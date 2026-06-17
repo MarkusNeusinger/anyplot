@@ -1,7 +1,7 @@
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 93/100 | Created: 2026-06-17
+// Quality: 91/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
@@ -9,7 +9,7 @@ const BRAND = t.palette[0]; // #009E73 — Imprint palette position 1 (first ser
 
 // --- Data: logistic map x(n+1) = r * x(n) * (1 - x(n)) ----------------------
 // For each growth rate r, iterate the map, discard the transient, and keep the
-// long-term orbit. This is fully deterministic — no RNG needed.
+// long-term orbit. Fully deterministic — no RNG needed.
 const R_MIN = 2.5;
 const R_MAX = 4.0;
 const R_STEPS = 1500; // parameter resolution across [2.5, 4.0]
@@ -31,11 +31,13 @@ for (let i = 0; i < R_STEPS; i++) {
 // ~150,000 points — dense enough to resolve the period-doubling cascade.
 
 // Key period-doubling thresholds on the route to chaos.
+// Positions staggered (top/bottom alternating) so the three closely-spaced
+// labels near chaos onset (r ≈ 3.449 / 3.544 / 3.5699) don't crowd each other.
 const bifurcations = [
-  { r: 3.0, text: "period-2" },
-  { r: 3.449, text: "period-4" },
-  { r: 3.544, text: "period-8" },
-  { r: 3.5699, text: "chaos" },
+  { r: 3.0,    text: "period-2", position: "insideStartTop" },
+  { r: 3.449,  text: "period-4", position: "insideEndBottom" },
+  { r: 3.544,  text: "period-8", position: "insideStartTop" },
+  { r: 3.5699, text: "chaos",    position: "insideEndBottom" },
 ];
 
 // --- Init -------------------------------------------------------------------
@@ -84,20 +86,20 @@ chart.setOption({
       type: "scatter",
       data: points,
       symbolSize: 1.1, // very small points → density-based visualization
-      large: true, // optimized path for the 150k-point cloud
+      large: true, // optimised path for the 150k-point cloud
       largeThreshold: 2000,
       itemStyle: { color: BRAND, opacity: 0.34 },
       markLine: {
         symbol: "none",
         silent: true,
         lineStyle: { color: t.inkSoft, type: "dashed", width: 1.4, opacity: 0.7 },
-        label: {
-          color: t.inkSoft,
-          fontSize: 13,
-          position: "insideEndTop",
-          formatter: (p) => p.data.text,
-        },
-        data: bifurcations.map((b) => ({ xAxis: b.r, text: b.text })),
+        // Per-item label overrides carry the position and text; fontSize 14 gives
+        // comfortable legibility at both full resolution and mobile thumbnail.
+        label: { color: t.inkSoft, fontSize: 14 },
+        data: bifurcations.map((b) => ({
+          xAxis: b.r,
+          label: { formatter: b.text, position: b.position },
+        })),
       },
     },
   ],

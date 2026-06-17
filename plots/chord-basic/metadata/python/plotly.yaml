@@ -1,61 +1,53 @@
 library: plotly
+language: python
 specification_id: chord-basic
 created: '2025-12-23T10:01:12Z'
-updated: '2026-04-06T21:00:11Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457530538
-issue: 0
-python_version: '3.14'
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chord-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chord-basic/plotly/plot.html
-quality_score: 88
-impl_tags:
-  dependencies: []
-  techniques:
-  - bezier-curves
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-06-17T05:38:56Z'
+generated_by: claude-sonnet
+workflow_run: 27667123968
+issue: 858
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent data storytelling with dominant corridor highlighting and informative
-    subtitle
-  - Professional layered arc effect with depth perception
-  - Full spec compliance including all 4 required features (colors, proportional widths,
-    tooltips, bidirectional flows)
-  - Colorblind-safe palette with intentional green-to-teal replacement
-  - Clean, well-structured code with appropriate complexity
-  - Dual output (PNG + interactive HTML) leverages Plotly strengths
+  - Full Imprint palette compliance across both themes; dark mode correctly adapts
+    all chrome tokens without missing any element
+  - Dominant corridor (Europe-Asia) detected programmatically and highlighted with
+    both opacity emphasis and subtitle narrative — strong data storytelling
+  - Dual-layer arc design (translucent outer ring + solid inner band) gives the chord
+    circle a polished, layered aesthetic beyond a flat-arc approach
+  - Rich interactive hover tooltips with incoming/outgoing/total flow data per entity
+    and per corridor — exemplary use of plotly interactive capabilities
+  - 'Fully spec-compliant: all required chord diagram features present including bidirectional
+    flows, proportional chord widths, entity labels with totals'
   weaknesses:
-  - Some thin chords between minor flows are hard to visually distinguish from each
-    other
-  - Vertical layout balance could be improved (more whitespace at top than bottom)
-  - Low-level construction is necessary but limits idiomatic library usage score
-  image_description: 'The plot displays a chord diagram with 6 continents arranged
-    around a circle. Each continent has a layered arc segment (outer translucent ring
-    + inner solid ring) with distinct colors: Africa (dark blue #306998), Asia (yellow
-    #FFD43B), Europe (teal #00B4D8), N. America (crimson #DC143C), S. America (purple
-    #9370DB), Oceania (orange #FF8C00). Continent labels with total flow values (e.g.,
-    "Europe 205M", "Asia 175M") are positioned around the perimeter in matching colors.
-    Chords of varying widths connect continents, with the Europe-Asia corridor visually
-    emphasized through higher opacity. The title reads "Migration Flows Between Continents
-    · chord-basic · plotly · pyplots.ai" with a subtitle noting "Europe–Asia corridor
-    dominates at 65M combined flow · Chord width proportional to flow magnitude".
-    A legend in the bottom-right lists all continents. Background is clean white (#FAFAFA
-    paper).'
+  - Subtitle annotation at y=0.965 (paper) is positioned in the same vertical zone
+    as the upper perimeter labels (Asia ~y=0.81 paper, S. America near top-left zone),
+    creating visual crowding in the top region — lower subtitle y to 0.92 or increase
+    top margin from 75 to 90 to create more breathing room between the subtitle and
+    chord perimeter labels
+  - Legend text at 11px (44px at scale=4) is at the lower bound for mobile legibility
+    (~7px when image scaled to 400px width) — consider 12px for the legend font size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "Migration Flows Between Continents · chord-basic · python · plotly · anyplot.ai" in dark INK (#1A1A17) — clearly readable. Subtitle "Europe–Asia dominates at 22M · chord width ∝ flow" in muted gray (INK_MUTED) — readable. Perimeter labels in entity colors at radius 1.17. Legend in bottom-right with elevated (#FFFDF6) background and INK_SOFT border.
+      Data: Six continents arranged around circle. Africa=#009E73 (green, first entity), Asia=#C475FD (lavender), Europe=#4467A3 (blue), N.America=#BD8233 (ochre), S.America=#AE3030 (red), Oceania=#2ABCCD (cyan). Chords at 50% opacity (dominant Europe-Asia at 75%). Dual-layer arc design (translucent outer + solid inner).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title text adapts to INK="#F0EFE8" (warm off-white) — clearly readable against dark background. Subtitle in INK_MUTED="#A8A79F" — readable. Legend text in INK_SOFT="#B8B7B0" — readable. Legend background ELEVATED_BG="#242420" with INK_SOFT border. No dark-on-dark failures observed.
+      Data: Chord colors identical to light render — Africa=#009E73 still visible on dark surface, all 6 entity colors unchanged and clearly distinguishable.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,46 +55,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, labels 20pt, subtitle
-          17pt, legend 18pt). All text clearly readable. Subtitle slightly small but
-          acceptable.
+        comment: 'All font sizes explicitly set (title scaled via length formula,
+          perimeter labels=14px, subtitle=14px, legend=11/12px). Minor deduction:
+          legend at 11px (44px final) approaches lower bound of mobile legibility
+          at ~400px viewport scale.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements. Labels well-positioned around perimeter
-          with proper anchoring.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Chords clearly visible with minimum width enforcement. Dominant corridor
-          stands out via opacity. Some thinner chords hard to distinguish.
+        comment: Subtitle at y=0.965 paper and upper perimeter labels (Asia ~y=0.81
+          paper) are at different positions but create visual crowding in the top
+          zone. No true pixel overlap detected; slight proximity deduction.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Chord widths proportional to flow magnitude; outer arc rings solid
+          and prominent; dominant corridor (Europe-Asia) at 75% opacity vs 50% for
+          others; all elements clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-6 used in canonical order; CVD-safe with
+          delta-E >= 13.7 for 6 colors; opacity levels allow chord distinction.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Palette explicitly avoids green, replacing with teal for deuteranopia
-          safety. Six distinct hues well-separated.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: 1:1 aspect ratio ideal for circular diagram. Slight vertical imbalance
-          with more whitespace at top.
+        comment: Square 2400x2400 canvas; chord circle fills ~60-70% of canvas; generous
+          margins; legend near data; no content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for chord diagram. Labels include units
-          (M for millions).
+        comment: Axes hidden (appropriate for chord diagram); title descriptive with
+          topic context; perimeter labels show entity name + total flows; subtitle
+          explains chord-width encoding.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'COLORS=[''#009E73'',''#C475FD'',''#4467A3'',''#BD8233'',''#AE3030'',''#2ABCCD'']
+          — exact Imprint positions 1-6. Africa (first entity) = #009E73. PAGE_BG
+          #FAF8F1/#1A1A17 correct. All chrome tokens theme-adaptive. Data colors identical
+          between light and dark.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -110,22 +115,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, layered arc effect, styled hover labels, intentional
-          typography hierarchy. Clearly above defaults.
+        comment: Custom dual-layer arc design, programmatic dominant-corridor detection
+          and highlighting, subtitle narrative, entity totals on perimeter — clearly
+          above well-configured library default. Dominant chord highlight (75% vs
+          50% opacity) is somewhat subtle; not quite FiveThirtyEight publication level.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All grid/axes hidden. Clean white background. White line borders
-          on arcs. Outer ring glow effect adds polish.
+        comment: 'No grid (appropriate), axes fully hidden, elevated legend with border,
+          carefully chosen opacity levels, smooth bezier chord paths. Deduction: subtitle
+          at y=0.965 creates tight vertical spacing near upper perimeter labels.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Dominant corridor highlighted with higher opacity. Subtitle calls
-          out insight. Continent totals displayed. Strong visual hierarchy.
+        comment: Dominant corridor (Europe-Asia 22M) detected programmatically, highlighted
+          with increased opacity and thicker border, explicitly called out in subtitle.
+          Perimeter labels show total flows. Clear visual hierarchy with dominant
+          chord as focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -135,54 +145,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram with entities on circle perimeter connected
-          by proportional-width chords.
+        comment: Correct chord diagram with circular entity arrangement, proportional-width
+          chords, inter-entity connections.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional chord widths, hover tooltips, bidirectional
-          flows all present.
+        comment: Distinct color per entity, chord width proportional to flow, hover
+          tooltips with exact flow values, bidirectional flows as separate chords.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flow matrix correctly maps sources to targets. Arc sizes proportional
-          to totals.
+        comment: Flow matrix correctly encodes source-target relationships; all 30
+          directed flows represented; arc widths proportional to entity totals.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend shows all 6 continents with correct
-          colors.
+        comment: Title 'Migration Flows Between Continents · chord-basic · python
+          · plotly · anyplot.ai' matches Descriptive Title + spec-id + language +
+          library + anyplot.ai format. Legend labels match all 6 continents.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 6 entities with varying connection strengths. Both strong and weak
-          flows present. Some weaker flows hard to visually distinguish.
+        comment: 'Shows all chord diagram features: bidirectional flows, varying chord
+          widths, entity arcs proportional to total flow, 6 entities with 30 connections.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration flows between continents is real-world, comprehensible,
-          neutral scenario.
+        comment: Global migration flows between continents is a classic, well-known,
+          neutral use case for chord diagrams.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Values in millions, individual flows range 2-35M. Total ~704M is
-          slightly high but acceptable for demonstration.
+        comment: Flow values 1-12M per corridor and entity totals 23-68M are realistic
+          for aggregate international migration statistics. Europe largest hub, Oceania
+          smallest — consistent with real-world patterns.
     code_quality:
       score: 10
       max: 10
@@ -192,49 +204,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, figure creation, save.
-          No functions or classes.'
+        comment: 'Flat linear structure: theme tokens -> data -> arc geometry -> figure
+          -> chords -> labels -> layout -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded flow matrix.
+        comment: flow_matrix is a hardcoded deterministic array; no random data generation;
+          fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: Only os, numpy, and plotly.graph_objects imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear sections. Appropriate complexity. No fake
-          UI.
+        comment: Complexity is appropriate for a hand-built chord diagram in plotly
+          (no native go.Chord type exists); bezier calculations and arc geometry are
+          justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Uses current Plotly API.
+        comment: Saves as plot-THEME.png (write_image) and plot-THEME.html (write_html);
+          all current plotly API.
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Plotly lacks native chord diagram. Manual go.Scatter construction
-          necessary. Good use of available features.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Leverages hovertemplate, hoveron=fills, HTML export, hoverlabel customization.
-          Genuinely distinctive Plotly capabilities.
-  verdict: REJECTED
+        comment: go.Scatter with fill='toself' is the correct plotly idiom for custom
+          polygon shapes; hovertemplate, legendgroup, showlegend, hoveron='fills'
+          are all idiomatic plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses plotly-specific features: interactive hover with rich HTML
+          hovertemplate, hoveron=''fills'' for area-based interaction, HTML export
+          for full interactivity, legendgroup for trace grouping.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  - bezier-curves
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

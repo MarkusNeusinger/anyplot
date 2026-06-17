@@ -1,0 +1,257 @@
+library: muix
+language: javascript
+specification_id: bifurcation-basic
+created: '2026-06-17T05:04:01Z'
+updated: '2026-06-17T05:30:18Z'
+generated_by: claude-sonnet
+workflow_run: 27667529976
+issue: 4415
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Brand green (#009E73) with density-appropriate alpha (0.55) creates beautiful
+    bifurcation density cloud
+  - Uses useDrawingArea hook for exact SVG pixel-coordinate positioning of reference
+    lines — idiomatic advanced MUI X
+  - All 4 bifurcation points labeled with precise r values and period names using
+    semantic amber (#DDCC77) anchor
+  - 120,000 data points (1000 r-steps × 120 records) correctly implements spec density
+    requirement
+  - ChartContainer composition API used rather than simpler ScatterChart — unlocks
+    custom SVG slot
+  - Both renders are theme-correct with matching data colors and proper chrome flip
+  - Deterministic logistic-map data generation with fixed seed X0=0.4
+  weaknesses:
+  - Annotation r-value labels at 11px may be slightly hard to read at mobile scale
+    (~400px display); consider 12px minimum
+  - 'DE-01 could be further polished: removing axis spine lines entirely would create
+    a cleaner open look, letting only tick marks define the axes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Title "bifurcation-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. X-axis label "Growth rate r" and Y-axis label "Steady-state population x" both readable. Tick labels at ~14px legible. Four amber dashed reference lines with inkSoft-colored annotation labels ("period-2", "period-4", "period-8", "chaos" with r-value text) visible at the top of the drawing area.
+      Data: Brand green #009E73 at 0.55 alpha creates the classic bifurcation density cloud — single fixed point up to r≈3.0, period-2 fork, period-4 cascade, then chaotic band with periodic windows visible in the right third of the plot.
+      Legibility verdict: PASS — all text readable; annotation r-value labels at 11px are small but legible at canvas resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, no pure black.
+      Chrome: Title text is light-colored and clearly readable against dark background. Axis labels and tick labels appear in light ink (theme-adaptive #B8B7B0 / #F0EFE8 range). Amber dashed reference lines remain visible. Annotation labels in inkSoft are readable against dark background. No dark-on-dark failure detected.
+      Data: Brand green #009E73 (identical to light render) stands out well against the dark surface. All bifurcation structure visible. Data colors are consistent between themes — only chrome has flipped.
+      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failure.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All fonts explicitly set (title 22px, axis labels 16px, tick labels
+          14px, annotations 13/11px). Readable in both themes. Minor: r-value annotation
+          at 11px slightly small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Annotation labels staggered with two vertical levels (y_offset 18/54px)
+          prevent overlap even where r=3.544 and r=3.5699 lines are only ~26px apart.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markerSize=1 with rgba 0.55 alpha for 120k points — optimal density-based
+          visualization, bifurcation structure perfectly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series brand green + amber reference lines. CVD-safe. No red-green
+          conflict.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Full landscape 3200x1800. Chart fills entire
+          canvas area minus 60px title bar. Margins balanced (left 86, right 28, top
+          16, bottom 70).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Growth rate r'' and ''Steady-state population x'' — descriptive
+          with variable notation, appropriate for mathematical diagram.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'rgba(0,158,115,0.55) = brand green #009E73 at 55% alpha. Background
+          t.pageBg is #FAF8F1 / #1A1A17 per theme. Data colors identical in both renders.
+          Chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic amber anchor for reference lines, density-appropriate
+          alpha, legend hidden. Not yet FiveThirtyEight-level polish but thoughtful
+          design choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend removed, axis lines styled with inkSoft, no grid (appropriate
+          for bifurcation). Custom SVG overlay with styled typography.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber dashed reference lines at period-doubling points guide viewer
+          through route-to-chaos narrative. Density effect naturally emphasizes attractor
+          structure.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram via scatter of long-term orbit values
+          vs parameter.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: markerSize=1 ✓, alpha 0.55 ✓, 120k points ✓, all 4 bifurcation labels
+          (r≈3.0, 3.449, 3.544, 3.5699) ✓, 300 transient discarded ✓, range 2.5–4.0
+          ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=growth rate r (2.5–4.0), Y=steady-state population x (0–1). Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bifurcation-basic · javascript · muix · anyplot.ai'' —
+          correct format. Legend hidden (single series).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows full period-doubling cascade: fixed point → period-2 → period-4
+          → period-8 → chaos, plus periodic windows within chaotic band.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical mathematical example for bifurcation/chaos
+          — real nonlinear dynamics scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Analytically correct: x∈[0,1], r∈[2.5,4.0], bifurcation points at
+          mathematically correct analytic values.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'MUI X requires function components; helper Bifurcations() is idiomatic
+          (uses useDrawingArea hook). Structure: data → component → export. Not over-engineered.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Logistic map is deterministic; fixed X0=0.4 seed avoids 0.5 degenerate
+          case.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: ChartContainer, ScatterPlot, ChartsXAxis, ChartsYAxis,
+          useDrawingArea.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, no over-engineering. Bifurcations SVG overlay is appropriate
+          complexity for the annotation requirement.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles output; component default-exports correctly; skipAnimation
+          set.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ChartContainer composition API (advanced over ScatterChart),
+          useDrawingArea hook, sx prop for MUI styling, disableHover — all idiomatic
+          MUI X patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'useDrawingArea hook for pixel-precise SVG overlay positioning is
+          distinctively MUI X. ChartContainer + ScatterPlot composition is MUI X-specific
+          advanced pattern. Minor: could leverage more MUI X slot customization.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
