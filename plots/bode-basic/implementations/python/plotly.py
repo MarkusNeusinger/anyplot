@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: plotly 6.8.0 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-06-17
 """
 
 import os
@@ -27,25 +26,24 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 GRID_MINOR = "rgba(26,26,23,0.07)" if THEME == "light" else "rgba(240,239,232,0.07)"
 
-# Imprint palette colors
+# Imprint palette colors — positions 1→3 in canonical order
 CLR_MAIN = "#009E73"  # Imprint green (position 1) — main Bode curve
-CLR_GAIN = "#BD8233"  # Imprint ochre (position 4) — gain margin annotation
-CLR_PHASE = "#C475FD"  # Imprint lavender (position 2) — phase margin annotation
+CLR_GAIN = "#C475FD"  # Imprint lavender (position 2) — gain margin annotation
+CLR_PHASE = "#4467A3"  # Imprint blue (position 3) — phase margin annotation
 
-# Data — Third-order open-loop transfer function:
-# H(s) = K / [(s/p1 + 1)(s/p2 + 1)(s²/wn² + 2ζs/wn + 1)]
-# Underdamped complex pair shows resonance peak and meaningful stability margins
-K = 40
-p1 = 2 * np.pi * 1  # real pole at 1 Hz
-p2 = 2 * np.pi * 10  # real pole at 10 Hz
-wn = 2 * np.pi * 100  # resonance at 100 Hz
-zeta = 0.3  # underdamped — produces visible resonance peak
+# Data — Third-order transfer function: H(s) = K / [(s/p1+1)(s²/wn²+2ζs/wn+1)]
+# Complex pair at wn=10 Hz with ζ=0.2 produces a clear resonance peak;
+# single real pole at 200 Hz ensures a finite gain margin (phase crosses -180°).
+K = 2
+p1 = 2 * np.pi * 200  # real pole at 200 Hz (well above resonance)
+wn = 2 * np.pi * 10  # resonance at 10 Hz
+zeta = 0.2  # underdamped — visible resonance peak
 
 frequency_hz = np.logspace(-1, 4, 800)
 omega = 2 * np.pi * frequency_hz
 s = 1j * omega
 
-H = K / ((s / p1 + 1) * (s / p2 + 1) * (s**2 / wn**2 + 2 * zeta * s / wn + 1))
+H = K / ((s / p1 + 1) * (s**2 / wn**2 + 2 * zeta * s / wn + 1))
 magnitude_db = 20 * np.log10(np.abs(H))
 phase_deg = np.degrees(np.unwrap(np.angle(H)))
 
@@ -84,7 +82,7 @@ fig.add_trace(
     col=1,
 )
 
-# 0 dB reference line
+# 0 dB reference line (dashed — zeroline suppressed on y-axis to avoid solid overlay)
 fig.add_hline(y=0, row=1, col=1, line={"color": INK_SOFT, "width": 1, "dash": "dash"})
 
 # Phase trace (same Imprint green — single-system Bode)
@@ -104,7 +102,7 @@ fig.add_trace(
 # -180 degree reference line
 fig.add_hline(y=-180, row=2, col=1, line={"color": INK_SOFT, "width": 1, "dash": "dash"})
 
-# Gain margin (Imprint ochre — position 4, orange-toned for warm stability indicator)
+# Gain margin annotation (Imprint lavender — position 2)
 if pc_found:
     fig.add_shape(
         type="rect",
@@ -163,7 +161,7 @@ if pc_found:
         col=1,
     )
 
-# Phase margin (Imprint lavender — position 2, purple-toned for stability indicator)
+# Phase margin annotation (Imprint blue — position 3)
 if gc_found:
     fig.add_shape(
         type="rect",
@@ -248,8 +246,10 @@ fig.update_xaxes(
     showgrid=True,
     gridcolor=GRID,
     gridwidth=1,
+    showline=True,
     linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
+    mirror=False,
+    zeroline=False,
     minor={"showgrid": True, "gridcolor": GRID_MINOR},
 )
 fig.update_xaxes(
@@ -260,8 +260,10 @@ fig.update_xaxes(
     showgrid=True,
     gridcolor=GRID,
     gridwidth=1,
+    showline=False,
     linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
+    mirror=False,
+    zeroline=False,
     minor={"showgrid": True, "gridcolor": GRID_MINOR},
 )
 
@@ -274,9 +276,11 @@ fig.update_yaxes(
     showgrid=True,
     gridcolor=GRID,
     gridwidth=1,
+    showline=True,
     linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
-    range=[-80, 45],  # tighter range — focuses on gain margin region, avoids -225 dB compression
+    mirror=False,
+    zeroline=False,  # suppress solid zeroline so only the dashed add_hline renders
+    range=[-80, 25],
 )
 fig.update_yaxes(
     row=2,
@@ -286,8 +290,10 @@ fig.update_yaxes(
     showgrid=True,
     gridcolor=GRID,
     gridwidth=1,
+    showline=True,
     linecolor=INK_SOFT,
-    zerolinecolor=INK_SOFT,
+    mirror=False,
+    zeroline=False,
 )
 
 # Save — landscape 3200 × 1800 (width=800, height=450, scale=4)
