@@ -1,0 +1,274 @@
+library: highcharts
+language: javascript
+specification_id: bifurcation-basic
+created: '2026-06-17T05:22:24Z'
+updated: '2026-06-17T05:41:12Z'
+generated_by: claude-sonnet
+workflow_run: 27667493591
+issue: 4415
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct logistic map implementation with 100,100 points (1001 r-values × 100 stable
+    iterations) and proper transient discarding (200 iterations)
+  - 'Brand green #009E73 at 0.30 alpha is an excellent choice for density-based visualization
+    — accumulation of overlapping points creates natural density shading revealing
+    the fractal bifurcation structure'
+  - Three annotated period-doubling plotLines at r≈3.0, r≈3.449, r≈3.544 directly
+    address the spec requirement and create clear visual narrative guiding the viewer
+    through the cascade to chaos
+  - 'turboThreshold: 0 + enableMouseTracking: false + tooltip disabled shows expert
+    Highcharts performance knowledge for large 100k+ scatter datasets'
+  - Both themes render correctly — warm off-white light / warm near-black dark, all
+    chrome tokens properly threaded; no dark-on-dark failures in dark render
+  - 'x-axis gridLineWidth: 0 is a deliberate, correct design choice — removes visual
+    noise from the scientific visualization'
+  weaknesses:
+  - 'Annotation labels at fontSize: 12px CSS (≈24px native) are at the lower bound
+    of readability — they are clear at full 3200px resolution but may be marginal
+    when scaled to 400px mobile viewport; consider bumping to 13-14px'
+  - DE-01 aesthetics are solid but not at publication-ready level — typography uses
+    standard system-inherit fonts with no custom weight or letter-spacing refinements
+    that would distinguish this from a well-configured default
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, clearly not pure white
+      Chrome: Title "bifurcation-basic · javascript · highcharts · anyplot.ai" in dark ink at 22px fills ~55% of width (within 50-70% guideline). X-axis label "Growth Rate (r)" and Y-axis label "Population (x)" in secondary dark inkSoft at 16px — both readable. Tick labels (0 to 1.0 on y, 2.5 to 4.0 on x) at 14px in inkSoft — all readable. Three vertical dashed plotLines at r≈3.0, 3.449, and 3.544 with annotation labels in inkSoft at 12px — readable at full resolution, slightly small for mobile.
+      Data: Brand green #009E73 scatter points at 0.30 alpha. Classic bifurcation diagram clearly visible: stable fixed point from r=2.5 to 3.0, period-2 fork around r=3.0, period-4 near r=3.449, period-4→8 near r=3.544, then full chaotic cloud to r=4.0. Density accumulation in the chaotic region creates visual richness. y-axis subtle grid only; no x-axis grid (deliberately removed).
+      Legibility verdict: PASS — all main text elements readable, data clearly visible on warm cream background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and axis labels rendered in light ink/inkSoft tokens — clearly readable against dark background. Tick labels in secondary light inkSoft — readable. Annotation plotLine labels in light inkSoft at 12px — readable at full resolution. No dark-on-dark failures observed (no near-black text on near-black background).
+      Data: Same brand green #009E73 at same 0.30 alpha — data colors are IDENTICAL to light render (only chrome flipped). Bifurcation structure equally visible; the brand green contrasts clearly against near-black background. Three vertical dashed annotation lines visible in inkSoft.
+      Legibility verdict: PASS — both renders fully readable; theme adaptation correct via window.ANYPLOT_TOKENS; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis titles 16px, tick
+          labels 14px, annotation labels 12px. Well-proportioned at desktop; annotation
+          labels at 12px CSS (24px native) are at the lower bound for mobile readability
+          (~3px at 400px viewport).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. plotLine labels for r≈3.449 (y:16) and r≈3.544 (y:60)
+          use different y-offsets to avoid collision despite close horizontal proximity.
+          Dense scatter data uses alpha for visual separation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius 0.7 with 0.30 alpha perfectly adapted to 100k+ point
+          density. Bifurcation structure clearly visible; density accumulation in
+          chaotic region creates informative visual texture.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in brand green #009E73 — CVD-safe by design. No competing
+          series. Annotation plotLines in neutral inkSoft provide secondary contrast.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no gate file). Landscape 3200x1800. Good margins,
+          no overflow, no clipping. Plot area fills canvas well with balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Growth Rate (r) and Population (x) — descriptive with parameter notation
+          in parentheses. Title matches exact required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses rgba(0,158,115,0.30) = #009E73 brand green
+          with alpha. Background transparent (page bg tokens provide #FAF8F1 light
+          / #1A1A17 dark). All chrome from window.ANYPLOT_TOKENS. Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Above well-configured defaults: intentional alpha-based density
+          visualization is a thoughtful design choice, scientific annotations add
+          educational sophistication, clean x-axis gridline removal is deliberate.
+          Falls short of ''publication-ready'' — typography uses inherit fonts with
+          no custom weight/spacing refinements.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: x-axis gridLineWidth:0 deliberately removed, y-axis
+          grid subtle via t.grid token, legend disabled (single series), tooltip disabled.
+          Axis lines present (standard for Highcharts — no top/right spine equivalent).
+          Generally clean scientific visualization.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Annotated period-doubling plotLines at r≈3.0, 3.449, 3.544 create
+          clear visual narrative: stability → period-doubling cascade → chaos. Viewer
+          is directly guided through the dynamical transitions. Density variation
+          (sparse left, rich right) reinforces the story visually.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter plot bifurcation diagram using logistic map
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: very small points (radius 0.7) with low
+          alpha (0.30), full period-doubling cascade, logistic map formula, labels
+          at r≈3.0/3.449/3.544, parameter range 2.5-4.0, transient discarding (200)
+          then stable (100)'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=growth rate r (2.5-4.0), Y=population x (0-1); both axes correctly
+          bounded and labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bifurcation-basic · javascript · highcharts · anyplot.ai'
+          exactly correct; no legend (correct for single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: '100,100 points covering full period-doubling cascade with annotated
+          transitions; all dynamical regimes visible: fixed point, period-2, period-4,
+          period-8, chaos'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map is the canonical educational example for bifurcation
+          diagrams; neutral scientific context; non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'r: 2.5-4.0 is the standard range capturing full route from stability
+          to chaos; x: 0-1 correct for logistic map; bifurcation points at scientifically
+          accurate values'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat procedural structure: constants → data generation → chart.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed initial condition x=0.5 for every r value,
+          no randomness.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (Highcharts is global); uses only window.ANYPLOT_TOKENS.
+          No unused globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic JS. Nested loops for logistic map are clear. No
+          over-engineering, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) call with current API.
+          Harness handles PNG/HTML output.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: turboThreshold:0 (critical for 100k+ scatter), enableMouseTracking:false
+          (performance), animation:false on both chart and series, credits disabled,
+          backgroundColor:transparent, plotLines with HTML labels — all correct Highcharts
+          idioms for this use case.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses xAxis.plotLines API with formatted HTML labels for scientific
+          annotations (Highcharts-specific); turboThreshold is a Highcharts-specific
+          performance knob. Does not leverage any advanced Highcharts features beyond
+          scatter + plotLines (e.g., no plotBands, no renderer paths, no zones).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
