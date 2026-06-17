@@ -1,7 +1,7 @@
 // anyplot.ai
 // column-stratigraphic: Stratigraphic Column with Lithology Patterns
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-17
+// Quality: 92/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;

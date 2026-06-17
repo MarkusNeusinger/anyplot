@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: column-stratigraphic
 created: '2026-06-17T01:05:03Z'
-updated: '2026-06-17T01:09:00Z'
+updated: '2026-06-17T01:17:50Z'
 generated_by: claude-opus
 workflow_run: 27658345933
 issue: 4573
@@ -12,100 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-st
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Six visually distinct SVG lithology textures (stipple dots, dashes, brick, random
-    dashes, pebble rings, fine horizontal lines) injected into the chart <defs> via
-    the Highcharts renderer API — a genuinely advanced, idiomatic technique that approximates
-    FGDC/USGS map symbols
-  - 'Geologically plausible, neutral data: real Colorado Plateau formations (Navajo,
-    Kaibab, Coconino, Redwall, Bright Angel) with sensible depths (0-398 m) and ages
-    spanning Jurassic to Cambrian, depth increasing downward as the spec requires'
-  - Title is exactly 'column-stratigraphic · javascript · highcharts · anyplot.ai';
-    legend is a cleanly framed 'Lithology' key whose labels match the layers
-  - Data colors are identical between light and dark renders — only chrome flips;
-    first lithology (sandstone) uses Imprint palette[0] green and the rest follow
-    canonical Imprint order
-  - Formation/age labels sit in semi-opaque rounded boxes so they stay fully legible
-    over the busy fill patterns in both themes
+  - 'Genuinely sophisticated Highcharts mastery: custom SVG lithology textures (stipple,
+    dashes, brick, pebbles) injected into the chart <defs> via chart.events.load +
+    this.renderer, then referenced as url(#litho-*) fills — a clean, idiomatic workaround
+    for the core bundle shipping no pattern-fill module.'
+  - 'All spec features present: 6 distinct lithology patterns (>= 5 required), formation+age
+    labels boxed inside each layer, depth axis in metres with reversed (downward-increasing)
+    scale, solid 1.5px layer-boundary lines, and left-side geologic-period brackets
+    drawn with renderer paths + toPixels coordinate mapping.'
+  - Realistic, neutral, geologically plausible data — real Colorado Plateau / Grand
+    Canyon section (Navajo, Kaibab, Coconino, Redwall, Bright Angel) with sensible
+    Jurassic-to-Cambrian ages and depths 0-398 m.
+  - 'Palette + theme compliance is exact: first lithology (sandstone) = #009E73, Imprint
+    tints assigned in canonical first-appearance order, data colors identical between
+    light and dark, backgrounds warm off-white / near-black, all chrome readable in
+    both themes.'
+  - 'Clean, deterministic, KISS code: hard-coded data, no network, no imports, tooltip
+    disabled for the static screenshot, animation:false set in both required places.'
   weaknesses:
-  - 'Large empty grey region on the left ~40% of the landscape canvas: the single-category
-    column is capped at maxPointWidth 520 and pushed center-right by the right-side
-    legend, leaving the area between the y-axis and the column unused. The spec explicitly
-    suggests ''Age labels or geological period names should appear on the left side''
-    — placing age/period annotations there would both better satisfy the spec hint
-    and fill the dead space (VQ-05, DE-03).'
-  - Several small helper arrow-functions (dot/seg/ring/cap) and a TEXTURE map add
-    structure beyond strict KISS; justified for pattern generation but slightly above
-    the 'no functions' bar (CQ-01).
-  - Layer-boundary lines are drawn via column borderWidth 1.5 which is fine, but the
-    spec's optional unconformity wavy-line convention is not used — acceptable since
-    unconformities are optional.
+  - Landscape canvas leaves a large empty horizontal band between the right edge of
+    the column and the legend — a vertical stratigraphic column under-uses the 16:9
+    width. Consider widening the column (maxPointWidth) or moving the legend/period
+    content to better balance the horizontal space (VQ-05).
+  - Formation/age data-label boxes use small type (13px/11px on the 1600px CSS mount);
+    they are readable at full size but become tight when the PNG is scaled down to
+    ~400px mobile width. A modest bump would improve small-screen legibility (VQ-01).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), page shows through transparent chart background. PASS.
-      Chrome: dark title "column-stratigraphic · javascript · highcharts · anyplot.ai" centered (~50% width), grey subtitle "Synthetic borehole BH-1 · Colorado Plateau · lithology by fill pattern", rotated y-axis title "Depth below surface (m)", tick labels "0 m"–"400 m" all dark and clearly readable. Right-side framed "Lithology" legend with 6 entries. All chrome readable.
-      Data: vertical stacked column of 9 layers, depth increasing downward. Sandstone = Imprint green (#009E73) stipple dots, shale = purple dashes, limestone = blue brick, siltstone = amber random dashes, conglomerate = red pebble rings, mudstone = cyan fine lines. Formation+age labels in light rounded boxes inside each layer, all legible.
-      Legibility verdict: PASS
+      Background: warm off-white (~#FAF8F1); chart background transparent so the page surface shows through.
+      Chrome: title "column-stratigraphic · javascript · highcharts · anyplot.ai" in dark ink, subtitle "Synthetic borehole BH-1 · Colorado Plateau · lithology by fill pattern" below it. Left y-axis "Depth below surface (m)" with tick labels "0 m"..."400 m". Geologic-period brackets on the left (Jurassic, Permian, Pennsylvanian, Mississippian, Cambrian) in dark ink. Legend "Lithology" panel at right (Sandstone, Shale, Limestone, Siltstone, Conglomerate, Mudstone) on an elevated off-white card. All text clearly readable against the light background.
+      Data: vertical stacked column of 9 layers, depth increasing downward; each layer tinted in an Imprint hue at ~0.58 opacity over a distinct SVG fill pattern (dots, dashes, brick, pebbles). First lithology (sandstone) = brand green #009E73. Formation+age labels boxed inside each layer with a semi-transparent light box and dark text.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17). PASS.
-      Chrome: light/white title, grey subtitle, light y-axis title and tick labels — all clearly readable, no dark-on-dark. Legend frame on elevated dark surface with light text. No black-on-black failures.
-      Data: identical pattern colors to light render — green/purple/blue/amber/red/cyan textures unchanged; only chrome flipped. Formation label boxes use dark elevated fill with light text, fully legible over patterns.
-      Legibility verdict: PASS
+      Background: warm near-black (~#1A1A17), chart transparent.
+      Chrome: same title/subtitle/axis/brackets/legend, now in light ink on the dark surface. Legend card is a dark elevated panel. No dark-on-dark failures — period labels, tick labels, axis title and legend entries all render in light ink and are clearly readable.
+      Data: identical layer colors, patterns and ordering to the light render — only the chrome and the formation-box backgrounds flip. Sandstone is still #009E73; all six lithology tints match the light render exactly.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly sized; labels boxed for contrast over patterns;
-          readable in both themes and when scaled
+        comment: All fonts explicitly sized and readable in both themes; formation/age
+          boxes small (13/11px) so a bit tight at ~400px scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Label boxes sit cleanly inside layers; no text collisions
+        comment: Formation boxes centered per layer, period brackets and legend separated;
+          no collisions even in the thinnest layers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 9 layers and 6 distinct textures clearly visible
+        comment: Six distinct fill patterns plus solid boundary lines; all layers
+          clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette + redundant pattern encoding beyond color (CVD-safe)
+        comment: Imprint palette (CVD-safe) plus pattern texture gives a redundant
+          non-color channel.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Exact 3200x1800; nothing clipped; but ~40% empty left region drops
-          one point
+        comment: Canvas gate passed; nothing clipped, but a large empty horizontal
+          band between column and legend under-uses the landscape width.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth axis labeled with units (m)
+        comment: Depth axis labeled with metres units; title matches mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series green #009E73, canonical Imprint order, correct theme
-          backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, correct backgrounds,
+          both themes correct.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -113,20 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom FGDC-style SVG textures, framed legend, label boxes, subtitle
-          — strong polish
+        comment: Custom SVG textures, period brackets, boxed labels — strong polish;
+          the empty right band keeps it from full marks.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Transparent bg, subtle grid, hidden x-axis, clean column boundaries
+        comment: Transparent bg, subtle grid, elevated rounded legend card, generous
+          spacing.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Clear depth narrative but empty left half weakens focal balance
+        comment: Clear downward-depth hierarchy with period brackets grouping layers;
+          guides the reader.
     spec_compliance:
       score: 15
       max: 15
@@ -136,26 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stratigraphic column
+        comment: Correct stratigraphic column.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 6 lithology patterns, formation names, age annotations, depth scale,
-          solid boundaries, downward depth
+        comment: Patterns (6), formation names, age/period labels, depth scale in
+          metres, solid boundaries, downward depth — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth axis correct; all layers shown top→bottom
+        comment: top/bottom mapped to stacked heights; full 0-398 m range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact; legend labels match lithologies
+        comment: Title format correct; legend labels = lithology names.
     data_quality:
       score: 15
       max: 15
@@ -165,85 +168,81 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Varying thickness, 6 rock types, multiple periods
+        comment: 9 layers, 6 lithologies, 5 periods, varied thicknesses.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Colorado Plateau formations, neutral
+        comment: Real Colorado Plateau formations with plausible ages; neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-398 m depths, Jurassic-Cambrian ages — sensible
+        comment: Depths 0-398 m, ages 190-510 Ma — sensible for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Small helper arrow-fns for pattern geometry — justified but above
-          strict no-function bar
+        comment: Tiny arrow helpers for SVG primitives; no classes, no over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data
+        comment: Hard-coded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Highcharts global only, no imports
+        comment: Uses Highcharts global; no imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean; tooltip disabled for static render; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-driven output, current API
+        comment: Harness-owned output; current Highcharts API.
     library_features:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Stacked column + reversed y-axis + renderer defs injection — idiomatic
-          high-level API
+        comment: Column stacking, reversed axis, useHTML data labels, top-level colors
+          array — idiomatic high-level API.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: chart.events.load renderer.createElement to inject custom SVG pattern
-          fills — distinctive Highcharts technique
+        comment: renderer-based SVG pattern injection + toPixels coordinate mapping;
+          clever but partly a workaround for the missing pattern-fill module.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-column
-  - svg-pattern-fill
-  - data-labels
-  - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - publication-ready
-  - theme-adaptive
-  - custom-textures
+  - alpha-blending
