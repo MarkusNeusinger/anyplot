@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:07:49Z'
-updated: '2026-06-17T03:23:10Z'
+updated: '2026-06-17T03:30:51Z'
 generated_by: claude-opus
 workflow_run: 27663250248
 issue: 4554
@@ -12,52 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Clinically authentic 12-lead layout: correct 3x4 column ordering (I/aVR/V1/V4,
-    II/aVL/V2/V5, III/aVF/V3/V6) plus a full-width Lead II rhythm strip, exactly matching
-    the spec''s standard clinical arrangement'
-  - 'Medical-standard ECG paper grid rendered with major (0.5mV/0.2s) and minor (0.1mV/0.04s)
-    lines in semantic matte red #AE3030, tuned per-theme so it reads on both #FAF8F1
-    cream and #1A1A17 near-black'
-  - 1mV calibration pulse drawn at the left margin of every row and a clinical scale
-    annotation '25 mm/s · 10 mm/mV · 1 mV cal' bottom-right
-  - 'Realistic lead-specific P-QRS-T morphology via a Gaussian-pulse model: aVR correctly
-    inverted, V1->V6 R-wave progression, plausible mV amplitudes within normal ranges'
-  - 'Imprint palette compliant: limb leads use brand green #009E73 (first series),
-    precordial leads use Imprint blue #4467A3; data colors identical across both themes
-    with only chrome flipping'
-  - Canvas is exactly 3200x1800 (gate passed); waveforms, labels and grid are cleanly
-    placed with no overlap or clipping in either render
+  - 'Faithful clinical replication: standard 3x4 lead layout (I/aVR/V1/V4 · II/aVL/V2/V5
+    · III/aVF/V3/V6) plus a full-width Lead II rhythm strip, on authentic ECG-paper
+    grid with 5:1 bold/light spacing.'
+  - 'Correct medical conventions: 1 mV calibration pulse at the start of each row
+    and a ''25 mm/s · 10 mm/mV · 1 mV cal'' scale annotation.'
+  - 'Palette compliant in both themes: limb leads are brand green #009E73 (first data
+    series), precordial leads Imprint blue #4467A3, and the universally-red ECG grid
+    #AE3030 is a legitimate semantic exception. Data colors identical across light/dark;
+    only chrome flips.'
+  - Exact 3200x1800 canvas; both renders fully readable with no clipping or overlap.
+  - Realistic synthetic P-QRS-T morphology with lead-specific amplitudes (inverted
+    aVR, R-wave progression V1->V4) and seeded reproducibility (seed=42).
   weaknesses:
-  - 'SC-04 title is wrong on two counts: it renders ''ecg-twelve-lead · pygal · pyplots.ai''
-    but the mandated format is ''{spec-id} · {language} · {library} · anyplot.ai''
-    = ''ecg-twelve-lead · python · pygal · anyplot.ai''. It is (a) missing the ''python''
-    language segment and (b) using the stale ''pyplots.ai'' domain instead of ''anyplot.ai''.
-    Fix the injected <text> title string (line ~222) and the module docstring (line
-    1). The sibling matplotlib.py already uses the correct form.'
-  - 'LM-02: pygal usage is competent but the chart leans heavily on manual SVG <text>
-    injection for every label/title because pygal lacks native per-point annotations
-    — distinctive pygal-specific features are limited beyond the XY + None-separated
-    multi-segment grid trick.'
-  - 'CQ-01: a small helper function (to_px) is defined; acceptable for the affine
-    label transform but slightly off the strict flat-script ideal.'
+  - 'Precordial blue #4467A3 reads slightly dim against the near-black dark-theme
+    grid; nudging stroke weight or lightness would lift contrast (minor VQ-03/VQ-04).'
+  - No legend/key explains the green=limb vs blue=precordial color encoding; a small
+    inline note would aid first-time readers (minor storytelling gap).
+  - Lead/title/scale labels are injected by raw SVG string replacement after chart.render()
+    rather than via pygal-native text placement — clever but slightly non-idiomatic
+    and coupled to the manual affine transform.
+  - One helper function (to_px) is present; otherwise the script is flat (minor CQ-01
+    KISS note).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white ~#FAF8F1 across full canvas and plot area. PASS.
-      Chrome: centered bold monospace title "ecg-twelve-lead · pygal · pyplots.ai" in dark ink, fully readable. Lead labels (I, aVR, V1, V4, ...) bold dark above each trace, readable. "II · rhythm" label at bottom-left, readable. Scale annotation "25 mm/s · 10 mm/mV · 1 mV cal" muted gray bottom-right, readable. NOTE: title uses "pyplots.ai" and omits "python" — SC-04 defect.
-      Data: ECG paper grid in light matte-red. Limb leads (I,II,III,aVR,aVL,aVF) green #009E73; precordial leads (V1-V6) blue #4467A3; full-width Lead II rhythm strip in green. 1mV calibration step at left of each row in ink. First series = #009E73 confirmed.
+      Background: warm off-white #FAF8F1 overlaid with a light red/pink ECG-paper grid (light 1mm lines, bold 5mm lines) — correct medical styling, not pure white.
+      Chrome: bold dark monospace title "ecg-twelve-lead · python · pygal · anyplot.ai" centered at top; bold dark lead labels (I, aVR, V1, V4, ...) above each panel; "II · rhythm" label at lower-left; muted "25 mm/s · 10 mm/mV · 1 mV cal" annotation bottom-right. All text clearly readable against the light background.
+      Data: limb leads (I, II, III, aVR, aVL, aVF) drawn in brand green #009E73; precordial leads (V1-V6) in Imprint blue #4467A3; 1mV calibration pulse rectangles at each row's left margin; full-width Lead II rhythm strip in green across the bottom. First data series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black ~#1A1A17 across full canvas and plot area. PASS.
-      Chrome: title and all lead labels in light ink (#F0EFE8), clearly readable against near-black — no dark-on-dark failures. Scale annotation in muted light gray, readable.
-      Data: red ECG grid (slightly intensified for dark surface) reads clearly; limb leads green #009E73 and precordial leads blue #4467A3 are IDENTICAL to the light render — only chrome flipped. Brand green remains visible. Calibration pulses visible.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17 with a dark-red ECG grid — not pure black, grid still visible.
+      Chrome: light monospace title, lead labels, and scale annotation all clearly readable; no dark-on-dark failures.
+      Data: identical color mapping to the light render — limb leads green #009E73, precordial leads blue #4467A3, rhythm strip green. Only the page/grid chrome flipped; data colors unchanged. Brand green remains clearly visible.
+      Legibility verdict: PASS (precordial blue is slightly dim on near-black but waveforms remain distinguishable)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,74 +59,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly sized; title/labels/annotation readable in both
-          themes. Dense 12-lead display is inherently busy at 400px mobile scale.
+        comment: Explicit font sizes (title 60, labels 46, scale 44); readable in
+          both themes; scale annotation small but secondary
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lead labels sit cleanly above traces; no collisions in either render.
+        comment: Lead labels sit cleanly above waveforms; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Waveform stroke widths (3.0-3.6) make all traces clearly visible
-          over the grid.
+        comment: Waveforms downsampled and visible; precordial blue slightly dim on
+          dark grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/red are CVD-distinguishable; color is not the sole signal
-          (spatial layout + labels carry meaning).
+        comment: Green/blue lead encoding is CVD-safe; red used only as grid chrome
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exactly 3200x1800 (gate passed); good proportions, nothing clipped.
+        comment: Exact 3200x1800; nothing cut off; balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Clinical scale annotation substitutes for axis titles (correct for
-          ECG); title present.
+        comment: ECG scale units (25mm/s, 10mm/mV) provided in lieu of conventional
+          axes; descriptive title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73, precordial #4467A3, semantic red grid; backgrounds
-          #FAF8F1/#1A1A17; both themes correct.'
+          #FAF8F1/#1A1A17; both themes correct'
     design_excellence:
       score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Medical-standard ECG paper styling, calibration pulses, clinical
-          layout — well above generic defaults.
+        comment: Authentic ECG-paper replication, calibration pulses, monospace medical
+          font, two-tone lead grouping
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No spines, subtle two-tier grid, clean monospace labels.
+        comment: Chrome hidden, subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clinical grid organization and rhythm strip guide the viewer like
-          a real ECG printout.
+        comment: Clear clinical hierarchy and rhythm-strip anchor; color encoding
+          unexplained
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,27 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 12-lead ECG multi-channel waveform display.
+        comment: 12-lead ECG waveform display
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3x4 grid order, rhythm strip, red ECG paper grid, 1mV calibration,
-          scale annotation, per-lead labels all present.
+        comment: Grid, calibration, 3x4 layout, rhythm strip, scale, labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, voltage (mV) on y, correctly offset per lead cell.
+        comment: Time->x, voltage->y, leads positioned correctly
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title 'ecg-twelve-lead · pygal · pyplots.ai' is missing the 'python'
-          language segment AND uses stale 'pyplots.ai' instead of mandated 'anyplot.ai'.
+        passed: true
+        comment: Title exactly 'ecg-twelve-lead · python · pygal · anyplot.ai'; lead
+          labels identify each panel
     data_quality:
       score: 15
       max: 15
@@ -170,20 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 leads + rhythm strip + grid + calibration + full P-QRS-T morphology.
+        comment: All 12 leads + rhythm; P-QRS-T morphology; lead-specific amplitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible normal sinus rhythm; lead-specific morphology (aVR inverted,
-          R-wave progression). Neutral.
+        comment: Normal sinus rhythm, neutral medical context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitudes within normal mV ranges per spec.
+        comment: mV amplitudes within typical physiological ranges
     code_quality:
       score: 9
       max: 10
@@ -193,33 +184,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat; one small to_px helper for the label affine transform.
+        comment: Mostly flat; one to_px helper for the affine transform
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, cairosvg, numpy, pygal, Style — all used.
+        comment: os, cairosvg, numpy, pygal, Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI; SVG label injection is a justified necessity.
+        comment: Well-commented, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html.
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html
     library_features:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,32 +218,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic pygal.XY + Style + stroke_style; None-separated multi-segment
-          grid lines.
+        comment: pygal.XY + Style + per-series stroke_style; label placement via SVG
+          post-processing is slightly non-idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Interactive HTML output; but heavy manual SVG injection limits pygal-native
-          distinctiveness.
-  verdict: REJECTED
+        comment: allow_interruptions/None breaks for grid lines, per-series stroke
+          styling, interactive HTML output
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - small-multiples
   - annotations
-  - svg-injection
-  - custom-grid
+  - faceting
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - theme-adaptive
-  dataprep:
-  - signal-synthesis
-  - downsampling
+  dataprep: []
   styling:
   - publication-ready
-  - custom-palette
-  - monospace-labels
+  - minimal-chrome
+  - grid-styling
