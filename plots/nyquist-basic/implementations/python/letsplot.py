@@ -1,29 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-20
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-06-17
 """
+# ruff: noqa: F405
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
 from scipy import signal
 
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Curated color palette
-COLOR_PRIMARY = "#1B4F72"
-COLOR_MIRROR = "#5DADE2"
-COLOR_CRITICAL = "#C0392B"
-COLOR_STABILITY = "#E74C3C"
-COLOR_UNIT_CIRCLE = "#AEB6BF"
-COLOR_GAIN_MARGIN = "#E74C3C"
-COLOR_ANNOTATION = "#2C3E50"
-COLOR_ARROW = "#1A5276"
+# Theme-adaptive chrome — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - Third-order system: G(s) = 2 / ((s+1)(0.5s+1)(0.2s+1))
+# Imprint categorical palette (hybrid-v3 sort)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+COLOR_MAIN = IMPRINT_PALETTE[0]  # brand green — main Nyquist curve
+COLOR_MIRROR = IMPRINT_PALETTE[2]  # blue — negative-frequency mirror
+COLOR_CRITICAL = IMPRINT_PALETTE[4]  # matte red — critical point (semantic: danger)
+COLOR_PM = IMPRINT_PALETTE[2]  # blue — phase margin marker
+PM_LABEL_TEXT = COLOR_PM if THEME == "light" else INK_SOFT  # dark mode: blue on #242420 fails WCAG AA
+
+# Data — third-order system: G(s) = 2 / ((s+1)(0.5s+1)(0.2s+1))
 num = [2.0]
 den = np.polymul(np.polymul([1, 1], [0.5, 1]), [0.2, 1])
 system = signal.TransferFunction(num, den)
@@ -35,24 +44,48 @@ real_part = H.real
 imag_part = H.imag
 
 df = pd.DataFrame({"real": real_part, "imaginary": imag_part, "frequency": omega})
-
-# Mirror (negative frequencies) for complete Nyquist contour
 df_mirror = pd.DataFrame({"real": real_part, "imaginary": -imag_part, "frequency": -omega})
 
-# Unit circle
+# Unit circle reference
 theta = np.linspace(0, 2 * np.pi, 200)
 df_circle = pd.DataFrame({"real": np.cos(theta), "imaginary": np.sin(theta)})
 
 # Critical point (-1, 0)
 df_critical = pd.DataFrame({"real": [-1.0], "imaginary": [0.0]})
 
-# Gain margin line: from critical point to nearest point on curve where it crosses negative real axis
+# Gain margin: phase crossover — where imaginary=0 and real<0
 real_cross_mask = (imag_part[1:] * imag_part[:-1] < 0) & (real_part[:-1] < 0)
 cross_indices = np.where(real_cross_mask)[0]
 cross_idx = cross_indices[0] if len(cross_indices) > 0 else np.argmin(np.abs(imag_part[200:])) + 200
 df_gain_margin = pd.DataFrame({"x": [-1.0], "y": [0.0], "xend": [real_part[cross_idx]], "yend": [0.0]})
 
-# Arrow indicators along the curve showing direction of increasing frequency
+gain_margin_db = 20 * np.log10(1.0 / abs(real_part[cross_idx]))
+gm_mid_x = (-1.0 + real_part[cross_idx]) / 2
+df_gm_label = pd.DataFrame(
+    {
+        "real": [gm_mid_x],
+        "imaginary": [0.26],  # above the line to avoid crowding with critical point label
+        "label": [f"GM = {gain_margin_db:.1f} dB"],
+    }
+)
+
+# Phase margin: gain crossover — where |G(jω)| = 1
+magnitudes = np.abs(H)
+cross_gain_mask = (magnitudes[1:] - 1) * (magnitudes[:-1] - 1) < 0
+gain_cross_indices = np.where(cross_gain_mask)[0]
+if len(gain_cross_indices) > 0:
+    gc_idx = gain_cross_indices[0]
+    gc_angle = np.angle(H[gc_idx], deg=True)
+    phase_margin = 180 + gc_angle
+    df_pm_point = pd.DataFrame({"real": [H[gc_idx].real], "imaginary": [H[gc_idx].imag]})
+    df_pm_label = pd.DataFrame(
+        {"real": [H[gc_idx].real + 0.18], "imaginary": [H[gc_idx].imag - 0.20], "label": [f"PM = {phase_margin:.1f}°"]}
+    )
+else:
+    df_pm_point = None
+    df_pm_label = None
+
+# Direction arrows showing increasing frequency
 arrow_indices = [50, 150, 300]
 df_arrows = df.iloc[arrow_indices].copy()
 df_arrows_next = df.iloc[[i + 5 for i in arrow_indices]].copy()
@@ -65,65 +98,63 @@ df_segments = pd.DataFrame(
     }
 )
 
-# Frequency labels at key points
+# Frequency labels at key points along the curve
 label_indices = [0, 80, 200, 350]
-df_labels = df.iloc[label_indices].copy()
-df_labels["label"] = [f"ω={omega[i]:.2f}" if omega[i] < 10 else f"ω={omega[i]:.0f}" for i in label_indices]
-df_labels["nudge_x"] = [0.12, -0.18, -0.12, 0.12]
-df_labels["nudge_y"] = [0.10, -0.14, 0.12, 0.10]
-
-# Stability region highlight - shaded area around critical point
-stability_theta = np.linspace(0, 2 * np.pi, 100)
-stability_r = 0.15
-df_stability_zone = pd.DataFrame(
-    {"real": -1.0 + stability_r * np.cos(stability_theta), "imaginary": stability_r * np.sin(stability_theta)}
+df_labels_base = df.iloc[label_indices].copy()
+freq_labels = [f"ω={omega[i]:.2f}" if omega[i] < 10 else f"ω={omega[i]:.0f}" for i in label_indices]
+nudge_x = [0.18, -0.22, -0.18, 0.18]
+nudge_y = [0.14, -0.18, 0.16, 0.14]
+df_freq_labels = pd.DataFrame(
+    {
+        "real": df_labels_base["real"].values + np.array(nudge_x),
+        "imaginary": df_labels_base["imaginary"].values + np.array(nudge_y),
+        "label": freq_labels,
+    }
 )
 
-# Gain margin annotation
-gain_margin_db = 20 * np.log10(1.0 / abs(real_part[cross_idx]))
-df_gm_label = pd.DataFrame(
-    {"real": [(-1.0 + real_part[cross_idx]) / 2], "imaginary": [0.12], "label": [f"GM = {gain_margin_db:.1f} dB"]}
-)
+# Stability zone highlight around (-1, 0)
+stab_theta = np.linspace(0, 2 * np.pi, 100)
+df_stability_zone = pd.DataFrame({"real": -1.0 + 0.15 * np.cos(stab_theta), "imaginary": 0.15 * np.sin(stab_theta)})
 
-# Plot
+# Build plot
 plot = (
     ggplot()
-    # Stability zone highlight around critical point
-    + geom_polygon(aes(x="real", y="imaginary"), data=df_stability_zone, fill=COLOR_STABILITY, alpha=0.07)
-    # Unit circle
-    + geom_path(aes(x="real", y="imaginary"), data=df_circle, color=COLOR_UNIT_CIRCLE, size=0.6, linetype="dashed")
+    # Subtle stability-danger zone around critical point
+    + geom_polygon(aes(x="real", y="imaginary"), data=df_stability_zone, fill=COLOR_CRITICAL, alpha=0.08)
+    # Unit circle reference
+    + geom_path(aes(x="real", y="imaginary"), data=df_circle, color=INK_MUTED, size=0.5, linetype="dashed")
     # Gain margin indicator line
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=df_gain_margin,
-        color=COLOR_GAIN_MARGIN,
+        color=COLOR_CRITICAL,
         size=0.7,
         linetype="dotted",
     )
-    # Gain margin label
+    # GM label positioned above the line to avoid crowding
     + geom_label(
         aes(x="real", y="imaginary", label="label"),
         data=df_gm_label,
-        size=16,
+        size=4,
         color=COLOR_CRITICAL,
-        fill="#FDEDEC",
-        alpha=0.9,
+        fill=ELEVATED_BG,
+        alpha=0.93,
         label_padding=0.3,
         label_r=0.15,
         label_size=0.5,
         fontface="bold",
     )
-    # Mirror curve (negative frequencies)
+    # Mirror curve (negative frequencies) — dashed, less prominent
     + geom_path(
-        aes(x="real", y="imaginary"), data=df_mirror, color=COLOR_MIRROR, size=1.0, alpha=0.45, linetype="dashed"
+        aes(x="real", y="imaginary"), data=df_mirror, color=COLOR_MIRROR, size=0.8, alpha=0.38, linetype="dashed"
     )
-    # Main Nyquist curve with tooltips
+    # Main Nyquist curve with interactive tooltips
     + geom_path(
         aes(x="real", y="imaginary"),
         data=df,
-        color=COLOR_PRIMARY,
-        size=2.2,
-        tooltips=layer_tooltips()
+        color=COLOR_MAIN,
+        size=2.0,
+        tooltips=layer_tooltips()  # noqa: F405
         .format("real", ".3f")
         .format("imaginary", ".3f")
         .format("frequency", ".3f")
@@ -135,18 +166,30 @@ plot = (
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=df_segments,
-        color=COLOR_ARROW,
-        size=1.5,
-        arrow=arrow(length=14, type="closed"),
+        color=COLOR_MAIN,
+        size=1.4,
+        arrow=arrow(length=12, type="closed"),  # noqa: F405
     )
-    # Critical point (-1, 0) - prominent marker
-    + geom_point(aes(x="real", y="imaginary"), data=df_critical, color=COLOR_CRITICAL, size=11, shape=4, stroke=3.5)
-    # Critical point label
+    # Frequency labels along the curve
+    + geom_label(
+        aes(x="real", y="imaginary", label="label"),
+        data=df_freq_labels,
+        size=3,
+        color=INK_SOFT,
+        fill=ELEVATED_BG,
+        alpha=0.9,
+        label_padding=0.3,
+        label_r=0.2,
+        label_size=0.2,
+    )
+    # Critical point (-1, 0) — prominent X marker
+    + geom_point(aes(x="real", y="imaginary"), data=df_critical, color=COLOR_CRITICAL, size=10, shape=4, stroke=3.0)
+    # Critical point label — placed below to separate from GM label above
     + geom_text(
         aes(x="real", y="imaginary"),
-        data=pd.DataFrame({"real": [-0.72], "imaginary": [0.28]}),
-        label="(-1, 0)",
-        size=18,
+        data=pd.DataFrame({"real": [-0.80], "imaginary": [-0.24]}),
+        label="(−1, 0)",
+        size=4,
         color=COLOR_CRITICAL,
         fontface="bold",
     )
@@ -154,54 +197,57 @@ plot = (
     + geom_point(
         aes(x="real", y="imaginary"),
         data=pd.DataFrame({"real": [0.0], "imaginary": [0.0]}),
-        color="#7F8C8D",
-        size=4,
+        color=INK_MUTED,
+        size=3,
         shape=3,
-        stroke=2.0,
+        stroke=1.5,
     )
-    # Frequency annotations along curve
-    + geom_label(
-        aes(x="real", y="imaginary", label="label"),
-        data=pd.DataFrame(
-            {
-                "real": df_labels["real"].values + df_labels["nudge_x"].values,
-                "imaginary": df_labels["imaginary"].values + df_labels["nudge_y"].values,
-                "label": df_labels["label"].values,
-            }
-        ),
-        size=17,
-        color=COLOR_ANNOTATION,
-        fill="#F8F9F9",
-        alpha=0.9,
-        label_padding=0.35,
-        label_r=0.2,
-        label_size=0.3,
-    )
-    # Styling
     + labs(
         x="Re{G(jω)}",
         y="Im{G(jω)}",
-        title="nyquist-basic · letsplot · pyplots.ai",
-        subtitle="G(s) = 2 / [(s+1)(0.5s+1)(0.2s+1)]  —  Stable: curve does not encircle (-1, 0)",
+        title="nyquist-basic · python · letsplot · anyplot.ai",
+        subtitle="G(s) = 2 / [(s+1)(0.5s+1)(0.2s+1)]  —  Stable: curve does not encircle (−1, 0)",
     )
-    + coord_fixed(ratio=1)
-    + ggsize(1200, 1200)
-    + theme_minimal()
-    + theme(
-        axis_text=element_text(size=16, color="#566573"),
-        axis_title=element_text(size=22, color="#2C3E50", face="bold"),
-        plot_title=element_text(size=26, color="#1B2631", face="bold"),
-        plot_subtitle=element_text(size=16, color="#5D6D7E", face="italic"),
-        panel_grid_major=element_line(color="#EAECEE", size=0.2),
-        panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#FDFEFE", color="#FDFEFE"),
-        panel_background=element_rect(fill="#FFFFFF", color="#D5D8DC", size=0.3),
+    + coord_fixed(ratio=1)  # noqa: F405
+    + ggsize(600, 600)  # noqa: F405  → 2400 × 2400 px at scale=4
+    + theme_minimal()  # noqa: F405
+    + theme(  # noqa: F405
+        axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+        axis_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=16, color=INK),
+        plot_subtitle=element_text(size=10, color=INK_SOFT),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.12),  # noqa: F405
+        panel_grid_minor=element_blank(),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),
         axis_ticks=element_blank(),
         axis_ticks_length=0,
-        plot_margin=[40, 40, 25, 25],
+        plot_margin=[10, 20, 15, 15],
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT),
+        legend_title=element_text(color=INK),
     )
 )
 
-# Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+# Phase margin annotation (adds content to balance the canvas)
+if df_pm_point is not None:
+    plot = (
+        plot
+        + geom_point(aes(x="real", y="imaginary"), data=df_pm_point, color=COLOR_PM, size=7, shape=1, stroke=2.0)
+        + geom_label(
+            aes(x="real", y="imaginary", label="label"),
+            data=df_pm_label,
+            size=3.8,
+            color=PM_LABEL_TEXT,
+            fill=ELEVATED_BG,
+            alpha=0.93,
+            label_padding=0.3,
+            label_r=0.15,
+            label_size=0.4,
+            fontface="bold",
+        )
+    )
+
+# Save — theme-suffixed PNG + interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405
+ggsave(plot, f"plot-{THEME}.html", path=".")  # noqa: F405
