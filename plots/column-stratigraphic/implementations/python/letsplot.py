@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-15
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-06-17
 """
 # ruff: noqa: F405
 
@@ -13,6 +13,20 @@ from lets_plot import *  # noqa: F403
 
 
 LetsPlot.setup_html()
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — matte red (#AE3030) reserved as the unconformity anchor
+ACCENT = "#AE3030"  # Imprint semantic anchor — erosional discontinuity
+
+# Pattern ink overlays the saturated fills (constant in both themes)
+PATTERN_INK = "#1A1A17"
 
 # Data - synthetic sedimentary section with 10 layers (depth increasing downward)
 layers = pd.DataFrame(
@@ -62,17 +76,18 @@ layers["thickness"] = layers["bottom"] - layers["top"]
 layers["xmin"] = 0.0
 layers["xmax"] = 1.0
 
-# Lithology color palette (refined earth tones for geological context)
+# Lithology fills — Imprint palette (CVD-safe), red withheld for the unconformity.
+# Sandstone is the first categorical series → brand green #009E73.
 lithology_colors = {
-    "Sandstone": "#F2D16B",
-    "Shale": "#8C8C8C",
-    "Limestone": "#6AAED6",
-    "Siltstone": "#C08C5A",
-    "Conglomerate": "#D06A62",
+    "Sandstone": "#009E73",  # Imprint 1 — brand green (first series)
+    "Shale": "#C475FD",  # Imprint 2 — lavender
+    "Limestone": "#4467A3",  # Imprint 3 — blue
+    "Siltstone": "#BD8233",  # Imprint 4 — ochre (earth)
+    "Conglomerate": "#2ABCCD",  # Imprint 6 — cyan
 }
 lithology_order = ["Sandstone", "Shale", "Limestone", "Siltstone", "Conglomerate"]
 
-# Generate lithology pattern overlay data
+# Generate lithology pattern overlay data (FGDC/USGS-style textures)
 pattern_segments = []  # For line-based patterns (shale dashes, limestone bricks)
 pattern_points = []  # For dot-based patterns (sandstone stipple, conglomerate circles)
 
@@ -149,7 +164,7 @@ pattern_circle_df = pd.DataFrame([p for p in pattern_points if p["shape"] == "ci
 form_labels = []
 for _, row in layers.iterrows():
     mid_depth = (row["top"] + row["bottom"]) / 2
-    form_labels.append({"x": 1.08, "y": mid_depth, "label": row["formation"]})
+    form_labels.append({"x": 1.06, "y": mid_depth, "label": row["formation"]})
 form_df = pd.DataFrame(form_labels)
 
 # Age labels (left side) with bracket indicators
@@ -183,16 +198,15 @@ plot = (
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="top", ymax="bottom", fill="lithology"),
         data=layers,
-        color="#2C2C2C",
+        color=INK,
         size=1.0,
-        alpha=0.8,
         tooltips=layer_tooltips()
         .format("@top", ".0f")
         .format("@bottom", ".0f")
         .format("@thickness", ".0f")
         .title("@formation")
         .line("@lithology | @age")
-        .line("Depth: @top\u2013@bottom m")
+        .line("Depth: @top–@bottom m")
         .line("Thickness: @thickness m"),
     )
 )
@@ -202,30 +216,30 @@ if pattern_seg_df is not None and len(pattern_seg_df) > 0:
     plot = plot + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=pattern_seg_df,
-        color="#2A2A2A",
+        color=PATTERN_INK,
         size=0.6,
-        alpha=0.75,
+        alpha=0.55,
         show_legend=False,
     )
 
 if pattern_dot_df is not None and len(pattern_dot_df) > 0:
     plot = plot + geom_point(
-        aes(x="x", y="y"), data=pattern_dot_df, color="#4A3A10", size=1.8, alpha=0.7, shape=16, show_legend=False
+        aes(x="x", y="y"), data=pattern_dot_df, color=PATTERN_INK, size=1.8, alpha=0.55, shape=16, show_legend=False
     )
 
 if pattern_circle_df is not None and len(pattern_circle_df) > 0:
     plot = plot + geom_point(
-        aes(x="x", y="y"), data=pattern_circle_df, color="#5A2A2A", size=5.0, alpha=0.7, shape=1, show_legend=False
+        aes(x="x", y="y"), data=pattern_circle_df, color=PATTERN_INK, size=5.0, alpha=0.6, shape=1, show_legend=False
     )
 
-# Unconformity wavy line at 110m with label
-plot = plot + geom_line(aes(x="x", y="y"), data=wavy_df, color="#C0392B", size=2.0, show_legend=False)
-unconformity_label = pd.DataFrame({"x": [1.08], "y": [110], "label": ["Unconformity"]})
+# Unconformity wavy line at 110m with label (Imprint matte-red anchor)
+plot = plot + geom_line(aes(x="x", y="y"), data=wavy_df, color=ACCENT, size=2.0, show_legend=False)
+unconformity_label = pd.DataFrame({"x": [1.06], "y": [110], "label": ["Unconformity"]})
 plot = plot + geom_text(
     aes(x="x", y="y", label="label"),
     data=unconformity_label,
-    color="#C0392B",
-    size=13,
+    color=ACCENT,
+    size=6.5,
     fontface="bold",
     hjust=0,
     show_legend=False,
@@ -239,21 +253,24 @@ plot = plot + geom_segment(
     aes(x="x", y="y", xend="xend", yend="yend"),
     data=non_unconformity_boundaries,
     linetype="dashed",
-    color="#666666",
+    color=INK_MUTED,
     size=0.6,
     show_legend=False,
 )
 
 # Age brackets (left side)
 plot = plot + geom_segment(
-    aes(x="x", y="y", xend="xend", yend="yend"), data=bracket_df, color="#444444", size=0.6, show_legend=False
+    aes(x="x", y="y", xend="xend", yend="yend"), data=bracket_df, color=INK_SOFT, size=0.6, show_legend=False
 )
 
 # Formation labels (right side)
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=form_df, size=15, color="#2C2C2C", hjust=0)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=form_df, size=6, color=INK, hjust=0)
 
 # Age labels (left side)
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=age_df, size=15, color="#2C2C2C", fontface="italic")
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=age_df, size=6, color=INK_SOFT, fontface="italic")
+
+# Theme flavor follows the active theme
+flavor = flavor_high_contrast_light() if THEME == "light" else flavor_high_contrast_dark()
 
 # Scales and theme
 plot = (
@@ -261,43 +278,45 @@ plot = (
     + scale_fill_manual(values=lithology_colors, name="Lithology", limits=lithology_order)
     + scale_y_reverse()
     + labs(
-        title="column-stratigraphic \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Synthetic Mesozoic\u2013Cenozoic sedimentary section \u00b7 Triassic to Paleogene",
+        title="column-stratigraphic · python · letsplot · anyplot.ai",
+        subtitle="Synthetic Mesozoic–Cenozoic sedimentary section · Triassic to Paleogene",
         y="Depth (m)",
         x="",
     )
-    + scale_x_continuous(limits=[-0.28, 1.52])
-    + flavor_high_contrast_light()
+    + scale_x_continuous(limits=[-0.30, 1.46])
+    + flavor
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#1A1A1A", margin=[0, 0, 12, 0]),
-        plot_subtitle=element_text(size=16, color="#666666", face="italic"),
-        axis_title_y=element_text(size=20, color="#333333", margin=[0, 8, 0, 0]),
+        plot_title=element_text(size=16, face="bold", color=INK, margin=[0, 0, 10, 0]),
+        plot_subtitle=element_text(size=11, color=INK_SOFT, face="italic"),
+        axis_title_y=element_text(size=12, color=INK, margin=[0, 8, 0, 0]),
         axis_title_x=element_blank(),
-        axis_text_y=element_text(size=16, color="#444444"),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
         axis_text_x=element_blank(),
         axis_ticks_x=element_blank(),
-        axis_line_y=element_line(size=0.8, color="#333333"),
-        legend_title=element_text(size=16, face="bold"),
-        legend_text=element_text(size=14),
+        axis_line_y=element_line(size=0.8, color=INK_SOFT),
+        legend_title=element_text(size=11, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="bottom",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major_x=element_blank(),
         panel_grid_minor_x=element_blank(),
-        panel_grid_major_y=element_line(size=0.2, color="#D8D8D8"),
+        panel_grid_major_y=element_line(size=0.3, color=INK_SOFT),
         panel_grid_minor_y=element_blank(),
-        plot_background=element_rect(color="white", fill="white"),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(color=PAGE_BG, fill=PAGE_BG),
         plot_margin=[16, 16, 16, 16],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+# Save (PNG + interactive HTML), theme-suffixed
+ggsave(plot, f"plot-{THEME}.png", scale=4)
+ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images to current directory
-if os.path.exists("lets-plot-images/plot.png"):
-    shutil.move("lets-plot-images/plot.png", "plot.png")
-if os.path.exists("lets-plot-images/plot.html"):
-    shutil.move("lets-plot-images/plot.html", "plot.html")
+for ext in ("png", "html"):
+    src = f"lets-plot-images/plot-{THEME}.{ext}"
+    if os.path.exists(src):
+        shutil.move(src, f"plot-{THEME}.{ext}")
 if os.path.exists("lets-plot-images") and not os.listdir("lets-plot-images"):
     os.rmdir("lets-plot-images")
