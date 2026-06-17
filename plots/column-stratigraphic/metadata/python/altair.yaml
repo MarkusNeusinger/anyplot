@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: column-stratigraphic
 created: '2026-03-15T22:59:28Z'
-updated: '2026-06-17T01:01:07Z'
+updated: '2026-06-17T01:11:43Z'
 generated_by: claude-opus
 workflow_run: 27658120878
 issue: 4573
@@ -12,64 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-st
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'First categorical series correctly anchored to Imprint green #009E73 (Sandstone);
-    full Imprint palette used in canonical order with red #AE3030 deliberately reserved
-    as the semantic anchor for unconformity markers'
-  - 'Theme adaptation is flawless — data fill colors are pixel-identical between light
-    and dark, only chrome (page background, ink, grid, legend frame) flips; warm #FAF8F1
-    / #1A1A17 backgrounds correct in both'
-  - 'Strong stratigraphic storytelling: depth axis increases downward per borehole
-    convention, age-period brackets on the left, formation names on the right, italic
-    thickness annotations far-right, and red dashed unconformity rules at the two
-    major age boundaries create clear visual hierarchy'
-  - Canvas is exactly 3200x1800 via PAD-only-to-target (no crop), honoring the altair.md
-    hard rule
-  - Clean KISS module-level code, deterministic hardcoded data, all imports used,
-    real Altair tooltips (no fake interactivity), idiomatic layered composition with
-    transform_calculate
+  - 'Correct stratigraphic-column plot type: vertical depth axis reversed (increasing
+    downward), 10 stacked lithology layers with solid boundary lines — all spec features
+    present.'
+  - Five visually distinct fill textures (sandstone dots, shale em-dashes, limestone
+    brick-like horizontal dashes, siltstone short dashes, conglomerate circles) tiled
+    across each layer, approximating FGDC/USGS conventions.
+  - 'Clean lane-based layout: age-period brackets + italic labels on the far left,
+    formation names to the right of the column, italic thickness annotations in a
+    far-right lane — no collisions between side labels.'
+  - 'Imprint palette used correctly: first series (Sandstone) = #009E73, lithologies
+    use positions 1,2,3,4,6 with position 5 (matte red #AE3030) reserved semantically
+    for the dashed unconformity markers.'
+  - 'Theme-adaptive chrome is correct in both renders — warm off-white #FAF8F1 (light)
+    / warm near-black #1A1A17 (dark); data fill colors identical across themes, only
+    chrome flips. Dark glyph texture reads well on every mid-tone fill in both themes.'
+  - Realistic, neutral data (Grand Canyon sedimentary section, Cambrian–Permian) with
+    sensible depth scale (0–200 m) and varied thicknesses (10–35 m).
+  - KISS module-level code, deterministic (no RNG), clean imports, real tooltips (interactive
+    lib), saves plot-{THEME}.png + .html with pad-only-to-3200x1800 (no crop).
   weaknesses:
-  - 'Left-side age labels overlap the depth-axis tick numbers: the long italic period
-    names collide with the numerals — Pennsylvanian over 140, Mississippian over 160,
-    Devonian over 180. Push the age-label lane further left (lower x_pos / widen left
-    padding) or shrink the age fontsize so the period names clear the depth scale
-    (VQ-02).'
-  - Lithology pattern symbols only fill a narrow central band of each layer rather
-    than tiling the full rectangle width — the spec calls for a distinct fill pattern/texture
-    per lithology. The texture reads as a small motif rather than a true fill (VQ-03/SC-02).
-    Consider tiling the pattern across more of the column width.
-  - Unconformity text labels sit slightly on top of the conglomerate circle motif
-    / layer content near depth 120 — minor crowding (VQ-02).
+  - 'VQ-02: The red ''Unconformity'' label at depth ~120 overlaps the conglomerate
+    (cyan) layer''s circle texture glyphs and sits on the layer boundary line. Readable
+    but cluttered — nudge the label up (larger negative dy) or shift it into a clearer
+    horizontal lane so it doesn''t collide with the tiled circles and the boundary
+    rule.'
+  - 'VQ-01: Age-period labels (Permian, Pennsylvanian, Mississippian, Devonian, Cambrian)
+    at fontSize=10 italic are a touch small relative to the formation labels (12pt);
+    legible at full size but tight when scaled to ~400 px. Consider 11pt.'
+  - 'DE-03: Only the second unconformity (depth 170, Mississippian/Devonian boundary)
+    draws attention through red; the storytelling is solid but the focal hierarchy
+    could be sharpened (e.g. a faint shaded band at each unconformity to signal missing
+    time).'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct light surface. Legend frame on elevated #FFFDF6.
-      Chrome: dark title "column-stratigraphic · python · altair · anyplot.ai" with grey subtitle
-        "Grand Canyon Sedimentary Section — Cambrian to Permian". Depth axis "Depth (m)" with ticks
-        0–200 in dark-soft ink, all readable. Formation names (Cedar Mesa Fm … Muav Fm) in dark bold
-        on the right, italic grey thickness annotations (30 m … 20 m) far-right. Italic age-period
-        labels (Permian, Pennsylvanian, Mississippian, Devonian, Cambrian) on the left.
-      Data: 10 stacked rectangles colored by lithology — Sandstone = Imprint green #009E73 (first
-        series), Shale = lavender #C475FD, Limestone = blue #4467A3, Siltstone = ochre #BD8233,
-        Conglomerate = cyan #2ABCCD. Dark text pattern motifs overlaid; red dashed unconformity rules
-        at depths 120 and 170. Layer boundaries are solid ink strokes.
-      Legibility verdict: PASS — all chrome readable. NOTE: long age-period labels (Pennsylvanian,
-        Mississippian, Devonian) overlap the depth tick numerals 140/160/180 on the left.
+      Background: warm off-white (~#FAF8F1), correct light surface.
+      Chrome: title "column-stratigraphic · python · altair · anyplot.ai" + subtitle "Grand Canyon Sedimentary Section — Cambrian to Permian" in dark ink, fully readable. Left "Depth (m)" axis with ticks 0–200 increasing downward (dark labels). Age-period italic labels and far-left bracket readable. Formation names (Cedar Mesa Fm … Muav Fm) in bold dark ink to the right; italic muted thickness "30 m" etc. in far-right lane. Bottom legend (Sandstone/Shale/Limestone/Siltstone/Conglomerate) on elevated cream frame. All text readable.
+      Data: 10 stacked rectangles — Sandstone #009E73 (green), Shale #C475FD (lavender), Limestone #4467A3 (blue), Siltstone #BD8233 (ochre), Conglomerate #2ABCCD (cyan). Each filled with a distinct dark-ink tiled texture glyph. First series Sandstone is #009E73. Two red dashed unconformity rules with "Unconformity" labels.
+      Legibility verdict: PASS (minor clutter: red "Unconformity" label overlaps cyan circle texture + boundary line).
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct dark surface; legend frame on #242420.
-      Chrome: light/off-white title, light-grey subtitle, light-soft depth ticks and axis title,
-        off-white formation names, grey thickness annotations, light italic age labels — all clearly
-        readable, NO dark-on-dark failures.
-      Data: lithology fill colors are pixel-identical to the light render (green/lavender/blue/ochre/
-        cyan), confirming only chrome flipped. Red #AE3030 unconformity dashes remain visible. Brand
-        green #009E73 reads well on the dark surface.
-      Legibility verdict: PASS — same age-label/tick overlap on the left as the light render; not a
-        legibility failure but a layout collision to fix.
+      Background: warm near-black (~#1A1A17), correct dark surface.
+      Chrome: title/subtitle in light ink, axis labels/ticks light, formation names light, age labels light italic — all clearly readable, NO dark-on-dark failures. Legend on dark elevated frame with light labels.
+      Data: identical fill colors to the light render (green/lavender/blue/ochre/cyan); only chrome flipped. Dark-ink texture glyphs still read on each mid-tone fill. Brand green #009E73 visible. Red unconformity dashed rules visible.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -77,48 +69,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Fonts explicitly set, readable in both themes; minor crowding on
-          left lane
+        comment: All text readable in both themes; age labels at 10pt slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Age-period labels overlap depth tick numerals 140/160/180 on the
-          left
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Patterns visible but only fill a central band, not the full rect
-          width
+        comment: Red 'Unconformity' label overlaps conglomerate circle texture and
+          boundary line.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Layers, textures and boundaries clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette, CVD-safe, good contrast
+        comment: Imprint palette CVD-safe; red unconformity is dashed + labeled, not
+          sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800, nothing clipped; left lane crowded
+        comment: Canvas gate passed (3200x1800); good proportions, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth (m) with units; x-axis intentionally suppressed
+        comment: Depth (m) with units; correct mandated title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint order, correct theme backgrounds'
+        comment: 'First series #009E73; Imprint positions 1,2,3,4,6; backgrounds theme-correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -126,19 +117,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom Imprint palette, intentional multi-lane layout, subtitle
+        comment: Custom textures, age brackets, unconformity markers — real design
+          work.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: x-axis suppressed, subtle grid, framed legend, generous whitespace
+        comment: No view spines, subtle grid (opacity 0.15), generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Focal column, age brackets, red unconformity emphasis
+        comment: Clear focal column with red unconformity emphasis; hierarchy could
+          be sharper.
     spec_compliance:
       score: 15
       max: 15
@@ -148,49 +141,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical stratigraphic column
+        comment: Vertical stratigraphic column.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 lithologies, formations, ages, thickness scale, unconformities,
-          boundaries
+        comment: Patterns, formations, ages, thickness scale, boundaries, unconformities
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth on y, increasing downward via reversed scale
+        comment: Depth reversed (downward); all 10 layers shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title + descriptive prefix subtitle; legend labels
-          match
+        comment: Correct title format; legend labels match lithologies.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers all aspects; pattern fill is partial
+        comment: Varied thickness, 5 lithologies, ages, unconformities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Grand Canyon section, plausible and neutral
+        comment: Grand Canyon section, plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Depths 0-200 m, thicknesses 10-35 m
+        comment: 0–200 m depths, 10–35 m thicknesses.
     code_quality:
       score: 10
       max: 10
@@ -200,33 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Module-level, no functions/classes
+        comment: Module-level, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Deterministic, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL all used
+        comment: os, altair, pandas, PIL all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Real tooltips, no fake UI
+        comment: Appropriate; real tooltips, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + .html
+        comment: Saves plot-{THEME}.png + .html, pad-only no crop.
     library_features:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,26 +226,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Layered composition, transform_calculate, encodings
+        comment: Layered charts via +, declarative encodings, transform_calculate.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: Multi-layer +, real tooltips, calculated lanes
+        comment: Layering and tooltips used; texture via tiled text marks is creative
+          but standard marks.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - annotations
-  - layer-composition
-  - html-export
-  - hover-tooltips
+  - layered-charts
+  - text-annotations
+  - categorical-color
+  - reference-lines
+  - tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - publication-ready
-  - edge-highlighting
+  - theme-adaptive
+  - custom-palette
+  - texture-fill
