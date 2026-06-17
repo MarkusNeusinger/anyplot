@@ -27,8 +27,11 @@ const IMPRINT_PALETTE = [
     colorant"#99B314",
 ]
 
+# Imprint sequential colormap: brand green → blue (for continuous frequency encoding)
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
+
 # Frequency response: G(s) = 1 / (s(s+1)(0.5s+1))
-# Phase crossover at ω_pc = √2 rad/s → G = -1/3 (gain margin = 3, stable)
+# Phase crossover at ω_pc = √2 rad/s → G(jω_pc) = -1/3 → gain margin = 3
 n_points = 800
 ω = 10 .^ range(log10(0.04), log10(100.0), length=n_points)
 G_jω = [1.0 / (im * w * (1 + im * w) * (1 + 0.5 * im * w)) for w in ω]
@@ -36,20 +39,26 @@ G_jω = [1.0 / (im * w * (1 + im * w) * (1 + 0.5 * im * w)) for w in ω]
 re_vals = real.(G_jω)
 im_vals = imag.(G_jω)
 
-# Locate gain crossover (|G|=1) and phase crossover (phase=-180°)
+# Gain crossover (|G| = 1) and phase crossover (phase = -180°)
 mag = abs.(G_jω)
 gc_idx = argmin(abs.(mag .- 1.0))
 ω_gc_val = ω[gc_idx]
 G_gc = G_jω[gc_idx]
+phase_margin_deg = 180.0 + angle(G_gc) * (180.0 / π)
 
 ph_deg = angle.(G_jω) .* (180.0 / π)
 pc_idx = argmin(abs.(ph_deg .+ 180.0))
-G_pc  = G_jω[pc_idx]
+G_pc   = G_jω[pc_idx]
+gain_margin = round(1.0 / abs(G_pc); digits=1)
+
+# Log-frequency for continuous color encoding along the Nyquist curve
+log_ω = log10.(ω)
+log_ω_min, log_ω_max = extrema(log_ω)
 
 # Unit circle
 θ_circle = range(0.0, 2π, length=300)
 
-# Figure — square canvas for 1:1 aspect (2400×2400 output)
+# Figure — square canvas for 1:1 aspect (2400×2400 output at px_per_unit=2)
 fig = Figure(
     size            = (1200, 1200),
     fontsize        = 14,
@@ -77,6 +86,8 @@ ax = Axis(
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
     backgroundcolor    = PAGE_BG,
@@ -101,15 +112,18 @@ lines!(ax, cos.(θ_circle), sin.(θ_circle);
     label     = "Unit circle",
 )
 
-# Nyquist curve (positive frequencies, ω: 0→∞)
+# Nyquist curve — colored by log₁₀(ω) using Imprint sequential colormap
+# Low frequency (ω → 0) renders in brand green; high frequency in blue
 lines!(ax, re_vals, im_vals;
-    color     = IMPRINT_PALETTE[1],
-    linewidth = 2.8,
-    label     = "G(jω) = 1 / [s(s+1)(0.5s+1)]",
+    color      = log_ω,
+    colormap   = ANYPLOT_SEQ,
+    colorrange = (log_ω_min, log_ω_max),
+    linewidth  = 2.8,
+    label      = "G(jω) = 1 / [s(s+1)(0.5s+1)]",
 )
 
 # Direction arrows showing increasing-frequency direction
-for idx in [60, 160, 290, 430, 580]
+for idx in [80, 260, 460]
     if idx + 4 <= length(re_vals)
         dx = re_vals[idx + 4] - re_vals[idx]
         dy = im_vals[idx + 4] - im_vals[idx]
@@ -121,8 +135,8 @@ for idx in [60, 160, 290, 430, 580]
                 [re_vals[idx]], [im_vals[idx]],
                 [u], [v];
                 arrowsize  = 10,
-                arrowcolor = IMPRINT_PALETTE[1],
-                linecolor  = IMPRINT_PALETTE[1],
+                arrowcolor = INK_SOFT,
+                linecolor  = INK_SOFT,
                 linewidth  = 1.5,
             )
         end
@@ -158,21 +172,39 @@ scatter!(ax, [-1.0], [0.0];
     label       = "Critical point (-1, 0)",
 )
 
+# Gain margin: dotted line from phase crossover point to critical point
+lines!(ax, [real(G_pc), -1.0], [0.0, 0.0];
+    color     = (INK_SOFT, 0.45),
+    linewidth = 1.8,
+    linestyle = :dot,
+)
+text!(ax, (real(G_pc) + (-1.0)) / 2, 0.13;
+    text     = "GM = $(gain_margin)",
+    color    = INK_SOFT,
+    fontsize = 11,
+    align    = (:center, :bottom),
+)
+
 # Frequency annotations
 text!(ax, real(G_pc) + 0.07, imag(G_pc) + 0.16;
     text     = "ω = √2 rad/s",
     color    = IMPRINT_PALETTE[4],
     fontsize = 11,
 )
-text!(ax, -1.0 + 0.07, 0.18;
+text!(ax, -1.0 + 0.07, 0.22;
     text     = "(-1, 0)",
     color    = IMPRINT_PALETTE[5],
     fontsize = 11,
 )
+text!(ax, real(G_gc) - 0.10, imag(G_gc) - 0.28;
+    text     = "PM ≈ $(round(Int, phase_margin_deg))°",
+    color    = IMPRINT_PALETTE[6],
+    fontsize = 11,
+    align    = (:right, :top),
+)
 
-# Clip view to the interesting region (avoids ω→0 singularity)
 xlims!(ax, -2.2, 1.5)
-ylims!(ax, -3.5, 3.5)
+ylims!(ax, -4.0, 2.0)
 
 axislegend(ax;
     position        = :rt,
@@ -181,6 +213,29 @@ axislegend(ax;
     labelsize       = 11,
     labelcolor      = INK,
     rowgap          = 4,
+)
+
+# Colorbar: maps log₁₀(ω) to the Imprint sequential gradient — Makie layout element
+Colorbar(fig[1, 2];
+    colormap       = ANYPLOT_SEQ,
+    limits         = (log_ω_min, log_ω_max),
+    label          = "log₁₀(ω)  [rad/s]",
+    labelsize      = 13,
+    labelcolor     = INK,
+    ticklabelsize  = 11,
+    ticklabelcolor = INK_SOFT,
+    tickcolor      = INK_SOFT,
+    width          = 18,
+)
+
+# Stability summary — Makie Label layout element below the plot
+stability_str = "System: STABLE  ·  Gain Margin = $(gain_margin)  ·  Phase Margin ≈ $(round(Int, phase_margin_deg))°"
+Label(fig[2, 1:2], stability_str;
+    fontsize  = 12,
+    color     = INK_SOFT,
+    halign    = :left,
+    tellwidth = false,
+    padding   = (8, 0, 4, 4),
 )
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
