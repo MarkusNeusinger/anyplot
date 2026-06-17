@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: chord-basic
 created: '2026-06-17T01:36:51Z'
-updated: '2026-06-17T01:40:41Z'
+updated: '2026-06-17T01:49:04Z'
 generated_by: claude-opus
 workflow_run: 27659672820
 issue: 858
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Genuine, well-engineered chord diagram hand-built with matplotlib Path/PathPatch
-    bezier ribbons and Wedge arcs — outer arcs are proportional to each continent's
-    total outgoing flow and ribbon widths are proportional to per-direction flow,
-    exactly as a chord diagram should behave.
-  - 'Imprint palette applied correctly: first entity (Africa) is brand green #009E73
-    and the remaining continents follow canonical order (lavender, blue, ochre, red,
-    cyan); identical data colors across light and dark, only chrome flips.'
-  - 'Theme-adaptive chrome is correct — warm off-white #FAF8F1 / warm near-black #1A1A17
-    backgrounds, ink-colored title and continent labels readable in both renders with
-    no dark-on-dark failure.'
-  - Square 2400x2400 canvas is the right choice for a radial/symmetric chart and matches
-    the gate exactly; bbox_inches left default.
-  - Title follows mandated format with descriptive prefix and uses the length-aware
-    fontsize formula to avoid overflow.
-  - 'Clean KISS script: flat top-level code, deterministic hardcoded data (no seed
-    needed), only used imports, alpha=0.72 ribbons handle center overplotting well.'
+  - Authentic chord diagram built from scratch with matplotlib Path/PathPatch ribbons
+    and Wedge arcs — arc length encodes each continent's total outgoing flow and ribbon
+    width at each end encodes the directional flow, exactly matching the spec's 'width
+    proportional to value' and bidirectional requirements.
+  - 'Imprint palette applied in canonical order with Africa (first entity) correctly
+    = #009E73; each of the 6 continents gets a distinct, CVD-safe hue.'
+  - 'Theme adaptation is flawless: light render on #FAF8F1, dark render on #1A1A17,
+    identical data colors across both, all text remains fully legible (no dark-on-dark).'
+  - Strong data storytelling — the largest bidirectional corridor (Asia <-> Europe,
+    320k/yr) is highlighted with an ink edge + higher alpha and called out in a top-left
+    annotation, giving the busy diagram a clear focal point.
+  - 'Smart use of the square canvas: the inscribed circle leaves corners free, which
+    are used for the focal-insight annotation and the flow-magnitude scale note instead
+    of wasted whitespace.'
+  - Exact 2400x2400 canvas, no bbox_inches='tight', clean linear KISS script with
+    deterministic hardcoded data and no unused imports.
   weaknesses:
-  - Bidirectional flows are merged into a single asymmetric ribbon colored by the
-    dominant direction's source, rather than two separate chords as the spec note
-    literally requests ('both directions should be visible as separate chords'). This
-    is the standard d3-style chord convention and reads cleanly, but it does not surface
-    each direction independently.
-  - 'Library mastery is inherently limited: seaborn is used only for set_theme/set_palette
-    while all the actual drawing is raw matplotlib patches — unavoidable since seaborn
-    has no chord primitive, but it means little idiomatic seaborn or seaborn-distinctive
-    feature usage.'
-  - No legend or value scale — continent identity comes only from the ring labels
-    and there is no indication of the flow magnitude scale (e.g. thousands/year),
-    so absolute values are not recoverable from the static image.
+  - 'Library Mastery is inherently low for this spec: seaborn has no native chord
+    primitive, so the diagram is hand-built with matplotlib patches and seaborn only
+    supplies set_theme/set_palette. This is the correct and honest approach, but it
+    limits LM-01/LM-02 credit.'
+  - Near the top of the circle (around the small Oceania arc) several thin crossing
+    ribbons bunch together and are hard to trace individually — inherent to chord
+    diagrams at this density, but the busiest region of the chart.
+  - No legend or per-ribbon value labels for non-focal corridors; exact flows for
+    pairs other than the highlighted one must be inferred from ribbon width (acceptable
+    for a static chord, and tooltips are correctly omitted rather than faked per AR-08).
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct — not pure white.
-      Chrome: title "Global Migration Flows · chord-basic · python · seaborn · anyplot.ai" in dark ink at top, fully visible, not clipped. Six continent labels (Africa, Asia, Europe, N. America, S. America, Oceania) in dark ink positioned outside the ring — all readable, none clipped at canvas edges.
-      Data: outer ring arcs colored Africa=#009E73 (green), Asia=#C475FD (lavender), Europe=#4467A3 (blue), N. America=#BD8233 (ochre), S. America=#AE3030 (red), Oceania=#2ABCCD (cyan). First series is brand green. Ribbons connect continent pairs with width proportional to flow; alpha~0.72 keeps the center tangle legible.
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: title "Global Migration Flows · chord-basic · python · seaborn · anyplot.ai" in dark ink across the top, fully readable. Six continent labels (Africa, Asia, Europe, N. America, S. America, Oceania) sit outside the ring in dark ink, all readable. Top-left annotation "Largest corridor / Asia <-> Europe: 320k / year" and bottom-left scale note both legible. No overlap of text.
+      Data: 6 distinct Imprint hues — Africa green (#009E73, first series), Asia lavender, Europe blue, N. America ochre, S. America matte red, Oceania cyan. Outer ring arcs sized by total outgoing flow; ribbons connect pairs with width proportional to flow. Asia<->Europe ribbon highlighted with ink edge + higher opacity as the focal corridor.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct — not pure black.
-      Chrome: title and continent labels in light ink (#F0EFE8), all clearly readable against the dark surface. No dark-on-dark failure.
-      Data: ribbon and ring colors are identical to the light render — only the background and text color flipped. Brand green and all other hues remain visible on the dark surface.
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: title, continent labels, and both corner annotations render in light ink (#F0EFE8 / soft), all clearly readable — no dark-on-dark failures.
+      Data: identical hues to the light render (only chrome flipped). Brand green for Africa still vivid; matte red, blue, ochre, lavender, cyan all hold their identity. Focal Asia<->Europe ribbon highlighted identically.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,48 +64,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and labels explicitly sized and readable in both themes; length-aware
-          title fontsize prevents overflow.
+        comment: Title, labels, annotations readable in both themes; fontsizes explicitly
+          set and title-length-scaled.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlap; center ribbon crossing is inherent to chord diagrams
-          and handled with alpha.
+        comment: No text overlap; thin ribbons bunch near Oceania but that is data
+          density, not text collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Ribbons and arcs clearly visible; alpha 0.72 appropriate for overlap.
+        comment: Ribbons + arcs visible, focal corridor emphasized; non-focal ribbons
+          recede via alpha (intentional).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette.
+        comment: Imprint palette is CVD-safe; no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square, balanced, nothing cut off.
+        comment: Exact 2400x2400; corners used well; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Chord has no axes; descriptive title and per-entity ring labels present.
+        comment: No axes for chord; title descriptive, units given in annotation.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+        comment: 'First entity #009E73; Imprint canonical order; correct theme backgrounds
           both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -115,23 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Hand-built proportional chord geometry with bezier ribbons — well
-          above generic defaults.
+        comment: Hand-built chord with focal highlight and intentional hierarchy —
+          well above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal chrome (axis off), subtle page-bg edge strokes separate arcs/ribbons
-          cleanly.
+        comment: Axes off, generous whitespace, subtle alpha on receding ribbons.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear radial structure; no single highlighted focal flow.
+        comment: Clear focal corridor + corner annotations guide the viewer.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram.
+        comment: Genuine chord diagram.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Proportional widths and distinct per-entity colors present; bidirectional
-          flows merged into one ribbon rather than separate chords.
+        comment: Distinct entity colors, width proportional to flow, bidirectional
+          flows as separate ribbon ends.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value mapped correctly to arcs and ribbon widths.
+        comment: Flow matrix mapped to arc/sub-arc spans correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; ring labels
-          serve entity identification.
+        comment: Title matches required format with descriptive prefix; ring acts
+          as color key.
     data_quality:
       score: 15
       max: 15
@@ -169,13 +167,14 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows arcs, ribbons, proportional widths, and bidirectional structure.
+        comment: Total-flow arcs, directional ribbon widths, bidirectional pairs all
+          shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration flows between 6 continents — plausible and neutral.
+        comment: Inter-continental migration flows — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -191,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,15 +208,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clear geometry code, no fake UI.
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, default bbox_inches.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'.
     library_features:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -225,14 +224,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: seaborn used only for theme/palette; drawing is raw matplotlib (unavoidable
-          for chord).
+        comment: Uses sns.set_theme/set_palette; chord itself necessarily built on
+          matplotlib patches (seaborn has no chord primitive).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: Bezier Path ribbons and Wedge arcs are matplotlib, not seaborn-distinctive.
+        passed: false
+        comment: No seaborn-distinctive features — unavoidable for a chord in this
+          library.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -248,3 +248,4 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
+  - publication-ready
