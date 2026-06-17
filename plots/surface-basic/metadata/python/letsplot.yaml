@@ -2,12 +2,12 @@ library: letsplot
 language: python
 specification_id: surface-basic
 created: '2025-12-23T22:01:09Z'
-updated: '2026-05-05T17:13:12Z'
-generated_by: claude-haiku
-workflow_run: 25390256203
+updated: '2026-06-17T01:33:29Z'
+generated_by: claude-sonnet
+workflow_run: 27658906283
 issue: 1013
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.13
+library_version: 4.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/surface-basic/python/letsplot/plot-light.html
@@ -15,109 +15,138 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/surface-b
 quality_score: 88
 review:
   strengths:
-  - 'Perfect visual quality: all text legibility, layout, and palette compliance checks
-    pass'
-  - 'Complete spec compliance: correct 3D surface type, all required features present,
-    proper axis labels and colorbar'
-  - 'Excellent code quality: clean structure, proper seeding, idiomatic letsplot usage
-    with ggsave scale parameter'
-  - 'Strong data quality: mathematically interesting example (sin·cos surface) with
-    full feature coverage and realistic scale'
-  - 'Flawless theme adaptation: both light and dark renders are fully readable with
-    identical data colors and proper chrome colors'
+  - Creative 3D surface simulation using painter's algorithm and 2D projection — impressive
+    given letsplot's lack of native 3D support, and the visual result is convincing
+    in both themes
+  - Imprint diverging colormap (`imprint_div`) correctly applied with theme-adaptive
+    midpoint (off-white in light, near-black in dark), producing the correct surface
+    appearance in both renders
+  - 'Full theme-adaptive chrome: all six chrome tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, DIV_MID) correctly branched on ANYPLOT_THEME, with zero dark-on-dark
+    or light-on-light failures'
+  - Peak and valley annotations add guided data storytelling — viewer immediately
+    locates z≈+1 and z≈−1 extrema without searching
+  - All font sizes explicitly set (plot_title=16, axis_title=12, axis_text=10, legend_text=10,
+    legend_title=12, geom_text size=3.5mm) with well-proportioned result at 3200×1800
+    px
+  - Clean, linear code structure with no functions or classes; painter's algorithm
+    implementation is well-organized with clear comments; zip(strict=True) is a nice
+    Pythonic safety touch
   weaknesses:
-  - 'Design Excellence is moderate: while aesthetically competent, the implementation
-    uses standard viridis colormap and library defaults rather than custom palette
-    choices or exceptional visual refinement'
+  - Annotation text (geom_text size=3.5mm) resolves to ~53px in the 3200×1800 export
+    — readable but slightly small for annotations that carry key insight (peak z≈+1,
+    valley z≈−1); increase to size=4.5 or 5 for better prominence
+  - '3D rotation not supported: letsplot outputs a fixed-angle 2D projection; the
+    spec asks interactive libraries to ''enable rotation to explore the surface from
+    different angles'' — the HTML file has hover tooltips but no rotation (inherent
+    letsplot limitation; acceptable but worth noting)'
+  - 'DE-01 ceiling: the aesthetic is clean and above defaults but not yet FiveThirtyEight-level;
+    could benefit from a subtle shading layer or vignette on the projection edges
+    to strengthen perceived depth, or a brief subtitle note explaining the math function'
+  - LM-02 distinctive features are present (layer_tooltips with custom .line() format,
+    HTML export) but the core rendering technique (geom_polygon + painter's algorithm)
+    is transferable to plotnine without modification — a more letsplot-native approach
+    would push LM-02 higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with good definition against data elements
-      Chrome: Title "surface-basic · letsplot · anyplot.ai" in dark text (size 24pt); axis labels "X (projected)" and "Z (height)" in dark text (size 20pt); tick labels in soft gray (#4A4A44, size 16pt) — all clearly readable. Legend on right showing "Z Value" scale.
-      Data: 3D surface rendered with viridis colormap (yellow peaks → dark blue valleys). Polygon edges (size 0.2) provide subtle definition. Color gradient is smooth and perceptually clear.
-      Legibility verdict: PASS — All text readable, strong contrast, no dark-on-light issues.
+      Background: Warm off-white (#FAF8F1) — clearly visible as a cream surface, not pure white.
+      Chrome: Title "surface-basic · python · letsplot · anyplot.ai" at top-left in dark ink (#1A1A17), occupying ~65% of plot width. Y-axis label "Z (height)" in dark ink, X-axis label "X (projected)" in dark ink. Tick labels in secondary ink (#4A4A44), ranging -1.5 to 1.5 on Y, -4 to 4 on X. All text readable against light background. Legend titled "Z Value" with color gradient strip on right side, legible.
+      Data: 3D surface simulation of sin(x)*cos(y) via painter's algorithm. Blue (#4467A3) at peaks (z≈+1, upper-right), transitioning through off-white midpoint to matte-red (#AE3030) at valleys (z≈−1, front-left). Polygon edges rendered in #4A4A44 at size=0.15, providing subtle depth grid. Annotations "peak  z ≈ +1" and "valley  z ≈ −1" visible in dark ink.
+      Legibility verdict: PASS — all text clearly readable; no light-on-light failures detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with proper definition
-      Chrome: Title and axis labels in light text (#F0EFE8) — clearly visible against dark background. Tick labels in soft light gray (#B8B7B0) — no dark-on-dark failures. Legend background is darker (theme-adapted).
-      Data: Viridis colors appear identical to light render (yellow peaks, dark blue valleys). Polygon edges provide consistent definition. 3D projection is equally clear.
-      Legibility verdict: PASS — All text readable in light colors, data colors match light render exactly, no theme-adaptation failures.
+      Background: Warm near-black (#1A1A17) — clearly visible as a dark warm surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), axis labels in light cream, tick labels in secondary light (#B8B7B0). Legend box styled with #242420 fill and #B8B7B0 border. Polygon edges rendered in #B8B7B0 (light in dark mode), providing visible depth grid. All chrome elements readable against dark background; no dark-on-dark text failures detected.
+      Data: Identical data colors to light render — blue (#4467A3) at peaks, matte-red (#AE3030) at valleys. The theme-adaptive diverging midpoint shifts to #1A1A17, so mid-value polygons blend smoothly with the dark background (expected and correct imprint_div behavior). Annotations "peak  z ≈ +1" and "valley  z ≈ −1" visible in light cream ink.
+      Legibility verdict: PASS — all text clearly readable; no dark-on-dark failures; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt — all explicitly set and readable
-          in both themes
+        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend=10/12, geom_text=3.5mm). Well-proportioned at 3200x1800. Minor: annotation
+          labels at size=3.5mm resolve to ~53px in the export — readable but slightly
+          small for key insight annotations.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-positioned, no overlaps, legend isolated from plot
+        comment: No overlap between any text elements, annotations, or the legend.
+          Peak and valley annotations are well-positioned away from each other and
+          the legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3D surface clearly visible with subtle polygon edges providing definition
+        comment: Surface polygons clearly visible; diverging colormap creates strong
+          visual contrast between peaks and valleys; polygon edges provide depth cues.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Imprint diverging (red-blue) is CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 50-70% of canvas with balanced margins, no cut-offs
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with balanced
+          margins. Legend nicely integrated on right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''X (projected)'', ''Z (height)'', proper title
-          format'
+        comment: Title correct format. X-axis 'X (projected)' and Y-axis 'Z (height)'
+          are descriptive for a 2D-projected surface. The original Y data dimension
+          is folded into the projection depth, so two visible axes labeled correctly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) / #1A1A17
-          (dark); text colors theme-correct; data colors identical across themes'
+        comment: 'imprint_div correctly applied: low=#AE3030, high=#4467A3, mid=DIV_MID
+          (theme-adaptive). Plot backgrounds #FAF8F1 light / #1A1A17 dark. All chrome
+          tokens theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default with viridis, clean but not exceptional or
-          custom
+        passed: true
+        comment: 'Above defaults: custom Imprint diverging palette, full theme-adaptive
+          chrome, painter''s algorithm produces visually striking result. Not yet
+          FiveThirtyEight-level — could add depth shading or more visual hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, subtle edges, generous whitespace — good refinement but
-          not exceptional
+        comment: Panel grid removed, axis lines removed, polygon edges very subtle
+          (size=0.15), theme_minimal base. Good refinement; slightly more margin polish
+          could push this higher.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Clear mathematical function but generic narrative; data displayed
-          without special context or emphasis
+        passed: true
+        comment: Annotations guide viewer to peak (z≈+1) and valley (z≈−1). Diverging
+          colormap creates natural visual hierarchy around zero. Viewer immediately
+          sees the extrema. Good storytelling.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,28 +154,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D surface visualization using polygon projection
+        comment: Output is clearly a 3D surface plot, correctly visualizing a 2-variable
+          function as a continuous surface with height+color encoding.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Smooth colormap (viridis), axis labels (x, y, z via colorbar), 40x40
-          grid, function visualization
+        comment: 'Smooth colormap (imprint_div) ✓, axis labels ✓, colorbar ✓, 40x40
+          grid (within 30-50 spec range) ✓. Missing: rotation for interactive exploration
+          (letsplot HTML has hover tooltips but no 3D rotation — inherent library
+          limitation).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, z-values mapped to color and 3D height, all
-          data visible
+        comment: 40x40 grid, z=sin(x)*cos(y), x/y from -3 to 3. All data correctly
+          mapped and visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'surface-basic · letsplot · anyplot.ai', legend labels 'Z Value'
-          with scale
+        comment: Title 'surface-basic · python · letsplot · anyplot.ai' exactly matches
+          required format. Legend 'Z Value' is descriptive.
     data_quality:
       score: 15
       max: 15
@@ -156,20 +188,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Function shows peaks, valleys, saddle points — full feature coverage
+        comment: Shows peaks, valleys, and saddle points. 40x40 grid provides good
+          coverage. Full range of sin(x)*cos(y) visible.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematically classic example (sin·cos surface), neutral scientific
-          context
+        comment: Classic mathematical function z=sin(x)*cos(y) — clear scientific
+          context, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values -1 to +1 are correct for sin/cos, grid -3 to +3 is sensible
+        comment: x/y from -3 to 3 shows ~2 complete oscillation periods. Z range -1
+          to +1 is the correct theoretical maximum for sin*cos.
     code_quality:
       score: 10
       max: 10
@@ -179,60 +213,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme setup → data generation → plot → save'
+        comment: 'Linear structure: imports → tokens → data → projection → quads →
+          plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, all calculations deterministic
+        comment: np.random.seed(42) set. Data is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used, no unused imports
+        comment: All 14 letsplot imports are used. os, numpy, pandas all used. No
+          unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, painter's algorithm well-structured, no fake
-          functionality
+        comment: Painter's algorithm cleanly implemented. zip(strict=True) is Pythonic.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html, uses current ggsave
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct path parameter
+          in ggsave.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ggplot() with aes(), geom_polygon(), scale_fill_viridis(), ggsave()
-          with scale — all idiomatic letsplot patterns
+        comment: 'Very idiomatic letsplot: ggplot grammar, geom_polygon with group
+          aesthetic, scale_fill_gradient2, layer_tooltips with custom format, theme()
+          with element functions, ggsize+ggsave with scale=4.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_polygon creatively for 3D projection; ggsave scale parameter
-          is letsplot-specific; good library understanding but polygon usage is somewhat
-          generic
+        comment: 'layer_tooltips with .line(''Z value: @z{.3f}'') is distinctly letsplot.
+          HTML export included. Core painter''s algorithm via geom_polygon is transferable
+          to plotnine — not uniquely letsplot.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - 3d-projection
+  - annotations
+  - colorbar
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
+  - minimal-chrome
