@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-17
