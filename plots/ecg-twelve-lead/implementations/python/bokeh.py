@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: bokeh 3.9.1 | Python 3.14.3
-Quality: 90/100 | Created: 2026-06-17
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-06-17
 """
 
 import os
