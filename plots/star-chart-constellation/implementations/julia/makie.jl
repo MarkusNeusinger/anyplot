@@ -67,6 +67,38 @@ const CONSTELLATIONS = [
      stars = [(5.278, 45.998, 0.08), (5.992, 44.947, 1.90),
               (5.995, 37.213, 2.62), (4.950, 33.166, 2.69)],
      edges = [(1, 2), (2, 3), (3, 4), (4, 1)]),
+    (abbr = "Per",
+     stars = [(3.405, 49.861, 1.79), (3.136, 40.956, 2.12), (3.902, 31.884, 2.85),
+              (3.964, 40.010, 2.89), (3.715, 47.788, 3.01)],
+     edges = [(5, 1), (1, 4), (4, 3), (1, 2)]),
+    (abbr = "Eri",
+     stars = [(2.939, -8.898, 3.89), (3.549, -9.458, 3.73),
+              (3.721, -9.764, 3.54), (3.967, -13.509, 2.95)],
+     edges = [(1, 2), (2, 3), (3, 4)]),
+    (abbr = "Lep",
+     stars = [(5.545, -17.822, 2.58), (5.470, -20.759, 2.81), (5.091, -22.371, 3.19),
+              (5.220, -16.205, 3.31), (5.744, -22.448, 3.59), (5.855, -20.879, 3.81)],
+     edges = [(3, 2), (2, 1), (1, 4), (2, 5), (5, 6)]),
+    (abbr = "Col",
+     stars = [(5.660, -34.074, 2.65), (5.849, -35.768, 3.12), (5.958, -35.283, 4.36),
+              (5.521, -35.470, 3.87), (6.357, -33.437, 3.85)],
+     edges = [(4, 1), (1, 2), (2, 5), (2, 3)]),
+    (abbr = "Mon",
+     stars = [(6.480, -7.033, 3.74), (7.685, -9.551, 3.93), (6.247, -6.275, 3.98),
+              (7.198, -0.493, 4.15), (8.143, -2.983, 4.34)],
+     edges = [(3, 1), (1, 4), (4, 2), (2, 5)]),
+    (abbr = "Cnc",
+     stars = [(8.275, 9.186, 3.53), (8.745, 18.154, 3.94), (8.778, 28.760, 4.02),
+              (8.975, 11.858, 4.26), (8.722, 21.469, 4.66)],
+     edges = [(3, 5), (5, 2), (2, 4), (2, 1)]),
+    (abbr = "Lyn",
+     stars = [(9.351, 34.392, 3.14), (9.318, 36.803, 3.82), (8.382, 43.188, 4.25),
+              (6.908, 58.421, 4.35), (6.323, 59.011, 4.44)],
+     edges = [(1, 2), (2, 3), (3, 4), (4, 5)]),
+    (abbr = "Hya",
+     stars = [(8.925, 5.946, 3.11), (8.779, 6.419, 3.38), (8.622, 5.704, 4.14),
+              (8.644, 3.341, 4.45), (8.720, 3.399, 4.30), (8.795, 5.835, 4.35)],
+     edges = [(1, 6), (6, 2), (2, 3), (3, 4), (4, 5), (5, 1)]),
 ]
 
 # --- Build plotting arrays from the catalog ---------------------------------
@@ -85,7 +117,18 @@ for c in CONSTELLATIONS
     end
     cra = mean(s[1] for s in c.stars); cdec = mean(s[2] for s in c.stars)
     lx, ly = project(cra, cdec)
-    push!(label_x, lx); push!(label_y, ly + 0.06 * RBND); push!(label_t, c.abbr)
+    # Offset the label away from the brightest (lowest-magnitude) star so it
+    # never crowds the most prominent marker of the group.
+    bs = c.stars[argmin(s[3] for s in c.stars)]
+    bx, by = project(bs[1], bs[2])
+    dx = lx - bx; dy = ly - by; nrm = hypot(dx, dy)
+    off = 0.11 * RBND
+    if nrm < 1e-6
+        push!(label_x, lx); push!(label_y, ly + off)
+    else
+        push!(label_x, lx + off * dx / nrm); push!(label_y, ly + off * dy / nrm)
+    end
+    push!(label_t, c.abbr)
 end
 
 # --- Background star field (faint stars filling the sky window) --------------
@@ -150,7 +193,7 @@ leg_ys   = collect((1.00, 0.86, 0.72) .* RBND)
 leg_mags = (0.0, 2.0, 4.0)
 
 # --- Plot -------------------------------------------------------------------
-fig = Figure(resolution = (1200, 1200), fontsize = 16, backgroundcolor = PAGE_BG)
+fig = Figure(size = (1200, 1200), fontsize = 16, backgroundcolor = PAGE_BG)
 ax = Axis(fig[1, 1];
     title = "star-chart-constellation · julia · makie · anyplot.ai",
     titlesize = 25, titlecolor = INK, titlegap = 16,
