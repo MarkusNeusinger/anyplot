@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: matplotlib | Imprint palette
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
 
 import os
