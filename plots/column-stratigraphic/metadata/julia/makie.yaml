@@ -1,0 +1,246 @@
+library: makie
+language: julia
+specification_id: column-stratigraphic
+created: '2026-06-17T01:09:06Z'
+updated: '2026-06-17T01:25:44Z'
+generated_by: claude-opus
+workflow_run: 27658572602
+issue: 4573
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Exceptional spec fidelity: seven hand-drawn FGDC/USGS-style lithology textures
+    (stipple, laminae, brick, broken dashes, clasts, rhombs, coal cleats) exceed the
+    5-pattern minimum and are reused identically in both the column and the legend
+    key.'
+  - 'Correct stratigraphic conventions: depth increases downward via inverted ylims,
+    solid boundary rules with a genuine wavy unconformity line plus a leadered ''unconformity''
+    annotation, formations + depth ranges to the right, geological ages to the left.'
+  - 'Clean theme adaptation — chrome flips correctly between #FAF8F1 and #1A1A17 while
+    all data colors stay identical; coal is given a theme-stable dark fill with a
+    light outline + pale cleats so it reads as semantic black in both renders.'
+  - 'First categorical series is brand green #009E73 (Sandstone); the rest follow
+    canonical Imprint order. Patterns give redundant (CVD-safe) encoding beyond color.'
+  - Title matches the mandated 'column-stratigraphic · julia · makie · anyplot.ai'
+    format; legend labels match lithology names exactly.
+  - 'Idiomatic CairoMakie: poly!/Rect2f blocks, batched linesegments! for textures
+    and boundaries, hidexdecorations!, explicit spine controls, Point2f primitives.'
+  weaknesses:
+  - Layout leaves a wide empty band between the column (left third) and the legend
+    (far right); only the unconformity leader occupies it. Tightening the column-to-legend
+    gap or widening the column would improve balance (VQ-05).
+  - Formation/depth-range labels (13pt) and age labels (12.5pt) are on the small side;
+    when the 3200×1800 PNG is scaled to ~400px thumbnails they become hard to read.
+    Consider a small bump for mobile legibility (VQ-01).
+  - 'Coal fill (#2E2E28) on the dark #1A1A17 surface is low-contrast; it reads only
+    thanks to its INK_SOFT outline and pale cleats. Acceptable as a semantic-black
+    choice but borderline.'
+  - add_pattern! is a helper function — defensible here for DRY reuse across blocks
+    and legend, but slightly against the KISS 'no functions' preference (CQ-01).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) across figure and axis — correct, not pure white.
+      Chrome: dark title "column-stratigraphic · julia · makie · anyplot.ai" centered; "Depth (m)" y-axis label and 0–240 ticks in dark/soft ink, all clearly readable; "Lithology" legend heading and entry labels dark and legible; "unconformity" annotation in muted ink readable.
+      Data: vertical column of 9 layers — Sandstone green (#009E73, first series), Shale lavender, Limestone blue brick, Siltstone ochre dashes, Conglomerate cyan clasts, Dolostone rose diamonds, Coal black; each with distinct texture. Ages left, formation + depth range right. Wavy unconformity at 120 m. Legend swatches mirror the patterns.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: title, "Depth (m)", ticks, legend heading/labels all in light ink, clearly readable; no dark-on-dark failures. "unconformity" annotation light-muted, readable.
+      Data: identical lithology colors and patterns to the light render (only chrome flipped). Coal block uses a fixed dark fill with a light outline + pale cleats so it stays visible on the near-black surface; brand green Sandstone reads well.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; labels slightly small for 400px
+          thumbnails
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; formation labels clear to the right of the column
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patterns and markers well-sized; coal readable via outline + cleats
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette + redundant texture encoding = CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); wide empty band between column and
+          legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth (m) with units; x decorations hidden, appropriate for a column
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; correct theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom hand-drawn FGDC lithology textures, tinted fills, legend key
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, no grid, clean; some unused whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear depth narrative with unconformity emphasis and age progression
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 patterns, formations, ages, depth scale, boundaries, wavy unconformity
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth increases downward; all 9 layers shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legend labels match lithologies
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 lithologies, varying thickness, ages across periods, unconformity
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geologically plausible, neutral formation/age sequence
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–232 m borehole depths sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function add_pattern! — justified DRY reuse but a function
+          nonetheless
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: poly!/Rect2f, batched linesegments!, hidexdecorations!, explicit
+          spines
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Point2f batching, inverted ylims, custom texture painting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - minimal-chrome
+  - alpha-blending
