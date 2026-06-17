@@ -6,14 +6,8 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-// G(s) = 48 / ((s+1)(s+2)(s+3))
-// Denominator (jω+1)(jω+2)(jω+3) = (6-6ω²) + jω(11-ω²)
-function gJw(omega) {
-  const rd = 6 - 6 * omega * omega;
-  const id = omega * (11 - omega * omega);
-  const d2 = rd * rd + id * id;
-  return { re: 48 * rd / d2, im: -48 * id / d2 };
-}
+// G(s) = 48/((s+1)(s+2)(s+3)): Re[G(jω)] = 48rd/d², Im[G(jω)] = −48id/d²
+// where rd = 6−6ω², id = ω(11−ω²), d² = rd²+id²
 
 // 600 log-spaced frequencies ω ∈ [0.03, 30]
 const N = 600;
@@ -21,7 +15,10 @@ const wMin = 0.03, wMax = 30;
 const omegas = Array.from({ length: N }, (_, i) =>
   wMin * Math.pow(wMax / wMin, i / (N - 1))
 );
-const pos = omegas.map((w) => { const p = gJw(w); return { re: p.re, im: p.im, w }; });
+const pos = omegas.map((w) => {
+  const rd = 6 - 6 * w * w, id = w * (11 - w * w), d2 = rd * rd + id * id;
+  return { re: 48 * rd / d2, im: -48 * id / d2, w };
+});
 // Negative-frequency mirror: reflect Im across real axis, reverse so it joins at ω→−∞
 const neg = [...pos].reverse().map((p) => ({ re: p.re, im: -p.im }));
 
@@ -116,7 +113,7 @@ clipped.append("path")
   .attr("d", lineGen);
 
 // Direction arrows showing increasing frequency
-[40, 105, 185, 305, 435].forEach((i) => {
+[70, 105, 185, 305, 435].forEach((i) => {
   if (i + 4 >= pos.length) return;
   const p1 = pos[i], p2 = pos[i + 4];
   clipped.append("line")
@@ -133,10 +130,11 @@ const annotPts = [
   { omega: 0.3,         label: "ω = 0.3",                   dx:  14, dy: -10, anchor: "start" },
   { omega: 1.0,         label: "ω = 1.0",                   dx: -14, dy:  20, anchor: "end"   },
   { omega: 2.0,         label: "ω = 2.0",                   dx: -14, dy:  20, anchor: "end"   },
-  { omega: phaseXover,  label: "ω = 3.32 (phase crossover)", dx:  12, dy:  22, anchor: "start" },
+  { omega: phaseXover,  label: "ω = 3.32 (phase crossover)", dx:  12, dy:  38, anchor: "start" },
 ];
 annotPts.forEach(({ omega, label, dx, dy, anchor }) => {
-  const p = gJw(omega);
+  const rd = 6 - 6 * omega * omega, id = omega * (11 - omega * omega), d2 = rd * rd + id * id;
+  const p = { re: 48 * rd / d2, im: -48 * id / d2 };
   clipped.append("circle")
     .attr("cx", xSc(p.re)).attr("cy", ySc(p.im)).attr("r", 7)
     .attr("fill", t.palette[2]).attr("stroke", t.pageBg).attr("stroke-width", 2.5);
