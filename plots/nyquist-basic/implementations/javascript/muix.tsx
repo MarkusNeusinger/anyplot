@@ -1,3 +1,7 @@
+// anyplot.ai
+// nyquist-basic: Nyquist Plot for Control Systems
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 81/100 | Created: 2026-06-17
 //# anyplot-orientation: square
 // anyplot.ai
 // nyquist-basic: Nyquist Plot for Control Systems
