@@ -1,43 +1,67 @@
 library: seaborn
+language: python
 specification_id: bifurcation-basic
 created: '2026-03-20T20:30:09Z'
-updated: '2026-03-20T20:54:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23361206117
+updated: '2026-06-17T04:48:07Z'
+generated_by: claude-opus
+workflow_run: 27665883180
 issue: 4415
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - JointGrid with marginal KDE is a creative, distinctive seaborn feature that adds
-    real analytical insight
-  - Regime-based color coding creates an immediate visual narrative of the route to
-    chaos
-  - Bifurcation point annotations with dashed lines guide the viewer through key transitions
-  - Marker size and alpha tuned per regime for optimal density visualization
-  - Clean, deterministic data generation with appropriate parameters
+  - 'Faithful logistic-map bifurcation diagram: 5000 r-values × 200 post-transient
+    samples (~1M points) spanning r=2.5–4.0, capturing the full period-doubling cascade
+    into chaos exactly as the spec requires'
+  - Density-aware marker strategy — larger opaque markers on the sparse stable branch,
+    sub-pixel low-alpha markers on the dense chaotic fan — combats overplotting cleanly
+  - 'Semantic three-regime coloring (Stable→brand green #009E73, Period-Doubling→blue,
+    Chaos→matte-red) tells the route-to-chaos story and is justified as an Imprint
+    semantic-exception mapping'
+  - Distinctive seaborn JointGrid with a per-regime marginal KDE on the y-axis adds
+    real density insight rather than decoration
+  - Key bifurcation points (Period-2 r≈3.0, Period-4 r≈3.449, Period-8 r≈3.544) annotated
+    with dashed rules and non-overlapping labels
+  - 'Both light and dark renders are fully theme-correct: warm backgrounds, identical
+    data colors, all chrome readable; canvas exactly 3200×1800'
+  - Clean, flat, deterministic script (no RNG, fixed x0=0.5); all imports used; custom
+    legend uses readable marker proxies since the real markers are sub-pixel
   weaknesses:
-  - Annotation font size (15pt) could be slightly larger for maximum readability
-  - Per-regime scatter loop is slightly less idiomatic than a single hue-based call,
-    though justified by varying marker sizes
-  image_description: 'The plot displays a bifurcation diagram of the logistic map
-    with "Growth Rate (r)" on the x-axis (2.5–4.0) and "Steady-State Population (x)"
-    on the y-axis (0–1). Three color-coded regimes are shown: blue ("Stable") as a
-    single converging line from r≈2.5 to r≈3.0, orange ("Period-Doubling") showing
-    branching from r≈3.0 to r≈3.57, and red ("Chaos") filling the region from r≈3.57
-    to r=4.0 with dense scattered points. Dashed vertical lines annotate key bifurcation
-    points: Period-2 at r≈3.0, Period-4 at r≈3.449, and Period-8 at r≈3.544. A marginal
-    KDE on the right y-axis shows density distributions per regime (blue peak near
-    0.65, orange bimodal, red spread across 0–1). The x-marginal is hidden. A legend
-    in the upper left identifies the three regimes. Title reads "bifurcation-basic
-    · seaborn · pyplots.ai". Spines are removed on top/right. The overall layout is
-    clean and professional.'
+  - Marginal y-axis KDE is quite narrow (ratio=8) and the green stable hump protrudes
+    slightly past the marginal panel; could be tightened or the marginal clip refined
+    for a cleaner edge
+  - Tick labels at 8pt are on the smaller side for mobile (~400px) scaling — readable
+    at full res but the lower bound of comfortable
+  - Period-4 (r≈3.449) and Period-8 (r≈3.544) annotation labels sit fairly close in
+    the upper band; they do not overlap but the horizontal breathing room between
+    them is tight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no pure white anywhere. Elevated legend box slightly lighter.
+      Chrome: Title "bifurcation-basic · python · seaborn · anyplot.ai" centered in dark ink, fully readable.
+        X label "Growth Rate (r)" and Y label "Steady-State Population (x)" dark, readable. Tick labels
+        (2.6–4.0 on x, 0.0–1.0 on y) in soft ink, readable. Upper-left legend "Regime: Stable/Period-Doubling/Chaos"
+        with colored marker proxies, dark-ink text. Annotations Period-2/Period-4/Period-8 with dashed grey rules.
+      Data: Stable branch in brand green #009E73 (left, ~0.6), period-doubling fork in blue (#4467A3), chaotic
+        fan in matte red (#AE3030). Marginal y-KDE on the right mirrors the regime colors. First series = #009E73 confirmed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black. Legend box slightly elevated (#242420).
+      Chrome: Title, axis labels, and tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) and clearly
+        readable against the dark surface. No dark-on-dark failures. Legend text light and legible. Dashed
+        rules and annotation labels visible.
+      Data: Identical data colors to the light render — green stable branch, blue bifurcation tree, red chaos
+        fan, matching marginal KDE. Only chrome flipped; data palette unchanged.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,67 +69,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt,
-          annotations 15pt). Annotations slightly smaller than ideal.
+        comment: All fonts explicitly set and readable in both themes; tick labels
+          at 8pt are at the lower comfortable bound for mobile
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations positioned with offsets. Legend
-          in empty region.
+        comment: Annotations spread across the empty upper band; legend sits in open
+          space; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker sizes adapted per regime (1.5 stable, 0.3 dense). Alpha tuned
-          for density. Bifurcation structure clearly visible.
+        comment: 'Density-aware markers: larger on stable branch, sub-pixel + alpha
+          on chaotic fan; legend proxies readable'
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, green/blue/red also spatially separated
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/red palette with high perceptual distance. Colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: JointGrid fills canvas well. Hidden x-marginal is smart. Marginal
-          y-KDE slightly compresses main plot.
+        comment: Exact 3200x1800; good proportions; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with parameter notation: Growth Rate (r), Steady-State
-          Population (x).'
+        comment: Descriptive labels with variable symbols (r), (x)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; semantic-exception mapping; theme backgrounds
+          correct both renders'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette for regime storytelling. Seaborn ticks style with
-          custom font_scale. Professional hierarchy. Above defaults.
+        comment: Custom semantic palette, JointGrid + marginal KDE, intentional density-aware
+          styling
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed. Subtle edge colors. Clean marginal panel with fill
-          alpha. Good whitespace.
+        comment: Spines despined, generous whitespace, subtle annotation rules; uninformative
+          x-marginal removed
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Regime coloring creates immediate narrative. Annotations mark transitions.
-          Marginal KDE reveals density structure.
+        comment: Regime coloring + bifurcation annotations guide the eye through the
+          route to chaos
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +144,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bifurcation diagram of logistic map.
+        comment: Correct logistic-map bifurcation diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: small points, alpha, period-doubling
-          cascade, logistic map, labeled bifurcation points, transients discarded.'
+        comment: Tiny low-alpha points, full cascade, transient discard (300), bifurcation
+          labels, r 2.5-4.0
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: r on x-axis, x on y-axis. Full required range covered.
+        comment: r on x, x on y, full ranges shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend with regime labels and title.
+        comment: Title matches mandated format; legend labels match regimes
     data_quality:
       score: 15
       max: 15
@@ -144,21 +173,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stable fixed point, period-2/4/8 bifurcations, chaotic regime,
-          and windows of periodicity.
+        comment: Stable, period-doubling, and chaotic regimes all clearly shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical bifurcation example. Neutral scientific
-          context.
+        comment: Canonical logistic map; neutral, educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5000 r-values, 300 transient, 200 plotted iterations. All appropriate.
+        comment: r 2.5-4.0, x 0-1 — correct domain
     code_quality:
       score: 10
       max: 10
@@ -168,33 +195,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, plotting, styling, save.'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Logistic map is fully deterministic. No random seed needed.
+        comment: Fully deterministic (fixed x0=0.5, no RNG)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used.
+        comment: All imports used (incl. Line2D for proxies)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pre-allocated arrays. Clean regime classification. Well-organized
-          per-regime loop.
+        comment: Well-commented, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight.
-    library_mastery:
+        comment: Saves plot-{THEME}.png at dpi=400, no bbox_inches=tight
+    library_features:
       score: 8
       max: 10
       items:
@@ -203,24 +229,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of set_theme, JointGrid, scatterplot, kdeplot, despine.
-          Per-regime loop justified but slightly less idiomatic.
+        comment: High-level sns.set_theme/scatterplot/kdeplot; some matplotlib for
+          fine control
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: JointGrid with marginal KDE is a distinctive seaborn feature adding
-          genuine analytical value.
+        comment: JointGrid with per-regime marginal KDE — a distinctive seaborn capability
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep:
   - kde
   styling:
+  - publication-ready
   - alpha-blending
