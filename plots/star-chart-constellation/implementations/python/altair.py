@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: altair 6.2.1 | Python 3.x | Imprint palette
-Quality: regen from 90 | Updated: 2026-06-16
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-17
 """
 
 import os
