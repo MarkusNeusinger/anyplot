@@ -1,7 +1,3 @@
-// anyplot.ai
-// bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 92/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
@@ -17,16 +13,16 @@ import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data: the logistic map  x(n+1) = r · x(n) · (1 − x(n)) -------------------
-// For each growth rate r we iterate deterministically from a fixed start, throw
-// away the transient, then record the long-term orbit. The cloud of recorded
-// states traces the period-doubling cascade into chaos — the classic route.
+// --- Data: logistic map  x(n+1) = r · x(n) · (1 − x(n)) -------------------
+// Iterate deterministically from a fixed start, discard the transient, then
+// record long-term orbit points. 1000 r-steps × 120 records = 120 k points —
+// dense enough to meet the spec's 100 k+ target and fill the chaotic band.
 const R_MIN = 2.5;
 const R_MAX = 4.0;
-const R_STEPS = 720; // parameter resolution along the x-axis
-const TRANSIENT = 300; // discarded initial iterations (settle onto the attractor)
-const RECORD = 45; // states kept per r value (the steady-state orbit)
-const X0 = 0.4; // fixed seed (avoid 0.5 — it falls into the 0-orbit trap at r=4)
+const R_STEPS = 1000;   // parameter resolution along the x-axis
+const TRANSIENT = 300;  // discarded initial iterations (settle onto attractor)
+const RECORD = 120;     // states kept per r value (the steady-state orbit)
+const X0 = 0.4;         // fixed seed (avoids the 0.5 trap at r=4)
 
 const points: { x: number; y: number; id: number }[] = [];
 let pid = 0;
@@ -40,26 +36,32 @@ for (let i = 0; i < R_STEPS; i++) {
   }
 }
 
-// Key period-doubling bifurcations of the logistic map (analytic values).
+// Key period-doubling bifurcations (analytic values).
+// Labels alternate left (anchor "end") / right (anchor "start") so the
+// clustered r=3.544 and r=3.5699 references don't crowd on the same side.
+// Two vertical levels spread each left/right pair apart vertically.
 const MARKERS = [
-  { r: 3.0, text: "period-2" },
-  { r: 3.449, text: "period-4" },
-  { r: 3.544, text: "period-8" },
-  { r: 3.5699, text: "chaos" },
+  { r: 3.0,    text: "period-2", anchor: "end",   level: 0 },
+  { r: 3.449,  text: "period-4", anchor: "end",   level: 1 },
+  { r: 3.544,  text: "period-8", anchor: "start", level: 0 },
+  { r: 3.5699, text: "chaos",    anchor: "start", level: 1 },
 ];
+const LABEL_Y_OFFSETS = [18, 54];   // two distinct heights (px from top of drawing area)
 
 const TITLE_H = 60;
 
-// Overlay drawn in SVG space via the drawing-area hook. Linear axes map data
-// (R_MIN, ·) → left edge and (R_MAX, ·) → right edge, so r → x is exact.
+// Overlay drawn in SVG space via the drawing-area hook. Linear axes map each
+// r value to an exact x pixel coordinate without guessing scale factors.
 function Bifurcations() {
   const { left, top, width, height } = useDrawingArea();
   const xOf = (r: number) => left + ((r - R_MIN) / (R_MAX - R_MIN)) * width;
+
   return (
     <g>
-      {MARKERS.map((m, idx) => {
+      {MARKERS.map((m) => {
         const x = xOf(m.r);
-        const labelY = top + 18 + (idx % 2) * 26; // stagger to avoid overlap
+        const dx = m.anchor === "end" ? -8 : 8;
+        const labelY = top + LABEL_Y_OFFSETS[m.level];
         return (
           <g key={m.r}>
             <line
@@ -73,19 +75,19 @@ function Bifurcations() {
               opacity={0.7}
             />
             <text
-              x={x - 6}
+              x={x + dx}
               y={labelY}
               fill={t.inkSoft}
-              textAnchor="end"
+              textAnchor={m.anchor}
               style={{ fontSize: 13, fontFamily: "Inter, system-ui, sans-serif", fontWeight: 600 }}
             >
               {m.text}
             </text>
             <text
-              x={x - 6}
+              x={x + dx}
               y={labelY + 16}
               fill={t.inkSoft}
-              textAnchor="end"
+              textAnchor={m.anchor}
               opacity={0.8}
               style={{ fontSize: 11, fontFamily: "Inter, system-ui, sans-serif" }}
             >
@@ -155,6 +157,7 @@ export default function Chart() {
             min: 0,
             max: 1,
             label: "Steady-state population  x",
+            tickNumber: 11,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
