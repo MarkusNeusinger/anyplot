@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-17
