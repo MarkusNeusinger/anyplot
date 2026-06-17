@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-17
@@ -39,6 +39,18 @@ _, H = signal.freqresp(system, w=omega)
 real = H.real
 imag = H.imag
 
+# Stability margins from frequency response
+magnitude = np.abs(H)
+phase_deg = np.unwrap(np.angle(H)) * 180 / np.pi
+
+# Phase crossover (phase → -180°) → gain margin
+wpc_idx = np.argmin(np.abs(phase_deg + 180))
+gm_db = 20 * np.log10(1 / magnitude[wpc_idx])
+
+# Gain crossover (|H| → 1) → phase margin
+wgc_idx = np.argmin(np.abs(magnitude - 1))
+pm_deg = 180 + phase_deg[wgc_idx]
+
 # Plot
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -73,6 +85,37 @@ ax.plot(
     label="Critical point (−1, 0)",
 )
 
+# Phase margin: gain crossover on unit circle (|H|=1)
+ax.plot(real[wgc_idx], imag[wgc_idx], "D", color=BRAND, markersize=7, zorder=6)
+ax.annotate(
+    r"$\phi_m$" + f" = {pm_deg:.1f}°",
+    xy=(real[wgc_idx], imag[wgc_idx]),
+    xytext=(14, 12),
+    textcoords="offset points",
+    fontsize=9,
+    color=BRAND,
+    fontweight="bold",
+    ha="left",
+    va="bottom",
+    zorder=6,
+)
+
+# Gain margin: phase crossover on negative real axis (phase = -180°)
+ax.plot(real[wpc_idx], imag[wpc_idx], "s", color=CRITICAL_COLOR, markersize=6, zorder=6)
+ax.annotate(
+    r"$G_m$" + f" = {gm_db:.1f} dB",
+    xy=(real[wpc_idx], imag[wpc_idx]),
+    xytext=(-0.55, 0.40),
+    textcoords="data",
+    fontsize=9,
+    color=CRITICAL_COLOR,
+    fontweight="bold",
+    ha="center",
+    va="bottom",
+    zorder=6,
+    arrowprops={"arrowstyle": "->", "color": CRITICAL_COLOR, "lw": 1.0, "shrinkA": 0, "shrinkB": 5},
+)
+
 # Frequency annotations at key points
 freq_annotations = [(0.3, (15, 12)), (1.0, (15, 12)), (2.0, (-15, -18)), (5.0, (-15, 14)), (10.0, (12, 12))]
 for freq_val, (ox, oy) in freq_annotations:
@@ -85,7 +128,7 @@ for freq_val, (ox, oy) in freq_annotations:
         xy=(real[idx], imag[idx]),
         xytext=(ox, oy),
         textcoords="offset points",
-        fontsize=16,
+        fontsize=9,
         color=INK_SOFT,
         fontweight="medium",
         ha=ha,
