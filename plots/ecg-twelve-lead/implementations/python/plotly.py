@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: plotly 6.6.0 | Python 3.14.3
+Library: plotly 6.8.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
