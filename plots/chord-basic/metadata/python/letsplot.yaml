@@ -1,59 +1,59 @@
 library: letsplot
+language: python
 specification_id: chord-basic
 created: '2025-12-23T10:01:36Z'
-updated: '2026-04-06T20:55:18Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457536364
-issue: 0
-python_version: '3.14'
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chord-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chord-basic/letsplot/plot.html
-quality_score: 87
-impl_tags:
-  dependencies:
-  - pillow
-  techniques:
-  - bezier-curves
-  - layer-composition
-  - annotations
-  - hover-tooltips
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
+updated: '2026-06-17T01:52:24Z'
+generated_by: claude-opus
+workflow_run: 27660191586
+issue: 858
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent three-tier opacity hierarchy creates immediate visual storytelling
-  - Professional Okabe-Ito derived color palette with strong accessibility
-  - Center annotation for dominant flow adds data storytelling
-  - Comprehensive bidirectional flow data with realistic migration context
-  - Clean, well-structured code with appropriate complexity
-  - Interactive tooltips via layer_tooltips() leverage lets-plot strengths
+  - 'First series Asia rendered in brand green #009E73; full Imprint palette used
+    in canonical order with distinct colors per continent.'
+  - 'Backgrounds correct in both themes (#FAF8F1 light / #1A1A17 dark); all chrome
+    (title, labels, legend, caption) flips theme-adaptively while data colors stay
+    identical.'
+  - 'Sophisticated hand-built chord geometry: proportional arc sizes with gaps, bezier-curved
+    ribbons, three-tier opacity hierarchy so weak flows stay legible, tick marks linking
+    arcs to labels.'
+  - Bidirectional flows shown as separate chords (e.g. Asia→Europe 45 and Europe→Asia
+    22), satisfying the spec's bidirectional requirement.
+  - 'Data storytelling via a ''Strongest: Asia→Europe (45)'' annotation and a caption
+    explaining the width/opacity encoding.'
+  - Correct square canvas (2400×2400), title in the exact mandated format, interactive
+    HTML export with hover tooltips, deterministic hardcoded data, flat KISS script
+    with clean imports.
   weaknesses:
-  - Low-magnitude chords at alpha=0.2 are somewhat faint
-  - Minor label crowding near small arcs (Oceania/South America)
-  - Library mastery limited by necessity of manual geometry for chord diagram
-  image_description: 'The plot displays a chord diagram showing migration flows between
-    6 continents arranged around a circle. Each continent has a colored arc segment
-    on the perimeter: Asia (dark blue #306998), Europe (golden/amber), Africa (light
-    blue), North America (dark orange), South America (purple), and Oceania (teal/green).
-    Chords connect continents with widths proportional to flow magnitude. Three opacity
-    tiers create visual hierarchy — strongest flows (like Asia→Europe at 45) are most
-    opaque, weakest flows are translucent. A center annotation reads "Strongest: Asia→Europe
-    (45)". The title "chord-basic · letsplot · pyplots.ai" appears top-left in dark
-    navy. A horizontal legend at the bottom identifies all 6 continents. The caption
-    reads "Width proportional to migration flow magnitude · Opacity indicates relative
-    strength". Background is light gray (#FAFAFA) with tick marks connecting arcs
-    to labels.'
+  - 'The center annotation ''Strongest: Asia→Europe (45)'' overlaps the dense crossing
+    chord ribbons, reducing its legibility against the busy backdrop — consider a
+    small elevated background pill behind the text or relocating it to a calmer area.'
+  - The legend title 'Continent' sits very close to / slightly overlaps the first
+    column of legend swatches — add horizontal spacing between the legend title and
+    the keys.
+  - The central region is visually busy where many ribbons cross (inherent to chord
+    diagrams), but this compounds the annotation overlap above.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) page and an elevated cream legend frame (#FFFDF6) — not pure white.
+      Chrome: bold near-black title "chord-basic · python · letsplot · anyplot.ai" top-left; bold dark continent labels (Asia, Oceania, South America, North America, Africa, Europe) around the ring; italic muted caption bottom-right; legend title "Continent" + 6 keys all dark-on-light. All text readable.
+      Data: outer ring arcs and bezier chords colored by Imprint palette — Asia = brand green #009E73 (first series), Europe = lavender, North America = ochre, Africa = blue, South America = matte red, Oceania = cyan. Chord width proportional to flow, three opacity tiers. Center annotation "Strongest: Asia→Europe (45)" in soft-ink bold overlaps the crossing ribbons (slightly busy but legible).
+      Legibility verdict: PASS (annotation is the only mildly-strained element, still readable).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) page and elevated dark legend frame (#242420) — not pure black.
+      Chrome: light off-white title, labels, legend text and italic caption — all clearly readable, no dark-on-dark failures. Tick marks and arc separators use the dark theme's page-bg seam color.
+      Data: identical data colors to the light render (Asia green #009E73, Europe lavender, North America ochre, Africa blue, South America red, Oceania cyan) — only the chrome flipped. Three-tier chord opacity preserved.
+      Legibility verdict: PASS (center "Strongest" annotation in light-ink over mixed dark ribbons is readable; same mild central busyness as light).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -61,42 +61,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, labels 18 bold, legend 16/18,
-          caption 13). Center annotation at size 11 is slightly small.
+        comment: All labels/title/legend/caption readable both themes; center annotation
+          slightly strained against busy chords.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Labels well-positioned with adaptive radius. Minor crowding between
-          South America and Oceania.
+        passed: false
+        comment: Center annotation overlaps crossing ribbons; legend title 'Continent'
+          nearly touches first swatch column.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three-tier opacity creates good hierarchy. Low-magnitude chords at
-          alpha=0.2 are somewhat faint.
+        comment: Three-tier opacity keeps weak flows visible; arcs and chords all
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; adequate contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Okabe-Ito derived palette is colorblind-safe with good contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Circular diagram fills square canvas reasonably. Some inherent corner
-          waste.
+        comment: Correct 2400x2400 square; nothing clipped; balanced composition.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed. Caption provides context about width and opacity
-          encoding.
+        comment: No axes (chord); title + descriptive encoding caption present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint canonical order; backgrounds correct
+          in both themes.'
     design_excellence:
       score: 16
       max: 20
@@ -106,22 +111,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom Okabe-Ito palette, professional navy title,
-          light gray background, white chord separators, tick marks.'
+        comment: Custom bezier chord geometry, proportional arcs+gaps, tick marks,
+          three-tier hierarchy — well above generic.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void() removes clutter, subtle tick marks, white borders separate
-          chords, generous whitespace.
+        comment: theme_void, no chartjunk, subtle seams, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Three-tier opacity highlights strongest flows. Center annotation
-          calls out dominant Asia-Europe flow.
+        comment: Strongest-flow annotation + opacity hierarchy guide the eye to dominant
+          flows.
     spec_compliance:
       score: 15
       max: 15
@@ -131,50 +135,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram with entities on circle perimeter and connecting
-          chords.
+        comment: Correct chord diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, proportional widths, tooltips, bidirectional flows
-          all present.
+        comment: Distinct entity colors, width ~ flow, bidirectional separate chords,
+          hover tooltips in HTML.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source/target/value correctly mapped. Arc sizes proportional to total
-          flow.
+        comment: source/target/value mapped correctly; arcs sized by total flow.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend labels all 6 continents correctly.
+        comment: Title exactly 'chord-basic · python · letsplot · anyplot.ai'; legend
+          labels match continents.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bidirectional flows, varying magnitudes (8-45), all 6 entities connected.
+        comment: Shows bidirectional flows, proportional widths, multiple entities,
+          varied magnitudes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration flows between continents - real-world, neutral topic.
+        comment: Inter-continental migration flows — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flow values 8-45 represent plausible relative migration magnitudes.
+        comment: Flow values 8–45 are sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -184,14 +188,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, layout, geometry, plot, save. No functions
-          or classes.'
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded flow data.
+        comment: Deterministic hardcoded data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -203,29 +206,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear comments. Appropriate complexity for chord
-          diagram.
+        comment: Complexity appropriate to hand-built chord geometry; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at scale=3. Also exports HTML. Current API.
-    library_mastery:
-      score: 6
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; current ggsave API.
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar correctly but chord diagram requires mostly manual
-          geometry.
+        comment: 'Idiomatic ggplot grammar: layered geoms, scale_fill_manual, coord_fixed,
+          theme_void.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses layer_tooltips() and HTML export. Core is library-agnostic geometry.
-  verdict: REJECTED
+        comment: geom_polygon ribbons, layer_tooltips hover, interactive HTML export
+          — lets-plot strengths.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - bezier-curves
+  - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
