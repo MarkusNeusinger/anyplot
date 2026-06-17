@@ -1,0 +1,264 @@
+library: echarts
+language: javascript
+specification_id: bifurcation-basic
+created: '2026-06-17T05:03:25Z'
+updated: '2026-06-17T05:27:07Z'
+generated_by: claude-sonnet
+workflow_run: 27667457129
+issue: 4415
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct bifurcation diagram using logistic map with 150k points (1500 r-steps
+    × 100 kept), resolving the full period-doubling cascade with excellent density
+  - 'ECharts-idiomatic large-mode rendering (large: true, largeThreshold: 2000) correctly
+    handles the 150k-point cloud without performance issues'
+  - All four key bifurcation points labeled (r≈3.0, 3.449, 3.544, 3.5699) with staggered
+    insideStartTop/insideEndBottom positions preventing crowding near chaos onset
+  - 'Perfect theme-adaptive chrome: t.ink for axis names/title, t.inkSoft for tick
+    labels, t.grid for splitLines, transparent background letting page bg show through'
+  - 'Data parameters correctly follow spec: TRANSIENT=300 discarded, KEEP=100 recorded,
+    r in [2.5, 4.0], x in [0, 1]'
+  - Code is clean, flat, deterministic, and fully self-contained — no imports, no
+    RNG needed (logistic map is deterministic)
+  weaknesses:
+  - Markline annotation labels (period-2, period-4, period-8, chaos) render as very
+    small rotated text along the dashed lines — at thumbnail/mobile scale (~400px
+    wide) they become barely legible; consider bumping label fontSize from 14 to 16
+    or adding a short horizontal callout label above/below each line instead
+  - 'DE-01/DE-02: Styling is correct and clean but minimal — no explicit removal of
+    top/right axis spines (ECharts shows only left/bottom by default, which is acceptable,
+    but explicit boundaryGap or spine suppression would be cleaner), and no visual
+    emphasis differentiating the stable from chaotic regions beyond density'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Title "bifurcation-basic · javascript · echarts · anyplot.ai" centered in bold dark text (~22px CSS), clearly readable. X-axis label "Growth rate  r" and Y-axis label "Long-term state  x" in dark ink (17px), readable. Tick labels (14px, soft ink) on both axes are readable. Four dashed vertical marklines at r≈3.0, 3.449, 3.544, 3.5699 with rotated 90° labels ("period-2", "period-4", "period-8", "chaos") — small but legible at source resolution.
+      Data: Brand green #009E73 (t.palette[0]) scatter cloud, symbolSize=1.1, opacity=0.34, creating a density-based visualization. The bifurcation structure is clearly visible: stable period-1 branch on the left (r<3), period-2 fork at r≈3.0, further period-doubling, and chaotic spray on the right (r>3.57). Horizontal y-axis splitLines are subtle (t.grid). No x-axis splitLines.
+      Legibility verdict: PASS — all text is readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface color, not pure black.
+      Chrome: Title in light text clearly readable against dark background. Axis names and tick labels in light-colored text (t.ink / t.inkSoft dark variants) — all readable, no dark-on-dark failures detected. Markline dashed lines and rotated labels are visible.
+      Data: Brand green #009E73 is identical to the light render — only chrome flips, data colors stay constant. The density structure remains clearly visible. Grid lines subtle.
+      Legibility verdict: PASS — all text is readable against the warm near-black background. No dark-on-dark text failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels all readable in both themes.
+          Markline annotation labels (14px, rotated) are small but legible at source
+          resolution; at thumbnail scale they become marginal.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap. Staggered markline labels
+          (alternating top/bottom) prevent crowding in the dense r≈3.4–3.57 region.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize=1.1 with opacity=0.34 is appropriate for 150k points.
+          Period-doubling structure clearly visible through density contrast.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in brand green #009E73 — CVD-safe, no red-green sole-signal
+          issue.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Grid margins generous (left:92, right:56, top:96,
+          bottom:84). Nothing overflowing or cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows exact required format. 'Growth rate  r' and 'Long-term
+          state  x' are descriptive with the variable symbols included.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'BRAND = t.palette[0] (#009E73) for the sole series. backgroundColor:
+          transparent lets page bg (#FAF8F1 / #1A1A17) show through. t.ink, t.inkSoft,
+          t.grid correctly wired to chrome elements. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Deliberate density-based visualization with chosen
+          alpha=0.34 creates scientific elegance. Intentional minimal grid (x-axis
+          splitLine hidden, y-axis subtle). Staggered label positioning shows design
+          thought.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2). Tick marks hidden (axisTick: show: false), x-axis
+          splitLine removed, y-axis grid subtle. Generous plot margins.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default (2). The four labeled marklines guide the viewer through
+          the period-doubling cascade. Staggered positioning helps readers follow
+          the narrative from stability to chaos.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram using scatter type for the logistic map
+          orbit portrait.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: small point size (1.1px), low alpha (0.34),
+          full cascade shown, logistic map used, all 4 bifurcation points labeled,
+          transient discarded (300), parameter range [2.5, 4.0].'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: growth rate r [2.5, 4.0]. Y: long-term state x [0, 1]. Correct
+          axes for logistic map.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'bifurcation-basic · javascript · echarts · anyplot.ai'.
+          No legend needed for single-series plot.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows complete bifurcation diagram: period-1 fixed point, period-2,
+          period-4, period-8, and fully chaotic region. 150k points provides excellent
+          resolution.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the canonical logistic map — the textbook example for bifurcation
+          diagrams. Neutral scientific content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r in [2.5, 4.0] captures the full route from stability through chaos.
+          x in [0, 1] is the correct state space. 1500 r-steps with 100 kept per step
+          = 150k points is appropriate density.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Simple loops for data generation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — logistic map with fixed seed state (x=0.5)
+          and fixed parameters. No RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — ECharts is a global, all other values computed in-script.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean data generation loop, concise bifurcations array with .map()
+          for markLine data. Comments explain non-obvious choices.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false, no explicit size/devicePixelRatio, echarts.init(el)
+          on #container. ECharts harness emits plot-{theme}.png and plot-{theme}.html.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'large: true + largeThreshold: 2000 is the correct ECharts pattern
+          for large point clouds. markLine is the idiomatic way to draw reference
+          lines. Data as [r, x] pairs is the correct scatter data format.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: large rendering mode is ECharts-specific and correctly applied for
+          150k points. Per-item markLine label overrides (position insideStartTop/insideEndBottom)
+          are ECharts-specific advanced usage. Strong but not exceptional (no use
+          of e.g. visualMap density coloring or dataZoom).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
