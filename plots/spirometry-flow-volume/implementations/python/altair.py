@@ -1,13 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-06-17
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove script directory from sys.path to avoid importing local altair.py
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
+# Also strip the '' / '.' empty-string entry added when running from this dir
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from PIL import Image  # noqa: E402
+
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — data colors stay identical across themes
+BRAND = "#009E73"  # measured loop — ALWAYS first series
+PREDICTED = INK_MUTED  # predicted normal overlay — theme-adaptive muted
+PEF_RED = "#AE3030"  # Imprint matte red — focal Peak Expiratory Flow marker
+FEV1_BLUE = "#4467A3"  # Imprint blue — FEV1 reference
 
 # Data
 np.random.seed(42)
@@ -27,12 +53,12 @@ vol_remaining = vol_exp[pef_idx:] - vol_exp[pef_idx]
 vol_range = fvc_measured - vol_exp[pef_idx]
 flow_decline = pef_measured * (1 - (vol_remaining / vol_range) ** 0.85)
 flow_exp = np.concatenate([flow_rise, flow_decline[1:]])
-flow_exp += np.random.normal(0, 0.015, len(flow_exp))  # subtle noise
+flow_exp += np.random.normal(0, 0.015, len(flow_exp))  # subtle physiological noise
 flow_exp = np.clip(flow_exp, 0, None)
 flow_exp[0] = 0
 flow_exp[-1] = 0
 
-# Measured inspiratory limb: symmetric U-shape
+# Measured inspiratory limb: symmetric U-shape below the zero-flow line
 vol_insp = np.linspace(fvc_measured, 0, n_points)
 t_insp = np.linspace(0, np.pi, n_points)
 flow_insp = -5.5 * np.sin(t_insp)
@@ -87,44 +113,54 @@ df_pef = pd.DataFrame({"volume": [pef_vol], "flow": [pef_flow], "label": [f"PEF 
 # Clinical values annotation
 df_clinical = pd.DataFrame(
     {
-        "volume": [4.2],
-        "flow": [8.5],
-        "label": [f"FVC = {fvc_measured:.1f} L\nFEV\u2081 = {fev1_measured:.1f} L\nPEF = {pef_flow:.1f} L/s"],
+        "volume": [4.0],
+        "flow": [9.0],
+        "label": [f"FVC = {fvc_measured:.1f} L\nFEV₁ = {fev1_measured:.1f} L\nPEF = {pef_flow:.1f} L/s"],
     }
 )
 
-# FEV1 marker: vertical reference at 1-second volume (approx FEV1 volume)
-df_fev1_line = pd.DataFrame({"volume": [fev1_measured, fev1_measured], "flow": [-1.5, 8.0]})
+# FEV1 marker: vertical reference at the 1-second volume
+df_fev1_line = pd.DataFrame({"volume": [fev1_measured, fev1_measured], "flow": [-1.5, 7.8]})
+df_fev1_label = pd.DataFrame({"volume": [fev1_measured], "flow": [8.4], "label": ["FEV₁"]})
 
-df_fev1_label = pd.DataFrame({"volume": [fev1_measured], "flow": [8.5], "label": ["FEV\u2081"]})
+# Color and dash scales for the legend
+color_scale = alt.Scale(domain=["Measured", "Predicted"], range=[BRAND, PREDICTED])
+dash_scale = alt.Scale(domain=["Measured", "Predicted"], range=[[1, 0], [8, 6]])
 
-# Color and dash scales for legend
-color_scale = alt.Scale(domain=["Measured", "Predicted"], range=["#306998", "#999999"])
-dash_scale = alt.Scale(domain=["Measured", "Predicted"], range=[[0], [8, 6]])
-
-# Nearest selection for interactive tooltip on hover (Altair-distinctive)
+# Nearest selection for interactive hover tooltip (Altair-distinctive)
 nearest = alt.selection_point(nearest=True, on="pointerover", fields=["order"], empty=False)
 
-# Main curves with legend
+x_axis = alt.X("volume:Q", title="Volume (L)", scale=alt.Scale(domain=[-0.3, 5.6]))
+y_axis = alt.Y("flow:Q", title="Flow (L/s)", scale=alt.Scale(domain=[-8, 12]))
+
+# Zero-flow reference line
+df_zero = pd.DataFrame({"volume": [-0.3, 5.6], "flow": [0, 0]})
+zero_line = (
+    alt.Chart(df_zero)
+    .mark_line(strokeWidth=1.2, strokeDash=[4, 4], color=INK_MUTED, opacity=0.6)
+    .encode(x=x_axis, y=y_axis)
+)
+
+# Main loops with legend
 curves = (
     alt.Chart(df_all)
-    .mark_line(strokeWidth=2.5)
+    .mark_line()
     .encode(
-        x=alt.X("volume:Q", title="Volume (L)", scale=alt.Scale(domain=[-0.3, 5.6])),
-        y=alt.Y("flow:Q", title="Flow (L/s)", scale=alt.Scale(domain=[-8, 12])),
+        x=x_axis,
+        y=y_axis,
         order="order:Q",
         color=alt.Color(
             "curve:N",
             title=None,
             scale=color_scale,
-            legend=alt.Legend(labelFontSize=16, symbolSize=300, symbolStrokeWidth=3, orient="top-right", offset=-10),
+            legend=alt.Legend(labelFontSize=12, symbolStrokeWidth=3, orient="top-right", offset=-6),
         ),
         strokeDash=alt.StrokeDash("curve:N", title=None, scale=dash_scale, legend=None),
-        strokeWidth=alt.condition(alt.datum.curve == "Measured", alt.value(3), alt.value(2)),
+        strokeWidth=alt.condition(alt.datum.curve == "Measured", alt.value(3.5), alt.value(2)),
     )
 )
 
-# Interactive tooltip layer (Altair-distinctive: hover reveals flow/volume values)
+# Interactive hover layer (Altair-distinctive: reveals flow/volume on the measured loop)
 tooltip_points = (
     alt.Chart(df_measured)
     .mark_point(opacity=0, size=80)
@@ -141,68 +177,62 @@ tooltip_points = (
 
 hover_rule = (
     alt.Chart(df_measured)
-    .mark_rule(color="#666666", strokeWidth=1, strokeDash=[3, 3])
+    .mark_rule(color=INK_SOFT, strokeWidth=1, strokeDash=[3, 3])
     .encode(x="volume:Q")
     .transform_filter(nearest)
 )
 
 hover_point = (
     alt.Chart(df_measured)
-    .mark_point(size=120, filled=True, color="#306998")
+    .mark_point(size=120, filled=True, color=BRAND)
     .encode(x="volume:Q", y="flow:Q")
     .transform_filter(nearest)
 )
 
-# PEF marker and label
-pef_point = alt.Chart(df_pef).mark_point(size=300, filled=True, color="#C0392B").encode(x="volume:Q", y="flow:Q")
-
+# PEF focal marker and label
+pef_point = alt.Chart(df_pef).mark_point(size=260, filled=True, color=PEF_RED).encode(x="volume:Q", y="flow:Q")
 pef_label = (
     alt.Chart(df_pef)
-    .mark_text(align="left", dx=16, dy=-16, fontSize=18, fontWeight="bold", color="#C0392B")
+    .mark_text(align="left", dx=14, dy=-12, fontSize=13, fontWeight="bold", color=PEF_RED)
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
 # FEV1 vertical reference line with label
 fev1_line = (
     alt.Chart(df_fev1_line)
-    .mark_line(strokeWidth=1.5, strokeDash=[6, 4], color="#E67E22", opacity=0.7)
+    .mark_line(strokeWidth=1.5, strokeDash=[6, 4], color=FEV1_BLUE, opacity=0.8)
     .encode(x="volume:Q", y="flow:Q")
 )
-
 fev1_label = (
     alt.Chart(df_fev1_label)
-    .mark_text(fontSize=15, fontWeight="bold", color="#E67E22", dy=-8)
+    .mark_text(fontSize=12, fontWeight="bold", color=FEV1_BLUE, dy=-6)
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
-# Clinical values text
+# Clinical values text block
 clinical_text = (
     alt.Chart(df_clinical)
-    .mark_text(align="left", fontSize=17, lineBreak="\n", lineHeight=22, color="#333333", fontWeight="bold")
+    .mark_text(align="left", fontSize=12, lineBreak="\n", lineHeight=16, color=INK, fontWeight="bold")
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
-# Zero flow reference line
-df_zero = pd.DataFrame({"volume": [-0.3, 5.6], "flow": [0, 0]})
-zero_line = (
-    alt.Chart(df_zero).mark_line(strokeWidth=1, strokeDash=[4, 4], color="#bbbbbb").encode(x="volume:Q", y="flow:Q")
-)
-
-# Expiratory/Inspiratory region labels
+# Expiratory / Inspiratory region labels (bumped up from the previous 14pt-equivalent)
 df_region_exp = pd.DataFrame({"volume": [0.2], "flow": [11.0], "label": ["Expiration"]})
 df_region_insp = pd.DataFrame({"volume": [0.2], "flow": [-7.0], "label": ["Inspiration"]})
-
 region_exp_label = (
     alt.Chart(df_region_exp)
-    .mark_text(fontSize=14, color="#888888", fontStyle="italic", align="left")
+    .mark_text(fontSize=13, color=INK_MUTED, fontStyle="italic", align="left")
+    .encode(x="volume:Q", y="flow:Q", text="label:N")
+)
+region_insp_label = (
+    alt.Chart(df_region_insp)
+    .mark_text(fontSize=13, color=INK_MUTED, fontStyle="italic", align="left")
     .encode(x="volume:Q", y="flow:Q", text="label:N")
 )
 
-region_insp_label = (
-    alt.Chart(df_region_insp)
-    .mark_text(fontSize=14, color="#888888", fontStyle="italic", align="left")
-    .encode(x="volume:Q", y="flow:Q", text="label:N")
-)
+# Title — scale fontsize off the 67-char baseline (this title is shorter, so stays at 16)
+title_text = "spirometry-flow-volume · python · altair · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title_text)))
 
 chart = (
     (
@@ -220,24 +250,40 @@ chart = (
         + region_insp_label
     )
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("spirometry-flow-volume · altair · pyplots.ai", fontSize=28, anchor="start", color="#222222"),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title(title_text, fontSize=title_fontsize, anchor="start", color=INK),
     )
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
+        domain=False,
+        gridColor=INK,
         gridOpacity=0.12,
-        gridColor="#cccccc",
-        domainColor="#444444",
-        tickColor="#888888",
-        labelColor="#333333",
-        titleColor="#222222",
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(padding=10, cornerRadius=4, strokeColor="#dddddd")
+    .configure_legend(
+        labelFontSize=12, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, padding=8, cornerRadius=4
+    )
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — altair view dims are not the saved PNG; pad up to the canonical 3200×1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
