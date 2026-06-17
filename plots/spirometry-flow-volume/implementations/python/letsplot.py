@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,99 +13,57 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data: Simulated spirometry flow-volume loop
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "#D9D4C7" if THEME == "light" else "#33322D"
+
+# Imprint palette — data colors stay constant across themes
+BRAND = "#009E73"  # measured patient loop — ALWAYS first series
+PRED = INK_MUTED  # predicted normal reference (theme-adaptive muted)
+PEF_COLOR = "#BD8233"  # ochre accent for Peak Expiratory Flow
+FEV1_COLOR = "#C475FD"  # lavender accent for FEV1 marker
+
+# Data: simulated spirometry flow-volume loop (mild obstructive pattern)
 np.random.seed(42)
 
-# Measured patient data (mild obstructive pattern)
-fvc = 4.2  # Forced Vital Capacity in liters
-pef = 8.5  # Peak Expiratory Flow in L/s
-fev1 = 3.1  # FEV1 in liters
+# Measured patient values
+fvc = 4.2  # Forced Vital Capacity (L)
+pef = 8.5  # Peak Expiratory Flow (L/s)
+fev1 = 3.1  # Forced Expiratory Volume in 1 s (L)
 
 # Expiratory limb: sharp rise to PEF then roughly linear decline
-n_exp = 150
+n_exp = 160
 volume_exp = np.linspace(0, fvc, n_exp)
-t_peak = 0.08  # PEF occurs early (~8% of FVC)
-peak_idx = int(t_peak * n_exp)
-
+peak_idx = int(0.08 * n_exp)
 flow_rise = np.linspace(0, pef, peak_idx + 1)
-volume_remaining = volume_exp[peak_idx:]
-flow_decline = pef * (1 - ((volume_remaining - volume_remaining[0]) / (fvc - volume_remaining[0])) ** 0.85)
+vol_rem = volume_exp[peak_idx:]
+flow_decline = pef * (1 - ((vol_rem - vol_rem[0]) / (fvc - vol_rem[0])) ** 0.85)
 flow_exp = np.concatenate([flow_rise, flow_decline[1:]])
 
-# Inspiratory limb: symmetric U-shaped curve below zero
-n_insp = 150
+# Inspiratory limb: symmetric U-shaped curve below the zero-flow line
+n_insp = 160
 volume_insp = np.linspace(fvc, 0, n_insp)
-pif = -6.0  # Peak Inspiratory Flow
-t_norm = np.linspace(0, np.pi, n_insp)
-flow_insp = pif * np.sin(t_norm)
+pif = -6.0  # Peak Inspiratory Flow (L/s)
+flow_insp = pif * np.sin(np.linspace(0, np.pi, n_insp))
 
-# Predicted normal values (healthy reference)
-fvc_pred = 4.8
-pef_pred = 10.2
-
-n_pred_exp = 150
-volume_pred_exp = np.linspace(0, fvc_pred, n_pred_exp)
-peak_idx_pred = int(0.08 * n_pred_exp)
+# Predicted normal values (healthy reference loop)
+fvc_pred, pef_pred, pif_pred = 4.8, 10.2, -7.0
+volume_pred_exp = np.linspace(0, fvc_pred, n_exp)
+peak_idx_pred = int(0.08 * n_exp)
 flow_pred_rise = np.linspace(0, pef_pred, peak_idx_pred + 1)
-volume_pred_remaining = volume_pred_exp[peak_idx_pred:]
-flow_pred_decline = pef_pred * (
-    1 - ((volume_pred_remaining - volume_pred_remaining[0]) / (fvc_pred - volume_pred_remaining[0])) ** 0.95
-)
+vol_rem_pred = volume_pred_exp[peak_idx_pred:]
+flow_pred_decline = pef_pred * (1 - ((vol_rem_pred - vol_rem_pred[0]) / (fvc_pred - vol_rem_pred[0])) ** 0.95)
 flow_pred_exp = np.concatenate([flow_pred_rise, flow_pred_decline[1:]])
+volume_pred_insp = np.linspace(fvc_pred, 0, n_insp)
+flow_pred_insp = pif_pred * np.sin(np.linspace(0, np.pi, n_insp))
 
-n_pred_insp = 150
-volume_pred_insp = np.linspace(fvc_pred, 0, n_pred_insp)
-pif_pred = -7.0
-flow_pred_insp = pif_pred * np.sin(np.linspace(0, np.pi, n_pred_insp))
-
-# Combine measured loop into single DataFrame with group for legend
-df_measured = pd.DataFrame(
-    {
-        "volume": np.concatenate([volume_exp, volume_insp]),
-        "flow": np.concatenate([flow_exp, flow_insp]),
-        "curve": "Measured",
-    }
-)
-
-df_predicted = pd.DataFrame(
-    {
-        "volume": np.concatenate([volume_pred_exp, volume_pred_insp]),
-        "flow": np.concatenate([flow_pred_exp, flow_pred_insp]),
-        "curve": "Predicted Normal",
-    }
-)
-
-# Ribbon data for filled measured loop area
-df_ribbon_measured = pd.DataFrame(
-    {"volume": volume_exp, "ymin": np.interp(volume_exp, volume_insp[::-1], flow_insp[::-1]), "ymax": flow_exp}
-)
-
-# Ribbon data for filled predicted loop area
-df_ribbon_predicted = pd.DataFrame(
-    {
-        "volume": volume_pred_exp,
-        "ymin": np.interp(volume_pred_exp, volume_pred_insp[::-1], flow_pred_insp[::-1]),
-        "ymax": flow_pred_exp,
-    }
-)
-
-# PEF annotation point
-pef_volume = volume_exp[np.argmax(flow_exp)]
-df_pef = pd.DataFrame({"volume": [pef_volume], "flow": [pef]})
-
-# FEV1 volume marker on measured curve
-fev1_flow = np.interp(fev1, volume_exp, flow_exp)
-df_fev1 = pd.DataFrame({"volume": [fev1], "flow": [fev1_flow]})
-
-# Clinical values annotation
-clinical_text = f"FEV\u2081: {fev1:.1f} L  |  FVC: {fvc:.1f} L  |  PEF: {pef:.1f} L/s"
-df_clinical = pd.DataFrame({"volume": [fvc * 0.52], "flow": [pef * 1.15], "label": [clinical_text]})
-
-# Combined line data for legend
-df_lines = pd.concat([df_measured, df_predicted], ignore_index=True)
-
-# Tooltip data for measured expiratory limb
-df_measured_exp_tt = pd.DataFrame(
+# Curve frames (one row per limb point) with hover labels for tooltips
+df_meas_exp = pd.DataFrame(
     {
         "volume": volume_exp,
         "flow": flow_exp,
@@ -112,9 +72,7 @@ df_measured_exp_tt = pd.DataFrame(
         "flow_label": [f"{f:.1f} L/s" for f in flow_exp],
     }
 )
-
-# Tooltip data for measured inspiratory limb
-df_measured_insp_tt = pd.DataFrame(
+df_meas_insp = pd.DataFrame(
     {
         "volume": volume_insp,
         "flow": flow_insp,
@@ -123,63 +81,81 @@ df_measured_insp_tt = pd.DataFrame(
         "flow_label": [f"{f:.1f} L/s" for f in flow_insp],
     }
 )
+df_pred_exp = pd.DataFrame({"volume": volume_pred_exp, "flow": flow_pred_exp, "curve": "Predicted normal"})
+df_pred_insp = pd.DataFrame({"volume": volume_pred_insp, "flow": flow_pred_insp, "curve": "Predicted normal"})
+
+# Ribbon fills (loop interiors) — measured uses inspiratory limb as lower bound
+df_ribbon_meas = pd.DataFrame(
+    {"volume": volume_exp, "ymin": np.interp(volume_exp, volume_insp[::-1], flow_insp[::-1]), "ymax": flow_exp}
+)
+df_ribbon_pred = pd.DataFrame(
+    {
+        "volume": volume_pred_exp,
+        "ymin": np.interp(volume_pred_exp, volume_pred_insp[::-1], flow_pred_insp[::-1]),
+        "ymax": flow_pred_exp,
+    }
+)
+
+# Clinical markers
+pef_volume = volume_exp[np.argmax(flow_exp)]
+df_pef = pd.DataFrame({"volume": [pef_volume], "flow": [pef]})
+fev1_flow = np.interp(fev1, volume_exp, flow_exp)
+df_fev1 = pd.DataFrame({"volume": [fev1], "flow": [fev1_flow]})
+
+# Clinical summary text box (spec requires FEV1 / FVC / PEF annotations)
+ratio = fev1 / fvc
+clinical_text = f"FEV₁ {fev1:.1f} L   ·   FVC {fvc:.1f} L   ·   PEF {pef:.1f} L/s   ·   FEV₁/FVC {ratio:.0%}"
+df_clinical = pd.DataFrame({"volume": [fvc_pred * 0.55], "flow": [10.3], "label": [clinical_text]})
+
+title = "spirometry-flow-volume · python · letsplot · anyplot.ai"
 
 # Plot
 plot = (
     ggplot()
-    # Filled predicted normal range (subtle background)
-    + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_predicted, fill="#D4D4D4", alpha=0.3)
-    # Filled measured loop area
-    + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_measured, fill="#306998", alpha=0.15)
-    # Predicted loop lines (dashed) - use color aes for natural legend
+    # Filled loop interiors
+    + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_pred, fill=PRED, alpha=0.12)
+    + geom_ribbon(aes(x="volume", ymin="ymin", ymax="ymax"), data=df_ribbon_meas, fill=BRAND, alpha=0.14)
+    # Zero-flow reference line dividing expiratory (upper) from inspiratory (lower)
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.5)
+    # Predicted normal loop (dashed) — legend driven by color + linetype aes
     + geom_line(
-        aes(x="volume", y="flow", color="curve"),
-        data=df_predicted[df_predicted["curve"] == "Predicted Normal"].iloc[:n_pred_exp],
-        size=1.2,
-        linetype="dashed",
-        show_legend=True,
+        aes(x="volume", y="flow", color="curve", linetype="curve"), data=df_pred_exp, size=1.1, show_legend=True
     )
     + geom_line(
-        aes(x="volume", y="flow", color="curve"),
-        data=df_predicted[df_predicted["curve"] == "Predicted Normal"].iloc[n_pred_exp:],
-        size=1.2,
-        linetype="dashed",
-        show_legend=False,
+        aes(x="volume", y="flow", color="curve", linetype="curve"), data=df_pred_insp, size=1.1, show_legend=False
     )
-    # Measured loop lines with tooltips - use color aes for natural legend
+    # Measured loop (solid) with interactive tooltips
     + geom_line(
-        aes(x="volume", y="flow", color="curve"),
-        data=df_measured_exp_tt,
+        aes(x="volume", y="flow", color="curve", linetype="curve"),
+        data=df_meas_exp,
         size=2.0,
         show_legend=True,
-        tooltips=layer_tooltips().title("Expiratory Limb").line("Volume|@vol_label").line("Flow|@flow_label"),
+        tooltips=layer_tooltips().title("Expiratory limb").line("Volume|@vol_label").line("Flow|@flow_label"),
     )
     + geom_line(
-        aes(x="volume", y="flow", color="curve"),
-        data=df_measured_insp_tt,
+        aes(x="volume", y="flow", color="curve", linetype="curve"),
+        data=df_meas_insp,
         size=2.0,
         show_legend=False,
-        tooltips=layer_tooltips().title("Inspiratory Limb").line("Volume|@vol_label").line("Flow|@flow_label"),
+        tooltips=layer_tooltips().title("Inspiratory limb").line("Volume|@vol_label").line("Flow|@flow_label"),
     )
-    # FEV1 marker on curve (purple - colorblind-safe)
-    + geom_point(aes(x="volume", y="flow"), data=df_fev1, color="#7C3AED", size=7, shape=18)
+    # FEV1 marker
+    + geom_point(aes(x="volume", y="flow"), data=df_fev1, color=FEV1_COLOR, size=6, shape=18)
     + geom_label(
         aes(x="volume", y="flow", label="label"),
-        data=pd.DataFrame(
-            {"volume": [fev1 + 0.15], "flow": [fev1_flow + 0.6], "label": [f"FEV\u2081 at {fev1:.1f} L"]}
-        ),
-        size=11,
-        color="#7C3AED",
-        fill="#F5F3FF",
-        label_padding=0.3,
+        data=pd.DataFrame({"volume": [fev1 + 0.15], "flow": [fev1_flow + 1.1], "label": [f"FEV₁ at {fev1:.1f} L"]}),
+        size=7,
+        color=FEV1_COLOR,
+        fill=ELEVATED_BG,
+        label_padding=0.25,
         hjust=0,
     )
-    # PEF marker (amber - colorblind-safe)
+    # PEF marker
     + geom_point(
         aes(x="volume", y="flow"),
         data=df_pef,
-        color="#D97706",
-        size=8,
+        color=PEF_COLOR,
+        size=7,
         shape=16,
         tooltips=layer_tooltips()
         .title("Peak Expiratory Flow")
@@ -188,50 +164,53 @@ plot = (
     )
     + geom_label(
         aes(x="volume", y="flow", label="label"),
-        data=pd.DataFrame({"volume": [pef_volume + 0.2], "flow": [pef + 0.5], "label": [f"PEF: {pef} L/s"]}),
-        size=12,
-        color="#D97706",
-        fill="#FFFBEB",
-        label_padding=0.3,
+        data=pd.DataFrame({"volume": [pef_volume + 0.18], "flow": [pef + 0.1], "label": [f"PEF {pef} L/s"]}),
+        size=7,
+        color=PEF_COLOR,
+        fill=ELEVATED_BG,
+        label_padding=0.25,
         hjust=0,
     )
-    # Clinical values bar at top
+    # Clinical summary
     + geom_label(
         aes(x="volume", y="flow", label="label"),
         data=df_clinical,
-        size=12,
-        color="#1F2937",
-        fill="#F3F4F6",
-        label_padding=0.5,
+        size=7,
+        color=INK,
+        fill=ELEVATED_BG,
+        label_padding=0.4,
         hjust=0.5,
     )
-    # Zero flow reference line
-    + geom_hline(yintercept=0, color="#6B7280", size=0.6, linetype="solid")
-    + scale_color_manual(values={"Measured": "#306998", "Predicted Normal": "#9CA3AF"}, name="")
-    + guides(color=guide_legend(override_aes={"size": 5}))
-    # Labels and sizing
-    + labs(x="Volume (L)", y="Flow (L/s)", title="spirometry-flow-volume \u00b7 letsplot \u00b7 pyplots.ai")
-    + ggsize(1600, 900)
-    + coord_cartesian(ylim=[-8, 11])
-    + scale_x_continuous(expand=[0.02, 0])
+    # Scales — combined color + linetype legend (shared empty name merges them)
+    + scale_color_manual(values={"Measured": BRAND, "Predicted normal": PRED}, name="")
+    + scale_linetype_manual(values={"Measured": "solid", "Predicted normal": "dashed"}, name="")
+    + guides(color=guide_legend(override_aes={"size": 1.6}))
+    + labs(x="Volume (L)", y="Flow (L/s)", title=title)
+    + coord_cartesian(xlim=[-0.15, 5.4], ylim=[-8, 11])
     + scale_y_continuous(breaks=list(range(-8, 12, 2)))
+    # Sizing & theme-adaptive chrome
+    + ggsize(800, 450)
+    + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="#1F2937"),
-        axis_title=element_text(size=20, color="#374151"),
-        axis_text=element_text(size=16, color="#6B7280"),
-        panel_grid_major_y=element_line(color="#E5E7EB", size=0.4),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        panel_grid_major_y=element_line(color=GRID, size=0.4),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        legend_position=[0.85, 0.92],
+        panel_border=element_blank(),
+        axis_line=element_blank(),
+        axis_ticks=element_blank(),
+        legend_position=[0.86, 0.93],
         legend_justification=[0.5, 1.0],
-        legend_text=element_text(size=15),
-        legend_background=element_rect(fill="#FFFFFF", color="#E5E7EB", size=0.5),
-        plot_background=element_rect(fill="#FAFAFA"),
-        panel_background=element_rect(fill="#FAFAFA"),
-        plot_margin=[40, 20, 20, 20],
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_margin=[24, 24, 16, 16],
     )
 )
 
 # Save
-ggsave(plot, "plot.png", scale=3, path=".")
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
