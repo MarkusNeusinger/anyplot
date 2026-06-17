@@ -1,7 +1,7 @@
 # anyplot.ai
 # ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-06-17
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 93/100 | Created: 2026-06-17
 
 using CairoMakie
 using Colors
