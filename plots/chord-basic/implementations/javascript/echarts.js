@@ -72,10 +72,11 @@ const links = flows.map((f) => ({
   target: f.target,
   value: f.value,
   lineStyle: {
-    width: 1.5 + f.value * 0.8,
+    // Minimum width + opacity floor keep low-volume flows (1–2M) legible.
+    width: 3 + f.value * 0.85,
     curveness: 0.3,
     color: nodeColor[f.source],
-    opacity: 0.55,
+    opacity: 0.65,
   },
 }));
 
@@ -107,7 +108,11 @@ chart.setOption({
     data: nodes,
     links: links,
     roam: false,
-    center: ["50%", "55%"],
+    // Reserve a title band at the top and shrink the ring slightly so the
+    // topmost node clears the title text (VQ-02 crowding fix).
+    top: "12%",
+    bottom: "6%",
+    center: ["50%", "54%"],
     edgeSymbol: ["none", "arrow"],
     edgeSymbolSize: 10,
     label: {
@@ -117,7 +122,7 @@ chart.setOption({
       fontSize: 19,
       fontWeight: 500,
     },
-    lineStyle: { opacity: 0.55 },
+    lineStyle: { opacity: 0.65 },
     emphasis: {
       focus: "adjacency",
       lineStyle: { opacity: 0.9 },
