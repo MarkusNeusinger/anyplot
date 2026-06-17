@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-17
@@ -23,6 +23,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette — first series always #009E73
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -71,7 +72,7 @@ else:
 anyplot_theme = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
     panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
-    panel_grid_major=element_line(color=INK_SOFT, size=0.2),  # noqa: F405
+    panel_grid_major=element_line(color=RULE, size=0.3),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
     panel_border=element_blank(),  # noqa: F405
     axis_title=element_text(color=INK, size=12, face="bold"),  # noqa: F405
@@ -194,11 +195,11 @@ if freq_pc is not None:
         shape=18,  # noqa: F405
     )
 
-# Combine panels vertically with a 4% gap; use explicit pixel dimensions since
-# ggbunch adds internal overhead that breaks the simple scale= formula
+# Combine panels vertically; override the wrapper background so the inter-panel
+# gap matches PAGE_BG instead of defaulting to white in dark mode
 combined = ggbunch(  # noqa: F405
     plots=[mag_plot, phase_plot], regions=[(0, 0, 1, 0.48, 0, 0), (0, 0.52, 1, 0.48, 0, 0)]
-)
+) + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG))  # noqa: F405
 
 ggsave(combined, f"plot-{THEME}.png", path=".", w=3200, h=1800, unit="px")
 ggsave(combined, f"plot-{THEME}.html", path=".")
