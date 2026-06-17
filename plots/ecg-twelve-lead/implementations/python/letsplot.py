@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-19
+Library: letsplot 4.10.1 | Python 3.13.12
+Quality: 90/100 | Regenerated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -28,6 +30,23 @@ from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
+
+# Theme-adaptive chrome (Imprint palette + theme tokens)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# ECG-paper grid — classic red ruling, kept as theme-adaptive chrome so the
+# iconic medical look survives on both the warm-cream and warm-black surfaces.
+PAPER_TINT = "#FBF0EB" if THEME == "light" else "#241C19"
+GRID_MINOR = "#EBD2CB" if THEME == "light" else "#3A2A26"
+GRID_MAJOR = "#D49B8E" if THEME == "light" else "#5E3E35"
+GRID_COL = "#BC7563" if THEME == "light" else "#7C4E43"
+
+# ECG trace = Imprint brand green (position 1) — identical in both themes, only
+# chrome flips. Green tracings are a real patient-monitor convention.
+TRACE = "#009E73"
 
 # Data - Synthetic ECG (Normal Sinus Rhythm)
 np.random.seed(42)
@@ -99,7 +118,7 @@ for lead_name, w in lead_weights.items():
     y_baseline = (n_rows - 1 - row) * row_spacing + row_spacing
 
     all_traces.append(pd.DataFrame({"time": x_vals, "voltage": signal + y_baseline, "lead": lead_name}))
-    label_records.append({"time": x_vals[0] + 0.03, "voltage": y_baseline + 1.3, "label": lead_name})
+    label_records.append({"time": x_vals[0] + 0.05, "voltage": y_baseline + 1.35, "label": lead_name})
 
 # Lead II rhythm strip across the bottom (full 10 seconds)
 n_full = int(fs * total_time)
@@ -111,7 +130,7 @@ signal_ii += np.random.normal(0, 0.015, n_full)
 
 rhythm_baseline = 0.0
 all_traces.append(pd.DataFrame({"time": t_full, "voltage": signal_ii + rhythm_baseline, "lead": "II_rhythm"}))
-label_records.append({"time": 0.03, "voltage": rhythm_baseline + 1.3, "label": "II"})
+label_records.append({"time": 0.05, "voltage": rhythm_baseline + 1.35, "label": "II"})
 
 df = pd.concat(all_traces, ignore_index=True)
 labels_df = pd.DataFrame(label_records)
@@ -138,14 +157,14 @@ cal_records.extend(
 )
 cal_df = pd.DataFrame(cal_records)
 
-# Scale annotation text
-scale_df = pd.DataFrame({"x": [total_time - 0.05], "y": [rhythm_baseline - 1.3], "label": ["25 mm/s | 10 mm/mV"]})
+# Scale annotation text (bumped size — prev review flagged it as slightly small)
+scale_df = pd.DataFrame({"x": [total_time - 0.05], "y": [rhythm_baseline - 1.4], "label": ["25 mm/s   |   10 mm/mV"]})
 
-# ECG paper grid lines
-y_min = rhythm_baseline - 1.8
+# ECG paper grid extents
+y_min = rhythm_baseline - 1.9
 y_max = (n_rows - 1) * row_spacing + row_spacing + 2.0
 
-# Row background regions using geom_rect (lets-plot distinctive feature)
+# Paper-region backgrounds using geom_rect (lets-plot distinctive feature)
 row_rects = []
 for row_idx in range(n_rows):
     y_base = (n_rows - 1 - row_idx) * row_spacing + row_spacing
@@ -180,82 +199,82 @@ col_boundaries = [strip_duration * i for i in range(5)]
 col_sep = pd.DataFrame({"x": col_boundaries, "xend": col_boundaries, "y": y_min, "yend": y_max})
 
 # Plot
-ecg_trace_color = "#1a1a2e"
-
 plot = (
     ggplot()
-    # Row background regions (lets-plot geom_rect)
+    # Paper-region backgrounds (lets-plot geom_rect)
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         data=row_rects_df,
-        fill="#fff5f0",
-        alpha=0.3,
+        fill=PAPER_TINT,
+        alpha=0.5,
         color="rgba(0,0,0,0)",
         tooltips=layer_tooltips().line("@region"),
         inherit_aes=False,
     )
     # Minor grid
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=minor_v, color="#f0ccc4", size=0.1, inherit_aes=False
+        aes(x="x", y="y", xend="xend", yend="yend"), data=minor_v, color=GRID_MINOR, size=0.1, inherit_aes=False
     )
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=minor_h, color="#f0ccc4", size=0.1, inherit_aes=False
+        aes(x="x", y="y", xend="xend", yend="yend"), data=minor_h, color=GRID_MINOR, size=0.1, inherit_aes=False
     )
     # Major grid
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=major_v, color="#c8887e", size=0.3, inherit_aes=False
+        aes(x="x", y="y", xend="xend", yend="yend"), data=major_v, color=GRID_MAJOR, size=0.3, inherit_aes=False
     )
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=major_h, color="#c8887e", size=0.3, inherit_aes=False
+        aes(x="x", y="y", xend="xend", yend="yend"), data=major_h, color=GRID_MAJOR, size=0.3, inherit_aes=False
     )
     # Column separators
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=col_sep, color="#b07068", size=0.6, inherit_aes=False
+        aes(x="x", y="y", xend="xend", yend="yend"), data=col_sep, color=GRID_COL, size=0.6, inherit_aes=False
     )
     # 1mV calibration pulses
-    + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=cal_df, color=ecg_trace_color, size=0.8, inherit_aes=False
-    )
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=cal_df, color=INK, size=0.7, inherit_aes=False)
     # ECG traces with interactive tooltips (lets-plot layer_tooltips)
     + geom_line(
         aes(x="time", y="voltage", group="lead"),
         data=df,
-        color=ecg_trace_color,
-        size=0.8,
+        color=TRACE,
+        size=0.7,
         tooltips=layer_tooltips().line("Lead: @lead").format("time", ".2f").line("Time: @time s"),
     )
     # Lead labels
     + geom_text(
         aes(x="time", y="voltage", label="label"),
         data=labels_df,
-        color=ecg_trace_color,
-        size=11,
+        color=INK,
+        size=7,
         fontface="bold",
         hjust=0,
         inherit_aes=False,
     )
     # Scale annotation
-    + geom_text(aes(x="x", y="y", label="label"), data=scale_df, color="#666666", size=9, hjust=1, inherit_aes=False)
+    + geom_text(aes(x="x", y="y", label="label"), data=scale_df, color=INK_MUTED, size=6, hjust=1, inherit_aes=False)
     # Scales
     + scale_x_continuous(limits=[-0.3, total_time], expand=[0, 0])
     + scale_y_continuous(limits=[y_min, y_max], expand=[0, 0])
-    + labs(title="ecg-twelve-lead \u00b7 letsplot \u00b7 pyplots.ai")
+    + labs(
+        title="ecg-twelve-lead · python · letsplot · anyplot.ai",
+        subtitle="Normal sinus rhythm · 72 bpm · standard 12-lead with continuous Lead II rhythm strip",
+    )
     # Theme - ECG paper style
     + theme(
-        plot_title=element_text(size=26, face="bold", color="#333333", margin=[0, 0, 12, 0]),
+        plot_title=element_text(size=17, face="bold", color=INK, margin=[0, 0, 4, 0]),
+        plot_subtitle=element_text(size=11, color=INK_MUTED, margin=[0, 0, 10, 0]),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
-        panel_background=element_rect(fill="#fff5f0"),
-        plot_background=element_rect(fill="#ffffff"),
+        panel_background=element_rect(fill=PAGE_BG, color="rgba(0,0,0,0)"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid=element_blank(),
-        plot_margin=[30, 20, 15, 20],
+        plot_margin=[28, 22, 16, 22],
         legend_position="none",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save (scale 4x -> 3200 x 1800 px)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
