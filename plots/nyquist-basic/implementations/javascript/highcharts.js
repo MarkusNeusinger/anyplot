@@ -1,6 +1,7 @@
 // anyplot.ai
 // nyquist-basic: Nyquist Plot for Control Systems
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 89/100 | Created: 2026-06-17
 //# anyplot-orientation: square
 
@@ -8,13 +9,28 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data: G(s) = 30 / ((s+1)(s+2)(s+3)) ---
 // G(jw) = 30 / ((6 - 6w²) + j(11w - w³))
-// Phase crossover at w = √11 ≈ 3.317 rad/s: G(j√11) = -0.5 (gain margin = 2)
+// Phase crossover at w = √11 ≈ 3.317 rad/s: G(j√11) = -0.5 (gain margin = 2 = 6 dB)
 function g(w) {
   const dr = 6 - 6 * w * w;
   const di = 11 * w - w * w * w;
   const d2 = dr * dr + di * di;
   return { re: 30 * dr / d2, im: -30 * di / d2 };
 }
+
+// Gain crossover frequency: binary search for |G(jω)| = 1
+// At ω=1: |G|≈3 > 1;  at ω=4: |G|≈0.33 < 1  →  root lies in [1, 4]
+let wgcLow = 1.0, wgcHigh = 4.0;
+for (let i = 0; i < 50; i++) {
+  const wm = (wgcLow + wgcHigh) / 2;
+  const pm = g(wm);
+  const mag2 = pm.re * pm.re + pm.im * pm.im;
+  if (mag2 > 1) wgcLow = wm; else wgcHigh = wm;
+}
+const wgc = (wgcLow + wgcHigh) / 2;
+const pgc = g(wgc);
+// Phase margin = 180° + ∠G(jω_gc)  [∠G is negative for this system]
+const phaseGc = Math.atan2(pgc.im, pgc.re) * 180 / Math.PI;
+const pmDeg = Math.round(180 + phaseGc);
 
 // Logarithmically spaced frequencies: ω ∈ [0.01, 100] rad/s
 const N = 400;
@@ -34,22 +50,32 @@ for (let i = 0; i <= 200; i++) {
   unitCircle.push([Math.cos(th), Math.sin(th)]);
 }
 
-// Key frequency annotation points
+// Frequency annotation points — ω_pc handled separately with below-axis label
+// to avoid crowding with the (−1, 0) label above the real axis
 const annotPoints = [
   { w: 0.3, label: "0.3 rad/s" },
   { w: 1.0, label: "1 rad/s" },
-  { w: 2.0, label: "2 rad/s" },
-  { w: Math.sqrt(11), label: "ω_pc ≈ 3.32 rad/s" }
+  { w: 2.0, label: "2 rad/s" }
 ].map(f => {
   const p = g(f.w);
   return { x: p.re, y: p.im, name: f.label };
 });
 
+// ω_pc sits on the real axis at (−0.5, 0) — place label below to clear the
+// (−1, 0) label above the axis
+const wpc = Math.sqrt(11);
+const ppc = g(wpc);
+const wpcPoint = {
+  x: ppc.re, y: ppc.im, name: "ω_pc ≈ 3.32 rad/s",
+  dataLabels: { y: 18, x: 4 }
+};
+
 // Frequencies at which to place direction arrows (ω > 0 curve and its mirror)
 const arrowFreqs = [0.5, 2.0];
 
-// Title (52 chars — below 67 threshold, fontSize stays at 22px)
+// Title and subtitle conveying the transfer function and stability margins
 const title = "nyquist-basic · javascript · highcharts · anyplot.ai";
+const subtitle = `G(s) = 30/((s+1)(s+2)(s+3))  ·  Gain margin: 6 dB  ·  Phase margin: ${pmDeg}°`;
 
 // --- Chart ---
 Highcharts.chart("container", {
@@ -129,6 +155,10 @@ Highcharts.chart("container", {
     text: title,
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" }
   },
+  subtitle: {
+    text: subtitle,
+    style: { color: t.inkSoft, fontSize: "14px" }
+  },
   xAxis: {
     type: "linear",
     title: { text: "Real", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -202,19 +232,19 @@ Highcharts.chart("container", {
         enabled: true,
         format: "(−1, 0)",
         style: { color: t.palette[4], fontSize: "13px", fontWeight: "600" },
-        x: 6, y: -14
+        x: 6, y: -28
       }
     },
     {
       name: "Frequency markers",
       type: "scatter",
-      data: annotPoints,
+      data: [...annotPoints, wpcPoint],
       color: t.palette[2],
       marker: { symbol: "circle", radius: 5 },
       dataLabels: {
         enabled: true,
         format: "{point.name}",
-        style: { color: t.inkSoft, fontSize: "11px", fontWeight: "normal" },
+        style: { color: t.inkSoft, fontSize: "12px", fontWeight: "normal" },
         allowOverlap: false
       },
       showInLegend: false
