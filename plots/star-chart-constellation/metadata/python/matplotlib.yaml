@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: star-chart-constellation
 created: '2026-03-18T21:15:07Z'
-updated: '2026-06-16T23:57:24Z'
+updated: '2026-06-17T00:14:47Z'
 generated_by: claude-opus
 workflow_run: 27655675842
 issue: 4560
@@ -15,119 +15,125 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Authentic astronomical dataset: real star names with true RA/Dec and apparent
-    magnitudes across 21 constellations (~125 named stars + 300 muted field stars)
-    — plausible and neutral'
-  - Distinctive matplotlib Aitoff all-sky projection with x-ticks relabelled from
-    degrees to Right Ascension hours — idiomatic use of a built-in projection
-  - Magnitude correctly inverted to point size (brighter = larger) with a power-law
-    mapping, a soft halo glow behind the brightest stars, and magnitude also encoded
-    along imprint_seq
-  - Theme-adaptive chrome threaded through every non-data element; data colours stay
-    identical between light and dark renders
-  - 'Polished layered composition: muted background field stars, semi-transparent
-    constellation stick-figure lines, path-effect strokes on labels for legibility,
-    dashed amber ecliptic with a legend'
+  - 'Authentic real-star catalog: ~130 named stars across 21 constellations with accurate
+    RA/Dec/magnitude (Sirius mag -1.46 through faint members), giving exceptional
+    data realism and feature coverage'
+  - Correct north-polar azimuthal-equidistant projection yields a natural circular
+    sky boundary, exactly as the spec recommends; RA spokes every 2h and Dec circles
+    (+60/+30/0/-30) are clearly labelled
+  - 'Sophisticated layering: faint Milky Way band (galactic->equatorial transform),
+    muted background field stars, dashed amber ecliptic (with RA-seam break), soft
+    halos behind the brightest stars, and path-effect strokes for label legibility'
+  - Magnitude encoded twice (point size via inverted-magnitude power law AND Imprint
+    sequential green->blue color), with a dedicated size legend and a feature legend
+    (ecliptic + Milky Way)
+  - 'Fully theme-adaptive chrome: data colors identical between renders, only background/ink/grid/legend
+    frames flip; backgrounds are correct #FAF8F1 / #1A1A17'
+  - 'Canvas is exactly 3200x1800; square polar axes centered with legends in the side
+    margins; brand green #009E73 anchors the brightest stars'
   weaknesses:
-  - 'Projection deviates from the spec note: the spec asks for stereographic or azimuthal
-    equidistant so the sky boundary looks circular, but Aitoff renders an ellipse.
-    Acceptable but not what was specified.'
-  - Central sky region (Hercules / Boötes / Corona Bor. / Lyra / Pegasus) is crowded;
-    some constellation labels and star markers sit close together, slightly reducing
-    readability when scaled to ~400px mobile width.
-  - Optional Milky Way band feature from the spec is not included (ecliptic is present).
-  - Constellation labels (7.5pt) and bright-star labels (7pt) are small — legible
-    at full 3200px resolution but marginal at mobile scale.
+  - 'Constellation/star label overlaps in the dense north-polar center: ''Altair''
+    (bright-star label) collides with the ''Cygnus'' constellation label; ''Cassiopeia''
+    is visually truncated by ''Perseus'' (reads as ''CassiopPerseus''); ''Capella''
+    overlaps the ''Taurus'' label; ''Corona Bor.'' runs into ''Ursa Major''. The force-relaxation
+    pass resolves most groups but does not fully separate these crowded central names.
+    Repair: include the bright-star labels (Altair, Capella, Vega, Aldebaran) as movable
+    nodes in the relaxation (not just fixed obstacles), or increase MIN_D_FIXED /
+    half_w reservation for the long names so the densest northern cluster spreads
+    further.'
+  - 'Center crowding reduces mobile legibility (~400px): the overlapping italic constellation
+    names in the dense region would be hard to read when the chart is scaled down.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface (not pure white).
-      Chrome: title "star-chart-constellation · python · matplotlib · anyplot.ai" in dark ink, fully readable; RA-hour ticks (22h..2h) and Dec ticks (+75°..-75°) in soft grey, readable; dashed coordinate grid subtle; footer subtitle readable; "Ecliptic" legend lower-right with elevated fill.
-      Data: stars coloured along imprint_seq (brand green #009E73 for brightest, fading toward blue), sized by magnitude; muted grey background field stars; grey semi-transparent constellation lines; amber dashed ecliptic; italic constellation names and bright-star labels with light stroke halos.
-      Legibility verdict: PASS — all text readable; only the dense central cluster is slightly crowded.
+      Background: warm off-white (~#FAF8F1) across full canvas and inside the circular polar chart. Correct.
+      Chrome: title "star-chart-constellation · python · matplotlib · anyplot.ai" in dark ink, centered, fully visible. RA hour spokes (0h-22h) and Dec circle labels (+60°/+30°/0°/-30°) in soft/muted ink, readable. Footer subtitle readable. Two legends (Ecliptic+Milky Way upper-right; Apparent magnitude lower-right) on elevated cream frames with readable text.
+      Data: named stars colored along Imprint sequential ramp — brightest = brand green #009E73 fading to blue #4467A3 for fainter; sizes scale with brightness. Halos behind brightest stars. Faint grey Milky Way band and background field stars. Dashed amber ecliptic curve. Constellation stick-figure lines in soft ink. First/brightest series is #009E73. Correct.
+      Legibility verdict: PASS overall, BUT central north-polar region has several overlapping labels (Altair/Cygnus, Cassiopeia/Perseus, Capella/Taurus, Corona Bor./Ursa Major) — localized crowding, not invisibility.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface (not pure black).
-      Chrome: title and ticks in light ink (#F0EFE8 / #B8B7B0), fully readable; grid subtle but visible; legend frame uses dark elevated fill; no dark-on-dark failures detected.
-      Data: star colours identical to the light render (green->blue imprint_seq), amber ecliptic identical; only chrome flipped.
-      Legibility verdict: PASS — all text readable; brand green clearly visible on the dark surface.
+      Background: warm near-black (~#1A1A17). Correct.
+      Chrome: title and labels in light ink (#F0EFE8 / soft), all clearly readable against dark — no dark-on-dark failures. Grid dashed circles subtle but visible. Legend frames on #242420 elevated panels with light text.
+      Data: data colors IDENTICAL to light render — brand green brightest stars fading to blue, same sizes, same Milky Way/field-star greys, same amber ecliptic. Only chrome flipped. Brand green clearly visible on dark surface.
+      Legibility verdict: PASS overall, same central-crowding overlaps as the light render (theme-independent layout issue).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes set; readable both themes; small 7-7.5pt labels marginal
-          at mobile scale
+        comment: Font sizes explicitly set (7.5-12pt); readable in both themes, but
+          dense central labels crowd and would be hard at ~400px
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Path-effect strokes keep labels readable, but central region is crowded
-          with close labels/markers
+        passed: false
+        comment: 'Real overlaps in north-polar center: Altair/Cygnus, Cassiopeia/Perseus,
+          Capella/Taurus, Corona Bor./Ursa Major'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Magnitude-sized markers, muted alpha field stars, halo glow on brightest
-          — density well handled
+        comment: Magnitude-scaled sizes, muted bg field stars and Milky Way alpha,
+          halos behind bright stars — density well managed
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green->blue sequential is CVD-safe; amber ecliptic distinct; no red-green
-          sole signal
+        comment: Green->blue sequential, CVD-safe, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions; nothing clipped
+        comment: Exactly 3200x1800; circular polar centered, legends in margins, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: RA hours + Dec degrees with explanatory footer
+        comment: RA (hours) spokes, Dec (deg) circles, footer with units; title correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first; imprint_seq for continuous magnitude; theme-correct
-          backgrounds both renders; amber semantic anchor
+        comment: Brightest=#009E73, imprint_seq green->blue, amber semantic anchor
+          for ecliptic, backgrounds theme-correct
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Halo glow, path effects, custom colormap, intentional multi-layer
-          hierarchy
+        comment: Halos, Milky Way band, ecliptic, custom cmap, force-based label relaxation,
+          path strokes
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle dashed grid, no spines, semi-transparent lines, generous whitespace
+        comment: Subtle dashed grid, layered zorder, polar spine styling, generous
+          label strokes
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Brightest stars emphasized via size+halo+labels; constellation labels
-          guide the eye
+        comment: Clear focal hierarchy via size/color and named bright stars, but
+          central crowding dilutes the read
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,50 +141,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: star chart with constellation stick figures on a sky projection'
+        comment: Star chart + constellation stick figures on azimuthal-equidistant
+          projection
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Lines, magnitude sizing, grid, labels, ecliptic present; projection
-          is Aitoff not stereographic/azimuthal; Milky Way omitted (optional)
+        comment: magnitude->size, constellation lines, coord grid, labels, ecliptic,
+          Milky Way — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA/Dec mapped correctly; magnitude inverted to size and mapped to
-          color
+        comment: RA/Dec projected to theta/r correctly, magnitude inverted for size
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; Ecliptic legend labelled
+        comment: Title matches mandated format; feature + magnitude legends labelled
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers magnitude sizing, color, lines, labels, grid, ecliptic across
-          21 constellations
+        comment: 21 constellations, ~130 named stars, bg field, Milky Way, ecliptic
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real star names/coordinates/magnitudes — authentic and neutral
+        comment: Accurate real-star catalog (RA/Dec/mag); neutral, educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Magnitudes -1.46..6.0, RA 0-24h, Dec sensible ranges
+        comment: Magnitudes -1.46 to ~4.9, realistic apparent-magnitude range
     code_quality:
       score: 10
       max: 10
@@ -188,7 +193,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: Flat procedural script; single small project() helper used repeatedly
+          is justified, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,50 +206,55 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used (os, pe, plt, np, LinearSegmentedColormap, Line2D,
+          Patch)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
-    library_mastery:
-      score: 8
+        comment: Saves plot-{THEME}.png, no bbox_inches=tight, current API
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes methods, Aitoff projection, LinearSegmentedColormap, path effects
+        comment: Polar projection, add_axes, LinearSegmentedColormap, legend proxy
+          artists, path_effects
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Built-in Aitoff projection, path-effect strokes, custom colormap,
-          halo glow
+        comment: Polar projection + custom cmap + path-effect strokes + force-based
+          label layout
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - annotations
-  - manual-ticks
+  - custom-legend
+  - path-effects
   patterns:
   - data-generation
   - iteration-over-groups
+  - force-directed-labels
   dataprep:
-  - normalization
+  - coordinate-projection
+  - galactic-to-equatorial
   styling:
-  - custom-colormap
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - custom-colormap
