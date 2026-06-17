@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-17
@@ -63,8 +63,8 @@ fig.add_shape(
 # vertically to avoid overlap at 3200×1800.
 bifurcation_points = [
     (3.0, "Period-2", "center", 1.04),
-    (3.449, "Period-4", "center", 1.13),
-    (3.544, "Period-8", "right", 1.04),
+    (3.449, "Period-4", "center", 1.04),
+    (3.544, "Period-8", "right", 1.22),
     (3.5699, "Chaos onset", "left", 1.04),
 ]
 
@@ -80,7 +80,7 @@ for r_bif, label, xanchor, y_pos in bifurcation_points:
             "yref": "paper",
             "text": f"<b>{label}</b><br>r ≈ {r_bif}",
             "showarrow": False,
-            "font": {"size": 15, "color": INK_SOFT, "family": "Arial, sans-serif"},
+            "font": {"size": 11, "color": INK_SOFT, "family": "Arial, sans-serif"},
             "bgcolor": ELEVATED_BG,
             "bordercolor": INK_SOFT,
             "borderpad": 4,
@@ -108,6 +108,8 @@ fig.update_layout(
         "title": {"text": "Growth Rate (r)", "font": {"size": 12, "color": INK}, "standoff": 12},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
+        "showline": True,
+        "mirror": False,
         "range": [2.45, 4.05],
         "zeroline": False,
         "dtick": 0.25,
@@ -117,6 +119,8 @@ fig.update_layout(
         "title": {"text": "Steady-State Population (x)", "font": {"size": 12, "color": INK}, "standoff": 12},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
+        "showline": True,
+        "mirror": False,
         "gridwidth": 1,
         "gridcolor": GRID,
         "range": [-0.05, 1.05],
@@ -127,7 +131,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     showlegend=False,
-    margin={"l": 80, "r": 40, "t": 130, "b": 70},
+    margin={"l": 80, "r": 40, "t": 150, "b": 70},
     annotations=annotations,
     hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 12, "font_color": INK},
 )
