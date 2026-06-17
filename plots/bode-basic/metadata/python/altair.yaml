@@ -1,48 +1,53 @@
 library: altair
+language: python
 specification_id: bode-basic
 created: '2026-03-21T20:47:03Z'
-updated: '2026-03-21T21:10:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388395461
+updated: '2026-06-17T20:32:06Z'
+generated_by: claude-sonnet
+workflow_run: 27716198920
 issue: 4411
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bode-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bode-basic/altair/plot.html
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/altair/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent dual-panel Bode plot with clear gain/phase margin annotations using
-    distinct colors and shapes
-  - Custom colorblind-safe palette with intentional color hierarchy (blue magnitude,
-    orange phase, purple GM, teal PM)
-  - Interactive features (tooltips, crosshair) leverage Altair strengths as a declarative
-    visualization library
-  - Fully deterministic, realistic control systems data with well-computed stability
-    margins
-  - Clean code structure with explicit font sizing throughout
+  - 'Correct Imprint palette throughout: magnitude #009E73 (first series), phase #C475FD
+    (second), GM annotation #4467A3 (third), PM annotation #BD8233 (fourth) — canonical
+    order and consistent between renders'
+  - 'Full spec compliance: dual-panel Bode plot with logarithmic shared x-axis, gain
+    and phase margin annotations, reference lines at 0 dB and -180°, crossover markers'
+  - 'Idiomatic Altair usage: layer composition via + operator, vconcat for dual-panel,
+    selection_point crosshair for interactive hover, HTML export alongside PNG'
+  - Deterministic data from a mathematically rigorous third-order open-loop transfer
+    function with documented poles and realistic stability margins (GM=16.5 dB, PM=50.9°)
+  - 'Theme adaptation complete: all chrome tokens (background, text, grid, annotation
+    colors) correctly flip between light #FAF8F1 and dark #1A1A17; data colors stay
+    constant across themes'
   weaknesses:
-  - Some wasted vertical space in the magnitude panel lower region
-  - Could use Altair transforms instead of creating many separate DataFrames for a
-    more idiomatic approach
-  - Domain lines/spines still present; removing them would further refine the visual
-    design
-  image_description: The plot displays a Bode plot with two vertically stacked panels
-    on a light blue-gray background. The top panel shows magnitude (dB) vs frequency
-    (rad/s) with a blue curve (#306998) starting at ~20 dB flat, rolling off after
-    ~1 rad/s, and dropping to about -65 dB at 1000 rad/s. A dashed gray reference
-    line at 0 dB is visible. The gain margin (GM = 16.5 dB) is annotated with a purple
-    dashed vertical line between the phase crossover point (~-16 dB) and the 0 dB
-    reference, with a purple monospace label. Crossover points are marked with filled
-    circle (blue, at gain crossover) and diamond (purple, at phase crossover) markers
-    with white stroke edges. The bottom panel shows phase (degrees) vs frequency with
-    an orange curve (#E8833A) starting near 0° and dropping to about -270°. A dashed
-    gray reference line at -180° is shown. The phase margin (PM = 50.9°) is annotated
-    with a teal dashed vertical line and monospace label. Matching circle and diamond
-    markers indicate crossover points. The title reads "bode-basic · altair · pyplots.ai"
-    with subtitle "G(s) = 10 / (s+1)(s/10+1)(s/50+1) · Open-Loop Frequency Response".
-    The shared logarithmic x-axis spans 0.01 to 1,000 rad/s with labels only on the
-    bottom panel.
+  - Narrow panel heights (height=100 inner) make the dual-panel layout feel slightly
+    cramped — consider increasing each panel to height=130-150 for more breathing
+    room between data and axis labels
+  - 'DE-01 could be pushed higher: consider a subtle area fill under the magnitude
+    line (low opacity) to add visual weight and distinguish the panels more distinctly'
+  - The crosshair interaction uses an invisible mark_point layer as a selection target
+    — this is correct Altair pattern but the mag_selectable chart layer adds a bit
+    of boilerplate; could be simplified with .add_params on the main line chart directly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, no pure white
+      Chrome: Bold title "bode-basic · python · altair · anyplot.ai" in dark #1A1A17, subtitle in muted #4A4A44 — both clearly readable. Y-axis labels "Magnitude (dB)" and "Phase (degrees)" in dark ink, "Frequency (rad/s)" x-axis title readable. Tick labels (−60 to 20 dB, 0 to −280°, 0.01 to 1000 rad/s) in soft ink, all legible.
+      Data: Magnitude line in #009E73 (Imprint[0] brand green), phase line in #C475FD (Imprint[1] lavender). Gain-margin annotation dashed line + diamond marker + "GM = 16.5 dB" label in #4467A3 (Imprint[2] blue). Phase-margin annotation dashed line + diamond marker + "PM = 50.9°" in #BD8233 (Imprint[3] ochre). Reference lines at 0 dB and −180° in muted dashed gray. Crossover markers as circles (gain) and diamonds (phase) distinctly shaped. Grid lines subtle at 10% opacity.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black
+      Chrome: Title and subtitle render in light cream #F0EFE8/#B8B7B0 — fully readable against dark background. Axis titles and tick labels in light ink — no dark-on-dark failures. Grid lines appear as faint white-tinted lines at low opacity.
+      Data: Magnitude line still #009E73 (brand green — unchanged from light render). Phase line still #C475FD (lavender — unchanged). GM annotation still #4467A3 (blue), PM annotation still #BD8233 (ochre) — all four data/annotation colors identical to light render as required.
+      Legibility verdict: PASS — all text clearly readable, no dark-on-dark issues detected, brand green remains visible and prominent on dark surface
   criteria_checklist:
     visual_quality:
       score: 29
@@ -50,66 +55,87 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 20pt, ticks
-          16pt'
+        comment: All font sizes explicitly set (title=16px, subtitle=12px, axis labels=12px,
+          ticks=10px, annotations=10px). Readable in both themes. Minor deduction
+          for slightly cramped feel in narrow panels (height=100 inner).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text overlaps in either render. GM and PM labels positioned clear
+          of data lines and markers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines strokeWidth=3, markers size=220 with white stroke edges
+        comment: Line strokeWidth=2.5 appropriate for 600-point dataset. Crossover
+          markers size=100 clearly visible. Reference lines strokeWidth=1.5 visible
+          without competing with data.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple main series clearly distinct. Blue/ochre annotations
+          distinct from each other and from main series. Imprint palette is CVD-safe.
+          No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe, purple/teal annotations distinguishable
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Two panels fill canvas well but some empty space in lower magnitude
-          region
+        comment: Canvas gate passed. Dual-panel fills canvas well with title and subtitle.
+          Balanced margins. No text clipped at edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Magnitude (dB), Phase (degrees), Frequency (rad/s) - all with units
+        comment: Title correct format. Magnitude (dB), Phase (degrees), Frequency
+          (rad/s) — all descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Magnitude = #009E73 (first series). Phase = #C475FD (second). GM
+          = #4467A3 (third). PM = #BD8233 (fourth). Canonical Imprint order. Light
+          bg #FAF8F1, dark bg #1A1A17. Data colors identical across themes. Chrome
+          correctly flips.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, styled markers, monospace annotations,
-          custom background
+        comment: 'Clearly above defaults: consistent color-coding between annotation
+          lines/labels/markers, monospace font for technical labels matches engineering
+          context, intentional shape distinction (circle vs diamond for different
+          crossover types). Not quite FiveThirtyEight level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, subtle grid opacity 0.25, custom domain styling,
-          corner radius
+        comment: Domain lines removed, grid at 10% opacity, ticks minimized, strokeWidth=0
+          on view border. Good refinement but could push further (e.g., area fill
+          for panels).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: GM/PM annotations create focal points with distinct colors and shapes
+        comment: 'Stability margins (the KEY insight from a Bode plot) are directly
+          annotated with values. Crossover markers distinguish gain vs phase crossover.
+          Visual hierarchy: thick data lines > annotation lines > markers > text.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,48 +145,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom,
+          shared logarithmic frequency axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: dual-panel, log axis, margin annotations, reference
-          lines, grid'
+        comment: 'All spec features: dual panel, log x-axis, GM annotation with dashed
+          line, PM annotation with dashed line, 0 dB reference line, -180° reference
+          line, grid lines, crossover markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on x (log), magnitude/phase on y
+        comment: Frequency on x-axis (log scale, 0.01-1000 rad/s), magnitude_db on
+          top y-axis, phase_deg on bottom y-axis. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for single series
+        comment: 'Title: ''bode-basic · python · altair · anyplot.ai'' — correct format.
+          No legend needed (separate panels + consistent coloring).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Third-order system shows rolloff, phase transition, stability margins
+        comment: 'Shows all Bode plot features: magnitude rolloff, phase shift from
+          0 to ~-270°, both stability margins, crossover frequencies.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic open-loop transfer function for control systems engineering
+        comment: Mathematically rigorous third-order open-loop transfer function G(s)=10/((s+1)(s/10+1)(s/50+1))
+          with documented poles. Standard control systems engineering example.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: DC gain 20 dB, GM=16.5 dB, PM=50.9° are realistic values
+        comment: DC gain = 20 dB (correct for K=10). Phase from 0° to ~-270° (correct
+          for 3rd order). GM=16.5 dB, PM=50.9° are physically realistic stability
+          margins for this system.
     code_quality:
       score: 10
       max: 10
@@ -170,60 +204,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions or classes
+        comment: 'Linear structure: imports → theme tokens → data → chart layers →
+          compose → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic transfer function evaluation
+        comment: 'Fully deterministic: mathematical formula with np.logspace, no random
+          elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas'
+        comment: 'All imports used: altair, numpy, pandas, PIL.Image, os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with logical grouping
+        comment: Appropriate complexity for a layered dual-panel chart. Multiple chart
+          objects are necessary for Altair layer composition. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Altair 6.0 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas pad-to-target
+          implemented correctly. Current Altair 6 API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good declarative grammar usage, layered composition, vconcat, configure
-          methods
+        comment: 'Expert Altair usage: layer composition (+), vconcat, configure_*
+          global config, proper encoding types (:Q, :N), alt.Scale/Axis/Title/Tooltip
+          used correctly, transform_filter with selection.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive selection, crosshair tooltips, HTML export leverage Vega-Lite
-          foundation
+        comment: Uses Altair-specific vconcat for dual panels, selection_point crosshair
+          (interactive), transform_filter, and HTML export — features not easily replicated
+          in static libraries.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
+  - subplots
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
-  - edge-highlighting
