@@ -1,0 +1,244 @@
+library: highcharts
+language: javascript
+specification_id: chord-basic
+created: '2026-06-17T01:50:33Z'
+updated: '2026-06-17T01:54:24Z'
+generated_by: claude-opus
+workflow_run: 27660115488
+issue: 858
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Genuine native chord diagram built with Highcharts' own SVGRenderer (chart.renderer.path/g/text)
+    instead of shelling out to a forbidden library or faking a sankey — the correct,
+    idiomatic response to the dependency-wheel module not being vendored.
+  - 'Faithful d3-chord layout: group arc length proportional to total outflow, sub-arcs
+    sized by per-pair flow, tapered quadratic-bezier ribbons whose two ends reflect
+    each direction''s magnitude.'
+  - 'Imprint palette in canonical order with Africa = brand green #009E73 as the first
+    entity; data colors identical across light and dark, only chrome flips.'
+  - 'Both renders are clean, centered and theme-correct: warm off-white #FAF8F1 (light)
+    and warm near-black #1A1A17 (dark) via transparent chart background; all labels
+    legible in both.'
+  - Honest interactivity — real SVG <title> elements give exact bidirectional flow
+    values in the HTML view without faking tooltips in the PNG.
+  - Deterministic hard-coded migration matrix; no imports, no network, fully reproducible.
+  weaknesses:
+  - Bidirectional flows are merged into a single tapered ribbon per unordered pair
+    (colored by the dominant direction's origin) rather than two visibly separate
+    chords as the spec note suggests; both directions are encoded in the ribbon's
+    differing end-widths and the hover title, but they are not drawn as distinct arcs.
+  - The fully-connected 6-node layout makes the center dense — several 0.6-opacity
+    ribbons overlap into muddy blended colors where they cross, which is partly inherent
+    to chord diagrams but slightly reduces per-link traceability.
+  - Radial entity labels (16px CSS) are comfortably readable at full resolution but
+    become small when the 2400px square is scaled to ~400px mobile width.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), transparent chart bg showing the page surface — not pure white.
+      Chrome: dark title "chord-basic · javascript · highcharts · anyplot.ai" (22px bold) and grey subtitle describing migration flows; six radial entity labels (Africa, Asia, Europe, N. America, S. America, Oceania) in dark bold text. All readable.
+      Data: six annular group arcs in Imprint canonical order — Africa = brand green #009E73, Asia = lavender, Europe = blue, N. America = ochre, S. America = matte red, Oceania = cyan. Tapered bezier ribbons (0.6 opacity) connect the groups, width proportional to flow, colored by origin. First entity is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), transparent chart bg — not pure black.
+      Chrome: light title and subtitle, light entity labels — all clearly readable, no dark-on-dark.
+      Data: identical group-arc and ribbon colors to the light render (Africa green, Asia lavender, Europe blue, N. America ochre, S. America red, Oceania cyan) — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px / labels 16px, legible both themes; radial labels small
+          at 400px mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels placed outside arcs with alignment logic; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Solid arcs over 0.6-opacity ribbons; all elements visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint CVD-safe palette, ribbons separated by hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square, centered, nothing clipped; canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes (chord); title + subtitle descriptive with units (thousands)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First entity #009E73; canonical Imprint order; transparent bg over
+          correct page surface; both themes correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hand-built annular arcs + bezier ribbons via SVGRenderer; d3-chord
+          layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, generous whitespace, page-bg strokes separating ribbons/arcs
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Origin-colored ribbons, outflow-scaled arcs reveal Asia/Africa dominance
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine chord diagram
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Distinct color per entity, width-proportional ribbons, hover values;
+          bidirectional shown as tapered single ribbon, not two separate chords
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value mapped to arcs/ribbons correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title; arc labels serve as legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 6x6 matrix, bidirectional, varied widths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Continental migration flows — plausible, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Thousands/year, sensible magnitudes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Geometry helper functions present but necessary for native SVG draw
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic matrix
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Highcharts global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png + .html; current Highcharts API
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts.chart shell + chart.renderer SVGRenderer — idiomatic given
+          module constraints
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Highcharts' SVGRenderer path/g/text low-level API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - patches
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - publication-ready

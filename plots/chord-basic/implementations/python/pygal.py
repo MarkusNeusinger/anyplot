@@ -1,17 +1,39 @@
-""" pyplots.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: pygal 3.1.0 | Python 3.14
-Quality: 80/100 | Updated: 2026-04-06
+Library: pygal 3.1.0 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import math
+import os
+import re
 
 import cairosvg
 import pygal
 from pygal.style import Style
 
 
-# Data: Migration flows between 6 continents (thousands of people)
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first series ALWAYS #009E73, then canonical order.
+# Theme-independent so each continent keeps its identity across light/dark.
+IMPRINT_PALETTE = (
+    "#009E73",  # Africa     — brand green
+    "#C475FD",  # Asia       — lavender
+    "#4467A3",  # Europe     — blue
+    "#BD8233",  # N. America — ochre
+    "#AE3030",  # S. America — matte red
+    "#2ABCCD",  # Oceania    — cyan
+)
+
+# Data: migration flows between 6 continents (thousands of people / year).
+# Each (source, target, value) is one directed flow; both directions appear.
 continents = ["Africa", "Asia", "Europe", "N. America", "S. America", "Oceania"]
 n = len(continents)
 
@@ -48,187 +70,183 @@ flows = [
     (5, 4, 3),
 ]
 
-# Colorblind-safe palette — strong contrast on white
-colors = [
-    "#306998",  # Africa - Python Blue
-    "#C78C00",  # Asia - Rich Amber (darkened for visibility)
-    "#2E7D32",  # Europe - Forest Green
-    "#D84315",  # N. America - Deep Orange
-    "#7B1FA2",  # S. America - Deep Purple
-    "#00695C",  # Oceania - Dark Teal (darkened for visibility)
-]
-
-# Arc allocation proportional to total flow per entity
+# Arc allocation proportional to total flow (in + out) per continent
 totals = [0] * n
 for s, t, v in flows:
     totals[s] += v
     totals[t] += v
 grand_total = sum(totals)
 
-gap = 0.05  # radians between arcs
-arc_spans = [(2 * math.pi - gap * n) * totals[i] / grand_total for i in range(n)]
-arc_starts = []
-angle = -math.pi / 2  # start at top
-for i in range(n):
-    arc_starts.append(angle)
-    angle += arc_spans[i] + gap
+# Square canvas — hard rule for symmetric circular plots (prompts/library/pygal.md)
+W = H = 2400
 
-# Style
+# Style — pygal carries every theme token; sizes are native source pixels.
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    colors=tuple(colors),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=44,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
+    title_font_size=66,
     legend_font_size=44,
-    value_font_size=36,
-    stroke_width=3,
+    stroke_width=0,
 )
 
-# Pygal chart — square canvas, legend at bottom close to diagram
+# Chart — pygal owns the title + bottom legend (one swatch per continent) and
+# emits the interactive SVG/HTML. The chord geometry is injected afterwards in
+# absolute pixel coordinates, so it never depends on pygal's internal padding.
 chart = pygal.XY(
-    width=3600,
-    height=3600,
+    width=W,
+    height=H,
     style=custom_style,
-    title="chord-basic \u00b7 pygal \u00b7 pyplots.ai",
+    title="chord-basic · python · pygal · anyplot.ai",
     show_legend=True,
-    x_title="",
-    y_title="",
-    show_x_guides=False,
-    show_y_guides=False,
-    show_x_labels=False,
-    show_y_labels=False,
-    stroke=True,
-    dots_size=0,
     legend_at_bottom=True,
     legend_at_bottom_columns=6,
-    legend_box_size=24,
+    legend_box_size=40,
+    show_x_labels=False,
+    show_y_labels=False,
+    show_x_guides=False,
+    show_y_guides=False,
+    stroke=False,
+    dots_size=0,
     margin=40,
-    margin_bottom=80,
-    range=(0, 10),
-    xrange=(0, 10),
-    truncate_legend=-1,
 )
 
-# Node arcs as pygal XY series — filled arcs with wide strokes
-node_r = 3.8
-for i, name in enumerate(continents):
-    steps = max(20, int(arc_spans[i] * 30))
-    pts = [
-        (
-            5.0 + node_r * math.cos(arc_starts[i] + arc_spans[i] * k / steps),
-            5.0 + node_r * math.sin(arc_starts[i] + arc_spans[i] * k / steps),
-        )
-        for k in range(steps + 1)
-    ]
-    chart.add(name, pts, stroke=True, show_dots=False, fill=False, stroke_style={"width": 42, "linecap": "butt"})
+# One invisible anchor point per continent gives the legend its colored swatch
+# without drawing anything in the plot area (and without a "No data" watermark).
+for name in continents:
+    chart.add(name, [(5, 5)], stroke=False, show_dots=False)
 
-chart.render_to_file("plot.svg")
+svg = chart.render().decode("utf-8")
 
-# --- SVG injection: background, filled chord ribbons, labels ---
-# Map chart data coords (0-10) to SVG pixel coords
-# Plot area: translate(40, 122), rect 3520 x 3344
-svg_cx = 40 + 3520 / 2  # 1800
-svg_cy = 122 + 3344 / 2  # 1794
-sx = 3520 / 10  # 352 px per data unit
-sy = 3344 / 10  # 334.4 px per data unit
+# --- Locate title baseline + legend top so the diagram fits between them ---
+title_ys = [float(y) for y in re.findall(r'<text x="[\d.]+" y="([\d.]+)" class="title"', svg)]
+title_bottom = (max(title_ys) if title_ys else 80) + 70
+m_leg = re.search(r'<g transform="translate\([\d.]+, ([\d.]+)\)" class="legends"', svg)
+legend_top = float(m_leg.group(1)) if m_leg else H - 120
+
+# Diagram geometry — all derived from canvas + parsed chrome, no magic numbers
+cx = W / 2
+cy = (title_bottom + legend_top) / 2
+max_r_v = (legend_top - title_bottom) / 2 - 20
+max_r_h = W / 2 - 340  # leave room for the widest side labels ("S. America")
+r_label = min(max_r_v, max_r_h)
+r_outer = r_label - 80  # colored band outer edge
+band = r_outer * 0.075  # band thickness
+r_inner = r_outer - band  # chords attach to the inner edge
+
+# Arc spans (clockwise from top), proportional to each continent's total flow
+gap = 0.045  # radians of whitespace between arcs
+available = 2 * math.pi - gap * n
+spans = [available * totals[i] / grand_total for i in range(n)]
+arc_start = []  # higher angle (clockwise sweep decreases the angle)
+angle = math.pi / 2  # start at the top
+for i in range(n):
+    arc_start.append(angle)
+    angle -= spans[i] + gap
 
 svg_elems = []
 
-# Subtle background ellipse matching the node arc shape
-bg_rx = node_r * sx + 30
-bg_ry = node_r * sy + 30
-svg_elems.append(
-    f'  <ellipse cx="{svg_cx:.0f}" cy="{svg_cy:.0f}" rx="{bg_rx:.0f}" ry="{bg_ry:.0f}" fill="#F7F7F7" stroke="none"/>'
-)
+# Subtle hub disc to ground the circular composition
+svg_elems.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r_inner - 6:.1f}" fill="{ELEVATED_BG}" stroke="none"/>')
 
-# Filled chord ribbons
-chord_r = 3.4  # inner edge of node arcs (chart units)
-arc_pos = list(arc_starts)
+# Filled chord ribbons — width proportional to flow, colored by source,
+# opacity scaled by magnitude so dominant corridors read first.
+chord_r = r_inner
+arc_pos = list(arc_start)
 max_val = max(v for _, _, v in flows)
-
 for s, t, v in flows:
-    s_ext = arc_spans[s] * v / totals[s]
-    t_ext = arc_spans[t] * v / totals[t]
-    s_a1, s_a2 = arc_pos[s], arc_pos[s] + s_ext
-    t_a1, t_a2 = arc_pos[t], arc_pos[t] + t_ext
+    s_ext = spans[s] * v / totals[s]
+    t_ext = spans[t] * v / totals[t]
+    s_a1, s_a2 = arc_pos[s], arc_pos[s] - s_ext
+    t_a1, t_a2 = arc_pos[t], arc_pos[t] - t_ext
     arc_pos[s] = s_a2
     arc_pos[t] = t_a2
 
-    sx1 = svg_cx + chord_r * sx * math.cos(s_a1)
-    sy1 = svg_cy - chord_r * sy * math.sin(s_a1)
-    sx2 = svg_cx + chord_r * sx * math.cos(s_a2)
-    sy2 = svg_cy - chord_r * sy * math.sin(s_a2)
-    tx1 = svg_cx + chord_r * sx * math.cos(t_a1)
-    ty1 = svg_cy - chord_r * sy * math.sin(t_a1)
-    tx2 = svg_cx + chord_r * sx * math.cos(t_a2)
-    ty2 = svg_cy - chord_r * sy * math.sin(t_a2)
-    rx = chord_r * sx
-    ry = chord_r * sy
+    sx1, sy1 = cx + chord_r * math.cos(s_a1), cy - chord_r * math.sin(s_a1)
+    sx2, sy2 = cx + chord_r * math.cos(s_a2), cy - chord_r * math.sin(s_a2)
+    tx1, ty1 = cx + chord_r * math.cos(t_a1), cy - chord_r * math.sin(t_a1)
+    tx2, ty2 = cx + chord_r * math.cos(t_a2), cy - chord_r * math.sin(t_a2)
 
-    # Higher opacity floor ensures all chords are clearly visible
-    opacity = 0.55 + 0.35 * v / max_val
+    # Inset the quadratic control point toward — but short of — the hub: thick
+    # corridors dive deep to the center, thin ones stay shallow, so the many
+    # low-magnitude ribbons no longer pile up on a single point at the hub.
+    depth = 0.55 + 0.35 * (v / max_val)
+    c1x, c1y = (sx1 + tx1) / 2, (sy1 + ty1) / 2
+    c2x, c2y = (tx2 + sx2) / 2, (ty2 + sy2) / 2
+    q1x, q1y = c1x + depth * (cx - c1x), c1y + depth * (cy - c1y)
+    q2x, q2y = c2x + depth * (cx - c2x), c2y + depth * (cy - c2y)
 
+    opacity = 0.30 + 0.55 * (v / max_val)
     path = (
         f"M {sx1:.1f},{sy1:.1f} "
-        f"Q {svg_cx:.1f},{svg_cy:.1f} {tx1:.1f},{ty1:.1f} "
-        f"A {rx:.1f},{ry:.1f} 0 0,1 {tx2:.1f},{ty2:.1f} "
-        f"Q {svg_cx:.1f},{svg_cy:.1f} {sx2:.1f},{sy2:.1f} "
-        f"A {rx:.1f},{ry:.1f} 0 0,0 {sx1:.1f},{sy1:.1f} Z"
+        f"Q {q1x:.1f},{q1y:.1f} {tx1:.1f},{ty1:.1f} "
+        f"A {chord_r:.1f},{chord_r:.1f} 0 0,1 {tx2:.1f},{ty2:.1f} "
+        f"Q {q2x:.1f},{q2y:.1f} {sx2:.1f},{sy2:.1f} "
+        f"A {chord_r:.1f},{chord_r:.1f} 0 0,0 {sx1:.1f},{sy1:.1f} Z"
     )
-    svg_elems.append(f'  <path d="{path}" fill="{colors[s]}" fill-opacity="{opacity:.2f}" stroke="none"/>')
+    tip = f"{continents[s]} → {continents[t]}: {v}k/yr"
+    svg_elems.append(
+        f'<path d="{path}" fill="{IMPRINT_PALETTE[s]}" fill-opacity="{opacity:.2f}" '
+        f'stroke="none"><title>{tip}</title></path>'
+    )
 
-# Labels positioned outside node arcs
-label_r = 4.25
+# Node arcs — filled annular sectors on the perimeter, one per continent
+for i in range(n):
+    a0, a1 = arc_start[i], arc_start[i] - spans[i]
+    ox1, oy1 = cx + r_outer * math.cos(a0), cy - r_outer * math.sin(a0)
+    ox2, oy2 = cx + r_outer * math.cos(a1), cy - r_outer * math.sin(a1)
+    ix2, iy2 = cx + r_inner * math.cos(a1), cy - r_inner * math.sin(a1)
+    ix1, iy1 = cx + r_inner * math.cos(a0), cy - r_inner * math.sin(a0)
+    sector = (
+        f"M {ox1:.1f},{oy1:.1f} "
+        f"A {r_outer:.1f},{r_outer:.1f} 0 0,1 {ox2:.1f},{oy2:.1f} "
+        f"L {ix2:.1f},{iy2:.1f} "
+        f"A {r_inner:.1f},{r_inner:.1f} 0 0,0 {ix1:.1f},{iy1:.1f} Z"
+    )
+    tip = f"{continents[i]}: {totals[i]}k/yr total flow"
+    svg_elems.append(
+        f'<path d="{sector}" fill="{IMPRINT_PALETTE[i]}" stroke="{PAGE_BG}" '
+        f'stroke-width="3"><title>{tip}</title></path>'
+    )
+
+# Continent labels just outside their arc, colored for identity
 for i, name in enumerate(continents):
-    mid = arc_starts[i] + arc_spans[i] / 2
-    lx = svg_cx + label_r * sx * math.cos(mid)
-    ly = svg_cy - label_r * sy * math.sin(mid)
-    ly = max(100, min(3450, ly))
+    mid = arc_start[i] - spans[i] / 2
+    lx, ly = cx + (r_outer + 46) * math.cos(mid), cy - (r_outer + 46) * math.sin(mid)
     deg = math.degrees(mid) % 360
-    if deg <= 75 or deg >= 285:
+    if deg <= 80 or deg >= 280:
         anchor = "start"
-    elif 105 <= deg <= 255:
+    elif 100 <= deg <= 260:
         anchor = "end"
     else:
         anchor = "middle"
-    # Keep labels within viewBox — override anchor near edges
-    if anchor == "end" and lx < 300:
-        anchor = "start"
-        lx = max(20, lx)
-    elif anchor == "start" and lx > 3300:
-        anchor = "end"
-        lx = min(3580, lx)
     svg_elems.append(
-        f'  <text x="{lx:.0f}" y="{ly:.0f}" fill="{colors[i]}" '
-        f'font-size="54" font-weight="bold" text-anchor="{anchor}" '
+        f'<text x="{lx:.1f}" y="{ly:.1f}" fill="{IMPRINT_PALETTE[i]}" '
+        f'font-size="56" font-weight="bold" text-anchor="{anchor}" '
         f'dominant-baseline="central" '
-        f'font-family="DejaVu Sans, sans-serif">{name}</text>'
+        f'font-family="DejaVu Sans, Helvetica, Arial, sans-serif">{name}</text>'
     )
 
-# Inject elements and render
-with open("plot.svg") as f:
-    svg = f.read()
-svg = svg.replace("</svg>", "\n".join(svg_elems) + "\n</svg>")
-with open("plot.svg", "w") as f:
+# Inject the diagram just before the closing tag and write outputs
+svg = svg.replace("</svg>", "<g>" + "".join(svg_elems) + "</g></svg>")
+
+with open(f"plot-{THEME}.svg", "w") as f:
     f.write(svg)
 
-cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png")
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=W, output_height=H)
 
-# Interactive HTML export
-with open("plot.html", "w") as f:
+# Interactive HTML — embed the composed SVG so it matches the PNG exactly
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(
-        "<!DOCTYPE html>\n<html>\n<head>\n"
-        "    <title>chord-basic \u00b7 pygal \u00b7 pyplots.ai</title>\n"
-        "    <style>body{margin:0;padding:20px;background:#f5f5f5}"
-        ".container{max-width:100%;margin:0 auto}"
-        "object{width:100%;height:auto}</style>\n</head>\n<body>\n"
-        '    <div class="container">\n'
-        '        <object type="image/svg+xml" data="plot.svg">'
-        "Chord diagram</object>\n"
-        "    </div>\n</body>\n</html>"
+        '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n'
+        "<title>chord-basic · python · pygal · anyplot.ai</title>\n"
+        f"<style>body{{margin:0;background:{PAGE_BG}}}"
+        "svg{width:100%;height:auto;display:block}</style>\n</head>\n<body>\n"
+        f"{svg}\n</body>\n</html>"
     )
