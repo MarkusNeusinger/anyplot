@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-18
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-17
 """
 
 import os
