@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: star-chart-constellation
+created: '2026-06-17T00:21:49Z'
+updated: '2026-06-17T00:26:45Z'
+generated_by: claude-opus
+workflow_run: 27656684422
+issue: 4560
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Constellation stick-figure lines use brand green #009E73 (palette[0]) and stars
+    use pale amber #DDCC77 — exactly matching the spec''s pale-yellow-stars-on-dark-sky
+    requirement'
+  - 'Real astronomical data: 15 northern constellations with accurate RA/Dec coordinates,
+    apparent magnitudes, and real stick-figure edges (Big Dipper, Cassiopeia, Cygnus,
+    Lyra, etc.)'
+  - 'Sophisticated idiomatic D3/SVG: radial-gradient night sky, feGaussianBlur glow
+    blooms on bright stars, clip-path disk, magnitude-scaled point sizing, deterministic-LCG
+    twinkling field stars for depth'
+  - Correct north-polar azimuthal-equidistant projection with a natural circular sky
+    boundary, labeled RA spokes (0h-22h) and Dec circles (+30deg/+60deg/+80deg)
+  - Title exactly matches the mandated 'star-chart-constellation . javascript . d3
+    . anyplot.ai' format; square 2400x2400 canvas gate passed
+  - Data colors are identical across light and dark renders; only the page-surface
+    chrome (title) flips with theme, which is the correct handling for a domain that
+    requires a constant dark sky
+  weaknesses:
+  - Constellation name labels render at 12px with opacity 0.62 (CON_LABEL) — readable
+    at full resolution but faint and small; when the chart is scaled to ~400px mobile
+    width these may become hard to read. Consider bumping to ~13-14px or opacity ~0.72.
+  - 'Minor crowding: in the upper region the ''ANDROMEDA'' centroid label sits close
+    to the ''+30deg'' Dec tick label — no true pixel overlap, but slightly tight.'
+  - By design the entire sphere interior is theme-constant (dark navy on both renders)
+    and only the page surface + title flip with theme — this is the correct interpretation
+    of the spec's dark-sky requirement, but means the dark/light renders differ only
+    in the thin chrome border around the disk.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page surface (~#FAF8F1) surrounding a circular night-sky disk that is intentionally dark navy (radial gradient #16223A center -> #0E1726 -> #090F1C rim). The spec explicitly mandates a dark sky, so the disk does not flip with theme.
+      Chrome: Title "star-chart-constellation . javascript . d3 . anyplot.ai" in dark ink (t.ink #1A1A17) on the cream surface — clearly readable. RA tick labels (0h..22h) ring the disk in ink-soft. Dec labels (+30deg/+60deg/+80deg) and uppercase letter-spaced constellation names (PEGASUS, CYGNUS, LYRA, URSA MAJOR, BOOTES, LEO, etc.) sit on the dark disk in pale tones — readable, though the constellation names are somewhat faint/small.
+      Data: Constellation stick-figure lines are brand green #009E73 (palette[0]) at ~0.55 opacity. Stars are pale amber #DDCC77 sized by apparent magnitude; bright named stars (Vega, Deneb, Arcturus, Capella, Regulus, Polaris, etc.) carry a soft Gaussian-blur bloom and labels. A faint field-star scatter fills the disk.
+      Legibility verdict: PASS — all chrome readable; constellation names faint but legible at full size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page surface (~#1A1A17) surrounding the same dark navy sky disk. The disk interior is pixel-identical to the light render.
+      Chrome: Title in light ink (t.ink #F0EFE8) on the near-black surface — clearly readable, no dark-on-dark failure. All in-disk text (RA/Dec ticks, constellation names, star names) is identical to the light render and reads as pale tones on the dark sky.
+      Data: Constellation lines, stars, blooms, and field stars are identical to the light render — only the thin page-surface border and the title color flipped. Brand green #009E73 and amber stars both clearly visible.
+      Legibility verdict: PASS — title correctly flips to light ink; no dark-on-dark text.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, star names 12.5px readable; constellation names 12px
+          @ opacity 0.62 are faint/small for ~400px mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Centroid labels offset above star groups; only minor crowding near
+          ANDROMEDA/+30deg, no true overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Magnitude-scaled sizing, glow bloom on bright stars, faint field
+          stars — strong density handling
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green lines + amber stars on dark navy — high contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square gate passed; disk centered with title room; nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: RA in hours, Dec in degrees, descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Lines #009E73 (palette[0]); stars amber per pale-yellow spec; page
+          chrome flips, sky intentionally constant-dark'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Radial-gradient sky, glow blooms, twinkle field stars, letter-spaced
+          labels — planetarium-quality polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, subtle 0.16-opacity grid, generous whitespace, boundary
+          ring
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Focal points via bloom + magnitude hierarchy; constellation lines
+          guide the eye
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Azimuthal-equidistant star chart with circular sky boundary
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude sizing, stick-figure lines, RA/Dec grid, centroid labels,
+          star-name labels, dark sky
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA->angle, Dec->radius, magnitude->size all rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; single-series so no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 constellations covering all plot-type aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real star coordinates/magnitudes; neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitudes -1.5..6.5, RA 0-24h, realistic Dec
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script; only small inline arrow helpers (project/decToR/magToRadius)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG for field stars; hard-coded star data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — d3 global per harness contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Square directive; harness emits plot-{theme}.png/.html; current d3
+          API
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: selectAll/data/join, d3.range/d3.mean, scales, defs/gradient/filter
+          — fully idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: radialGradient, feGaussianBlur glow, clipPath — distinctive SVG capabilities
+          used well
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - polar-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - dark-theme
+  - gradient-fill
+  - alpha-blending
+  - publication-ready
