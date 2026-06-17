@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-17
@@ -101,29 +101,31 @@ for regime_name, marker_s, marker_alpha in [("Stable", 2.0, 0.85), ("Period-Doub
 for regime_name in regime_order:
     subset = df[df["Regime"] == regime_name]
     sns.kdeplot(
-        y=subset["x"], color=palette[regime_name], fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_y, clip=(0, 1)
+        y=subset["x"], color=palette[regime_name], fill=True, alpha=0.22, linewidth=1.5, ax=g.ax_marg_y, clip=(0, 1)
     )
 
 # Remove the x-marginal — uniform r sampling adds no density insight.
 g.ax_marg_x.set_visible(False)
 
-# Annotate key period-doubling bifurcation points.
+# Annotate key period-doubling bifurcation points. Labels sit in the empty upper
+# band and are spread horizontally (Period-2/4 share the gap before r≈3.45, Period-8
+# to the right) so no two label boxes intersect and none collide with the legend.
 bifurcation_points = [
-    (3.0, "Period-2\nr ≈ 3.0", 0.05),
-    (3.449, "Period-4\nr ≈ 3.449", -0.16),
-    (3.544, "Period-8\nr ≈ 3.544", 0.05),
+    (3.0, "Period-2\nr ≈ 3.0", 3.02, 0.96, "left"),
+    (3.449, "Period-4\nr ≈ 3.449", 3.43, 0.96, "right"),
+    (3.544, "Period-8\nr ≈ 3.544", 3.60, 0.96, "left"),
 ]
 
-for r_bif, label, x_offset in bifurcation_points:
+for r_bif, label, x_text, y_text, ha in bifurcation_points:
     ax.axvline(r_bif, color=INK, linewidth=0.8, linestyle="--", alpha=0.3)
     ax.annotate(
         label,
-        xy=(r_bif, 0.03),
-        xytext=(r_bif + x_offset, 0.15),
+        xy=(r_bif, y_text),
+        xytext=(x_text, y_text),
         fontsize=9,
         color=INK_SOFT,
-        ha="left" if x_offset > 0 else "right",
-        va="bottom",
+        ha=ha,
+        va="center",
         arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.8},
     )
 
