@@ -1,45 +1,62 @@
 library: plotly
+language: python
 specification_id: column-stratigraphic
 created: '2026-03-15T22:56:23Z'
-updated: '2026-03-15T23:06:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23121198678
+updated: '2026-06-17T00:54:48Z'
+generated_by: claude-opus
+workflow_run: 27657972977
 issue: 4573
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/plotly/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent geological data using real Western Interior Seaway formations with accurate
-    stratigraphy
-  - Five distinct lithology patterns with carefully chosen earth-tone colors and blue
-    accent
-  - Subtle age-period background shading and dotted boundary lines add professional
-    polish
-  - Rich hover tooltips with formation, lithology, depth range, thickness, and age
-    information
-  - Clean, well-structured code with no unnecessary complexity
+  - 'Correct stratigraphic column plot type: vertical stacked layers with depth increasing
+    downward, exactly per spec convention.'
+  - Five distinct fill patterns (dots, horizontal dashes, plus-grid, diagonal lines,
+    cross-hatch) approximate FGDC/USGS lithology symbols and double as CVD-safe redundant
+    encoding beyond color.
+  - 'All required features present: formation names + lithology to the right, geological
+    age labels on the left, ''Depth (m)'' scale axis, solid bar boundaries, and dotted
+    age-period boundary lines.'
+  - 'Imprint palette used correctly — Sandstone is brand green #009E73, remaining
+    lithologies drawn from canonical Imprint colors; data colors are identical across
+    light/dark, only chrome flips.'
+  - 'Realistic, neutral data: named Western Interior Seaway formations (Dakota, Greenhorn,
+    Niobrara, Lance, Wasatch) spanning Late Cretaceous→Eocene with plausible thicknesses.'
+  - 'Clean KISS structure: linear script, deterministic hardcoded data, only used
+    imports, idiomatic plotly graph_objects with marker.pattern fills and hovertemplate.'
+  - 'Theme tokens threaded through every element; both renders pass legibility with
+    correct #FAF8F1 / #1A1A17 backgrounds.'
   weaknesses:
-  - Annotation font sizes (14-15pt) could be slightly larger for optimal readability
-    at full resolution
-  - Some vertical space wasted below the last layer to the 200m gridline
-  image_description: 'The plot displays a vertical stratigraphic column with 10 geological
-    layers stacked from 0m (top) to ~195m (bottom) depth. Each layer uses a distinct
-    fill pattern and color: Sandstone (tan/beige with dot pattern), Shale (gray with
-    dash pattern), Limestone (blue with cross/plus pattern), Siltstone (tan-brown
-    with diagonal line pattern), and Conglomerate (orange-brown with x pattern). Formation
-    names (bold) and lithology types (italic) are labeled to the right of each layer.
-    Age labels (Late Cretaceous, Maastrichtian, Paleocene, Eocene) appear on the left
-    side in blue text. Subtle background shading differentiates age periods, with
-    dotted blue horizontal lines marking age boundaries. The y-axis shows "Depth (m)"
-    with a reversed scale (0 at top, increasing downward). A lithology legend with
-    pattern swatches sits in the upper right corner. Title reads "column-stratigraphic
-    · plotly · pyplots.ai" centered at top.'
+  - Age-period shading rectangles (x0=0.62→x1=1.38) render as visible grey blocks
+    flanking the column, most noticeable in the dark theme where they read as boxy
+    panels rather than subtle tint — consider lowering alpha further or constraining
+    the shading to the column width.
+  - Formation/lithology label pairs for thin layers (Graneros Sh, Carlile Sh) sit
+    close together; spacing is acceptable but tight on the smallest layers.
+  - Spec mentions unconformities may use wavy lines; period boundaries use dotted
+    lines instead — acceptable since wavy is optional, but a wavy unconformity marker
+    would more faithfully follow the geological convention.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), no pure white.
+      Chrome: title "column-stratigraphic · python · plotly · anyplot.ai" in dark ink, centered; "Depth (m)" y-axis title and tick labels (0–180) clearly dark and readable; age labels (Late Cretaceous, Maastrichtian, Paleocene, Eocene) on the left in soft ink; formation names (bold) + lithology (italic) on the right readable. Legend box "Lithology" with elevated off-white background and pattern swatches.
+      Data: stacked column — Sandstone green #009E73 (dots), Shale purple #C475FD (h-dashes), Limestone blue #4467A3 (plus grid), Siltstone amber #BD8233 (diagonals), Conglomerate cyan #2ABCCD (cross). First series is brand green. Dotted age boundary lines at 100/148/170 m.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), no pure black.
+      Chrome: title and all labels in light ink (#F0EFE8 / #B8B7B0) clearly readable; ticks and age labels light-on-dark, no dark-on-dark failures; legend on elevated #242420 panel with light text.
+      Data: colors identical to light render (green/purple/blue/amber/cyan, brand green first); patterns identical. Age-shading bands read as faint grey panels around the column.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -47,38 +64,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axis 22pt, ticks 16pt).
-          Annotations at 14-15pt slightly small.
+        comment: All fonts explicitly set; readable in both themes. Formation labels
+          at 11pt are modest but clear on the 3200px canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere.
+        comment: No text/data collisions; thin-layer labels tight but distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Layer bars clearly visible with distinct patterns and colors.
+        comment: Patterns and bars prominent and distinguishable in both themes.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe; patterns add redundant encoding beyond
+          color.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Earth-tone palette with blue accent is colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good layout but some wasted vertical space below last layer.
+        comment: Exactly 3200x1800 (gate passed); balanced layout, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled Depth (m) with units. X-axis appropriately hidden.
+        comment: Depth (m) with units; title in mandated format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint colors; backgrounds theme-correct
+          in both renders.'
     design_excellence:
       score: 14
       max: 20
@@ -88,22 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom earth-tone palette with Python Blue accent. Intentional typography
-          and subtle age shading.
+        comment: Lithology patterns, age shading, dual-side labels, dotted boundaries
+          — well above generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: White background, subtle grid, hidden x-axis, clean legend with subtle
-          border.
+        comment: Hidden x-axis, subtle grid, legend on elevated surface; age-shading
+          bands slightly boxy in dark mode.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Background shading groups formations by period. Dotted boundary lines
-          highlight transitions.
+        comment: Age grouping and boundary lines create hierarchy; clear single focal
+          column.
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stratigraphic column with stacked blocks and lithology patterns.
+        comment: Correct stratigraphic column, depth increasing downward.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 5 lithology patterns, reversed depth, formation
-          labels, age labels, depth scale.'
+        comment: 5 distinct patterns, formation + age labels, depth scale, boundary
+          lines.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly represents depth with reversed scale.
+        comment: All 10 layers shown with correct top/bottom depths.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Legend shows all 5 lithology types with pattern
-          swatches.
+        comment: Title format correct; legend labels match lithologies.
     data_quality:
       score: 15
       max: 15
@@ -143,21 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 layers, 5 lithology types, varying thicknesses, 4 geological periods.
+        comment: 5 lithologies, 4 periods, varying thickness, unconformity-style boundaries.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Western Interior Seaway formations. Geologically accurate and
-          neutral.
+        comment: Real Western Interior Seaway formations; neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Depths 0-195m with realistic thicknesses. Age progression geologically
-          plausible.
+        comment: 0–195 m depths with sensible layer thicknesses.
     code_quality:
       score: 10
       max: 10
@@ -167,32 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure. No functions or classes.
+        comment: No functions/classes; linear.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported and used.
+        comment: os and plotly.graph_objects both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code with appropriate complexity.
+        comment: Clean, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions and HTML export.
-    library_mastery:
+        comment: Saves plot-{THEME}.png + .html; current API.
+    library_features:
       score: 8
       max: 10
       items:
@@ -201,26 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Bar with base, add_shape, add_annotation. Could leverage
-          subplots for multi-column layout.
+        comment: go.Figure with add_trace/add_shape/add_annotation; idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Marker patterns, hover templates with HTML, and HTML export are distinctive
-          Plotly features.
+        comment: marker.pattern fill shapes, hovertemplate, layered shapes — plotly-distinctive.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - kaleido
   techniques:
+  - stacked-bars
+  - fill-patterns
   - annotations
-  - hover-tooltips
-  - html-export
+  - shapes-overlay
   - custom-legend
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - grouping
   styling:
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
+  - theme-adaptive
+  - hatching
