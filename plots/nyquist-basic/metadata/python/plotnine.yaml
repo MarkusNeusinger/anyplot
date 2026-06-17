@@ -1,116 +1,161 @@
 library: plotnine
+language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:47:50Z'
-updated: '2026-03-20T23:27:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23365453541
+updated: '2026-06-17T22:40:42Z'
+generated_by: claude-sonnet
+workflow_run: 27723208862
 issue: 4412
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Comprehensive Nyquist plot with both positive and negative frequency curves, gain/phase
-    margins computed and annotated
-  - Professional color scheme with purposeful visual hierarchy (red critical point,
-    purple/orange crossovers)
-  - Stability region shading and unit circle provide immediate visual context
-  - Clean, deterministic code with realistic control systems transfer function
-  - All spec requirements met with thoughtful frequency annotations and direction
-    arrows
+  - 'Excellent spec compliance — all required features implemented: critical point
+    marked, unit circle drawn, frequency annotations, direction arrows, 1:1 aspect
+    ratio via coord_fixed'
+  - Realistic and technically correct control system G(s)=5/[(s+1)(0.5s+1)(0.2s+1)]
+    with plausible phase margin (~33°) and gain margin (~7.9 dB)
+  - 'Semantic color use from Imprint palette: critical point in matte red (#AE3030),
+    gain crossover in blue (#4467A3), phase crossover in ochre (#BD8233), main curve
+    in brand green (#009E73)'
+  - Merged legend via shared name='Frequency Response' across scale_color_manual,
+    scale_linetype_manual, scale_size_manual, scale_alpha_manual — idiomatic plotnine/ggplot2
+    technique
+  - Stability region fill and phase margin indicator line add educational visual context
+    beyond the bare curve
+  - Direction arrows on both positive and negative frequency branches clearly show
+    frequency progression
+  - Perfect palette compliance and theme adaptation — both light (#FAF8F1) and dark
+    (#1A1A17) render correctly; data colors identical across themes, all chrome tokens
+    theme-adaptive
+  - Perfect code quality — deterministic data, clean imports, KISS structure, all
+    imports used
   weaknesses:
-  - Minor crowding near origin where omega=3 label and phase crossover marker are
-    close together
-  - Frequency label loop breaks pure grammar-of-graphics idiom (minor)
-  image_description: 'The plot displays a Nyquist diagram on the complex plane with
-    "Real Axis [dimensionless]" on the x-axis and "Imaginary Axis [dimensionless]"
-    on the y-axis. The title reads "nyquist-basic · plotnine · pyplots.ai" in bold
-    at the top. Two curves are shown: a solid dark blue line for positive frequencies
-    (ω > 0) that spirals from the upper-right (~5, -0.8 at low ω) counterclockwise
-    through the lower half-plane and converges toward the origin, and a dashed lighter
-    blue line for negative frequencies (ω < 0) that mirrors it above the real axis.
-    A dashed gray unit circle is centered at the origin with a subtle shaded stability
-    region fill inside. The critical point (-1, 0) is marked with a bold red "X" and
-    labeled in red. A purple circle marks the gain crossover point with annotation
-    "ω = 2.5 rad/s · PM = 33°" in the lower-left. An orange square marks the phase
-    crossover point with annotation "ω = 4.1 rad/s · GM = 7.8 dB" in the upper-left.
-    Five blue dots along the positive-frequency curve are labeled with frequency values
-    (ω = 0.1, 0.3, 0.7, 1.5, 3). Dark arrows indicate the direction of increasing
-    frequency on both curves. A legend at the bottom distinguishes positive and negative
-    frequency curves. The aspect ratio is 1:1.'
+  - Annotation text inside the plot is small (size=3.0mm ≈ 8.5pt for Phase crossover,
+    Gain crossover, Critical point, Phase Margin labels) — at mobile widths (~400px)
+    these may become unreadable; increase annotation size to 3.5–4.0mm for better
+    legibility
+  - Central cluster around (-1, 0) is visually crowded — critical point ×, phase crossover
+    square, gain crossover circle, phase margin line, and Phase Margin text all converge
+    in a small area; consider staggering annotations or using leader lines to reduce
+    density
+  - Stability region fill at alpha=0.07 is nearly invisible — either increase to 0.12–0.15
+    or remove it; a barely-visible fill adds clutter without contributing to readability
+  - 'Design Excellence could be pushed higher: the annotation layout is somewhat mechanical
+    (Phase crossover and Gain crossover text both anchored to the far left at x≈-3),
+    missing the opportunity for smarter placement that avoids the busy lower-left
+    area'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "nyquist-basic · python · plotnine · anyplot.ai" bold and clearly visible in dark ink. Y-axis label "Imaginary Axis [dimensionless]" and X-axis label "Real Axis [dimensionless]" readable at 10pt. Tick labels (-3 to 3 on both axes) visible at 8pt in INK_SOFT tone.
+      Data: Positive frequency curve in brand green (#009E73) solid — prominent and clearly traceable. Negative frequency (conjugate) in lavender (#C475FD) dashed, slightly thinner but distinguishable. Dashed unit circle in subtle gray. Stability region fill in very light blue (barely visible at alpha=0.07). Critical point at (-1,0) marked with red × (matte red #AE3030). Gain crossover blue circle at ~(-0.84,-0.55). Phase crossover ochre square at ~(-0.35,0). Phase margin indicator line from origin to gain crossover. Direction arrows on both branches showing frequency increase. Frequency annotations ω=0.1, ω=0.3, ω=0.7, ω=1.5 visible on right side of curve. Phase crossover and Gain crossover text annotations in upper-left and lower-left quadrants respectively.
+      Legibility verdict: PASS — all chrome text readable; annotation text inside plot is small (≈8.5pt for callout labels) but legible at full resolution; central area around (-1,0) is visually dense with converging markers and lines
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title visible in light cream text (#F0EFE8). Axis labels and tick labels render in light secondary tone (#B8B7B0). Legend box uses elevated dark fill (#242420) with light text — clearly readable. Grid lines very subtle against dark background. No dark-on-dark failures detected.
+      Data: Colors are identical to the light render — brand green Nyquist curve, lavender dashed negative branch, matte red critical point ×, blue gain crossover circle, ochre phase crossover square. Data identity across themes confirmed.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; direction arrows visible in adapted theme-muted colors
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt, legend 14/12pt. Annotations use size=12 with bold weight.'
+        comment: All font sizes explicitly set — title 12pt, axis labels 10pt, ticks
+          8pt, legend 8pt. Internal annotation text at 3.0mm (~8.5pt) is small but
+          readable at full resolution; borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Some crowding in the central cluster around (-1,0) where critical
+          point marker, phase crossover square, gain crossover circle, phase margin
+          line and 'Phase Margin' annotation converge. Main curve and external annotations
+          are clearly readable.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Most labels well-separated. Minor crowding near origin where omega=3,
-          phase crossover marker, and curve convergence cluster.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: 'Lines perfectly adapted: solid 1.5pt primary, dashed 1.0pt secondary.
-          Markers distinctly sized and shaped.'
+        comment: Main curves, markers, and arrows well-sized. Stability region fill
+          at alpha=0.07 is nearly invisible — adds visual noise without contributing
+          meaningfully.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with redundant encoding (solid/dashed linetype
+          + distinct marker shapes for crossover markers). Green-lavender pair has
+          sufficient contrast.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: dark blue, light blue, red, purple, orange.'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: 1:1 aspect ratio correct, balanced margins. Slight asymmetry in x
-          vs y range leaves some unused vertical space.
+        comment: 2400×2400 square canvas (canvas gate passed). coord_fixed ratio=1
+          gives correct 1:1 aspect ratio for Nyquist plot. Plot fills canvas well
+          with balanced margins. Legend at bottom is well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Real Axis [dimensionless], Imaginary Axis
-          [dimensionless].'
+        comment: 'X: ''Real Axis [dimensionless]'', Y: ''Imaginary Axis [dimensionless]''
+          — descriptive with units. Title follows correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (positive freq) = #009E73 (brand green) ✓. Second series
+          (negative freq) = #C475FD (lavender, position 2) ✓. Critical point uses
+          #AE3030 (matte red, semantic anchor for danger) ✓. Both backgrounds correct
+          (#FAF8F1 light, #1A1A17 dark). All chrome theme-adaptive. Data colors identical
+          across themes.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive color scheme anchored on Python blue with purposeful accent
-          colors. Stability region shading adds depth.
+        comment: Above library defaults — semantic color assignments from Imprint
+          palette, stability fill, phase margin indicator, direction arrows, multiple
+          annotation types. Central area density and small annotation text prevent
+          reaching 'strong design' tier.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle grid, minor grid removed, custom
-          panel background.
+        comment: Minor grid removed, major grid very subtle (alpha=0.15), panel border
+          kept (appropriate for enclosed complex plane), elevated legend background,
+          theme_minimal base. Good refinement overall.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: red critical point, color-coded crossovers
-          with computed margins, direction arrows, stability region shading.'
+        comment: 'Visual hierarchy guides viewer to key stability analysis elements:
+          critical point highlighted in semantic red, stability margins annotated
+          with computed values, direction arrows show frequency progression, stability
+          region fill contextualizes the critical point. Goes well beyond raw data
+          display.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +165,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane.
+        comment: Correct Nyquist plot on complex plane with positive and negative
+          frequency conjugate branches, 1:1 aspect ratio via coord_fixed.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: critical point, unit circle, frequency
-          annotations, direction arrows, 1:1 aspect ratio, axis labels.'
+        comment: 'All spec features present: critical point (-1,0) marked with distinct
+          marker, unit circle drawn, frequency annotations at key points, direction
+          arrows on both curves, 1:1 aspect ratio, Real/Imaginary axis labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real and imaginary parts correctly mapped. All data visible.
+        comment: Real part on X axis, imaginary part on Y axis, both positive and
+          negative frequency branches shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend clearly labels positive and
-          negative frequency curves.
+        comment: 'Title: ''nyquist-basic · python · plotnine · anyplot.ai'' ✓. Legend:
+          ''Frequency Response'' with correct labels for both branches.'
     data_quality:
       score: 15
       max: 15
@@ -150,22 +198,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both frequency curves, gain/phase crossovers with computed margins,
-          multiple frequency annotations.
+        comment: 'Shows all Nyquist plot features: positive/negative branches, critical
+          point, unit circle, stability margins, direction of increasing frequency,
+          stability region.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic third-order transfer function with stable poles. Meaningful
-          gain and phase margins.
+        comment: Realistic third-order industrial control system G(s)=5/[(s+1)(0.5s+1)(0.2s+1)]
+          with poles at s=-1,-2,-5. Computed PM≈33° and GM≈7.9 dB are plausible for
+          this system.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard frequency range with logarithmic spacing. Realistic response
-          magnitudes.
+        comment: Frequency range 0.01–1000 rad/s appropriate for system poles at 1,
+          2, 5 rad/s. Plot limits (-3.8 to 5.8 x, -4.8 to 4.8 y) correctly contain
+          the full curve. Stability margins are in the expected physical range.
     code_quality:
       score: 10
       max: 10
@@ -175,31 +226,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: 'Flat script: Imports → Data → Plot → Save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical transfer function evaluation.
+        comment: Fully deterministic — analytical formula, no random elements. No
+          seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used in implementation.
+        comment: All 24 plotnine imports verified in use. numpy, pandas, os, sys all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Loops for annotations are appropriate.
+        comment: Clean, Pythonic, appropriate complexity for a rich Nyquist plot.
+          sys.path manipulation is necessary and commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current plotnine API.
+        comment: Saves as plot-{THEME}.png at dpi=400, width=6, height=6 (correct
+          for 2400×2400 square canvas).
     library_mastery:
       score: 7
       max: 10
@@ -209,25 +264,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics usage: layered geoms, aesthetic mappings,
-          unified legend via scale_*_manual, coord_fixed.'
+        comment: Well-applied grammar of graphics with multiple coordinated scales,
+          coord_fixed, guide_legend, and proper theme system usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Unified legend through mapped aesthetics, geom_ribbon for stability
-          region, coord_fixed are ggplot-specific patterns.
+        comment: Merged legend via shared name='Frequency Response' across four scale_*_manual
+          calls is a distinctive ggplot2/plotnine grammar feature. geom_ribbon for
+          stability fill and arrow() argument in geom_segment also show library depth.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
