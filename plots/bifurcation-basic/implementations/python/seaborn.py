@@ -1,16 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Quality: pending | Created: 2026-06-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.lines import Line2D
 
 
-# Data - Logistic map: x(n+1) = r * x(n) * (1 - x(n))
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data — Logistic map: x(n+1) = r * x(n) * (1 - x(n))
 r_values = np.linspace(2.5, 4.0, 5000)
 transient = 300
 n_plot = 200
@@ -29,29 +40,48 @@ for r in r_values:
         x_all[idx] = x
         idx += 1
 
-# Classify regions for color storytelling
+# Classify the route to chaos for color storytelling.
 regime = np.where(r_all < 3.0, "Stable", np.where(r_all < 3.57, "Period-Doubling", "Chaos"))
 
 df = pd.DataFrame({"r": r_all, "x": x_all, "Regime": regime})
 
-# Colorblind-safe palette: blue, orange, red - high perceptual distance
-palette = {"Stable": "#306998", "Period-Doubling": "#E88C30", "Chaos": "#DC2626"}
+# Imprint palette — semantic mapping: stable→brand green (calm), chaos→matte red
+# (semantic anchor for the extreme/disordered regime), period-doubling→blue between.
+palette = {
+    "Stable": "#009E73",  # Imprint position 1 (brand) — first series
+    "Period-Doubling": "#4467A3",  # Imprint position 3 (blue)
+    "Chaos": "#AE3030",  # Imprint position 5 (matte red, semantic: chaotic/extreme)
+}
 regime_order = ["Stable", "Period-Doubling", "Chaos"]
 
-# Use seaborn JointGrid with marginal KDE — a distinctive seaborn feature
+# JointGrid with a marginal KDE — a distinctive seaborn feature that reveals the
+# density structure of each regime alongside the bifurcation cascade.
 sns.set_theme(
     style="ticks",
-    context="talk",
-    font_scale=1.1,
-    rc={"font.family": "sans-serif", "axes.edgecolor": "#888888", "axes.linewidth": 0.8},
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "font.family": "sans-serif",
+    },
 )
 
-g = sns.JointGrid(data=df, x="r", y="x", height=9, ratio=8, space=0.08, marginal_ticks=False)
-g.figure.set_size_inches(16, 9)
+g = sns.JointGrid(data=df, x="r", y="x", ratio=8, space=0.06, marginal_ticks=False)
+g.figure.set_size_inches(8, 4.5)  # × dpi 400 → 3200 × 1800 px
+g.figure.set_dpi(400)
+g.figure.set_facecolor(PAGE_BG)
 
-# Main plot: scatter per regime with size adapted to data density
-# Stable region has few unique points per r → larger markers for visibility
-for regime_name, marker_s, marker_alpha in [("Stable", 1.5, 0.8), ("Period-Doubling", 0.3, 0.55), ("Chaos", 0.3, 0.5)]:
+ax = g.ax_joint
+ax.set_facecolor(PAGE_BG)
+g.ax_marg_y.set_facecolor(PAGE_BG)
+
+# Main plot: density-aware scatter per regime. The stable branch has few unique
+# points per r → larger markers; the chaotic fan is dense → tiny markers + alpha.
+for regime_name, marker_s, marker_alpha in [("Stable", 2.0, 0.85), ("Period-Doubling", 0.5, 0.55), ("Chaos", 0.5, 0.5)]:
     subset = df[df["Regime"] == regime_name]
     sns.scatterplot(
         data=subset,
@@ -62,61 +92,70 @@ for regime_name, marker_s, marker_alpha in [("Stable", 1.5, 0.8), ("Period-Doubl
         alpha=marker_alpha,
         linewidth=0,
         edgecolor="none",
-        label=regime_name,
-        ax=g.ax_joint,
+        ax=ax,
         rasterized=True,
+        legend=False,
     )
 
-# Marginal KDE on y-axis: distinctive seaborn density visualization per regime
+# Marginal KDE on the y-axis: per-regime density of steady-state values.
 for regime_name in regime_order:
     subset = df[df["Regime"] == regime_name]
     sns.kdeplot(
         y=subset["x"], color=palette[regime_name], fill=True, alpha=0.3, linewidth=1.5, ax=g.ax_marg_y, clip=(0, 1)
     )
 
-# Remove x-marginal (uniform r sampling adds no insight)
+# Remove the x-marginal — uniform r sampling adds no density insight.
 g.ax_marg_x.set_visible(False)
 
-ax = g.ax_joint
-
-# Annotate key bifurcation points
+# Annotate key period-doubling bifurcation points.
 bifurcation_points = [
-    (3.0, "Period-2\nr ≈ 3.0", 0.04),
-    (3.449, "Period-4\nr ≈ 3.449", -0.14),
-    (3.544, "Period-8\nr ≈ 3.544", 0.04),
+    (3.0, "Period-2\nr ≈ 3.0", 0.05),
+    (3.449, "Period-4\nr ≈ 3.449", -0.16),
+    (3.544, "Period-8\nr ≈ 3.544", 0.05),
 ]
 
 for r_bif, label, x_offset in bifurcation_points:
-    ax.axvline(r_bif, color="#94a3b8", linewidth=0.8, linestyle="--", alpha=0.6)
+    ax.axvline(r_bif, color=INK, linewidth=0.8, linestyle="--", alpha=0.3)
     ax.annotate(
         label,
         xy=(r_bif, 0.03),
-        xytext=(r_bif + x_offset, 0.13),
-        fontsize=15,
-        color="#475569",
+        xytext=(r_bif + x_offset, 0.15),
+        fontsize=9,
+        color=INK_SOFT,
         ha="left" if x_offset > 0 else "right",
         va="bottom",
-        arrowprops={"arrowstyle": "-", "color": "#94a3b8", "lw": 0.8},
+        arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.8},
     )
 
 # Style
-ax.set_title("bifurcation-basic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", color="#333333", pad=16)
-ax.set_xlabel("Growth Rate (r)", fontsize=20, color="#444444")
-ax.set_ylabel("Steady-State Population (x)", fontsize=20, color="#444444")
+ax.set_title("bifurcation-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+ax.set_xlabel("Growth Rate (r)", fontsize=10, color=INK)
+ax.set_ylabel("Steady-State Population (x)", fontsize=10, color=INK)
 ax.set_xlim(2.5, 4.0)
 ax.set_ylim(0, 1)
-ax.tick_params(axis="both", labelsize=16, colors="#555555")
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax)
 sns.despine(ax=g.ax_marg_y, bottom=True, left=True)
 
-# Refine legend
-legend = ax.get_legend()
-legend.set_title("Regime")
-legend.get_title().set_fontsize(15)
+# Legend with readable marker proxies (the scatter markers themselves are sub-pixel).
+handles = [
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        linestyle="",
+        markersize=7,
+        markerfacecolor=palette[name],
+        markeredgecolor="none",
+        label=name,
+    )
+    for name in regime_order
+]
+legend = ax.legend(handles=handles, title="Regime", loc="upper left", fontsize=8, title_fontsize=9, framealpha=0.9)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_title().set_color(INK)
 for text in legend.get_texts():
-    text.set_fontsize(14)
-legend.set_frame_on(True)
-legend.get_frame().set_alpha(0.9)
-legend.get_frame().set_edgecolor("#cccccc")
+    text.set_color(INK_SOFT)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
