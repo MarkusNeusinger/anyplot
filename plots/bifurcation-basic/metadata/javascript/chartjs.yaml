@@ -1,0 +1,279 @@
+library: chartjs
+language: javascript
+specification_id: bifurcation-basic
+created: '2026-06-17T05:21:20Z'
+updated: '2026-06-17T05:41:41Z'
+generated_by: claude-sonnet
+workflow_run: 27667380908
+issue: 4415
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Full logistic map bifurcation (r=2.5–4.0) with 100k+ points at density-appropriate
+    pointRadius=0.8 and alpha=0.10–0.13 produces a beautiful period-doubling cascade
+  - Custom labelPlugin using Chart.js afterDraw lifecycle hook elegantly annotates
+    the three key bifurcation points (r≈3.0, 3.449, 3.544) with period labels without
+    requiring a heavy annotation plugin
+  - Mixed chart approach — scatter for data density + line datasets for dashed reference
+    lines — is idiomatic Chart.js and avoids any external dependencies
+  - Theme-specific alpha (0.13 light / 0.10 dark) is a thoughtful adaptation showing
+    the designer understood density rendering differs between themes
+  - 'All chrome (text, grid, borders) is fully theme-adaptive via ANYPLOT_TOKENS;
+    both renders pass the warm-surface check (#FAF8F1 light / #1A1A17 dark)'
+  - Correct transient discarding (N_SKIP=200, N_PLOT=100) and 1001 parameter steps
+    yield exactly the canonical bifurcation structure
+  - Code is clean, deterministic, and self-contained — no imports, no fetch, no random;
+    perfectly portable
+  weaknesses:
+  - The r≈3.0 and r≈3.449 annotation labels share the same dy=14 vertical offset,
+    so both appear at identical height in the plot area; staggering them (e.g., dy
+    14 / 34 / 54) would prevent them from reading as a single horizontal band of text
+  - The period-1 fixed-point branch (r=2.5–3.0) renders as an extremely thin green
+    line at pointRadius=0.8; increasing to 1.2–1.4 in this pre-bifurcation sparse
+    zone would improve visibility at mobile widths without affecting the dense chaotic
+    region
+  - 'DE-01 could be elevated with one visual polish pass: a subtle horizontal reference
+    line or shaded band for the chaotic region (r>3.57) would create stronger visual
+    hierarchy and guide the viewer from order to chaos more decisively'
+  - LM-02 is limited — the implementation does not exploit Chart.js-specific features
+    like the built-in annotation plugin (chartjs-plugin-annotation), custom tooltip
+    formatters, or multi-axis configurations that would set it apart from a generic
+    scatter library
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, not cream-beige, correct surface.
+      Chrome: Title "bifurcation-basic · javascript · chartjs · anyplot.ai" in dark text at top — fully readable. X-axis label "Growth Rate Parameter (r)" and Y-axis label "Population Value (x)" are dark text, clearly readable. Tick labels (2.5–4.0 on x, 0–1.0 on y) are a slightly softer dark tone, readable. Three bifurcation annotation labels ("r≈3.0 (period-2)", "r≈3.449 (period-4)", "r≈3.544 (period-8)") appear near the top of the chart area in soft dark text — all readable, though r≈3.0 and r≈3.449 share the same vertical offset.
+      Data: Brand green (#009E73) scatter points with alpha=0.13. The period-1 fixed point (r=2.5–3.0) renders as a very thin but visible continuous green curve. The period-2 bifurcation at r≈3.0 shows two clearly separated branches. Period-4 branches appear after r≈3.449. The chaotic region (r>3.57) displays the characteristic fractal density structure in green. Three dashed vertical reference lines in subtle ink-alpha at r=3.0, 3.449, and 3.544 are visible but unobtrusive.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and axis labels render in light/off-white text — fully readable against the dark background. Tick labels are in a slightly softer light tone, all readable. Bifurcation annotation labels appear in the same light-text style, readable. Grid lines are subtle lighter lines, not dominant. No dark-on-dark text failures observed — all chrome elements use theme-appropriate light colors.
+      Data: Same #009E73 brand green — identical color to the light render, confirming data colors did not flip with the theme. The green stands out well against the near-black background. The period-1 branch appears as a bright green line, more visually prominent than in the light render due to contrast. The chaotic region shows denser scattered green points. Dashed reference lines are visible as subtle lighter lines.
+      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures detected. Data color identity between themes confirmed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, annotations 14px). Readable in both themes. Minor deduction: r≈3.0
+          and r≈3.449 annotation labels share the same dy=14 vertical position, risking
+          visual crowding at smaller viewports.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Annotation labels horizontally separated
+          at different r values. Legend hidden (single series). No data-text collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: '100k+ points at pointRadius=0.8 with alpha 0.10-0.13 shows excellent
+          density structure. Minor deduction: period-1 fixed-point branch (r=2.5–3.0)
+          renders as an extremely thin single-pixel line that may be hard to see at
+          mobile sizes.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green (#009E73) on warm surfaces. CVD-safe. Reference
+          lines in muted ink-alpha. No red-green sole-signal issue.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no gate file). Chart fills canvas well with balanced
+          margins. Good use of plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels with parameter notation: ''Growth Rate Parameter
+          (r)'' and ''Population Value (x)''. Title in correct anyplot format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Data uses t.palette[0]=#009E73 (Imprint brand green). Light background
+          ~#FAF8F1, dark ~#1A1A17. All chrome theme-adaptive via ANYPLOT_TOKENS. Data
+          colors identical across both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: custom annotation plugin, theme-specific
+          alpha values (0.13/0.10), mixed chart types for reference lines, hidden
+          single-series legend. Intentional design thinking present but not FiveThirtyEight-level
+          polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Axis borders removed (border: false), grid uses theme-adaptive t.grid
+          token, legend hidden for clean look, bifurcation annotations replace a traditional
+          legend. Solid refinement above library defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation labels with period information and dashed reference lines
+          guide the viewer through the period-doubling cascade. Viewer immediately
+          sees the transition from stable fixed point to chaos. Above default 'data
+          displayed without interpretation.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation diagram using scatter density visualization of
+          the logistic map.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pointRadius 0.8 (≤1px), full period-doubling
+          cascade shown, logistic map formula correct, bifurcation labels at r≈3.0/3.449/3.544,
+          N_SKIP=200 transients discarded, N_PLOT=100 subsequent values, r range 2.5–4.0.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: r (growth rate) correctly on X-axis, x (population value) correctly
+          on Y-axis. All data visible across full range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bifurcation-basic · javascript · chartjs · anyplot.ai' matches
+          required format. Legend appropriately hidden for single data series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows complete period-doubling cascade: period-1 (r<3.0), period-2
+          (r≈3.0–3.449), period-4 (r≈3.449–3.544), period-8, and full chaotic regime.
+          All aspects of the bifurcation diagram present.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Logistic map and dynamical systems chaos theory — a canonical, neutral,
+          well-established scientific context. Non-controversial academic topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r in [2.5, 4.0] and x in [0, 1] are the mathematically correct canonical
+          parameter ranges for the logistic map. Bifurcation points at r≈3.0, 3.449,
+          3.544 are accurate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: tokens → data generation → mount → chart config.
+          The labelPlugin is an idiomatic Chart.js plugin object, not an abstraction.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed starting value x=0.5, no random number
+          generation.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Browser-based JS with no imports. Only uses Chart.js global (pre-loaded
+          by harness). Minimal rgba helper function.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Data generation loop is concise. Custom plugin
+          is minimal and purposeful. No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows Chart.js harness contract: canvas appended to #container,
+          no savefig calls. Harness produces plot-light.png and plot-dark.png.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly idiomatic: scatter type for density, line datasets for
+          reference lines in a mixed chart, custom afterDraw plugin using Chart.js
+          lifecycle, getPixelForValue() scale API, animation: false, responsive: true,
+          maintainAspectRatio: false.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js-specific mixed chart dataset type property, afterDraw
+          plugin lifecycle hook, and scales.x.getPixelForValue() — distinctly Chart.js.
+          However, does not leverage more advanced distinctive features like the built-in
+          plugin system annotations or custom tick formatters.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
