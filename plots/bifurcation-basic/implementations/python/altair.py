@@ -1,5 +1,7 @@
-"""bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: altair | Theme-adaptive Imprint palette
+""" anyplot.ai
+bifurcation-basic: Bifurcation Diagram for Dynamical Systems
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-06-17
 """
 
 import os
