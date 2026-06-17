@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bifurcation-basic
 created: '2026-03-20T20:28:31Z'
-updated: '2026-06-17T05:23:27Z'
+updated: '2026-06-17T05:38:50Z'
 generated_by: claude-sonnet
 workflow_run: 27667163428
 issue: 4415
@@ -15,52 +15,45 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcati
 quality_score: 89
 review:
   strengths:
-  - Correct bifurcation diagram using logistic map with full period-doubling cascade
-    and chaos onset
-  - 'Excellent density visualization: size=1 markers at opacity=0.18 creates the characteristic
-    bifurcation structure clearly'
-  - go.Scattergl used idiomatically for 200k+ points (WebGL-accelerated, prevents
-    render lag)
-  - All four bifurcation points (Period-2, Period-4, Period-8, Chaos onset) annotated
-    with staggered vertical positions
-  - Subtle chaotic regime shading (r > 3.5699) adds narrative context beyond spec
-    requirements
-  - Complete theme-adaptive chrome — all tokens correctly wired, both renders fully
-    readable
-  - 'Palette compliant: brand green #009E73 as sole data color, ELEVATED_BG annotation
-    boxes, correct backgrounds'
-  - 'Descriptive title prefix used correctly: Logistic Map · bifurcation-basic · python
-    · plotly · anyplot.ai'
-  - HTML output plus PNG — interactive hover with formatted hovertemplate
+  - Correct use of go.Scattergl (WebGL-accelerated) for 200K data points — right library
+    call for this density
+  - 'All 6 spec requirements implemented precisely: 1px marker size, opacity=0.18,
+    logistic map, all 4 bifurcation points labeled, 200 transient + 100 steady-state
+    iterations, r range 2.5–4.0'
+  - Staggered annotation placement (Period-8 at y_pos=1.22 paper coords) avoids collision
+    with Period-4 in the crowded 3.449–3.544 r-unit band
+  - Chaotic regime shading (4% opacity brand green fill for r > 3.5699) adds visual
+    narrative without competing with data
+  - 'Correct theme-adaptive chrome throughout: all tokens (INK, INK_SOFT, ELEVATED_BG,
+    GRID) applied to every text element; no dark-on-dark failures'
+  - 'Perfect palette compliance: single series = #009E73 brand green; annotation boxes
+    use ELEVATED_BG; backgrounds are #FAF8F1 (light) and #1A1A17 (dark)'
+  - Title fontsize scaling formula applied correctly for the extended title string
   weaknesses:
-  - 'VQ-02: Period-8 (r=3.544, xanchor=right) and Chaos onset (r=3.5699, xanchor=left)
-    share y_paper=1.04 and are only 0.026 r-units apart — their annotation boxes touch/overlap
-    at the rendered scale. Fix: give Chaos onset a distinct y_paper (e.g., 1.13) and
-    swap Period-4 down to 1.04, or use a different stagger pattern so all four boxes
-    have clear visual separation.'
-  - 'VQ-01: Annotation font size=15px (→60 source px at scale=4) is larger than the
-    axis label font (12px→48 source px), inverting the expected typographic hierarchy
-    where secondary labels should be smaller than axis labels. Reduce annotation font
-    to 11–12px to restore proper hierarchy.'
-  - 'DE-01/DE-02: Top/right spines not explicitly removed via showline=False/mirror=False
-    on xaxis/yaxis — add spine suppression to lift visual refinement score.'
+  - Annotation font at 11px is borderline for mobile readability — when the 3200×1800
+    canvas is scaled to ~400px viewport width, 11px annotations render at effectively
+    ~1.4px logical, making them nearly invisible on mobile
+  - No visual refinement for tick marks — tick marks themselves are still shown (plotly
+    default); removing them via ticklen=0 or similar would improve cleanliness
+  - DE-01 ceiling not reached — the chaotic regime shading and staggered annotations
+    show design thought, but the overall look stops short of maximum sophistication
+    (no typography hierarchy beyond standard sizes, no progressive emphasis through
+    the period-doubling cascade)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white.
-      Chrome: Title "Logistic Map · bifurcation-basic · python · plotly · anyplot.ai" rendered in dark ink, clearly legible. X-axis label "Growth Rate (r)" and Y-axis label "Steady-State Population (x)" both in dark text at 12px, readable. Tick labels (2.5–4.0 on X; 0–1 on Y) in INK_SOFT secondary color, readable. Four annotation boxes with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border present: Period-2 (r≈3.0), Period-4 (r≈3.449), Period-8 (r≈3.544), Chaos onset (r≈3.5699). Red-dashed vlines mark each bifurcation point.
-      Data: Brand green #009E73 scatter markers (size=1, opacity=0.18) form the characteristic bifurcation structure — stable period-1, period-2 fork at r≈3.0, period-4 at r≈3.449, period-8 at r≈3.544, and chaotic dispersion beyond r≈3.5699. Subtle green-tinted rectangular shading highlights the chaotic regime. Y-axis has a subtle grid; X-axis has no grid.
-      Annotation overlap: Period-8 and Chaos onset share y_paper=1.04 and are only 0.026 r-units apart — at the rendered scale these two boxes touch/overlap noticeably. Period-4 (y_paper=1.13) successfully clears Period-8 vertically but appears close to it horizontally.
-      Legibility verdict: PASS overall — all text readable. Minor annotation crowding noted (VQ-02 deduction, not a full failure).
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, clearly not pure white.
+      Chrome: Title "Logistic Map · bifurcation-basic · python · plotly · anyplot.ai" in dark INK (#1A1A17) at center-top — fully readable. Y-axis label "Steady-State Population (x)" rotated left, clear. X-axis label "Growth Rate (r)" at bottom, clear. Tick labels in INK_SOFT muted color, readable at 10px. Four annotation boxes (Period-2 r=3.0, Period-4 r=3.449, Period-8 r=3.544, Chaos onset r=3.5699) with ELEVATED_BG (#FFFDF6) fill and INK_SOFT text at 11px — readable at full resolution. Dashed red reference lines (matte red #AE3030 at 40% opacity) mark each bifurcation. Subtle green fill (~4% opacity) highlights the chaotic regime (r > 3.5699). Y-axis grid subtle at 15% opacity, no x-axis grid.
+      Data: Brand green #009E73 scatter at size=1, opacity=0.18. 200K points (2000 r values × 100 iterations) form the characteristic bifurcation structure: single fixed point for r<3, period-2 fork, period-4, period-8, then dense chaotic region from ~r=3.57. The structure is crisp with appropriate density-based visualization.
+      Legibility verdict: PASS — all title, axis, and annotation text is readable against the warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black.
-      Chrome: Title and axis labels render in light-colored text (F0EFE8/B8B7B0 tokens), all clearly legible against the dark surface. Tick labels in INK_SOFT light secondary — fully readable. Annotation boxes correctly use ELEVATED_BG (#242420) fill with INK_SOFT (#B8B7B0) border, giving them proper dark-theme appearance.
-      Data: Brand green #009E73 identical to light render — the bifurcation structure reads even more vividly on the dark background due to contrast. Y-axis grid renders as a subtle light-tinted line, not competing with data. Same annotation overlap issue (Period-8 and Chaos onset) is present.
-      No dark-on-dark failures observed — no black text on near-black background.
-      Legibility verdict: PASS — all text readable, no theme-adaptation failures.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title in light INK (#F0EFE8) — clearly visible against dark background. Y-axis and X-axis labels in INK color, readable. Tick labels in light INK_SOFT (#B8B7B0) at 10px — readable. Annotation boxes use dark ELEVATED_BG (#242420) with light INK_SOFT text — correct dark-theme elevated surface. No dark-on-dark failures observed — all text tokens correctly flip for dark mode.
+      Data: Brand green #009E73 scatter — data colors are identical to the light render as required. The green is clearly visible against the near-black surface. Chaotic regime shading is present (green tint at 4% opacity, subtle but visible). Reference lines (muted red at 40% opacity) remain visible.
+      Legibility verdict: PASS — all text is readable against the dark background. Chrome correctly adapts through INK/INK_SOFT tokens. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,55 +61,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set and readable in both themes. Minor:
-          annotation font=15px (60 source px) is larger than axis labels at 12px (48
-          source px), slightly inverting typographic hierarchy.'
+        comment: Font sizes explicitly set (title=16px, axis=12px, ticks=10px, annotations=11px).
+          Readable in both themes. Annotation text at 11px is borderline for mobile
+          at 400px viewport scaling.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Period-8 and Chaos onset annotation boxes share y_paper=1.04 with
-          only 0.026 r-units separation — boxes touch/overlap at rendered scale. Data
-          points themselves are free of overlap issues.
+        comment: No overlap detected. Annotations staggered vertically (Period-8 at
+          y_pos=1.22 paper coords) to avoid collision in crowded 3.449-3.544 r-unit
+          band.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Perfectly density-adapted: size=1 markers at opacity=0.18 for 200k
-          points creates classic bifurcation density visualization per spec requirement.'
+        comment: 200K points at size=1, opacity=0.18 — perfect density-based visualization.
+          Bifurcation structure is crisp and clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in brand green #009E73 on warm surfaces. Good contrast
-          in both themes. CVD-safe.'
+        comment: Single data color (brand green). Red reference lines are structural
+          markers, not data encoding. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Landscape 3200x1800. Plot fills canvas well.
-          Margins l=80, r=40, t=130, b=70 provide generous whitespace. No content
-          cut off.
+        comment: Canvas 3200x1800 correct. Title ~70% width. Axis labels balanced.
+          t=150 generous top margin accommodates staggered annotations. Nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Growth Rate (r)'' and Y: ''Steady-State Population (x)'' —
-          descriptive with parameter symbols in parentheses.'
+        comment: 'X: ''Growth Rate (r)'', Y: ''Steady-State Population (x)'' — descriptive
+          with variable notation. Title follows spec format with descriptive prefix.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series = #009E73 brand green. Light bg #FAF8F1, dark bg #1A1A17.
-          All chrome tokens (INK, INK_SOFT, GRID, ELEVATED_BG) correctly adaptive.
-          Reference vlines use subdued #AE3030 (Imprint matte red) — semantically
-          appropriate for boundary markers.'
+        comment: 'Single series = #009E73 brand green. Backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark). All chrome tokens theme-adaptive. No palette violations.'
     design_excellence:
       score: 13
       max: 20
@@ -126,25 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: Imprint palette usage, thoughtful
-          annotation staggering, chaotic regime shading, dynamic title font scaling.
-          Not yet at publication-quality (annotation overlap detracts from polish).'
+        comment: Above-default aesthetic. Chaotic regime shading (4% opacity), staggered
+          annotations, subdued reference lines show design thought. No top/right spines.
+          Stops short of maximum sophistication.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis grid only (no X-axis grid), clean annotation boxes with ELEVATED_BG
-          fill, no prominent box frame. Spines not explicitly suppressed via showline=False.
+        comment: Y-axis grid only (no x-axis grid). No top/right borders. Consistent
+          Arial font. Elevated backgrounds for annotation boxes. Generous whitespace
+          (t=150). Could remove tick marks.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy created through: annotation boxes labeling transition
-          points, chaotic regime shading (beyond spec requirement), and the density
-          visualization naturally guiding the eye from stability to chaos. Annotation
-          crowding slightly diminishes impact.'
+        comment: Annotations create clear narrative through period-doubling cascade.
+          Chaotic regime shading highlights key region. Reference lines reinforce
+          transitions. Strong storytelling for a mathematical plot.
     spec_compliance:
       score: 15
       max: 15
@@ -154,29 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bifurcation diagram using logistic map scatter.
+        comment: Correct bifurcation diagram for dynamical systems.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: small markers + low alpha, full period-doubling
-          cascade, logistic map formula, all four bifurcation points labeled, 200
-          transient + 100 recorded iterations, r range 2.5–4.0.'
+        comment: 'All spec features: 1px marker size, opacity=0.18, logistic map formula,
+          all 4 bifurcation points labeled (r~3.0/3.449/3.544/3.5699), 200 transient
+          + 100 steady-state iterations, r range 2.5-4.0.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Growth Rate r (2.45–4.05), Y=Steady-State Population x (−0.05–1.05).
-          Correct and complete.
+        comment: X=r parameter (2.5-4.0), Y=steady-state x (0-1). 200K points (2000
+          r values x 100 iterations) exceeds 100K+ spec requirement.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Logistic Map · bifurcation-basic · python · plotly · anyplot.ai''
-          — correct optional-prefix format. No legend (single series, correct).'
+          — correct format with descriptive prefix. No legend (single series, showlegend=False).'
     data_quality:
       score: 15
       max: 15
@@ -186,24 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows complete route: period-1 stable fixed point, period-2 fork,
-          period-4 and period-8 doublings, full chaotic regime. All aspects of the
-          bifurcation diagram visible.'
+        comment: 'Complete bifurcation cascade: period-1, period-2, period-4, period-8,
+          chaos. All phases demonstrated with annotated transitions.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical chaos theory example — real scientific
-          context in nonlinear dynamics and population ecology. Neutral academic content.
+        comment: Logistic map is the canonical bifurcation example. Standard parameter
+          ranges. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: r in [2.5, 4.0], x in [0, 1] — correct for logistic map. Bifurcation
-          points at r≈3.0, 3.449, 3.544, 3.5699 are factually accurate (Feigenbaum
-          values).
+        comment: r in [2.5, 4.0], x in [0, 1] — standard values for logistic map.
+          200 transient iterations appropriate for convergence.
     code_quality:
       score: 10
       max: 10
@@ -213,56 +201,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data generation → plot
-          → save. No functions or classes.'
+        comment: No functions/classes. Clean sequential structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: logistic map with fixed initial condition x=0.5.
-          No randomness, no seed needed.'
+        comment: 'Deterministic: logistic map with fixed initial x=0.5, no randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Title font scaling formula is appropriate.
-          Annotation loop is clear.
+        comment: Clean, appropriate complexity. Bifurcation point list as data structure
+          is well-organized. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4) and plot-{THEME}.html.
-          go.Scattergl is current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert plotly usage: go.Scattergl for WebGL density rendering, add_vline
-          for reference lines, add_shape for region highlight, yref=''paper'' for
-          above-plot annotations, hovertemplate for formatted tooltips.'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: go.Scattergl (WebGL-accelerated — unique to plotly for large datasets),
-          hovertemplate with per-point formatting, HTML output alongside PNG, paper-coordinate
-          annotation positioning. Several plotly-distinctive features leveraged well.
-  verdict: REJECTED
+        comment: Uses go.Scattergl (WebGL-accelerated) for 200K points — correct choice
+          for this density. Idiomatic add_vline(), add_shape(), yref='paper' annotations.
+          Above default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ScatterGL WebGL acceleration is Plotly-distinctive for large datasets.
+          Custom hovertemplate. write_html() for interactive output. hoverlabel styling.
+          Clearly above default 1.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
