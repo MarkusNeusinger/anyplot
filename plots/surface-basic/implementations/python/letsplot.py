@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 surface-basic: Basic 3D Surface Plot
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-17
@@ -15,9 +15,11 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_polygon,
+    geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_gradient2,
     theme,
     theme_minimal,
@@ -72,12 +74,29 @@ for group_id, (_, corners_x, corners_y, avg_z) in enumerate(quads):
 
 df = pd.DataFrame(poly_data)
 
+# Annotate peak (x≈π/2, y≈0, z≈+1) and valley (x≈−π/2, y≈0, z≈−1)
+j_peak = np.argmin(np.abs(x - np.pi / 2))
+i_peak = np.argmin(np.abs(y - 0.0))
+j_valley = np.argmin(np.abs(x + np.pi / 2))
+i_valley = i_peak
+
+ann_df = pd.DataFrame(
+    {
+        "x": [X_proj[i_peak, j_peak], X_proj[i_valley, j_valley]],
+        "y": [Z_proj[i_peak, j_peak] + 0.14, Z_proj[i_valley, j_valley] - 0.14],
+        "z": [1.0, -1.0],
+        "group": [-1, -2],
+        "label": ["peak  z ≈ +1", "valley  z ≈ −1"],
+    }
+)
+
 # Imprint diverging colormap: matte-red (negative) → neutral midpoint → blue (positive)
 plot = (
     ggplot(df, aes(x="x", y="y", group="group", fill="z"))
-    + geom_polygon(color=INK_SOFT, size=0.15, alpha=1.0)
+    + geom_polygon(color=INK_SOFT, size=0.15, alpha=1.0, tooltips=layer_tooltips().line("Z value: @z{.3f}"))
+    + geom_text(aes(label="label"), data=ann_df, color=INK, size=3.5, fontface="bold")
     + scale_fill_gradient2(low="#AE3030", mid=DIV_MID, high="#4467A3", midpoint=0, name="Z Value")
-    + labs(x="X (projected)", y="Z (height)", title="surface-basic · letsplot · anyplot.ai")
+    + labs(x="X (projected)", y="Z (height)", title="surface-basic · python · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -89,6 +108,7 @@ plot = (
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_title=element_text(size=12, color=INK),
         panel_grid=element_blank(),
+        axis_line=element_blank(),
     )
     + ggsize(800, 450)
 )
