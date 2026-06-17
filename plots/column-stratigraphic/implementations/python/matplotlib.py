@@ -1,15 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-15
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-06-17
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data - synthetic sedimentary borehole section (depth increasing downward, younger at top)
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first categorical series is ALWAYS brand green (#009E73).
+# Lithologies are ordered by grain size (coarse → fine), so conglomerate leads.
+# Semantic exception: sand → ochre, carbonate → blue, mudrock → muted gray.
+IMPRINT_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data — synthetic sedimentary borehole section (depth increases downward,
+# youngest at top), using real US Great Plains formations and ages.
 layers = [
     {"top": 0, "bottom": 12, "lithology": "conglomerate", "formation": "Ogallala Fm", "age": "Miocene"},
     {"top": 12, "bottom": 30, "lithology": "sandstone", "formation": "Arikaree Fm", "age": "Miocene"},
@@ -23,32 +39,25 @@ layers = [
     {"top": 175, "bottom": 200, "lithology": "sandstone", "formation": "Entrada Fm", "age": "Jurassic"},
 ]
 
-# Lithology styles: color, hatch pattern
+# Lithology styles: Imprint color, FGDC-like hatch, grain-size column width.
+# Grain size sets the block width (wider = coarser), a standard sed-log convention.
 lithology_styles = {
-    "sandstone": {"color": "#F5DEB3", "hatch": "...", "edgecolor": "#8B7355"},
-    "shale": {"color": "#A9A9A9", "hatch": "---", "edgecolor": "#555555"},
-    "limestone": {"color": "#87CEEB", "hatch": "++", "edgecolor": "#4682B4"},
-    "siltstone": {"color": "#C4B69C", "hatch": "//", "edgecolor": "#8B7D6B"},
-    "conglomerate": {"color": "#DEB887", "hatch": "ooo", "edgecolor": "#8B6914"},
+    "conglomerate": {"color": "#009E73", "hatch": "o", "grain": 3.2},  # brand green — first series
+    "sandstone": {"color": "#BD8233", "hatch": "..", "grain": 2.6},  # ochre — sand
+    "siltstone": {"color": "#C475FD", "hatch": "//", "grain": 1.9},  # lavender
+    "shale": {"color": IMPRINT_MUTED, "hatch": "--", "grain": 1.3},  # muted gray — mudrock
+    "limestone": {"color": "#4467A3", "hatch": "+", "grain": 2.3},  # blue — carbonate
 }
+lithology_order = ["conglomerate", "sandstone", "siltstone", "shale", "limestone"]
 
-# Age group background colors for subtle shading
-age_colors = {
-    "Miocene": "#FFF8E7",
-    "Oligocene": "#F5F0E0",
-    "Eocene": "#EDE8D8",
-    "Cretaceous": "#E8EEF5",
-    "Jurassic": "#F0E8E0",
-}
+# Plot — square canvas, depth has no preferred horizontal axis
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot
-fig, ax = plt.subplots(figsize=(12, 16))
-
-column_left = 1.5
-column_width = 5.0
+column_left = 0.0
 max_depth = 200
 
-# Compute age spans
+# Compute the depth span of each geological period
 age_spans = {}
 for layer in layers:
     age = layer["age"]
@@ -58,144 +67,117 @@ for layer in layers:
         age_spans[age]["top"] = min(age_spans[age]["top"], layer["top"])
         age_spans[age]["bottom"] = max(age_spans[age]["bottom"], layer["bottom"])
 
-# Draw subtle age-group background shading
-for age, span in age_spans.items():
-    bg_rect = mpatches.FancyBboxPatch(
-        (column_left - 0.1, span["top"]),
-        column_width + 0.2,
-        span["bottom"] - span["top"],
-        boxstyle="square,pad=0",
-        facecolor=age_colors[age],
-        edgecolor="none",
-        zorder=0,
-    )
-    ax.add_patch(bg_rect)
+# Subtle alternating period-band shading behind the column (theme-adaptive)
+for idx, span in enumerate(age_spans.values()):
+    if idx % 2 == 0:
+        band = mpatches.Rectangle(
+            (-0.8, span["top"]),
+            4.3,
+            span["bottom"] - span["top"],
+            facecolor=INK,
+            edgecolor="none",
+            alpha=0.045,
+            zorder=0,
+        )
+        ax.add_patch(band)
 
-# Draw lithology layers
+# Lithology layers — width encodes grain size, hatch encodes rock type
 for layer in layers:
-    top = layer["top"]
-    bottom = layer["bottom"]
-    thickness = bottom - top
+    top, bottom = layer["top"], layer["bottom"]
     style = lithology_styles[layer["lithology"]]
 
-    rect = mpatches.FancyBboxPatch(
+    rect = mpatches.Rectangle(
         (column_left, top),
-        column_width,
-        thickness,
-        boxstyle="square,pad=0",
+        style["grain"],
+        bottom - top,
         facecolor=style["color"],
-        edgecolor=style["edgecolor"],
-        linewidth=1.5,
+        edgecolor=INK_SOFT,
+        linewidth=1.0,
         hatch=style["hatch"],
-        zorder=1,
+        alpha=0.9,
+        zorder=2,
     )
     ax.add_patch(rect)
 
     mid_depth = (top + bottom) / 2
-    ax.text(
-        column_left + column_width + 0.4,
-        mid_depth,
-        layer["formation"],
-        fontsize=16,
-        va="center",
-        ha="left",
-        fontweight="semibold",
-        color="#2C2C2C",
-    )
+    ax.text(3.6, mid_depth, layer["formation"], fontsize=10, va="center", ha="left", color=INK, zorder=4)
 
-# Unconformity between Eocene (Chadron Fm, bottom=72) and Cretaceous (Niobrara Fm, top=72)
+# Unconformity — wavy erosional surface between Eocene and Cretaceous (72 m)
 unconformity_depth = 72
-x_wave = np.linspace(column_left, column_left + column_width, 80)
-y_wave = unconformity_depth + 0.8 * np.sin(x_wave * 4)
-ax.plot(x_wave, y_wave, color="#B22222", linewidth=2.5, zorder=3)
+x_wave = np.linspace(column_left, 3.3, 120)
+y_wave = unconformity_depth + 1.1 * np.sin(x_wave * 7)
+ax.plot(x_wave, y_wave, color="#AE3030", linewidth=2.0, zorder=3)
 ax.text(
-    column_left + column_width + 0.4,
+    3.6,
     unconformity_depth,
     "unconformity",
-    fontsize=14,
+    fontsize=8,
     va="center",
     ha="left",
     fontstyle="italic",
-    color="#B22222",
-    fontweight="medium",
+    color="#AE3030",
+    zorder=4,
 )
 
-# Age labels on the left with bracket lines
-bracket_x = column_left - 1.2
+# Period (age) labels on the left with bracket lines
+bracket_x = -0.65
 for age, span in age_spans.items():
     mid = (span["top"] + span["bottom"]) / 2
-    ax.text(
-        column_left - 1.8,
-        mid,
-        age,
-        fontsize=16,
-        va="center",
-        ha="center",
-        fontstyle="italic",
-        color="#333333",
-        fontweight="medium",
-        clip_on=False,
-    )
-    ax.plot(
-        [bracket_x, bracket_x + 0.4],
-        [span["top"] + 0.5, span["top"] + 0.5],
-        color="#555555",
-        linewidth=1.2,
-        clip_on=False,
-    )
-    ax.plot(
-        [bracket_x, bracket_x + 0.4],
-        [span["bottom"] - 0.5, span["bottom"] - 0.5],
-        color="#555555",
-        linewidth=1.2,
-        clip_on=False,
-    )
-    ax.plot(
-        [bracket_x + 0.2, bracket_x + 0.2],
-        [span["top"] + 0.5, span["bottom"] - 0.5],
-        color="#555555",
-        linewidth=1.2,
-        clip_on=False,
-    )
+    ax.text(-1.05, mid, age, fontsize=10, va="center", ha="right", fontstyle="italic", color=INK_SOFT, clip_on=False)
+    ax.plot([bracket_x, bracket_x + 0.35], [span["top"] + 0.6, span["top"] + 0.6], color=INK_SOFT, linewidth=1.0)
+    ax.plot([bracket_x, bracket_x + 0.35], [span["bottom"] - 0.6, span["bottom"] - 0.6], color=INK_SOFT, linewidth=1.0)
+    ax.plot([bracket_x, bracket_x], [span["top"] + 0.6, span["bottom"] - 0.6], color=INK_SOFT, linewidth=1.0)
 
-# Legend
-legend_handles = []
-for lith, style in lithology_styles.items():
-    patch = mpatches.Patch(
-        facecolor=style["color"],
-        edgecolor=style["edgecolor"],
-        hatch=style["hatch"],
+# Grain-size guide above the column (explains the varying block width)
+ax.annotate("", xy=(3.3, -9), xytext=(0.1, -9), arrowprops={"arrowstyle": "->", "color": INK_MUTED, "linewidth": 1.2})
+ax.text(1.7, -16, "grain size: fine → coarse", ha="center", fontsize=8, color=INK_MUTED)
+
+# Legend — lithology patterns, in grain-size order
+legend_handles = [
+    mpatches.Patch(
+        facecolor=lithology_styles[lith]["color"],
+        edgecolor=INK_SOFT,
+        hatch=lithology_styles[lith]["hatch"],
         label=lith.capitalize(),
+        alpha=0.9,
         linewidth=1.0,
     )
-    legend_handles.append(patch)
-
-ax.legend(
+    for lith in lithology_order
+]
+leg = ax.legend(
     handles=legend_handles,
-    loc="upper center",
-    bbox_to_anchor=(0.55, -0.03),
-    fontsize=16,
-    framealpha=0.95,
-    edgecolor="#bbbbbb",
-    fancybox=True,
-    shadow=True,
+    loc="center left",
+    bbox_to_anchor=(0.72, 0.5),
+    fontsize=9,
     title="Lithology",
-    title_fontsize=17,
+    title_fontsize=10,
+    framealpha=0.95,
     borderpad=1.0,
-    ncol=5,
+    labelspacing=0.8,
+    handleheight=1.6,
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_title().set_color(INK)
+for txt in leg.get_texts():
+    txt.set_color(INK_SOFT)
 
 # Style
-ax.set_xlim(column_left - 2.8, column_left + column_width + 4.5)
-ax.set_ylim(max_depth, 0)
-ax.set_ylabel("Depth (m)", fontsize=20, labelpad=10)
-ax.set_title("column-stratigraphic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium", pad=25)
-ax.tick_params(axis="y", labelsize=16, length=6)
+title = "column-stratigraphic · python · matplotlib · anyplot.ai"
+title_fontsize = round(12 * 67 / len(title)) if len(title) > 67 else 12
+
+ax.set_xlim(-5.0, 14.2)
+ax.set_ylim(210, -22)
+ax.set_ylabel("Depth (m)", fontsize=11, color=INK, labelpad=8)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=12)
+ax.set_yticks(np.arange(0, max_depth + 1, 25))
+ax.tick_params(axis="y", labelsize=9, length=4, colors=INK_SOFT)
 ax.set_xticks([])
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
-ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, linestyle="--")
+ax.spines["left"].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.085, right=0.985, top=0.9, bottom=0.06)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
