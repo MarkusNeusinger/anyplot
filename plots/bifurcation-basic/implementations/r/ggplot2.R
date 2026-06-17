@@ -15,6 +15,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 GRID        <- adjustcolor(INK, alpha.f = 0.15)
+CHAOS_BG    <- adjustcolor(INK_SOFT, alpha.f = 0.07)
 
 IMPRINT_PALETTE <- c(
   "#009E73",  # 1 — brand green (always first series)
@@ -52,21 +53,30 @@ for (i in seq_along(r_values)) {
 
 df <- data.frame(r = r_vec, x = x_vec)
 
-# Period-doubling bifurcation point annotations
+# Period-doubling bifurcation annotations
+# y staggered: 3.449 and 3.544 are only 0.095 apart in x, so elevate 3.449
 bif_r     <- c(3.0, 3.449, 3.544)
 bif_label <- c(
   "r ≈ 3.0\nperiod-2",
   "r ≈ 3.449\nperiod-4",
   "r ≈ 3.544\nperiod-8"
 )
+bif_y     <- c(0.06, 0.16, 0.06)   # stagger so crowded labels don't overlap
 
 # Title with length-aware font sizing (67-char baseline, default 12pt)
 title_str <- "bifurcation-basic · r · ggplot2 · anyplot.ai"
 title_n   <- nchar(title_str)
 title_fs  <- max(8L, round(12.0 * min(1.0, 67.0 / title_n)))
 
-# Plot
+# Plot: chaotic-regime rect placed first so it renders behind data
 p <- ggplot(df, aes(x = r, y = x)) +
+  annotate(
+    "rect",
+    xmin = 3.57, xmax = 4.005,
+    ymin = 0,    ymax = 1,
+    fill  = CHAOS_BG,
+    color = NA
+  ) +
   geom_point(
     size  = 0.05,
     alpha = 0.10,
@@ -82,12 +92,24 @@ p <- ggplot(df, aes(x = r, y = x)) +
   annotate(
     "text",
     x          = bif_r,
-    y          = 0.04,
+    y          = bif_y,
     label      = bif_label,
-    size       = 2.5,
+    size       = 3.0,
     color      = INK_MUTED,
     hjust      = 0.5,
     vjust      = 0,
+    lineheight = 0.9
+  ) +
+  annotate(
+    "text",
+    x        = 3.785,
+    y        = 0.96,
+    label    = "Chaotic\nregime",
+    size     = 3.0,
+    color    = INK_MUTED,
+    hjust    = 0.5,
+    vjust    = 1,
+    fontface = "italic",
     lineheight = 0.9
   ) +
   labs(
