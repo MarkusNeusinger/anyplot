@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: bokeh 3.9.1 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-17
+Quality: 88/100 | Updated: 2026-06-17
 """
 
 # Remove the script's own directory from sys.path so that `import bokeh` resolves
