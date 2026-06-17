@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: pygal 3.1.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-17
 """
 
 import math
