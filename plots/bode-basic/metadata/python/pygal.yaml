@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bode-basic
 created: '2026-03-21T20:48:39Z'
-updated: '2026-06-17T20:22:32Z'
+updated: '2026-06-17T20:34:27Z'
 generated_by: claude-sonnet
 workflow_run: 27716440212
 issue: 4411
@@ -12,104 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Technically complete Bode plot with both magnitude and phase panels on a 3200×1800
-    canvas
-  - 'All required spec features present: dual-panel layout, logarithmic frequency
-    axis, reference lines (0 dB, -180°), gain margin and phase margin annotations'
-  - 'Excellent data quality: realistic 3rd-order control system with resonance, correct
-    dB/degree scales, stability margins with engineering context'
-  - 'Clean Imprint palette usage: #009E73 for primary curves, #AE3030 for reference
-    thresholds (semantic), #4467A3 for margin indicators — correct Imprint semantic
-    ordering'
-  - Theme-adaptive chrome works correctly in both renders — background, text, grid,
-    and annotation boxes all flip correctly between light (#FAF8F1) and dark (#1A1A17)
-  - 'Good data storytelling: annotation boxes clearly display stability margins and
-    system stability status with color coding'
-  - HTML export leverages pygal native SVG interactivity with tooltips — appropriate
-    use of pygal distinctive feature
-  - Code is clean, deterministic, and well-structured with no over-engineering
+  - Complete spec compliance — dual-panel Bode plot with gain margin, phase margin,
+    0 dB and -180° reference lines all present and correctly placed
+  - 'Strong data storytelling: semantically color-coded reference lines (red for stability
+    thresholds, blue for margin indicators) and prominent annotation boxes with rounded
+    corners convey engineering insight immediately'
+  - Realistic 3rd-order transfer function data with clear resonance peak at 5 Hz and
+    stability margins in the engineering-typical range (GM=12.2 dB, PM=26°)
+  - Full theme adaptation — all chrome tokens correctly adapt between light (#FAF8F1)
+    and dark (#1A1A17) surfaces; data colors identical across both renders
+  - Pygal-idiomatic dual-panel composition via separate charts + PIL stacking, with
+    cubic interpolation for smooth lines and custom x-axis formatters for log scale
+    display
+  - HTML export with embedded SVG preserves native pygal interactivity (tooltips,
+    hover) as a bonus output
   weaknesses:
-  - Annotation box in top panel (ann_x=1900, ann_y=50, 1250×195 px) overlaps with
-    the title text — the "anyplot.ai" portion of the title is obscured by the ELEVATED_BG
-    fill. Lower annotation box from y=50 to at minimum y=130 to clear the title, or
-    shift it to a non-overlapping quadrant (e.g., bottom-right of the top panel)
-  - 'Same annotation overlap issue affects dark render — the #242420 ELEVATED_BG box
-    covers the right end of the title in dark theme too'
-  - Vertical guide line appearing at x=1 Hz (log10(1)=0) is prominent despite show_x_guides=False
-    — minor visual noise, could be suppressed or reduced by careful x_labels management
+  - PIL annotation text (font_reg=26px, font_bold=32px) is too small for the combined
+    3200×1800 canvas — at ~400px mobile width these become ~3px and are unreadable.
+    Increase font_reg to at least 48px and font_bold to 56px, and expand annotation
+    box height accordingly.
+  - Magnitude and phase chart setup code is repetitive (nearly identical kwargs for
+    pygal.XY and add() calls) — minor code elegance issue; could be extracted into
+    a helper dict.
+  - 'DE-02: pygal''s default chart frame cannot be removed but whitespace could be
+    slightly more generous — the 140px left margin is correctly sized but the top
+    margins (40px for magnitude, 10px for phase) are quite tight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "bode-basic · python · pygal · anyplot.ai" is dark ink against light bg — readable but the right portion ("anyplot.ai") is obscured by the ELEVATED_BG annotation box placed at (1900, 50). Axis labels "Magnitude (dB)", "Phase (°)", "Frequency (Hz)" are clearly visible with dark ink. Tick labels are dark and readable. Legend at bottom is readable.
-      Data: Magnitude curve (#009E73 green) is prominent and clearly visible in the top panel. Phase curve (#009E73 green) is clear in the bottom panel. Reference lines (#AE3030 dashed red) for 0 dB and -180° are visible but subtle. Margin indicator dots and lines (#4467A3 blue) are visible at gain/phase crossover points. Annotation boxes show Peak, Gain Margin, Phase Margin values with stability status.
-      Legibility verdict: PARTIAL FAIL — font sizes explicitly set and most text is readable, but the annotation box in the top-right (1900×50 to 3150×245) covers the "anyplot.ai" portion of the title.
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
+      Chrome: Title "bode-basic · python · pygal · anyplot.ai" in dark ink, spanning ~60% of width — clearly readable. Y-axis label "Magnitude (dB)" vertical on left of top panel, "Phase (°)" on left of bottom panel, both readable. X-axis label "Frequency (Hz)" at bottom of phase panel, readable. Tick labels (log-spaced Hz values on x-axis; dB on magnitude y-axis; degrees on phase y-axis) in muted ink, all readable at canvas size. Legend items at the bottom of each panel (3-column layout) are clearly readable.
+      Data: Primary Magnitude and Phase lines in brand green #009E73 — clearly visible with width=5 stroke. 0 dB and -180° reference lines in IMPRINT_RED (#AE3030) as dashed lines — semantic use of red for stability-critical thresholds. Gain margin and phase margin indicator lines in IMPRINT_BLUE (#4467A3) as shorter dashed lines with endpoint dots. -3 dB and -90° secondary references in muted ink. Annotation boxes (rounded rectangle, elevated #FFFDF6 background) in upper-right of each panel showing peak, gain margin, phase margin, and stability status.
+      Legibility verdict: PASS — all pygal-rendered text is readable at canvas size. PIL annotation text (26-32px) is readable at full resolution but would become too small (~3px) at 400px mobile width — minor concern.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black.
-      Chrome: Title, axis labels, and tick labels render in light #F0EFE8 ink — clearly visible against the dark background. No dark-on-dark failures. Legend text at bottom is light and readable. Annotation box fills use #242420 ELEVATED_BG — appropriate.
-      Data: Magnitude and phase curves are identical #009E73 green to the light render — palette is theme-invariant as required. Reference lines and margin indicators retain identical colors (#AE3030, #4467A3). Data colors are confirmed identical between light and dark renders.
-      Legibility verdict: PARTIAL FAIL — same annotation box position issue: the #242420 box at (1900, 50) obscures "anyplot.ai" from the title in the dark render as well.
+      Background: Warm near-black (#1A1A17) — correct surface color, not pure black.
+      Chrome: Title and all axis labels flip to light ink (#F0EFE8 region) — clearly visible against dark background. Tick labels are light-colored and readable. Legend text is light and readable. Annotation box fill flips to elevated dark (#242420) with light text — no dark-on-dark failure observed.
+      Data: Magnitude and Phase lines remain brand green #009E73 — identical to light render. Reference lines, margin indicators, and secondary references all retain their Imprint palette colors (IMPRINT_RED, IMPRINT_BLUE, INK_MUTED) — identical to light render, only chrome flips.
+      Legibility verdict: PASS — all text elements readable against the dark background. Data colors identical to light render confirming correct theme-adaptive chrome implementation.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=66, label=56, major_label=44, legend=44).
-          Most text readable in both themes, but annotation box at (1900,50) obscures
-          'anyplot.ai' from the title in both renders.
+        comment: All pygal font sizes explicitly set (title=66, labels=56, major_labels=44,
+          legend=44); readable at canvas size in both themes. PIL annotation text
+          (26px reg, 32px bold) is readable at 3200px but falls to ~3px at 400px mobile
+          viewport — minor deduction.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Annotation box (1900,50,1250x195) overlaps with title text, covering
-          the 'anyplot.ai' portion in both light and dark renders.
+        passed: true
+        comment: No overlapping text or data elements in either render. Legend columns
+          well-spaced at bottom, annotation boxes placed in upper-right without collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Data curves, reference lines, margin indicators all clearly visible.
-          Line weights well-chosen for this data density.
+        comment: Primary lines at width=5 are prominent. Reference lines at width=2.5
+          are clearly distinguishable. Margin indicator dots (size=8) and dashed segments
+          visible at plot scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73), red (#AE3030), blue (#4467A3) are CVD-safe with
-          adequate luminance differences. Redundant encoding via dashed vs solid line
-          styles.
+        comment: Imprint palette with CVD-safe hues. Green/red pair has redundant
+          encoding via linestyle (solid vs dashed) so not relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Dual-panel layout makes good use of 3200x1800 canvas. Minor deduction
-          for the annotation box starting too high (y=50) which conflicts with the
-          title area.
+        comment: Dual-panel fills 3200x1800 canvas well. Explicit margins provide
+          breathing room. Panel divider line cleanly separates the two plots.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Magnitude (dB), Phase (°), Frequency (Hz) — all descriptive with
-          units.
+        comment: 'Title correct format. Y-axes: ''Magnitude (dB)'' and ''Phase (°)''.
+          X-axis: ''Frequency (Hz)''. All descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (Imprint position 1). References use #AE3030
-          (semantic: thresholds). Margins use #4467A3 (Imprint position 3). Backgrounds
-          #FAF8F1/#1A1A17 correct. Chrome adapts properly in both themes.'
+        comment: 'First series (#009E73) correct. Semantic exception justified: IMPRINT_RED
+          for stability-critical threshold lines (0 dB, -180°), IMPRINT_BLUE for margin
+          indicators. Backgrounds #FAF8F1/#1A1A17 correct. Chrome adapts correctly
+          in both themes.'
     design_excellence:
       score: 13
       max: 20
@@ -119,25 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above library defaults: custom annotation boxes with rounded corners,
-          color hierarchy (green=data, red=references, blue=margins), theme-adaptive
-          styling. Not quite publication-ready but clearly above configured defaults.'
+        comment: 'Above defaults: semantic color assignment showing domain expertise,
+          annotation boxes with rounded corners and elevated backgrounds, hierarchical
+          stroke widths and dash patterns. Limited by pygal''s inherent SVG rendering
+          style.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: dashed vs solid line styles for different semantic
-          roles, subtle panel divider, rounded annotation boxes. Pygal default grid/spine
-          styling mostly retained.'
+        comment: Y-only grid (show_x_guides=False), explicit margins, custom stroke
+          styles. Pygal's default frame cannot be removed but overall layout is clean.
+          Top margins (10-40px) are somewhat tight.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: annotation boxes prominently display stability
-          margins with color coding, ''Status: Stable'' verdict creates clear takeaway.
-          Visual hierarchy guides reader to stability analysis conclusion.'
+        comment: 'Clear visual hierarchy: green data line vs red stability thresholds
+          vs blue margin indicators. ''Status: Stable'' annotation in green provides
+          immediate insight. Prominent margin annotations (GM, PM) guide viewer to
+          engineering-relevant metrics.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,31 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with magnitude on top, phase on bottom,
-          shared logarithmic frequency axis.
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom,
+          shared log frequency axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: dual-panel layout, log frequency axis, 0
-          dB reference, -180° reference, gain margin annotation, phase margin annotation
-          with markers.'
+        comment: 'All spec features present: dual panels, log frequency axis, 0 dB
+          reference, -180° reference, gain margin annotated, phase margin annotated,
+          grid lines. Bonus: -3 dB and -90° references.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on X (log), magnitude dB on top Y, phase degrees on bottom
-          Y. All data visible across full frequency range.
+        comment: Frequency (Hz) on x-axis (log scale via log10 internal values with
+          formatter), Magnitude (dB) on top y-axis, Phase (°) on bottom y-axis. All
+          data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bode-basic · python · pygal · anyplot.ai' is correct format.
-          Legend labels match data series (Magnitude, 0 dB ref, GM value, -3 dB; Phase,
-          -180° ref, PM value, -90° ref).
+        comment: 'Title ''bode-basic · python · pygal · anyplot.ai'' correct. Legend
+          labels informative: ''Magnitude'', ''0 dB ref'', ''GM: 12.2 dB @ 11.1 Hz'',
+          ''−3 dB'', ''Phase'', ''−180° ref'', ''PM: 26.0° @ 6.7 Hz'', ''−90° ref''.'
     data_quality:
       score: 15
       max: 15
@@ -181,27 +185,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete coverage: resonance peak, magnitude rolloff, phase rolloff,
-          gain crossover, phase crossover, both stability margins, system characterization
-          (3rd-order, ωn, ζ).'
+        comment: 3rd-order transfer function shows resonance peak, magnitude rolloff,
+          phase rolloff beyond -180°, gain and phase crossover frequencies, stability
+          margins — covers all key Bode plot features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic 3rd-order control system: ωn=5 Hz, ζ=0.2, pole at 50 Hz.
-          GM=12.2 dB and PM=26° are plausible engineering values for a marginally
-          stable system.'
+        comment: Realistic control systems transfer function G(s) with natural frequency
+          5 Hz, damping 0.2, extra pole at 50 Hz. Neutral engineering topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency 0.1–1000 Hz covers full response. Magnitude -100 to +20
-          dB appropriate for this system. Phase -280 to +10° captures full 3rd-order
-          rolloff to near -270°.
+        comment: 0.1-1000 Hz range appropriate for ωn=5 Hz system. -100 to 20 dB magnitude
+          range and -280° to 0° phase range correct for 3rd-order system. GM=12.2
+          dB and PM=26° are realistic.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -209,36 +212,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data computation → chart creation → Pillow
-          composition → save. No unnecessary functions or classes.'
+        comment: 'Linear structure: imports → tokens → data → chart setup → render
+          → compose → annotate → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: pure mathematical computation of transfer function
-          response, no random elements.'
+        comment: Fully deterministic — computed from mathematical transfer function
+          formula, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, os, cairosvg, numpy, pygal, PIL (Image/ImageDraw/ImageFont),
-          pygal.style.Style.'
+        comment: All imports (io, os, cairosvg, numpy, pygal, PIL, pygal.style.Style)
+          are used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean Pythonic code. Annotation boxes are legitimate static info
-          panels, not fake interactive tooltips. HTML export uses actual SVG interactivity.
+        comment: Code is ~300 lines with notable repetition between magnitude and
+          phase chart setup (near-identical kwargs and add() calls). Could be condensed
+          with a shared config dict.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
-          Correct output filenames.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
       score: 7
       max: 10
@@ -248,25 +251,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good pygal usage: XY chart with proper Style object, x_labels/x_labels_major
-          for tick control, stroke_style per series, show_dots per series, legend_at_bottom.
-          Pillow compositing is appropriate for dual-panel layout.'
+        comment: Correct use of pygal.XY with interpolate='cubic', Style object for
+          all theming, x_labels_major separation, cairosvg for PNG render. Dual-panel
+          via PIL composition is the correct pygal workaround.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses pygal-specific features: HTML export with native SVG tooltips
-          (pygal''s main distinctive feature), x_value_formatter for Hz display on
-          log scale, tooltip_fancy_mode, per-series stroke_style and formatter.'
-  verdict: REJECTED
+        comment: Leverages pygal's SVG interactivity (tooltip_fancy_mode, x_value_formatter,
+          per-series formatter), HTML export with embedded SVG, cubic interpolation
+          for smooth curves, and minor x-label support for log-scale readability.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   - pillow
   techniques:
-  - annotations
   - subplots
+  - annotations
   - html-export
   - manual-ticks
   patterns:
