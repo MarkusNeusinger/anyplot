@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: matplotlib 3.10.8 | Python 3.14
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 93/100 | Created: 2026-06-17
 """
 
 import os
