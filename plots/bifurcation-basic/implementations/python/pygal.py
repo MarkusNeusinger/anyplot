@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-06-17
@@ -104,7 +104,7 @@ chart = pygal.XY(
     y_title="Steady-State Population (xₙ)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=2,
     legend_box_size=22,
     stroke=False,
     dots_size=1.2,
@@ -112,7 +112,7 @@ chart = pygal.XY(
     show_y_guides=True,
     x_value_formatter=lambda v: f"{v:.3f}",
     value_formatter=lambda v: f"{v:.4f}",
-    margin_bottom=110,
+    margin_bottom=160,
     margin_left=70,
     margin_right=50,
     margin_top=55,
