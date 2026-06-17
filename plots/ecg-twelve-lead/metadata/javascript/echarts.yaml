@@ -1,0 +1,251 @@
+library: echarts
+language: javascript
+specification_id: ecg-twelve-lead
+created: '2026-06-17T03:35:44Z'
+updated: '2026-06-17T03:39:57Z'
+generated_by: claude-opus
+workflow_run: 27663734736
+issue: 4554
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Authentic clinical 12-lead ECG reproduction: correct 3x4 layout (I/aVR/V1/V4,
+    II/aVL/V2/V5, III/aVF/V3/V6) plus a full-length Lead II rhythm strip across the
+    bottom, exactly like a printed hospital ECG'
+  - Domain-faithful red ECG-paper grid using a two-level ruling (bold 5mm major +
+    light 1mm minor via ECharts splitLine/minorSplitLine), tuned per theme for contrast
+    on cream and near-black surfaces
+  - Single brand-green trace (#009E73, palette[0]) is identical across both themes;
+    only the chrome (background, grid tone, labels) flips — perfect theme adaptation
+  - 'Clinically accurate waveform morphology: globally inverted aVR, textbook R-wave
+    progression V1(deep rS)->V6(tall qR), realistic P-QRS-T amplitudes (P 0.1-0.25mV,
+    QRS 0.5-2.0mV, T 0.1-0.5mV) at 75bpm'
+  - 'All required spec features present: 1mV calibration pulse in each row margin,
+    per-lead labels, and the standard ''25 mm/s  10 mm/mV  1 mV cal'' scale annotation'
+  - Exact title format and exact 3200x1800 canvas; deterministic Gaussian-sum ECG
+    model (no RNG), clean self-contained code
+  weaknesses:
+  - The ECG-paper grid red (rgba(199,68,68,...)) is a justified domain-convention
+    semantic exception rather than the exact Imprint matte-red anchor (#AE3030); acceptable
+    for ECG paper but worth noting it is a slightly brighter custom red
+  - The bottom-left scale annotation is set at 13px CSS, which is on the small side
+    relative to the canvas and could be marginal when scaled to ~400px mobile width
+    — consider ~15-16px for safety
+  - Code uses small helper functions (gauss, ecgBeat, leadTrace, calPulse) rather
+    than strict imports->data->plot flow; appropriate for the math model but a slight
+    deviation from the KISS no-functions guideline
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1 (correct, not pure white).
+      Chrome: centered bold dark title "ecg-twelve-lead · javascript · echarts · anyplot.ai" fully readable; lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, and rhythm-strip II) in bold dark text, all clearly readable; bottom-left scale annotation "25 mm/s  10 mm/mV  1 mV cal" in soft ink, readable. Red ECG-paper grid (bold 5mm + faint 1mm) is the domain convention, subtle but visible.
+      Data: single brand-green (#009E73) waveform trace across all 12 leads + rhythm strip; 1mV calibration pulses at left margin of each row. Trace clearly distinguishable from grid.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 (correct, not pure black).
+      Chrome: title and all lead labels rendered in light/near-white text, fully readable against the dark surface — no dark-on-dark failures. Scale annotation legible in muted light ink. Grid is a muted red, subtle but visible.
+      Data: identical brand-green (#009E73) trace to the light render — only chrome flipped. Calibration pulses present. Green reads well on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 22px, labels 17px bold); all readable
+          both themes. Scale annotation 13px is slightly small for mobile scaling.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data; lead labels sit cleanly above each trace.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 1.8px green trace clearly visible against the red paper grid in both
+          themes; appropriate for dense multi-lead layout.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single green series with high contrast on both surfaces; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills the canvas with balanced margins; nothing cut off; exact
+          3200x1800.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: ECG paper convention has no axis titles; scale annotation provides
+          units (mm/s, mm/mV); per-lead labels present.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Trace is #009E73; backgrounds #FAF8F1/#1A1A17; grid red is a justified
+          ECG-paper domain exception. Data colors identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Publication-quality, authentic clinical ECG reproduction far above
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle two-level grid, no spines/axis lines, generous whitespace,
+          polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Recognizable hospital layout + realistic per-lead morphology guide
+          the reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-channel ECG waveform display on medical grid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid, rhythm strip, paper grid, calibration pulse, labels, scale
+          annotation — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: time->x (s), voltage->y (mV); continuous coordinate carries all leads.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format; single-series so per-lead labels replace a legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Inverted aVR, R-wave progression V1->V6, full P-QRS-T complexes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Normal sinus rhythm, clinically plausible, neutral medical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitudes in normal physiological ranges; 75bpm; 2.5s/column at
+          25mm/s.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions for the ECG math model; appropriate but deviates
+          from strict no-functions flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic Gaussian-sum model, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses the echarts global; no extraneous imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, appropriate complexity; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Idiomatic mount-node contract; harness emits plot-{theme}.png/.html.
+    library_features:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic line series, value axes with splitLine, single grid coordinate
+          system.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Two-level minorSplitLine grid + graphic-API text overlay with custom
+          pixel mapping — distinctive ECharts usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
+  - minimal-chrome
