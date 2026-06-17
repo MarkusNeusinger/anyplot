@@ -50,9 +50,52 @@ Highcharts.chart("container", {
         max: R_MAX,
         lineColor: t.inkSoft,
         tickColor: t.inkSoft,
-        gridLineColor: t.grid,
-        gridLineWidth: 1,
-        labels: { style: { color: t.inkSoft, fontSize: "14px" } }
+        gridLineWidth: 0,
+        labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+        plotLines: [
+            {
+                value: 3.0,
+                color: t.inkSoft,
+                dashStyle: "Dash",
+                width: 1,
+                label: {
+                    text: "Period-1→2<br/>r≈3.0",
+                    style: { color: t.inkSoft, fontSize: "12px" },
+                    rotation: 0,
+                    align: "left",
+                    x: 4,
+                    y: 16
+                }
+            },
+            {
+                value: 3.449,
+                color: t.inkSoft,
+                dashStyle: "Dash",
+                width: 1,
+                label: {
+                    text: "Period-2→4<br/>r≈3.449",
+                    style: { color: t.inkSoft, fontSize: "12px" },
+                    rotation: 0,
+                    align: "left",
+                    x: 4,
+                    y: 16
+                }
+            },
+            {
+                value: 3.544,
+                color: t.inkSoft,
+                dashStyle: "Dash",
+                width: 1,
+                label: {
+                    text: "Period-4→8<br/>r≈3.544",
+                    style: { color: t.inkSoft, fontSize: "12px" },
+                    rotation: 0,
+                    align: "left",
+                    x: 4,
+                    y: 60
+                }
+            }
+        ]
     },
     yAxis: {
         title: {
