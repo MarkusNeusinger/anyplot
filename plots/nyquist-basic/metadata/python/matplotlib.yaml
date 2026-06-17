@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:47:13Z'
-updated: '2026-06-17T22:21:56Z'
+updated: '2026-06-17T22:36:58Z'
 generated_by: claude-sonnet
 workflow_run: 27722735717
 issue: 4412
@@ -12,130 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance — all required features implemented: critical point (-1,0)
-    with red X marker, unit circle, directional arrows, frequency annotations at ω=0.3/1/2/5/10,
-    and 1:1 equal aspect ratio'
-  - Excellent data quality — third-order cascaded system G(s)=2/((s+1)(0.5s+1)(0.2s+1))
-    is realistic and physically correct, showing a proper Nyquist curve with clear
-    stability margin visualization
-  - Perfect code quality — clean KISS structure with no functions/classes, deterministic
-    data from scipy.signal, all imports used
-  - Fully readable in both themes — all chrome tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG)
-    correctly applied to both light and dark renders with no dark-on-dark or light-on-light
-    failures
-  - 'Semantically correct palette usage — brand green for the main Nyquist curve,
-    Imprint matte red (#AE3030) for the critical point (correct semantic role: error/danger
-    marker)'
+  - All five spec requirements (critical point, unit circle, frequency annotations,
+    direction arrows, 1:1 aspect ratio) implemented correctly and accurately
+  - 'Added value beyond spec: computed and annotated gain/phase margins with exact
+    numerical values using scipy.signal'
+  - Perfect theme adaptation with no dark-on-dark failures in either render
+  - Realistic third-order transfer function G(s)=2/((s+1)(0.5s+1)(0.2s+1)) with physically
+    plausible stability margins (Gm=16.0 dB, PM=81.0°)
+  - Clean, deterministic code with proper Imprint palette usage including semantic
+    red for the critical stability point
   weaknesses:
-  - Frequency annotation fontsize=16 is larger than the axis labels (fontsize=10)
-    and even the title (fontsize=12), creating an inverted typography hierarchy —
-    annotations dominate the plot visually. Reduce annotation fontsize to 9-10pt so
-    they subordinate to the axis labels as expected.
-  - Design Excellence is at 'well-configured default' level (DE-01=4) — the implementation
-    meets the spec but doesn't push beyond it. Consider adding a subtle background
-    highlight or annotation box at the critical point to draw the viewer's eye to
-    the stability margin region.
-  - Library Mastery (LM-02=3) — the use of patches.Circle and annotate with arrowprops
-    is good but not maximally distinctive. The implementation could leverage scipy.signal
-    more expressively (e.g., computing and annotating gain margin and phase margin
-    directly on the plot) to show deeper integration between scipy and matplotlib.
+  - 'Minor annotation crowding near phase crossover: Gm arrow tip and ω=5 label occupy
+    very similar coordinates around (−0.06, 0) — shift ω=5 offset to separate them'
+  - Frequency annotation text at 9pt slightly small for mobile readability at 400px
+    scaled width — raise to 10pt
+  - Design excellence could reach publication quality with subtle emphasis around
+    the critical stability region (e.g. faint translucent fill in safe region)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "nyquist-basic · python · matplotlib · anyplot.ai" at fontsize=12 is dark-colored and readable, spanning ~70% of the 2400px canvas width (expected). Axis labels "Real" (X) and "Imaginary" (Y) at fontsize=10 are clearly visible. Tick labels at fontsize=8 are readable. Reference lines (axhline/axvline) are very subtle.
-      Data: Main G(jω) curve in brand green (#009E73) at linewidth=2.5 — clearly visible. Mirror G(-jω) in the same green at alpha=0.35 with dashed linestyle — semi-transparent, visually distinct. Unit circle as dotted gray line. Critical point (-1, 0) as large red X (markersize=14, #AE3030). Directional arrows embedded in the curve at 4 positions. Frequency annotations at ω=0.3, 1, 2, 5, 10 in INK_SOFT at fontsize=16. Legend in lower-left with ELEVATED_BG frame and light edge.
-      Legibility verdict: PASS — all text is readable, but frequency annotations at fontsize=16 are larger than axis labels (10pt) and title (12pt), creating an inverted typography hierarchy.
+      Background: Warm off-white #FAF8F1 — correct light theme surface.
+      Chrome: Title "nyquist-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Real" (x) and "Imaginary" (y) in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt — all readable. Frequency annotations (ω=0.3, 1, 2, 5, 10) and stability margin annotations (Gm, φm) in 9pt — small but legible.
+      Data: G(jω) curve in brand green #009E73 (solid, 2.5pt); G(−jω) conjugate branch in same green with alpha=0.35 (dashed). Critical point (−1, 0) marked with red × #AE3030 at markersize=14. Unit circle in dotted INK_SOFT. Direction arrows in #009E73 along the primary curve. Diamond marker at gain crossover, square marker at phase crossover, circle markers at frequency annotation points.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title is light-colored (#F0EFE8) and readable. Axis labels and tick labels appear in light tones (INK and INK_SOFT dark-mode values) — no dark-on-dark failures detected. Grid lines are white/light at very low alpha — subtle and visible. Legend frame uses ELEVATED_BG (#242420) which is distinct from the page background.
-      Data: G(jω) curve is same brand green (#009E73) — data colors are identical to the light render. The mirror G(-jω) dashed curve at alpha=0.35 appears as a slightly darker teal on the dark background (expected alpha blending behavior). Unit circle appears as a light dotted circle. Critical point (-1, 0) retains the Imprint red #AE3030 — visible on dark background.
-      Legibility verdict: PASS — all text is readable in dark theme. No dark-on-dark text failures. Data colors are consistent with the light render.
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels in light ink. Tick labels in INK_SOFT (#B8B7B0) — readable against dark background. Frequency annotations and stability margin annotations remain readable. Unit circle shifts to white dotted line. Legend frame uses elevated dark background #242420 with light text.
+      Data: G(jω) curve remains #009E73 — identical to light render. Critical point × remains #AE3030 — identical. All Imprint palette data colors unchanged between themes; only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements clearly readable against near-black surface. Brand green #009E73 fully visible on dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes, but frequency
-          annotation fontsize=16 is larger than axis labels (10pt) and title (12pt)
-          — inverted typography hierarchy
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, annotations
+          9pt, ticks 8pt). Readable in both themes. 9pt annotations slightly small
+          for mobile.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: ω=5 and ω=10 annotations are crowded in the center-upper area near
-          the curve convergence point, slightly reducing readability
+        comment: 'Minor crowding: Gm arrow tip and omega=5 label occupy very similar
+          coordinates near (-0.06, 0).'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve, arrows, critical point marker, and unit circle are all
-          clearly visible and well-sized
+        comment: All curves, markers, arrows, and unit circle clearly visible in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; critical point uses semantic red; main
-          curve in brand green — adequately distinguishable
+        comment: Good luminance contrast; CVD-safe Imprint palette; green and red
+          clearly distinct.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas appropriate for symmetric Nyquist plot; 1:1
-          aspect ratio; no content cut off; legend well-positioned
+        comment: 2400x2400 square canvas correct for 1:1 Nyquist aspect ratio; canvas
+          gate passed; balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real and Imaginary are the standard axis labels for a Nyquist plot;
-          title format is correct
+        comment: Axes labeled 'Real' and 'Imaginary' per spec; title is the mandated
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series in #009E73 brand green; critical point uses #AE3030
-          semantic red (intentional error/danger role); backgrounds are #FAF8F1 /
-          #1A1A17; chrome tokens correctly applied in both themes'
+        comment: 'First series #009E73; semantic red #AE3030 for critical point (correct
+          semantic exception for error/critical role); backgrounds #FAF8F1 light /
+          #1A1A17 dark; both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured Imprint palette and correct token usage, but the
-          design sits at a polished default level rather than exceptional sophistication
+        passed: true
+        comment: 'Clearly above defaults: multiple distinct marker shapes (diamond,
+          square, circle, x), alpha-differentiated conjugate branch (0.35), arrowstyle
+          direction arrows, intentional color hierarchy between primary/secondary/reference
+          elements.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle grid (alpha=0.15), legend frame
-          uses ELEVATED_BG — clearly above defaults but not maximally polished
+        passed: true
+        comment: Top/right spines removed; subtle grid (alpha=0.15); center axis lines
+          with alpha=0.4; styled legend with elevated background; controlled margins
+          via subplots_adjust.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Directional arrows, frequency annotations, and critical point marker
-          guide the viewer effectively; good visual hierarchy for a control systems
-          plot
+        passed: true
+        comment: Computed and annotated exact stability margins (Gm=16.0 dB, PM=81.0°);
+          direction arrows guide frequency trajectory; critical point is the clear
+          focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot — complex plane with real/imaginary axes and
-          frequency response curve
+        comment: Correct Nyquist plot mapping complex frequency response onto complex
+          plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Critical point marked, unit circle drawn, frequency annotations at
-          key points, directional arrows, 1:1 aspect ratio, correct axis labels —
-          all spec requirements met
+        comment: Critical point (-1,0) marked with red x; unit circle drawn; frequency
+          annotations at 5 key points; direction arrows on curve; 1:1 aspect ratio
+          via set_aspect('equal').
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on X, imaginary part on Y, 800 logspaced frequency points
-          covering the full response
+        comment: Real on X-axis, Imaginary on Y-axis; 800 logarithmically spaced points
+          (logspace -1.5 to 2).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exact format 'nyquist-basic · python · matplotlib · anyplot.ai';
-          legend entries G(jω), G(-jω), Critical point (-1, 0) are correct
+        comment: Title is 'nyquist-basic · python · matplotlib · anyplot.ai'; legend
+          labels G(jω), G(-jω), Critical point (-1, 0) are clear and accurate.
     data_quality:
       score: 15
       max: 15
@@ -178,22 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full Nyquist curve with conjugate mirror, frequency annotations,
-          stability margin visualization, and reference unit circle
+        comment: Shows G(jω) and G(-jω) curves, unit circle, critical point, direction
+          arrows, frequency labels, and computed stability margins — full Nyquist
+          diagram.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s)=2/((s+1)(0.5s+1)(0.2s+1)) is a realistic industrial cascade
-          control system — neutral topic, physically correct
+        comment: Third-order cascaded process transfer function G(s)=2/((s+1)(0.5s+1)(0.2s+1));
+          engineering-plausible stability margins (Gm=16.0 dB, PM=81.0°) for a stable
+          well-damped system.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: DC gain of 2.0 shown correctly at (2, 0); frequency range 0.032–100
-          rad/s is appropriate; system is stable (critical point outside encirclement)
+        comment: Frequency range 0.03-100 rad/s appropriate for system poles at s=-1,
+          -2, -5; axis bounds fit the data naturally.
     code_quality:
       score: 10
       max: 10
@@ -203,36 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → plot → save; no functions
-          or classes'
+        comment: 'Linear top-to-bottom structure: Imports -> Theme tokens -> Data
+          -> Plot -> Save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — transfer function and scipy frequency response
-          computation
+        comment: Deterministic transfer function computation via scipy.signal; no
+          random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, sys, matplotlib.pyplot, numpy, matplotlib.patches.Circle,
-          scipy.signal'
+        comment: 'All imports used: matplotlib, numpy, Circle from patches, scipy.signal.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; arrowprops usage is appropriately verbose for this
-          task; no fake UI elements
+        comment: Clean, well-organized; good zorder management; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API; no deprecated
-          functions
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; dpi=400; correct
+          matplotlib API.
     library_mastery:
       score: 7
       max: 10
@@ -242,18 +234,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses axes methods (ax.plot, ax.annotate, ax.add_patch, ax.set_aspect),
-          explicit figure creation, scipy for control system modeling alongside matplotlib
-          — good idiomatic usage
+        comment: Axes methods throughout; matplotlib.patches.Circle; fig.subplots_adjust
+          for margin control; setp for legend text styling; proper dual facecolor
+          assignment.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: matplotlib.patches.Circle and ax.annotate() with arrowprops are matplotlib-distinctive;
-          scipy.signal.freqresp integration is good but the implementation doesn't
-          leverage scipy's gain/phase margin calculations for deeper integration
-  verdict: REJECTED
+        passed: true
+        comment: Uses Circle patch, annotate with arrowprops for directional arrows
+          and stability margin callouts, zorder layering, set_aspect('equal') for
+          correct unit-circle proportions.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
