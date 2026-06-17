@@ -1,0 +1,239 @@
+library: makie
+language: julia
+specification_id: spirometry-flow-volume
+created: '2026-06-17T04:14:58Z'
+updated: '2026-06-17T04:18:32Z'
+generated_by: claude-opus
+workflow_run: 27665156038
+issue: 4557
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Correct flow-volume loop morphology: sharp rise to PEF, roughly linear expiratory
+    decline, and a symmetric U-shaped inspiratory limb below the zero-flow line forming
+    a closed loop.'
+  - All spec-required clinical annotations present — labeled PEF marker, FVC/FEV1/FEV1-FVC/PEF
+    values box, and a dashed predicted-normal reference overlay distinct from the
+    solid measured loop.
+  - 'Brand green #009E73 used for the measured (primary) series; backgrounds are theme-correct
+    (#FAF8F1 light / #1A1A17 dark) with the values box on the elevated surface (#FFFDF6
+    / #242420).'
+  - 'Clean theme-adaptive chrome: title/labels/ticks all readable in both renders
+    with no dark-on-dark or light-on-light failures; top/right spines removed, subtle
+    12%-alpha grid.'
+  - Polished composition — italic limb labels, zero-flow reference rule, elevated
+    callout box, and well-placed legend that avoid overlap with the data.
+  weaknesses:
+  - 'The predicted-normal overlay color is the theme-adaptive `muted` anchor (INK_MUTED),
+    so its hue differs between light and dark renders. This is permitted for the muted
+    reference role, but a fixed Imprint hue (e.g. ochre #BD8233) would give the reference
+    loop a constant identity across themes.'
+  - '''PEF'' appears both as a legend entry and as an inline text annotation next
+    to the marker — mildly redundant; the inline label alone would suffice.'
+  - 'LM-02: usage is solid but conventional (lines!/scatter!/text!/poly!/axislegend/hlines!);
+    no distinctive CairoMakie-specific capability is showcased beyond standard primitives.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1); values callout box on elevated #FFFDF6.
+      Chrome: dark title "spirometry-flow-volume · julia · makie · anyplot.ai", axis labels "Volume (L)" / "Flow (L/s)", and grey tick labels all clearly readable. Subtle grid + zero-flow rule visible.
+      Data: solid brand-green (#009E73) measured loop; dashed grey predicted-normal overlay; green PEF marker with PAGE_BG stroke at ~(0.45, 9.6). First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17); values box on elevated #242420.
+      Chrome: light title and axis labels, light-grey tick labels — all readable, no dark-on-dark failures. Grid and zero-flow rule subtle but visible.
+      Data: measured loop is identical brand green #009E73; PEF marker identical. Predicted-normal dashed line is the lighter muted anchor (#A8A79F) — theme-adaptive by the muted-role rule, so it reads correctly against the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes; all text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, values box, and limb labels placed in empty regions; no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thick solid loop, dashed reference, prominent PEF marker — all clearly
+          visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs grey-dashed differentiated by color AND linestyle; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 exact; balanced proportions, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (L, L/s).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first; correct theme backgrounds; reference uses muted
+          anchor.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Callout box, italic annotations, PEF stroke marker — clear design
+          intent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines trimmed, subtle grid, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Measured loop is the focal point vs muted predicted reference; PEF
+          emphasized.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flow-volume loop.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: PEF marker, clinical values, dashed predicted overlay, closed loop
+          — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume on x, flow on y; expiratory above / inspiratory below zero.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Canonical title; legend labels match series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both limbs, PEF, predicted overlay, clinical metrics.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible mild-obstructive spirometry values (FVC 4.8, FEV1/FVC 81%).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Volumes 0–5 L, flows ±10 L/s — physiologically sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42); curves are deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Readable comprehensions; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png; current size=/px_per_unit API.
+    library_features:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis + lines!/scatter!/text!/poly!/axislegend/hlines!.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Solid but conventional primitive usage; nothing CairoMakie-unique
+          showcased.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - reference-lines
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
