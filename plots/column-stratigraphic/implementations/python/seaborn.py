@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,15 +13,35 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn theme for polished styling
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — first lithology is always brand green; matte-red (#AE3030)
+# is deliberately skipped here and reserved as the semantic boundary marker.
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#2ABCCD", "#954477"]
+UNCONF_RED = "#AE3030"  # Imprint matte-red — semantic unconformity anchor
+
 sns.set_theme(
     style="ticks",
-    context="talk",
-    font_scale=1.0,
-    rc={"axes.linewidth": 1.2, "patch.linewidth": 1.5, "hatch.linewidth": 1.0},
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "axes.linewidth": 1.0,
+        "patch.linewidth": 1.0,
+        "hatch.linewidth": 0.8,
+    },
 )
 
-# Data - synthetic sedimentary section (Western Interior Seaway)
+# Data — synthetic sedimentary section (Western Interior Seaway)
 layers = [
     {"top": 0, "bottom": 15, "lithology": "sandstone", "formation": "Dakota Fm", "age": "Late Cretaceous"},
     {"top": 15, "bottom": 30, "lithology": "shale", "formation": "Graneros Sh", "age": "Late Cretaceous"},
@@ -36,202 +58,183 @@ layers = [
 df = pd.DataFrame(layers)
 df["thickness"] = df["bottom"] - df["top"]
 df["mid_depth"] = (df["top"] + df["bottom"]) / 2
-df["col_width"] = 1.0
 
-# Use seaborn color palette for distinct lithology colors (colorblind-safe)
-lith_types = ["sandstone", "shale", "limestone", "siltstone", "conglomerate", "dolomite"]
-palette = sns.color_palette("colorblind", n_colors=len(lith_types))
-lith_color_map = dict(zip(lith_types, [sns.desaturate(c, 0.7) for c in palette], strict=True))
-
-lithology_styles = {
-    "sandstone": {"color": lith_color_map["sandstone"], "hatch": "...", "label": "Sandstone"},
-    "shale": {"color": lith_color_map["shale"], "hatch": "---", "label": "Shale"},
-    "limestone": {"color": lith_color_map["limestone"], "hatch": "+++", "label": "Limestone"},
-    "siltstone": {"color": lith_color_map["siltstone"], "hatch": "//", "label": "Siltstone"},
-    "conglomerate": {"color": lith_color_map["conglomerate"], "hatch": "ooo", "label": "Conglomerate"},
-    "dolomite": {"color": lith_color_map["dolomite"], "hatch": "xxx", "label": "Dolomite"},
+# Lithology styling — Imprint colors + hatch approximations of FGDC/USGS symbols
+lith_order = ["sandstone", "shale", "limestone", "siltstone", "conglomerate", "dolomite"]
+lith_hatch = {
+    "sandstone": "...",  # stipple dots
+    "shale": "---",  # horizontal dashes
+    "limestone": "+++",  # brick / grid
+    "siltstone": "//",  # diagonal dashes
+    "conglomerate": "ooo",  # clasts / pebbles
+    "dolomite": "xxx",  # rhombic
 }
-
-# Age period background colors via seaborn palette
-age_bg_palette = sns.color_palette("pastel", n_colors=5)
-age_list = ["Late Cretaceous", "Late Jurassic", "Middle Jurassic", "Late Triassic", "Early Permian"]
-age_bg_colors = {age: (*age_bg_palette[i], 0.10) for i, age in enumerate(age_list)}
+lith_label = {name: name.title() for name in lith_order}
+lith_color = {name: IMPRINT_PALETTE[i] for i, name in enumerate(lith_order)}
 
 total_depth = 180
+col_width = 0.5
 
-# Build thickness data for side panel (seaborn distinctive feature)
-thickness_df = df[["lithology", "thickness"]].copy()
-thickness_df["lithology"] = thickness_df["lithology"].str.title()
+# Geological-age extents (min top → max bottom across that age's layers)
+age_order = ["Late Cretaceous", "Late Jurassic", "Middle Jurassic", "Late Triassic", "Early Permian"]
+age_spans = {age: (df[df["age"] == age]["top"].min(), df[df["age"] == age]["bottom"].max()) for age in age_order}
+age_tint = dict(zip(age_order, IMPRINT_PALETTE[:5], strict=True))
 
-# Plot - three-panel layout: age brackets | stratigraphic column | thickness strip
-fig, (ax_age, ax, ax_thick) = plt.subplots(1, 3, figsize=(16, 9), width_ratios=[0.16, 0.54, 0.30])
-
-# Use sns.barplot for the lithology layers (seaborn plotting function)
-sns.barplot(
-    data=df,
-    y="formation",
-    x="col_width",
-    color="#306998",
-    ax=ax,
-    edgecolor="black",
-    linewidth=1.5,
-    order=df["formation"].tolist(),
-    width=0.98,
+# Plot — three panels: geological age | stratigraphic column | layer thickness
+fig, (ax_age, ax, ax_thick) = plt.subplots(
+    1, 3, figsize=(8, 4.5), dpi=400, width_ratios=[0.16, 0.50, 0.34], facecolor=PAGE_BG
 )
+for a in (ax_age, ax, ax_thick):
+    a.set_facecolor(PAGE_BG)
 
-# Reposition bars from categorical to proportional depth scale and add hatching
-col_width = 0.55
-for i, (_, row) in enumerate(df.iterrows()):
-    bar = ax.patches[i]
-    style = lithology_styles[row["lithology"]]
-    bar.set_facecolor(style["color"])
-    bar.set_hatch(style["hatch"])
-    bar.set_y(row["top"])
-    bar.set_height(row["thickness"])
-    bar.set_x(0)
-    bar.set_width(col_width)
+# Stratigraphic column — bars drawn directly at true depth coordinates (no
+# categorical-to-continuous repositioning). barh centers on mid_depth.
+for _, row in df.iterrows():
+    ax.barh(
+        row["mid_depth"],
+        col_width,
+        height=row["thickness"],
+        color=lith_color[row["lithology"]],
+        hatch=lith_hatch[row["lithology"]],
+        edgecolor=INK,
+        linewidth=1.1,
+        zorder=3,
+    )
 
-# Switch to continuous depth axis
-ax.set_ylim(total_depth, 0)
-ax.set_yticks([])
+ax.set_ylim(total_depth, 0)  # depth increases downward (borehole convention)
+ax.set_xlim(0, 1.6)
 
-# Formation labels to the right of each layer
+# Formation names to the right of each layer
 for _, row in df.iterrows():
     ax.text(
-        col_width + 0.05,
+        col_width + 0.07,
         row["mid_depth"],
         row["formation"],
-        fontsize=15,
+        fontsize=7,
         fontweight="medium",
         va="center",
         ha="left",
-        color="#2C2C2C",
+        color=INK,
     )
 
-# Mark major unconformities with wavy lines for data storytelling
+# Major unconformities — wavy red boundary lines with labels
 unconformities = [(100, "Cretaceous–Jurassic"), (140, "Jurassic–Triassic"), (162, "Triassic–Permian")]
-
 for depth, label in unconformities:
-    x_wave = np.linspace(0, col_width, 80)
-    y_wave = depth + 0.8 * np.sin(x_wave * 40)
-    ax.plot(x_wave, y_wave, color="#CC3333", linewidth=2.5, zorder=5)
-    # Place unconformity labels above the wavy line, inside column
+    x_wave = np.linspace(0, col_width, 120)
+    y_wave = depth + 1.1 * np.sin(x_wave * 45)
+    ax.plot(x_wave, y_wave, color=UNCONF_RED, linewidth=1.6, zorder=5, solid_capstyle="round")
     ax.text(
         col_width / 2,
-        depth - 2.0,
+        depth - 1.6,
         label,
-        fontsize=10,
+        fontsize=6,
         fontweight="bold",
+        fontstyle="italic",
         va="bottom",
         ha="center",
-        color="#CC3333",
-        fontstyle="italic",
+        color=UNCONF_RED,
         zorder=6,
-        bbox={"facecolor": "white", "alpha": 0.85, "edgecolor": "none", "pad": 1.5},
+        bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85, "pad": 1.0},
     )
-
-# Age labels on the left panel
-age_positions = {}
-for _, row in df.iterrows():
-    age = row["age"]
-    if age not in age_positions:
-        age_positions[age] = {"top": row["top"], "bottom": row["bottom"]}
-    age_positions[age]["top"] = min(age_positions[age]["top"], row["top"])
-    age_positions[age]["bottom"] = max(age_positions[age]["bottom"], row["bottom"])
-
-ax_age.set_xlim(0, 1)
-ax_age.set_ylim(total_depth, 0)
-ax.set_xlim(-0.02, 1.20)
-
-for age, pos in age_positions.items():
-    mid_y = (pos["top"] + pos["bottom"]) / 2
-    bg = age_bg_colors[age]
-
-    # Subtle background band across both panels
-    ax_age.axhspan(pos["top"], pos["bottom"], color=bg, zorder=0)
-    ax.axhspan(pos["top"], pos["bottom"], color=bg, zorder=0)
-
-    # Bracket lines
-    ax_age.plot(
-        [0.85, 0.85], [pos["top"] + 1, pos["bottom"] - 1], color="#555555", linewidth=2.5, solid_capstyle="butt"
-    )
-    ax_age.plot([0.80, 0.90], [pos["top"] + 1, pos["top"] + 1], color="#555555", linewidth=2)
-    ax_age.plot([0.80, 0.90], [pos["bottom"] - 1, pos["bottom"] - 1], color="#555555", linewidth=2)
-
-    # Age text
-    ax_age.text(
-        0.35,
-        mid_y,
-        age.replace(" ", "\n"),
-        fontsize=15,
-        fontweight="bold",
-        va="center",
-        ha="center",
-        fontstyle="italic",
-        color="#333333",
-    )
-
-# Style age axis
-ax_age.set_ylabel("Depth (m)", fontsize=20, labelpad=10)
-ax_age.tick_params(axis="y", labelsize=16)
-ax_age.set_yticks(np.arange(0, total_depth + 1, 20))
-ax_age.set_xticks([])
-sns.despine(ax=ax_age, top=True, right=True, bottom=True)
 
 ax.set_xticks([])
+ax.set_yticks([])
 ax.set_xlabel("")
 ax.set_ylabel("")
-ax.tick_params(axis="y", left=False, labelleft=False)
 sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
 
-# Right panel: seaborn stripplot showing layer thicknesses by lithology
-# Uses distinctive seaborn categorical visualization (strip plot with jitter)
-lith_order = [s["label"] for s in lithology_styles.values()]
-strip_palette = {s["label"]: s["color"] for s in lithology_styles.values()}
+# Age panel — depth scale, period brackets, age labels
+ax_age.set_xlim(0, 1)
+ax_age.set_ylim(total_depth, 0)
+for age in age_order:
+    top_d, bot_d = age_spans[age]
+    mid_y = (top_d + bot_d) / 2
+    # Faint Imprint tint groups each period across both panels
+    ax_age.axhspan(top_d, bot_d, color=age_tint[age], alpha=0.06, zorder=0)
+    ax.axhspan(top_d, bot_d, color=age_tint[age], alpha=0.05, zorder=0)
+    # Period bracket
+    ax_age.plot([0.82, 0.82], [top_d + 1, bot_d - 1], color=INK_SOFT, linewidth=1.4)
+    ax_age.plot([0.76, 0.88], [top_d + 1, top_d + 1], color=INK_SOFT, linewidth=1.2)
+    ax_age.plot([0.76, 0.88], [bot_d - 1, bot_d - 1], color=INK_SOFT, linewidth=1.2)
+    ax_age.text(
+        0.36,
+        mid_y,
+        age.replace(" ", "\n"),
+        fontsize=8,
+        fontweight="medium",
+        fontstyle="italic",
+        va="center",
+        ha="center",
+        color=INK,
+    )
+
+ax_age.set_ylabel("Depth (m)", fontsize=10, color=INK, labelpad=4)
+ax_age.set_yticks(np.arange(0, total_depth + 1, 20))
+ax_age.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+ax_age.set_xticks([])
+sns.despine(ax=ax_age, top=True, right=True, bottom=True)
+ax_age.spines["left"].set_color(INK_SOFT)
+
+# Thickness panel — seaborn strip plot of layer thickness by lithology
+thickness_df = df[["lithology", "thickness"]].copy()
 sns.stripplot(
     data=thickness_df,
     x="thickness",
     y="lithology",
     ax=ax_thick,
-    palette=strip_palette,
     hue="lithology",
+    palette=lith_color,
     order=lith_order,
-    size=14,
+    hue_order=lith_order,
+    size=10,
     marker="D",
-    edgecolor="black",
-    linewidth=1.0,
+    edgecolor=INK,
+    linewidth=0.8,
     jitter=False,
     legend=False,
 )
-ax_thick.set_xlabel("Thickness (m)", fontsize=16)
+ax_thick.set_xlabel("Thickness (m)", fontsize=9, color=INK)
 ax_thick.set_ylabel("")
-ax_thick.tick_params(axis="both", labelsize=13)
-ax_thick.set_title("Layer Thickness", fontsize=16, fontweight="medium", pad=8)
-ax_thick.xaxis.grid(True, alpha=0.3, linewidth=0.8)
+ax_thick.set_yticks(range(len(lith_order)))
+ax_thick.set_yticklabels([lith_label[name] for name in lith_order])
+ax_thick.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax_thick.set_title("Layer Thickness", fontsize=9, fontweight="medium", color=INK, pad=6)
+ax_thick.set_axisbelow(True)
+ax_thick.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 sns.despine(ax=ax_thick, top=True, right=True)
+ax_thick.spines["left"].set_color(INK_SOFT)
+ax_thick.spines["bottom"].set_color(INK_SOFT)
 
-# Lithology legend on the thickness panel (avoids overlapping column labels)
+# Lithology legend (decodes column hatching) — figure-level strip at the bottom
 legend_handles = [
-    mpatches.Patch(facecolor=style["color"], edgecolor="black", hatch=style["hatch"], label=style["label"])
-    for style in lithology_styles.values()
+    mpatches.Patch(facecolor=lith_color[name], edgecolor=INK, hatch=lith_hatch[name], label=lith_label[name])
+    for name in lith_order
 ]
-
-ax_thick.legend(
+legend = fig.legend(
     handles=legend_handles,
-    loc="lower right",
-    fontsize=12,
-    framealpha=0.95,
+    loc="lower center",
+    bbox_to_anchor=(0.53, 0.005),
+    ncol=6,
+    fontsize=7,
     title="Lithology",
-    title_fontsize=14,
-    edgecolor="#CCCCCC",
-    fancybox=True,
+    title_fontsize=8,
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.95,
+    columnspacing=1.1,
+    handlelength=1.4,
 )
+legend.get_title().set_color(INK)
+for text in legend.get_texts():
+    text.set_color(INK)
 
 # Title
-fig.suptitle("column-stratigraphic · seaborn · pyplots.ai", fontsize=24, fontweight="medium", y=0.97)
+fig.suptitle(
+    "column-stratigraphic · python · seaborn · anyplot.ai", fontsize=14, fontweight="medium", color=INK, y=0.955
+)
 
-plt.subplots_adjust(wspace=0.08)
-plt.tight_layout(rect=[0, 0, 1, 0.95])
+fig.subplots_adjust(left=0.07, right=0.99, top=0.86, bottom=0.18, wspace=0.07)
 
 # Save
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

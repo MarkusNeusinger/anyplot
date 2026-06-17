@@ -1,43 +1,61 @@
 library: matplotlib
+language: python
 specification_id: column-stratigraphic
 created: '2026-03-15T22:55:31Z'
-updated: '2026-03-15T23:10:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23121198649
+updated: '2026-06-17T00:52:26Z'
+generated_by: claude-opus
+workflow_run: 27657819151
 issue: 4573
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Geologically accurate data using real US Great Plains formations with correct
-    stratigraphic order
-  - Five distinct lithology patterns with appropriate earthy colors approximating
-    geological conventions
-  - Well-executed unconformity wavy line as a visual focal point
-  - Clean age bracket system with italic labels on the left side
-  - Subtle age-group background shading adds depth without cluttering
-  - All font sizes explicitly set and readable
+  - 'Hits every spec requirement: 10 stacked lithology layers with 5 distinct FGDC-style
+    hatch patterns (circles=conglomerate, dots=sandstone, diagonals=siltstone, dashes=shale,
+    brick=limestone), formation names labelled right, italic period labels with bracket
+    lines on the left, solid layer boundaries, a wavy red unconformity surface, and
+    a Depth (m) scale increasing downward.'
+  - 'First categorical series is brand green #009E73 (conglomerate); remaining lithologies
+    use canonical Imprint hues (ochre sandstone, lavender siltstone, muted gray shale,
+    blue limestone). Backgrounds are correct #FAF8F1 / #1A1A17 and only chrome flips
+    between renders.'
+  - 'Sophisticated design: block width encodes grain size with an explanatory ''grain
+    size: fine to coarse'' arrow, subtle alternating period-band shading, removed
+    top/right/bottom spines, faint y-grid (alpha 0.12), and a well-framed lithology
+    legend with theme-adaptive frame.'
+  - 'Realistic, neutral data: real US Great Plains formations (Ogallala, Arikaree,
+    Niobrara, Dakota, Morrison, Entrada) with correct Miocene-through-Jurassic ages
+    and plausible 12-25 m thicknesses over a 0-200 m section.'
+  - 'Clean, deterministic, KISS code: no functions/classes, hardcoded data (fully
+    reproducible, no RNG needed), all imports used, idiomatic mpatches.Rectangle/hatching
+    and manually-constructed legend handles; canvas is exactly 3200x1800.'
   weaknesses:
-  - Conglomerate ooo hatch pattern could be slightly less dense for better visibility
-    at smaller scales
-  image_description: 'The plot displays a vertical stratigraphic column spanning 0-200m
-    depth (increasing downward). Ten geological layers are shown as stacked rectangular
-    blocks, each filled with a distinct hatch pattern and color: sandstone (wheat
-    with dot stipple), shale (gray with horizontal dashes), limestone (light blue
-    with cross/plus pattern), siltstone (tan with diagonal lines), and conglomerate
-    (burlywood with circle pattern). Formation names (Ogallala Fm, Arikaree Fm, White
-    River Fm, Chadron Fm, Niobrara Fm, Carlile Shale, Greenhorn Fm, Dakota Fm, Morrison
-    Fm, Entrada Fm) are labeled in bold to the right of each layer. Age labels (Miocene,
-    Oligocene, Eocene, Cretaceous, Jurassic) appear in italics on the left with bracket
-    lines spanning their respective depth ranges. A red wavy line marks an unconformity
-    between the Eocene and Cretaceous at 72m depth with an italic red "unconformity"
-    label. The y-axis is labeled "Depth (m)" and the title reads "column-stratigraphic
-    · matplotlib · pyplots.ai". A horizontal legend at the bottom shows all 5 lithology
-    types with their patterns. Top, right, and bottom spines are removed; a subtle
-    dashed grid is visible on the y-axis.'
+  - Layout leaves a large empty horizontal band between the formation labels and the
+    far-right legend; pulling the legend inward or widening the column area would
+    use the canvas more efficiently (minor VQ-05).
+  - Code comment on the subplots line says 'square canvas' while the implementation
+    correctly uses landscape figsize=(8, 4.5) -> 3200x1800; harmless but the comment
+    should be corrected to avoid confusion in future edits.
+  - The grain-size-as-block-width encoding is clever but non-standard for stratigraphic
+    columns; the explanatory arrow mitigates this, but a reader could briefly misread
+    varying widths as a data artifact rather than a designed channel.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), confirmed — not pure white.
+      Chrome: dark title "column-stratigraphic · python · matplotlib · anyplot.ai" centered at top; "Depth (m)" y-axis label and 0-200 m tick labels in soft ink, fully readable; italic period labels (Miocene/Oligocene/Eocene/Cretaceous/Jurassic) and formation names (Ogallala Fm … Entrada Fm) clearly legible; faint horizontal grid visible but subtle. All text readable. PASS.
+      Data: first layer (conglomerate) is brand green #009E73 with circle hatch; sandstone ochre w/ dots, siltstone lavender w/ diagonals, shale muted gray w/ dashes, limestone blue w/ brick hatch; red wavy unconformity line + italic "unconformity" label at ~72 m; grain-size arrow up top. First series confirmed #009E73.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), confirmed — not pure black.
+      Chrome: title, axis label, ticks, period labels and formation names all in light ink (#F0EFE8 / #B8B7B0) and clearly readable against the dark surface; no dark-on-dark failures; grid lines subtle but present; legend frame uses elevated dark bg with light text.
+      Data: identical Imprint hues to the light render (green/ochre/lavender/gray/blue with the same hatches); unconformity stays red #AE3030 and remains visible; only chrome flipped. Data colors confirmed identical.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,62 +66,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, ylabel 20pt, ticks 16pt,
-          formation labels 16pt, age labels 16pt'
+        comment: Font sizes explicitly set (formations 10pt, ages 10pt, Depth label
+          11pt, ticks 9pt, length-scaled title); all readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text/data collisions; formation labels sit clear of the column,
+          legend isolated.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Hatch patterns distinct; conglomerate ooo pattern slightly dense
+        comment: Blocks prominent, hatches and the red unconformity line clearly visible
+          in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Earthy palette with good contrast, no red-green confusion
+        comment: Hatch patterns give redundant (CVD-safe) encoding beyond color; no
+          red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Tall portrait layout ideal for stratigraphic column, balanced margins
+        comment: Exactly 3200x1800, gate passed, nothing clipped; minor empty band
+          between labels and far-right legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Depth (m) with units, x-axis appropriately removed
+        comment: Depth (m) carries units; x-axis intentionally unlabelled (ticks off)
+          which is appropriate.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint hues throughout; backgrounds #FAF8F1/#1A1A17
+          correct; both renders theme-correct.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom earthy palette, distinct hatch patterns, age-group background
-          shading
+        comment: Custom Imprint palette, FGDC-like hatching, period bands, brackets,
+          grain-size width channel — clearly intentional.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Three spines removed, subtle grid, legend with shadow, clean whitespace
+        comment: Top/right/bottom spines removed, subtle grid (alpha 0.12) and period
+          shading (alpha 0.045), generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Unconformity creates focal point, age brackets guide reading through
-          time
+        comment: Clear focal column, red unconformity highlight, period grouping;
+          grain-size width is a slightly unconventional extra channel.
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical column with stacked lithology pattern blocks
+        comment: Vertical stratigraphic column with stacked patterned layers — exactly
+          the spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 5 lithology patterns, formation names, age
-          labels, depth scale, unconformity'
+        comment: 5 distinct hatch patterns, formation labels, age labels, depth scale,
+          solid boundaries, wavy unconformity all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Depth increases downward per borehole convention
+        comment: Depth increases downward; top/bottom mapped to block extents; all
+          10 layers shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend with all lithology types
+        comment: Title exactly 'column-stratigraphic · python · matplotlib · anyplot.ai';
+          legend labels match lithologies.
     data_quality:
       score: 15
       max: 15
@@ -142,19 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 layers, 5 lithology types, varying thicknesses, unconformity
+        comment: Multiple lithologies, formations, ages, varying thickness, and an
+          unconformity — full feature spread.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US Great Plains formations with correct geological ages
+        comment: Real US Great Plains formations with correct geological ages; neutral
+          and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-200m depth range realistic for borehole
+        comment: 0-200 m section with realistic 12-25 m layer thicknesses.
     code_quality:
       score: 10
       max: 10
@@ -164,58 +200,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure, no functions or classes
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data
+        comment: Fully deterministic hardcoded data; no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, mpatches, plt, numpy all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, appropriate complexity, no fake UI
+        comment: Clean and well-commented, no fake UI; one stale 'square canvas' comment.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png with correct facecolor; no bbox_inches='tight'.
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods, mpatches, proper hatching/legend handle construction.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, FancyBboxPatch appropriate for this plot
-          type
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Hatching system, FancyBboxPatch, clip_on, custom legend handles
+        comment: Patch hatching, manual legend handles, annotate arrows — distinctive
+          matplotlib patch work.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - annotations
   - custom-legend
-  - patches
+  - manual-ticks
   patterns:
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - edge-highlighting
   - grid-styling
