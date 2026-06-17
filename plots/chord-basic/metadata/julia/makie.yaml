@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: chord-basic
 created: '2026-06-17T01:56:58Z'
-updated: '2026-06-17T02:00:47Z'
+updated: '2026-06-17T02:10:35Z'
 generated_by: claude-opus
 workflow_run: 27660336415
 issue: 858
@@ -12,59 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Builds a true chord diagram from CairoMakie primitives (poly! + quadratic Bezier
-    ribbons) without any external graph/chord package — idiomatic and self-contained.
-  - 'First region (Africa) is brand green #009E73 and all six regions use canonical
-    Imprint palette hues in order; semantic-red slot 5 is correctly skipped since
-    regions are abstract categories.'
-  - 'Theme tokens are threaded through every chrome element — title, region labels,
-    and footnote are fully legible on both #FAF8F1 (light) and #1A1A17 (dark) surfaces
-    with data colors identical across themes.'
-  - Arc width is proportional to total outflow and ribbon feet are sized per-direction,
-    giving an honest, well-encoded flow visualization with a clarifying footnote instead
-    of faked interactivity.
-  - Clean square 2400x2400 canvas, decorations/spines hidden, alpha-blended ribbons
-    (0.6) under solid arc segments separated by background-colored strokes — polished
-    and intentional.
+  - Correct, fully-realized chord diagram built natively in CairoMakie with hand-constructed
+    arc geometry and quadratic Bezier ribbons — no fallback to another library
+  - 'Each of the 6 regions gets a distinct Imprint hue in canonical order (Africa
+    = brand green #009E73), arc width ∝ total throughput, ribbon width ∝ flow magnitude'
+  - Bidirectional flows render as two separate source-tinted chords (out_foot / in_foot
+    split), satisfying the spec's directed-flow requirement
+  - Largest flows drawn first so thin tail flows stay legible on top — deliberate
+    draw-order storytelling
+  - 'Theme chrome is correct in both renders: warm off-white #FAF8F1 (light) / warm
+    near-black #1A1A17 (dark); region labels and title flip to INK while vivid data
+    colors stay identical'
+  - Title is exactly 'chord-basic · julia · makie · anyplot.ai'; footnote explains
+    the encoding without faking interactivity (AR-08 clean)
+  - 'Clean KISS script: deterministic hardcoded data, only used imports (CairoMakie,
+    Colors), no functions/classes, idiomatic poly!/text!/DataAspect usage'
   weaknesses:
-  - Bidirectional flows are merged into a single ribbon per region pair tinted by
-    the dominant direction, rather than rendered as two separate chords as the spec
-    note requests — a viewer cannot read i->j vs j->i as distinct arcs (the asymmetric
-    feet hint at it but it is subtle).
-  - Tinting each ribbon by only the dominant source means the color near the non-dominant
-    foot does not match that region, which slightly weakens color-based attribution
-    for the smaller direction.
-  - The center of the diagram gets visually muddy where many alpha-blended ribbons
-    cross (especially the lavender Asia and cyan/blue flows), reducing per-ribbon
-    distinguishability in the core.
-  - Two inline lambda helpers (on_ring, bezier) are defined — minor deviation from
-    the strict KISS no-functions guideline, though they are small and the chord geometry
-    justifies them.
-  - Random.seed!(42) and using Random are present but the data is fully hardcoded,
-    so the seed/import are effectively unused.
+  - The footnote string in the saved PNGs ('Arc width ∝ total outflow · ribbon width
+    ∝ flow magnitude') does not match the current source footnote ('Arc width ∝ total
+    flow · each ribbon is one direction, tinted by its source region'), suggesting
+    plot_images/ may be one render behind the last fix commit — ensure artifacts are
+    re-rendered from current code so footnote text matches.
+  - In the dark render the alpha-0.5 ribbons over the near-black surface lose some
+    saturation where they cross the centre, making a few thin overlapping ribbons
+    slightly muddier than in the light render — consider nudging ribbon alpha up to
+    ~0.55-0.6 for the dark theme only.
+  - No legend mapping color->region beyond the perimeter arc labels; acceptable for
+    a chord diagram but a tiny swatch key would remove any ambiguity for the muted
+    central crossings.
+  - Footnote fontsize 17 (≈34px effective on the 2400px canvas) is on the small side
+    relative to the 24pt region labels — readable but could come up a couple of points
+    for mobile down-scaling.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1), correct light surface — not pure white.
-      Chrome: bold dark title "chord-basic · julia · makie · anyplot.ai" centered at top, fully readable.
-        Six bold dark region labels (Africa, Asia, Europe, N. America, S. America, Oceania) placed
-        just outside the ring, anchored by quadrant — all readable, none clipped. Soft-ink footnote
-        "Arc width ∝ total outflow · ribbon width ∝ flow magnitude" readable at bottom.
-      Data: six colored arc segments — Africa green #009E73, Asia lavender, Europe blue, N. America
-        ochre, S. America cyan, Oceania rose. Alpha-blended Bezier ribbons connect regions, width
-        proportional to flow. First series is brand green. Imprint palette in canonical order (red slot skipped).
-      Legibility verdict: PASS — all text crisp and high-contrast on the warm light surface.
+      Background: warm off-white (#FAF8F1), correct light surface.
+      Chrome: bold dark title "chord-basic · julia · makie · anyplot.ai" centered at top, fully readable. Six region labels (Africa, Asia, Europe, N. America, S. America, Oceania) in bold dark ink placed just outside the ring, each clearly readable. Soft-grey footnote at the bottom explains the encoding. No clipping at any edge.
+      Data: a circular chord diagram with six colored perimeter arcs sized by throughput — Africa green (#009E73), Asia lavender, Europe blue, N. America ochre, S. America cyan, Oceania rose. First series is the brand green. Semi-transparent Bezier ribbons connect arcs, tinted by source region, width proportional to flow. Asia (lavender) and Africa (green) dominate; Oceania is the thinnest arc.
+      Legibility verdict: PASS — all text dark-on-light and crisp; data colors vivid and distinguishable.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17), correct dark surface — not pure black.
-      Chrome: light (#F0EFE8) title and region labels, all clearly readable; no dark-on-dark failures.
-        Footnote in soft light ink, readable.
-      Data: identical region colors and ribbon geometry to the light render — only chrome flipped.
-        Africa green, Asia lavender, Europe blue, N. America ochre, S. America cyan, Oceania rose,
-        all matching the light render exactly.
-      Legibility verdict: PASS — every label and the title are legible against the near-black background.
+      Background: warm near-black (#1A1A17), correct dark surface.
+      Chrome: same title and labels now in light ink (#F0EFE8), all clearly readable against the dark background — no dark-on-dark failures. Footnote in soft light grey, readable.
+      Data: identical arc colors and layout to the light render (only chrome flipped). Brand green arc still reads well. Alpha-0.5 ribbons sit over the dark surface and appear slightly more muted where they overlap near the centre, but every arc and ribbon remains distinguishable.
+      Legibility verdict: PASS — all chrome light-on-dark and readable; data colors match the light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,52 +65,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 30pt, bold region labels 24pt, footnote 17pt — all readable
-          in both themes
+        comment: Title 30pt, labels 24pt, footnote 17pt all readable in both themes;
+          footnote slightly small relative to labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; labels anchored outside the ring by quadrant
+        comment: Labels anchored by quadrant outside the ring; no text collisions;
+          ribbon overlap is inherent alpha-blending, not a defect
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ribbons visible via alpha 0.6, but center gets muddy where many ribbons
-          cross
+        comment: Solid arcs + alpha-0.5 ribbons; largest-first draw order keeps thin
+          flows visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette + alpha blending
+        comment: Imprint palette is CVD-safe; hue + position distinguish regions,
+          not red-green alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square (valid), good proportions, nothing clipped
+        comment: 2400x2400 square (gate passed), centered, nothing clipped, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes (chord); region labels + encoding footnote + descriptive
-          title
+        comment: Axes N/A for chord; perimeter region labels + title present and descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint canonical order; backgrounds correct;
-          both themes correct'
+        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1
+          / #1A1A17 correct in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -125,23 +119,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom Bezier ribbons, proportional arcs, quadrant-anchored labels
-          — well above generic defaults
+        comment: Hand-built chord geometry, Bezier ribbons, intentional palette —
+          well above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Decorations/spines hidden, bg-colored arc strokes separate segments,
-          generous whitespace
+        comment: Spines/decorations hidden, generous whitespace, arc stroke separation
+          in page-bg color
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Arc width = outflow, per-direction ribbon feet, clarifying footnote
+        comment: Largest-first draw order and throughput-sized arcs create a clear
+          hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,26 +144,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram
+        comment: Genuine chord diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Distinct color per entity + width-proportional chords; bidirectional
-          flows merged into one ribbon, not two separate chords as the spec note prefers
+        comment: Distinct color per entity, width ∝ value, bidirectional flows as
+          separate chords
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: source/target/value mapped to arcs and sub-arcs
+        comment: source/target/value correctly mapped to arc feet and ribbons
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; region labels identify entities
+        comment: Title exact format; perimeter labels serve as the region key
     data_quality:
       score: 15
       max: 15
@@ -178,7 +173,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 regions, bidirectional asymmetric flows, varied magnitudes
+        comment: 6 entities, asymmetric bidirectional flows, wide magnitude range
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -190,44 +185,43 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 20-640 thousands — sensible for migration
+        comment: Values 20-640 thousands, sensible for the domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two inline lambda helpers (on_ring, bezier) — minor deviation from
-          no-functions, justified by chord geometry
+        comment: No functions/classes; short lambda helpers only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic (seeded, though data is hardcoded)
+        comment: Hardcoded deterministic flow matrix; no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — Random effectively unused
+        comment: CairoMakie + Colors, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, no fake UI
+        comment: Well-commented geometry; no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2
+        comment: save("plot-$(THEME).png", ...) with px_per_unit=2
     library_features:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -235,15 +229,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axis, poly!, text!, DataAspect, hidespines!/hidedecorations! — idiomatic
-          CairoMakie
+        comment: Idiomatic poly!/text!/Axis/DataAspect; building chord from primitives
+          is the right call (no recipe exists)
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: DataAspect + poly! with custom Bezier paths to assemble chords from
-          primitives
+        comment: DataAspect + poly! Bezier fills; little Makie-unique flourish beyond
+          solid primitive use
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -252,9 +246,11 @@ impl_tags:
   - patches
   - annotations
   patterns:
+  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
   - alpha-blending
+  - publication-ready
