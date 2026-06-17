@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-20
+Library: pygal | Python 3.14
+Quality: pending | Created: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first series ALWAYS brand green, then canonical order
+GREEN = "#009E73"
+LAVENDER = "#C475FD"
+BLUE = "#4467A3"
 
 # Data — logistic map x(n+1) = r * x(n) * (1 - x(n))
 np.random.seed(42)
@@ -27,11 +40,11 @@ r_periodic = np.linspace(R_PERIOD2, R_CHAOS, 500)
 r_chaotic = np.linspace(R_CHAOS, 4.0, 700)
 r_values = np.concatenate([r_stable, r_periodic, r_chaotic])
 
-# Colorblind-safe palette: navy blue, burnt orange, deep violet (no blue-green confusion)
+# Three regions narrating the route to chaos (abstract → canonical Imprint order)
 regions = {
-    "Stable Fixed Point": (2.5, R_PERIOD2, "#1b5e8a"),
-    "Period-Doubling Cascade": (R_PERIOD2, R_CHAOS, "#d55e00"),
-    "Chaotic Regime": (R_CHAOS, 4.0, "#7b2d8e"),
+    "Stable Fixed Point": (2.5, R_PERIOD2, GREEN),
+    "Period-Doubling Cascade": (R_PERIOD2, R_CHAOS, LAVENDER),
+    "Chaotic Regime": (R_CHAOS, 4.0, BLUE),
 }
 
 region_data = {name: [] for name in regions}
@@ -50,7 +63,7 @@ for r in r_values:
                 break
 
 # Downsample each region to balance visual density
-max_per_region = {"Stable Fixed Point": 6000, "Period-Doubling Cascade": 18000, "Chaotic Regime": 28000}
+max_per_region = {"Stable Fixed Point": 5000, "Period-Doubling Cascade": 16000, "Chaotic Regime": 24000}
 for name in region_data:
     pts = region_data[name]
     cap = max_per_region[name]
@@ -59,59 +72,58 @@ for name in region_data:
         idx.sort()
         region_data[name] = [pts[i] for i in idx]
 
-# Publication-quality style with high-contrast colorblind-safe palette
+# Publication-quality style on the theme-adaptive Imprint surface
 font = "'Helvetica Neue', 'DejaVu Sans', Helvetica, Arial, sans-serif"
 region_colors = tuple(c for _, (_, _, c) in regions.items())
-annotation_color = "#888888"
-all_colors = region_colors + (annotation_color,)
+all_colors = region_colors + (INK_MUTED,)
 
 custom_style = Style(
-    background="white",
-    plot_background="#f7f7f7",
-    foreground="#333333",
-    foreground_strong="#111111",
-    foreground_subtle="#dddddd",
-    guide_stroke_color="#e0e0e0",
-    guide_stroke_dasharray="3, 8",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    guide_stroke_dasharray="2, 6",
+    major_guide_stroke_color=INK_MUTED,
     major_guide_stroke_dasharray="2, 4",
     colors=all_colors,
     font_family=font,
     title_font_family=font,
-    title_font_size=52,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=30,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     legend_font_family=font,
-    value_font_size=26,
-    tooltip_font_size=28,
+    tooltip_font_size=36,
     tooltip_font_family=font,
     opacity=0.55,
     opacity_hover=1.0,
 )
 
-# Chart with pygal-specific features: secondary series, custom formatters, interpolation config
+# XY scatter with pygal-specific features: per-point tooltip metadata + custom formatters
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="bifurcation-basic · pygal · pyplots.ai",
+    title="bifurcation-basic · python · pygal · anyplot.ai",
     x_title="Growth Rate Parameter (r)",
     y_title="Steady-State Population (xₙ)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    legend_box_size=22,
+    legend_box_size=26,
     stroke=False,
-    dots_size=1.8,
+    dots_size=1.3,
     show_x_guides=True,
     show_y_guides=True,
-    show_y_minor_guides=True,
     x_value_formatter=lambda v: f"{v:.3f}",
     value_formatter=lambda v: f"{v:.4f}",
-    margin_bottom=110,
-    margin_left=70,
-    margin_right=50,
-    margin_top=55,
+    margin_bottom=70,
+    margin_left=60,
+    margin_right=40,
+    margin_top=60,
     xrange=(2.5, 4.0),
     range=(0.0, 1.0),
     print_values=False,
@@ -122,32 +134,21 @@ chart = pygal.XY(
     y_labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
     truncate_legend=-1,
     no_data_text="",
-    show_x_labels=True,
-    show_y_labels=True,
-    dynamic_print_values=True,
     allow_interruptions=True,
-    show_minor_x_labels=True,
-    spacing=25,
-    inner_radius=0,
     include_x_axis=True,
 )
 
 # Add each region as a separate series with per-point tooltip metadata
+# (short legend labels avoid bottom-row overlap; r-ranges live on the x-axis)
 for name in regions:
-    lo, hi, _ = regions[name]
-    chart.add(
-        f"{name} (r\u2248{lo:.1f}\u2013{hi:.2f})",
-        region_data[name],
-        stroke=False,
-        show_dots=True,
-        allow_interruptions=True,
-    )
+    chart.add(name, region_data[name], stroke=False, show_dots=True, allow_interruptions=True)
 
-# Annotation markers at key bifurcation points — dashed vertical lines in one legend entry
+# Dashed vertical reference lines at the period-doubling thresholds (one legend entry,
+# drawn on the primary axis so no secondary y-axis clutters the right edge)
 annotation_points = [
-    (R_PERIOD2, "r\u22483.0: Period-2 onset"),
-    (R_PERIOD4, "r\u22483.449: Period-4 onset"),
-    (R_PERIOD8, "r\u22483.544: Period-8 onset"),
+    (R_PERIOD2, "r≈3.0: Period-2 onset"),
+    (R_PERIOD4, "r≈3.449: Period-4 onset"),
+    (R_PERIOD8, "r≈3.544: Period-8 onset"),
 ]
 
 annotation_data = []
@@ -160,12 +161,12 @@ chart.add(
     "Bifurcation Points",
     annotation_data,
     stroke=True,
-    stroke_style={"width": 2.5, "dasharray": "10, 5"},
+    stroke_style={"width": 4, "dasharray": "12, 8"},
     show_dots=False,
     dots_size=0,
-    secondary=True,
 )
 
-# Dual render: PNG for static preview, HTML for pygal's native SVG interactivity with tooltips
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Dual render: PNG for static preview, HTML for pygal's native SVG interactivity
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
