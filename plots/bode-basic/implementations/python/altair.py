@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-17
@@ -104,7 +104,7 @@ nearest = alt.selection_point(nearest=True, on="pointerover", fields=["frequency
 
 mag_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=2.5, color=CLR_MAG, interpolate="monotone")
+    .mark_line(strokeWidth=2.5, color=CLR_MAG, interpolate="monotone", clip=True)
     .encode(
         x=alt.X("frequency:Q", scale=freq_scale, axis=alt.Axis(labels=False, title="", ticks=False)),
         y=alt.Y("magnitude_db:Q", title="Magnitude (dB)", scale=y_mag_scale),
@@ -131,13 +131,13 @@ mag_crosshair = (
 
 mag_ref = (
     alt.Chart(ref_0db)
-    .mark_line(strokeWidth=1.5, strokeDash=[8, 6], color=INK_SOFT, opacity=0.7)
+    .mark_line(strokeWidth=1.5, strokeDash=[8, 6], color=INK_SOFT, opacity=0.7, clip=True)
     .encode(x=alt.X("x:Q", scale=freq_scale), y=alt.Y("y:Q", scale=y_mag_scale))
 )
 
 mag_gm_line = (
     alt.Chart(gm_line)
-    .mark_line(strokeWidth=2.0, color=CLR_GM, strokeDash=[5, 3])
+    .mark_line(strokeWidth=2.0, color=CLR_GM, strokeDash=[5, 3], clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("magnitude_db:Q", scale=y_mag_scale))
 )
 
@@ -149,13 +149,13 @@ mag_gm_label = (
 
 mag_gc_point = (
     alt.Chart(gc_mag_pt)
-    .mark_point(size=100, shape="circle", filled=True, color=CLR_MAG, stroke=INK, strokeWidth=1.5)
+    .mark_point(size=100, shape="circle", filled=True, color=CLR_MAG, stroke=INK, strokeWidth=1.5, clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("magnitude_db:Q", scale=y_mag_scale))
 )
 
 mag_pc_point = (
     alt.Chart(pc_mag_pt)
-    .mark_point(size=100, shape="diamond", filled=True, color=CLR_GM, stroke=INK, strokeWidth=1.5)
+    .mark_point(size=100, shape="diamond", filled=True, color=CLR_GM, stroke=INK, strokeWidth=1.5, clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("magnitude_db:Q", scale=y_mag_scale))
 )
 
@@ -182,7 +182,7 @@ magnitude_chart = (
 
 phase_line = (
     alt.Chart(df)
-    .mark_line(strokeWidth=2.5, color=CLR_PHASE, interpolate="monotone")
+    .mark_line(strokeWidth=2.5, color=CLR_PHASE, interpolate="monotone", clip=True)
     .encode(
         x=alt.X("frequency:Q", scale=freq_scale, title="Frequency (rad/s)"),
         y=alt.Y("phase_deg:Q", title="Phase (degrees)", scale=y_phase_scale),
@@ -195,13 +195,13 @@ phase_line = (
 
 phase_ref = (
     alt.Chart(ref_180)
-    .mark_line(strokeWidth=1.5, strokeDash=[8, 6], color=INK_SOFT, opacity=0.7)
+    .mark_line(strokeWidth=1.5, strokeDash=[8, 6], color=INK_SOFT, opacity=0.7, clip=True)
     .encode(x=alt.X("x:Q", scale=freq_scale), y=alt.Y("y:Q", scale=y_phase_scale))
 )
 
 phase_pm_line = (
     alt.Chart(pm_line)
-    .mark_line(strokeWidth=2.0, color=CLR_PM, strokeDash=[5, 3])
+    .mark_line(strokeWidth=2.0, color=CLR_PM, strokeDash=[5, 3], clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("phase_deg:Q", scale=y_phase_scale))
 )
 
@@ -213,13 +213,13 @@ phase_pm_label = (
 
 phase_gc_point = (
     alt.Chart(gc_phase_pt)
-    .mark_point(size=100, shape="circle", filled=True, color=CLR_PHASE, stroke=INK, strokeWidth=1.5)
+    .mark_point(size=100, shape="circle", filled=True, color=CLR_PHASE, stroke=INK, strokeWidth=1.5, clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("phase_deg:Q", scale=y_phase_scale))
 )
 
 phase_pc_point = (
     alt.Chart(pc_phase_pt)
-    .mark_point(size=100, shape="diamond", filled=True, color=CLR_PM, stroke=INK, strokeWidth=1.5)
+    .mark_point(size=100, shape="diamond", filled=True, color=CLR_PM, stroke=INK, strokeWidth=1.5, clip=True)
     .encode(x=alt.X("frequency:Q", scale=freq_scale), y=alt.Y("phase_deg:Q", scale=y_phase_scale))
 )
 
@@ -233,10 +233,10 @@ chart = (
     alt.vconcat(magnitude_chart, phase_chart, spacing=8)
     .configure_view(strokeWidth=0, fill=ELEVATED_BG)
     .configure_axis(
-        domainColor=INK_SOFT,
+        domain=False,
         tickColor=INK_SOFT,
         gridColor=INK,
-        gridOpacity=0.15,
+        gridOpacity=0.10,
         gridWidth=0.5,
         labelColor=INK_SOFT,
         titleColor=INK,
