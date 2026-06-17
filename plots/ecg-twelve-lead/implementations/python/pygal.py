@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-17
@@ -219,7 +219,7 @@ labels_svg = ""
 labels_svg += (
     f'<text x="{WIDTH / 2:.0f}" y="78" font-family="monospace" font-size="60" '
     f'font-weight="bold" text-anchor="middle" fill="{INK}">'
-    "ecg-twelve-lead · pygal · pyplots.ai</text>\n"
+    "ecg-twelve-lead · python · pygal · anyplot.ai</text>\n"
 )
 
 # Lead labels above each waveform
