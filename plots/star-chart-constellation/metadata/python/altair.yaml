@@ -1,49 +1,63 @@
 library: altair
+language: python
 specification_id: star-chart-constellation
 created: '2026-03-18T21:13:27Z'
-updated: '2026-03-18T21:44:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23267218074
+updated: '2026-06-17T00:06:29Z'
+generated_by: claude-opus
+workflow_run: 27655999854
 issue: 4560
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/altair/plot.html
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/python/altair/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Stunning dark-sky aesthetic with cohesive color palette (warm stars, teal labels,
-    golden highlights, blue-grey grid)
-  - Summer Triangle highlight adds genuine data storytelling and a visual focal point
-  - Comprehensive real-world astronomical data with 15 constellations and accurate
-    star coordinates
-  - Custom label offsets prevent overlap in crowded constellation regions
-  - Manual magnitude legend is clean and informative
-  - Interactive features (hover highlighting, tooltips) leverage Altair distinctive
-    capabilities
-  - Correct stereographic projection implementation
+  - Stereographic projection from the north celestial pole renders a natural circular
+    sky boundary — an idiomatic, sophisticated use of altair layered marks
+  - 'Real star catalog data: 70 named stars across 15 constellations with authentic
+    RA/Dec/magnitude values, plus 200 magnitude-thresholded field stars for realistic
+    depth'
+  - Summer Triangle (Vega/Deneb/Altair) highlighted with dashed amber lines and a
+    label as a deliberate storytelling focal point
+  - Magnitude inverted to size (brighter = larger) per spec, with an in-plot size
+    legend explaining the mapping
+  - 'Imprint palette correct: first series brand green #009E73, blue constellation
+    lines, amber focal anchor; backgrounds #FAF8F1 / #1A1A17 with only chrome flipping
+    between themes'
+  - Genuine altair interactivity (selection_point pointerover highlight + tooltips)
+    plus HTML export — no fake UI
+  - 'Clean KISS structure: no functions/classes, seeded (np.random.seed(42)), all
+    imports used, pad-only canvas handling per library rules'
   weaknesses:
-  - RA hour labels are somewhat faint (11pt, 0.35 opacity) — could be slightly more
-    prominent
-  - Minor crowding near Hercules/Corona Borealis constellation labels
-  image_description: 'The plot displays a star chart rendered on a dark navy (#0A1628)
-    background mimicking the night sky. Stars are plotted using stereographic projection
-    from the North Celestial Pole. Star sizes vary proportionally with brightness
-    — brighter stars (lower magnitude) appear as large cream/pale yellow circles,
-    while dimmer stars are smaller grey-blue dots. Fifteen constellations are connected
-    with light blue (#5C9DC8) stick-figure lines: Orion, Ursa Major, Cassiopeia, Leo,
-    Cygnus, Lyra, Gemini, Taurus, Boötes, Aquila, Corona Borealis, Hercules, Draco,
-    Perseus, and Auriga. Constellation names are labeled in teal (#80CBC4) bold text
-    near each group''s centroid. The Summer Triangle (Vega–Deneb–Altair) is highlighted
-    with golden dashed lines and an italic label. A faint coordinate grid shows declination
-    circles at 0°, 30°, 60° and RA radial lines every 3 hours, with hour labels around
-    the boundary. A custom magnitude legend in the lower right shows four size classes.
-    The title reads "star-chart-constellation · altair · pyplots.ai" with a subtitle
-    describing the projection and Summer Triangle highlight. A thin boundary circle
-    frames the projection at dec ≈ -10°.'
+  - Magnitude legend size circles overlap vertically in the lower-right — the large
+    mag<1 marker collides with the mag 1-2.5 circle below it; increase vertical spacing
+    or shrink the largest legend marker
+  - 'The amber italic Summer Triangle label is low-contrast against the light #FAF8F1
+    background and crowds the Aquila constellation label on the left side — nudge
+    it clear and/or use INK for the text while keeping amber for the triangle lines'
+  - 'Central region is crowded: Ursa Major, Draco, Corona Bor., Cygnus, Hercules and
+    Lyra labels cluster tightly near the projection center; still individually readable
+    but visually busy'
+  - In the dark render the legend markers slightly overlap the 3h RA grid label near
+    the lower-right edge
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: title "star-chart-constellation · python · altair · anyplot.ai" in dark ink, fully readable, with a grey subtitle. RA hour labels (0h..21h) and constellation names render in dark/soft ink against the light surface — all readable. Dashed RA/Dec coordinate grid is subtle but visible.
+      Data: named stars are brand green #009E73 sized by magnitude (brighter=larger); field stars muted grey; constellation stick-figure lines Imprint blue; Summer Triangle dashed amber. First data series confirmed #009E73.
+      Legibility verdict: PASS — all chrome readable. Minor note: amber "Summer Triangle" label is low-contrast on the off-white surface but still legible.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: title and subtitle render in light ink, fully readable. RA labels and constellation names in light/soft ink — no dark-on-dark failures. Grid lines subtle but visible.
+      Data: colors identical to the light render — same brand green stars, grey field stars, blue lines, amber Summer Triangle. Only the chrome (background/text) flipped.
+      Legibility verdict: PASS — all chrome readable, no dark-on-dark text. Brand green visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -51,71 +65,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28pt, subtitle 17pt,
-          labels 15pt, legend 13-14pt). RA hour labels at 11pt with 0.35 opacity are
-          readable but slightly faint.
+        comment: Title, labels, RA/Dec ticks readable in both themes; amber Summer
+          Triangle label slightly low-contrast on light
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Custom label offsets prevent most overlap. Minor crowding near Hercules/Corona
-          Borealis area.
+        comment: Magnitude legend size circles overlap; Summer Triangle label crowds
+          Aquila; busy central cluster
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Star sizes well-adapted to magnitude range. Bright stars prominent,
-          dim filler stars visible but unobtrusive.
+        comment: Magnitude-to-size mapping clear; field stars muted, named stars prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Excellent contrast on dark background. Warm/cool star coloring avoids
-          colorblind issues. All elements distinguishable.
+        comment: CVD-safe Imprint palette, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 1200x1200 layout ideal for circular sky projection. Chart
-          fills canvas well with legend neatly placed.
+        comment: 2400x2400 square; circular projection fits, nothing clipped (canvas
+          gate passed)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for sky projection. Descriptive title and
-          subtitle.
+        comment: Hidden cartesian axes by design; RA/Dec grid + descriptive subtitle
+          serve as coordinate reference
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both themes correct'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Custom dark-sky design with three-tier star colors, golden Summer
-          Triangle, teal labels, subtle grid. Cohesive astronomical aesthetic well
-          beyond defaults.
+        comment: Projection, focal highlight, custom in-plot legend — above default
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Axes/spines hidden, grid at 0.18 opacity, subtle boundary circle,
-          clean 12-layer composition.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Summer Triangle highlight creates focal point and narrative. Magnitude
-          sizing communicates brightness hierarchy. Good visual hierarchy through
-          color contrast.
+        comment: Axes hidden, subtle dashed grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Summer Triangle highlighted as a clear amber focal point
     spec_compliance:
       score: 15
       max: 15
@@ -125,29 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct star chart with stereographic projection and constellation
-          stick-figure lines.
+        comment: Stereographic star chart with constellation lines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: projection, magnitude sizing, constellation
-          lines, labels, dark background, RA/Dec grid, magnitude threshold.'
+        comment: Projection, lines, magnitude sizing, RA/Dec grid, labels, mag threshold
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: RA/Dec correctly converted to stereographic projection. Stars positioned
-          accurately.
+        comment: Projected x/y from RA/Dec, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Custom magnitude legend appropriate and
-          well-executed.
+        comment: Title exact format; magnitude legend present
     data_quality:
       score: 15
       max: 15
@@ -157,22 +166,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 constellations, ~65 named stars, 200 filler stars, full magnitude
-          range (-0.05 to 5.5), varied constellation shapes.
+        comment: Sizing, lines, grid, labels, projection, threshold all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real star names with approximately correct coordinates. Astronomy/education
-          domain is neutral and engaging.
+        comment: Authentic star names and RA/Dec/magnitude values; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic magnitude values. RA (0-24h) and Dec (-20 to +75) ranges
-          sensible for northern sky view.
+        comment: Magnitudes -0.05 to 5.5, realistic celestial coordinates
     code_quality:
       score: 10
       max: 10
@@ -182,66 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-projection-plot-save structure. No functions or
-          classes.
+        comment: No functions/classes, inline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for filler star generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports (altair, numpy, pandas) are used.
+        comment: os, altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Inline projection math necessary and well-commented.
-          No fake UI.
+        comment: Real interactivity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0 and plot.html. Current Altair
-          6.0 API.
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png + .html; pad-only canvas handling
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Declarative layered marks combined with +
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good declarative grammar: layered composition with + operator, encoding
-          channels, alt.condition, configure methods. Manual projection unavoidable.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses selection_point for hover highlighting, tooltips, alt.condition
-          for conditional opacity, HTML export. Distinctive Altair interaction features.
+        comment: selection_point pointerover highlight, tooltips, HTML export
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - dark-theme
+  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
+  - publication-ready
