@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
-Library: matplotlib | Python 3.13
-Quality: 88/100 | Updated: 2026-06-17
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-17
 """
 
 import os
