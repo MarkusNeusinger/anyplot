@@ -45,7 +45,7 @@ for (let i = 0; i <= 100; i++) {
 }
 
 // Frequency annotation points at key frequencies
-const annotFreqs = [0.1, 0.5, 1.0, 2.0, 5.0];
+const annotFreqs = [0.3, 0.5, 1.0, 2.0, 5.0];
 const annotPoints = annotFreqs.map((fw) => {
   let bestIdx = 0;
   let bestDiff = Infinity;
@@ -72,7 +72,7 @@ chart.setOption({
     text: "nyquist-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 20,
-    textStyle: { color: t.ink, fontSize: 20, fontWeight: "bold" }
+    textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" }
   },
 
   legend: {
@@ -91,9 +91,9 @@ chart.setOption({
     name: "Real",
     nameLocation: "middle",
     nameGap: 45,
-    nameTextStyle: { color: t.ink, fontSize: 16 },
+    nameTextStyle: { color: t.ink, fontSize: 16, fontWeight: "bold" },
     axisLabel: { color: t.inkSoft, fontSize: 13 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
     min: -2.0,
     max: 1.5,
@@ -104,9 +104,9 @@ chart.setOption({
     name: "Imaginary",
     nameLocation: "middle",
     nameGap: 65,
-    nameTextStyle: { color: t.ink, fontSize: 16 },
+    nameTextStyle: { color: t.ink, fontSize: 16, fontWeight: "bold" },
     axisLabel: { color: t.inkSoft, fontSize: 13 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
     min: -1.75,
     max: 1.75,
@@ -172,17 +172,18 @@ chart.setOption({
     {
       name: "Frequency Markers",
       type: "scatter",
-      data: annotPoints.map((pt) => [pt.re, pt.im]),
+      data: annotPoints.map((pt, i) => ({
+        value: [pt.re, pt.im],
+        label: { position: i === 4 ? "bottom" : "top", offset: [0, i === 4 ? 4 : -4] },
+      })),
       symbol: "circle",
       symbolSize: 9,
       itemStyle: { color: t.palette[2], borderColor: t.pageBg, borderWidth: 1.5 },
       label: {
         show: true,
         formatter: (params) => `${annotPoints[params.dataIndex].freq} rad/s`,
-        position: "top",
         color: t.inkSoft,
         fontSize: 12,
-        offset: [0, -4],
       },
       emphasis: { disabled: true },
     },
