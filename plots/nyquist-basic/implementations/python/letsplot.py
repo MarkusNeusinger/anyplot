@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-17
@@ -30,6 +30,7 @@ COLOR_MAIN = IMPRINT_PALETTE[0]  # brand green — main Nyquist curve
 COLOR_MIRROR = IMPRINT_PALETTE[2]  # blue — negative-frequency mirror
 COLOR_CRITICAL = IMPRINT_PALETTE[4]  # matte red — critical point (semantic: danger)
 COLOR_PM = IMPRINT_PALETTE[2]  # blue — phase margin marker
+PM_LABEL_TEXT = COLOR_PM if THEME == "light" else INK_SOFT  # dark mode: blue on #242420 fails WCAG AA
 
 # Data — third-order system: G(s) = 2 / ((s+1)(0.5s+1)(0.2s+1))
 num = [2.0]
@@ -214,14 +215,14 @@ plot = (
         axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         axis_title=element_text(size=12, color=INK),
         plot_title=element_text(size=16, color=INK),
-        plot_subtitle=element_text(size=9, color=INK_SOFT),
+        plot_subtitle=element_text(size=10, color=INK_SOFT),
         panel_grid_major=element_line(color=INK_SOFT, size=0.12),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
         panel_background=element_rect(fill=PAGE_BG),
         axis_ticks=element_blank(),
         axis_ticks_length=0,
-        plot_margin=[20, 20, 15, 15],
+        plot_margin=[10, 20, 15, 15],
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_text=element_text(color=INK_SOFT),
         legend_title=element_text(color=INK),
@@ -237,7 +238,7 @@ if df_pm_point is not None:
             aes(x="real", y="imaginary", label="label"),
             data=df_pm_label,
             size=3.8,
-            color=COLOR_PM,
+            color=PM_LABEL_TEXT,
             fill=ELEVATED_BG,
             alpha=0.93,
             label_padding=0.3,
