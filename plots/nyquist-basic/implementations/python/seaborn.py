@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-06-17
@@ -22,7 +22,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint palette — categorical positions
 BRAND = "#009E73"  # position 1 — positive-frequency branch
-IMPRINT_BLUE = "#4467A3"  # position 3 — negative-frequency (mirror) branch
+IMPRINT_PURPLE = "#C475FD"  # position 2 — negative-frequency (mirror) branch
 CRIT_RED = "#AE3030"  # semantic anchor — critical stability threshold
 
 # Data — open-loop transfer function: G(s) = 10 / ((s+1)(0.5s+1)(0.2s+1))
@@ -69,7 +69,7 @@ sns.lineplot(
     x="Real",
     y="Imaginary",
     hue="Branch",
-    palette=[BRAND, IMPRINT_BLUE],
+    palette=[BRAND, IMPRINT_PURPLE],
     linewidth=2.5,
     sort=False,
     estimator=None,
@@ -97,7 +97,7 @@ ax.plot(-1, 0, marker="x", color=CRIT_RED, markersize=16, markeredgewidth=3, zor
 ax.annotate(
     "Critical point\n(−1, 0)",
     xy=(-1, 0),
-    xytext=(-3.5, 2.0),
+    xytext=(-1.8, 2.8),
     fontsize=8,
     color=CRIT_RED,
     fontweight="bold",
