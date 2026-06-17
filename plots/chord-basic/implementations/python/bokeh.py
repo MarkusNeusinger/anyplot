@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 chord-basic: Basic Chord Diagram
-Library: bokeh 3.9.1 | Python 3.13
+Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-06-17
 """
 
