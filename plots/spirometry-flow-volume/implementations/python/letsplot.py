@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: letsplot | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-06-17
 """
 
 import os
