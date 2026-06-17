@@ -1,0 +1,250 @@
+library: ggplot2
+language: r
+specification_id: star-chart-constellation
+created: '2026-06-17T00:13:56Z'
+updated: '2026-06-17T00:17:48Z'
+generated_by: claude-opus
+workflow_run: 27656428481
+issue: 4560
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Authentic astronomical data — real named stars with accurate RA/Dec/magnitude
+    across 14 northern constellations, giving genuine educational value and a neutral,
+    plausible context.
+  - Azimuthal-equidistant projection done idiomatically with coord_fixed; circular
+    sky boundary, declination circles, RA spokes and labeled tick marks make a natural
+    celestial map.
+  - 'Magnitude double-encoded by point size (inverted: brighter = larger) AND the
+    imprint_seq continuous colormap (brand green -> blue) via scale_color_gradient
+    — fully palette-compliant.'
+  - 'Thoughtful depth touches: 280 uniformly-distributed faint field stars (sin(dec)
+    sampling), the dashed ecliptic line, and semi-transparent constellation stick-figure
+    edges.'
+  - Clean theme-token threading — chrome (page/elevated bg, ink tokens) flips correctly
+    between light and dark while data colors stay identical; both renders are readable.
+  - Idiomatic, KISS, reproducible ggplot2 (set.seed(42), theme_void, scale_size_identity,
+    guide_colorbar reverse, layered geoms).
+  weaknesses:
+  - Constellation name labels sit directly on top of their star clusters (e.g. Ursa
+    Minor, Ursa Major, Cassiopeia near the centre), causing mild text-on-data overlap;
+    a small dodge or halo/background stroke behind the italic labels would improve
+    VQ-02.
+  - Spec asks for 200-500 stars across 20-30 constellations; the chart covers ~14
+    constellations with stick figures. Within readability limits, but a few more constellations
+    (or labeling field-star density) would better meet the coverage target.
+  - Field-star points use no alpha, so the densest central region shows slight overplotting;
+    a small alpha (<1) on faint stars would clean up the core.
+  - Optional Milky Way faint band (mentioned in spec notes) is not rendered — acceptable
+    omission but would add atmosphere.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white page (#FAF8F1) with a slightly elevated near-white sky disc (#FFFDF6); NOT pure white.
+      Chrome: dark title "star-chart-constellation · r · ggplot2 · anyplot.ai" across the top, fully visible (not clipped). RA spoke labels (0h..22h) ring the disc, declination ticks (+0°, +30°, +60°) along a spoke, italic soft-grey constellation names at cluster centroids, "Apparent magnitude" colorbar (0 green at top -> 5 blue at bottom) on the right. All readable.
+      Data: stars colored by magnitude on the imprint_seq gradient (brand green #009E73 for bright -> blue #4467A3 for faint), sized inversely by magnitude (bright = larger). Thin semi-transparent stick-figure edges connect constellation stars. Dashed ecliptic curve present.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black page (#1A1A17) with a slightly elevated disc (#242420); NOT pure black — mimics night sky well.
+      Chrome: light-toned title, RA/Dec labels, italic constellation names and legend all clearly visible against the dark surface. No dark-on-dark failures observed.
+      Data: identical magnitude colormap and sizing to the light render — only the surrounding chrome flipped. Brand green bright stars remain vivid.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/RA/Dec/legend all readable in both themes; italic soft constellation
+          labels are slightly low-contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Constellation labels overlap their star clusters in the dense centre;
+          readable but a dodge/halo would help.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good magnitude-driven sizing; faint field stars lack alpha so the
+          core overplots slightly.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green->blue, CVD-safe, no red/green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square, disc centred, legend right, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: RA/Dec grid labels serve as axes; descriptive title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous imprint_seq; correct theme backgrounds; both renders theme-correct.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Projection, ecliptic, field-star depth, dec circles and RA spokes
+          well above generic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void, no spines, subtle faint grid, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Stick-figure lines and labels guide the eye; bright stars are focal.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Star chart with constellations on azimuthal-equidistant projection.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude->size, stick figures, RA/Dec grid + ticks, labels, ecliptic,
+          mag threshold.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec projected to x/y, magnitude -> size and color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; 'Apparent magnitude' colorbar.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong coverage; ~14 constellations vs spec's 20-30 target, no Milky
+          Way band.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real star catalog data, neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic magnitudes (-0.05 to 5.8) and coordinates.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2/dplyr/tidyr/scales/ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Layered geoms, coord_fixed, scale_size_identity, guide_colorbar,
+          theme_void.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: coord_fixed projection, reversed colorbar guide, identity size scale.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
