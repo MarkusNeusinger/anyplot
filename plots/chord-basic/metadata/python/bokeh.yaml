@@ -1,22 +1,243 @@
 library: bokeh
+language: python
 specification_id: chord-basic
 created: '2025-12-23T10:02:12Z'
-updated: '2026-04-06T20:49:22Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457532478
-issue: 0
-python_version: '3.14'
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chord-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chord-basic/bokeh/plot.html
+updated: '2026-06-17T01:44:42Z'
+generated_by: claude-opus
+workflow_run: 27659820843
+issue: 858
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/bokeh/plot-dark.html
 quality_score: 90
+review:
+  strengths:
+  - 'Correct chord-diagram structure: proportional outer arcs, bidirectional flows
+    rendered as separate chords, chord width scaled to flow value — every spec requirement
+    met.'
+  - 'Full Imprint palette in canonical order with brand green #009E73 as the first
+    entity; data colors are identical across light and dark renders, only chrome flips.'
+  - 'Strong theme adaptation — warm off-white #FAF8F1 and warm near-black #1A1A17
+    backgrounds, with all titles, entity labels, flow totals, legend, and annotation
+    readable in both (no dark-on-dark).'
+  - Genuine Bokeh interactivity (HoverTool tooltips + HTML artifact) rather than faked
+    UI, plus visual hierarchy via per-chord alpha and a focal annotation calling out
+    the largest flow.
+  - Clean square 2400x2400 canvas, round circle, centered layout with sorted bottom
+    legend and per-entity flow totals — polished and uncluttered chrome.
+  weaknesses:
+  - The thin, low-alpha minor-flow chords crossing the center are hard to trace individually
+    at full size and nearly invisible when scaled to ~400px mobile width — consider
+    a touch more alpha floor or slight width for sub-75th-percentile flows.
+  - Per-entity flow-total subtitles (24pt, e.g. '41M') are the smallest text and approach
+    the legibility floor when the square render is scaled down; they survive but have
+    little headroom.
+  - Storytelling leans on a single annotation; the dense center could benefit from
+    de-emphasizing crossing minor chords further so the strong relationships read
+    as the clear focal structure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct light surface.
+      Chrome: title "chord-basic · python · bokeh · anyplot.ai" in dark ink, centered and fully readable. Entity labels (Africa, Asia, Europe, N. America, S. America, Oceania) in their entity colors, bold, with muted-gray flow totals beneath. Bottom legend (3x2) with color swatches + "(NNM)" totals readable in soft ink. Italic muted annotation "Largest flow: Asia → Europe (15M)". All text readable.
+      Data: six proportional outer arcs colored Imprint — Africa #009E73 (green), Asia #C475FD (purple), Europe #4467A3 (blue), N. America #BD8233 (ochre), S. America #AE3030 (red), Oceania #2ABCCD (cyan). First series is #009E73. Chords colored by source with alpha-based hierarchy.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct dark surface.
+      Chrome: title in light ink, fully readable. Entity labels in the same entity colors (still legible on dark), flow totals in light-muted gray, legend text light-soft, annotation light-muted italic. No dark-on-dark failures observed.
+      Data: arc and chord colors are identical to the light render (Imprint positions unchanged); only background and ink tokens flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; 24pt flow-total
+          subtitles have little headroom when scaled to ~400px.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Entity labels, totals, legend, and annotation are well spaced; no
+          collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha hierarchy works for strong flows; faint thin minor chords in
+          the center are hard to trace.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe with adequate contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400 square; circle round, centered, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly hidden for a chord diagram; title descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette, intentional alpha hierarchy, flow totals, focal annotation
+          — polished.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome (no axes/grid/outline), subtle inner ring, generous
+          whitespace; center is necessarily busy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted legend and largest-flow annotation create a focal point; dense
+          crossing chords slightly dilute the hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chord diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct per-entity colors, proportional chord width, hover tooltips,
+          bidirectional flows as separate chords.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value all mapped from the flow matrix.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match entities.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Arcs, proportional chords, and bidirectional flows all shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Continental migration flows — plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in millions, sensible domain magnitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded flow matrix, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; real interactivity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png and plot-{theme}.html.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, figure, patches, HoverTool — idiomatic Bokeh.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Real hover tooltips and interactive HTML artifact distinguish it
+          from a static render.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - bezier-curves
   - patches
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -27,212 +248,3 @@ impl_tags:
   styling:
   - minimal-chrome
   - alpha-blending
-  - edge-highlighting
-review:
-  strengths:
-  - Excellent chord diagram built from scratch using Bokeh primitives with elegant
-    bezier curve geometry
-  - Strong visual hierarchy via alpha scaling guides attention to dominant flows
-  - Polished design with custom background, color-matched labels, decorative inner
-    ring, and white arc borders
-  - Interactive HoverTool with styled HTML tooltips leverages Bokeh distinctive capabilities
-  - Complete spec compliance including bidirectional flows and proportional chord
-    widths
-  weaknesses:
-  - Some thin chords for minor flows are very faint and hard to trace visually
-  - Legend text (18pt) is slightly small relative to the 3600px canvas
-  image_description: 'The plot displays a chord diagram showing migration flows between
-    6 continents (Africa, Asia, Europe, N. America, S. America, Oceania) arranged
-    around a circle. Each continent has a colored arc segment — Africa (dark navy
-    #306998), Asia (orange #D55E00), Europe (blue #0072B2), N. America (light blue
-    #56B4E9), S. America (teal #009E73), Oceania (pink #CC79A7). Entity labels are
-    colored to match their arcs and include total flow values (e.g., "Asia 69M").
-    Chords connecting entities have widths proportional to flow magnitude, with an
-    alpha-based visual hierarchy making stronger flows (≥75th percentile) more opaque.
-    The background is warm off-white (#F5F5F0). A sorted legend at the bottom shows
-    all entities by total flow. An italic annotation reads "Largest flow: Asia → Europe
-    (15M)". The title "chord-basic · bokeh · pyplots.ai" appears at top center. White
-    borders separate the outer arc segments, and a subtle inner ring adds decorative
-    detail.'
-  criteria_checklist:
-    visual_quality:
-      score: 27
-      max: 30
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 7
-        max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 28pt, sub-labels
-          20pt, legend 18pt). All readable. Legend text slightly small.
-      - id: VQ-02
-        name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text or visual elements. Labels positioned cleanly
-          with appropriate anchoring.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
-        max: 6
-        passed: true
-        comment: Chords visible with alpha hierarchy. Some thin chords for small flows
-          are quite faint.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 4
-        passed: true
-        comment: Colorblind-safe palette with well-separated hues. No red-green confusion
-          risk.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square format appropriate for circular diagram. Slight asymmetry
-          with diagram shifted up for bottom legend.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Title in correct format. Flow values labeled with M units. No traditional
-          axes needed.
-    design_excellence:
-      score: 16
-      max: 20
-      items:
-      - id: DE-01
-        name: Aesthetic Sophistication
-        score: 6
-        max: 8
-        passed: true
-        comment: 'Strong design: custom warm background, color-matched labels, white
-          arc borders, decorative inner ring. Clearly above defaults.'
-      - id: DE-02
-        name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Axes/grid hidden, outline removed, custom background, white separators,
-          subtle inner ring, generous whitespace.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Alpha-based visual hierarchy highlights strongest flows. Largest
-          flow annotation creates focal point. Legend sorted by total flow.
-    spec_compliance:
-      score: 15
-      max: 15
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 5
-        max: 5
-        passed: true
-        comment: Correct chord diagram with entities around circle connected by chords.
-      - id: SC-02
-        name: Required Features
-        score: 4
-        max: 4
-        passed: true
-        comment: 'All spec requirements met: distinct colors, proportional widths,
-          hover tooltips, bidirectional flows.'
-      - id: SC-03
-        name: Data Mapping
-        score: 3
-        max: 3
-        passed: true
-        comment: Source/target/value correctly mapped. 6 entities with full bidirectional
-          flow matrix.
-      - id: SC-04
-        name: Title & Legend
-        score: 3
-        max: 3
-        passed: true
-        comment: Title in correct format. Legend labels match data with flow totals.
-    data_quality:
-      score: 14
-      max: 15
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 5
-        max: 6
-        passed: true
-        comment: Shows bidirectional flows, varying magnitudes (1-15M), all 6 entities
-          connected.
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 5
-        passed: true
-        comment: Migration flows between continents — real, comprehensible, neutral
-          scenario.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
-        max: 4
-        passed: true
-        comment: Migration values in millions are plausible for inter-continental
-          flows.
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports, data, figure, arcs, labels, chords, legend,
-          save. No functions or classes.'
-      - id: CQ-02
-        name: Reproducibility
-        score: 2
-        max: 2
-        passed: true
-        comment: Deterministic data with hardcoded flow matrix. No random elements.
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
-      - id: CQ-04
-        name: Code Elegance
-        score: 2
-        max: 2
-        passed: true
-        comment: Clean and well-structured. Elegant complex number usage for bezier
-          curves.
-      - id: CQ-05
-        name: Output & API
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png via export_png. Also saves HTML. Current API.
-    library_mastery:
-      score: 8
-      max: 10
-      items:
-      - id: LM-01
-        name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Proper use of ColumnDataSource, patches, figure, HoverTool. Idiomatic
-          approach for building chord diagram from Bokeh primitives.
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: HoverTool with custom HTML tooltips, HTML export alongside PNG, per-element
-          alpha via ColumnDataSource binding.
-  verdict: APPROVED
