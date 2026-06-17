@@ -1,12 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette
+BRAND = "#009E73"  # measured loop (always first series)
+BLUE = "#4467A3"  # PEF landmark
+MUTED = INK_MUTED  # predicted normal reference
+# Flow deficit fill uses Imprint matte red #AE3030 (semantic: loss / obstruction) at low alpha
 
 # Data - Spirometry flow-volume loop for a patient with mild obstruction
 np.random.seed(42)
@@ -20,12 +36,15 @@ fev1 = 3.1  # FEV1 (L)
 fvc_pred = 4.8
 pef_pred = 10.2
 
-# Expiratory limb: sharp rise to PEF then roughly linear decline
 n_points = 150
+
+# Expiratory limb: sharp rise to PEF then roughly linear decline.
+# Normalised so the curve peak lands exactly on the stated PEF value.
 volume_exp = np.linspace(0, fvc, n_points)
 t_exp = volume_exp / fvc
-flow_exp = pef * (1 - t_exp) ** 0.35 * (1 - np.exp(-30 * t_exp))
+flow_exp = (1 - t_exp) ** 0.35 * (1 - np.exp(-30 * t_exp))
 flow_exp = np.maximum(flow_exp, 0)
+flow_exp = flow_exp / flow_exp.max() * pef
 
 # Inspiratory limb: symmetric U-shape below zero line
 volume_insp = np.linspace(fvc, 0, n_points)
@@ -33,11 +52,12 @@ t_insp = np.linspace(0, 1, n_points)
 pif = -5.5  # Peak Inspiratory Flow
 flow_insp = pif * np.sin(np.pi * t_insp)
 
-# Predicted normal expiratory limb
+# Predicted normal expiratory limb (peak pinned to predicted PEF)
 volume_pred_exp = np.linspace(0, fvc_pred, n_points)
 t_pred_exp = volume_pred_exp / fvc_pred
-flow_pred_exp = pef_pred * (1 - t_pred_exp) ** 0.3 * (1 - np.exp(-35 * t_pred_exp))
+flow_pred_exp = (1 - t_pred_exp) ** 0.3 * (1 - np.exp(-35 * t_pred_exp))
 flow_pred_exp = np.maximum(flow_pred_exp, 0)
+flow_pred_exp = flow_pred_exp / flow_pred_exp.max() * pef_pred
 
 # Predicted normal inspiratory limb
 volume_pred_insp = np.linspace(fvc_pred, 0, n_points)
@@ -52,18 +72,17 @@ flow_measured = np.concatenate([flow_exp, flow_insp])
 volume_predicted = np.concatenate([volume_pred_exp, volume_pred_insp])
 flow_predicted = np.concatenate([flow_pred_exp, flow_pred_insp])
 
-# Find PEF point on measured curve
+# PEF point now coincides exactly with the curve peak
 pef_idx = np.argmax(flow_exp)
 pef_volume = volume_exp[pef_idx]
 
-# FEV1 volume marker (volume at 1 second ~ first ~74% of FVC for this patient)
-fev1_volume = fev1  # approximate volume where FEV1 is reached
+# FEV1 volume marker
+fev1_volume = fev1
 
 # Plot
 fig = go.Figure()
 
-# Shaded area between predicted and measured expiratory curves to highlight deficit
-# Use a common volume range for the fill
+# Shaded deficit between predicted and measured expiratory curves (obstruction)
 vol_common = np.linspace(0, min(fvc, fvc_pred), 120)
 flow_pred_interp = np.interp(vol_common, volume_pred_exp, flow_pred_exp)
 flow_meas_interp = np.interp(vol_common, volume_exp, flow_exp)
@@ -73,7 +92,7 @@ fig.add_trace(
         x=np.concatenate([vol_common, vol_common[::-1]]),
         y=np.concatenate([flow_pred_interp, flow_meas_interp[::-1]]),
         fill="toself",
-        fillcolor="rgba(231, 76, 60, 0.08)",
+        fillcolor="rgba(174, 48, 48, 0.12)",
         line={"width": 0},
         name="Flow Deficit",
         showlegend=True,
@@ -82,39 +101,39 @@ fig.add_trace(
     )
 )
 
-# Predicted normal loop (dashed, behind measured)
+# Predicted normal loop (dashed reference, behind measured)
 fig.add_trace(
     go.Scatter(
         x=volume_predicted,
         y=flow_predicted,
         mode="lines",
-        line={"color": "#90A4AE", "width": 2.5, "dash": "dot"},
+        line={"color": MUTED, "width": 2.5, "dash": "dash"},
         name="Predicted Normal",
         hovertemplate="<b>Predicted</b><br>Volume: %{x:.2f} L<br>Flow: %{y:.2f} L/s<extra></extra>",
         legendrank=2,
     )
 )
 
-# Measured loop (solid, with gradient-like effect using color)
+# Measured loop (solid brand green)
 fig.add_trace(
     go.Scatter(
         x=volume_measured,
         y=flow_measured,
         mode="lines",
-        line={"color": "#1B4F72", "width": 4, "shape": "spline"},
+        line={"color": BRAND, "width": 4, "shape": "spline"},
         name="Measured",
         hovertemplate="<b>Measured</b><br>Volume: %{x:.2f} L<br>Flow: %{y:.2f} L/s<extra></extra>",
         legendrank=1,
     )
 )
 
-# PEF marker with custom symbol
+# PEF marker sitting exactly on the curve peak
 fig.add_trace(
     go.Scatter(
         x=[pef_volume],
         y=[pef],
         mode="markers",
-        marker={"size": 18, "color": "#E74C3C", "symbol": "diamond", "line": {"width": 2.5, "color": "white"}},
+        marker={"size": 16, "color": BLUE, "symbol": "diamond", "line": {"width": 2.5, "color": PAGE_BG}},
         name="PEF",
         showlegend=False,
         hovertemplate="<b>Peak Expiratory Flow</b><br>%{y:.1f} L/s at %{x:.2f} L<extra></extra>",
@@ -129,14 +148,14 @@ fig.add_annotation(
     showarrow=True,
     arrowhead=0,
     arrowwidth=2,
-    arrowcolor="#C0392B",
-    ax=60,
-    ay=-40,
-    font={"size": 17, "color": "#C0392B", "family": "Arial"},
-    bgcolor="rgba(255,255,255,0.85)",
-    bordercolor="#C0392B",
+    arrowcolor=BLUE,
+    ax=55,
+    ay=-32,
+    font={"size": 13, "color": BLUE},
+    bgcolor=ELEVATED_BG,
+    bordercolor=BLUE,
     borderwidth=1.5,
-    borderpad=6,
+    borderpad=5,
 )
 
 # FEV1 vertical reference line
@@ -146,23 +165,22 @@ fig.add_shape(
     x1=fev1_volume,
     y0=-1,
     y1=np.interp(fev1_volume, volume_exp, flow_exp),
-    line={"color": "rgba(27, 79, 114, 0.35)", "width": 1.5, "dash": "dashdot"},
+    line={"color": INK_SOFT, "width": 1.5, "dash": "dashdot"},
 )
 
 fig.add_annotation(
     x=fev1_volume,
-    y=-1.2,
+    y=-1.3,
     text=f"FEV₁ = {fev1:.1f} L",
     showarrow=False,
-    font={"size": 15, "color": "#1B4F72", "family": "Arial"},
-    bgcolor="rgba(255,255,255,0.8)",
+    font={"size": 12, "color": INK_SOFT},
+    bgcolor=ELEVATED_BG,
     borderpad=4,
 )
 
-# Clinical values annotation box with styled header
+# Clinical values annotation box
 clinical_text = (
-    f'<span style="color:#1B4F72"><b>Spirometry Results</b></span><br>'
-    f'<span style="color:#555">━━━━━━━━━━━━━━━━━━━</span><br>'
+    f"<b>Spirometry Results</b><br>"
     f"FEV₁: <b>{fev1:.1f} L</b><br>"
     f"FVC: <b>{fvc:.1f} L</b><br>"
     f"FEV₁/FVC: <b>{fev1 / fvc:.0%}</b><br>"
@@ -175,82 +193,74 @@ fig.add_annotation(
     yref="paper",
     text=clinical_text,
     showarrow=False,
-    font={"size": 17, "family": "Arial"},
+    font={"size": 13, "color": INK},
     align="left",
-    bordercolor="#1B4F72",
-    borderwidth=2,
-    borderpad=14,
-    bgcolor="rgba(248, 249, 250, 0.95)",
+    bordercolor=INK_SOFT,
+    borderwidth=1.5,
+    borderpad=12,
+    bgcolor=ELEVATED_BG,
     xanchor="right",
     yanchor="top",
 )
 
 # Zero flow reference line
-fig.add_hline(y=0, line={"color": "rgba(0,0,0,0.2)", "width": 1, "dash": "solid"})
+fig.add_hline(y=0, line={"color": GRID, "width": 1.5})
 
-# Layout with refined styling
+# Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "spirometry-flow-volume · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Arial", "color": "#2C3E50"},
+        "text": "spirometry-flow-volume · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
     },
     xaxis={
-        "title": {"text": "Volume (L)", "font": {"size": 22, "family": "Arial", "color": "#2C3E50"}, "standoff": 15},
-        "tickfont": {"size": 18, "family": "Arial", "color": "#555"},
+        "title": {"text": "Volume (L)", "font": {"size": 12, "color": INK}, "standoff": 12},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
         "range": [-0.3, max(fvc, fvc_pred) + 0.6],
-        "linecolor": "#BDC3C7",
+        "linecolor": INK_SOFT,
         "linewidth": 1.5,
-        "mirror": False,
         "ticks": "outside",
         "ticklen": 6,
-        "tickcolor": "#BDC3C7",
+        "tickcolor": INK_SOFT,
         "dtick": 1,
     },
     yaxis={
-        "title": {"text": "Flow (L/s)", "font": {"size": 22, "family": "Arial", "color": "#2C3E50"}, "standoff": 15},
-        "tickfont": {"size": 18, "family": "Arial", "color": "#555"},
+        "title": {"text": "Flow (L/s)", "font": {"size": 12, "color": INK}, "standoff": 12},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(189, 195, 199, 0.3)",
-        "griddash": "dot",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
-        "linecolor": "#BDC3C7",
+        "linecolor": INK_SOFT,
         "linewidth": 1.5,
-        "mirror": False,
         "ticks": "outside",
         "ticklen": 6,
-        "tickcolor": "#BDC3C7",
+        "tickcolor": INK_SOFT,
         "dtick": 2,
     },
-    template="plotly_white",
     legend={
-        "font": {"size": 16, "family": "Arial"},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.02,
         "xanchor": "left",
         "yanchor": "bottom",
-        "bgcolor": "rgba(248, 249, 250, 0.9)",
-        "bordercolor": "#BDC3C7",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
         "itemsizing": "constant",
         "tracegroupgap": 4,
     },
-    margin={"l": 100, "r": 80, "t": 100, "b": 100},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    hoverlabel={
-        "bgcolor": "white",
-        "bordercolor": "#1B4F72",
-        "font": {"size": 15, "family": "Arial", "color": "#2C3E50"},
-    },
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": BRAND, "font": {"size": 12, "color": INK}},
     hovermode="closest",
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
