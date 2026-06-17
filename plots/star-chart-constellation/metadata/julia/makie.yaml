@@ -1,0 +1,258 @@
+library: makie
+language: julia
+specification_id: star-chart-constellation
+created: '2026-06-17T00:16:15Z'
+updated: '2026-06-17T00:33:05Z'
+generated_by: claude-opus
+workflow_run: 27656518304
+issue: 4560
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Sophisticated, hand-rolled stereographic projection centred on the winter sky
+    — bright stars use real catalog coordinates (Sirius at mag -1.46, Betelgeuse,
+    Rigel, etc.), giving a genuinely accurate and recognisable sky map.
+  - 'Magnitude-to-size mapping is correct and inverted (brighter = larger via magsize),
+    and the faint background star field uses alpha keyed to magnitude, creating a
+    clean visual hierarchy: green constellation stars pop against the muted field.'
+  - 'Both themes render correctly — warm off-white #FAF8F1 (light) and warm near-black
+    #1A1A17 (dark); the dark render in particular reads as a convincing night sky.
+    Data colours (brand green #009E73) are identical across themes, only chrome flips.'
+  - 'Idiomatic CairoMakie: NaN-gap polylines for the coordinate grid and constellation
+    edges, DataAspect() for an undistorted circular sky boundary, hidedecorations!/hidespines!
+    for minimal chrome, per-point markersize arrays. Square 2400x2400 canvas hits
+    the canonical target exactly.'
+  - 'Thoughtful details: constellation labels are offset away from the brightest star
+    of each group, RA/Dec ticks carry units (h, °), and a magnitude legend (mag 0/2/4)
+    is parked in the empty corner outside the sky circle.'
+  weaknesses:
+  - Only 14 named constellations are drawn, below the spec's stated range of 20-30
+    constellations. The chart is clean and readable, but adding ~6-10 more bright
+    constellations (e.g. Cas, And, Cep, Cet) would better satisfy the spec coverage
+    target.
+  - RA/Dec tick labels are rendered at fontsize 15 on the 2400px square canvas, which
+    reads small relative to the constellation labels (fontsize 22) — legible at full
+    size but borderline when scaled to ~400px mobile width. Consider bumping tick
+    labels to ~18.
+  - The 'Ori' constellation label sits very close to / lightly crowds one of its bright
+    green stars near the chart centre — not a true overlap, but the label-offset heuristic
+    could push it a touch further for breathing room.
+  - Optional ecliptic line and Milky Way band from the spec notes are omitted (both
+    explicitly optional, so not a hard miss, but they would enrich the celestial-map
+    storytelling).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), correct light surface — not pure white, not dark.
+      Chrome: title "star-chart-constellation · julia · makie · anyplot.ai" in dark ink at top, fully visible and readable. Constellation name labels (Ori, Tau, Gem, CMa, CMi, Aur, Per, Eri, Lep, Col, Mon, Cnc, Lyn, Hya) in bold dark text, all readable. RA ticks (4h,5h,6h,8h) and Dec ticks (-30°,0°,+30°) in soft gray, small but legible. Magnitude legend top-left ("Star magnitude", mag 0/2/4) readable. Circular sky boundary and subtle coordinate grid visible.
+      Data: constellation bright stars and stick-figure lines in brand green #009E73 (first series); faint background star field in muted gray dots sized/alpha'd by magnitude. First series is #009E73. PASS.
+      Legibility verdict: PASS (RA/Dec ticks are on the small side but readable).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), correct dark surface — not pure black, reads as a night sky.
+      Chrome: title and constellation labels in light ink (#F0EFE8), all clearly readable against the dark background — no dark-on-dark failures. Tick labels and legend text in soft light gray, readable. Grid and boundary subtle but visible.
+      Data: constellation stars and lines identical brand green #009E73 as the light render; background field stars now light/gray dots. Only chrome flipped between themes — data colours identical. PASS.
+      Legibility verdict: PASS (no dark-on-dark; brand green visible on the dark surface).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title/labels readable in both themes; RA/Dec ticks at fontsize 15
+          read small on the 2400px canvas and borderline at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean overall; 'Ori' label lightly crowds a central bright star but
+          no true collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Magnitude-keyed marker sizes and alpha'd background field give clear
+          hierarchy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green reads well and CVD-safe on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canonical 2400x2400 square; circle centred, legend in corner, nothing
+          clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: RA/Dec ticks carry units (h, °); descriptive title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both themes correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hand-rolled stereographic projection, custom grid, magnitude sizing,
+          label-offset logic — well beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Decorations/spines hidden, subtle grid, circular boundary, generous
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal points (green constellations vs faint field); could add
+          ecliptic/Milky Way for richer narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Star chart with stereographic projection and constellation stick
+          figures — correct.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Projection, stick figures, magnitude sizing, grid, labels, RA/Dec
+          ticks, legend, background field all present; 14 constellations is below
+          the spec's 20-30 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec -> projected x/y correct; magnitude -> inverted marker size.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; magnitude legend present and labeled.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All plot-type features shown; constellation count slightly low.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real catalog coordinates and magnitudes (Sirius -1.46, Betelgeuse,
+          Rigel); neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitudes -1.46..6.5, RA/Dec ranges sensible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Defines small pure math helpers (project/angdist/magsize) — justified
+          for projection but technically functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Figure/Axis, scatter!/lines!/text!, hidedecorations!, DataAspect,
+          limits! — idiomatic CairoMakie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: NaN-gap polylines, DataAspect circular boundary, RGBAf alpha, per-point
+          markersize arrays.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
