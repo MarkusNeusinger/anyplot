@@ -1,57 +1,63 @@
 library: pygal
+language: python
 specification_id: chord-basic
 created: '2025-12-23T10:02:16Z'
-updated: '2026-04-06T21:11:15Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457534934
-issue: 0
-python_version: '3.14'
+updated: '2026-06-17T02:01:45Z'
+generated_by: claude-opus
+workflow_run: 27660041020
+issue: 858
+language_version: 3.13.14
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chord-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chord-basic/pygal/plot.html
-quality_score: 80
-impl_tags:
-  dependencies:
-  - cairosvg
-  techniques:
-  - html-export
-  - bezier-curves
-  - custom-legend
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - minimal-chrome
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/python/pygal/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent spec compliance with all required features present including bidirectional
-    flows and proportional widths
-  - Strong colorblind-safe palette with matching colored labels for visual identity
-    per continent
-  - Creative SVG injection approach to implement a chart type pygal does not natively
-    support
-  - Clean realistic migration data with good variety of flow magnitudes
-  - Subtle background ellipse and opacity scaling add visual polish
+  - 'First series Africa = #009E73 (brand green) with the full Imprint palette in
+    canonical order; each continent keeps its identity (arc, ribbons, label, legend
+    swatch all share one hue) across both themes.'
+  - 'Backgrounds are theme-correct (#FAF8F1 light / #1A1A17 dark) with a subtle ELEVATED_BG
+    hub disc; data colors are byte-identical between renders and only chrome flips.'
+  - Chord width is genuinely proportional to flow magnitude and bidirectional flows
+    render as separate ribbons, fully satisfying the spec.
+  - Opacity scaled by magnitude (0.30 + 0.55 * v/max) plus depth-scaled quadratic
+    control points let dominant corridors read first and stop thin ribbons piling
+    up at the hub — real data storytelling.
+  - Geometry is derived from parsed pygal chrome (title baseline + legend top) and
+    canvas size, so the diagram fits between title and legend with no magic numbers.
+  - 'Real interactivity preserved: SVG <title> hover tooltips (''Africa -> Asia: 8k/yr'')
+    embedded in the exported HTML — appropriate for pygal as an interactive library.'
+  - Clean module-level code, deterministic data, only used imports, correct plot-{THEME}.png/.svg/.html
+    outputs.
   weaknesses:
-  - Library mastery is limited as most visualization is manual SVG injection rather
-    than pygal API usage
-  - SVG coordinate mapping relies on hardcoded magic numbers that are fragile
-  - Design storytelling could be stronger with a clearer focal point or narrative
-  image_description: 'The plot shows a chord diagram depicting migration flows between
-    6 continents (Africa, Asia, Europe, N. America, S. America, Oceania) arranged
-    around a circle. Each continent has a thick colored arc on the perimeter: Africa
-    (steel blue), Asia (rich amber), Europe (forest green), N. America (deep orange),
-    S. America (deep purple), Oceania (dark teal). Filled chord ribbons connect the
-    arcs, with width proportional to flow magnitude and colored by the source continent
-    with varying opacity (stronger flows are more opaque). A subtle light gray background
-    ellipse sits behind the diagram. Labels are positioned outside the arcs in matching
-    bold colors. The title "chord-basic · pygal · pyplots.ai" appears at the top in
-    dark gray. A legend at the bottom shows all 6 continents with colored squares.'
+  - The dense bundle of low-magnitude ribbons crossing near the center is slightly
+    busy and can be hard to trace individually — inherent to chord diagrams, partially
+    mitigated by the depth/opacity scaling, but it costs a little center clarity (DE-03).
+  - Continent labels are colored to match their arc; ochre 'N. America' and cyan 'Oceania'
+    are the lowest-contrast on the cream light surface — still readable at 56px bold,
+    but the least legible elements. Consider an ink-color stroke or slightly darker
+    label tint for the lighter hues.
+  - The chord geometry is hand-rolled SVG injected into pygal's output; pygal itself
+    only provides title/legend/style chrome. This is a reasonable workaround (pygal
+    has no native chord type) but limits how 'idiomatic' the core visualization can
+    be (LM).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1, with a slightly lighter elevated hub disc (#FFFDF6) grounding the circle. Correct, not pure white.
+      Chrome: title "chord-basic · python · pygal · anyplot.ai" in dark ink, centered at top, fully readable. Bottom legend with 6 swatches (Africa, Asia, Europe, N. America, S. America, Oceania) in dark text, readable. Continent labels sit just outside each arc, colored to match the arc — all readable at 56px bold; ochre/cyan are lowest contrast but still legible.
+      Data: six perimeter arcs colored Imprint canonical — Africa green #009E73 (first series, top-right), Asia lavender, Europe blue, N. America ochre, S. America matte red, Oceania cyan. Filled chord ribbons flow between arcs, colored by source, opacity scaled by flow magnitude. Arc widths proportional to total flow (Asia/N.America widest).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 with a #242420 elevated hub disc. Correct, not pure black.
+      Chrome: title light ink, readable. Legend text light, readable. Continent labels in the same data hues, readable against the dark surface (the saturated hues read well on near-black). No dark-on-dark failures.
+      Data: arc, ribbon, label and legend colors are identical to the light render — only the background/text chrome flipped. First series still #009E73.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,65 +65,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set in Style and SVG injection. All text readable.
-          Legend text slightly small.
+        comment: Title, legend, and 56px bold colored continent labels all readable
+          in both themes; ochre/cyan labels lowest contrast on cream but legible.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap. Chord ribbon overlap is inherent to the
-          chart type.
+        comment: Labels placed outside arcs with anchor logic; no text collisions.
+          Ribbon crossings are by-design, not overlap defects.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Chords clearly visible with opacity 0.55-0.90. Thick arcs. Smaller
-          flows less prominent but discernible.
+        comment: Ribbons opacity- and depth-scaled by magnitude; arcs clearly visible.
+          Dense thin ribbons remain perceptible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe across 6 series; redundant encoding via
+          position + label.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Colorblind-safe palette with strong contrast. No red-green ambiguity.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square canvas appropriate for circular diagram. Legend slightly disconnected.
+        comment: 2400x2400 square (gate passed); geometry fits between title and legend,
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. No axis labels needed for chord diagram.
+        comment: No axes for chord; descriptive title + per-continent labels serve
+          as identifiers with units in tooltips (k/yr).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint canonical order, theme-correct backgrounds,
+          identical data colors across renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Custom palette, colored labels, background ellipse, opacity scaling.
-          Above defaults but not publication-level.
+        comment: Custom SVG chord geometry, opacity/depth-scaled ribbons, hub disc,
+          colored identity labels — far beyond defaults.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/axes, clean composition, generous whitespace, subtle hub
+          grounding.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clean design with hidden axes/grids, subtle background ellipse, generous
-          whitespace.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Opacity scaling creates some hierarchy. No specific focal point or
-          narrative emphasis.
+        comment: Dominant corridors read first via opacity/depth; slight center clutter
+          from many low-magnitude ribbons mutes the focal hierarchy a touch.
     spec_compliance:
       score: 15
       max: 15
@@ -127,51 +143,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chord diagram with circular perimeter and proportional chords.
+        comment: Correct chord diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct colors, proportional widths, bidirectional
-          flows.'
+        comment: Distinct color per entity, width proportional to flow, bidirectional
+          flows as separate ribbons, hover tooltips for interactive output.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Flows correctly mapped. Arc sizes proportional to total flow.
+        comment: 6 continents, 30 directed source/target/value flows; arc spans proportional
+          to totals.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: Title 'chord-basic · python · pygal · anyplot.ai'; legend labels
+          match continents.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good variety: bidirectional flows, varying magnitudes, all continents
-          connected.'
+        comment: Arcs, ribbons, bidirectional flows, proportional widths — all chord
+          aspects shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Migration flows between continents is realistic and neutral.
+        comment: Migration flows between 6 continents — plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 2-35 thousand sensible for inter-continental migration.
+        comment: Values 2-35 k/yr, sensible for migration magnitudes.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -179,47 +197,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure with no functions or classes.
+        comment: Flat module-level script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data values.
+        comment: Fully deterministic hardcoded flow data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, cairosvg, pygal, Style.'
+        comment: math, os, re, cairosvg, pygal, Style — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: SVG injection with hardcoded pixel coordinates is fragile but necessary.
+        comment: Geometry derived from parsed chrome; well-commented; tooltips are
+          real SVG <title>, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via cairosvg. Also generates HTML export.
-    library_mastery:
-      score: 4
+        comment: Writes plot-{THEME}.png/.svg/.html; no bare plot.png.
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Core visualization is SVG injection. Pygal serves primarily as canvas
-          for arcs and legend.
+        passed: true
+        comment: Uses pygal Style/legend/XY chrome idiomatically; core chord geometry
+          is hand-rolled SVG since pygal has no native chord type.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses pygal SVG output for post-processing, legend_at_bottom, and
-          HTML export.
+        passed: true
+        comment: Leverages pygal's interactive SVG + HTML export with embedded hover
+          tooltips.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - cairosvg
+  techniques:
+  - bezier-curves
+  - patches
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
