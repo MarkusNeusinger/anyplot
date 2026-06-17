@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ecg-twelve-lead
 created: '2026-06-17T03:32:22Z'
-updated: '2026-06-17T03:36:56Z'
+updated: '2026-06-17T03:44:52Z'
 generated_by: claude-opus
 workflow_run: 27663666098
 issue: 4554
@@ -12,42 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Authentic clinical 12-lead presentation: correct 3x4 column order (I/aVR/V1/V4
-    · II/aVL/V2/V5 · III/aVF/V3/V6) plus a full-length Lead II rhythm strip, exactly
-    as the spec requests.'
-  - 'Medically faithful waveform morphology from a compact Gaussian P-Q-R-S-T model:
-    inverted complexes in aVR, rS pattern in V1 progressing to tall R in V5/V6, and
-    amplitudes inside textbook normal ranges (P ~0.1-0.25 mV, QRS ~0.5-1.5 mV, T ~0.1-0.5
-    mV).'
-  - 'Real ECG-paper grid: minor 1 mm and bold 5 mm lines in a domain-appropriate matte-red
-    (#AE3030), with a 1 mV calibration pulse opening every row and a ''25 mm/s · 10
-    mm/mV'' scale footnote — physically correct calibration.'
-  - 'Perfect theme adaptation: data colour (brand green #009E73) is identical across
-    light and dark, only chrome (background, text ink, grid opacity) flips. Both renders
-    are fully legible.'
-  - Exact canvas (3200x1800), clean idiomatic D3 (single SVG, d3.line, concatenated
-    path strings for the grid), and fully deterministic synthetic data with no RNG.
+  - Authentic clinical 3x4 lead layout (I/aVR/V1/V4 · II/aVL/V2/V5 · III/aVF/V3/V6)
+    plus a full-width Lead II rhythm strip, exactly matching the standard hospital
+    ECG format from the spec.
+  - 'Medically accurate synthetic waveforms: Gaussian P-Q-R-S-T model with per-lead
+    coefficients reproducing textbook morphology (inverted aVR, rS-to-tall-R precordial
+    progression) within normal amplitude ranges.'
+  - 'Realistic ECG-paper grid: continuous 1mm/5mm pink-red (#AE3030) minor/major lines
+    at physically correct pxPerMm scale (25 mm/s, 10 mm/mV), a justified semantic-exception
+    color for ECG paper.'
+  - 1 mV calibration pulse rendered in the left gutter of every row, and a scale footnote
+    (25 mm/s · 10 mm/mV · 1 mV calibration) documenting clinical units.
+  - Brand-green (#009E73) traces are identical across both themes; only chrome flips
+    — clean theme adaptation with both renders fully legible.
+  - 'First categorical color is the Imprint brand green and backgrounds are theme-correct
+    (#FAF8F1 light, #1A1A17 dark).'
   weaknesses:
-  - Lead labels (18px in the 1600-wide CSS mount) and the 13px scale footnote become
-    small when the figure is scaled to ~400px mobile width; the chart is inherently
-    dense, but slightly larger lead labels would improve small-screen legibility.
-  - Coordinates are computed directly in pixels rather than via d3.scaleLinear; justified
-    for a fixed physical-scale medical plot, but it means the implementation leans
-    less on D3's scale/axis idioms than a typical D3 chart would.
+  - The bottom-right scale footnote is set at 15px — readable at full size but small
+    when the image is scaled to ~400px mobile width; bumping to ~18px would improve
+    legibility.
+  - Several small arrow-function helpers (ecg, sample, traceLine, calPulse, drawCal,
+    drawTrace) add a light layer of abstraction beyond strict KISS, though they are
+    idiomatic and well-justified for D3.
+  - Lead cells have no per-cell baseline tick or amplitude reference beyond the shared
+    calibration pulse; an optional faint baseline could aid interpretation but is
+    not required by the spec.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) ECG-paper surface.
-      Chrome: title "Normal Sinus Rhythm · ecg-twelve-lead · javascript · d3 · anyplot.ai" in dark ink, centered and fully readable. Lead labels (I, aVR, V1, V4 / II, aVL, V2, V5 / III, aVF, V3, V6 + rhythm II) in bold dark ink, all readable. Pink/red ECG grid (minor 1mm + bold 5mm) subtle but visible. Bottom-right footnote "25 mm/s · 10 mm/mV · 1 mV calibration" readable.
-      Data: green traces (#009E73) for all leads and the calibration pulses. Correct morphology — inverted aVR, rS in V1, tall R in V4/V5/V6, full-length Lead II rhythm strip at bottom.
+      Background: warm off-white (~#FAF8F1) covered by an authentic ECG-paper grid of fine pink-red (#AE3030) minor lines at 1mm and bolder major lines at 5mm intervals.
+      Chrome: centered dark title "Normal Sinus Rhythm · ecg-twelve-lead · javascript · d3 · anyplot.ai"; bold dark lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, plus II rhythm strip); small dark-grey footnote bottom-right. All text clearly readable against the light grid.
+      Data: green (#009E73) ECG traces with realistic P-QRS-T complexes; green calibration step pulses in the left gutter of each row. First series is #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) surface.
-      Chrome: title in light ink, fully readable. Lead labels in light/white ink, all readable (no dark-on-dark). Red ECG grid subtle but visible at higher opacity. Footnote in soft ink, readable.
-      Data: identical green traces (#009E73) and calibration pulses — only chrome flipped, data colours unchanged from light render.
+      Background: warm near-black (~#1A1A17) with the same ECG grid drawn in muted dark red, slightly higher opacity so it remains visible.
+      Chrome: light/near-white title, lead labels, and footnote — all clearly readable against the dark background. No dark-on-dark failures.
+      Data: identical green (#009E73) traces and calibration pulses, matching the light render exactly; only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,70 +62,68 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 22px, labels 18px, footnote 13px; readable both themes; slightly
-          small at 400px mobile for the dense layout
+        comment: Title and bold 22px lead labels very readable in both themes; 15px
+          footnote is small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lead labels sit cleanly in cell corners; no collisions with traces
+        comment: No text/data overlaps; traces stay within their cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Traces stroke-width 1.9, calibration visible, grid subtle but present
+        comment: 1.9px green traces clearly visible; grid subtle but present.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green data series; red grid is background context, not a data
-          signal
+        comment: Green data on neutral red grid; CVD-safe, red is chrome not a data
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800, well-proportioned clinical layout, nothing clipped
+        comment: Correct 3200x1800 canvas; clinical proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Scale footnote provides units; lead labels present (ECG convention
-          has no axes)
+        comment: Lead labels + scale footnote with units; descriptive title.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds correct; red grid is justified
-          domain semantic exception'
+        comment: Brand green first series; backgrounds theme-correct; red grid is
+          a justified ECG-paper semantic exception.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Authentic ECG paper, calibration pulses, correct morphology — strong
-          polish
+        comment: Highly polished, authentic ECG-paper aesthetic.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean, no extraneous chrome, subtle grid
+        comment: No spines, subtle grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clinical layout + rhythm strip guides the clinical reading
+        comment: Clinical layout + rhythm strip guide the viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-channel 12-lead ECG display
+        comment: Correct 12-lead ECG waveform display.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3x4 grid, rhythm strip, ECG paper, calibration pulse, scale + lead
-          labels all present
+        comment: 3x4 grid, rhythm strip, ECG paper grid, calibration pulse, lead labels,
+          scale all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time x / voltage y; per-lead morphology correct
+        comment: time->x at 25mm/s, mV->y at 10mm/mV.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; single series
-          needs no legend
+        comment: Title format correct with descriptive prefix.
     data_quality:
       score: 15
       max: 15
@@ -162,19 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: P-QRS-T across all 12 leads + rhythm strip + calibration
+        comment: All 12 leads + rhythm with realistic per-lead morphology.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Normal sinus rhythm, neutral medical context
+        comment: Normal sinus rhythm, neutral medical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitudes in normal mV ranges, 2.5s strips at 1000 Hz
+        comment: Amplitudes in normal physiological ranges.
     code_quality:
       score: 9
       max: 10
@@ -184,34 +184,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Small arrow helpers (drawTrace/drawCal/ecg/trace) — DRY for 12 cells
-          but several helpers
+        comment: Several small arrow-function helpers, idiomatic but beyond strict
+          no-functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic math model, no RNG
+        comment: Fully deterministic, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: d3 global only, no imports
+        comment: Uses the d3 global only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Clean, well-commented, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness emits plot-{theme}.png + .html; no bare plot.png
+        comment: Harness emits plot-{theme}.png/.html.
     library_features:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -219,26 +219,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic d3.select/d3.line/path-string grid; leans less on scales
+        comment: d3.scaleLinear + d3.line accessors carry physical calibration units.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: d3.line shape generator + efficient concatenated path strings for
-          the grid
+        comment: Custom path generation via d3.line shape generator; reused per-cell
+          scales.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - small-multiples
-  - custom-gridlines
-  - annotations
+  - custom-grid
+  - line-generator
+  - calibration-marker
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - signal-synthesis
+  - synthetic-signal
+  - gaussian-sum
   styling:
   - publication-ready
+  - theme-adaptive
   - domain-specific-grid
