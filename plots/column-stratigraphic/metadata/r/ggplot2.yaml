@@ -1,0 +1,253 @@
+library: ggplot2
+language: r
+specification_id: column-stratigraphic
+created: '2026-06-17T01:07:04Z'
+updated: '2026-06-17T01:18:07Z'
+generated_by: claude-opus
+workflow_run: 27658492230
+issue: 4573
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Faithful FGDC/USGS-style lithology patterns hand-composed natively from segments,
+    dot grids and open-circle clasts — brick courses for limestone, stipple for sandstone,
+    laminae for shale, broken dashes for siltstone, scattered clasts for conglomerate
+    — overcoming ggplot2's lack of a fill-texture geom without any workaround.
+  - 'Complete spec coverage: depth axis with meters scale (scale_y_reverse, increasing
+    downward), formation names labeled right, geological ages labeled left, solid
+    layer boundaries, and a wavy unconformity contact at the Aptian/Tithonian boundary
+    with an italic ''unconformity'' annotation.'
+  - 'First categorical series (Sandstone) is brand green #009E73 and the five lithologies
+    follow the canonical Imprint palette; backgrounds are correct (#FAF8F1 light /
+    #1A1A17 dark) and pattern ink flips with theme while data fills stay identical.'
+  - Realistic, neutral domain data — genuine Western Canada Sedimentary Basin formations
+    (Belly River, Wapiabi, Greenhorn, Viking, Cadomin, Fernie) with plausible Cretaceous–Jurassic
+    ages and sensible 0–250 m depths.
+  - 'Strong geological storytelling and visual hierarchy: bold formation names, soft-ink
+    ages/lithology subtitles, subtle y-only grid, removed spines, and the unconformity
+    wave as a clear focal accent.'
+  weaknesses:
+  - The italic per-layer lithology subtitles (geom_text size 2.9) and age labels (size
+    3.0) are on the small side; at the ~400 px mobile render these become hard to
+    read. Consider bumping the smallest annotations by ~0.3-0.5 mm so they survive
+    downscaling without crowding the formation names.
+  - Layer fills use alpha 0.62, which slightly mutes the Imprint colours; a touch
+    more saturation (e.g. alpha ~0.7) would strengthen the legend-to-layer colour
+    match while keeping the ink patterns legible.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), correct.
+      Chrome: bold dark title "column-stratigraphic · r · ggplot2 · anyplot.ai"; "Depth (m)" y-axis title and 0–250 tick labels in soft ink; right-side legend "Lithology" with elevated cream frame. All readable.
+      Data: eight stacked layers filled with Imprint colours (Sandstone green #009E73 first), overlaid with dark-ink FGDC patterns (brick/stipple/laminae/dashes/clasts), wavy unconformity line, ages on left, bold formation names + italic lithology on right. First series confirmed #009E73.
+      Legibility verdict: PASS (small italic lithology/age labels are readable at full size; flagged as a minor mobile-scaling concern).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), correct.
+      Chrome: title, axis title, ticks and legend text all in light ink, clearly readable — no dark-on-dark.
+      Data: layer fill colours identical to light render; only the pattern ink, text and grid chrome flipped to light. First series still #009E73; conglomerate red and limestone blue read well on dark.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable at full size in both themes; small italic lithology/age
+          labels are a mild mobile-scaling concern at 400 px.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Formation/lithology labels vertically offset; no collisions even
+          in thin layers.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patterns, clasts and dots all clearly visible against fills in both
+          themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, CVD-safe; lithology also encoded by pattern, not
+          colour alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 exact; good proportions, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth (m) with units; x-axis intentionally suppressed for the column.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; backgrounds correct
+          both themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hand-built FGDC lithology patterns and unconformity wave show real
+          design intent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-only grid, generous whitespace; alpha mutes
+          fills slightly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear geological narrative with unconformity focal accent and label
+          hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 5 distinct patterns, formations, ages, depth scale, boundaries, unconformity
+          wave.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: top/bottom mapped to reversed depth axis (downward).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match lithologies.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all stratigraphic aspects incl. unconformity.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine WCSB formations and plausible ages; neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–250 m depths, sensible layer thicknesses.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-level loop builds pattern primitives; no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2/dplyr/tibble/ragg all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg device.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scale_y_reverse, coord_cartesian clip=off, layered geoms, guide override.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: scale_size_identity, native pattern composition unique to grammar-of-graphics
+          approach.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  - tibble
+  - ragg
+  techniques:
+  - geom-rect
+  - custom-hatching
+  - annotations
+  - theme-adaptive
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - geometry-construction
+  styling:
+  - publication-ready
+  - alpha-blending
+  - reversed-axis

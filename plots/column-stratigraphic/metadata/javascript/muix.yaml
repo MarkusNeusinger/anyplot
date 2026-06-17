@@ -1,0 +1,251 @@
+library: muix
+language: javascript
+specification_id: column-stratigraphic
+created: '2026-06-17T01:17:38Z'
+updated: '2026-06-17T01:21:41Z'
+generated_by: claude-opus
+workflow_run: 27658880932
+issue: 4573
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/muix/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - Hand-crafted FGDC/USGS-style SVG fill patterns (stipple dots, horizontal laminations,
+    brickwork, rhombic brick, scattered dashes, pebble clasts) give every lithology
+    a distinct, colourblind-safe texture cue — pattern is the primary signal, Imprint
+    colour the redundant secondary.
+  - 'Idiomatic use of MUI X community composition API: ChartContainer + useXScale/useYScale
+    hooks turn the chart into a coordinate-space provider for fully custom SVG, the
+    correct community-surface approach for a chart type MUI X has no native primitive
+    for.'
+  - Rich, geologically authentic data — a real Western Canada Sedimentary Basin succession
+    (Horseshoe Canyon, Bearpaw, Rundle, Palliser, Leduc, etc.) with plausible ages,
+    thicknesses, and two unconformities rendered as wavy contacts vs solid conformable
+    lines.
+  - 'Excellent information architecture: depth axis (m, increasing downward) and geological-period
+    time brackets on the left, patterned column in the centre, formation/age/thickness
+    labels with leader lines on the right, and a two-part legend (lithology + contact
+    types).'
+  - 'Perfect theme adaptation — first series is brand green #009E73 (palette[0]);
+    saturated pattern motifs are identical between renders, only chrome flips; backgrounds
+    are correct #FAF8F1 / #1A1A17 with all text fully legible in both themes.'
+  weaknesses:
+  - The 0.26-opacity colour wash behind each pattern blends with the page background,
+    so the perceived layer tint differs subtly between light and dark (the saturated
+    motif strokes remain identical) — acceptable theme behaviour but worth noting
+    if strict colour parity is ever required.
+  - Secondary text (period ages 12.5px, formation sub-labels 13px) is on the small
+    side; at a ~400px mobile downscale these approach the lower bound of comfortable
+    legibility — consider nudging to ~14px for the smallest labels.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), correct — not pure white.
+      Chrome: dark bold title "column-stratigraphic · javascript · muix · anyplot.ai" with grey subtitle; "Depth (m)" axis label and 0–280 ticks; period brackets (Cretaceous/Carboniferous/Devonian/Cambrian) with Ma ranges; formation labels with age·thickness; "Lithology" and "Contacts" legend headers. All readable (dark ink on cream).
+      Data: 9 stacked patterned layers — sandstone green stipple (#009E73, palette[0]), shale lavender laminations, limestone blue brick, dolomite cyan rhombic, siltstone ochre dashes, conglomerate red clasts. Solid conformable contacts; two wavy unconformities (black). First series is brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), correct — not pure black.
+      Chrome: light ink title/subtitle, light axis ticks, light period/formation labels, light legend text — all clearly readable, no dark-on-dark failures. Wavy unconformity contacts flip to white for contrast.
+      Data: identical saturated pattern motifs and hues to the light render (sandstone green, shale lavender, limestone blue, dolomite cyan, siltstone ochre, conglomerate red); only the faint background wash blends darker. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly set (12.5–26px); readable in both themes. Smallest
+          secondary labels (12.5–13px) slightly tight at mobile downscale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; formation labels spaced with leader lines, legend
+          clean.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Six distinct, clearly visible lithology patterns; motif density well
+          chosen.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pattern texture is a redundant non-colour cue — fully CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800; balanced three-zone layout, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth (m) with units; exact mandated title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint palette throughout; correct theme
+          backgrounds in both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Bespoke FGDC/USGS SVG pattern library, intentional hierarchy, period
+          brackets, leader lines — far beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean, no clutter, generous whitespace, subtle leader lines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Central column as focal point; periods left, formations right; conformable
+          vs unconformity distinction tells the depositional story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 distinct patterns (>5 required), formation names, ages, thickness,
+          depth scale, solid + wavy contacts, depth increasing downward.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth correctly mapped top→bottom; all 9 layers shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format; legend labels match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple lithologies, varying thickness, two unconformities, four
+          geological periods.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic WCSB formations and ages; neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0–280 m depths, 26–36 m layer thicknesses — sensible for a borehole
+          section.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Idiomatic React component decomposition, not over-engineered.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ChartContainer, useXScale, useYScale all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Community @mui/x-charts only; harness handles output.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct community composition API: ChartContainer + useXScale/useYScale
+          hooks for custom marks.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses MUI X's scale hooks as a coordinate provider to build a non-native
+          chart type entirely within community surface.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
