@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: letsplot | Python 3.14
-Quality: pending | Created: 2026-06-17
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-06-17
 """
 # ruff: noqa: F405
 
