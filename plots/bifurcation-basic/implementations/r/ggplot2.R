@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-#' Library: ggplot2 | R 4.x
-#' Quality: pending | Created: 2026-06-17
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 83/100 | Created: 2026-06-17
 
 library(ggplot2)
 library(ragg)
