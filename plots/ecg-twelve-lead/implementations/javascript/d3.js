@@ -88,14 +88,22 @@ const ecg = (time, lead) => {
 
 // 1000 Hz sampling (2500 samples / 2.5 s strip), matching the spec acquisition rate.
 const dt = 0.001;
-const trace = (lead, dur, x0, yb) => {
+const sample = (lead, dur) => {
   const pts = [];
-  for (let time = 0; time <= dur + 1e-9; time += dt) {
-    pts.push([x0 + time * pxPerSec, yb - ecg(time, lead) * pxPerMv]);
-  }
+  for (let time = 0; time <= dur + 1e-9; time += dt) pts.push({ t: time, v: ecg(time, lead) });
   return pts;
 };
-const line = d3.line();
+
+// d3.scaleLinear carries the physical ECG calibration in measured units: seconds→px
+// at 25 mm/s and mV→px at 10 mm/mV. Each cell reuses the same scales, offset by its
+// own (x0, yb) origin, so the d3.line accessors read in clinical units, not pixels.
+const xScale = d3.scaleLinear().domain([0, 1]).range([0, pxPerSec]);
+const vScale = d3.scaleLinear().domain([0, 1]).range([0, pxPerMv]);
+const traceLine = (x0, yb) =>
+  d3
+    .line()
+    .x((d) => x0 + xScale(d.t))
+    .y((d) => yb - vScale(d.v));
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3
@@ -157,10 +165,10 @@ const drawCal = (yb) =>
     .attr("stroke-width", 2)
     .attr("fill", "none")
     .attr("stroke-linejoin", "round");
-const drawTrace = (pts) =>
+const drawTrace = (pts, x0, yb) =>
   svg
     .append("path")
-    .attr("d", line(pts))
+    .attr("d", traceLine(x0, yb)(pts))
     .attr("stroke", BRAND)
     .attr("stroke-width", 1.9)
     .attr("fill", "none")
@@ -172,13 +180,13 @@ layout.forEach((row, r) => {
   const yb = rowBaseline(r);
   drawCal(yb);
   row.forEach((lead, c) => {
-    drawTrace(trace(lead, stripSec, colX0(c), yb));
+    drawTrace(sample(lead, stripSec), colX0(c), yb);
     svg
       .append("text")
       .attr("x", colX0(c) + 8)
-      .attr("y", yb - leadH / 2 + 22)
+      .attr("y", yb - leadH / 2 + 24)
       .attr("fill", t.ink)
-      .style("font-size", "18px")
+      .style("font-size", "22px")
       .style("font-weight", "700")
       .text(lead);
   });
@@ -186,13 +194,13 @@ layout.forEach((row, r) => {
 
 // Full-length Lead II rhythm strip across the bottom (10 s continuous)
 drawCal(rhythmBaseline);
-drawTrace(trace("II", 4 * stripSec, colX0(0), rhythmBaseline));
+drawTrace(sample("II", 4 * stripSec), colX0(0), rhythmBaseline);
 svg
   .append("text")
   .attr("x", colX0(0) + 8)
-  .attr("y", rhythmBaseline - rhythmH / 2 + 22)
+  .attr("y", rhythmBaseline - rhythmH / 2 + 24)
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "22px")
   .style("font-weight", "700")
   .text("II");
 
@@ -215,5 +223,5 @@ svg
   .attr("y", height - 8)
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "15px")
   .text("25 mm/s · 10 mm/mV · 1 mV calibration");
