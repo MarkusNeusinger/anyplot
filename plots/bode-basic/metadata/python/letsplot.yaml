@@ -1,94 +1,114 @@
 library: letsplot
+language: python
 specification_id: bode-basic
 created: '2026-03-21T20:47:57Z'
-updated: '2026-03-21T21:39:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388395540
+updated: '2026-06-17T20:47:42Z'
+generated_by: claude-sonnet
+workflow_run: 27716668799
 issue: 4411
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bode-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bode-basic/letsplot/plot.html
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/letsplot/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required Bode plot features (dual panels, margins,
-    reference lines, annotations)
-  - 'Strong design choices: color-coded stability margins (orange GM, blue PM) with
-    labeled backgrounds create clear visual hierarchy'
-  - Realistic 3rd-order transfer function with meaningful engineering parameters
-  - Expert lets-plot usage with distinctive features (flavor_high_contrast_light,
-    layer_tooltips, ggbunch)
-  - Clean, deterministic code with well-structured interpolation for precise crossover
-    calculations
+  - Complete dual-panel Bode plot with correct magnitude and phase panels sharing
+    a logarithmic frequency axis
+  - 'Well-implemented stability margin annotations: GM (ochre, #BD8233) with bidirectional
+    arrow and PM (blue, #4467A3) with bidirectional arrow — exact values labeled clearly
+    in rounded annotation boxes'
+  - Correct 0 dB reference line in magnitude panel and -180° reference line in phase
+    panel using theme-adaptive dashed lines
+  - Full Imprint palette compliance and theme adaptation — warm off-white (#FAF8F1)
+    light background, warm near-black (#1A1A17) dark background, all chrome tokens
+    correctly applied
+  - Effective use of ggbunch for dual-panel composition, layer_tooltips() for interactive
+    HTML output, and dual PNG+HTML export — distinctive letsplot features
   weaknesses:
-  - GM/PM arrow segments are small relative to plot scale due to narrow margins, reducing
-    their visual impact
-  - Right portion of log-scale frequency axis has less data density, creating some
-    visual imbalance
-  - Could benefit from slightly more whitespace between the two panels
-  image_description: The plot displays a Bode plot with two vertically aligned panels
-    on a white background. The top panel shows magnitude (dB) vs frequency (Hz) on
-    a logarithmic x-axis. A thick dark navy blue line starts flat near 0 dB, exhibits
-    a subtle resonance peak around 0.5-0.8 Hz, then drops steeply through -35 dB.
-    A dashed gray reference line marks 0 dB. The gain margin (GM = 5.4 dB) is annotated
-    with an orange label on a light peach background, with orange diamond markers
-    at the phase crossover frequency and a vertical arrow segment between 0 dB and
-    the magnitude at that frequency. A blue diamond marks the gain crossover on the
-    0 dB line. The bottom panel shows phase (degrees) vs frequency (Hz) on the same
-    log scale. The dark blue line starts near 0 degrees and rolls off steeply through
-    -180 degrees to below -250 degrees. A dashed gray reference line marks -180 degrees.
-    The phase margin (PM = 15.8 degrees) is annotated with a blue label on a light
-    blue background, with diamond markers and a vertical arrow segment. An orange
-    diamond marks the phase crossover point at -180 degrees. Dotted vertical lines
-    connect the crossover frequencies across both panels. The title "bode-basic ·
-    letsplot · pyplots.ai" is centered at the top in bold.
+  - Panel axis lines appear on all four sides creating a full box frame rather than
+    the preferred L-shaped (left+bottom only) frame — panel_border=element_blank()
+    may not be suppressing the top/right axis lines in letsplot; consider also setting
+    axis_line_x/axis_line_y separately or using theme_minimal() as a base (DE-02 impact)
+  - Y-axis tick labels are slightly small and densely spaced (every 2 dB in the magnitude
+    panel shows many tick marks); at mobile width (~400 px) these could become hard
+    to read — consider reducing tick density with scale_y_continuous(breaks=seq(-30,10,10))
+    and increasing axis_text size to 11 (VQ-01 minor impact)
+  - Phase margin bidirectional arrow is very short (only 15.8° span between phase_at_gc
+    and -180°), making the arrow itself nearly invisible at the scale of the phase
+    panel — consider enlarging the arrowhead or adding a horizontal leader line to
+    make the PM marker more visually prominent
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) throughout — plot background, panel backgrounds, and the inter-panel gap all match the correct surface color. NOT pure white.
+      Chrome: Title "bode-basic · python · letsplot · anyplot.ai" centered at top of magnitude panel in dark INK (#1A1A17), bold, clearly readable. Axis labels "Magnitude (dB)" (left, magnitude panel) and "Phase (°)" (left, phase panel) and "Frequency (Hz)" (bottom, phase panel) in bold dark text — all legible. Tick labels in INK_SOFT (#4A4A44) are visible though somewhat small, especially the densely spaced magnitude y-ticks.
+      Data: Main frequency response lines in brand green (#009E73) — correct first-series color. Gain crossover: blue diamond marker at 0 dB. Phase crossover: ochre diamond marker at -180°. GM = 5.4 dB annotation in ochre (#BD8233) with bidirectional arrow and rounded label box (ELEVATED_BG fill #FFFDF6). PM = 15.8° annotation in blue (#4467A3) with bidirectional arrow and rounded label box. Dashed 0 dB and -180° reference lines in INK_SOFT.
+      Legibility verdict: PASS — all text readable against the light background; no "light on light" failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) throughout — panel backgrounds, inter-panel gap, and outer canvas all correctly use the dark surface. NOT pure black.
+      Chrome: Title in light INK (#F0EFE8) clearly readable against the dark background. Axis labels in INK (#F0EFE8) and tick labels in INK_SOFT (#B8B7B0) — light text against dark background, all readable. No dark-on-dark failure detected.
+      Data: Main lines still in brand green (#009E73) — identical to light render. GM annotation in ochre (#BD8233) and PM annotation in blue (#4467A3) — same Imprint palette colors as light render. Annotation boxes use ELEVATED_BG (#242420) fill with colored text — readable against the dark background. Dashed reference lines visible in muted light color.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=26pt, axis_title=20pt bold,
-          axis_text=16pt, labels=18pt bold'
+        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10). Text
+          readable in both themes. Minor deduction: y-axis tick labels in magnitude
+          panel are densely spaced (every 2 dB) and slightly small at mobile width.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. GM/PM labels well-positioned away from data
-          and markers
+        comment: No overlapping text or data elements. GM and PM annotation boxes
+          placed in clear whitespace away from the frequency response curves.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Main curve thick and visible. GM/PM arrow segments small due to narrow
-          margins but still visible
+        comment: Green frequency response lines clearly visible (size=1.0), diamond
+          markers visible (size=8), annotation boxes prominent, dashed reference lines
+          visible.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three colors used (green, ochre, blue) from Imprint palette — all
+          CVD-safe and clearly distinguishable from each other.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: dark navy, orange, blue. No red-green dependency'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: 'Dual-panel layout fills canvas well. Minor: magnitude y-axis truncated
-          at -35 dB'
+        comment: Canvas gate passed (3200x1800). Dual-panel layout fills canvas well.
+          Inter-panel gap rendered with correct PAGE_BG color in both themes.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Magnitude (dB), Phase (°), Frequency (Hz) — all descriptive with
-          units
+        comment: 'All labels descriptive with units: Magnitude (dB), Phase (°), Frequency
+          (Hz). Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). GM uses #BD8233 (ochre, pos
+          4), PM uses #4467A3 (blue, pos 3) — Imprint palette. Backgrounds #FAF8F1
+          (light) and #1A1A17 (dark). All chrome theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
@@ -98,22 +118,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette with color coding, flavor_high_contrast_light
-          base, colored label backgrounds, diamond markers
+        comment: 'Clearly above defaults: rounded annotation boxes (label_r=0.15,
+          ELEVATED_BG fill), diamond markers at crossover points, bidirectional arrows
+          with closed arrowheads, Imprint palette color-coding for GM vs PM. Strong
+          professional polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, subtle grid, minor grid hidden, light axis
-          lines, generous margins
+        comment: Minor grid removed, major grid subtle (RULE color at 15% opacity),
+          panel border removed. Panel backgrounds match PAGE_BG creating seamless
+          integration. Some refinement visible but axis lines may appear on all four
+          sides.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: GM/PM annotations serve as focal points, color-coded to distinguish
-          margins. Viewer immediately understands stability characteristics
+        comment: 'Good storytelling: different Imprint colors for GM (ochre) vs PM
+          (blue) creates visual hierarchy, bidirectional arrows show the magnitude
+          of each stability margin, exact values labeled. Viewer immediately sees
+          the stability analysis result.'
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Bode plot with dual-panel layout
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom,
+          shared logarithmic frequency axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: dual panels, shared log axis, reference lines,
-          margin annotations, grid'
+        comment: 'All spec features present: dual-panel layout, gain margin annotation,
+          phase margin annotation, 0 dB reference line, -180° reference line, logarithmic
+          frequency axis, grid lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on X (log), magnitude/phase on Y. All data visible
+        comment: 'X: frequency in Hz (log scale), Y-mag: magnitude in dB, Y-phase:
+          phase in degrees. All correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, centered, bold. No legend needed
+        comment: 'Title: ''bode-basic · python · letsplot · anyplot.ai'' — correct
+          format. No legend needed (single series).'
     data_quality:
       score: 15
       max: 15
@@ -152,22 +182,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows resonance peak, rolloff, gain/phase crossover, gain margin,
-          phase margin, asymptotic behavior
+        comment: Shows resonance peak in magnitude, full phase rolloff from 0° to
+          below -270°, gain crossover, phase crossover, stability margins. All aspects
+          of Bode plot analysis covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 3rd-order transfer function with complex poles, realistic control
-          systems scenario
+        comment: 3rd-order control system G(s) = 500/((s+20)(s²+2s+25)) is a realistic,
+          neutral engineering transfer function. Resonance peak from underdamped complex
+          poles is physically correct.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic frequency range, physically meaningful margins (GM=5.4
-          dB, PM=15.8°)
+        comment: GM≈5.4 dB and PM≈15.8° are realistic stability margins (borderline
+          stable — educational). Frequency range 0.016-50 Hz appropriate for this
+          system. 500 logspaced points for smooth curves.
     code_quality:
       score: 10
       max: 10
@@ -177,33 +210,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script structure, no functions/classes
+        comment: 'Linear sequential structure: imports → tokens → data → theme → magnitude
+          plot → phase plot → combine → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: analytical transfer function, no random data'
+        comment: 'Fully deterministic: transfer function with fixed coefficients,
+          no random numbers.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, numpy, pandas, lets_plot (wildcard), ggsave,
+          scipy.signal.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. No fake UI or over-engineering
+        comment: 'Appropriate complexity. The # noqa: F405 comments are necessary
+          for letsplot wildcard imports. No over-engineering, no fake UI.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. ggsave with
+          w=3200, h=1800, unit='px' produces correct output dimensions.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -211,26 +249,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Expert gg grammar usage, ggbunch for multi-panel layout
+        comment: 'Good idiomatic usage: ggplot grammar, geom_label with label_r/label_padding,
+          scale_x_log10(), layer_tooltips() with .format()/.line(). Saving via w/h/unit=''px''
+          rather than scale=4 is slightly non-standard for letsplot but functional.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: flavor_high_contrast_light, layer_tooltips builder, ggbunch with
-          regions, export_ggsave with scale
+        comment: Uses ggbunch (letsplot-specific multi-panel composition), layer_tooltips()
+          with custom format directives (letsplot-specific tooltip API), and dual
+          PNG+HTML export — showcasing letsplot's interactive web output alongside
+          static PNG.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - subplots
   - annotations
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
+  - alpha-blending
   - grid-styling

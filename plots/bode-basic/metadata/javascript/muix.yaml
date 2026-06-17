@@ -1,0 +1,267 @@
+library: muix
+language: javascript
+specification_id: bode-basic
+created: '2026-06-17T20:33:04Z'
+updated: '2026-06-17T20:53:07Z'
+generated_by: claude-sonnet
+workflow_run: 27717365908
+issue: 4411
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Full spec compliance — dual-panel Bode plot with magnitude on top, phase on bottom,
+    logarithmic frequency axis in both panels, reference lines at 0 dB and -180°,
+    and annotated gain margin (18.0 dB) and phase margin (36.2°)
+  - Realistic three-pole transfer function G(s) = 20/((s/w1+1)(s/w2+1)(s/w3+1)) providing
+    genuine control engineering context with meaningful stability margins
+  - Semantic color coding for reference lines — ochre (palette[3]) for gain margin
+    vertical line, blue (palette[2]) for phase margin vertical line — provides immediate
+    visual distinction between the two stability indicators
+  - 'Clean idiomatic MUI X code using ChartsReferenceLine component and log-scale
+    axis (scaleType: ''log'') — library-native approach'
+  - 'Correct Imprint palette usage: brand green (#009E73) for magnitude series, lavender
+    (#C475FD) for phase series, with appropriate theme-adaptive chrome via ANYPLOT_TOKENS'
+  weaknesses:
+  - 'X-axis tick labels overlap in the sub-Hz range (0.01–0.1 Hz): ''60m'' and ''70m''
+    labels visibly merge into ''60m70m'' in both renders — reduce log-scale tick density
+    or add minTickDistance to prevent crowding at this frequency range'
+  - 'Reference line labels (0 dB, -180°, GM = 18.0 dB, PM = 36.2°) set to fontSize:
+    12 are too small for this canvas; increase all ChartsReferenceLine labelStyle.fontSize
+    to 14 to improve readability'
+  - Visible thick horizontal separator line between the two LineChart panels creates
+    an inelegant panel boundary; reduce margin.bottom on the magnitude chart (from
+    8 to 4) and margin.top on the phase chart (from 5 to 2) to minimize the gap
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "bode-basic · javascript · muix · anyplot.ai" centered, bold, dark ink — fully readable. Y-axis labels "Magnitude (dB)" and "Phase (°)" readable. "Frequency (Hz)" x-axis label readable. Tick labels readable at standard sizes except for crowded sub-Hz range where "60m70m" labels overlap.
+      Data: Magnitude panel shows brand green (#009E73) line descending from ~+26 dB to ~-85 dB. Phase panel shows lavender (#C475FD) line from 0° to ~-265°. Dashed 0 dB reference line with "0 dB" label. Dashed -180° reference line with "-180°" label. Ochre vertical reference line for gain margin (GM = 18.0 dB) at phase crossover. Blue vertical reference line for phase margin (PM = 36.2°) at gain crossover.
+      Legibility verdict: PASS — all text readable, minor concern: reference line labels at fontSize 12 are small; x-axis labels show confirmed overlap ("60m70m") in sub-Hz range
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title and all axis labels rendered in light color against dark background — fully readable. No dark-on-dark failures detected. Grid lines subtle and visible. Reference line labels in light color.
+      Data: Brand green (#009E73) magnitude line and lavender (#C475FD) phase line are IDENTICAL to light render — only chrome flips. Gain margin (ochre) and phase margin (blue) reference lines unchanged.
+      Legibility verdict: PASS — full theme adaptation successful, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 23px, axis labels 15px, tick labels
+          13px) and readable in both themes. Reference line labels at fontSize 12
+          are too small. X-axis tick labels crowded in sub-Hz range.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: X-axis tick labels overlap in sub-Hz frequency range — '60m' and
+          '70m' labels merge into '60m70m' in both renders.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green magnitude line and lavender phase line clearly visible. Line
+          strokeWidth 2.5 appropriate for 250-point continuous curves. No markers
+          (correct for dense line chart). Reference lines clearly visible with dashed
+          styling.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          and CVD-safe per Imprint palette design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Two-panel layout fills the canvas well with equal
+          panel heights. Visible thick separator line between the two LineChart components
+          is somewhat inelegant but functional.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title 'bode-basic · javascript · muix · anyplot.ai' correct format.
+          'Magnitude (dB)', 'Phase (°)', and 'Frequency (Hz)' all include units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green (#009E73) for magnitude. Second series
+          lavender (#C475FD) for phase. Background #FAF8F1 light / #1A1A17 dark. Chrome
+          fully theme-adaptive via ANYPLOT_TOKENS.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Slightly above configured default due to semantic color coding of
+          stability margin reference lines (ochre for gain margin, blue for phase
+          margin). Clean typography with fontWeight 600 and letterSpacing for title.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Custom sx reduces axis stroke to 0.7, grid uses theme-adaptive t.grid
+          token, legends hidden. Visible panel separator is minor detraction. MUI
+          ThemeProvider handles most chrome adaptation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Semantic color-coded reference lines (ochre vertical for GM, blue
+          vertical for PM) effectively guide viewer to the stability margin information.
+          Clear two-panel visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dual-panel Bode plot — magnitude on top, phase on bottom,
+          shared logarithmic frequency axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: dual-panel layout, log frequency axis, 0 dB and
+          -180° reference lines, gain margin and phase margin annotations, grid lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency (Hz) on log x-axis, magnitude (dB) on top y-axis, phase
+          (degrees) on bottom y-axis. Full frequency range 0.01–100 Hz covered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bode-basic · javascript · muix · anyplot.ai' matches required
+          format. Legends appropriately hidden for single-series panels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows magnitude AND phase responses across full frequency range.
+          Gain crossover and phase crossover frequencies identified. Both stability
+          margins computed and annotated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-pole open-loop transfer function G(s) = 20/((s/1+1)(s/10+1)(s/100+1))
+          is a realistic control systems example. Engineering stability margins (GM=18
+          dB, PM=36.2°) in normal operating ranges.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 0.01–100 Hz appropriate for control systems. Magnitude
+          +26 dB to -85 dB realistic for three-pole system. Phase 0° to -265° correct
+          for third-order system.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: data generation at module level, single default-export
+          component. No unnecessary functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — data computed from fixed mathematical formula,
+          no random generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: LineChart, ChartsReferenceLine, Box, Typography.
+          No unused imports.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. No fake UI. Crossover detection loops
+          are concise and correct.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles PNG/HTML output. Uses current MUI X community API
+          (no Pro/Premium imports).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct use of MUI X declarative API: LineChart with series, xAxis
+          scaleType=''log'', slotProps.legend hidden, margin customization, skipAnimation.
+          Window globals used correctly.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine is a distinctive MUI X feature used effectively
+          for both horizontal (0 dB, -180°) and vertical (crossover frequency) reference
+          lines. Custom sx styling using MUI's CSS-in-JS system is MUI-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
