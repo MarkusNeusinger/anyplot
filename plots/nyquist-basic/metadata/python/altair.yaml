@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:45:14Z'
-updated: '2026-06-17T22:37:25Z'
+updated: '2026-06-17T22:48:40Z'
 generated_by: claude-sonnet
 workflow_run: 27723115314
 issue: 4412
@@ -12,56 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Complete spec compliance: all required features implemented (critical point with
-    ring+cross, unit circle, direction arrows, frequency annotations at key ω, 1:1
-    aspect ratio)'
-  - Interactive Altair legend filtering via alt.selection_point lets viewers toggle
-    positive/negative frequency branches by clicking the legend
-  - Realistic third-order transfer function G(s)=5/((s+1)(0.5s+1)(0.1s+1)) with correctly
-    computed positive and negative frequency branches
-  - 'Correct Imprint palette: first series #009E73 (positive branch) and second #C475FD
-    (negative branch); semantic red #AE3030 for critical point, ochre #BD8233 for
-    phase crossover'
-  - 'Theme-adaptive chrome fully applied in both renders: background, axis colors,
-    legend fill all correctly flip between light/dark; data colors identical across
-    both themes'
+  - 'Correct Nyquist plot on complex plane with both positive and negative frequency
+    branches using Imprint palette (green #009E73 positive, lavender #C475FD negative)'
+  - 'All spec-required features present: critical point (-1,0) marked with red cross+ring,
+    dashed unit circle reference, direction arrows (triangle markers) on both branches,
+    frequency annotations at gain crossover and phase crossover, 1:1 square aspect
+    ratio'
+  - 'Descriptive axis labels with units: ''Real Part — Re[G(jω)]'' and ''Imaginary
+    Part — Im[G(jω)]'''
+  - Interactive Altair legend with selection highlight (opacity fade) — a genuinely
+    distinctive Altair feature
+  - Fully deterministic data from a realistic third-order control system G(s) = 5/((s+1)(0.5s+1)(0.1s+1))
+  - Theme-adaptive chrome correct in both renders — title, ticks, axis labels flip
+    correctly; data colors identical
+  - Subtitle provides engineering context; gain and phase crossover both annotated
+    for control-theory storytelling
   weaknesses:
-  - 'Label crowding in critical region: critical point cross at (-1,0), phase crossover
-    diamond at (~-0.45,0), ''Critical Point (−1,0)'' label, and ''ω ≈ 5.6 (phase ×)''
-    label are all tightly clustered in a small area, creating a visually busy center
-    where labels nearly overlap — separate them with larger dx/dy offsets or position
-    the phase crossover label to the left rather than right'
-  - Unit circle reference is very faint (strokeDash=[5,4] + opacity=0.3) and barely
-    visible in both renders, especially on dark background — increase opacity to 0.5
-    and consider a slightly thicker stroke (~1.5px) so it reads as a visible reference
-    circle
-  - The ω=2.0 regular annotation marker and the ω≈2.0 (|G|=1) gain crossover marker
-    are plotted at nearly identical positions on the curve, creating two overlapping
-    dot markers at the same point which adds visual noise without clarity — remove
-    the ω=2.0 regular annotation and keep only the more informative gain crossover
-    annotation
-  - 'Critical point label text color #AE3030 on dark background (#1A1A17) has contrast
-    ratio ~2.8:1, just below the 3:1 threshold — either use CRITICAL_COLOR only for
-    the marker and render the text label in INK/INK_SOFT token, or boost the label
-    to the lighter semantic-red variant'
+  - 'Annotation crowding near (-1,0): three annotation labels (Critical Point, ω≈2.7
+    (|G|=1), ω≈5.6 (phase ×)) and two marker types cluster in a small region — slight
+    readability issue, though no hard overlap'
+  - 'DE-02: All four plot spines retained (Altair default frame) — for a complex-plane
+    Nyquist plot keeping the full frame is defensible, but removing top/right spines
+    or making stroke very subtle would lift polish'
+  - 'LM-02: Layer composition and interactive legend are Altair-distinctive, but no
+    use of alt.concat / facet / transform_fold or other higher-level Altair idioms
+    that would elevate library mastery further'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "nyquist-basic · python · altair · anyplot.ai" in bold dark ink, clearly readable. Subtitle "G(s) = 5 / (s+1)(0.5s+1)(0.1s+1) · Open-Loop Frequency Response" in softer INK_SOFT. Axis labels "Imaginary Part — Im[G(jω)]" (Y) and "Real Part — Re[G(jω)]" (X) in bold dark ink, readable. Tick labels in secondary ink, readable. Legend ("Frequency Branch") in elevated cream box at top-right, clearly legible.
-      Data: Positive frequency branch in #009E73 (brand green) spiraling from (5,0) inward. Negative branch in #C475FD (lavender) as mirror image. Critical point at (-1,0) marked with red (#AE3030) cross+ring. Phase crossover at (~-0.45,0) marked with ochre (#BD8233) diamond. Unit circle shown as dashed gray circle (faint, opacity=0.3). Direction arrows as triangle markers on each branch. Frequency labels at ω=0.5, ω=1.0, ω≈2.0 (|G|=1), ω≈5.6 (phase ×). Labels near center region are crowded but individually legible.
-      Legibility verdict: PASS — all text readable, minor crowding near critical region.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "nyquist-basic · python · altair · anyplot.ai" in bold dark ink (#1A1A17), subtitle in INK_SOFT gray. Axis labels ("Real Part — Re[G(jω)]", "Imaginary Part — Im[G(jω)]") clearly readable. Tick labels in INK_SOFT gray at 10px, legible. Legend box has elevated warm-cream fill with soft stroke.
+      Data: Positive branch in #009E73 (brand green), negative branch in #C475FD (lavender) — mirror curves forming the Nyquist contour. Dashed gray unit circle reference. Red (#AE3030) cross+ring at critical point (-1,0). Ochre (#BD8233) diamond at phase crossover. Green circles at frequency annotation points. Triangle arrow markers on both branches indicate increasing frequency direction.
+      Legibility verdict: PASS — all text readable; annotation area near (-1,0) is slightly crowded but no text is illegible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in bold near-white (#F0EFE8), clearly readable against dark background. Subtitle in #B8B7B0, readable. Axis labels in bold light ink, readable. Tick labels in #B8B7B0, readable. Legend in dark elevated background (#242420) with light text — no dark-on-dark issues. Grid lines subtle white dashes (~10% opacity), visible.
-      Data: Data colors identical to light render — green (#009E73) positive branch, lavender (#C475FD) negative branch. Critical point red (#AE3030) cross+ring visible on dark bg though slightly lower contrast. Phase crossover ochre (#BD8233) diamond visible. Unit circle (dashed gray) barely visible at opacity=0.3 on dark background.
-      Legibility verdict: PASS — all text readable. Minor concern: critical point label in #AE3030 on dark background has ~2.8:1 contrast (just below 3:1 threshold), discernible but borderline.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle use light ink (#F0EFE8 / #B8B7B0). Axis labels, tick labels all rendered in light-colored text — clearly readable against dark background. Legend box uses elevated dark fill (#242420) with soft border.
+      Data: Identical colors to light render — green #009E73 (positive branch), lavender #C475FD (negative branch), red critical point, ochre phase crossover. No color drift between themes. Grid at 10% opacity is subtle and appropriate.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All annotation text, critical point label, frequency labels render in theme-appropriate light tones. Brand green #009E73 clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,62 +62,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, subtitle, axis labels, tick labels all readable in both themes.
-          Annotation fontSize=10 is at minimum for readability; annotation labels
-          in crowded center region are small but legible.
+        comment: 'All font sizes explicitly set (title=16, subtitle=12, axis=12, labels=10).
+          Both themes readable. Minor: frequency annotations at 10px are at the minimum
+          but legible.'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: 'Label crowding in the critical region: ''Critical Point (-1,0)'',
-          ''ω≈5.6 (phase ×)'' label, and phase crossover diamond all cluster in the
-          same small area (x∈[-1,0], y∈[-0.3,0.5]). Labels are adjacent rather than
-          strictly overlapping, but the area is visually congested.'
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All data elements visible. Unit circle is very faint (strokeDash
-          + opacity=0.3) — technically present but barely readable as a reference,
-          especially in dark render.
+        comment: Slight crowding of three annotation labels near (-1,0) region but
+          no actual text overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines (strokeWidth=2.5), markers, arrows, unit circle all clearly
+          visible and sized appropriately for 650-point line data.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) are CVD-distinguishable (distinct
-          hue families). Redundant encoding via triangle direction arrows. Red cross
-          for critical point is semantically clear.
+        comment: Green/purple pair is CVD-safe. Critical red and ochre additional
+          markers are also distinguishable.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas appropriate for 1:1 aspect ratio Nyquist
-          plot. Canvas gate passed. Title ~60% of width. Axis labels balanced. No
-          overflow detected.
+        comment: 2400x2400 square canvas confirmed. Plot fills canvas well with balanced
+          margins. Legend positioned top-right inside plot area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels 'Real Part — Re[G(jω)]' and 'Imaginary Part — Im[G(jω)]'
-          are descriptive with proper mathematical notation. Title is correct mandated
-          format with informative subtitle.
+        comment: 'Both axes labeled with units: ''Real Part — Re[G(jω)]'' and ''Imaginary
+          Part — Im[G(jω)]''. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (positive branch), second series #C475FD (negative
-          branch) — canonical Imprint order. Critical point uses #AE3030 (slot 5,
-          semantic red for critical/danger). Phase crossover uses #BD8233 (slot 4,
-          ochre). Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Chrome tokens
-          correctly applied.'
+        comment: 'First series #009E73 (brand green). Second series #C475FD (Imprint
+          position 2). Critical point #AE3030 (semantic red, appropriate). Background
+          #FAF8F1/#1A1A17. Data colors identical across themes. Chrome theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -132,28 +117,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Custom Imprint palette correctly applied. Multiple
-          distinct marker types (cross+ring for critical, diamond for phase crossover,
-          circle for frequency marks, triangles for direction). Interactive legend.
-          Informative subtitle. Deliberate design effort visible.
+        comment: 'Above generic defaults: critical point gets dual ring+cross emphasis,
+          phase crossover gets diamond shape, direction arrows add character, subtitle
+          provides engineering context. Not quite publication-quality but clearly
+          thoughtful.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Subtle 10% grid, elevated legend background, dashed
-          unit circle reference. All four spines present — appropriate for complex
-          plane visualization (full frame needed for reference). Generous margins
-          around the square plot.
+        comment: Subtle grid (opacity=0.10), dashed unit circle, styled legend box.
+          Full frame retained (defensible for complex plane) but top/right spine removal
+          would lift polish further.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Critical point prominently marked with emphasis
-          ring. Direction arrows convey increasing frequency clearly. Gain and phase
-          crossover both identified. Subtitle states the transfer function. Interactive
-          legend allows branch comparison. Viewer is guided to the stability analysis.
+        comment: Critical point prominently emphasized with multiple markers — the
+          key stability story. Direction arrows guide viewer through frequency traversal.
+          Gain/phase crossover both annotated.
     spec_compliance:
       score: 15
       max: 15
@@ -163,32 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Nyquist plot: imaginary vs real part of G(jω) for frequency
-          range covering both positive and negative branches.'
+        comment: Correct Nyquist plot on complex plane with both positive and negative
+          frequency branches.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: critical point (-1,0) with distinct marker
-          (red cross+ring), unit circle drawn (dashed), frequency annotations at key
-          points (ω=0.5, 1.0, 2.0, gain crossover, phase crossover), direction arrows
-          (triangle markers), 1:1 aspect ratio, axes labeled Real/Imaginary.'
+        comment: 'All spec features: critical point (-1,0) marked, unit circle drawn,
+          frequency annotations, direction arrows, 1:1 aspect ratio, ''Real''/''Imaginary''
+          axis labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=real part, Y=imaginary part. Both positive and negative frequency
-          branches. Frequency range 10^-2 to 10^3 rad/s logarithmically spaced. Data
-          range [-5.2, 5.2] on both axes captures all relevant features.
+        comment: Real part on X-axis, Imaginary on Y-axis. Full range [-5.2, 5.2]
+          captures all data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'nyquist-basic · python · altair · anyplot.ai' correct. Legend
-          labels 'ω ≥ 0 (positive)' and 'ω ≤ 0 (negative)' descriptive and accurate.
+        comment: 'Title: ''nyquist-basic · python · altair · anyplot.ai''. Legend:
+          ''Frequency Branch'' with correct branch labels.'
     data_quality:
       score: 15
       max: 15
@@ -198,25 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both frequency branches (positive and negative). Unit circle reference.
-          Critical point. Gain crossover (|G|=1). Phase crossover (Im=0). Multiple
-          frequency markers. Direction arrows. Covers all aspects of a Nyquist plot.
+        comment: Both frequency branches, unit circle, critical point, gain crossover,
+          phase crossover, direction arrows — comprehensive Nyquist feature set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s) = 5/((s+1)(0.5s+1)(0.1s+1)) is a realistic third-order industrial
-          process control system. Neutral engineering context with no controversial
-          content.
+        comment: Real third-order control system G(s)=5/((s+1)(0.5s+1)(0.1s+1)), neutral
+          engineering context, stable system with meaningful stability margins.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 10^-2 to 10^3 rad/s appropriate for the system time
-          constants (1s, 0.5s, 0.1s). Axis range ±5.2 captures the full Nyquist contour.
-          Gain K=5 produces a clearly visible non-trivial encirclement pattern.
+        comment: Logarithmically spaced frequencies 0.01–1000 rad/s, transfer function
+          computed correctly, gain K=5 gives realistic gain/phase margins.
     code_quality:
       score: 10
       max: 10
@@ -226,35 +204,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear top-to-bottom script. Clear sectioned
-          structure (data generation → layer construction → composition → save).
+        comment: 'Linear structure: imports → tokens → data → layers → compose → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Transfer function data is fully deterministic (mathematical computation
-          only, no randomness).
+        comment: Fully deterministic mathematical formula, no random elements needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image — all used. No unused imports.
+        comment: numpy, pandas, altair, PIL, os — all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured layer composition. Appropriate use of DataFrames
-          per element type. Conditional arrow logic. No fake functionality.
+        comment: Appropriate complexity for a multi-layer Nyquist chart. Layer composition
+          is clean and well-commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (with pad-to-2400×2400 logic) and plot-{THEME}.html.
-          Current altair 6.0 API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API. PIL pad-to-target block present.
     library_mastery:
       score: 7
       max: 10
@@ -264,28 +241,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Above default (3). Uses alt.selection_point with add_params, alt.condition
-          for interactive opacity, layer composition via + operator, proper Q/N encoding
-          types, scale domain specification with alt.Scale. Idiomatic Altair patterns
-          throughout.
+        comment: Correct layer composition, alt.selection_point with alt.condition,
+          proper encoding types (Q/N), configure_* for theme. Strong idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Above default (1). Interactive legend filtering (click to dim other
-          branch) — a key Altair strength. HTML export alongside PNG. Layer composition
-          of 10+ chart objects. alt.condition for conditional encoding. Demonstrates
-          Altair's declarative approach well.
+        comment: Interactive legend with click-to-highlight via selection_point is
+          distinctively Altair. Multi-layer composition (9+ layers) and HTML export
+          also Altair-specific. No use of transforms (transform_fold, transform_calculate)
+          or higher-level Altair idioms.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
+  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   dataprep: []
