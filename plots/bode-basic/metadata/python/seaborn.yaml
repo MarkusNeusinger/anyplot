@@ -1,96 +1,134 @@
 library: seaborn
+language: python
 specification_id: bode-basic
 created: '2026-03-21T20:51:08Z'
-updated: '2026-03-21T21:02:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388395298
+updated: '2026-06-17T20:27:28Z'
+generated_by: claude-sonnet
+workflow_run: 27715846136
 issue: 4411
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bode-basic/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent transfer function computation with interpolated crossover frequencies
-    for precise GM/PM values
-  - Professional color-coded annotation system with Tol bright colorblind-safe palette
-  - FacetGrid for dual-panel layout is idiomatic seaborn with crossover dotted lines
-    tying both panels together
-  - Clean well-structured code with appropriate domain complexity
+  - Idiomatic seaborn FacetGrid with long-form DataFrame for dual-panel layout — paradigmatic
+    seaborn approach
+  - Accurate computation and annotation of gain margin (18.7 dB) and phase margin
+    (41.8°) with interpolated crossover frequencies
+  - Vertical tie-lines connecting both panels at the crossover frequencies provide
+    strong visual storytelling
+  - 'Imprint palette used semantically: brand green for frequency response, blue (#4467A3)
+    for gain margin, ochre (#BD8233) for phase margin'
+  - Complete theme-adaptive chrome with all tokens properly set — both renders pass
+    legibility checks
+  - sns.despine(offset=8) gives characteristic seaborn spine gap, subtle grid with
+    alpha=0.15
+  - Perfectly deterministic data from a physically realistic Type-1 control system
+    transfer function
   weaknesses:
-  - 'Minor: annotation arrow positioning could be slightly more refined for the GM
-    label in the magnitude panel'
+  - Bottom margin is tight — 'Frequency (Hz)' x-axis label sits very close to the
+    canvas edge; consider adding subplots_adjust(bottom=0.12) or increasing figure
+    height slightly to give the bottom label more breathing room
+  - 'DE-01 ceiling: annotation boxes and palette use are polished but the dual-panel
+    layout still reads as a well-configured engineering default rather than a visually
+    distinctive publication-ready chart — a subtle fill between the 0 dB line and
+    the response curve in the magnitude panel would lift the storytelling further'
   image_description: |-
-    The plot displays a dual-panel Bode plot for a Type-1 open-loop transfer function. The top panel shows magnitude in dB vs. frequency (Hz) on a logarithmic x-axis, with the response curve in dark blue starting around +30 dB at 0.1 Hz and rolling off to approximately -110 dB at 1000 Hz. A dashed gray reference line at 0 dB is visible. Two blue dots mark the phase crossover frequency (~5 Hz) on the magnitude curve and at 0 dB, connected by a vertical blue line. An annotation box with blue border reads "GM = 18.7 dB" with an arrow pointing to the midpoint.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "bode-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable. Y-axis labels "Magnitude (dB)" and "Phase (°)" in dark ink, readable. X-axis label "Frequency (Hz)" visible at bottom — tight margin but fully readable. Tick labels in INK_SOFT (#4A4A44), readable at 8pt.
+      Data: Brand green (#009E73) frequency response line in both panels. Blue (#4467A3) GM annotation box "GM 18.7 dB" with arrow and vertical bracket. Ochre (#BD8233) PM annotation box "PM 41.8°" with arrow and vertical bracket. Dashed reference lines at 0 dB and -180°. Subtle vertical dotted lines at crossover frequencies connecting both panels.
+      Legibility verdict: PASS — all text readable. Minor: "Frequency (Hz)" x-axis label tight at canvas bottom edge.
 
-    The bottom panel shows phase in degrees vs. frequency, with the curve starting at -90° and rolling off to approximately -270°. A dashed gray reference line at -180° is present. Two orange dots mark the gain crossover frequency on the phase curve and at -180°, connected by a vertical orange line. An annotation box with orange border reads "PM = 41.8°" with an arrow. Dotted vertical lines at both crossover frequencies span both panels. The title reads "bode-basic · seaborn · pyplots.ai". Spines are removed on top and right, with subtle grid lines on both axes. The overall design is clean and professional.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark failures observed. Tick labels light-colored and visible.
+      Data: Brand green (#009E73) line identical to light render. GM annotation box (blue #4467A3) and PM annotation box (ochre #BD8233) identical to light render — only chrome flips between themes.
+      Legibility verdict: PASS — all text readable in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, annotations=15'
+        comment: 'All font sizes explicitly set (title dynamic, labels 10pt, ticks
+          8pt). Both renders readable. Minor deduction: ''Frequency (Hz)'' x-axis
+          label tight at canvas bottom edge.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotations well-positioned with arrows
+        comment: No overlapping text elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=3, markers at size=10, vertical margin lines at
-          2.5
+        comment: Line (linewidth=2.5), annotation markers (size=7), and reference
+          lines all clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Tol bright scheme colorblind-safe with excellent contrast
+        comment: Imprint palette with CVD-safe colors. Blue and ochre are perceptually
+          distinct.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Dual-panel fills 16x9 canvas well with balanced margins
+        comment: 'Canvas 3200x1800 (gate passed). Dual-panel fills canvas well. Minor:
+          bottom margin tight for x-axis label.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on all axes
+        comment: Magnitude (dB), Phase (°), Frequency (Hz) — all descriptive with
+          units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. GM uses #4467A3, PM uses #BD8233 — both Imprint
+          palette. Backgrounds #FAF8F1/#1A1A17 correct. All chrome theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Tol bright palette, color-coded GM/PM annotations, professional
-          polish above defaults
+        comment: Intentional semantic palette (GM=blue, PM=ochre), themed annotation
+          boxes, clean dual-panel layout. Above defaults but not publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: sns.despine(), subtle grid styling, good whitespace, nearly perfect
+        comment: sns.despine(offset=8), subtle grid alpha=0.15, hspace=0.25. Good
+          refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color-coded GM/PM annotations create clear focal points, crossover
-          lines tie panels together
+        comment: Vertical tie-lines at crossover frequencies, annotated stability
+          margins, reference lines. Visual hierarchy guides viewer to the key stability
+          margins.
     spec_compliance:
       score: 15
       max: 15
@@ -100,26 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with magnitude on top, phase on bottom
+        comment: 'Correct dual-panel Bode plot: magnitude on top, phase on bottom,
+          shared log frequency axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: dual-panel, GM/PM annotations, reference
-          lines, log scale, grid'
+        comment: Gain margin annotated, phase margin annotated, reference lines at
+          0 dB and -180°, log-scale frequency axis, grid lines present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on x (log), magnitude/phase on y, correct ranges
+        comment: Frequency (Hz) on x, magnitude (dB) and phase (°) on separate y-axes.
+          All data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format, no legend needed for single-system plot
+        comment: Title is 'bode-basic · python · seaborn · anyplot.ai'. Single series
+          — no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -129,20 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows resonance, rolloff regions, phase transition, crossover frequencies,
-          stability margins
+        comment: Shows resonance rolloff, phase rolloff, gain crossover, phase crossover,
+          gain margin, and phase margin. All key Bode plot features present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic controls engineering Type-1 system with realistic parameters
+        comment: Type-1 control system with poles at 5 Hz and 50 Hz — physically realistic
+          and neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: GM=18.7 dB, PM=41.8° indicate a well-designed stable system
+        comment: GM=18.7 dB and PM=41.8° are realistic stability margins for a well-designed
+          control system. Frequency range 0.1-1000 Hz is appropriate.
     code_quality:
       score: 10
       max: 10
@@ -152,49 +195,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, system definition, frequency response, crossover,
-          plot, save'
+        comment: 'Linear flow: tokens → data → FacetGrid → annotations → labels →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical transfer function
+        comment: Fully deterministic — mathematical transfer function, no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean interpolation for crossover frequencies, appropriate complexity
+        comment: Clean, Pythonic. Crossover frequency interpolation is appropriately
+          complex for the task.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and current API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: FacetGrid with map_dataframe over long-form DataFrame, sns.despine,
+          sns.set_theme with rc — all paradigmatic seaborn patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: FacetGrid with row faceting is idiomatic seaborn for dual-panel layout
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: FacetGrid, sns.despine(), sns.set_theme() are distinctive seaborn
-          features
+        comment: FacetGrid row faceting with long-form data is distinctly seaborn.
+          sns.despine(offset=8) characteristic spine gap. Core visualization reverts
+          to matplotlib after FacetGrid setup, preventing full marks.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,6 +251,8 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - interpolation
   styling:
+  - alpha-blending
   - grid-styling
