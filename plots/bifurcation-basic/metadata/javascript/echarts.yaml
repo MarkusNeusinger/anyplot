@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: bifurcation-basic
+created: '2026-06-17T05:03:25Z'
+updated: '2026-06-17T05:06:55Z'
+generated_by: claude-opus
+workflow_run: 27666837873
+issue: 4415
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Textbook logistic-map bifurcation diagram — the full period-doubling cascade (period-1
+    → 2 → 4 → 8 → chaos) is crisply resolved with ~150k deterministic points at symbolSize
+    1.1 and opacity 0.34, exactly the density-based rendering the spec calls for.
+  - 'Idiomatic ECharts performance handling: scatter with `large: true` / `largeThreshold:
+    2000` to render the 150k-point cloud efficiently, plus `markLine` dashed annotations
+    labelling the key bifurcation thresholds (period-2, period-4, period-8, chaos).'
+  - 'First series is brand green #009E73 from the Imprint palette; chrome flips correctly
+    between light (#FAF8F1) and dark (#1A1A17) while data color stays identical.'
+  - Exact required title format, descriptive axis labels with variable names ('Growth
+    rate  r', 'Long-term state  x'), fully deterministic data (no RNG, transient of
+    300 discarded, 100 kept).
+  - 'Refined chrome: x-axis vertical grid suppressed, subtle y-only splitLine, axis
+    ticks hidden, generous margins — clean publication-ready look.'
+  weaknesses:
+  - The three rightmost markLine labels (period-4 at r=3.449, period-8 at r=3.544,
+    chaos at r=3.5699) sit very close together near the chaos onset; rotated and small
+    (fontSize 13) they read as slightly crowded and would be hard to parse when the
+    chart is scaled to ~400px mobile width. Consider staggering label `position` or
+    nudging the thresholds' label offsets for breathing room.
+  - markLine labels at fontSize 13 are the smallest text on the chart; legible at
+    full 3200px but borderline at mobile scale — a slightly larger size or selective
+    labelling would harden legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), not pure white.
+      Chrome: title "bifurcation-basic · javascript · echarts · anyplot.ai" in dark bold ink, centered and fully readable. Axis names "Growth rate  r" (bottom) and "Long-term state  x" (left, rotated) clear. Tick labels (2.5–4.0 on x, 0–1 on y) in soft ink, readable. Four dashed vertical markLines with rotated labels period-2 / period-4 / period-8 / chaos.
+      Data: single brand-green (#009E73) dense point cloud forming the classic logistic-map bifurcation tree — single fixed point to ~r=3, splitting into period-2, period-4, then the chaotic fan with embedded periodic windows. First series confirmed #009E73.
+      Legibility verdict: PASS — all chrome readable; the three rightmost markLine labels are slightly crowded but not overlapping.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: title in light ink (#F0EFE8), fully readable. Axis names and tick labels in soft light ink, clearly visible — no dark-on-dark failure. markLine dashed lines and labels visible in soft ink.
+      Data: identical brand-green (#009E73) point cloud, same geometry and density as the light render — only chrome flipped. Green reads well on the dark surface.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicitly set (title 22, axis names 17, ticks 14, markLine
+          13). All readable both themes; markLine labels small/borderline at mobile
+          scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions, but period-4/period-8/chaos labels crowd together
+          near chaos onset.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dense ~150k points at symbolSize 1.1 + opacity 0.34 — ideal density
+          visualization.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single green hue, strong contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good proportions, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names with variable symbols.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 correct both themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean professional polish, intentional bifurcation annotations.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No vertical grid, subtle y-grid, ticks hidden, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: markLine labels guide viewer to the period-doubling route to chaos.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bifurcation scatter.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Logistic map, transient discard (300), keep 100, r 2.5-4.0, labelled
+          bifurcation points.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=r, y=state, full parameter range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format; single series, no legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full cascade period-1 through chaos with periodic windows.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical logistic map, neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: r in [2.5,4], x in [0,1].
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses provided globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png/html; current ECharts API.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scatter + large-mode + markLine, top-level color array — idiomatic
+          ECharts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: large/largeThreshold high-perf path and markLine annotations are
+          ECharts-distinctive.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - scatter-density
+  - reference-lines
+  - annotations
+  patterns:
+  - data-generation
+  - iterative-simulation
+  dataprep:
+  - logistic-map
+  - transient-discard
+  styling:
+  - publication-ready
+  - alpha-blending
+  - large-scatter
