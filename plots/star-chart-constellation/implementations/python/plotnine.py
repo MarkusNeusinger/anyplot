@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-17
@@ -333,27 +333,27 @@ constellation_names = {
 # especially the crowded circumpolar core (UMa / UMi / Dra / Cas / Per / Aur).
 label_nudge = {
     "Ori": (0.14, -0.34),
-    "UMa": (-0.28, 0.52),
+    "UMa": (-0.42, 0.66),
     "Cas": (-0.30, 0.46),
     "Leo": (0.05, -0.42),
     "Cyg": (0.48, 0.10),
     "Sco": (0.00, -0.44),
     "Gem": (0.34, -0.36),
-    "Lyr": (-0.46, -0.08),
-    "Aql": (0.46, 0.00),
+    "Lyr": (-0.62, -0.12),
+    "Aql": (0.62, -0.04),
     "Tau": (-0.12, -0.44),
     "CMa": (0.00, -0.42),
     "Per": (0.54, 0.06),
     "And": (-0.10, -0.46),
-    "Boo": (-0.48, -0.10),
+    "Boo": (-0.66, -0.16),
     "Sgr": (0.00, -0.42),
     "Aur": (-0.48, -0.54),
-    "CrB": (0.40, 0.12),
+    "CrB": (0.56, 0.20),
     "CMi": (0.36, -0.30),
     "Peg": (-0.32, -0.32),
     "Vir": (0.05, -0.42),
-    "UMi": (0.56, 0.46),
-    "Dra": (-0.58, 0.36),
+    "UMi": (0.72, 0.58),
+    "Dra": (-0.76, 0.46),
 }
 label_data = []
 for abbr, full_name in constellation_names.items():
@@ -426,8 +426,8 @@ plot = (
         fontweight="bold",
     )
     # RA / Dec tick labels
-    + geom_text(df_ra_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=6)
-    + geom_text(df_dec_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=6, ha="left")
+    + geom_text(df_ra_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=7)
+    + geom_text(df_dec_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=7, ha="left")
     + coord_fixed(
         ratio=1, xlim=(-radius_limit - 0.2, radius_limit + 0.2), ylim=(-radius_limit - 0.2, radius_limit + 0.2)
     )
