@@ -5,9 +5,9 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// Open-loop transfer function G(jω) = 1 / (jω · (1 + jω/a) · (1 + jω/b))
-// Poles at ω=1 and ω=10 rad/s — classic third-order system with clear stability margins
-const a = 1, b = 10;
+// Open-loop transfer function G(jω) = 1 / (jω · (1 + jω/p1) · ((jω/ωn)² + 2ζ(jω/ωn) + 1))
+// Real pole at ω=1 rad/s, underdamped complex pair at ωn=5 rad/s (ζ=0.1) → resonance peak
+const p1 = 1, wn = 5, zeta = 0.1;
 const N = 500;
 const W_MIN = 0.01, W_MAX = 1000;
 
@@ -17,20 +17,26 @@ let phaseMargin = null, gainMargin = null;
 
 for (let i = 0; i < N; i++) {
   const w = Math.pow(10, Math.log10(W_MIN) + (i / (N - 1)) * (Math.log10(W_MAX) - Math.log10(W_MIN)));
-  const mag = 1 / (w * Math.sqrt(1 + (w / a) * (w / a)) * Math.sqrt(1 + (w / b) * (w / b)));
+
+  // Underdamped second-order factor denominator: (1 - (ω/ωn)²) + j(2ζω/ωn)
+  const re = 1 - (w / wn) ** 2;
+  const im = 2 * zeta * w / wn;
+
+  // |G| = (1/ω) · 1/sqrt(1+(ω/p1)²) · 1/sqrt(re²+im²)
+  const mag = (1 / w) * (1 / Math.sqrt(1 + (w / p1) ** 2)) * (1 / Math.sqrt(re * re + im * im));
   const magDb = 20 * Math.log10(mag);
-  const phase = -90 - (Math.atan(w / a) * 180 / Math.PI) - (Math.atan(w / b) * 180 / Math.PI);
+
+  // phase(G) = -90° - atan(ω/p1) - atan2(im, re) [degrees]
+  const phase = -90 - (Math.atan(w / p1) * 180 / Math.PI) - (Math.atan2(im, re) * 180 / Math.PI);
 
   magData.push({ x: w, y: magDb });
   phaseData.push({ x: w, y: phase });
 
   if (i > 0) {
-    // Gain crossover: magnitude crosses 0 dB (above → below)
     if (gainCrossFreq === null && magData[i - 1].y > 0 && magDb <= 0) {
       gainCrossFreq = w;
       phaseMargin = 180 + phase;
     }
-    // Phase crossover: phase crosses -180° (above → below)
     if (phaseCrossFreq === null && phaseData[i - 1].y > -180 && phase <= -180) {
       phaseCrossFreq = w;
       gainMargin = -magDb;
@@ -40,7 +46,6 @@ for (let i = 0; i < N; i++) {
 
 // --- Layout: flex column, top = magnitude, bottom = phase ---
 const container = document.getElementById('container');
-// Set individual style properties so the harness's width/height are preserved
 container.style.display = 'flex';
 container.style.flexDirection = 'column';
 container.style.background = t.pageBg;
@@ -58,7 +63,7 @@ function addPanel() {
 const magCanvas = addPanel();
 const phaseCanvas = addPanel();
 
-// Custom log-axis tick formatter: show powers of 10 only
+// Log-axis tick formatter: show powers of 10 only
 const logTickCallback = (val) => {
   const exp = Math.log10(val);
   const rounded = Math.round(exp);
@@ -73,11 +78,31 @@ const logXBase = {
   type: 'logarithmic',
   min: W_MIN,
   max: W_MAX,
+  border: { display: false },
   grid: { color: t.grid },
   ticks: { color: t.inkSoft, font: { size: 14 }, callback: logTickCallback }
 };
 
-// Custom afterDraw plugin for margin labels
+// L-frame plugin: draw only left + bottom axis lines (remove default box)
+function makeLFramePlugin() {
+  return {
+    id: 'lFrame',
+    afterDraw(chart) {
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.strokeStyle = t.inkSoft;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, chartArea.top);
+      ctx.lineTo(chartArea.left, chartArea.bottom);
+      ctx.lineTo(chartArea.right, chartArea.bottom);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+}
+
+// Custom afterDraw plugin for margin annotations
 function makeMarginPlugin(annotations) {
   return {
     id: 'marginLabels',
@@ -86,7 +111,7 @@ function makeMarginPlugin(annotations) {
       const xScale = chart.scales.x;
       const yScale = chart.scales.y;
       ctx.save();
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = 'bold 14px sans-serif';
       ctx.textBaseline = 'bottom';
       for (const ann of annotations) {
         if (ann.xValue == null) continue;
@@ -101,7 +126,6 @@ function makeMarginPlugin(annotations) {
   };
 }
 
-// Scale bounds
 const MAG_MIN = -80, MAG_MAX = 40;
 const PHASE_MIN = -270, PHASE_MAX = 0;
 
@@ -203,13 +227,14 @@ new Chart(magCanvas, {
       y: {
         min: MAG_MIN,
         max: MAG_MAX,
+        border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: 'Magnitude (dB)', color: t.ink, font: { size: 16 } }
       }
     }
   },
-  plugins: [makeMarginPlugin(magAnnotations)]
+  plugins: [makeLFramePlugin(), makeMarginPlugin(magAnnotations)]
 });
 
 // ---- Phase chart datasets ----
@@ -277,7 +302,7 @@ if (phaseCrossFreq !== null) {
   phaseAnnotations.push({
     xValue: phaseCrossFreq,
     yValue: -200,
-    text: 'GM freq',
+    text: 'ω_pc = ' + phaseCrossFreq.toFixed(1) + ' rad/s',
     color: t.palette[2],
     align: 'left',
     dx: 8,
@@ -304,11 +329,12 @@ new Chart(phaseCanvas, {
       y: {
         min: PHASE_MIN,
         max: PHASE_MAX,
+        border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
         title: { display: true, text: 'Phase (°)', color: t.ink, font: { size: 16 } }
       }
     }
   },
-  plugins: [makeMarginPlugin(phaseAnnotations)]
+  plugins: [makeLFramePlugin(), makeMarginPlugin(phaseAnnotations)]
 });
