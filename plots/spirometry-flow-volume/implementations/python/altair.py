@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
