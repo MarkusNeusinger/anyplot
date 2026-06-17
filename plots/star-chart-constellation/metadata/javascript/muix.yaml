@@ -1,0 +1,252 @@
+library: muix
+language: javascript
+specification_id: star-chart-constellation
+created: '2026-06-17T00:24:15Z'
+updated: '2026-06-17T00:28:34Z'
+generated_by: claude-opus
+workflow_run: 27656851709
+issue: 4560
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Custom north-pole azimuthal-equidistant projection renders a natural circular
+    sky boundary with a labelled RA/Dec coordinate grid (RA spokes every 2h, declination
+    circles at +60/+30/0/-30) — exactly the orientation the spec calls for.
+  - 'Apparent magnitude is correctly inverted into marker size (brightest stars large,
+    faint field stars tiny) AND mapped onto the Imprint sequential ramp (brand green
+    #009E73 -> blue), with a clear bottom-left magnitude legend that doubles as a
+    brightness key.'
+  - Real, factually-accurate bright-star catalogue (Sirius -1.46, Vega 0.03, Arcturus
+    -0.05, etc.) across 23 constellations with proper IAU stick-figure edges and centroid-placed
+    constellation labels — strong, neutral, educational data.
+  - 'Expert idiomatic MUI X community usage: ChartContainer composed with ScatterPlot
+    plus custom SVG layers (SkyGrid, ConstellationLines, ConstellationLabels, ChartTitle,
+    MagnitudeLegend) that read the live chart scales through useXScale/useYScale/useDrawingArea
+    hooks — a distinctive composable-API pattern hard to replicate elsewhere.'
+  - 'Both renders are theme-correct: warm off-white #FAF8F1 / warm near-black #1A1A17
+    backgrounds, identical data colours across themes, all chrome legible, deterministic
+    LCG-seeded background star field (no network).'
+  weaknesses:
+  - In the dense central region of the disk (Ursa Minor / Draco / Hercules / Bootes
+    / Corona Borealis) several italic constellation labels sit close to or lightly
+    overlap stars and stick-figure lines — readable but slightly crowded. Consider
+    a small leader-offset or lower-priority de-cluttering for centroid labels that
+    land on top of markers.
+  - Constellation labels use inkSoft at opacity 0.78 and fontSize 13 — legible at
+    full 2400px but on the fainter side; a touch more weight/contrast would help them
+    survive the 400px mobile downscale.
+  - Grid colour is a hard-coded rgba(120,140,170,0.30) cool tone rather than the theme
+    RULE token. It reads well on both surfaces by design, but it is not strictly theme-adaptive
+    chrome — acceptable for a sky chart, just noting the deviation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no pure white, no painted panel — page shows through the transparent SVG.
+      Chrome: dark title "star-chart-constellation · javascript · muix · anyplot.ai" centred at top, fully readable. RA hour labels (0h..22h) ring the rim; declination labels (+60°, +30°, 0°, -30°) along the 20h spoke; magnitude legend bottom-left. Faint cool grid circles + spokes visible but subtle. All text readable.
+      Data: stars coloured on the Imprint sequential ramp — brightest band is brand green #009E73 (large markers), fading to blue #4467A3 for the faintest. Sizes scale inversely with magnitude. Constellation stick-figure lines (subtle inkSoft) connect catalogue stars; italic constellation names near centroids.
+      Legibility verdict: PASS (minor crowding of a few centre labels, but nothing unreadable).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: light title and labels, all clearly readable against the dark surface; no dark-on-dark failures. Grid and rim read correctly.
+      Data: star colours are identical to the light render (green->blue ramp, same sizes) — only the chrome flipped. Brand green #009E73 reads well on the dark surface.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Sizes explicitly set, title 22px, readable in both themes; constellation
+          labels slightly faint/small
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor label/star/line crowding in the dense disk centre
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size excellently adapted to magnitude/density — bright large,
+          faint tiny
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green->blue sequential ramp, CVD-safe, distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400, circular chart fills canvas, no clipping, gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: RA in hours, Dec in degrees with units; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq for brightness, brand green first, theme-correct chrome
+          both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Polished celestial map, custom projection, intentional brightness
+          hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean composition; slight centre crowding holds it back
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bright stars pop, constellation patterns emerge, magnitude legend
+          tells the brightness story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Star chart with constellations on azimuthal projection
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Projection, stick figures, mag->size, RA/Dec grid, con labels, mag
+          threshold, faint field
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec correctly projected to x/y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; magnitude legend labels match
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full magnitude range, 23 constellations, bright + faint field
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real astronomy, neutral, educational
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually accurate star coordinates and magnitudes (J2000)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> components -> default export; component split
+          required for hooks, idiomatic React
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG for background field; hard-coded catalogue
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ChartContainer, ScatterPlot, hooks — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-driven output, current community API, skipAnimation set
+    library_features:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ChartContainer composition with hook-driven custom layers
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useDrawingArea custom SVG overlays — uniquely
+          MUI X composable API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - alpha-blending
