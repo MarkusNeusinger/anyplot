@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: pending | Created: 2026-03-15
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-06-17
 """
 
 import os
