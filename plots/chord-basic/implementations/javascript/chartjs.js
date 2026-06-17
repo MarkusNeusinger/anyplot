@@ -1,7 +1,7 @@
 // anyplot.ai
 // chord-basic: Basic Chord Diagram
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-17
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-17
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
