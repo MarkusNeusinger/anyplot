@@ -1,42 +1,55 @@
 library: altair
+language: python
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:07:57Z'
-updated: '2026-03-19T20:22:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23314441105
+updated: '2026-06-17T03:19:50Z'
+generated_by: claude-opus
+workflow_run: 27663111985
 issue: 4554
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Exceptional ECG paper aesthetic with custom pink grid background and two-weight
-    grid lines — authentically mimics clinical ECG printouts
-  - 'Complete spec compliance: all 12 leads, clinical 3x4 layout, rhythm strip, calibration
-    pulse, P/R/T annotations'
-  - Realistic synthetic data with lead-specific morphologies, R-wave progression,
-    and physiologically accurate amplitudes
-  - Clean, well-organized code with reusable grid_layers and clear section structure
+  - 'Authentic clinical 12-lead layout: correct 3x4 column ordering (I/aVR/V1/V4,
+    II/aVL/V2/V5, III/aVF/V3/V6) plus a full-length Lead II rhythm strip across the
+    bottom — exactly matches the spec''s standard hospital format.'
+  - 'Medical-grade detail: light pink/red ECG paper grid (fine ~1mm + bold ~5mm rules),
+    a 1 mV calibration pulse at the rhythm-strip margin, and italic P/R/T wave-morphology
+    annotations in Imprint matte red.'
+  - Realistic synthetic data — Gaussian P-QRS-T model with lead-specific polarity
+    (aVR inverted, V1/V2 deep S waves) and precordial R-wave progression; amplitudes
+    sit in the spec's normal ranges (P~0.15, QRS~1.0, T~0.3 mV).
+  - 'Brand green #009E73 trace on theme-correct surfaces (#FAF8F1 light / #1A1A17
+    dark); ECG paper, grid, and annotation colors all flip per theme while the green
+    data trace stays constant.'
+  - Canvas is exactly 3200x1800 in both themes; idiomatic altair layered hconcat/vconcat
+    composition with reusable mark_rule grid layers; clean deterministic code (np.random.seed).
   weaknesses:
-  - Library mastery could be stronger — manual loop-based grid construction instead
-    of Altair native faceting
-  - Minor spacing/layout refinements possible to make panels feel more like a unified
-    clinical strip
-  image_description: 'The plot displays a 12-lead ECG arranged in the standard clinical
-    3x4 grid layout on pink/red ECG paper-style background. Row 1: I, aVR, V1, V4;
-    Row 2: II, aVL, V2, V5; Row 3: III, aVF, V3, V6. Each panel shows dark (near-black)
-    P-QRS-T waveform complexes against fine pink grid lines (thin at ~1mm intervals)
-    and bolder red grid lines (at ~5mm intervals). The background color is a warm
-    light pink (#FFF0EC). Lead labels appear in bold black text in the upper-left
-    of each panel. A full-width Lead II rhythm strip spans the bottom with a 1mV calibration
-    pulse (square wave) at the left margin, labeled "1 mV". P, R, and T wave annotations
-    appear in red italic text above the first beat of the rhythm strip. The title
-    reads "ecg-twelve-lead · altair · pyplots.ai" in large bold text, with subtitles
-    "Normal Sinus Rhythm · 72 BPM · 12-Lead ECG" and "25 mm/s · 10 mm/mV" in gray.
-    Lead morphology varies realistically: aVR is inverted, precordial leads show R-wave
-    progression from V1 to V4, and limb leads show appropriate relative amplitudes.'
+  - Twelve small panels in a 3x4 grid plus rhythm strip mean each panel's traces and
+    fine grid get dense; at ~400px mobile width the per-panel detail and the small
+    'Time (s)' tick labels on the bottom row compress toward illegibility. Acceptable
+    for this plot type but worth noting for the mobile srcset.
+  - Only the bottom panel row and rhythm strip carry a 'Time (s)' axis; there is no
+    explicit mV y-axis label on any panel — defensible by ECG convention (the calibration
+    pulse conveys vertical scale) but a reader unfamiliar with ECG paper gets no voltage
+    axis cue.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 page; each lead panel is light-pink ECG paper (#FFF0EC) with fine pink and bold red grid rules — authentic clinical printout look.
+      Chrome: bold dark title "ecg-twelve-lead · python · altair · anyplot.ai" with grey subtitle "Normal Sinus Rhythm · 72 BPM · 12-Lead ECG / 25 mm/s · 10 mm/mV"; black bold lead labels (I, aVR, V1, V4 ...); "Time (s)" axis on bottom row + rhythm strip; "1 mV" calibration label and italic red P/R/T annotations — all readable.
+      Data: green #009E73 ECG traces, single series; aVR inverted, V1/V2 deep S, precordial R progression visible. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 page; lead panels are dark red-tinted paper (#2B1A18) with muted red grid rules.
+      Chrome: light off-white title and grey subtitle; light lead labels (white) clearly visible on dark paper; "1 mV" and P/R/T annotations in lighter red (#E68B82) — no dark-on-dark failures.
+      Data: identical green #009E73 traces (data color unchanged from light render); only chrome/paper flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -47,40 +60,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28pt, subtitle 18pt,
-          axis title 20pt, tick labels 18pt, lead labels 20pt, annotations 16pt).
-          All text clearly readable.
+        comment: All text explicitly sized and readable at full res in both themes;
+          minor mobile-density concern across 12 small panels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap anywhere. Lead labels positioned cleanly.
+        comment: No overlapping text; P/R/T annotations and lead labels cleanly placed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Waveform lines clearly visible against pink grid. Good contrast.
+        comment: Green traces clearly visible over subtle paper grid in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Monochrome waveforms on pink grid. No colorblind issues.
+        comment: Strong green-on-paper contrast, CVD-safe; red used only as redundant
+          annotation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Excellent layout: 3x4 grid fills canvas well, rhythm strip spans
-          full width.'
+        comment: Exact 3200x1800; clinical 3x4 + rhythm strip layout, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) with units. Y-axis omitted by ECG convention.
+        comment: Time (s) axis + scale subtitle (25 mm/s, 10 mm/mV); mV scale via
+          calibration pulse per ECG convention.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; ECG-paper pink
+          is a domain semantic exception; both renders theme-correct.'
     design_excellence:
       score: 16
       max: 20
@@ -90,22 +110,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Custom ECG paper aesthetic with warm pink background, medical red
-          grid tones. Professional clinical appearance.
+        comment: 'Genuine clinical polish: authentic ECG paper, calibration pulse,
+          rhythm strip, wave annotations.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Custom grid lines at two weight levels, view borders with corner
-          radius, generous spacing.
+        comment: Subtle two-tier grid, clean panel borders, generous spacing, theme-adaptive
+          paper.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: P/R/T annotations guide interpretation. Calibration pulse provides
-          context. R-wave progression tells physiological story.
+        comment: Annotations and rhythm strip guide the eye; clear R-peak focal points.
     spec_compliance:
       score: 15
       max: 15
@@ -115,27 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-channel line plot in 3x4 clinical grid layout with
-          rhythm strip.
+        comment: Correct multi-channel 12-lead ECG display.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: grid layout, rhythm strip, ECG paper
-          grid, calibration pulse, lead labels, P-QRS-T morphology.'
+        comment: 3x4 grid, rhythm strip, ECG paper grid, calibration pulse, lead labels,
+          scale markers all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X-axis, voltage on Y-axis, correct domains and scales.
+        comment: Time x / voltage y across all 12 leads + rhythm strip.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed.
+        comment: Title exact format; per-panel labels replace a legend (single series).
     data_quality:
       score: 15
       max: 15
@@ -145,20 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 leads with distinct morphologies, R-wave progression, inverted
-          aVR, P-QRS-T components.
+        comment: P-QRS-T morphology, lead polarity, precordial R progression all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Normal sinus rhythm at 72 BPM. Real, neutral medical scenario.
+        comment: Neutral, plausible normal sinus rhythm at 72 BPM.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Amplitudes in realistic mV range. Physiologically normal heart rate.
+        comment: Amplitudes and 2.5s strip match spec's normal mV ranges.
     code_quality:
       score: 10
       max: 10
@@ -168,56 +185,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Three imports, all used.
+        comment: os, altair, numpy, pandas, PIL all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with clear sections. Reusable grid_layers avoids
-          duplication.
+        comment: Well-commented, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current Altair API.
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png + .html with pad-to-target block.
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Layered marks, hconcat/vconcat composition, reusable mark_rule grid
+          layers.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of layered composition, hconcat/vconcat, configure_view.
-          Could use facet for more idiomatic approach.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Layer composition operator, hconcat/vconcat layout, configure_view
-          styling, HTML export.
+        comment: Hand-rolled small-multiples via concatenation with per-panel custom
+          grids.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - html-export
   patterns:
   - data-generation
@@ -225,3 +242,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - publication-ready
