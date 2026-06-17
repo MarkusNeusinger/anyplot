@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-06-17
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-06-17
 """
 
 import os
