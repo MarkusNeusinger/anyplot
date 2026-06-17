@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-06-17
+Quality: 94/100 | Updated: 2026-06-17
 """
 
 import os

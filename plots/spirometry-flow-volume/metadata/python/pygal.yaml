@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:18:08Z'
-updated: '2026-06-17T04:11:08Z'
+updated: '2026-06-17T04:17:50Z'
 generated_by: claude-opus
 workflow_run: 27664872774
 issue: 4557
@@ -12,116 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'First series uses brand green #009E73; predicted overlay drawn as muted dashed
-    gray and PEF emphasised in matte red — a clean, semantically-meaningful Imprint
-    palette on the correct #FAF8F1 / #1A1A17 surfaces, identical data colors across
-    both themes.'
-  - 'Closed flow-volume loop is well-formed: sharp rise to PEF, roughly linear expiratory
-    decline, symmetric U-shaped inspiratory limb — physiologically convincing for
-    a healthy adult.'
-  - 'All spec-required clinical features present: red labeled PEF marker, FEV1/FVC/PEF
-    callout box with brand accent bar, dashed predicted-normal overlay, and a dashed
-    zero-flow reference line.'
-  - 'Polished design: elevated callout card, generous whitespace, subtle theme-adaptive
-    grid, clear red focal point — strong visual hierarchy and storytelling.'
-  - Leans on pygal's distinctive interactive output (HTML + tooltips, value/x_value
-    formatters) while using thoughtful SVG post-processing for dashes and annotations
-    pygal can't express natively.
+  - 'Correct flow-volume loop morphology: sharp expiratory rise to a clearly marked
+    PEF, roughly linear decline, and a symmetric U-shaped inspiratory limb below the
+    zero line — the loop closes cleanly at both volume extremes.'
+  - 'All required clinical annotations present: PEF point highlighted in matte red
+    with an inline label, plus a styled Clinical Values callout box (FEV1, FVC, PEF
+    with the 79% FEV1/FVC ratio).'
+  - Dashed predicted-normal overlay achieved via SVG post-processing gives clear measured-vs-predicted
+    differentiation; solid thick measured loop vs thin dashed reference reads instantly.
+  - 'Theme adaptation is correct in both renders: warm-cream #FAF8F1 and warm-black
+    #1A1A17 surfaces, with identical data colors (brand green measured, muted gray
+    predicted, red PEF) flipping only chrome.'
+  - 'First series is #009E73 brand green; title matches the mandated ''spirometry-flow-volume
+    · python · pygal · anyplot.ai'' format.'
+  - 'Distinctive pygal usage: interactive SVG/HTML output with value formatters, plus
+    surgical ElementTree post-processing for dashing, PEF emphasis, callout box, and
+    a dashed zero-flow reference line.'
   weaknesses:
-  - X-axis has no numeric volume tick labels — only the 'Volume (L)' title is shown.
-    For a flow-volume loop the volume scale (e.g. FVC endpoint near 4.8 L) is clinically
-    meaningful; enable major x labels so the viewer can read volume off the axis.
-  - PEF marker label reads 'PEF = 9.4 L/s' (the noisy measured peak) while the clinical
-    callout box and spec input state 9.5 L/s — a small inconsistency. Either label
-    the nominal PEF or round both consistently so the two annotations agree.
-  - Y-axis shows only two ticks (0.0 and 10.0 L/s); a couple of intermediate ticks
-    (e.g. 5.0, -5.0) would aid reading flow magnitudes on both limbs.
+  - Legend at the bottom carries five entries including two near-identical gray 'Predicted
+    Normal (Expiratory/Inspiratory)' swatches — slightly busy; could be consolidated
+    to a single 'Predicted Normal' entry for cleaner reading, though no actual overlap
+    occurs.
+  - Grid chrome relies on pygal defaults (subtle y-guides only); refinement is good
+    but not exceptional — visual refinement is solid rather than standout.
+  - The SVG ElementTree post-processing (dashing by serie class, PEF circle rewrite,
+    manual box/text placement) is effective but adds notable complexity and is somewhat
+    fragile to pygal's internal class naming.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — not pure white, correct.
-      Chrome: dark title "spirometry-flow-volume · python · pygal · anyplot.ai", dark "Flow (L/s)" / "Volume (L)" axis titles, dark "10.0 L/s" / "0.0 L/s" y-ticks, dark legend text at bottom — all clearly readable. Subtle grid.
-      Data: measured loop in brand green #009E73 (solid), predicted-normal loop in muted gray dashed, red PEF dot (#AE3030) with bold "PEF = 9.4 L/s" label, dashed zero-flow reference line, elevated "Clinical Values" callout box with green accent bar (FEV1/FVC/PEF). First series is #009E73.
-      Legibility verdict: PASS
+      Background: warm off-white (#FAF8F1), correct — not pure white.
+      Chrome: title "spirometry-flow-volume · python · pygal · anyplot.ai" in dark ink, fully readable; axis titles "Volume (L)" / "Flow (L/s)" and tick labels (0.0–5.0 L, -5.0 to 10.0 L/s) all crisp and dark on the light surface. Subtle gray y-grid visible but not dominant.
+      Data: measured loop in brand green #009E73 (thick solid), predicted-normal loop in muted gray dashed, PEF marked by a red #AE3030 dot with "PEF = 9.5 L/s" label. Clinical Values callout box (upper right) on elevated cream with a green accent bar. First series confirmed #009E73.
+      Legibility verdict: PASS — all text and data clearly readable.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — not pure black, correct.
-      Chrome: light title, light axis titles, light "10.0 L/s" / "0.0 L/s" y-ticks, light legend text — all clearly readable, no dark-on-dark failures.
-      Data: identical to light render — green measured loop, gray dashed predicted loop, red PEF marker, green-accented callout card on elevated dark surface. Only chrome flipped; data colors unchanged.
-      Legibility verdict: PASS
+      Background: warm near-black (#1A1A17), correct — not pure black.
+      Chrome: title, axis titles, and tick labels render in light ink, all clearly readable; no dark-on-dark failures. Grid lines subtle muted tone, visible.
+      Data: colors identical to light render — green measured, gray dashed predicted, red PEF dot/label, green accent bar on the callout box (elevated dark #242420 with light/muted text, readable). Only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark issues; brand green visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All present text readable in both themes; sparse axis ticks
+        comment: Font sizes explicitly set; all text readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; callout and PEF label clear
+        comment: No collisions; bottom legend slightly busy but distinct.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines, dashes, marker all distinct
+        comment: Thick measured lines, dashed predicted, prominent PEF dot.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/gray/red well separated; red is single point
+        comment: Red used only on a single labeled point; not red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800, nothing clipped, good proportions
+        comment: 3200x1800, good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Titles have units but x-axis has no numeric tick labels
+        passed: true
+        comment: Volume (L) / Flow (L/s) with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct backgrounds both themes'
+        comment: 'First series #009E73; backgrounds theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Callout card, accent bar, PEF emphasis
+        comment: Callout box with accent bar, PEF highlight, zero-flow reference line.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, no spines
+        comment: Subtle y-grid, clean; relies on pygal defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Red PEF focal point, clinical callout guides reading
+        comment: Clear focal point (PEF) and clinical callout guide the viewer.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,25 +131,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop
+        comment: Flow-volume loop (XY) correct.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: PEF, FEV1/FVC/PEF box, predicted overlay, closed loop
+        comment: PEF marked+labeled, FEV1/FVC/PEF callout, dashed predicted overlay.
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: X/Y correct but x volume values not readable on axis
+        passed: true
+        comment: Volume x, Flow y, both limbs shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend matches
+        comment: Title format correct; legend labels match series.
     data_quality:
       score: 15
       max: 15
@@ -157,19 +159,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both limbs, predicted, PEF
+        comment: Expiratory rise/decline, inspiratory U-curve, predicted overlay.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible healthy-adult spirometry, neutral
+        comment: 'Healthy adult values: FVC 4.8 L, PEF 9.5 L/s, FEV1 3.8 L (79%).'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible L and L/s values
+        comment: Sensible L and L/s ranges.
     code_quality:
       score: 10
       max: 10
@@ -179,31 +181,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: Flat top-level script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Reasonable SVG post-processing
+        comment: SVG post-processing appropriate for pygal's limits; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png + .html
+        comment: Saves plot-{THEME}.png + .html.
     library_features:
       score: 8
       max: 10
@@ -213,28 +215,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal XY + Style; SVG post-proc for dashes
+        comment: pygal.XY + Style used idiomatically; some manual SVG editing.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive HTML, tooltips, value formatters
+        comment: Interactive SVG/HTML, value formatters, tooltips.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - svg-post-processing
   - annotations
-  - reference-line
-  - closed-loop
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
-  - theme-tokens
-  dataprep:
-  - synthetic-curves
+  dataprep: []
   styling:
   - publication-ready
-  - theme-adaptive
-  - dashed-overlay
+  - edge-highlighting
