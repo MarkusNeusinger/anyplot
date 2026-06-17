@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-17
@@ -41,14 +41,12 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette: measured loop is the brand green (first series); the predicted
-# normal loop is the theme-adaptive muted anchor (a reference baseline sitting
-# behind the data); the deficit ribbon uses the amber caution anchor; PEF focal
-# point uses the matte-red semantic anchor.
+# normal loop is the violet second-series anchor; the deficit ribbon uses the amber
+# caution anchor; PEF focal point uses the matte-red semantic anchor.
 BRAND = "#009E73"  # Imprint position 1 — measured loop
-PREDICTED = INK_MUTED  # muted anchor — predicted normal reference
+PREDICTED = "#C475FD"  # Imprint position 2 (violet) — predicted normal reference
 DEFICIT = "#DDCC77"  # amber anchor — caution / deficit
 PEF_RED = "#AE3030"  # Imprint position 5 (matte red) — PEF emphasis
 
@@ -136,7 +134,7 @@ plot = (
         data=df_pef,
         mapping=aes(x="volume", y="flow", label="label"),
         color=PEF_RED,
-        size=4.6,
+        size=5.2,
         ha="left",
         va="bottom",
         nudge_x=0.35,
@@ -149,7 +147,7 @@ plot = (
         x=0.25,
         y=-3.6,
         label=clinical_text,
-        size=4.4,
+        size=5.0,
         color=INK,
         fill=ELEVATED_BG,
         ha="left",
@@ -179,10 +177,11 @@ plot = (
         panel_grid_minor=element_blank(),
         legend_title=element_text(size=10, weight="bold", color=INK),
         legend_text=element_text(size=9, color=INK_SOFT),
-        legend_position=(0.83, 0.80),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
-        legend_key=element_rect(fill=ELEVATED_BG, color="none"),
-        legend_key_width=30,
+        legend_position=(0.82, 0.76),
+        legend_box="vertical",
+        legend_background=element_rect(fill=ELEVATED_BG + "CC", color=INK_SOFT, size=0.4),
+        legend_key=element_rect(fill="none", color="none"),
+        legend_key_width=26,
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
     )
