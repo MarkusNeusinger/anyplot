@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:47:00Z'
-updated: '2026-06-17T22:35:56Z'
+updated: '2026-06-17T22:54:35Z'
 generated_by: claude-sonnet
 workflow_run: 27723477360
 issue: 4412
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Complete and correct Nyquist implementation with all spec-required features plus
-    above-spec additions (gain/phase margin computation, mirror curve, stability zone,
-    interactive tooltips)
-  - 'Semantic Imprint palette application: green for main data curve, matte red for
-    critical/danger point, blue for phase margin — all semantically justified and
-    correctly drawn from palette positions'
-  - 'Distinctive letsplot features used well: layer_tooltips() API with format chains,
-    arrow() in geom_segment, geom_label box parameters (label_padding, label_r, label_size)'
-  - Fully deterministic, clean KISS code structure with proper HTML+PNG dual output
-  - Informative subtitle communicates system identity and stability verdict; visual
-    hierarchy guides viewer to key stability margins
+  - Correct Nyquist plot with mirror curve, unit circle, and all spec-required elements
+    present
+  - Semantic Imprint palette use — brand green for main curve, matte red (semantic
+    exception) for critical point, blue for mirror/phase margin
+  - 'Thoughtful accessibility fix: PM label switches from blue to INK_SOFT (#B8B7B0)
+    in dark mode to maintain WCAG contrast on #242420 elevated background'
+  - 'Rich control-engineering storytelling: stability zone polygon, gain margin indicator
+    line, direction arrows, and quantitative GM/PM annotations all work together'
+  - 'letsplot-distinctive features used well: layer_tooltips() with custom formatting,
+    arrow() in geom_segment, label_r/label_padding/label_size in geom_label, HTML
+    export'
   weaknesses:
-  - 'PM annotation ''PM = 80.9°'' uses #4467A3 blue text on #242420 dark box in dark
-    mode — contrast ratio ~1.7:1, below WCAG AA 4.5:1; change PM label text color
-    in dark mode to INK_SOFT (#B8B7B0) or use a lighter-themed approach for the label
-    color parameter'
-  - Top plot margin creates disproportionately large whitespace (~12% of canvas height)
-    above the title on the square canvas; reduce plot_margin top value from 20 to
-    10 to better balance the composition
-  - Subtitle font size 9pt is small (36 source-px at scale=4); increase plot_subtitle
-    size from 9 to 10pt for better mobile readability
+  - Spines not explicitly removed — theme_minimal() retains a panel border that is
+    visible as a faint outline in both renders; prefer setting axis_line=element_blank()
+    explicitly to achieve the style-guide L-frame or frameless look
+  - Frequency label text at size=3mm is small relative to the 2400×2400 canvas — consider
+    bumping to size=3.5 for the four ω= labels so they read better on mobile viewports
+  - 'LM-02 gap: the interactive tooltips are letsplot-distinctive but not visible
+    in the PNG; a more visually distinctive letsplot feature in the static render
+    (e.g. geom_livemap or a letsplot-specific coord) would strengthen the library
+    mastery score'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "nyquist-basic · python · letsplot · anyplot.ai" in dark ink at ~70% canvas width, readable. Axis labels Re{G(jω)} / Im{G(jω)} in dark ink. Tick labels clear. Subtitle in small (9pt) but readable dark text. Grid lines subtle.
-      Data: Main Nyquist curve in #009E73 (brand green), line weight 2.0. Mirror curve in #4467A3 (blue) dashed at alpha=0.38. Unit circle in grey dashed. Critical point (-1,0) red X (size=10). Stability zone subtle red polygon fill. GM line dotted red. GM label box red on #FFFDF6. Frequency label boxes INK_SOFT text on #FFFDF6 fill. PM circle open blue ring. PM label blue on #FFFDF6.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "nyquist-basic · python · letsplot · anyplot.ai" fully visible in dark ink (#1A1A17) at top; subtitle in muted ink below. Axis titles "Re{G(jω)}" and "Im{G(jω)}" clearly readable in dark ink. Tick labels readable in INK_SOFT. Grid lines extremely subtle (size=0.12) — present but not dominant.
+      Data: Main Nyquist curve in brand green (#009E73), prominent and clear. Dashed mirror curve in blue (#4467A3) at alpha=0.38, visibly secondary. Unit circle in dashed gray. Critical point marked with red (#AE3030) X at size=10, very prominent. Phase margin point: open blue circle. Stability zone: translucent red polygon around (-1,0). GM label "GM = 15.9 dB" in red on elevated background box. PM label "PM = 80.9°" in blue. Four frequency labels (ω=0.01, ω=0.04, ω=0.40, ω=6.39) in small label boxes along the curve. Three direction arrows showing increasing frequency.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light cream text (#F0EFE8), clearly readable. Axis labels in light text. Tick labels in light text. Subtitle readable. Grid lines subtle but visible. Stability zone polygon shows as white/light outlined ring (default polygon border behavior in dark mode — minor visual inconsistency).
-      Data: Main Nyquist curve remains identical #009E73 green — identical to light render. Mirror curve same blue-dashed. Critical point same red X. GM label box red text on #242420 — readable. Frequency labels: light grey (#B8B7B0) text on #242420 — readable. PM label: #4467A3 blue text on #242420 — contrast ~1.7:1, borderline legibility at mobile scale.
-      Legibility verdict: PASS with note — PM label contrast suboptimal in dark mode (#4467A3 on #242420 fails WCAG AA)
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle visible in light-colored text on dark background. Axis titles and tick labels rendered in light ink (INK_SOFT #B8B7B0 / INK #F0EFE8) — all readable. Grid lines subtle on dark surface. No dark-on-dark failures observed.
+      Data: Main Nyquist curve still in brand green (#009E73) — identical to light render, correct. Mirror curve still blue at alpha=0.38. Critical point red X still prominent (red reads well on dark). GM label in red still visible. PM label uses INK_SOFT (#B8B7B0) instead of blue in dark mode — accessibility-correct choice that keeps it readable on the #242420 elevated background. All frequency labels readable in their elevated-background boxes. Elevated backgrounds (#242420) correctly theme-adapted.
+      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render; chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,82 +58,89 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 16pt, axis_title 12pt, axis_text
-          10pt); well-proportioned. Minor: subtitle at 9pt is small (36 source-px
-          at scale=4).'
+        comment: 'All font sizes explicitly set (title=16, subtitle=10, axis_title=12,
+          axis_text=10, legend text=10). Well-proportioned in both renders. Minor:
+          ω frequency labels at size=3mm are slightly small on the 2400×2400 canvas.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All annotation labels manually nudged with no text-to-text or text-to-data
-          collisions visible.
+        comment: No overlapping elements. GM label above critical point, PM label
+          below phase margin point, frequency labels spread with explicit nudge offsets.
+          All readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve size=2.0 is prominent; critical point size=10 X marker
-          is highly visible; direction arrows clear; PM circle distinct.
+        comment: Main curve size=2.0 prominent, critical X marker size=10/stroke=3
+          very visible, PM circle size=7/stroke=2 clear. Mirror curve intentionally
+          subdued at alpha=0.38. All elements visible and sized appropriately for
+          their semantic role.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Imprint palette is CVD-safe. Deduction: PM label uses #4467A3 blue
-          text on ELEVATED_BG #242420 in dark mode — contrast ratio ~1.7:1, below
-          WCAG AA 4.5:1.'
+        passed: true
+        comment: Imprint palette is CVD-safe. Red for critical point is semantic exception
+          (danger), not sole signal — shape (X) also differentiates it. PM accessibility
+          handled via PM_LABEL_TEXT adaptive coloring in dark mode.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Correct 2400x2400 square canvas with coord_fixed(1). Minor deduction:
-          top margin above title creates ~12% dead space; plot_margin top=20 is disproportionate
-          for the square canvas.'
+        comment: 2400×2400 square canvas correct for Nyquist (1:1 aspect). coord_fixed(ratio=1)
+          keeps unit circle circular. Plot fills canvas well with generous margins.
+          No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes use precise mathematical notation Re{G(jω)} and Im{G(jω)}, more
-          descriptive than the spec's plain Real/Imaginary requirement.
+        comment: Re{G(jω)} and Im{G(jω)} — more informative than the spec's suggested
+          'Real'/'Imaginary'; standard control engineering notation. Title format
+          correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Critical point #AE3030 (semantic
-          danger). PM uses #4467A3 (blue). Backgrounds #FAF8F1 light / #1A1A17 dark.
-          Data colors identical across themes.'
+        comment: 'First series #009E73 (brand green). Critical point uses #AE3030
+          (valid semantic exception for danger). Mirror curve uses #4467A3 (palette
+          position 3). Both renders have correct backgrounds (#FAF8F1 / #1A1A17).
+          Dark chrome fully theme-adapted.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above defaults: semantic Imprint colors, stability-zone
-          polygon, dual margin annotations, direction arrows, informative subtitle.
-          Not quite at FiveThirtyEight/gallery-ready level.'
+        comment: 'Strong design: stability zone polygon, semantic color assignments,
+          direction arrows, multi-layer annotation (GM label, PM label, freq labels,
+          critical point). Well above library defaults. Not quite FiveThirtyEight-level
+          publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base, tick marks removed (axis_ticks=element_blank),
-          subtle grid (size=0.12), custom margins. No explicit spine removal beyond
-          what theme_minimal provides.
+        comment: Grid extremely subtle (major only, size=0.12). Ticks removed (axis_ticks=element_blank).
+          theme_minimal() base. Panel border still partially visible as faint outline
+          — spines not explicitly removed via axis_line=element_blank().
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Stability zone highlights danger zone, GM and PM computed and annotated,
-          direction arrows show frequency sweep, subtitle states stability verdict.
-          Good visual hierarchy.
+        comment: 'Plot tells a clear stability story: subtitle names the verdict,
+          stability zone draws attention to critical point, GM/PM annotations quantify
+          the margins, direction arrows teach the reader how to interpret the diagram.
+          Visual hierarchy via color+size guides the eye.'
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +150,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane, frequency-parameterized.
+        comment: 'Correct Nyquist plot: complex-plane frequency response. Includes
+          mirror curve (negative frequencies), 1:1 aspect ratio.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Critical point marked with red X, unit circle drawn, frequency values
-          annotated at 4 key points, direction arrows on curve, 1:1 aspect ratio via
-          coord_fixed.
+        comment: 'All spec features present: critical point (-1,0) marked with red
+          X, unit circle drawn, frequency values annotated at 4 key points, direction
+          arrows on curve, 1:1 aspect ratio, axes labeled.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, 500 log-spaced frequency points, negative-frequency
-          mirror included.
+        comment: Real part on X, imaginary part on Y. Full frequency range (0.01–100
+          rad/s) with 500 log-spaced points, all visible on the canvas.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'nyquist-basic · python · letsplot · anyplot.ai'.
-          No legend needed; annotations serve that role.
+        comment: 'Title: ''nyquist-basic · python · letsplot · anyplot.ai'' — correct
+          format. No legend needed (all series identified via annotations directly
+          on plot).'
     data_quality:
       score: 15
       max: 15
@@ -175,23 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows main curve, negative-frequency mirror, unit circle, critical
-          point, gain margin, phase margin, direction arrows, frequency labels — comprehensive
-          coverage.
+        comment: 'Shows all Nyquist plot features: main curve, mirror curve, unit
+          circle, critical point, gain margin, phase margin, frequency annotations,
+          direction arrows. Comprehensive.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real third-order transfer function G(s) = 2/[(s+1)(0.5s+1)(0.2s+1)],
-          a standard control systems model. Scientifically accurate and neutral.
+        comment: Real third-order transfer function G(s) = 2/((s+1)(0.5s+1)(0.2s+1)),
+          physically plausible and stable (GM=15.9dB, PM=80.9°). Classic control systems
+          domain — neutral and scientifically accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.01-100 rad/s realistic; GM = 15.9 dB and PM = 80.9°
-          are physically plausible; axis ranges center on the curve naturally.
+        comment: Logarithmic frequency spacing 0.01–100 rad/s is the standard analysis
+          range. Gain/phase values computed correctly from the transfer function via
+          scipy. Proportions factually correct.
     code_quality:
       score: 10
       max: 10
@@ -201,36 +212,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data computation → plot construction → save; no
-          functions or classes.
+        comment: 'Linear flow: imports → chrome tokens → data computation → dataframes
+          → plot construction → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic computation from fixed transfer function; no
-          randomness.
+        comment: Fully deterministic — scipy transfer function computation, no random
+          numbers.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, lets_plot (wildcard), scipy.signal — all used, none
-          extraneous.
+        comment: os, numpy, pandas, lets_plot (wildcard required), scipy.signal —
+          all used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized multi-layer construction; edge-case handling for margin
-          computation appropriate; no fake functionality.
+        comment: Clean and Pythonic. Conditional PM annotation (if df_pm_point is
+          not None) is appropriate domain logic. PM_LABEL_TEXT adaptive coloring is
+          a thoughtful accessibility detail.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html; current letsplot API
-          throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsave with scale=4
+          for correct 2400×2400 output. Current letsplot API.
     library_mastery:
       score: 9
       max: 10
@@ -240,27 +252,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of ggplot grammar: multiple geom layers, aes() mappings,
-          coord_fixed(), labs(), theme() with element_* functions, ggsize(), ggsave(scale=4).'
+        comment: 'Expertly uses grammar-of-graphics: layered geom composition, coord_fixed(),
+          ggsize(), theme() overrides, geom_label() with letsplot-specific parameters
+          (label_r, label_padding, label_size, fontface).'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses letsplot-distinctive features: layer_tooltips() with .format()/.line()
-          chains, arrow(length=12, type=''closed'') in geom_segment, geom_label box
-          parameters (label_padding, label_r, label_size), HTML export.'
-  verdict: REJECTED
+        comment: 'Uses letsplot-specific features: layer_tooltips() with .format()/.line()
+          chaining, arrow(length, type=''closed'') in geom_segment, label_r/label_padding/label_size
+          on geom_label, HTML export. The interactive tooltips are genuinely distinctive
+          but don''t manifest visually in the PNG.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling

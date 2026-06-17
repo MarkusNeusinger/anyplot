@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: letsplot 4.10.1 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-17
+Quality: 92/100 | Updated: 2026-06-17
 """
 # ruff: noqa: F405
 
