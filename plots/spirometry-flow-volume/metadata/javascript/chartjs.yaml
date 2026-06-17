@@ -1,0 +1,243 @@
+library: chartjs
+language: javascript
+specification_id: spirometry-flow-volume
+created: '2026-06-17T04:17:11Z'
+updated: '2026-06-17T04:20:29Z'
+generated_by: claude-opus
+workflow_run: 27665231532
+issue: 4557
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'First categorical series is brand green #009E73; predicted-normal overlay uses
+    a neutral dashed INK_SOFT line — clean, CVD-safe two-curve contrast that holds
+    in both themes.'
+  - 'Closed flow-volume loop is anatomically correct: sharp sqrt rise to PEF, near-linear
+    expiratory decline, symmetric U-shaped inspiratory limb below the emphasized zero-flow
+    line.'
+  - Custom afterDatasetsDraw plugin renders a rounded elevated clinical-values card
+    (FVC / FEV1 / PEF, Measured vs Predicted) plus a labeled PEF marker — genuine
+    Chart.js mastery, not fake interactivity.
+  - Zero-flow y=0 gridline is emphasized via a per-tick grid color/width callback,
+    reinforcing the expiratory-above / inspiratory-below split.
+  - Theme tokens threaded through every chrome element; data colours identical light/dark,
+    only background/text/grid flip. Title matches the mandated anyplot format exactly.
+  weaknesses:
+  - Single buildLoop() helper arrow function is used for data generation — acceptable
+    and idiomatic for the closed-loop construction, but slightly above the strict
+    KISS no-functions ideal (CQ-01).
+  - Title at 22px is long (~57 chars); legible at full size but margins are tight
+    when scaled toward ~400px mobile — could verify it does not crowd at small widths
+    (VQ-01).
+  - Inspiratory limb is a mathematically perfect half-ellipse; clinically plausible
+    but slightly idealized versus a real effort-dependent inspiratory curve (minor
+    DQ realism).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no pure-white plot panel.
+      Chrome: dark title "spirometry-flow-volume · javascript · chartjs · anyplot.ai", grey subtitle, axis titles "Volume (L)" / "Flow (L/s)", soft-grey tick labels, subtle grid, emphasized darker zero-flow line — all clearly readable.
+      Data: measured loop in brand green #009E73 (solid, ~3.5px); predicted-normal loop in neutral grey dashed; green PEF dot with "PEF" label; rounded elevated clinical card top-right with Meas. values in green and Pred. in grey.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: light/white title, subtitle, axis titles, light-grey ticks, subtle grid, light-grey emphasized zero line — all readable, no dark-on-dark text. Clinical card sits on an elevated dark surface with light-grey/green text legible.
+      Data: identical to light render — green #009E73 measured loop and grey dashed predicted loop; only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized and readable in both themes; long 22px
+          title slightly tight at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clinical card, PEF label, legend and curves never collide.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Solid 3.5px / dashed 2.5px lines and 7px PEF marker all prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs neutral dashed; CVD-safe, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions, nothing clipped; canvas gate not triggered.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume (L) / Flow (L/s) with units; correct title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Series 1 = #009E73; backgrounds #FAF8F1 / #1A1A17; both themes correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clinical-values card, PEF annotation, dashed reference overlay —
+          clear intentional polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, emphasized zero line, rounded elevated card, generous
+          whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Green measured loop is the focal point against dashed predicted normal;
+          card guides interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct closed flow-volume loop (scatter + showLine).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: PEF marker, FEV1/FVC/PEF values, dashed predicted overlay, closed
+          loop, axis labels all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume on x, flow on y; expiratory above, inspiratory below zero.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exact; legend Measured / Predicted normal, PEF filtered.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Rise-to-PEF, linear decline, inspiratory U, predicted overlay, closed
+          loop all shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Clinically plausible neutral values (FVC 4.6/5.2, PEF 8.6/10.2, FEV1
+          3.8/4.2).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Volumes and flows in realistic spirometry ranges.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One buildLoop() data-gen helper + annotation plugin; idiomatic but
+          above strict no-function ideal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded parameters.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is a provided global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean canvas drawing; no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, responsive, harness owns output files.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scatter + showLine datasets, options/scales/plugins structured idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin, per-tick grid color/width callback,
+          roundRect card.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - edge-highlighting
