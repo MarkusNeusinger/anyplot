@@ -1,14 +1,32 @@
-""" pyplots.ai
+"""pyplots.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-19
+Library: pygal 3.1.0 | Python 3.13.12
+Quality: regen | Created: 2026-06-17
 """
+
+import os
 
 import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme-adaptive chrome (Imprint palette) — single script renders both themes
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette positions used here:
+#   limb leads      -> brand green  #009E73 (first categorical series, always)
+#   precordial V1-6 -> blue         #4467A3
+#   ECG paper grid  -> matte red    #AE3030 (semantic: ECG grid is universally red)
+LIMB = "#009E73"
+PRECORDIAL = "#4467A3"
+# Grid intensity tuned per theme so the red ECG grid reads on cream and near-black.
+GRID_MAJOR = "rgba(174,48,48,0.55)" if THEME == "light" else "rgba(174,48,48,0.60)"
+GRID_MINOR = "rgba(174,48,48,0.20)" if THEME == "light" else "rgba(174,48,48,0.26)"
 
 # Data — synthetic ECG via Gaussian pulse model (flat script, no helper functions)
 np.random.seed(42)
@@ -67,7 +85,7 @@ rhythm_signal += np.random.normal(0, 0.012, rhythm_samples)
 # Clinical 3x4 grid layout
 grid_layout = [["I", "aVR", "V1", "V4"], ["II", "aVL", "V2", "V5"], ["III", "aVF", "V3", "V6"]]
 
-# Layout parameters
+# Layout parameters (data units)
 col_width = 2.5
 col_gap = 0.3
 col_offset = col_width + col_gap
@@ -76,56 +94,46 @@ num_rows = 3
 num_cols = 4
 amp_scale = 1.5
 
-# Chart dimensions
+# Chart coordinate range
 x_min = -0.6
 x_max = num_cols * col_offset + 0.1
 y_min = -num_rows * row_height - 2.5
 y_max = row_height * 0.7
 
-# Color scheme — ECG paper pink/red with precordial emphasis
-grid_major_color = "#D4A0A0"
-grid_minor_color = "#E8C8C8"
-waveform_color = "#1A1A1A"
-precordial_color = "#0D47A1"  # Deep blue for V1-V6 R-wave progression emphasis
-bg_color = "#FFF5F0"
-paper_color = "#FFF0E8"
+# Canvas (hard rule: landscape 3200x1800) and margins (kept pure so the
+# injected-label affine transform below matches pygal's plot box).
+WIDTH, HEIGHT = 3200, 1800
+M_TOP, M_BOTTOM, M_LEFT, M_RIGHT = 120, 40, 24, 24
 
-# Build color tuple for all series
-# 4 grid series + 3 calibration + 12 waveforms + 1 rhythm = 20 series
-grid_colors = (grid_major_color,) * 2 + (grid_minor_color,) * 2
-cal_colors = (waveform_color,) * 3
-# Waveforms: limb leads black, precordial leads blue for storytelling
+# Series colors in add() order: 4 grid + 3 calibration + 12 waveforms + 1 rhythm
+grid_colors = (GRID_MAJOR, GRID_MAJOR, GRID_MINOR, GRID_MINOR)
+cal_colors = (INK,) * num_rows
 waveform_colors = ()
 for row_leads in grid_layout:
     for lead_name in row_leads:
-        if lead_name.startswith("V"):
-            waveform_colors += (precordial_color,)
-        else:
-            waveform_colors += (waveform_color,)
-rhythm_color = (waveform_color,)
+        waveform_colors += (PRECORDIAL,) if lead_name.startswith("V") else (LIMB,)
+rhythm_color = (LIMB,)
 all_colors = grid_colors + cal_colors + waveform_colors + rhythm_color
 
 ecg_style = Style(
-    background=bg_color,
-    plot_background=paper_color,
-    foreground="#333333",
-    foreground_strong="#1A1A1A",
-    foreground_subtle="#E8D0D0",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=all_colors,
-    title_font_size=48,
     label_font_size=0,
     major_label_font_size=0,
     legend_font_size=0,
     value_font_size=0,
-    stroke_width=2,
+    stroke_width=2.5,
     font_family="monospace",
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=WIDTH,
+    height=HEIGHT,
     style=ecg_style,
-    title="ecg-twelve-lead \u00b7 pygal \u00b7 pyplots.ai",
     show_dots=False,
     stroke=True,
     show_x_guides=False,
@@ -136,89 +144,112 @@ chart = pygal.XY(
     allow_interruptions=True,
     js=[],
     print_values=False,
-    x_title="25 mm/s  |  10 mm/mV",
-    margin_top=60,
-    margin_bottom=50,
-    margin_left=20,
-    margin_right=20,
+    margin_top=M_TOP,
+    margin_bottom=M_BOTTOM,
+    margin_left=M_LEFT,
+    margin_right=M_RIGHT,
     range=(y_min, y_max),
     xrange=(x_min, x_max),
 )
 
-# Major grid lines (every 0.5 mV vertical, every 0.2s horizontal)
+# ECG paper grid — major lines every 0.5 mV / 0.2 s, minor every 0.1 mV / 0.04 s
 major_h = []
 for y_val in np.arange(y_min, y_max + 0.01, 0.5):
     major_h.extend([(x_min, float(y_val)), (x_max, float(y_val)), None])
-chart.add(None, major_h, show_dots=False, stroke_style={"width": 1.8})
+chart.add(None, major_h, show_dots=False, stroke_style={"width": 1.6})
 
 major_v = []
 for x_val in np.arange(x_min, x_max + 0.01, 0.2):
     major_v.extend([(float(x_val), y_min), (float(x_val), y_max), None])
-chart.add(None, major_v, show_dots=False, stroke_style={"width": 1.8})
+chart.add(None, major_v, show_dots=False, stroke_style={"width": 1.6})
 
-# Minor grid lines (every 0.1 mV vertical, every 0.04s horizontal)
 minor_h = []
 for y_val in np.arange(y_min, y_max + 0.01, 0.1):
     minor_h.extend([(x_min, float(y_val)), (x_max, float(y_val)), None])
-chart.add(None, minor_h, show_dots=False, stroke_style={"width": 0.5})
+chart.add(None, minor_h, show_dots=False, stroke_style={"width": 0.6})
 
 minor_v = []
 for x_val in np.arange(x_min, x_max + 0.01, 0.04):
     minor_v.extend([(float(x_val), y_min), (float(x_val), y_max), None])
-chart.add(None, minor_v, show_dots=False, stroke_style={"width": 0.5})
+chart.add(None, minor_v, show_dots=False, stroke_style={"width": 0.6})
 
-# Calibration pulse (1mV) at start of each row
+# 1 mV calibration pulse at the left margin of each row
 for row in range(num_rows):
     y_base = -row * row_height
-    cal = [(-0.40, y_base), (-0.40, y_base + 1.0 * amp_scale), (-0.20, y_base + 1.0 * amp_scale), (-0.20, y_base)]
-    chart.add(None, cal, show_dots=False, stroke_style={"width": 4, "linecap": "square", "linejoin": "miter"})
+    cal = [(-0.42, y_base), (-0.42, y_base + 1.0 * amp_scale), (-0.22, y_base + 1.0 * amp_scale), (-0.22, y_base)]
+    chart.add(None, cal, show_dots=False, stroke_style={"width": 3.0, "linecap": "square", "linejoin": "miter"})
 
-# ECG waveforms — downsample for performance, use secondary_series for precordial emphasis
+# ECG waveforms — limb leads green, precordial leads blue (downsampled for size)
 ds = 3
 t_ds = t[::ds]
-
 for row_idx, row_leads in enumerate(grid_layout):
     for col_idx, lead_name in enumerate(row_leads):
         signal = leads[lead_name][::ds] * amp_scale
         x_off = col_idx * col_offset
         y_off = -row_idx * row_height
         pts = list(zip((t_ds + x_off).tolist(), (signal + y_off).tolist(), strict=True))
-        stroke_w = 5.0 if lead_name.startswith("V") else 4.0
+        stroke_w = 3.6 if lead_name.startswith("V") else 3.0
         chart.add(None, pts, show_dots=False, stroke_style={"width": stroke_w, "linecap": "round", "linejoin": "round"})
 
-# Lead II rhythm strip across bottom
+# Lead II rhythm strip across the bottom (full width)
 rhythm_x_scale = (x_max - x_min) / rhythm_duration
 rhythm_ds = 4
 rx = rhythm_t[::rhythm_ds] * rhythm_x_scale + x_min
 ry = rhythm_signal[::rhythm_ds] * amp_scale + (-num_rows * row_height - 1.0)
 rhythm_pts = list(zip(rx.tolist(), ry.tolist(), strict=True))
-chart.add(None, rhythm_pts, show_dots=False, stroke_style={"width": 4.5, "linecap": "round", "linejoin": "round"})
+chart.add(None, rhythm_pts, show_dots=False, stroke_style={"width": 3.2, "linecap": "round", "linejoin": "round"})
 
-# Render SVG
+# Render SVG, then inject title + lead labels + scale annotation as text.
 svg = chart.render(is_unicode=True)
 
-# Inject lead labels and scale annotations via SVG text elements
-label_style = 'font-family="monospace" font-size="48" font-weight="bold"'
+# Affine transform: data coords -> source pixels within the pure margin box.
+plot_x0, plot_w = M_LEFT, WIDTH - M_LEFT - M_RIGHT
+plot_y0, plot_h = M_TOP, HEIGHT - M_TOP - M_BOTTOM
+
+
+def to_px(x, y):
+    px = plot_x0 + (x - x_min) / (x_max - x_min) * plot_w
+    py = plot_y0 + (y_max - y) / (y_max - y_min) * plot_h
+    return px, py
+
+
 labels_svg = ""
+
+# Title (centered, INK)
+labels_svg += (
+    f'<text x="{WIDTH / 2:.0f}" y="78" font-family="monospace" font-size="60" '
+    f'font-weight="bold" text-anchor="middle" fill="{INK}">'
+    "ecg-twelve-lead · pygal · pyplots.ai</text>\n"
+)
+
+# Lead labels above each waveform
 for row_idx, row_leads in enumerate(grid_layout):
     for col_idx, lead_name in enumerate(row_leads):
-        px = 65 + col_idx * 1110
-        py = 130 + row_idx * 640
-        fill = precordial_color if lead_name.startswith("V") else "#1A1A1A"
-        labels_svg += f'<text x="{px}" y="{py}" {label_style} fill="{fill}">{lead_name}</text>\n'
+        x_off = col_idx * col_offset
+        y_off = -row_idx * row_height
+        px, py = to_px(x_off + 0.05, y_off + 1.75)
+        labels_svg += (
+            f'<text x="{px:.0f}" y="{py:.0f}" font-family="monospace" font-size="46" '
+            f'font-weight="bold" fill="{INK}">{lead_name}</text>\n'
+        )
 
 # Rhythm strip label
-labels_svg += f'<text x="65" y="{130 + 3 * 640}" {label_style} fill="#1A1A1A">II (rhythm)</text>\n'
-
-# Scale calibration text near bottom-right
+rpx, rpy = to_px(x_min + 0.08, -num_rows * row_height - 1.0 + 1.7)
 labels_svg += (
-    '<text x="4500" y="2650" font-family="monospace" font-size="36" '
-    'fill="#666666" text-anchor="end">25 mm/s  ·  10 mm/mV  ·  1 mV cal</text>\n'
+    f'<text x="{rpx:.0f}" y="{rpy:.0f}" font-family="monospace" font-size="46" '
+    f'font-weight="bold" fill="{INK}">II · rhythm</text>\n'
+)
+
+# Single scale annotation, bottom-right (no longer duplicated with x_title)
+labels_svg += (
+    f'<text x="{WIDTH - M_RIGHT - 6}" y="{HEIGHT - 16}" font-family="monospace" '
+    f'font-size="44" fill="{INK_MUTED}" text-anchor="end">'
+    "25 mm/s · 10 mm/mV · 1 mV cal</text>\n"
 )
 
 svg = svg.replace("</svg>", labels_svg + "</svg>")
 
-# Save
-with open("plot.html", "w") as f:
+# Save — theme-suffixed PNG (gallery) + HTML (interactive detail view)
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(svg)
-cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to="plot.png", dpi=96)
+cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=WIDTH, output_height=HEIGHT)
