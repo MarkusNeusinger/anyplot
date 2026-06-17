@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: letsplot 4.10.1 | Python 3.13.12
-Quality: 90/100 | Regenerated: 2026-06-17
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
