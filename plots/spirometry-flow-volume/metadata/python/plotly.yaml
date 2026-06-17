@@ -1,113 +1,138 @@
 library: plotly
+language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:07Z'
-updated: '2026-03-18T22:29:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23269660786
+updated: '2026-06-17T04:02:17Z'
+generated_by: claude-opus
+workflow_run: 27664597060
 issue: 4557
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/plotly/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - 'Excellent data storytelling: shaded Flow Deficit area immediately communicates
-    clinical insight of mild obstruction'
-  - Professional clinical annotation box with styled header and key spirometry values
-  - 'Strong visual hierarchy: thick dark measured curve vs thin dotted gray predicted
-    makes comparison effortless'
-  - Complete spec compliance with PEF marker, FEV1 reference line, and all clinical
-    values annotated
-  - Clean well-organized code with appropriate Plotly Graph Objects usage
+  - 'Closed flow-volume loop is anatomically correct: sharp expiratory rise to PEF
+    then linear decline (upper limb), symmetric U-shaped inspiratory limb below the
+    zero line — exactly what the spec describes.'
+  - 'All required clinical landmarks present: blue diamond PEF marker sitting on the
+    curve peak with an arrow annotation, FEV1 dash-dot reference line + label, and
+    a Spirometry Results box reporting FEV1, FVC, FEV1/FVC (74%), and PEF.'
+  - Dashed muted predicted-normal loop overlaid behind the solid green measured loop,
+    with the gap rendered as a semantic matte-red (#AE3030) Flow Deficit fill — a
+    sophisticated visual that tells the obstruction story.
+  - 'First series is brand green #009E73; PEF blue (#4467A3) and deficit red are from
+    the Imprint palette; backgrounds are correct #FAF8F1 / #1A1A17 and identical data
+    colors carry across both themes (measured/PEF/deficit).'
+  - Both renders are fully legible — title, axis labels, ticks, and all annotation
+    boxes read clearly with no dark-on-dark or light-on-light failures; canvas dimension
+    gate passed.
+  - 'Clean KISS plotly graph_objects code: seeded data, only used imports, idiomatic
+    add_trace/add_annotation/add_shape/add_hline, hovertemplates, fill=''toself'',
+    spline shape, legendrank ordering, scale=4 landscape export with HTML.'
   weaknesses:
-  - PEF diamond marker sits slightly above actual curve peak due to mathematical model
-    not reaching exact PEF value
-  - Predicted loop uses dotted line instead of dashed as specified in spec
-  image_description: 'The plot displays a spirometry flow-volume loop on a clean white
-    background. A thick dark navy blue solid line shows the measured flow-volume loop
-    — the expiratory limb rises sharply toward PEF then declines roughly linearly,
-    while the inspiratory limb forms a symmetric U-shape reaching about -5.5 L/s.
-    A gray dotted line shows the predicted normal loop, which is larger in both volume
-    and flow. A light salmon/pink shaded area fills the gap between the predicted
-    and measured expiratory curves, labeled "Flow Deficit" in the legend. A red diamond
-    marker with white edge highlights the PEF point, connected by an arrow to an annotation
-    box reading "PEF = 8.5 L/s". A vertical dash-dot line at volume 3.1 L marks FEV1
-    with a label below. An annotation box in the upper right displays "Spirometry
-    Results" with FEV1: 3.1 L, FVC: 4.2 L, FEV1/FVC: 74%, PEF: 8.5 L/s. Legend in
-    the bottom-left shows Measured, Predicted Normal, and Flow Deficit. Title reads
-    "spirometry-flow-volume · plotly · pyplots.ai". Axes labeled "Volume (L)" and
-    "Flow (L/s)".'
+  - 'Minor: the Predicted Normal line uses the theme-adaptive INK_MUTED token (dark
+    gray #6B6A63 in light, light gray #A8A79F in dark), so its hue flips between themes.
+    It reads as a de-emphasized reference rather than a palette series so impact is
+    small, but the style guide prefers data-series colors to be identical across themes
+    — consider a fixed neutral if strict parity is desired.'
+  - 'Minor: in the dark render the Spirometry Results box and FEV1 label backgrounds
+    have slightly lower contrast against the near-black surface than in light; still
+    readable, but could be nudged for extra punch.'
+  image_description: "Light render (plot-light.png):\n  Background: warm off-white\
+    \ (~#FAF8F1), correct.\n  Chrome: dark title \"spirometry-flow-volume · python\
+    \ · plotly · anyplot.ai\" centered; \"Volume (L)\" x-label and \"Flow (L/s)\"\
+    \ y-label; tick labels in soft ink. All readable.\n  Data: solid brand-green (#009E73)\
+    \ measured loop; dashed gray predicted-normal loop; matte-red (#AE3030, low alpha)\
+    \ Flow Deficit fill between expiratory limbs; blue (#4467A3) diamond PEF marker\
+    \ with boxed \"PEF = 8.5 L/s\" arrow annotation; dash-dot FEV1 reference line\
+    \ + label; top-right Spirometry Results box. First series is #009E73. \n  Legibility\
+    \ verdict: PASS\n\nDark render (plot-dark.png):\n  Background: warm near-black\
+    \ (~#1A1A17), correct.\n  Chrome: light-gray title and labels, light tick labels\
+    \ — all clearly visible, no dark-on-dark.\n  Data: identical green measured loop,\
+    \ blue PEF diamond, and red deficit fill as the light render (only the muted predicted-normal\
+    \ gray flips, plus chrome). Brand green clearly visible.\n  Legibility verdict:\
+    \ PASS"
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 15-17pt'
+        comment: Fonts explicitly set (title 16, labels 12, ticks 10); readable in
+          both themes and when scaled down.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: PEF box, clinical box, FEV1 label and legend all clear of each other
+          and the data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Measured line width 4, predicted 2.5, PEF diamond size 18 with white
-          edge. All clearly visible
+        comment: Measured line width 4, predicted 2.5, PEF marker size 16 — all prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Navy vs gray vs red reinforced by line style differences. Colorblind-safe
+        comment: Green/blue/gray/red Imprint colors are CVD-safe; no red-green sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, plot fills ~65% of canvas, balanced margins
+        comment: Canvas gate passed; balanced margins, nothing clipped, centered title.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) - descriptive with units
+        comment: Volume (L) and Flow (L/s) with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint blue/red; correct theme backgrounds.
+          Minor: predicted gray is theme-adaptive.'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom palette, styled annotation box, shaded deficit area, diamond
-          marker. Above defaults with intentional hierarchy
+        comment: Deficit fill, clinical box, landmark diamond + arrow — strong intentional
+          polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: plotly_white template, x grid removed, y grid subtle dotted, outside
-          ticks, generous margins
+        comment: No spines, subtle y-grid only, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Shaded Flow Deficit area communicates clinical story. PEF highlighted.
-          FEV1 reference. Clinical summary box
+        comment: Clear PEF focal point; deficit shading communicates obstruction vs
+          predicted.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -115,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+        comment: Correct closed flow-volume loop.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All key features present. Minor: dotted instead of dashed for predicted,
-          PEF marker slightly above curve'
+        comment: PEF marked, FEV1/FVC/PEF annotated, dashed predicted overlay, closed
+          loop.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on X, Flow on Y, correct mapping
+        comment: X=volume, Y=flow; expiratory upper, inspiratory lower.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear and descriptive
+        comment: Title format correct; legend Measured/Predicted Normal/Flow Deficit.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -144,22 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both limbs, predicted vs measured, PEF, FEV1, FVC, FEV1/FVC ratio
-          showing mild obstruction
+        comment: Both limbs, predicted overlay, deficit, landmarks.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real spirometry scenario for patient with mild obstruction. Neutral
-          medical context
+        comment: 'Mild-obstruction case: FVC 4.2, FEV1 3.1, ratio 74%, PEF 8.5 — plausible
+          and neutral.'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Clinically realistic values. Minor: mathematical model peak slightly
-          below stated PEF causing marker gap'
+        comment: Liters and L/s at sensible magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -169,33 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes'
+        comment: No functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) + deterministic curves.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: os, numpy, plotly.graph_objects all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, elegant interpolation for shaded deficit area
+        comment: Clear, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700. Current API
-    library_mastery:
-      score: 7
+        comment: plot-{THEME}.png + .html, scale=4 landscape.
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -203,24 +226,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Fluent GO usage with add_trace, add_annotation, add_shape, hovertemplate
+        comment: graph_objects with add_trace/add_annotation/add_shape/add_hline.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: fill=toself, hovertemplate, hoverlabel, spline, legendrank, write_html
+        comment: hovertemplate, fill='toself', paper-ref annotations, legendrank,
+          spline shape.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
-  - html-export
+  - reference-lines
+  - fill-between
+  - landmark-marker
   patterns:
   - data-generation
   dataprep:
   - interpolation
+  - normalization
   styling:
-  - grid-styling
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
