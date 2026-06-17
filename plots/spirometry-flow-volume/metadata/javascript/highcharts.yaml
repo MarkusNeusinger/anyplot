@@ -1,0 +1,252 @@
+library: highcharts
+language: javascript
+specification_id: spirometry-flow-volume
+created: '2026-06-17T04:11:00Z'
+updated: '2026-06-17T04:15:10Z'
+generated_by: claude-opus
+workflow_run: 27664945954
+issue: 4557
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Textbook flow-volume loop: sharp expiratory rise to PEF then near-linear decline,
+    symmetric U-shaped inspiratory limb below the zero line, and a properly closed
+    loop sharing the (0,0) and (FVC,0) endpoints.'
+  - 'First series is brand green #009E73 (measured); predicted-normal reference uses
+    the theme-adaptive muted anchor as a dashed overlay — a correct, semantically
+    appropriate use of the Imprint anchors.'
+  - 'All spec features present: PEF marker with label, clinical callout box (FEV1,
+    FVC, PEF, FEV1/FVC), dashed predicted-normal overlay, zero-flow plotLine with
+    Expiration/Inspiration annotation, and unit-bearing axis titles.'
+  - 'Idiomatic Highcharts: linkedTo '':previous'' pairs each limb into one legend
+    entry, chart.renderer.label builds the callout from the core SVGRenderer (no annotations
+    module), plotLines draws the zero-flow reference — all within the core bundle.'
+  - 'Theme adaptation is clean in both renders: warm off-white #FAF8F1 / warm near-black
+    #1A1A17 backgrounds, identical data colors, only chrome flips; all text readable
+    in both themes.'
+  - Deterministic in-memory data with physiologically plausible normal-adult values
+    (FVC 4.8 L, FEV1 3.9 L, FEV1/FVC 81%, PEF 9.4 L/s).
+  weaknesses:
+  - 'Minor: the ''PEF · 9.4 L/s'' data label sits where the dashed predicted-normal
+    curve peaks, so the dashed line grazes the text in both renders. Still readable,
+    but nudging the label down/right (or away from the predicted peak) would remove
+    the slight collision.'
+  - Data-generation is wrapped in two helper functions (expiratoryLimb/inspiratoryLimb);
+    idiomatic for curve synthesis but a small deviation from the strict KISS imports→data→plot
+    flow.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), not pure white. Correct.
+      Chrome: dark title "spirometry-flow-volume · javascript · highcharts · anyplot.ai", grey subtitle, dark-grey axis titles "Volume (L)" / "Flow (L/s)", tick labels and gridlines all clearly readable. Callout box (top-right) has a light elevated fill with dark text. All readable.
+      Data: measured loop is brand green #009E73 (solid, ~3.5px); predicted-normal is a muted-grey dashed overlay; PEF point is a green-filled marker with dark ink stroke. First series confirmed #009E73.
+      Legibility verdict: PASS (only nit: dashed predicted line grazes the "PEF · 9.4 L/s" label, text still legible).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), not pure black. Correct.
+      Chrome: light title/labels (#F0EFE8 / #B8B7B0), subtle light gridlines, callout box with dark elevated fill (#242420) and light text — no dark-on-dark anywhere. All readable.
+      Data: colors identical to light render — measured #009E73 solid, predicted muted-grey dashed, PEF green marker (lighter ink stroke). Only chrome flipped.
+      Legibility verdict: PASS (same minor PEF-label/dashed-line graze as light).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (22/16/14px), well-proportioned, readable
+          in both themes and at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout; only a thin dashed predicted line grazing the PEF label
+          — readable, not a real collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths (3.5 measured / 2.5 predicted) and PEF marker (r=7) well-tuned
+          for the dense smooth curves.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs muted-grey distinguished by hue AND linestyle (solid/dashed);
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Loop fills the canvas, balanced margins, callout box placed inside
+          top-right whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume (L) / Flow (L/s) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; predicted uses theme-adaptive muted anchor;
+          backgrounds #FAF8F1/#1A1A17; chrome theme-correct both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: clinical callout, PEF marker, zero-flow
+          annotation, measured-vs-predicted distinction.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, styled callout box; no chartjunk.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Measured-vs-predicted comparison plus clinical values box guide interpretation;
+          green focal point over recessive grey.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct flow-volume loop with both limbs and closed shape.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: PEF marked, FEV1/FVC/PEF annotated, dashed predicted overlay, closed
+          loop — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume on x, Flow on y; expiratory positive, inspiratory negative.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels Measured / Predicted
+          normal.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows expiratory + inspiratory limbs, measured + predicted, PEF —
+          all aspects of the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral clinical pulmonary-function scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FVC 4.8 L, FEV1 3.9 L, FEV1/FVC 81%, PEF 9.4 L/s — physiologically
+          correct for a healthy adult.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small curve-generation helpers; idiomatic but a slight deviation
+          from strict imports→data→plot.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded parameters, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Highcharts global only; no imports/unused code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; SVGRenderer callout is the right tool.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current Highcharts.chart API; harness owns output naming.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: linkedTo paired limbs, plotLines, dataLabels, scatter overlay — high-level
+          API used well.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.label (core SVGRenderer) callout, linkedTo ':previous',
+          plotLine label — distinctive Highcharts capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - publication-ready

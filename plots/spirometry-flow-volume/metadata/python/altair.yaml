@@ -1,49 +1,60 @@
 library: altair
+language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:16:42Z'
-updated: '2026-03-18T22:48:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23269660919
+updated: '2026-06-17T04:07:23Z'
+generated_by: claude-opus
+workflow_run: 27664732683
 issue: 4557
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/altair/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent spec compliance with all required clinical annotations (PEF, FEV1, FVC)
-    present and correctly positioned
-  - Realistic spirometry data with clinically meaningful FEV1/FVC ratio suggesting
-    mild obstruction
-  - Strong use of Altair-distinctive interactive features (selection_point, transform_filter,
-    hover tooltips)
-  - Intentional color hierarchy creates clear visual storytelling (red PEF focal point,
-    orange FEV1 reference, blue/gray measured/predicted)
-  - Very clean code structure with appropriate complexity
+  - 'First series is brand green #009E73 (measured loop) and the predicted overlay
+    uses the theme-adaptive muted anchor as a dashed reference — textbook Imprint
+    palette discipline.'
+  - 'Strong data storytelling: red #AE3030 PEF marker is a clear focal point, FEV1
+    blue reference line, and a clinical FVC/FEV1/PEF callout block guide clinical
+    interpretation.'
+  - 'Both renders are fully theme-correct — warm off-white #FAF8F1 / warm near-black
+    #1A1A17 backgrounds, all chrome flips cleanly, data colors identical across themes,
+    no dark-on-dark text.'
+  - 'All spec features present: closed flow-volume loop, sharp rise to PEF then linear
+    decline, U-shaped inspiratory limb, dashed predicted overlay, Expiration/Inspiration
+    region labels, zero-flow reference line.'
+  - 'Distinctive Altair usage: layered composition plus a real interactive nearest-point
+    hover (rule + highlighted point + tooltip) exported to HTML — genuine interactivity,
+    not faked UI.'
+  - Canvas is exactly 3200x1800 via the prescribed render-then-pad approach; KISS
+    linear script, seeded RNG, clean imports.
   weaknesses:
-  - Region labels (Expiration/Inspiration) at 14pt are slightly small relative to
-    other text
-  - Axis domain lines still present - removing them would further refine the visual
-    design
-  image_description: 'The plot displays a spirometry flow-volume loop with Volume
-    (L) on the x-axis (ranging from -0.4 to 6.0) and Flow (L/s) on the y-axis (ranging
-    from -8 to 12). Two loops are shown: a solid blue "Measured" curve and a dashed
-    gray "Predicted" curve. The measured expiratory limb rises sharply from 0 to a
-    Peak Expiratory Flow of ~9.5 L/s (marked with a red filled circle and bold red
-    label "PEF = 9.5 L/s"), then declines linearly to FVC. The inspiratory limb forms
-    a symmetric U-shape reaching ~-5.5 L/s. The predicted loop is larger, peaking
-    at ~10.5 L/s and extending to 5.2L volume. A vertical orange dashed line marks
-    FEV1 at 3.2L with an orange label. A clinical values text block displays "FVC
-    = 4.8 L, FEV1 = 3.2 L, PEF = 9.5 L/s". Gray italic labels mark "Expiration" (upper)
-    and "Inspiration" (lower) regions. A dashed gray zero-flow reference line runs
-    horizontally. The legend in the top-right distinguishes Measured (solid blue)
-    from Predicted (dashed gray). The title "spirometry-flow-volume · altair · pyplots.ai"
-    appears at the top left. Grid lines are very subtle, and the overall layout is
-    clean and well-proportioned.'
+  - 'Minor redundancy: ''PEF = 9.5 L/s'' appears twice (focal marker label AND clinical
+    callout block). Consider dropping it from one to reduce repetition.'
+  - The 'Expiration' region label sits quite close to the top of the rising expiratory
+    limb and the PEF marker — readable, but a touch crowded; nudging it left/up would
+    add breathing room.
+  - Tick labels at 10px and the italic region labels at 13px are on the smaller side
+    for ~400px mobile scaling — legible but near the lower bound.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct light surface — not pure white.
+      Chrome: dark bold title "spirometry-flow-volume · python · altair · anyplot.ai" top-left; axis titles "Volume (L)" (x) and "Flow (L/s)" (y); dark-gray tick labels; subtle low-opacity grid; framed legend (Measured/Predicted) top-right. All readable.
+      Data: measured loop in brand green #009E73 (solid, ~3.5px); predicted loop in muted gray dashed; red #AE3030 filled PEF marker with red "PEF = 9.5 L/s" label; blue #4467A3 FEV1 dashed vertical reference + label; bold clinical callout (FVC/FEV1/PEF); italic muted "Expiration"/"Inspiration" region labels; dashed zero-flow reference line. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct dark surface — not pure black.
+      Chrome: light-cream title and axis titles; lighter-gray tick labels; subtle grid; legend frame with elevated dark fill. All chrome flipped correctly; no dark-on-dark text.
+      Data: identical to light render — green #009E73 measured loop, muted dashed predicted (lighter gray on dark), red PEF marker/label, blue FEV1 line/label, clinical callout, region labels. Brand green remains clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -51,43 +62,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axes 22pt, ticks 18pt,
-          legend 16pt, annotations 17-18pt). Region labels at 14pt slightly small.
+        comment: Fonts explicitly set and readable in both themes; tick/region labels
+          slightly small for mobile scaling.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlaps. Minor proximity between Expiration label
-          and predicted curve peak.
+        comment: No overlapping text/data; Expiration label only mildly crowded.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines at strokeWidth 2.5-3 clearly visible. PEF marker prominent.
-          Predicted dashed line could be slightly thicker.
+        comment: Measured 3.5px / predicted 2px lines and markers well sized for sparse
+          curves.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs gray is colorblind-safe. Red PEF marker and orange FEV1 line
-          provide additional contrast.
+        comment: CVD-safe Imprint colors; solid vs dashed differentiates series so
+          color isn't sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins. No content cut off.
+        comment: Exact 3200x1800, good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) with proper units.
+        comment: Volume (L) / Flow (L/s) with units; correct title.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; muted predicted, semantic red PEF, Imprint
+          blue FEV1; backgrounds correct both themes.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -95,22 +112,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Intentional color hierarchy: Python Blue for measured, gray for
-          predicted, red for PEF, orange for FEV1. Clearly above defaults.'
+        comment: Intentional focal hierarchy, semantic color roles, clinical annotation
+          design.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid opacity 0.12 very subtle, view stroke removed, legend styled.
-          Axis domain lines still present.
+        comment: Spines removed, subtle grid (opacity 0.12), framed legend, generous
+          whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: PEF focal point with red marker, measured
-          vs predicted comparison, FEV1 reference line adds diagnostic context.'
+        comment: Clear red PEF focal point, measured-vs-predicted comparison, region
+          labels guide the viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -120,27 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with both expiratory and inspiratory limbs.
+        comment: Correct closed flow-volume loop.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: PEF annotation, clinical values, predicted
-          overlay, distinct styling.'
+        comment: PEF marker, FVC/FEV1/PEF annotations, dashed predicted overlay, distinct
+          styling — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x-axis, Flow on y-axis, correct orientation.
+        comment: Volume x, Flow y; both limbs shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels Measured and Predicted match
-          data.
+        comment: Title in mandated format; legend Measured/Predicted matches.
     data_quality:
       score: 15
       max: 15
@@ -150,21 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both limbs, PEF peak, measured vs predicted, clinical values.
-          FEV1/FVC ratio 0.67 clinically meaningful.
+        comment: Expiratory + inspiratory limbs, PEF, decline, predicted overlay all
+          shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real pulmonary function test with physiologically accurate values.
-          Neutral medical context.
+        comment: FVC 4.8, FEV1 3.2, PEF 9.5 — realistic, neutral spirometry values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FVC=4.8L, FEV1=3.2L, PEF=9.5 L/s are realistic adult spirometry values.
+        comment: L and L/s axis ranges sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -174,33 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data generation, chart layers, composition,
-          save.'
+        comment: Linear script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: All imports used (os, sys, alt, np, pd, PIL).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Interactive hover is legitimate Altair functionality.
+        comment: Real Altair interactivity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html. Current API.
-    library_mastery:
+        comment: Saves plot-{THEME}.png + .html.
+    library_features:
       score: 9
       max: 10
       items:
@@ -209,26 +223,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative grammar: layered composition, encode/mark, alt.Scale/Legend/Title,
-          alt.condition, configure_*.'
+        comment: Layered charts, encodings, scales, configure_* — idiomatic Altair.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Altair-specific: selection_point with nearest, transform_filter,
-          hover tooltips, HTML export.'
+        comment: Interactive nearest-point hover (rule + point + tooltip) exported
+          to HTML.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - annotations
   - layer-composition
   - hover-tooltips
-  - custom-legend
   - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
