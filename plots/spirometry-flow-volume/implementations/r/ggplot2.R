@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' spirometry-flow-volume: Spirometry Flow-Volume Loop
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-06-17
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 91/100 | Created: 2026-06-17
 
 library(ggplot2)
 library(dplyr)
