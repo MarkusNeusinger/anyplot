@@ -1,43 +1,56 @@
 library: altair
+language: python
 specification_id: bifurcation-basic
 created: '2026-03-20T20:29:34Z'
-updated: '2026-03-20T21:02:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23361206466
+updated: '2026-06-17T05:40:30Z'
+generated_by: claude-sonnet
+workflow_run: 27667199678
 issue: 4415
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/altair/plot.html
-quality_score: 92
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent density-based visualization with well-tuned point size and opacity for
-    200K points
-  - Semantic color-coding by dynamical regime creates strong data storytelling
-  - Full use of Altair interactive capabilities (selection, crosshair, tooltips) with
-    HTML export
-  - All spec requirements fully satisfied including bifurcation point annotations
-  - Clean well-structured code with proper reproducibility
+  - Semantic Imprint color mapping (green=stable, amber=period-doubling, red=chaos)
+    makes the plot self-explanatory and aligns palette meaning with data meaning
+  - 'Perfect spec compliance: all required bifurcation labels at r=3.0/3.449/3.544/3.5699,
+    correct parameter range 2.5-4.0, 200 transients discarded, density-adapted point
+    sizing (size=1.5, opacity=0.18)'
+  - Correct theme adaptation in both renders — chrome inverts fully, data colors stay
+    constant across light and dark themes
+  - Interactive crosshair via alt.selection_point(nearest=True) and transform_filter
+    plus HTML export leverage Altair's distinctive compositional and selection capabilities
+  - PIL padding correctly targets the 3200x1800 canonical canvas with proper guard
+    against vl-convert overshoot (raise SystemExit if oversize)
   weaknesses:
-  - Annotation font size (14pt) could be slightly larger for better readability at
-    full resolution
-  - Gold/red color pair not fully optimized for all forms of color blindness
-  image_description: 'The plot displays a bifurcation diagram of the logistic map
-    with "Growth Rate (r)" on the x-axis (2.5–4.0) and "Steady-State Population (x)"
-    on the y-axis (0.0–1.0). Three color-coded regimes are clearly visible: blue ("Stable")
-    showing a single fixed-point line for r < 3.0, gold/amber ("Period-doubling")
-    displaying the period-2 and period-4/8 branches for 3.0 < r < ~3.57, and red ("Chaotic")
-    filling a dense cloud of points for r > ~3.57 with visible windows of periodicity.
-    Vertical dashed gray lines mark key bifurcation points with rotated text labels
-    at staggered y positions. The title reads "bifurcation-basic · altair · pyplots.ai"
-    with a subtitle "Logistic map period-doubling cascade from stability to chaos".
-    A legend in the top-right corner shows the three regime colors. The background
-    is clean with subtle dashed grid lines at low opacity. The layout fills the canvas
-    well.'
+  - 'Bifurcation label crowding near r=3.54-3.57: ''Period 8'' (r=3.544, y=0.55) and
+    ''Chaos onset'' (r=3.5699, y=0.82) are only 0.026 r-units apart horizontally;
+    move ''Period 8'' y-position from 0.55 to 0.35-0.40 for cleaner visual separation'
+  - Inner view height=275 is below the recommended 320 in the altair library guide;
+    a slightly taller data area would improve proportions without risking canvas gate
+    failure
+  - 'Design excellence headroom: standard Altair marks without additional typographic
+    hierarchy or focal-point emphasis to elevate beyond competent execution — consider
+    a subtle callout annotation at the first period-doubling branch'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bifurcation-basic · python · altair · anyplot.ai" bold, dark #1A1A17, ~60% plot width. Subtitle "Logistic map period-doubling cascade from stability to chaos" in muted ink. Axis labels "Growth Rate (r)" and "Steady-State Population (x)" in dark ink, fontSize=12. Tick labels in secondary ink #4A4A44, fontSize=10. All readable.
+      Data: Green (#009E73) stable fixed-point zone (r<3.0), amber (#DDCC77) period-doubling cascade, matte red (#AE3030) chaotic attractor. 200,000 points at size=1.5/opacity=0.18. Four rotated vertical bifurcation labels (Period 2, Period 4, Period 8, Chaos onset) with dashed vertical rules.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8, clearly readable. Subtitle in secondary light ink #B8B7B0. Axis labels and tick labels in light ink, all readable. Legend uses elevated dark surface #242420 with light text. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green stable zone (#009E73), amber period-doubling (#DDCC77), red chaotic (#AE3030). Brand green #009E73 visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -45,67 +58,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axes 22pt, ticks 18pt,
-          legend 14-16pt, annotations 14pt). Annotations slightly small.
+        comment: Title/subtitle/axis labels/ticks readable at correct sizes (16/11/12/10)
+          in both themes. Minor deduction for crowded r=3.54-3.57 label cluster.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels staggered to avoid overlap, but Period 2 and Period 8 both
-          at y=0.92 creates slight crowding near top edge.
+        comment: Period 8 and Chaos onset only 0.026 r-units apart; y-staggering prevents
+          direct overlap but labels are crowded in the chaotic transition zone.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Excellent density adaptation with size=1.5 and opacity=0.18 for 200K
-          points.
+        comment: 200,000 points at size=1.5/opacity=0.18 perfectly adapted to data
+          density. Bifurcation structure clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/gold/red palette generally distinguishable but gold and red
-          may be similar for deuteranopia.
+        comment: Imprint palette CVD-safe. Three-color traffic-light scheme with amber
+          separator is safe for common CVD types.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins at 1600x900.
+        comment: Canvas gate passed (3200x1800). Title ~60% width. No overflow or
+          clipping. PIL padding correct.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with parameter notation: Growth Rate (r) and
-          Steady-State Population (x).'
+        comment: Growth Rate (r) and Steady-State Population (x) are descriptive with
+          units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, period-doubling #DDCC77 (amber anchor), chaotic
+          #AE3030 (slot 5 semantic red). Backgrounds #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom semantic color palette, intentional typography hierarchy.
-          Above defaults but not publication-level.
+        comment: Semantic color mapping and custom legend styling are good choices,
+          above default (4) but not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: View strokes removed, subtle dashed grid at 0.12 opacity, domains
-          removed, clean whitespace.
+        comment: View stroke removed, domain=False, grid opacity=0.15, dashed rules
+          at opacity=0.30. Solid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color-coding by regime creates narrative. Annotated bifurcation points
-          guide viewer. Strong visual hierarchy.
+        comment: Green/amber/red progression narrates stability-to-chaos. Staggered
+          labels guide viewer. Subtitle provides narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -121,20 +142,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: small points, low alpha, cascade, logistic
-          map, labeled bifurcation points, transients discarded.'
+        comment: Small point size, full cascade, logistic map, four bifurcation labels,
+          200 transients discarded, 100 plotted, r in [2.5,4.0].
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: r on x-axis, x on y-axis, full range shown.
+        comment: X=r in [2.5,4.0], Y=x in [0,1.0]. All data shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend labels.
+        comment: Title format correct. Legend entries Stable/Period-doubling/Chaotic
+          match data regions.
     data_quality:
       score: 15
       max: 15
@@ -144,20 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stable fixed point, period-2/4/8 branches, chaotic regime,
-          and windows of periodicity.
+        comment: Stable fixed point, period-2, period-4, period-8, chaotic attractor
+          with fractal windows all shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical example for bifurcation diagrams.
+        comment: Logistic map is canonical textbook example. Standard parameter range
+          and initial condition. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard parameter range and iteration counts for logistic map.
+        comment: 200,000 points appropriate. 200 transient iterations discarded. x
+          in [0,1] correct state space.
     code_quality:
       score: 10
       max: 10
@@ -167,31 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: Linear, no functions or classes. Layer composition via + is idiomatic.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and random_state=42 for sampling.
+        comment: np.random.seed(42). Deterministic logistic map. df.sample uses random_state=42.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All five imports used: os, altair, numpy, pandas, PIL.Image.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, interactive features are legitimate Altair capabilities.
+        comment: Clean naming, semantic color constants, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html with current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
     library_mastery:
       score: 9
       max: 10
@@ -201,27 +226,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent declarative grammar usage: layered composition, encodings,
-          scales, axes, legends.'
+        comment: 'Full idiomatic Altair: typed encodings, alt.Scale/Axis/Legend/Title,
+          layer composition via +, selection_point, transform_filter.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point, voronoi overlay, transform_filter crosshair, HTML
-          export. Interactive features only visible in HTML.
+        comment: Nearest-point interactive selection, voronoi hover layer, crosshair
+          via transform_filter, HTML export, five-layer composition.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
