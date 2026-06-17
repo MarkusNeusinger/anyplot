@@ -1,7 +1,7 @@
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: 93/100 | Created: 2026-06-17
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 91/100 | Created: 2026-06-17
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
