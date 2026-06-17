@@ -1,0 +1,247 @@
+library: muix
+language: javascript
+specification_id: spirometry-flow-volume
+created: '2026-06-17T04:24:05Z'
+updated: '2026-06-17T04:27:27Z'
+generated_by: claude-opus
+workflow_run: 27665445014
+issue: 4557
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct closed flow-volume loop: expiratory limb rises sharply to PEF then declines,
+    inspiratory limb forms a symmetric U below the zero line — textbook spirometry
+    shape.'
+  - 'All spec-required clinical annotations present: PEF marked with a green dot +
+    leader line, and a clean elevated info panel listing PEF/FEV1/FVC/FEV1-FVC numeric
+    values.'
+  - Dashed predicted-normal envelope overlaid for comparison with distinct styling
+    (solid brand-green measured vs neutral dashed predicted), exactly as the spec
+    requests.
+  - 'First series is brand green #009E73; backgrounds are correct warm off-white (light)
+    and warm near-black (dark); data colours identical across themes with only chrome
+    flipping.'
+  - 'Idiomatic MUI X community usage: LineChart plus useXScale/useYScale/useDrawingArea
+    hooks to render a precise custom SVG overlay (zero-flow line, PEF marker, panel)
+    inside the drawing area — a distinctive, correct use of the library.'
+  - Realistic clinical context (mild obstructive pattern, FEV1/FVC 76%, scooped descending
+    limb) with sensible physiological scales.
+  weaknesses:
+  - Title fontsize (21px CSS) sits slightly below the ~22px guideline; it reads fine
+    at full resolution but could be nudged up marginally for stronger typographic
+    hierarchy.
+  - Several helper functions (expiratoryLimb, inspiratoryLimb, toPath) are defined
+    at module scope — justified and clear in a React/data-gen context, but slightly
+    more structure than the flattest possible KISS form.
+  - Both horizontal and vertical grid lines are drawn; a y-axis-only grid would be
+    marginally cleaner for this line-loop, though the current grid is subtle and does
+    not compete with the data.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no pure white, no painted panel behind chart.
+      Chrome: title "spirometry-flow-volume · javascript · muix · anyplot.ai" in dark ink, centered and fully readable. Axis labels "Volume (L)" / "Flow (L/s)" and numeric ticks in dark/soft ink, all clearly legible. "Expiration ▲" / "Inspiration ▼" soft-ink labels readable near the zero line.
+      Data: solid brand-green (#009E73) measured loop; neutral grey dashed predicted-normal envelope; green PEF dot with leader line + "PEF" label; elevated legend/clinical panel (PEF 9.5 L/s, FEV1 3.80 L, FVC 5.00 L, FEV1/FVC 76 %) with green solid + grey dashed legend swatches. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), not pure black.
+      Chrome: title and axis/tick labels render in light ink, all readable against the dark surface — no dark-on-dark failures. Expiration/Inspiration labels readable. Panel frame elevated (#242420) with light text.
+      Data: identical to light render — brand-green measured loop, grey dashed predicted envelope, green PEF marker, same clinical values. Data colours unchanged; only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title fontsize slightly under guideline.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; panel anchored in clear top-right space.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px loop line and dashed overlay clearly visible; PEF marker prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs neutral-dashed differentiated by style as well as hue; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good proportions, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Volume (L) / Flow (L/s) with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; correct theme backgrounds; neutral for reference
+          loop.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Polished clinical panel, PEF annotation, zero-flow rule — intentional
+          design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace; both-axis grid slightly busier
+          than needed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at PEF, measured-vs-predicted comparison, expiration/inspiration
+          cues.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Closed flow-volume loop, correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: PEF marker, FEV1/FVC/PEF values, dashed predicted overlay, closed
+          loop, distinct styling.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume on x, Flow on y; expiratory positive, inspiratory negative.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels Measured / Predicted
+          normal.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both limbs, PEF, predicted envelope, clinical metrics.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible mild-obstruction values; neutral medical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flow -8..11 L/s, volume 0..6 L — physiological.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions justified for data-gen/React but slightly more structure
+          than minimal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic in-memory data, no RNG/network.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: LineChart, hooks, Box, Typography all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-driven output; community @mui/x-charts API only.
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: LineChart + scale/drawing-area hooks; ThemeProvider-driven chrome.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG overlay via useXScale/useYScale/useDrawingArea inside
+          the chart.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
