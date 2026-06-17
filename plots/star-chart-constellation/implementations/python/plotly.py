@@ -1,15 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: plotly 6.8.0 | Python 3.14
-
-A celestial planisphere on an azimuthal-equidistant projection centred on the
-North Celestial Pole, so the sky boundary reads as a natural circle. Star
-apparent magnitude is double-encoded: brighter stars are both larger and pulled
-toward Imprint brand green via the `imprint_seq` continuous colormap; fainter
-stars shrink toward Imprint blue. Constellation stick-figures, a coordinate
-grid (RA spokes / Dec rings), the ecliptic and a faint Milky Way band complete
-the chart. Renders on both the light (#FAF8F1) and dark (#1A1A17) Imprint
-surfaces from a single theme-aware script.
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-17
 """
 
 import os
