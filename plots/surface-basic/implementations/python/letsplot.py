@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 surface-basic: Basic 3D Surface Plot
-Library: letsplot | Python
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-06-17
 """
 
 import os
