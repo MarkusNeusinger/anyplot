@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-06-17
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
 
 import os
