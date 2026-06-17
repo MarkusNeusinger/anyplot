@@ -1,42 +1,58 @@
 library: bokeh
+language: python
 specification_id: ecg-twelve-lead
 created: '2026-03-19T20:08:30Z'
-updated: '2026-03-19T20:20:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23314440997
+updated: '2026-06-17T03:18:10Z'
+generated_by: claude-opus
+workflow_run: 27663042992
 issue: 4554
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/python/bokeh/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Authentic ECG paper styling with domain-appropriate color palette (cream background,
-    salmon grid, green traces)
-  - Correct clinical 3x4 grid layout with all 12 leads showing realistic, differentiated
-    waveform morphologies
-  - Full-length Lead II rhythm strip and calibration pulses true to clinical ECG presentation
-  - Dual PNG + HTML export leveraging Bokeh web-native capabilities
-  - Comprehensive synthetic data model with per-lead transform parameters for realistic
-    P-QRS-T variation
+  - 'Faithful clinical 12-lead layout: standard 3x4 grid (I/aVR/V1/V4, II/aVL/V2/V5,
+    III/aVF/V3/V6) plus a full-length Lead II rhythm strip across the bottom — immediately
+    recognizable to clinicians.'
+  - Authentic ECG-paper styling using Imprint matte red (#AE3030) Span ruling at 1mm
+    fine / 5mm bold intervals over the brand surface, instead of an off-palette pink
+    fill — keeps palette compliance while reading as real ECG paper.
+  - Brand green (#009E73) used as the single trace color across all leads; 1mV calibration
+    pulses drawn in the leftmost column; scale annotations (25 mm/s, 10 mm/mV, NSR,
+    72 BPM) in the title band.
+  - Exact 3200x1800 canvas with toolbar disabled; CDP Emulation.setDeviceMetricsOverride
+    forces the viewport so the headless-Chrome screenshot lands at the precise canvas
+    size.
+  - 'Clean theme adaptation: data colors (red grid, green trace) are identical between
+    light and dark; only the background and ink tokens flip and all text stays readable
+    in both.'
   weaknesses:
-  - Helper functions break strict KISS flat-script structure (though justified by
-    13-panel repetition)
-  - ECG trace lines could be slightly thicker for maximum visibility at full resolution
-  - Could further leverage Bokeh interactive features such as hover tooltips in HTML
-    version
-  image_description: 'The plot displays a 12-lead ECG waveform arranged in the standard
-    clinical 3x4 grid format on authentic ECG paper styling. The background is a warm
-    pinkish-cream (#FFF5F0) with minor grid lines in light pink and major grid lines
-    in darker salmon/coral. All 12 leads are present: Row 1 (I, aVR, V1, V4), Row
-    2 (II, aVL, V2, V5), Row 3 (III, aVF, V3, V6). ECG traces are rendered in dark
-    green (#1B5E20) with realistic P-QRS-T morphology — aVR is properly inverted,
-    precordial leads show progressive R-wave growth from V1 to V4. A full-length Lead
-    II rhythm strip spans the bottom. Each lead is labeled in bold text at the upper-left
-    of its panel. Calibration pulses (1mV square markers) appear on the leftmost column.
-    The title "ecg-twelve-lead · bokeh · pyplots.ai" is centered at top with subtitle
-    "25 mm/s · 10 mm/mV · Normal Sinus Rhythm · 72 BPM".'
+  - Lead labels (24pt) and the subtitle (26pt) become small when the 3200px canvas
+    is scaled to ~400px thumbnails; legible at full size but near the lower bound
+    on mobile. Could nudge lead labels to ~28pt for margin.
+  - Code uses several helper functions (synth_beat, add_ecg_grid, style_ecg_panel,
+    draw_trace) which deviates from the strict KISS no-functions guideline — justified
+    here for DRY across 13 panels, but a minor stylistic deduction.
+  - Individual lead panels have axes hidden (clinical convention), so there are no
+    per-axis numeric labels; the scale is conveyed only via the calibration pulse
+    and title text. Acceptable for ECG but means VQ-06 relies on conventions rather
+    than explicit axis titles.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) page surface, overlaid with light red ECG-paper ruling (fine 1mm + bold 5mm lines in #AE3030).
+      Chrome: title "ecg-twelve-lead · python · bokeh · anyplot.ai" in dark ink centered at top, subtitle "25 mm/s · 10 mm/mV · Normal Sinus Rhythm · 72 BPM" below it; lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, "II (Rhythm)") in bold dark ink at upper-left of each panel — all readable.
+      Data: green (#009E73) ECG traces showing realistic P-QRS-T complexes in all 12 panels plus the rhythm strip; thin vertical 1mV calibration pulses at the left edge of the I/II/III column. First (and only) trace series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) page surface, with the same red ECG-paper ruling (slightly higher alpha) clearly visible.
+      Chrome: title, subtitle, and all lead labels rendered in light ink (#F0EFE8 / soft variants) — clearly readable against the dark background, no dark-on-dark failures.
+      Data: green traces and red grid are identical to the light render; only the background/ink chrome flipped. Calibration pulses still visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -44,46 +60,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 38pt, subtitle 24pt, lead labels
-          22pt bold. All clearly readable.'
+        comment: Title 44pt, labels 24pt, subtitle 26pt; readable in both themes.
+          Lead labels a touch small at 400px thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Each lead label well-positioned in its own panel.
+        comment: No text/data collisions across 13 panels.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: ECG traces visible with line_width=2.5, slightly thin for canvas
-          size but waveform morphology clearly distinguishable.
+        comment: Traces line_width=3 over subtle red grid, clearly visible in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Dark green on pink paper background provides strong contrast. Single-color
-          scheme avoids colorblind issues.
+        comment: Green trace vs red grid; red used only for chrome ruling, not as
+          a categorical signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills canvas well at 4800x~2620px. Panels use space efficiently.
+        comment: Exact 3200x1800, clinical proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden per ECG convention. Scale info in subtitle communicates
-          units.
+        comment: Per-clinical-convention hidden axes; scale conveyed via calibration
+          pulse + title (25mm/s, 10mm/mV).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Trace #009E73, grid #AE3030 (Imprint), backgrounds #FAF8F1/#1A1A17,
+          both themes correct.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -91,22 +114,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong domain-authentic design with custom ECG paper palette and
-          cohesive color story.
+        comment: Convincing clinical ECG-paper aesthetic, intentional palette mapping.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Custom Span-based grid, hidden axes, minimal borders. Every detail
-          serves clinical presentation.
+        comment: Minimal chrome, hidden axes, subtle ruling, theme surfaces.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clinical layout with varying lead morphologies creates natural visual
-          hierarchy recognizable to clinicians.
+        comment: Lead labels, calibration pulse, and rhythm strip guide the clinical
+          reading.
     spec_compliance:
       score: 15
       max: 15
@@ -116,29 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-channel ECG 12-lead waveform display in clinical grid
-          format.
+        comment: Multi-channel 12-lead ECG display.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 3x4 grid, rhythm strip, ECG paper grid, calibration
-          pulses, lead labels, synthetic P-QRS-T.'
+        comment: 3x4 grid, rhythm strip, ECG paper grid, 1mV calibration, lead labels,
+          scale markers all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, voltage on y-axis. Y-range ±2mV, 2.5s strips, 10s
-          rhythm strip.
+        comment: time (s) on x, mV on y, all 12 leads with distinct transforms.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed for single trace type with
-          individual labels.
+        comment: 'Title exact: ''ecg-twelve-lead · python · bokeh · anyplot.ai'';
+          single trace needs no legend.'
     data_quality:
       score: 15
       max: 15
@@ -148,21 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 leads with distinct morphologies, inverted aVR, precordial
-          progression, rhythm strip.
+        comment: Realistic P-QRS-T morphology, per-lead scale/invert transforms, noise.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Normal sinus rhythm at 72 BPM — real, neutral medical scenario.
+        comment: Normal sinus rhythm, neutral medical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QRS 0.5-1.5mV, P-waves 0.1-0.25mV, T-waves 0.1-0.5mV — all within
-          physiological ranges.
+        comment: mV amplitudes, 72 BPM, 2.5s strips — clinically plausible.
     code_quality:
       score: 9
       max: 10
@@ -172,14 +189,13 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions break flat structure but justified for 13-panel
-          repetition.
+        comment: Helper functions used (justified for 13-panel DRY) — minor KISS deduction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -191,16 +207,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean organization. Gaussian pulse model and lead transform dictionary
-          are elegant.
+        comment: Clear, appropriate complexity; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Also exports HTML.
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html.
+    library_features:
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -208,29 +223,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Bokeh idioms: ColumnDataSource, Span, Label, gridplot, Range1d,
-          toolbar_location=None.'
+        comment: gridplot + column layout, ColumnDataSource, Span ruling, Label —
+          idiomatic bokeh.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Span for grid lines, gridplot for panels, dual PNG+HTML export with
-          CDN resources.
+        comment: Interactive HoverTool readouts, Span overlays, HTML artifact export.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
   - subplots
   - annotations
-  - custom-legend
-  - manual-ticks
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
   - minimal-chrome
+  - grid-styling
+  - alpha-blending
