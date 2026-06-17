@@ -98,7 +98,7 @@ const nyquistPlugin = {
     }
 
     // Frequency annotation dots and labels
-    ctx.font = "bold 13px sans-serif";
+    ctx.font = "bold 15px sans-serif";
     for (const { x, y, label } of annotPts) {
       const { cx, cy } = toPx(x, y);
       // Ochre dot at the annotated point
@@ -195,6 +195,7 @@ new Chart(canvas, {
         title: { display: true, text: "Real", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
+        border: { display: false },
         min: -1.5,
         max: 1.5,
       },
@@ -203,6 +204,7 @@ new Chart(canvas, {
         title: { display: true, text: "Imaginary", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
+        border: { display: false },
         min: -1.5,
         max: 1.5,
       },
