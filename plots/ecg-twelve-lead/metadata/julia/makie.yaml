@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: ecg-twelve-lead
+created: '2026-06-17T03:27:15Z'
+updated: '2026-06-17T03:30:52Z'
+generated_by: claude-opus
+workflow_run: 27663528744
+issue: 4554
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Authentic clinical 12-lead ECG replication: standard 3x4 grid (I/aVR/V1/V4, II/aVL/V2/V5,
+    III/aVF/V3/V6) plus a full-length Lead II rhythm strip across the bottom — immediately
+    recognizable to clinicians.'
+  - Realistic P-QRS-T morphology built from a sum-of-Gaussians model with correct
+    per-lead polarities, precordial R/S progression (deep S in V1/V2 to tall R in
+    V4-V6), and inverted aVR.
+  - Medical-standard ECG paper grid using Imprint matte red (#AE3030) with 1mm minor
+    + 5mm bold lines and DataAspect() for true 25mm/s x 10mm/mV proportions; 1mV calibration
+    pulses on every row.
+  - 'Brand green #009E73 trace, correct theme backgrounds (#FAF8F1 / #1A1A17), and
+    chrome that flips cleanly between light and dark while data colors stay identical.'
+  - Title exactly matches the mandated ecg-twelve-lead · julia · makie · anyplot.ai
+    format; scale reference annotation documents 25 mm/s · 10 mm/mV · 1 mV calibration.
+  weaknesses:
+  - ECG traces are drawn at linewidth=1.2 — clinically realistic but thin; on the
+    ~400px mobile thumbnail the fine deflections lose some definition. A slight bump
+    (~1.4-1.6) would improve small-scale legibility without losing the paper aesthetic.
+  - 'Minor: the small per-strip data structure relies on helper functions (gauss/beat/ecg_signal)
+    which is justified for the ECG model but is a slight deviation from the strict
+    no-functions KISS preference.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ECG-paper surface — not pure white, not dark. Correct.
+      Chrome: Title "ecg-twelve-lead · julia · makie · anyplot.ai" in dark ink, clearly readable centered at top. Bold lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, plus the rhythm-strip II) in dark ink, all readable. Scale reference "25 mm/s · 10 mm/mV · 1 mV calibration" in soft ink, bottom-right, readable. ECG grid in light red/pink with 1mm minor + 5mm bold lines — subtle but clearly visible.
+      Data: Green (#009E73) ECG traces across all 12 leads in the standard 3x4 clinical layout plus a full-length Lead II rhythm strip; 1mV green calibration pulses at the start of each row. First/only series is brand green. Correct.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — not pure black, not light. Correct.
+      Chrome: Title and all lead labels in light ink (#F0EFE8), clearly visible against the dark surface — no dark-on-dark failure. Scale reference in soft light ink, readable. Grid red lines use slightly higher alpha (0.24/0.50) so they remain visible on the dark surface.
+      Data: Green (#009E73) traces and calibration pulses identical to the light render — only the chrome (background, text, grid alpha) flipped. Correct.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, bold lead labels, and scale reference readable in both themes;
+          fonts explicitly set. Thin traces slightly soften on mobile thumbnail.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Lead labels sit above each strip; no collisions between text, traces,
+          or grid.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green traces clearly visible against the paper grid; thin linewidth
+          is clinically appropriate.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single green data series on a red paper grid; red is chrome not a
+          data signal, so no red-green data ambiguity.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800; standard ECG proportions via DataAspect();
+          nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Decorations intentionally hidden (the grid is the scale); scale documented
+          via annotation; title correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Trace is brand green #009E73; grid red #AE3030 is an Imprint member
+          used semantically; backgrounds correct in both themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Authentic clinical ECG paper aesthetic with calibration pulses and
+          rhythm strip — well beyond generic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/decorations hidden, grid subtle, intentional medical layout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Recognizable clinical layout guides the viewer through all leads;
+          realistic morphology with R/S progression.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-channel 12-lead ECG display.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid, rhythm strip, ECG paper grid, 1mV calibration, 25mm/s +
+          10mm/mV scale, labeled leads — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time->x and voltage->y mapped at correct mm scaling per lead.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; no legend needed for single-series
+          ECG.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 leads + rhythm strip, P-QRS-T waves, R/S progression, aVR
+          inversion.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Normal sinus rhythm, neutral medical context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitudes in typical mV ranges, ~75 bpm.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small math helpers (gauss/beat/ecg_signal) justified for the ECG
+          model but deviate from strict no-functions preference.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png; current CairoMakie API.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic Makie: Axis, vlines!/hlines!, lines!, text!, hidedecorations!/hidespines!,
+          limits!.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: DataAspect() for true mm proportions, vlines!/hlines! for the paper
+          grid, broadcast beat. with Ref.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - minimal-chrome
+  - grid-styling
