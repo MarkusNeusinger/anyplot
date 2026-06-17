@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: nyquist-basic
 created: '2026-06-17T22:54:28Z'
-updated: '2026-06-17T23:01:34Z'
+updated: '2026-06-17T23:16:27Z'
 generated_by: claude-sonnet
 workflow_run: 27723836112
 issue: 4412
@@ -15,53 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-b
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all six required features (critical point marker, unit
-    circle, frequency annotations, direction arrows, 1:1 aspect ratio, Real/Imaginary
-    axis labels) correctly implemented'
-  - Elegant 1:1 square inner plot centered in the landscape canvas preserves the unit
-    circle geometry as required
-  - 'Correct use of Imprint palette: brand green #009E73 for the primary ω>0 curve;
-    semantic red #AE3030 for the critical point marker (slot 5 is the correct semantic
-    anchor for error/critical markers)'
-  - 'Thoughtful visual hierarchy: solid line for ω>0, dashed semi-transparent line
-    for ω<0 mirror clearly differentiates the two halves of the Nyquist contour'
-  - 'SVG defs used idiomatically: clip-path ensures data stays within the square plot
-    area, marker-end arrowheads show frequency direction without additional DOM overhead'
-  - Deterministic, in-memory data generation using the exact third-order transfer
-    function G(s)=48/((s+1)(s+2)(s+3)) — no fetch, no randomness, fully reproducible
-  - 'Theme-adaptive chrome throughout: t.ink, t.inkSoft, t.pageBg tokens applied correctly
-    to all non-data elements; both renders pass the readability check'
-  - Legend covers all plot elements with correctly matched symbol types (line swatch,
-    dashed line, × marker, dot) and includes an italicised transfer function note
+  - 'Complete spec compliance: all required Nyquist features present (critical point
+    marker, unit circle, frequency annotations, direction arrows, 1:1 aspect ratio)'
+  - 'Smart layout: square inner plot centred in landscape canvas correctly enforces
+    equal-axis aspect ratio'
+  - SVG arrowhead markers via defs for frequency direction — professional D3-distinctive
+    technique
+  - 'Excellent Imprint palette usage: #AE3030 for critical point (correct semantic
+    role), palette[2] for annotation dots in canonical order'
+  - Both light and dark themes render cleanly with no dark-on-dark or legibility failures
+  - Fully deterministic mathematical data generation from third-order transfer function
   weaknesses:
-  - 'Text crowding near the critical region: the ''(−1, 0)'' label (anchored at cpx+18,
-    cpy-14) and ''ω = 3.32 (phase crossover)'' label (anchored at xSc(-0.8)+12, ySc(0)+22)
-    are spatially adjacent since -1 and -0.8 are only 0.2 data-units apart. Both texts
-    land in the same visual cluster, reducing legibility of both annotations. Consider
-    offsetting the phase-crossover label down by an additional 12–16px or to the left
-    with anchor=''end''.'
-  - Helper function gJw(omega) is defined at the top level, which conflicts with the
-    KISS/no-functions CQ-01 criterion. The computation is simple enough to be inlined
-    at the two call sites (omega → {re, im}) with a single expression, removing the
-    function wrapper.
-  - First arrow segment (index 40) lands very close to the starting-point dot at approximately
-    (8, 0), creating a visually ambiguous 'open circle with arrow' appearance — the
-    arrowhead overlaps the filled starter dot. Shift the first arrow index to ~70
-    or place the starting-point dot in a separate layer drawn last so it renders on
-    top of the arrowhead.
+  - Annotation and tick labels at 13px CSS (26px output) are borderline for mobile
+    readability — raise to 14px
+  - 'Visual crowding near (−1,0): critical-point label and phase crossover annotation
+    are spatially adjacent; adjust dy offset on one label to reduce overlap'
+  - 'Design sophistication could be lifted: add a subtle stability-margin subtitle
+    or visually distinguish the unit circle from zero-axis reference lines to strengthen
+    DE-01'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct pageBg surface, not pure white.
-      Chrome: Title "nyquist-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center, clearly readable. "Real Axis" and "Imaginary Axis" labels at 16px dark ink, readable. Tick labels at 13px inkSoft (#4A4A44), readable. Grid lines subtle, low-opacity.
-      Data: Primary Nyquist curve (ω > 0) in brand green #009E73 as a solid 3.5px line tracing a large arc from upper-right (DC gain ≈8) through lower quadrant back to origin. Negative-frequency mirror in dashed semi-transparent green. Direction arrows at five positions along the curve. Unit circle as dashed gray circle centred at origin. Critical point (−1, 0) marked with a prominent red × (#AE3030). Four frequency annotation dots in Imprint blue (#4467A3) at ω=0.3, 1.0, 2.0, and 3.32. Legend to the right of the square plot area. Transfer function note below legend.
-      Crowding note: '(−1, 0)' label and 'ω = 3.32 (phase crossover)' label are spatially close near the critical point — both are readable but crowded.
-      Legibility verdict: PASS — all primary text is clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title 'nyquist-basic · javascript · d3 · anyplot.ai' in bold dark ink at 22px — clearly readable. Axis labels 'Real Axis' / 'Imaginary Axis' at 16px in dark ink — readable. Tick labels at 13px in inkSoft — readable. Annotation labels (ω = 0.3, 1.0, 2.0, 3.32) at 13px using t.ink — readable but slightly small.
+      Data: Main Nyquist locus in solid #009E73 (brand green), 3.5px stroke. Mirror locus in same green, dashed, opacity 0.38. Unit circle in grey dashed stroke. Critical point (−1,0) with red #AE3030 × marker. Annotation dots in Imprint palette[2] #4467A3. Direction arrows in brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark pageBg, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark surface. Axis labels and tick labels in inkSoft (#B8B7B0), readable. Grid lines subtle against dark background. No dark-on-dark failures observed.
-      Data: Brand green #009E73 curve identical to light render — Imprint data colors unchanged between themes. Same dashed mirror curve, direction arrows, unit circle, red critical-point marker, and blue annotation dots. Legend text in inkSoft light color, readable. Transfer function note in italic inkSoft, readable.
-      Legibility verdict: PASS — all text is clearly readable against the warm near-black background. No dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light #F0EFE8 — clearly readable. Axis labels in light ink — readable. Tick labels in #B8B7B0 secondary text — readable. Annotation labels using t.ink (#F0EFE8 in dark mode) — readable. No dark-on-dark failures observed.
+      Data: All data colours identical to light render — #009E73 main locus, dashed mirror at 0.38 opacity, grey unit circle, #AE3030 critical point X, #4467A3 annotation dots. Data colours unchanged as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -72,60 +55,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 22px, axis labels 16px, tick/annotation labels 13px — all readable
-          in both themes. Minor deduction for crowded text cluster near critical point
-          (−1, 0) where the '(−1, 0)' label and 'ω = 3.32 (phase crossover)' label
-          are spatially adjacent.
+        comment: 'All sizes explicitly set: title 22px, axis labels 16px, tick/annotation
+          labels 13px CSS. Minor deduction: 13px annotations borderline for mobile.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No severe overlaps. Text crowding between '(−1, 0)' label (cpx+18,
-          cpy-14) and 'ω = 3.32 (phase crossover)' label (xSc(-0.8)+12, ySc(0)+22)
-          — these two data-space positions (-1 and -0.8) map to adjacent screen pixels,
-          producing a crowded annotation cluster. Both texts are still individually
-          legible.
+        comment: 'Minor crowding near critical point (-1,0): critical-point label
+          and phase crossover annotation are spatially adjacent but at distinct y-positions.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: solid primary curve, dashed mirror,
-          unit circle, direction arrows, critical point marker, annotation dots. Line
-          weight 3.5px appropriate for 600-point curve.'
+        comment: Main curve 3.5px solid, mirror 2px dashed at 0.38 opacity, arrows
+          prominent, annotation dots 7px, critical X 12px.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette. Critical point uses both color (#AE3030)
-          AND shape (×) redundant encoding — no red-green sole-signal issue.
+        comment: 'CVD-safe: brand green + semantic red (not sole differentiator) +
+          Imprint blue. Good contrast in both themes.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. 1:1 square inner plot correctly centred in landscape
-          canvas. Legend properly placed in right margin. No overflow observed.
+        comment: Canvas gate passed. Square inner plot in landscape canvas enforces
+          1:1 aspect ratio. Legend well-positioned right. Nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Real Axis'' and ''Imaginary Axis'' match the spec requirement.
-          Title format ''nyquist-basic · javascript · d3 · anyplot.ai'' is correct.'
+        comment: Axes labelled 'Real Axis' and 'Imaginary Axis' per spec. Title in
+          correct format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (t.palette[0]) ✓. Annotation dots use t.palette[2]
-          (#4467A3) — correct secondary Imprint color. Critical point uses #AE3030
-          — Imprint slot 5 semantic red, appropriate for error/critical role. Light
-          bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+        comment: 'First series #009E73, annotation dots Imprint palette[2], critical
+          point semantic #AE3030. Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -133,27 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Intentional color hierarchy (solid vs. dashed/transparent),
-          square inner plot in landscape canvas for 1:1 ratio, transfer function note
-          adds professional context. Thoughtful use of Imprint palette for categorical
-          differentiation.
+        comment: 'Above defaults: square-in-landscape layout, arrowhead markers, transfer-function
+          annotation. Not yet at publication level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Above default. Axes only at edges (no box border), subtle low-opacity
-          grid, generous whitespace in legend area, good clip-path preventing data
-          from bleeding outside the square plot.
+        comment: Subtle grid, low-opacity zero-axes, clean borderless legend, generous
+          margins. Box frame appropriate for complex-plane plot.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Above default. Direction arrows guide the viewer through increasing
-          frequency; critical point prominently anchored in semantic red; phase crossover
-          frequency explicitly labelled with its engineering significance; mirror
-          curve clearly differentiated as secondary information.
+        comment: 'Visual hierarchy: solid vs dashed curve, semantic red critical point,
+          direction arrows, phase crossover annotation, transfer function note.'
     spec_compliance:
       score: 15
       max: 15
@@ -163,31 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Nyquist plot: imaginary vs. real part of G(jω) in the complex
-          plane.'
+        comment: 'Correct Nyquist plot: Im[G(jω)] vs Re[G(jω)] with full positive/negative
+          frequency loci.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All six spec requirements met: critical point (−1,0) marked with
-          red ×, unit circle drawn as dashed reference, frequency annotations at ω=0.3/1.0/2.0/3.32,
-          direction arrows on curve, 1:1 aspect ratio, Real/Imaginary axis labels.'
+        comment: Critical point marker, unit circle, frequency annotations, direction
+          arrows, 1:1 aspect, correct axis labels, 600 log-spaced points.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary part on y-axis. 600 log-spaced frequencies
-          ω ∈ [0.03, 30] rad/s covering DC to well past phase crossover. Negative-frequency
-          mirror shown.
+        comment: Real on X, imaginary on Y. G(s)=48/((s+1)(s+2)(s+3)) correctly computed.
+          Frequency range 0.03-30 rad/s.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'nyquist-basic · javascript · d3 · anyplot.ai' correct. Legend
-          labels match all plotted elements.
+          labels match data content.
     data_quality:
       score: 15
       max: 15
@@ -197,64 +165,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full coverage: positive and negative frequency contour, critical
-          stability point, unit circle reference, direction of traversal, annotated
-          key frequencies including phase crossover, DC gain starting point.'
+        comment: Both pos/neg frequency loci, unit circle, critical point, annotated
+          key frequencies, direction arrows, DC-gain starting dot.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s) = 48/((s+1)(s+2)(s+3)) is a plausible, neutral third-order linear
-          time-invariant system. Values are academically appropriate.
+        comment: Classic third-order G(s)=48/((s+1)(s+2)(s+3)) — standard control
+          systems textbook example. Educational, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 log-spaced frequencies from 0.03 to 30 rad/s provides smooth
-          curve with appropriate density. DC gain ≈ 8, phase crossover at ω ≈ 3.32
-          rad/s — sensible engineering scale.
+        comment: 600 log-spaced points, domain window shows full locus with DC gain
+          at ~8 and phase crossover at ~(-0.8,0).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Top-level function gJw(omega) is defined — technically violates no-functions
-          criterion, though it's a small, justified helper for the transfer function
-          evaluation. Could be inlined.
+        comment: 'Linear script: data computation → SVG → layers → axes → labels →
+          legend → title. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: data derived analytically from the transfer
-          function, no random numbers.'
+        comment: 'Fully deterministic: all data from fixed mathematical formulas,
+          no random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Uses global d3 and window.ANYPLOT_TOKENS/ANYPLOT_SIZE
-          correctly.
+        comment: No imports (d3 global). No unused code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable D3 code. Good use of forEach for grid lines and annotations.
-          No fake interactivity.
+        comment: Clean D3 patterns. Arrowhead markers, clip-path, line generator all
+          appropriately complex.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles plot-{theme}.png and plot-{theme}.html output. SVG
-          sized to window.ANYPLOT_SIZE correctly.
+        comment: Harness handles output. D3 7.9.0 API.
     library_mastery:
       score: 7
       max: 10
@@ -264,17 +227,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Above default. Good use of d3.scaleLinear, d3.axisBottom/Left, d3.line()
-          with datum(), D3 selection chaining, SVG defs for reusable elements. Proper
-          margin convention.
+        comment: d3.line(), d3.axisBottom/Left, d3.scaleLinear, SVG defs, datum().attr('d',
+          lineGen). Above default.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Above default. SVG clipPath with defs for data boundary, SVG marker
-          definition for arrowheads with auto-orient, datum() for path rendering,
-          forEach loops for multi-position arrow placement.
+        comment: SVG marker defs for arrowheads (D3-distinctive), clip-path for data
+          boundary, line generator with custom scales.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -288,4 +249,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
