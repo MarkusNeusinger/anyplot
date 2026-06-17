@@ -4,7 +4,6 @@
 #' Quality: 86/100 | Created: 2026-06-17
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens (Imprint palette — see prompts/default-style-guide.md)
@@ -68,6 +67,15 @@ ref_df <- tibble::tibble(
   yint  = c(0, -180)
 )
 
+# Stability zone shading: vertical band between gain and phase crossover frequencies
+shade_df <- tibble::tibble(
+  panel = factor(panels, levels = panels),
+  xmin  = min(gc_freq, pc_freq),
+  xmax  = max(gc_freq, pc_freq),
+  ymin  = -Inf,
+  ymax  = Inf
+)
+
 # Stability margin annotations: place in each panel near the relevant crossover
 ann_df <- tibble::tibble(
   freq  = c(pc_freq * 2.5, gc_freq * 4.0),
@@ -81,6 +89,14 @@ title_str  <- "bode-basic · r · ggplot2 · anyplot.ai"
 title_size <- max(8, round(12 * min(1.0, 67 / nchar(title_str))))
 
 p <- ggplot(df, aes(x = freq, y = value)) +
+  # Stability zone: vertical band between crossover frequencies
+  geom_rect(
+    data = shade_df,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    inherit.aes = FALSE,
+    fill = adjustcolor(IMPRINT_PALETTE[1], alpha.f = 0.07),
+    color = NA
+  ) +
   # Reference lines per facet (0 dB and -180°)
   geom_hline(
     data = ref_df, aes(yintercept = yint),
@@ -103,7 +119,7 @@ p <- ggplot(df, aes(x = freq, y = value)) +
     data = ann_df,
     aes(x = freq, y = value, label = label),
     color = INK, fill = ELEVATED_BG,
-    label.size = 0.25, size = 2.8, label.r = unit(0.15, "lines")
+    label.size = 0.25, size = 3.5, label.r = unit(0.15, "lines")
   ) +
   scale_x_log10(
     breaks       = 10^(-2:1),
@@ -122,7 +138,8 @@ p <- ggplot(df, aes(x = freq, y = value)) +
     panel.background = element_rect(fill = PAGE_BG,     color = NA),
     panel.grid.major = element_line(color = GRID_COLOR, linewidth = 0.4),
     panel.grid.minor = element_line(color = GRID_COLOR, linewidth = 0.2),
-    panel.border     = element_rect(color = INK_SOFT,   fill = NA),
+    panel.border     = element_blank(),
+    axis.line        = element_line(color = INK_SOFT,  linewidth = 0.4),
     axis.title.x     = element_text(color = INK,      size = 10),
     axis.text        = element_text(color = INK_SOFT,  size = 8),
     plot.title       = element_text(color = INK,      size = title_size, face = "bold"),
