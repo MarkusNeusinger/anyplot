@@ -1,10 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: matplotlib | Python
-
-Theme-adaptive (ANYPLOT_THEME=light|dark). Imprint palette:
-measured loop = brand green (position 1), predicted normal = muted neutral
-(dashed reference), obstruction gap = matte-red semantic anchor.
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-06-17
 """
 
 import os
