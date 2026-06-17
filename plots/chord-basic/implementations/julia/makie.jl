@@ -5,9 +5,6 @@
 
 using CairoMakie
 using Colors
-using Random
-
-Random.seed!(42)
 
 # --- Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome") ---
 const THEME    = get(ENV, "ANYPLOT_THEME", "light")
@@ -38,23 +35,30 @@ flow = Float64[
    20   60   90   70   20    0    # from Oceania
 ]
 
-# --- Geometry: divide the circle into one arc per region, sized by total outflow ---
-n        = length(regions)
-gap      = deg2rad(4.0)                       # angular gap between adjacent arcs
-rowsum   = vec(sum(flow, dims = 2))           # total outflow drives each arc's width
-span     = (2π - n * gap) .* rowsum ./ sum(rowsum)
+# --- Geometry: one arc per region, sized by total throughput (outflow + inflow) ---
+# Each arc reserves a separate foot for every directed flow, so i→j and j→i render
+# as two distinct, source-tinted chords rather than a single merged ribbon.
+n          = length(regions)
+gap        = deg2rad(4.0)                          # angular gap between adjacent arcs
+throughput = vec(sum(flow, dims = 2)) .+ vec(sum(flow, dims = 1))  # row + column totals
+span       = (2π - n * gap) .* throughput ./ sum(throughput)
 
-# Walk the circle once, recording each region's arc and its per-target sub-arcs.
 # Each arc starts at the top (π/2) offset by the spans and gaps that precede it.
 arc_start = [π / 2 + sum(span[1:i-1]) + (i - 1) * gap for i in 1:n]
 arc_stop  = arc_start .+ span
-sub       = Matrix{NTuple{2,Float64}}(undef, n, n)   # sub[i, j] = (θ0, θ1) of flow i→j on region i
+
+# Walk each arc once, laying down an outgoing foot then an incoming foot per partner.
+out_foot = fill((0.0, 0.0), n, n)   # out_foot[i, j] = sub-arc on i carrying flow i→j
+in_foot  = fill((0.0, 0.0), n, n)   # in_foot[i, j]  = sub-arc on i receiving flow j→i
 for i in 1:n
     a = arc_start[i]
     for j in 1:n
-        w = flow[i, j] / rowsum[i] * span[i]
-        sub[i, j] = (a, a + w)
-        a += w
+        w_out = flow[i, j] / throughput[i] * span[i]
+        out_foot[i, j] = (a, a + w_out)
+        a += w_out
+        w_in = flow[j, i] / throughput[i] * span[i]
+        in_foot[i, j] = (a, a + w_in)
+        a += w_in
     end
 end
 
@@ -83,13 +87,13 @@ hidespines!(ax)
 hidedecorations!(ax)
 limits!(ax, -1.5, 1.5, -1.5, 1.5)
 
-# Ribbons first so the solid arcs and labels sit on top.
-for i in 1:n, j in (i + 1):n
-    flow[i, j] == 0 && flow[j, i] == 0 && continue
-    a0, a1 = sub[i, j]                       # foot on region i
-    b0, b1 = sub[j, i]                       # foot on region j
-    src    = flow[i, j] >= flow[j, i] ? i : j   # tint by the dominant direction
-
+# One ribbon per directed flow, tinted by its source. Largest flows are drawn
+# first so the thin tail flows stay readable on top, keeping the core legible.
+order = sort([(i, j) for i in 1:n, j in 1:n if flow[i, j] > 0];
+    by = ij -> flow[ij[1], ij[2]], rev = true)
+for (i, j) in order
+    a0, a1 = out_foot[i, j]                  # source foot on region i
+    b0, b1 = in_foot[j, i]                   # target foot on region j
     foot_i = [on_ring(t, r_in) for t in range(a0, a1; length = 12)]
     foot_j = [on_ring(t, r_in) for t in range(b0, b1; length = 12)]
     ribbon = vcat(
@@ -98,7 +102,7 @@ for i in 1:n, j in (i + 1):n
         foot_j,
         bezier(foot_j[end], foot_i[1]),
     )
-    poly!(ax, ribbon; color = (IMPRINT_PALETTE[src], 0.6), strokewidth = 0)
+    poly!(ax, ribbon; color = (IMPRINT_PALETTE[i], 0.5), strokewidth = 0)
 end
 
 # Colored arc segment per region (outer ring forward, inner ring back).
@@ -123,7 +127,7 @@ end
 
 # Footnote: clarify the encoding without faking interactivity.
 text!(ax, 0.0, -1.28;
-    text = "Arc width ∝ total outflow · ribbon width ∝ flow magnitude",
+    text = "Arc width ∝ total flow · each ribbon is one direction, tinted by its source region",
     align = (:center, :bottom), color = INK_SOFT, fontsize = 17)
 
 # --- Save ---
