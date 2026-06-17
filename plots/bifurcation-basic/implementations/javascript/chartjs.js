@@ -1,7 +1,7 @@
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-17
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-17
 
 const t = window.ANYPLOT_TOKENS;
 
