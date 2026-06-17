@@ -1,15 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 bifurcation-basic: Bifurcation Diagram for Dynamical Systems
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 94/100 | Created: 2026-03-20
+Library: matplotlib 3.11.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import PowerNorm
+from matplotlib.colors import LinearSegmentedColormap, PowerNorm
 
 
-# Data
+# Theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Continuous density → Imprint sequential cmap (brand green → blue).
+# Empty bins render as the page background so the diagram floats on the surface.
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+imprint_seq.set_bad(PAGE_BG)
+
+# Data — logistic map x(n+1) = r * x(n) * (1 - x(n))
 r_min, r_max = 2.5, 4.0
 num_r = 2000
 transient = 200
@@ -28,42 +43,38 @@ for i, r in enumerate(r_values):
         r_plot[i * iterations + j] = r
         x_plot[i * iterations + j] = x
 
-# Create 2D histogram for density-based rendering of the chaotic region
-# This reveals structure (periodic windows, attractor density) far better than scatter
+# 2D histogram for density-based rendering of the attractor structure.
+# Reveals periodic windows within chaos far better than a raw scatter.
 r_bins = 800
 x_bins = 600
 hist, r_edges, x_edges = np.histogram2d(r_plot, x_plot, bins=[r_bins, x_bins], range=[[r_min, r_max], [0, 1]])
+hist = np.ma.masked_where(hist == 0, hist)
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Subtle regime background shading
-ax.axvspan(r_min, 3.0, color="#E8F4FD", alpha=0.3, zorder=0)
-ax.axvspan(3.0, 3.57, color="#F0EBF8", alpha=0.3, zorder=0)
-ax.axvspan(3.57, r_max, color="#FDE8E8", alpha=0.2, zorder=0)
-
-# Density heatmap with PowerNorm to reveal structure across the full range
-# cividis is perceptually uniform and colorblind-safe
+# Density heatmap; PowerNorm lifts low-density branches into visibility.
 ax.pcolormesh(
     r_edges,
     x_edges,
     hist.T,
-    cmap="cividis",
-    norm=PowerNorm(gamma=0.35, vmin=0, vmax=hist.max()),
+    cmap=imprint_seq,
+    norm=PowerNorm(gamma=0.40, vmin=1, vmax=hist.max()),
     rasterized=True,
     zorder=1,
 )
 
-# Regime labels at bottom with semi-transparent background for readability
-label_bbox = {"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.7}
+# Regime labels at the bottom carry the stability → chaos narrative.
+label_bbox = {"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85}
 for rx, label in [(2.75, "Stable"), (3.28, "Periodic"), (3.78, "Chaotic")]:
     ax.text(
         rx,
         0.04,
         label,
         transform=ax.get_xaxis_transform(),
-        fontsize=14,
-        color="#666666",
+        fontsize=9,
+        color=INK_MUTED,
         ha="center",
         va="bottom",
         fontstyle="italic",
@@ -71,47 +82,50 @@ for rx, label in [(2.75, "Stable"), (3.28, "Periodic"), (3.78, "Chaotic")]:
         zorder=3,
     )
 
-# Annotations for key bifurcation points — well spaced
-bifurcation_points = [(3.0, "Period-2", -14, 0.97), (3.449, "Period-4", -60, 0.97), (3.544, "Period-8", -60, 0.87)]
+# Key period-doubling bifurcations — dashed markers with spaced callouts.
+ann_bbox = {"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9}
+bifurcation_points = [(3.0, "Period-2", -10, 0.97), (3.449, "Period-4", -10, 0.97), (3.544, "Period-8", -10, 0.87)]
 for r_bif, label, x_offset, y_frac in bifurcation_points:
-    ax.axvline(r_bif, color="#CCCCCC", linewidth=0.8, linestyle="--", alpha=0.6, zorder=2)
-    ha = "right" if x_offset < 0 else "left"
-    ann_bbox = {"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.8}
+    ax.axvline(r_bif, color=INK_SOFT, linewidth=0.7, linestyle="--", alpha=0.45, zorder=2)
     ax.annotate(
         f"{label}  r ≈ {r_bif}",
         xy=(r_bif, y_frac),
         xycoords=("data", "axes fraction"),
         xytext=(x_offset, 0),
         textcoords="offset points",
-        fontsize=14,
-        color="#444444",
-        ha=ha,
+        fontsize=9,
+        color=INK,
+        ha="right",
         va="top",
         bbox=ann_bbox,
         zorder=4,
     )
 
-# Onset of chaos annotation
+# Onset of chaos
 ax.annotate(
     "Onset of chaos\nr ≈ 3.57",
     xy=(3.57, 0.75),
     xytext=(3.75, 0.93),
-    fontsize=14,
-    color="#444444",
+    fontsize=9,
+    color=INK,
     ha="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.8},
-    arrowprops={"arrowstyle": "->", "color": "#666666", "connectionstyle": "arc3,rad=-0.2"},
+    bbox=ann_bbox,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "connectionstyle": "arc3,rad=-0.2"},
     zorder=4,
 )
 
 # Style
-ax.set_xlabel("Growth Rate (r)", fontsize=20)
-ax.set_ylabel("Steady-State Population (x)", fontsize=20)
-ax.set_title("bifurcation-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Growth Rate (r)", fontsize=10, color=INK)
+ax.set_ylabel("Steady-State Population (x)", fontsize=10, color=INK)
+title = "bifurcation-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_xlim(r_min, r_max)
 ax.set_ylim(0, 1)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.07, right=0.97, top=0.92, bottom=0.10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
