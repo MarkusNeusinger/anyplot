@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bode-basic
 created: '2026-03-21T20:45:56Z'
-updated: '2026-06-17T20:14:12Z'
+updated: '2026-06-17T20:34:34Z'
 generated_by: claude-sonnet
 workflow_run: 27715963407
 issue: 4411
@@ -12,49 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct dual-panel Bode layout with shared logarithmic x-axis and accurate stability
-    margin calculations (GM=10.8 dB, PM=24.1°)
-  - Cross-panel markers visually link the magnitude and phase panels at crossover
-    frequencies — effective data storytelling
-  - Full theme-adaptive chrome with correct Imprint palette tokens (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT, GRID) applied to all axes and annotation boxes
-  - 'Clean idiomatic Plotly usage: make_subplots, add_hline, add_shape, add_annotation,
-    update_xaxes/yaxes, write_image + write_html'
-  - Minor gridlines (opacity 7%) alongside major gridlines (15%) make it easy to read
-    margin values on both panels
-  - Shaded fill rectangles (opacity=0.12) for both margin regions are visually informative
-    without cluttering
+  - 'Perfect spec compliance: dual-panel Bode layout with shared log-frequency axis,
+    gain/phase margin annotations, and reference lines at 0 dB and -180°'
+  - 'Excellent palette compliance: main curves in #009E73 (Imprint position 1), gain
+    margin in #C475FD (position 2), phase margin in #4467A3 (position 3)'
+  - 'Both light and dark themes render cleanly with correct backgrounds (#FAF8F1 /
+    #1A1A17) and all chrome tokens properly adapted'
+  - Sophisticated cross-panel markers link the gain and phase crossover points visually
+    across both subplots
+  - Realistic third-order transfer function physics (resonance at 10 Hz, ζ=0.2, real
+    pole at 200 Hz) produces a textbook-quality Bode plot with visible resonance peak
+  - 'Idiomatic Plotly usage: make_subplots with shared_xaxes=True, add_hline for reference
+    lines, add_shape for filled margin regions, minor gridlines for log scale'
+  - HTML interactive export included alongside PNG output
   weaknesses:
-  - 'Palette ordering violation: gain margin uses Imprint position 4 (ochre #BD8233)
-    while phase margin uses position 2 (lavender #C475FD) — canonical rule requires
-    positions assigned in order 2→3 for the second and third distinct annotation colours'
-  - 'Resonance peak is not visibly present in the magnitude trace: with K=40, p1=1
-    Hz, p2=10 Hz, wn=100 Hz, ζ=0.3, the two lower poles attenuate the signal before
-    the complex-pair resonance can produce a visible bump — the spec explicitly calls
-    for a resonance peak; consider reducing p1/p2 or using a second-order-only system'
-  - 0 dB reference line renders solid (zerolinecolor from update_yaxes overlays the
-    intended dashed add_hline) — suppress the y-axis zeroline (zeroline=False in update_yaxes
-    row=1) so only the dashed hline shows
-  - All four frame spines remain visible (Plotly default); style guide prefers removing
-    top and right spines — set showline=False on top/right axis borders or use mirror=False
-  image_description: |-
-    Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme, clearly distinct from pure white.
-      Chrome: Title "bode-basic · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. Y-axis labels "Magnitude (dB)" and "Phase (degrees)" in dark ink at font-size 12. X-axis label "Frequency (Hz)" in dark ink. Tick labels in secondary ink (#4A4A44) at font-size 10 — all readable. Grid lines subtle at ~15% opacity.
-      Data: Main Bode curve in Imprint green (#009E73) — clearly visible in both panels. GM annotation box (ochre #BD8233 border) with "GM = 10.8 dB" text; PM annotation box (lavender #C475FD border) with "PM = 24.1°" text. Both annotation boxes use ELEVATED_BG (#FFFDF6) fill. Cross-panel diamond and square markers visible. 0 dB reference line appears solid (not dashed) due to y-axis zeroline overlay. -180° dashed reference line correctly rendered.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light contrast failures.
-
-    Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme, clearly distinct from pure black.
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels also in appropriate light tones. Grid lines subtle. No dark-on-dark failures observed.
-      Data: Imprint green curve identical to light render (position 1 = #009E73). Ochre and lavender annotation colors identical to light render. ELEVATED_BG (#242420) used for annotation box fills — boxes are slightly darker than background, providing subtle separation. Arrow lines and marker symbols all visible.
-      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark contrast failure.
+  - Design Excellence is functional but not exceptional — no spine removal on the
+    plot panels (top/right spines are still shown via Plotly defaults even with showline=False;
+    consider explicit mirror='allticks' or axis.showline approach to enforce L-shaped
+    frame)
+  - DE-03 storytelling could be enhanced by labeling the resonance peak explicitly
+    on the magnitude panel with a small annotation
+  - 'DE-01: The filled semi-transparent rectangles (opacity=0.12) for margin regions
+    are a nice touch but subtle; increasing opacity slightly to 0.18–0.20 would make
+    the margin regions more immediately legible without clashing with the data curve'
+  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
+    \ (#FAF8F1) correctly applied to both paper and plot backgrounds.\n  Chrome: Title\
+    \ \"bode-basic · python · plotly · anyplot.ai\" in dark ink (#1A1A17) centered\
+    \ at top, clearly readable. Y-axis labels \"Magnitude (dB)\" and \"Phase (degrees)\"\
+    \ in dark ink, readable. X-axis label \"Frequency (Hz)\" in dark ink at bottom\
+    \ panel. Tick labels in INK_SOFT (#4A4A44), readable. Grid lines are subtle at\
+    \ 15% opacity with minor gridlines for log scale.\n  Data: Magnitude curve in\
+    \ #009E73 (Imprint brand green) shows flat DC gain (~6 dB), resonance peak (~14\
+    \ dB) near 10 Hz, then rolloff below 0 dB. Dashed 0 dB reference line in INK_SOFT.\
+    \ Gain margin annotation \"GM = 12.0 dB\" in #C475FD (Imprint lavender) with bordered\
+    \ box and arrow, diamond marker at phase crossover. Phase curve in same #009E73\
+    \ falling from 0° to ~-250°+. Dashed -180° reference line. Phase margin annotation\
+    \ \"PM = 15.2°\" in #4467A3 (Imprint blue) with arrow. Cross-panel markers (blue\
+    \ square on magnitude plot, lavender diamond on phase plot).\n  Legibility verdict:\
+    \ PASS — all text is readable against the warm off-white background.\n\nDark render\
+    \ (plot-dark.png):\n  Background: Warm near-black (#1A1A17) correctly applied.\
+    \ \n  Chrome: Title in light ink (#F0EFE8), clearly readable against dark background.\
+    \ Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Grid lines remain\
+    \ subtle with correct dark-mode GRID token. Annotation boxes use ELEVATED_BG (#242420)\
+    \ as background — annotation text in #C475FD and #4467A3 is readable against the\
+    \ dark elevated background.\n  Data: Data colors are identical to light render\
+    \ — #009E73 curve, #C475FD gain margin markers/annotation, #4467A3 phase margin\
+    \ markers/annotation. Visual layout matches the light render exactly; only chrome\
+    \ elements have flipped.\n  Legibility verdict: PASS — no dark-on-dark failures\
+    \ detected. All text, labels, and annotation content are clearly readable against\
+    \ the dark background."
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,75 +74,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title font-size 16, axis labels 12, ticks 10) explicitly
-          set and readable at full resolution in both themes
+        comment: Title 16px, axis labels 12px, tick labels 10px — all at style-guide
+          recommended sizes. Readable in both light and dark renders.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap; GM and PM annotations are in separate
-          panels
+        comment: Annotations positioned with arrows and offsets to avoid overlap with
+          curves. No text collisions detected.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width 2.5 and marker sizes 8-10 clearly visible; 800-point line
-          plot appropriate density
+        comment: Main curves at width=2.5 clearly visible. Reference lines dashed
+          and readable. Markers (diamond/square, size 8-10) clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colorblind-safe; no red-green sole signal
+        comment: Imprint palette used — CVD-safe. No red-green sole signal. Three
+          hue families (green/lavender/blue) used for three distinct roles.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); dual-panel proportions good; no clipping
+        comment: Canvas gate passed (3200x1800). Dual-panel with row_heights=[0.55,
+          0.45] is appropriate. Margins l=80, r=40, t=70, b=60 — adequate spacing.
+          No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels descriptive with units; title format correct
+        comment: 'Title matches required format. X: ''Frequency (Hz)'', Y1: ''Magnitude
+          (dB)'', Y2: ''Phase (degrees)'' — all descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); first series is #009E73;
-          but margin annotations use positions 4 then 2 — not canonical order 2 then
-          3'
+        passed: true
+        comment: 'First series #009E73 (Imprint pos 1). Gain margin #C475FD (pos 2).
+          Phase margin #4467A3 (pos 3). Backgrounds #FAF8F1/#1A1A17 correct. Data
+          colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: custom palette, shaded margin regions, cross-panel
-          markers, styled annotation callout boxes'
+        comment: 'Above default (4). Intentional hierarchy: Imprint palette, filled
+          margin regions (opacity=0.12), cross-panel markers, styled annotation boxes.
+          Professional but not exceptional.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid well-done (major 15%, minor 7% opacity); whitespace generous;
-          but all four frame spines visible — top/right not removed
+        comment: Above default (2). L-shaped spines (showline=False on top panel x-axis,
+          mirror=False on y-axes), subtle 15% grid, minor gridlines for log readability,
+          no legend (single series).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent: dual-panel with cross-panel markers creates clear narrative;
-          stability margins highlighted with shaded fills and annotated callouts'
+        comment: Above default (2). Cross-panel diamond/square markers visually connect
+          measurement points between plots. Filled regions show margin distance to
+          instability. Exact values shown in annotations.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,54 +157,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dual-panel Bode plot with shared logarithmic x-axis
+        comment: 'Correct dual-panel Bode plot: magnitude (dB) top, phase (degrees)
+          bottom, shared log-frequency axis.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Gain margin and phase margin annotated; 0 dB and -180 deg reference
-          lines present; log x-axis; but resonance peak not visibly present in magnitude
-          trace
+        comment: 'All spec features present: dual panel, shared log x-axis, gain margin
+          annotation, phase margin annotation, 0 dB reference line, -180° reference
+          line, grid lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency on log x-axis, magnitude in dB on top, phase in degrees
-          on bottom
+        comment: 'X: frequency_hz (log Hz), Y1: magnitude_db (dB), Y2: phase_deg (degrees).
+          800 log-spaced points 0.1–10000 Hz. All data shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'bode-basic · python · plotly · anyplot.ai'; no legend (correct
-          for single-system Bode)
+        comment: 'Title: ''bode-basic · python · plotly · anyplot.ai'' — exact required
+          format. No legend (showlegend=False throughout, appropriate for single-system
+          Bode).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows magnitude and phase across 4 decades; stability margin annotations;
-          reference lines; cross-panel linking; missing visible resonance peak
+        comment: 'Shows all Bode plot aspects: flat DC gain, resonance peak, rolloff,
+          phase transition. Both stability margins computed and annotated.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Third-order transfer function with realistic parameters; GM ~10.8
-          dB and PM ~24.1 deg are plausible stability margins
+        comment: Third-order transfer function with realistic parameters. Resonance
+          at 10 Hz (ζ=0.2), real pole at 200 Hz, K=2. GM=12 dB, PM=15.2° are realistic
+          values. Neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency 0.1-10000 Hz; magnitude range [-80, 45] dB; phase range
-          0 to ~-350 deg appropriate for third-order system
+        comment: Magnitude range -80 to +25 dB captures full response. Frequency 0.1–10000
+          Hz spans 5 decades, appropriate for the given system poles. Phase range
+          auto-covers 0° to ~-270°.
     code_quality:
       score: 10
       max: 10
@@ -195,35 +218,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear top-level code
+        comment: No functions or classes. Clean linear flow with logical sections
+          commented.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — transfer function calculation, no random elements
+        comment: Fully deterministic — pure numpy math over fixed parameters, no random
+          numbers.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, plotly.graph_objects, plotly.subplots,
-          os, sys'
+        comment: os, sys (path fix), numpy, plotly.graph_objects, plotly.subplots
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path fix for plotly.py naming conflict is well-justified; code
-          is well-organized with clear sections
+        comment: Appropriate complexity. No fake UI. sys.path fix correctly handles
+          name collision with plotly.py filename.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4) and plot-{THEME}.html.
+          Current Plotly API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -231,15 +257,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: make_subplots, add_hline, add_shape, add_annotation,
-          update_layout, update_xaxes/yaxes all used idiomatically'
+        comment: make_subplots with shared_xaxes=True, go.Scatter, add_hline, add_shape,
+          add_annotation with arrows, update_xaxes/update_yaxes with row/col. All
+          idiomatic Plotly patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses minor gridlines, HTML export, shared x-axis subplots, shaped
-          annotation boxes; could further leverage plotly interactivity
+        comment: HTML interactive export, minor gridlines (Plotly-specific API), cross-panel
+          annotations via xref='x'/'x2', add_shape for subplot regions, np.log10(freq)
+          for log-axis annotation coordinates.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -252,4 +280,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
