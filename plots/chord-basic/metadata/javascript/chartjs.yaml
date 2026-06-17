@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: chord-basic
+created: '2026-06-17T01:58:14Z'
+updated: '2026-06-17T02:02:56Z'
+generated_by: claude-opus
+workflow_run: 27660410238
+issue: 858
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chord-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Builds a genuine chord diagram from a core Chart.js doughnut plus a custom afterDatasetsDraw
+    plugin that reads the live arc geometry (getProps for start/end angles, innerRadius,
+    centre) and bows ribbons through the centre — no D3, no community plugin, exactly
+    the 'pure Chart.js extensibility' path the library prompt asks for.
+  - 'Imprint palette in canonical order with brand green #009E73 leading (Africa);
+    data colours are pixel-identical across light and dark, only chrome flips.'
+  - Bidirectional flows are encoded as asymmetric ribbon ends (slot[i][j] vs slot[j][i]),
+    the standard Circos/d3-chord convention, with ribbon width proportional to flow
+    value and arc length proportional to total outgoing flow.
+  - Largest-pair-first draw order keeps thin ribbons readable on top of thick ones;
+    alpha 0.6 fill with a 0.9 stroke gives clean layering in both themes.
+  - Square 2400x2400 canvas via the //# anyplot-orientation directive; title matches
+    the mandated 'chord-basic · javascript · chartjs · anyplot.ai' format; deterministic
+    hard-coded data, animation:false, no filesystem/network access.
+  weaknesses:
+  - Spec notes suggest hover tooltips showing exact flow values for interactive libraries,
+    but the ribbons are drawn in the plugin layer and are not hit-testable — the tooltip
+    only reports each arc's total outgoing flow ('X k outgoing'), so hovering a ribbon
+    does not reveal its directional flow values in the HTML render.
+  - Ribbons are coloured solely by the dominant direction's entity, so a pair's minor-direction
+    entity has no colour cue; a reader cannot always tell which two entities a faint
+    ribbon connects without tracing it to both arcs.
+  - Each arc is tiled only by its outgoing slots, so incoming flow is not separately
+    reserved on the destination arc (a simplification vs a full Circos in+out segmented
+    arc); geometrically consistent but slightly less precise as a flow-balance readout.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), no pure-white plot area.
+      Chrome: title "chord-basic · javascript · chartjs · anyplot.ai" in dark ink, fully readable above the circle; bottom legend (Africa, Asia, Europe, N. America, S. America, Oceania) in dark text with matching colour swatches, all readable. PASS.
+      Data: doughnut ring of 6 arcs — Africa green #009E73 (first), Asia lavender #C475FD, Europe blue #4467A3, N. America ochre #BD8233, S. America matte red #AE3030, Oceania cyan #2ABCCD — canonical Imprint order. Translucent ribbons (alpha ~0.6) bow through the centre, widths proportional to flow. First series is #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), not pure black.
+      Chrome: title and legend in light ink (#F0EFE8), clearly readable against the dark surface; no dark-on-dark text. PASS.
+      Data: identical arc and ribbon colours to the light render (Africa still #009E73, etc.) — only the background and text colour flipped. Ribbons remain distinguishable on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px / legend 16px (2x at dpr) readable in both themes; entities
+          identified by legend only, no on-arc labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Single-row bottom legend, no text collisions; ribbon overlap handled
+          by alpha.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: alpha 0.6 fill + 0.9 stroke; thin Oceania ribbons small but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint CVD-safe palette, good contrast both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square (gate passed), centred, generous padding, nothing
+          clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes (chord); title descriptive, legend labels entities.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Africa #009E73 first, canonical order; backgrounds #FAF8F1 / #1A1A17
+          correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom chord built from doughnut + plugin; thoughtful colour-by-dominant-direction
+          and layering.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chartjunk; page-bg arc borders separate segments cleanly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Big-first draw order + arc length = total outgoing creates hierarchy;
+          minor-direction colour cue absent.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine chord diagram — entities on a ring, ribbons proportional
+          to flow.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct entity colours, width ~ value, bidirectional via asymmetric
+          ribbon ends (Circos convention).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: source/target/value mapped via flow matrix; 6 continents, directed
+          flows.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exact format; legend matches the 6 entities.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple entities, asymmetric bidirectional flows, varied widths
+          — full chord feature set.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Continental migration flows — plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Flow values 4–138k/year, sensible domain scale.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Plugin object + small helpers are the idiomatic way to extend Chart.js;
+          no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Chart is a global, per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No savefig (harness owns output); current Chart.js v4 API; animation:false.
+    library_features:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Plugin API (afterDatasetsDraw, getDatasetMeta, getProps), doughnut
+          type, mount-node contract all used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthesises a chord from core Chart.js + live canvas geometry — the
+          distinctive extensibility the library prompt celebrates.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-plugin
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
