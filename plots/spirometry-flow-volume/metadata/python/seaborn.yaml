@@ -1,89 +1,108 @@
 library: seaborn
+language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:18:54Z'
-updated: '2026-03-18T22:44:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23269660602
+updated: '2026-06-17T03:58:39Z'
+generated_by: claude-opus
+workflow_run: 27664529015
 issue: 4557
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent clinical storytelling through the flow-deficit shading between measured
-    and predicted curves
-  - Clean professional aesthetic with cohesive color palette and well-styled clinical
-    values text box
-  - Complete spec compliance with all required features (PEF, FEV1, FVC annotations,
-    predicted overlay, closed loop)
-  - Realistic spirometry data representing a mild obstructive pattern (FEV1/FVC =
-    73%)
-  - Good use of seaborn hue+style parameters for native dash pattern control
+  - 'Closed flow-volume loop is anatomically correct: sharp expiratory rise to PEF
+    then linear decline, symmetric U-shaped inspiratory limb below zero, expiratory
+    and inspiratory limbs share endpoints to form a clean closed shape.'
+  - 'All spec-required clinical annotations present and legible: PEF marked with red
+    dot + arrow callout, FEV1 with a green diamond marker, and a monospace clinical
+    callout box reporting FVC/FEV1/FEV1-FVC ratio/PEF.'
+  - Dashed muted predicted-normal overlay plus a red-shaded 'Flow deficit' region
+    between measured and predicted expiratory limbs adds genuine clinical data storytelling.
+  - 'Idiomatic seaborn: sns.lineplot with hue+style+dashes drives the solid/dashed
+    differentiation natively, sns.scatterplot for the marked points, sns.set_theme
+    + sns.despine for theme-adaptive chrome.'
+  - 'Both light and dark renders are fully readable: warm off-white #FAF8F1 / warm
+    near-black #1A1A17 backgrounds, brand green #009E73 measured loop identical across
+    themes, no dark-on-dark or light-on-light text.'
   weaknesses:
-  - 'Redundant legend code: sns.move_legend() immediately overridden by ax.legend()'
-  image_description: 'The plot displays a spirometry flow-volume loop on a clean white
-    background with subtle gridlines. The x-axis shows "Volume (L)" (0–5.2) and the
-    y-axis shows "Flow (L/s)" (−5.5 to 10.5). A solid blue (#306998) line traces the
-    measured flow-volume loop: the expiratory limb rises sharply from the origin to
-    a Peak Expiratory Flow of ~9.5 L/s, then declines roughly linearly to FVC at ~4.8
-    L. The inspiratory limb curves below the zero-flow line in a symmetric U-shape,
-    reaching about −5.5 L/s. A gray dashed line shows the predicted normal loop (larger,
-    extending to ~5.2 L volume and ~10.8 L/s PEF). A light red shaded region between
-    the measured and predicted expiratory limbs highlights the "Flow deficit." A red
-    dot with arrow annotation marks "PEF = 9.5 L/s," and a blue diamond with arrow
-    marks "FEV₁ = 3.5 L." A styled text box in the bottom-right displays clinical
-    values: FVC = 4.8 L, FEV₁ = 3.5 L, FEV₁/FVC = 73%, PEF = 9.5 L/s. The legend in
-    the upper right shows Measured (solid blue), Predicted Normal (dashed gray), and
-    Flow deficit (shaded red). Top and right spines are removed. Title reads "spirometry-flow-volume
-    · seaborn · pyplots.ai."'
+  - The predicted-normal overlay uses INK_MUTED (a theme-adaptive chrome token), so
+    the reference series color flips between light (#6B6A63) and dark (#A8A79F). It
+    reads as an intentional de-emphasized neutral reference, but strictly a data series
+    should hold a fixed palette color across themes — consider a fixed muted gray
+    if stricter theme-color parity is desired.
+  - Tick labels at 8pt are on the small side when the 3200x1800 canvas is scaled down
+    to ~400px mobile width; still readable but near the lower bound.
+  - 'LM-02: a fair amount of the polish (annotate arrows, fill_between deficit shading,
+    text callout box, axhline) is plain matplotlib rather than seaborn-distinctive
+    API — appropriate, but limits the seaborn-specific feature showcase.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1, correct light surface.
+      Chrome: dark title "spirometry-flow-volume · python · seaborn · anyplot.ai", dark axis labels "Volume (L)" / "Flow (L/s)", dark tick labels, subtle horizontal y-grid, top/right spines removed. All readable.
+      Data: measured loop in brand green #009E73 (solid), predicted-normal loop in muted dark-gray dashed, PEF marker red dot with red arrow "PEF = 9.5 L/s", FEV1 green diamond with green "FEV₁ = 3.5 L" callout, pink-shaded flow-deficit region, monospace clinical box (FVC/FEV1/FEV1-FVC/PEF), legend top-right (Measured / Predicted Normal / Flow deficit).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17, correct dark surface.
+      Chrome: light title, light axis + tick labels, subtle grid, despined. All readable.
+      Data: measured loop green #009E73 identical to light render, predicted overlay light-gray dashed, PEF red dot still clearly visible, FEV1 green diamond, deficit region shaded dark red (visible), clinical callout box with light text on elevated dark panel.
+      Legibility verdict: PASS — no dark-on-dark failures; PEF red and brand green both legible on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 14-16pt'
+        comment: Font sizes explicitly set, readable both themes; ticks at 8pt near
+          lower bound for mobile
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Annotations well-positioned with arrows. Legend
-          and text box in clear areas
+        comment: Legend, clinical box, annotations clear of data and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=3, PEF marker s=300, FEV1 marker s=200. All clearly
-          visible
+        comment: Lines 2.5pt, markers prominent (s=90-120), dashes clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/gray/red palette is colorblind-safe with strong luminance contrast
+        comment: Green/red/gray differentiated by shape+position, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize, plot fills canvas well with tight_layout
+        comment: Canvas gate passed; good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) and Flow (L/s) - descriptive with units
+        comment: Volume (L) / Flow (L/s) with units, full mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct both themes; predicted
+          overlay uses neutral chrome token (minor)'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -91,22 +110,19 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom cohesive palette, styled clinical text box, white edge-highlighting
-          on markers. Clearly above defaults
+        comment: Semantic colors, deficit shading, callout box, intentional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, grid subtle (alpha=0.15), zero-flow reference line.
-          Grid still on both axes
+        comment: Despined, subtle y-grid, zero reference line, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Flow-deficit shading tells the clinical story. PEF/FEV1 annotations
-          guide the viewer. Strong visual hierarchy
+        comment: PEF focal point, deficit region, measured-vs-predicted comparison
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct flow-volume loop with expiratory and inspiratory limbs
+        comment: Correct closed flow-volume loop
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: PEF annotation, clinical values box, predicted
-          overlay, distinct styling, closed loop'
+        comment: PEF marked, FEV1/FVC/PEF annotated, dashed predicted overlay, closed
+          loop
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Volume, Y=Flow, correct orientation
+        comment: x=Volume, y=Flow, expiratory positive/inspiratory negative
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format. Legend labels descriptive and accurate
+        comment: Title format correct, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -145,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both limbs, measured and predicted, PEF, FEV1, flow deficit. Comprehensive
+        comment: Expiratory+inspiratory, measured+predicted, deficit, all key values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinically plausible spirometry values consistent with mild obstructive
-          pattern
+        comment: FVC 4.8L, FEV1 3.5L, PEF 9.5L/s, ratio 73% — plausible mild obstruction,
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values within realistic clinical ranges for adult spirometry
+        comment: Realistic spirometry ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,33 +184,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42); deterministic curves
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, plt, np, pd, sns all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Redundant legend handling: sns.move_legend() immediately overridden
-          by ax.legend()'
+        passed: true
+        comment: Clean, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_mastery:
+        comment: Saves plot-{THEME}.png, no bbox_inches=tight
+    library_features:
       score: 7
       max: 10
       items:
@@ -203,29 +218,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.lineplot with hue+style, sns.scatterplot, sns.set_context,
-          sns.despine. Iterating over limbs slightly less idiomatic
+        comment: lineplot hue+style+dashes, scatterplot, set_theme, despine
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses seaborn-specific features: style parameter for dashes, sns.set_context,
-          sns.despine, sns.move_legend'
+        comment: hue+style dash mapping is seaborn-distinctive; much polish is plain
+          matplotlib
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
-  - layer-composition
+  - reference-overlay
+  - shaded-region
+  - highlight-marker
   patterns:
   - data-generation
-  - iteration-over-groups
-  - explicit-figure
   dataprep:
   - interpolation
   styling:
+  - publication-ready
+  - theme-adaptive
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
+  - semantic-color
