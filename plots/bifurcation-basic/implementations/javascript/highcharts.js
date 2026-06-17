@@ -1,7 +1,7 @@
 // anyplot.ai
 // bifurcation-basic: Bifurcation Diagram for Dynamical Systems
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-17
+// Quality: 90/100 | Created: 2026-06-17
 
 //# anyplot-orientation: landscape
 
