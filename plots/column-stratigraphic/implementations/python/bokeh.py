@@ -1,65 +1,99 @@
-""" pyplots.ai
+""" anyplot.ai
 column-stratigraphic: Stratigraphic Column with Lithology Patterns
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-15
+Library: bokeh 3.9.1 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-06-17
 """
 
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, LegendItem, Range1d, Span
-from bokeh.plotting import figure, output_file, save
+import math
+import os
+import sys
 
 
-# Data: Synthetic sedimentary section with 10 layers (varied thicknesses)
+# Prevent self-import: this file is named bokeh.py, which shadows the installed
+# bokeh package when its directory sits at the front of sys.path.
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _this_dir]
+
+import time
+from pathlib import Path
+
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, FixedTicker, HoverTool, Label, Legend, LegendItem, Range1d, Span
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme-adaptive chrome (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — data colors stay identical across light/dark themes
+IMPRINT_RED = "#AE3030"  # semantic anchor — K-Pg extinction event marker
+
+# Data: synthetic borehole section, depth increasing downward (law of
+# superposition — youngest beds on top, oldest at depth). Ages run from
+# Eocene (shallow) down through Paleocene to Late Cretaceous (deep).
 layers = [
-    {"top": 0, "bottom": 12, "lithology": "Sandstone", "formation": "Dakota Fm", "age": "Late Cretaceous"},
-    {"top": 12, "bottom": 38, "lithology": "Shale", "formation": "Mancos Fm", "age": "Late Cretaceous"},
-    {"top": 38, "bottom": 52, "lithology": "Limestone", "formation": "Niobrara Fm", "age": "Late Cretaceous"},
-    {"top": 52, "bottom": 60, "lithology": "Siltstone", "formation": "Pierre Fm", "age": "Late Cretaceous"},
-    {"top": 60, "bottom": 88, "lithology": "Sandstone", "formation": "Fox Hills Fm", "age": "Late Cretaceous"},
-    {"top": 88, "bottom": 112, "lithology": "Conglomerate", "formation": "Dawson Fm", "age": "Paleocene"},
-    {"top": 112, "bottom": 140, "lithology": "Shale", "formation": "Green River Fm", "age": "Eocene"},
-    {"top": 140, "bottom": 158, "lithology": "Limestone", "formation": "Leadville Fm", "age": "Eocene"},
-    {"top": 158, "bottom": 180, "lithology": "Sandstone", "formation": "Wasatch Fm", "age": "Eocene"},
-    {"top": 180, "bottom": 200, "lithology": "Siltstone", "formation": "Uinta Fm", "age": "Eocene"},
+    {"top": 0, "bottom": 22, "lithology": "Siltstone", "formation": "Uinta Fm", "age": "Eocene"},
+    {"top": 22, "bottom": 40, "lithology": "Sandstone", "formation": "Wasatch Fm", "age": "Eocene"},
+    {"top": 40, "bottom": 66, "lithology": "Shale", "formation": "Green River Fm", "age": "Eocene"},
+    {"top": 66, "bottom": 84, "lithology": "Conglomerate", "formation": "Dawson Fm", "age": "Paleocene"},
+    {"top": 84, "bottom": 100, "lithology": "Sandstone", "formation": "Fort Union Fm", "age": "Paleocene"},
+    {"top": 100, "bottom": 120, "lithology": "Sandstone", "formation": "Fox Hills Fm", "age": "Late Cretaceous"},
+    {"top": 120, "bottom": 150, "lithology": "Shale", "formation": "Pierre Fm", "age": "Late Cretaceous"},
+    {"top": 150, "bottom": 166, "lithology": "Limestone", "formation": "Niobrara Fm", "age": "Late Cretaceous"},
+    {"top": 166, "bottom": 184, "lithology": "Shale", "formation": "Mancos Fm", "age": "Late Cretaceous"},
+    {"top": 184, "bottom": 200, "lithology": "Sandstone", "formation": "Dakota Fm", "age": "Late Cretaceous"},
 ]
 
-# Lithology style mapping: improved colorblind-safe palette
-# Sandstone: warm yellow, Siltstone: olive green (high contrast vs sandstone)
+# Lithology styling: Imprint colors (constant) + FGDC-style hatch for a
+# redundant, colorblind-safe encoding (stipple=sandstone, dashes=shale, etc.)
 lithology_styles = {
-    "Sandstone": {"color": "#F5DEB3", "hatch_pattern": ".", "hatch_color": "#8B7355"},
-    "Shale": {"color": "#A9A9A9", "hatch_pattern": "-", "hatch_color": "#4A4A4A"},
-    "Limestone": {"color": "#87CEEB", "hatch_pattern": "+", "hatch_color": "#2E5A88"},
-    "Siltstone": {"color": "#7B9971", "hatch_pattern": "/", "hatch_color": "#3B5335"},
-    "Conglomerate": {"color": "#E8923F", "hatch_pattern": "o", "hatch_color": "#6B3A00"},
+    "Sandstone": {"color": "#009E73", "hatch_pattern": "."},  # Imprint 1 (brand — first series)
+    "Shale": {"color": "#C475FD", "hatch_pattern": "-"},  # Imprint 2
+    "Limestone": {"color": "#4467A3", "hatch_pattern": "+"},  # Imprint 3
+    "Siltstone": {"color": "#BD8233", "hatch_pattern": "/"},  # Imprint 4
+    "Conglomerate": {"color": "#2ABCCD", "hatch_pattern": "o"},  # Imprint 6
 }
+HATCH_INK = "#211F1A"  # dark hatch reads on every (constant) Imprint fill
 
-# K-Pg boundary depth
-KPG_DEPTH = 88
+# K-Pg boundary: contact between Paleocene (above) and Late Cretaceous (below)
+KPG_DEPTH = 100
 
-# Column geometry — wider for better canvas fill
-col_center = 0.55
-col_width = 1.1
+# Column geometry
+COL_LEFT, COL_RIGHT = 0.0, 2.4
+col_center = (COL_LEFT + COL_RIGHT) / 2
 
-# Plot — tighter x_range for better horizontal utilization
+# Plot
+title = "column-stratigraphic · python · bokeh · anyplot.ai"
 p = figure(
-    width=4800,
-    height=2700,
-    title="column-stratigraphic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     y_axis_label="Depth (m)",
     toolbar_location=None,
-    x_range=Range1d(-0.55, 1.85),
-    y_range=Range1d(210, -10),
+    x_range=Range1d(-1.8, 3.9),
+    y_range=Range1d(208, -8),
+    min_border_left=180,
+    min_border_top=110,
+    min_border_bottom=70,
+    min_border_right=40,
 )
 
-# Draw each layer as a rectangle with hatch pattern
-legend_items_dict = {}
+# Draw each layer as a depth interval with its lithology pattern
+legend_renderers = {}
 for layer in layers:
+    style = lithology_styles[layer["lithology"]]
     source = ColumnDataSource(
         data={
-            "x": [col_center],
-            "y": [(layer["top"] + layer["bottom"]) / 2],
-            "width": [col_width],
-            "height": [layer["bottom"] - layer["top"]],
+            "left": [COL_LEFT],
+            "right": [COL_RIGHT],
+            "top": [layer["top"]],
+            "bottom": [layer["bottom"]],
             "lithology": [layer["lithology"]],
             "formation": [layer["formation"]],
             "age": [layer["age"]],
@@ -69,180 +103,163 @@ for layer in layers:
         }
     )
 
-    style = lithology_styles[layer["lithology"]]
-    renderer = p.rect(
-        x="x",
-        y="y",
-        width="width",
-        height="height",
+    renderer = p.quad(
+        left="left",
+        right="right",
+        top="top",
+        bottom="bottom",
         source=source,
         fill_color=style["color"],
-        line_color="#2C2C2C",
-        line_width=2,
+        line_color=INK,
+        line_width=2.5,
         hatch_pattern=style["hatch_pattern"],
-        hatch_color=style["hatch_color"],
-        hatch_alpha=0.7,
-        hatch_scale=16,
-        hatch_weight=2,
+        hatch_color=HATCH_INK,
+        hatch_alpha=0.6,
+        hatch_scale=20,
+        hatch_weight=2.2,
     )
 
-    lith = layer["lithology"]
-    if lith not in legend_items_dict:
-        legend_items_dict[lith] = renderer
+    legend_renderers.setdefault(layer["lithology"], renderer)
 
-    hover = HoverTool(
-        renderers=[renderer],
-        tooltips=[
-            ("Lithology", "@lithology"),
-            ("Formation", "@formation"),
-            ("Age", "@age"),
-            ("Top", "@top_depth{0.0} m"),
-            ("Bottom", "@bottom_depth{0.0} m"),
-            ("Thickness", "@thickness{0.0} m"),
-        ],
+    p.add_tools(
+        HoverTool(
+            renderers=[renderer],
+            tooltips=[
+                ("Lithology", "@lithology"),
+                ("Formation", "@formation"),
+                ("Age", "@age"),
+                ("Top", "@top_depth{0.0} m"),
+                ("Bottom", "@bottom_depth{0.0} m"),
+                ("Thickness", "@thickness{0.0} m"),
+            ],
+        )
     )
-    p.add_tools(hover)
 
-# Depth tick marks at each layer boundary for polished geological appearance
-boundary_depths = sorted({layer["top"] for layer in layers} | {layer["bottom"] for layer in layers})
-for depth in boundary_depths:
-    x_left = col_center - col_width / 2
-    p.line(x=[x_left - 0.04, x_left], y=[depth, depth], line_color="#555555", line_width=1.5, line_alpha=0.6)
-    # Small depth label at boundary
-    label = Label(
-        x=x_left - 0.06,
-        y=depth,
-        text=f"{depth:.0f}",
-        text_font_size="13pt",
-        text_align="right",
-        text_baseline="middle",
-        text_color="#777777",
-    )
-    p.add_layout(label)
-
-# K-Pg boundary emphasis — bold red dashed line with prominent annotation
-kpg_span = Span(location=KPG_DEPTH, dimension="width", line_color="#CC0000", line_width=5, line_dash="dashed")
-p.add_layout(kpg_span)
-
-kpg_label = Label(
-    x=col_center,
-    y=KPG_DEPTH,
-    text="K-Pg Boundary (~66 Ma)",
-    text_font_size="20pt",
-    text_font_style="bold",
-    text_color="#CC0000",
-    text_align="center",
-    text_baseline="bottom",
-    y_offset=10,
-    background_fill_color="white",
-    background_fill_alpha=0.8,
-)
-p.add_layout(kpg_label)
-
-# Formation labels on the right side — closer to column
+# Formation labels — to the right of the column
 for layer in layers:
-    mid_y = (layer["top"] + layer["bottom"]) / 2
-    label = Label(
-        x=col_center + col_width / 2 + 0.04,
-        y=mid_y,
-        text=layer["formation"],
-        text_font_size="19pt",
-        text_font_style="bold",
-        text_align="left",
-        text_baseline="middle",
-        text_color="#2C2C2C",
+    p.add_layout(
+        Label(
+            x=COL_RIGHT + 0.18,
+            y=(layer["top"] + layer["bottom"]) / 2,
+            text=layer["formation"],
+            text_font_size="30pt",
+            text_font_style="bold",
+            text_align="left",
+            text_baseline="middle",
+            text_color=INK,
+        )
     )
-    p.add_layout(label)
 
-# Age labels on the left side with brackets
+# Geological age brackets on the left — rotated period names + bracket lines
 age_groups = {}
 for layer in layers:
-    age = layer["age"]
-    if age not in age_groups:
-        age_groups[age] = {"top": layer["top"], "bottom": layer["bottom"]}
-    else:
-        age_groups[age]["bottom"] = max(age_groups[age]["bottom"], layer["bottom"])
-        age_groups[age]["top"] = min(age_groups[age]["top"], layer["top"])
+    bounds = age_groups.setdefault(layer["age"], {"top": layer["top"], "bottom": layer["bottom"]})
+    bounds["top"] = min(bounds["top"], layer["top"])
+    bounds["bottom"] = max(bounds["bottom"], layer["bottom"])
 
-bracket_x = -0.12
+bracket_x = -0.6
 for age, bounds in age_groups.items():
     mid_y = (bounds["top"] + bounds["bottom"]) / 2
-    label = Label(
-        x=bracket_x - 0.04,
-        y=mid_y,
-        text=age,
-        text_font_size="19pt",
-        text_align="right",
-        text_baseline="middle",
-        text_color="#2C2C2C",
-        text_font_style="italic",
+    p.add_layout(
+        Label(
+            x=-1.25,
+            y=mid_y,
+            text=age,
+            text_font_size="30pt",
+            text_font_style="italic",
+            text_align="center",
+            text_baseline="middle",
+            text_color=INK,
+            angle=math.pi / 2,
+        )
     )
-    p.add_layout(label)
+    p.line(x=[bracket_x, bracket_x], y=[bounds["top"] + 1.5, bounds["bottom"] - 1.5], line_color=INK_SOFT, line_width=3)
+    for y in (bounds["top"] + 1.5, bounds["bottom"] - 1.5):
+        p.line(x=[bracket_x - 0.12, bracket_x], y=[y, y], line_color=INK_SOFT, line_width=3)
 
-    # Bracket lines
-    p.line(x=[bracket_x, bracket_x], y=[bounds["top"] + 1, bounds["bottom"] - 1], line_color="#2C2C2C", line_width=2.5)
-    p.line(
-        x=[bracket_x - 0.025, bracket_x], y=[bounds["top"] + 1, bounds["top"] + 1], line_color="#2C2C2C", line_width=2.5
+# K-Pg boundary emphasis — dashed red rule + labelled event marker
+p.add_layout(Span(location=KPG_DEPTH, dimension="width", line_color=IMPRINT_RED, line_width=5, line_dash="dashed"))
+p.add_layout(
+    Label(
+        x=col_center,
+        y=KPG_DEPTH,
+        text="K–Pg Boundary  (~66 Ma)",
+        text_font_size="30pt",
+        text_font_style="bold",
+        text_color=IMPRINT_RED,
+        text_align="center",
+        text_baseline="bottom",
+        y_offset=10,
+        background_fill_color=ELEVATED_BG,
+        background_fill_alpha=0.92,
+        border_line_color=IMPRINT_RED,
+        border_line_alpha=0.5,
+        padding=6,
     )
-    p.line(
-        x=[bracket_x - 0.025, bracket_x],
-        y=[bounds["bottom"] - 1, bounds["bottom"] - 1],
-        line_color="#2C2C2C",
-        line_width=2.5,
-    )
+)
 
-# Legend — positioned adjacent to column on right side
-legend_items = [LegendItem(label=lith, renderers=[rend]) for lith, rend in legend_items_dict.items()]
+# Legend — lithology key on the right panel (fills the wide landscape canvas)
 legend = Legend(
-    items=legend_items,
-    location="top_right",
-    label_text_font_size="20pt",
-    spacing=14,
-    padding=20,
-    margin=10,
-    background_fill_color="#F5F5F0",
-    background_fill_alpha=0.9,
-    border_line_color="#CCCCCC",
-    border_line_width=1,
-    glyph_height=32,
-    glyph_width=32,
+    items=[LegendItem(label=lith, renderers=[rend]) for lith, rend in legend_renderers.items()],
     title="Lithology",
-    title_text_font_size="22pt",
+    location="center",
+    label_text_font_size="34pt",
+    label_text_color=INK,
+    title_text_font_size="36pt",
     title_text_font_style="bold",
+    title_text_color=INK,
+    glyph_height=46,
+    glyph_width=46,
+    spacing=18,
+    padding=24,
+    margin=20,
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
 )
 p.add_layout(legend, "right")
 
-# Typography hierarchy
-p.title.text_font_size = "36pt"
-p.title.text_color = "#1A1A1A"
-p.title.offset = 10
-p.yaxis.axis_label_text_font_size = "28pt"
+# Typography + chrome
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.title.offset = 8
+p.yaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_style = "bold"
-p.yaxis.axis_label_text_color = "#333333"
-p.yaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_color = "#444444"
+p.yaxis.axis_label_text_color = INK
+p.yaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_color = INK_SOFT
+p.yaxis.ticker = FixedTicker(ticks=sorted({lz["top"] for lz in layers} | {lz["bottom"] for lz in layers}))
+p.yaxis.axis_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.yaxis.minor_tick_line_color = None
 
-# Visual refinement
 p.xaxis.visible = False
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.12
-p.ygrid.grid_line_dash = [4, 4]
-p.ygrid.grid_line_color = "#999999"
-
-p.yaxis.minor_tick_line_color = None
-p.yaxis.major_tick_line_color = "#AAAAAA"
-p.yaxis.axis_line_color = "#888888"
+p.ygrid.grid_line_color = None
 p.outline_line_color = None
-p.background_fill_color = "#FAFAF6"
-p.border_fill_color = "#FFFFFF"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Padding
-p.min_border_left = 100
-p.min_border_right = 40
-p.min_border_top = 60
-p.min_border_bottom = 60
-
-# Save
-export_png(p, filename="plot.png")
-output_file("plot.html", title="column-stratigraphic · bokeh · pyplots.ai")
+# Save — interactive HTML, then screenshot it with headless Chrome
+output_file(f"plot-{THEME}.html", title=title)
 save(p)
+
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# CDP override forces an exact W×H viewport regardless of outer window chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
