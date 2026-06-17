@@ -1,12 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-21
+Library: matplotlib | Python
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Third-order open-loop transfer function:
 # H(s) = K / ((s/w1 + 1)(s/w2 + 1)(s/w3 + 1))
@@ -45,66 +58,84 @@ if len(phase_crossover_idx) > 0:
 else:
     phase_crossover_freq = None
 
-# Plot
+# Plot — landscape canvas: figsize=(8, 4.5) × dpi=400 → exactly 3200×1800 px
 fig, (ax_mag, ax_phase) = plt.subplots(
-    2, 1, figsize=(16, 9), sharex=True, gridspec_kw={"height_ratios": [1, 1], "hspace": 0.08}
+    2,
+    1,
+    figsize=(8, 4.5),
+    dpi=400,
+    sharex=True,
+    facecolor=PAGE_BG,
+    gridspec_kw={"height_ratios": [1, 1], "hspace": 0.08},
 )
+ax_mag.set_facecolor(PAGE_BG)
+ax_phase.set_facecolor(PAGE_BG)
+
+# Imprint palette positions for stability margin annotations (avoid red-green pairing)
+GM_COLOR = IMPRINT_PALETTE[2]  # blue #4467A3 — gain margin
+PM_COLOR = IMPRINT_PALETTE[1]  # lavender #C475FD — phase margin
 
 # Magnitude plot
-ax_mag.semilogx(frequency_hz, magnitude_db, color="#306998", linewidth=3)
-ax_mag.axhline(y=0, color="#888888", linewidth=1, linestyle="--", alpha=0.6)
+ax_mag.semilogx(frequency_hz, magnitude_db, color=IMPRINT_PALETTE[0], linewidth=2.5)
+ax_mag.axhline(y=0, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6)
 
 # Gain margin annotation
 if phase_crossover_freq is not None:
-    ax_mag.vlines(phase_crossover_freq, gain_at_pc, 0, colors="#D4513D", linewidth=2.5)
-    ax_mag.plot(phase_crossover_freq, gain_at_pc, "o", color="#D4513D", markersize=10, zorder=5)
+    ax_mag.vlines(phase_crossover_freq, gain_at_pc, 0, colors=GM_COLOR, linewidth=2.5)
+    ax_mag.plot(phase_crossover_freq, gain_at_pc, "o", color=GM_COLOR, markersize=8, zorder=5)
     ax_mag.annotate(
         f"GM = {gain_margin:.1f} dB",
         xy=(phase_crossover_freq, (gain_at_pc + 0) / 2),
         xytext=(phase_crossover_freq * 3, (gain_at_pc + 0) / 2 + 8),
-        fontsize=16,
-        color="#D4513D",
+        fontsize=8,
+        color=GM_COLOR,
         fontweight="bold",
-        arrowprops={"arrowstyle": "->", "color": "#D4513D", "lw": 2},
+        arrowprops={"arrowstyle": "->", "color": GM_COLOR, "lw": 1.5},
     )
 
 # Phase plot
-ax_phase.semilogx(frequency_hz, phase_deg, color="#306998", linewidth=3)
-ax_phase.axhline(y=-180, color="#888888", linewidth=1, linestyle="--", alpha=0.6)
+ax_phase.semilogx(frequency_hz, phase_deg, color=IMPRINT_PALETTE[0], linewidth=2.5)
+ax_phase.axhline(y=-180, color=INK_SOFT, linewidth=1, linestyle="--", alpha=0.6)
 
 # Phase margin annotation
 if gain_crossover_freq is not None:
-    ax_phase.vlines(gain_crossover_freq, -180, phase_at_gc, colors="#2E8B57", linewidth=2.5)
-    ax_phase.plot(gain_crossover_freq, phase_at_gc, "o", color="#2E8B57", markersize=10, zorder=5)
+    ax_phase.vlines(gain_crossover_freq, -180, phase_at_gc, colors=PM_COLOR, linewidth=2.5)
+    ax_phase.plot(gain_crossover_freq, phase_at_gc, "o", color=PM_COLOR, markersize=8, zorder=5)
     ax_phase.annotate(
         f"PM = {phase_margin:.1f}°",
         xy=(gain_crossover_freq, (-180 + phase_at_gc) / 2),
         xytext=(gain_crossover_freq * 6, (-180 + phase_at_gc) / 2 + 20),
-        fontsize=16,
-        color="#2E8B57",
+        fontsize=8,
+        color=PM_COLOR,
         fontweight="bold",
-        arrowprops={"arrowstyle": "->", "color": "#2E8B57", "lw": 2},
+        arrowprops={"arrowstyle": "->", "color": PM_COLOR, "lw": 1.5},
     )
 
-# Style - Magnitude
-ax_mag.set_ylabel("Magnitude (dB)", fontsize=20)
-ax_mag.set_title("bode-basic · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
-ax_mag.tick_params(axis="both", labelsize=16)
+# Style — Magnitude panel
+title = "bode-basic · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax_mag.set_ylabel("Magnitude (dB)", fontsize=10, color=INK)
+ax_mag.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax_mag.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax_mag.spines["top"].set_visible(False)
 ax_mag.spines["right"].set_visible(False)
-ax_mag.yaxis.grid(True, alpha=0.2, linewidth=0.8)
-ax_mag.xaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax_mag.spines["left"].set_color(INK_SOFT)
+ax_mag.spines["bottom"].set_color(INK_SOFT)
+ax_mag.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax_mag.xaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
 
-# Style - Phase
-ax_phase.set_xlabel("Frequency (Hz)", fontsize=20)
-ax_phase.set_ylabel("Phase (°)", fontsize=20)
-ax_phase.tick_params(axis="both", labelsize=16)
+# Style — Phase panel
+ax_phase.set_xlabel("Frequency (Hz)", fontsize=10, color=INK)
+ax_phase.set_ylabel("Phase (°)", fontsize=10, color=INK)
+ax_phase.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax_phase.spines["top"].set_visible(False)
 ax_phase.spines["right"].set_visible(False)
-ax_phase.yaxis.grid(True, alpha=0.2, linewidth=0.8)
-ax_phase.xaxis.grid(True, alpha=0.15, linewidth=0.8)
+ax_phase.spines["left"].set_color(INK_SOFT)
+ax_phase.spines["bottom"].set_color(INK_SOFT)
+ax_phase.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax_phase.xaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
 ax_phase.set_yticks([0, -45, -90, -135, -180, -225, -270])
 
-# Save
+# Save — bbox_inches must stay default (None) to preserve exact 3200×1800 canvas
 fig.subplots_adjust(left=0.1, right=0.95, top=0.93, bottom=0.1)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
