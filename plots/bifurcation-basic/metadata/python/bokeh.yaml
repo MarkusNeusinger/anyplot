@@ -1,113 +1,135 @@
 library: bokeh
+language: python
 specification_id: bifurcation-basic
 created: '2026-03-20T20:28:57Z'
-updated: '2026-03-20T20:56:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23361206273
+updated: '2026-06-17T04:44:21Z'
+generated_by: claude-opus
+workflow_run: 27666023890
 issue: 4415
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/bokeh/plot.html
-quality_score: 87
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bifurcation-basic/python/bokeh/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Perfect spec compliance with all required features (bifurcation points labeled,
-    transients discarded, correct parameter range)
-  - Regime-based color encoding (blue to purple to red) effectively tells the chaos
-    story
-  - Clean visual refinement with removed axis lines, subtle grid, and Helvetica typography
-  - Dual output (PNG + interactive HTML) leverages Bokeh strengths
-  - Fully deterministic computation with appropriate resolution (3000 r-values x 150
-    states)
+  - Correct logistic-map bifurcation diagram showing the full period-doubling cascade
+    from a stable fixed point into chaos, with periodic windows (e.g. the period-3
+    window near r=3.83) clearly visible.
+  - 'Regime-based Imprint coloring tells the route-to-chaos story: stable=brand green
+    #009E73, period-2=blue, period-4=lavender, chaos=matte-red — first series is correctly
+    #009E73.'
+  - Density-aware alpha (0.65 stable -> 0.30 chaos) and tiny size=2 markers across
+    ~450k points create an effective density visualization that holds contrast on
+    both surfaces.
+  - Boxed annotations + dashed Span guides mark the key bifurcation points (r=3.0,
+    3.449, 3.57) with theme-adaptive elevated backgrounds, readable over the dense
+    fan.
+  - 'Theme-adaptive chrome flips correctly: warm off-white #FAF8F1 (light) and warm
+    near-black #1A1A17 (dark); data colors identical between renders, only chrome
+    flips.'
+  - Idiomatic bokeh — ColumnDataSource, vectorized np.select for color/alpha, HoverTool
+    + live HTML artifact, and the canonical 3200x1800 canvas via the Selenium screenshot
+    pattern.
   weaknesses:
-  - Chaotic region (red, alpha=0.15) has low contrast against light background
-  - Onset of chaos annotation placed at y=0.05 feels visually disconnected from the
-    chaotic structure
-  - Element-by-element color/alpha loop could be vectorized for cleaner code
-  image_description: The plot displays a classic logistic map bifurcation diagram
-    with the title "bifurcation-basic · bokeh · pyplots.ai". The x-axis shows "Growth
-    Rate (r)" from 2.5 to 4.0, and the y-axis shows "Steady-State Population (x)"
-    from 0 to 1. From r=2.5 to ~3.0, a single dark blue stable fixed point line curves
-    downward slightly then rises. At r≈3.0 the line splits into two branches (period-2,
-    labeled in red). The branches continue in lighter blue, splitting again at r≈3.449
-    (period-4, labeled in red at top). Beyond r≈3.57 (labeled "Onset of chaos" at
-    bottom), the diagram explodes into the characteristic chaotic fractal structure
-    rendered in faint red/pink points. Dashed red vertical lines mark each bifurcation
-    point. The background is light gray (#FAFAFA) with subtle grid lines. Typography
-    uses Helvetica with axis lines and ticks removed for a clean look. The regime-based
-    color transition from blue (stable) to purple (higher period) to red (chaotic)
-    provides effective visual storytelling.
+  - Annotation text (30pt) sits on top of the dense chaotic fan; the 'r=3.449 Period-4'
+    and 'r=3.57 Onset of chaos' boxes are close together near the top edge — readable
+    but slightly busy. Consider nudging the chaos label down/left a touch for more
+    breathing room.
+  - Annotation font (30pt) is smaller than the 34pt tick labels; when scaled to ~400px
+    mobile the bifurcation-point labels become tight. Could bump to ~34pt to match.
+  - Stable (green) and chaos (red) regimes rely partly on color; they are spatially
+    separated along x so position disambiguates for CVD viewers, but a brief in-axis
+    note or persistent regime key would reinforce the encoding.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white ~#FAF8F1 (not pure white), with a subtle low-alpha grid.
+      Chrome: bold dark title "bifurcation-basic · python · bokeh · anyplot.ai" top-left; x-axis "Growth Rate (r)" 2.5–4.0; y-axis "Steady-State Population (x)" 0–1; all tick/axis/title text dark and clearly readable. No axis lines/ticks (minimal L-frame).
+      Data: green stable branch (#009E73) to r≈3.0, blue period-2 split, lavender period-4, dense red chaotic fan with visible periodic windows. First series is #009E73. Boxed annotations + dashed vertical guides at r=3.0/3.449/3.57.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black ~#1A1A17 (not pure black).
+      Chrome: light title and axis/tick labels, all clearly readable; no dark-on-dark failures. Annotation boxes use elevated near-black with light text.
+      Data: colors identical to light render (green/blue/lavender/red); red chaotic fan reads well on the dark surface. Brand green #009E73 visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 72pt title, 48pt axis labels, 36pt
-          tick labels, 36pt annotations'
+        comment: All fonts explicit and readable in both themes; 30pt annotations
+          tight when scaled to mobile.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Annotations well-spaced at different y-positions, no text collisions
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Point size 1.5 appropriate for 450K points; chaotic region alpha=0.15
-          slightly faint
+        comment: Boxed annotations sit over the dense fan; two top labels are close
+          but readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: size=2 + density-aware alpha across ~450k points; excellent for dense
+          scatter.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
-        passed: false
-        comment: Blue-purple-red avoids red-green issue but light red alpha=0.15 has
-          low contrast on light background
+        score: 2
+        max: 2
+        passed: true
+        comment: Regimes spatially separated; not red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions; data points at far right edge slightly compressed
+        passed: true
+        comment: Canvas gate passed; good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with parameter notation: Growth Rate (r), Steady-State
-          Population (x)'
+        comment: Descriptive labels with parameter symbols.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint colors; correct theme backgrounds
+          in both renders.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Regime-based color palette, Helvetica typography, removed axis/tick
-          lines, custom background
+        comment: Custom semantic regime palette, theme-adaptive chrome, intentional
+          hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Axis lines removed, subtle grid alpha=0.12, clean background; grid
-          could be more subtle
+        passed: true
+        comment: Axis lines/ticks removed, subtle 0.12 grid, generous borders.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Regime coloring creates visual hierarchy; Onset of chaos annotation
-          at y=0.05 feels disconnected
+        passed: true
+        comment: Regime coloring + annotated bifurcation points narrate the route
+          to chaos; top labels slightly crowded.
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bifurcation diagram showing logistic map behavior
+        comment: Logistic-map bifurcation diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: small points, low alpha, cascade, labels,
-          transients discarded'
+        comment: Transients discarded (300), 150 kept, density viz, labeled bifurcations,
+          r in [2.5,4.0].
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=parameter r, Y=steady-state x, correct ranges
+        comment: X=r, Y=x; full ranges shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, no legend needed for this plot type
+        comment: Title matches mandated format; no legend needed (regime annotations
+          + guides).
     data_quality:
       score: 15
       max: 15
@@ -146,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stable fixed point, period-2, period-4, chaos, and periodicity
-          windows
+        comment: Full cascade period-1 -> chaos with periodic windows.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Logistic map is the canonical example with proper scientific terminology
+        comment: Canonical logistic map; neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: r in [2.5, 4.0] and x in [0, 1] are mathematically correct ranges
+        comment: r 2.5–4.0, x 0–1; ~450k points (>100k spec).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,61 +191,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, plot, styling, save'
+        comment: Flat script, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: logistic map with fixed x0=0.5'
+        comment: Deterministic (fixed x0=0.5, no RNG).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Per-element color/alpha loop could be vectorized with np.select
+        passed: true
+        comment: Vectorized np.select for color/alpha.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, current API
-    library_mastery:
-      score: 7
+        comment: Saves plot-{theme}.png + .html; current API.
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, figure, scatter, proper bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper ColumnDataSource, figure API, Label/Span models; could use
-          Bokeh transforms
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: HoverTool, HTML export with CDN, Span, active_scroll; hover only
-          visible in HTML
-  verdict: REJECTED
+        comment: HoverTool, Span guides, Label annotations, live HTML artifact.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - grid-styling
