@@ -1,7 +1,7 @@
 # anyplot.ai
 # column-stratigraphic: Stratigraphic Column with Lithology Patterns
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-06-17
+# Quality: 90/100 | Created: 2026-06-17
 
 using CairoMakie
 using Colors
