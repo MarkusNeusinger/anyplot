@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-17
@@ -234,7 +234,7 @@ if phase_cross_idx is not None:
     p.add_layout(
         Label(
             x=real_part[phase_cross_idx] - 0.10,
-            y=imag_part[phase_cross_idx] + 0.18,
+            y=imag_part[phase_cross_idx] + 0.40,
             text=f"Phase x-over ω={pc_freq:.2f}{gm_text}",
             text_font_size="22pt",
             text_color=COLOR_CRITICAL,
@@ -254,7 +254,7 @@ p.add_layout(
 )
 p.add_layout(
     Label(
-        x=real_part[-1] + 0.04,
+        x=real_part[-1] + 0.24,
         y=imag_part[-1] - 0.14,
         text="ω → ∞",
         text_font_size="22pt",
@@ -262,6 +262,20 @@ p.add_layout(
         text_font_style="italic",
     )
 )
+
+# Selected frequency labels at key points on the outer locus
+for kf, off_x, off_y in [(0.1, 0.15, 0.20), (1.0, 0.15, 0.18), (10.0, 0.12, -0.30)]:
+    idx = int(np.argmin(np.abs(freq - kf)))
+    p.add_layout(
+        Label(
+            x=real_part[idx] + off_x,
+            y=imag_part[idx] + off_y,
+            text=f"ω={kf}",
+            text_font_size="20pt",
+            text_color=INK_MUTED,
+            text_font_style="italic",
+        )
+    )
 
 # ── Hover tool ────────────────────────────────────────────────────────────────
 p.add_tools(
@@ -301,6 +315,8 @@ p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.minor_tick_line_color = None
 p.yaxis.minor_tick_line_color = None
+p.xaxis.major_tick_out = 0
+p.yaxis.major_tick_out = 0
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
