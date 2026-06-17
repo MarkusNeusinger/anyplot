@@ -10,6 +10,14 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
+// Refined chart appearance: subtle axis lines, grid at 0.15 opacity, thicker data lines
+const chartSx = {
+  "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeWidth: 0.7 },
+  "& .MuiChartsAxis-tick": { stroke: t.inkSoft, strokeWidth: 0.7 },
+  "& .MuiChartsGrid-root line": { stroke: t.grid },
+  "& .MuiLineElement-root": { strokeWidth: 2.5 },
+};
+
 // --- Data: G(s) = 20 / ((s/1+1)(s/10+1)(s/100+1)) — 3-pole open-loop TF ---
 // Pole frequencies: ω₁=1, ω₂=10, ω₃=100 rad/s  (0.16 Hz, 1.59 Hz, 15.9 Hz)
 const K = 20;
@@ -94,7 +102,7 @@ export default function Chart() {
           justifyContent: "center",
         }}
       >
-        <Typography sx={{ fontSize: 20, fontWeight: 500, letterSpacing: 0.4 }}>
+        <Typography sx={{ fontSize: 23, fontWeight: 600, letterSpacing: 0.3, color: t.ink }}>
           bode-basic · javascript · muix · anyplot.ai
         </Typography>
       </Box>
@@ -109,7 +117,8 @@ export default function Chart() {
           {
             data: freqs,
             scaleType: "log",
-            tickLabelStyle: { fontSize: 12 },
+            tickSize: 0,
+            tickLabelStyle: { display: "none" },
           },
         ]}
         yAxis={[
@@ -121,8 +130,9 @@ export default function Chart() {
         ]}
         series={[{ data: mags, showMark: false, label: "Magnitude" }]}
         slotProps={{ legend: { hidden: true } }}
-        grid={{ horizontal: true, vertical: true }}
-        margin={{ left: 80, right: 50, top: 20, bottom: 30 }}
+        grid={{ horizontal: true, vertical: false }}
+        margin={{ left: 80, right: 50, top: 20, bottom: 8 }}
+        sx={chartSx}
       >
         <ChartsReferenceLine
           y={0}
@@ -174,8 +184,9 @@ export default function Chart() {
         ]}
         series={[{ data: phases, showMark: false, label: "Phase" }]}
         slotProps={{ legend: { hidden: true } }}
-        grid={{ horizontal: true, vertical: true }}
+        grid={{ horizontal: true, vertical: false }}
         margin={{ left: 80, right: 50, top: 5, bottom: 60 }}
+        sx={chartSx}
       >
         <ChartsReferenceLine
           y={-180}
