@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-17
@@ -35,12 +35,12 @@ n = len(continents)
 
 flow_matrix = np.array(
     [
-        [0, 15, 25, 10, 5, 3],  # Africa to others
-        [12, 0, 30, 20, 8, 15],  # Asia to others
-        [20, 35, 0, 25, 12, 10],  # Europe to others
-        [8, 18, 22, 0, 15, 5],  # N. America to others
-        [6, 10, 18, 20, 0, 4],  # S. America to others
-        [2, 12, 8, 6, 3, 0],  # Oceania to others
+        [0, 5, 8, 3, 2, 1],  # Africa to others
+        [4, 0, 10, 7, 3, 5],  # Asia to others
+        [7, 12, 0, 8, 4, 3],  # Europe to others
+        [3, 6, 7, 0, 5, 2],  # N. America to others
+        [2, 3, 6, 7, 0, 1],  # S. America to others
+        [1, 4, 3, 2, 1, 0],  # Oceania to others
     ]
 )
 
@@ -114,8 +114,8 @@ for i in range(n):
         chord_width = max((flow / total_flow) * (1 - n * gap), min_chord_width)
 
         is_dominant = (i == dominant_src and j == dominant_tgt) or (i == dominant_tgt and j == dominant_src)
-        opacity = 0.75 if is_dominant else 0.38
-        line_width = 1.2 if is_dominant else 0.3
+        opacity = 0.75 if is_dominant else 0.50
+        line_width = 2.0 if is_dominant else 0.3
 
         tgt_base = arc_starts[j]
         tgt_offset = sum(
@@ -198,16 +198,13 @@ for i in range(n):
 
 # Subtitle
 fig.add_annotation(
-    text=(
-        f"Europe–Asia corridor dominates at <b>{dominant_flow}M</b> combined flow"
-        "  ·  Chord width proportional to flow magnitude"
-    ),
+    text=f"Europe–Asia dominates at <b>{dominant_flow}M</b>  ·  chord width ∝ flow",
     xref="paper",
     yref="paper",
     x=0.5,
     y=0.965,
     showarrow=False,
-    font={"size": 12, "color": INK_MUTED, "family": "Arial, Helvetica, sans-serif"},
+    font={"size": 14, "color": INK_MUTED, "family": "Arial, Helvetica, sans-serif"},
     xanchor="center",
 )
 
