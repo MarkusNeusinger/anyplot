@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chord-basic: Basic Chord Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 87/100 | Created: 2026-06-17
@@ -60,6 +60,10 @@ for i in range(n):
         a += flows[i, j] * scale
         sub_end[i, j] = a
 
+# Focal corridor — the largest bidirectional pair, highlighted to anchor the story
+combined = flows + flows.T
+focal = np.unravel_index(np.argmax(np.triu(combined, 1)), combined.shape)
+
 # Plot — square canvas: figsize=(6, 6) dpi=400 -> 2400 x 2400 px
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -116,8 +120,16 @@ for i in range(n):
         verts.append((0.0, 0.0))
         codes.append(Path.CLOSEPOLY)
 
+        # emphasise the focal corridor; let the rest recede so the story reads
+        is_focal = {i, j} == {focal[0], focal[1]}
         ax.add_patch(
-            PathPatch(Path(verts, codes), facecolor=IMPRINT_PALETTE[src], edgecolor=PAGE_BG, linewidth=0.4, alpha=0.72)
+            PathPatch(
+                Path(verts, codes),
+                facecolor=IMPRINT_PALETTE[src],
+                edgecolor=INK if is_focal else PAGE_BG,
+                linewidth=1.1 if is_focal else 0.4,
+                alpha=0.92 if is_focal else 0.5,
+            )
         )
 
 # Outer ring — one solid arc per continent for identity, plus a label
@@ -148,6 +160,30 @@ for i in range(n):
         fontweight="medium",
         color=INK,
     )
+
+# Corner annotations — the inscribed circle leaves the canvas corners empty, so
+# use them for the focal insight (top-left) and the flow-magnitude scale (bottom-left)
+fa, fb = continents[focal[0]], continents[focal[1]]
+ax.text(
+    -1.28,
+    1.24,
+    f"Largest corridor\n{fa} ↔ {fb}: {int(combined[focal])}k / year",
+    ha="left",
+    va="top",
+    fontsize=9,
+    fontweight="medium",
+    color=INK,
+)
+ax.text(
+    -1.28,
+    -1.24,
+    "Ribbon & arc width ∝ annual\nmigration (thousands of people)",
+    ha="left",
+    va="bottom",
+    fontsize=8,
+    color=INK,
+    alpha=0.7,
+)
 
 ax.set_xlim(-1.3, 1.3)
 ax.set_ylim(-1.3, 1.3)
