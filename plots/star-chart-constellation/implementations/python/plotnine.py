@@ -1,14 +1,15 @@
-""" pyplots.ai
+""" anyplot.ai
 star-chart-constellation: Star Chart with Constellations
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 84/100 | Created: 2026-03-18
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     coord_fixed,
     element_blank,
     element_rect,
@@ -17,18 +18,34 @@ from plotnine import (
     geom_segment,
     geom_text,
     ggplot,
+    guide_legend,
+    guides,
     labs,
-    scale_alpha_identity,
-    scale_color_identity,
-    scale_size_identity,
+    scale_alpha_continuous,
+    scale_size_continuous,
     theme,
     theme_void,
-    xlim,
-    ylim,
 )
 
 
-# Data — real star positions (RA in hours, Dec in degrees) for prominent constellations
+# ── Theme-adaptive chrome (Imprint palette + tokens) ──────────────────────────
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — brand green is the FIRST (and primary) categorical series.
+# Here it draws the constellation stick-figures, the chart's leading data layer.
+BRAND = "#009E73"
+# Stars themselves are rendered in the theme ink: dark engraving on a cream
+# parchment atlas (light), pale warm-white on a night sky (dark). Magnitude is
+# encoded by size + opacity, never colour — keeping Imprint identity intact.
+STAR_COLOR = INK
+GRID_COLOR = INK
+
+# ── Data — real star positions (RA in hours, Dec in degrees) ──────────────────
 np.random.seed(42)
 
 stars_raw = [
@@ -150,9 +167,8 @@ stars_raw = [
     ("Thuban", 14.07, 64.38, 3.65, "Dra"),
 ]
 
-# Constellation edges (pairs of star names)
+# Constellation edges (pairs of star names) — drawn as stick-figure lines
 edges_raw = [
-    # Orion
     ("Betelgeuse", "Bellatrix"),
     ("Bellatrix", "Mintaka"),
     ("Mintaka", "Alnilam"),
@@ -161,7 +177,6 @@ edges_raw = [
     ("Rigel", "Alnitak"),
     ("Rigel", "Saiph"),
     ("Saiph", "Alnitak"),
-    # Ursa Major
     ("Dubhe", "Merak"),
     ("Merak", "Phecda"),
     ("Phecda", "Megrez"),
@@ -169,97 +184,77 @@ edges_raw = [
     ("Alioth", "Mizar"),
     ("Mizar", "Alkaid"),
     ("Megrez", "Dubhe"),
-    # Cassiopeia
     ("Caph", "Schedar"),
     ("Schedar", "Gamma Cas"),
     ("Gamma Cas", "Ruchbah"),
     ("Ruchbah", "Segin"),
-    # Leo
     ("Regulus", "Chertan"),
     ("Chertan", "Denebola"),
     ("Denebola", "Zosma"),
     ("Zosma", "Algieba"),
     ("Algieba", "Regulus"),
-    # Cygnus
     ("Deneb", "Sadr"),
     ("Sadr", "Gienah Cyg"),
     ("Sadr", "Delta Cyg"),
     ("Sadr", "Albireo"),
-    # Scorpius
     ("Graffias", "Dschubba"),
     ("Dschubba", "Antares"),
     ("Antares", "Wei"),
     ("Wei", "Shaula"),
     ("Shaula", "Lesath"),
     ("Wei", "Sargas"),
-    # Gemini
     ("Castor", "Pollux"),
     ("Castor", "Tejat"),
     ("Pollux", "Alhena"),
     ("Tejat", "Mebsuta"),
     ("Mebsuta", "Castor"),
-    # Lyra
     ("Vega", "Sheliak"),
     ("Sheliak", "Sulafat"),
     ("Sulafat", "Vega"),
-    # Aquila
     ("Altair", "Tarazed"),
     ("Altair", "Alshain"),
-    # Taurus
     ("Aldebaran", "Elnath"),
     ("Aldebaran", "Alcyone"),
     ("Elnath", "Tianguan"),
-    # Canis Major
     ("Sirius", "Mirzam"),
     ("Sirius", "Adhara"),
     ("Adhara", "Wezen"),
     ("Wezen", "Aludra"),
-    # Perseus
     ("Mirfak", "Delta Per"),
     ("Mirfak", "Epsilon Per"),
     ("Epsilon Per", "Zeta Per"),
     ("Mirfak", "Algol"),
-    # Andromeda
     ("Alpheratz", "Mirach"),
     ("Mirach", "Almach"),
-    # Bootes
     ("Arcturus", "Izar"),
     ("Arcturus", "Muphrid"),
     ("Izar", "Nekkar"),
-    # Sagittarius
     ("Kaus Australis", "Kaus Media"),
     ("Kaus Media", "Kaus Borealis"),
     ("Kaus Borealis", "Nunki"),
     ("Nunki", "Ascella"),
     ("Ascella", "Kaus Australis"),
-    # Auriga
     ("Capella", "Menkalinan"),
     ("Menkalinan", "Theta Aur"),
     ("Theta Aur", "Iota Aur"),
     ("Iota Aur", "Capella"),
-    # Corona Borealis
     ("Nusakan", "Alphecca"),
     ("Alphecca", "Gamma CrB"),
-    # Canis Minor
     ("Procyon", "Gomeisa"),
-    # Pegasus
     ("Markab", "Scheat"),
     ("Markab", "Algenib"),
     ("Scheat", "Alpheratz"),
     ("Algenib", "Alpheratz"),
-    # Virgo
     ("Spica", "Porrima"),
     ("Porrima", "Vindemiatrix"),
-    # Ursa Minor
     ("Polaris", "Kochab"),
     ("Kochab", "Pherkad"),
-    # Draco
     ("Eltanin", "Rastaban"),
     ("Rastaban", "Thuban"),
 ]
 
-# Add fainter background stars
-n_bg = 250
+# Fainter background stars to give the sky depth (mag 3.5–5.5)
+n_bg = 230
 bg_ra = np.random.uniform(0, 24, n_bg)
 bg_dec = np.random.uniform(-50, 70, n_bg)
 bg_mag = np.random.uniform(3.5, 5.5, n_bg)
@@ -267,81 +262,48 @@ bg_stars = [(f"BG{i}", bg_ra[i], bg_dec[i], bg_mag[i], "bg") for i in range(n_bg
 
 all_stars = stars_raw + bg_stars
 
-# Build star dataframe
 star_names = [s[0] for s in all_stars]
 ra_hours = np.array([s[1] for s in all_stars])
 dec_deg = np.array([s[2] for s in all_stars])
 magnitudes = np.array([s[3] for s in all_stars])
 constellations = [s[4] for s in all_stars]
 
-# Convert RA hours to degrees, then to radians for projection
-ra_deg = ra_hours * 15.0
-ra_rad = np.radians(ra_deg)
+# ── Stereographic projection (centred on RA=12h, Dec=30° — northern sky) ──────
+ra_rad = np.radians(ra_hours * 15.0)
 dec_rad = np.radians(dec_deg)
-
-# Stereographic projection (centered on RA=12h, Dec=30° for northern sky view)
 ra0 = np.radians(180.0)
 dec0 = np.radians(30.0)
 
-# Stereographic projection formulas
-cos_c = np.sin(dec0) * np.sin(dec_rad) + np.cos(dec0) * np.cos(dec_rad) * np.cos(ra_rad - ra0)
-k = 2.0 / (1.0 + cos_c)
-proj_x = k * np.cos(dec_rad) * np.sin(ra_rad - ra0)
-proj_y = k * (np.cos(dec0) * np.sin(dec_rad) - np.sin(dec0) * np.cos(dec_rad) * np.cos(ra_rad - ra0))
 
-# Flip x so RA increases right-to-left (as seen on sky)
-proj_x = -proj_x
+def project(ra_r, dec_r):
+    """Stereographic projection; x flipped so RA increases right-to-left."""
+    cos_c = np.sin(dec0) * np.sin(dec_r) + np.cos(dec0) * np.cos(dec_r) * np.cos(ra_r - ra0)
+    k = 2.0 / (1.0 + cos_c)
+    x = -k * np.cos(dec_r) * np.sin(ra_r - ra0)
+    y = k * (np.cos(dec0) * np.sin(dec_r) - np.sin(dec0) * np.cos(dec_r) * np.cos(ra_r - ra0))
+    return x, y
 
-# Size mapping: brighter stars (lower mag) get larger points
-max_mag = 5.5
-min_mag = -1.5
-star_sizes = np.clip((max_mag - magnitudes) / (max_mag - min_mag), 0.05, 1.0)
-star_sizes = star_sizes**1.5 * 10.0 + 0.4
 
-# Star colors based on magnitude (brighter = more yellow-white, dimmer = blueish-white)
-star_colors = []
-for mag in magnitudes:
-    if mag < 0.5:
-        star_colors.append("#FFFDE7")
-    elif mag < 1.5:
-        star_colors.append("#FFF9C4")
-    elif mag < 2.5:
-        star_colors.append("#E8EAF6")
-    else:
-        star_colors.append("#B0BEC5")
-
-# Alpha based on magnitude (brighter stars more opaque)
-star_alphas = np.clip(0.4 + 0.6 * (max_mag - magnitudes) / (max_mag - min_mag), 0.3, 0.95)
+proj_x, proj_y = project(ra_rad, dec_rad)
 
 df_stars = pd.DataFrame(
-    {
-        "x": proj_x,
-        "y": proj_y,
-        "magnitude": magnitudes,
-        "size": star_sizes,
-        "color": star_colors,
-        "alpha": star_alphas,
-        "name": star_names,
-        "constellation": constellations,
-    }
+    {"x": proj_x, "y": proj_y, "magnitude": magnitudes, "name": star_names, "constellation": constellations}
 )
 
-# Filter to visible region (within projection circle)
+# Clip to the circular sky boundary
 radius_limit = 3.5
-df_stars = df_stars[np.sqrt(df_stars["x"] ** 2 + df_stars["y"] ** 2) < radius_limit].copy()
+df_stars = df_stars[np.hypot(df_stars["x"], df_stars["y"]) < radius_limit].copy()
 
-# Build edges dataframe
+# ── Constellation stick-figure segments ───────────────────────────────────────
 star_lookup = {row["name"]: (row["x"], row["y"]) for _, row in df_stars.iterrows()}
-edge_data = []
-for s1, s2 in edges_raw:
-    if s1 in star_lookup and s2 in star_lookup:
-        x1, y1 = star_lookup[s1]
-        x2, y2 = star_lookup[s2]
-        edge_data.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
-
+edge_data = [
+    {"x": star_lookup[a][0], "y": star_lookup[a][1], "xend": star_lookup[b][0], "yend": star_lookup[b][1]}
+    for a, b in edges_raw
+    if a in star_lookup and b in star_lookup
+]
 df_edges = pd.DataFrame(edge_data)
 
-# Constellation labels at centroid of each group with manual nudges
+# ── Constellation name labels at group centroids (with manual de-clutter) ─────
 named_stars = df_stars[df_stars["constellation"] != "bg"].copy()
 constellation_names = {
     "Ori": "ORION",
@@ -367,191 +329,124 @@ constellation_names = {
     "UMi": "URSA MINOR",
     "Dra": "DRACO",
 }
-# Manual nudges (dx, dy) to prevent label overlap
+# (dx, dy) nudges to keep labels off their stars and away from each other,
+# especially the crowded circumpolar core (UMa / UMi / Dra / Cas / Per / Aur).
 label_nudge = {
-    "Cyg": (0.30, 0.15),
-    "Lyr": (-0.30, -0.10),
-    "UMa": (0.0, 0.15),
-    "Gem": (0.15, -0.10),
-    "Aql": (0.25, 0.0),
-    "CMi": (-0.30, 0.0),
-    "CrB": (0.0, 0.10),
-    "And": (0.0, -0.10),
-    "Per": (0.20, 0.10),
-    "Boo": (-0.20, 0.0),
-    "Vir": (0.0, -0.10),
-    "Dra": (-0.30, -0.10),
-    "UMi": (0.20, 0.10),
-    "Peg": (0.0, -0.08),
-    "Ori": (0.15, 0.0),
-    "Tau": (0.0, 0.10),
-    "Aur": (0.20, 0.10),
+    "Ori": (0.14, -0.34),
+    "UMa": (-0.42, 0.66),
+    "Cas": (-0.30, 0.46),
+    "Leo": (0.05, -0.42),
+    "Cyg": (0.48, 0.10),
+    "Sco": (0.00, -0.44),
+    "Gem": (0.34, -0.36),
+    "Lyr": (-0.62, -0.12),
+    "Aql": (0.62, -0.04),
+    "Tau": (-0.12, -0.44),
+    "CMa": (0.00, -0.42),
+    "Per": (0.54, 0.06),
+    "And": (-0.10, -0.46),
+    "Boo": (-0.66, -0.16),
+    "Sgr": (0.00, -0.42),
+    "Aur": (-0.48, -0.54),
+    "CrB": (0.56, 0.20),
+    "CMi": (0.36, -0.30),
+    "Peg": (-0.32, -0.32),
+    "Vir": (0.05, -0.42),
+    "UMi": (0.72, 0.58),
+    "Dra": (-0.76, 0.46),
 }
 label_data = []
 for abbr, full_name in constellation_names.items():
     group = named_stars[named_stars["constellation"] == abbr]
     if len(group) > 0:
         dx, dy = label_nudge.get(abbr, (0.0, 0.0))
-        label_data.append({"x": group["x"].mean() + dx, "y": group["y"].min() - 0.18 + dy, "label": full_name})
-
+        label_data.append({"x": group["x"].mean() + dx, "y": group["y"].mean() + dy, "label": full_name})
 df_labels = pd.DataFrame(label_data)
 
-# Coordinate grid circles (declination rings)
-grid_circles = []
+# ── Coordinate grid: declination rings + RA meridians ─────────────────────────
+grid_segs = []
 for dec_grid in [0, 20, 40, 60]:
-    theta = np.linspace(0, 2 * np.pi, 200)
-    dec_g = np.radians(dec_grid)
-    cos_c_g = np.sin(dec0) * np.sin(dec_g) + np.cos(dec0) * np.cos(dec_g) * np.cos(theta)
-    k_g = 2.0 / (1.0 + cos_c_g)
-    gx = -k_g * np.cos(dec_g) * np.sin(theta)
-    gy = k_g * (np.cos(dec0) * np.sin(dec_g) - np.sin(dec0) * np.cos(dec_g) * np.cos(theta))
-    mask = np.sqrt(gx**2 + gy**2) < radius_limit
-    gx[~mask] = np.nan
-    gy[~mask] = np.nan
+    theta = np.linspace(0, 2 * np.pi, 240)
+    gx, gy = project(theta, np.full_like(theta, np.radians(dec_grid)))
+    bad = np.hypot(gx, gy) >= radius_limit
+    gx[bad] = np.nan
     for i in range(len(theta) - 1):
         if not (np.isnan(gx[i]) or np.isnan(gx[i + 1])):
-            grid_circles.append({"x": gx[i], "y": gy[i], "xend": gx[i + 1], "yend": gy[i + 1]})
-
-df_grid = pd.DataFrame(grid_circles) if grid_circles else pd.DataFrame(columns=["x", "y", "xend", "yend"])
-
-# RA grid lines (meridians)
-ra_grid_segs = []
+            grid_segs.append({"x": gx[i], "y": gy[i], "xend": gx[i + 1], "yend": gy[i + 1]})
 for ra_h in range(0, 24, 3):
-    ra_g = np.radians(ra_h * 15.0)
-    dec_range = np.linspace(np.radians(-50), np.radians(70), 150)
-    cos_c_g = np.sin(dec0) * np.sin(dec_range) + np.cos(dec0) * np.cos(dec_range) * np.cos(ra_g - ra0)
-    k_g = 2.0 / (1.0 + cos_c_g)
-    gx = -k_g * np.cos(dec_range) * np.sin(ra_g - ra0)
-    gy = k_g * (np.cos(dec0) * np.sin(dec_range) - np.sin(dec0) * np.cos(dec_range) * np.cos(ra_g - ra0))
-    mask = np.sqrt(gx**2 + gy**2) < radius_limit
-    gx[~mask] = np.nan
-    gy[~mask] = np.nan
+    dec_range = np.linspace(np.radians(-50), np.radians(70), 160)
+    gx, gy = project(np.full_like(dec_range, np.radians(ra_h * 15.0)), dec_range)
+    bad = np.hypot(gx, gy) >= radius_limit
+    gx[bad] = np.nan
     for i in range(len(dec_range) - 1):
         if not (np.isnan(gx[i]) or np.isnan(gx[i + 1])):
-            ra_grid_segs.append({"x": gx[i], "y": gy[i], "xend": gx[i + 1], "yend": gy[i + 1]})
+            grid_segs.append({"x": gx[i], "y": gy[i], "xend": gx[i + 1], "yend": gy[i + 1]})
+df_grid = pd.DataFrame(grid_segs)
 
-df_ra_grid = pd.DataFrame(ra_grid_segs) if ra_grid_segs else pd.DataFrame(columns=["x", "y", "xend", "yend"])
-
-# Combine all grid segments
-df_all_grid = pd.concat([df_grid, df_ra_grid], ignore_index=True)
-
-# RA tick labels at Dec=-10° for better separation from constellation names
-ra_tick_labels = []
+# RA tick labels along the Dec=-12° parallel
+ra_ticks = []
 for ra_h in range(0, 24, 3):
-    ra_g = np.radians(ra_h * 15.0)
-    dec_g = np.radians(-10)
-    cos_c_t = np.sin(dec0) * np.sin(dec_g) + np.cos(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0)
-    k_t = 2.0 / (1.0 + cos_c_t)
-    tx = -k_t * np.cos(dec_g) * np.sin(ra_g - ra0)
-    ty = k_t * (np.cos(dec0) * np.sin(dec_g) - np.sin(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0))
-    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.15:
-        ra_tick_labels.append({"x": tx, "y": ty - 0.15, "label": f"{ra_h}h"})
+    tx, ty = project(np.radians(ra_h * 15.0), np.radians(-12))
+    if np.hypot(tx, ty) < radius_limit - 0.1:
+        ra_ticks.append({"x": tx, "y": ty - 0.16, "label": f"{ra_h}h"})
+df_ra_ticks = pd.DataFrame(ra_ticks)
 
-df_ra_ticks = pd.DataFrame(ra_tick_labels)
-
-# Dec tick labels along RA=3h meridian (offset from 0h to avoid overlaps)
-dec_tick_labels = []
+# Dec tick labels along the RA=3h meridian
+dec_ticks = []
 for dec_val in [0, 20, 40, 60]:
-    ra_g = np.radians(3 * 15.0)
-    dec_g = np.radians(dec_val)
-    cos_c_t = np.sin(dec0) * np.sin(dec_g) + np.cos(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0)
-    k_t = 2.0 / (1.0 + cos_c_t)
-    tx = -k_t * np.cos(dec_g) * np.sin(ra_g - ra0)
-    ty = k_t * (np.cos(dec0) * np.sin(dec_g) - np.sin(dec0) * np.cos(dec_g) * np.cos(ra_g - ra0))
-    if np.sqrt(tx**2 + ty**2) < radius_limit - 0.15:
-        dec_tick_labels.append({"x": tx + 0.15, "y": ty, "label": f"{dec_val}°"})
+    tx, ty = project(np.radians(3 * 15.0), np.radians(dec_val))
+    if np.hypot(tx, ty) < radius_limit - 0.1:
+        dec_ticks.append({"x": tx + 0.16, "y": ty, "label": f"{dec_val}°"})
+df_dec_ticks = pd.DataFrame(dec_ticks)
 
-df_dec_ticks = pd.DataFrame(dec_tick_labels)
+# ── Title (mandated format; fontsize scales if it ever runs long) ─────────────
+TITLE = "star-chart-constellation · python · plotnine · anyplot.ai"
+title_size = round(13 * min(1.0, 67 / len(TITLE)))
 
-# Magnitude legend data
-legend_mags = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-legend_x_base = radius_limit - 0.5
-legend_y_base = -radius_limit + 1.4
-legend_stars = []
-legend_labels_list = []
-for i, lm in enumerate(legend_mags):
-    ly = legend_y_base + i * 0.32
-    lsize = np.clip((max_mag - lm) / (max_mag - min_mag), 0.05, 1.0) ** 1.5 * 10.0 + 0.4
-    lcolor = "#FFFDE7" if lm < 0.5 else "#FFF9C4" if lm < 1.5 else "#E8EAF6" if lm < 2.5 else "#B0BEC5"
-    legend_stars.append({"x": legend_x_base, "y": ly, "size": lsize, "color": lcolor})
-    legend_labels_list.append({"x": legend_x_base + 0.28, "y": ly, "label": f"mag {lm:.0f}"})
-
-df_legend_stars = pd.DataFrame(legend_stars)
-df_legend_labels = pd.DataFrame(legend_labels_list)
-
-# Plot
+# ── Plot ──────────────────────────────────────────────────────────────────────
 plot = (
     ggplot()
-    # Coordinate grid (very subtle)
-    + geom_segment(
-        data=df_all_grid, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#1a2744", size=0.3, alpha=0.5
-    )
-    # Constellation stick-figure lines
-    + geom_segment(
-        data=df_edges, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color="#5580b0", size=0.9, alpha=0.65
-    )
-    # Stars
-    + geom_point(data=df_stars, mapping=aes(x="x", y="y", size="size", color="color", alpha="alpha"))
-    + scale_size_identity()
-    + scale_color_identity()
-    + scale_alpha_identity()
+    # Coordinate grid (very subtle structural layer)
+    + geom_segment(df_grid, aes(x="x", y="y", xend="xend", yend="yend"), color=GRID_COLOR, size=0.3, alpha=0.14)
+    # Constellation stick-figures — Imprint brand green, the leading data series
+    + geom_segment(df_edges, aes(x="x", y="y", xend="xend", yend="yend"), color=BRAND, size=0.7, alpha=0.6)
+    # Stars — magnitude drives both size and opacity (brighter = bigger, opaque)
+    + geom_point(df_stars, aes(x="x", y="y", size="magnitude", alpha="magnitude"), color=STAR_COLOR, stroke=0)
+    + scale_size_continuous(name="Apparent\nmagnitude", range=(5.0, 0.4), breaks=[0, 1, 2, 3, 4, 5])
+    + scale_alpha_continuous(name="Apparent\nmagnitude", range=(1.0, 0.45), breaks=[0, 1, 2, 3, 4, 5])
+    + guides(size=guide_legend(), alpha=guide_legend())
     # Constellation names
     + geom_text(
-        data=df_labels,
-        mapping=aes(x="x", y="y", label="label"),
-        color="#7a9cca",
-        size=14,
-        alpha=0.85,
+        df_labels,
+        aes(x="x", y="y", label="label"),
+        color=INK_SOFT,
+        size=7,
+        alpha=0.9,
         fontstyle="italic",
-    )
-    # RA tick labels
-    + geom_text(data=df_ra_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=12, alpha=0.8)
-    # Dec tick labels
-    + geom_text(
-        data=df_dec_ticks, mapping=aes(x="x", y="y", label="label"), color="#5a7a9a", size=12, alpha=0.8, ha="left"
-    )
-    # Magnitude legend points
-    + geom_point(data=df_legend_stars, mapping=aes(x="x", y="y", size="size", color="color"), alpha=0.9)
-    # Magnitude legend labels
-    + geom_text(
-        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), color="#8899bb", size=11, ha="left", alpha=0.85
-    )
-    # Magnitude legend title
-    + annotate(
-        "text",
-        x=legend_x_base,
-        y=legend_y_base - 0.28,
-        label="Magnitude",
-        color="#99aabb",
-        size=12,
-        ha="center",
         fontweight="bold",
     )
-    # Title
-    + annotate(
-        "text",
-        x=0,
-        y=-radius_limit + 0.05,
-        label="star-chart-constellation · plotnine · pyplots.ai",
-        color="#8899aa",
-        size=16,
-        ha="center",
+    # RA / Dec tick labels
+    + geom_text(df_ra_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=7)
+    + geom_text(df_dec_ticks, aes(x="x", y="y", label="label"), color=INK_MUTED, size=7, ha="left")
+    + coord_fixed(
+        ratio=1, xlim=(-radius_limit - 0.2, radius_limit + 0.2), ylim=(-radius_limit - 0.2, radius_limit + 0.2)
     )
-    + coord_fixed(ratio=1)
-    + xlim(-radius_limit - 0.3, radius_limit + 0.6)
-    + ylim(-radius_limit - 0.1, radius_limit + 0.3)
-    + labs(x="", y="")
+    + labs(title=TITLE)
     + theme_void()
     + theme(
-        figure_size=(12, 12),
-        plot_background=element_rect(fill="#060d1f", color="#060d1f"),
-        panel_background=element_rect(fill="#060d1f", color="#060d1f"),
-        text=element_text(color="#aabbcc", size=16),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        plot_margin=0.02,
+        figure_size=(6, 6),
+        dpi=400,
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(color=INK_SOFT, size=title_size, ha="center", va="top", margin={"b": 12}),
+        legend_position="right",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_MUTED),
+        legend_title=element_text(color=INK, size=9, ha="left"),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_key=element_blank(),
+        plot_margin=0.01,
     )
 )
 
-# Save
-plot.save("plot.png", dpi=300, verbose=False)
+# ── Save (square 2400×2400 px) ────────────────────────────────────────────────
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
