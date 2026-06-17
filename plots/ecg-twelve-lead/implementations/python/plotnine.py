@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ecg-twelve-lead: ECG/EKG 12-Lead Waveform Display
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-19
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -25,7 +27,23 @@ from plotnine import (
 )
 
 
-# Data — synthetic ECG using Gaussian pulse model
+# Theme-adaptive chrome (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# ECG-paper red grid — the iconic clinical convention (light red/pink), kept
+# theme-adaptive so the warm cream / warm black page surfaces stay compliant.
+GRID_MAJOR = "#D98C7A" if THEME == "light" else "#6B3A35"
+GRID_MINOR = "#EBC9BD" if THEME == "light" else "#3A2623"
+
+# Trace in Imprint brand green (#009E73, palette position 1) — also the classic
+# bedside-monitor ECG colour, so the brand-first rule and the domain align.
+TRACE = "#009E73"
+
+# Data — synthetic normal sinus rhythm via a Gaussian P-QRS-T pulse model
 np.random.seed(42)
 
 sampling_rate = 500
@@ -88,13 +106,13 @@ df["lead"] = pd.Categorical(df["lead"], categories=grid_order, ordered=True)
 label_df = pd.DataFrame(
     {
         "time": [0.08] * 12,
-        "voltage": [1.35] * 12,
+        "voltage": [1.38] * 12,
         "lead": pd.Categorical(grid_order, categories=grid_order, ordered=True),
         "label": grid_order,
     }
 )
 
-# 1mV calibration pulse via segments — shown in Lead I
+# 1 mV calibration pulse via segments — shown in Lead I
 _cal_lead = pd.Categorical(["I"], categories=grid_order, ordered=True)
 cal_seg_df = pd.DataFrame(
     {
@@ -105,58 +123,47 @@ cal_seg_df = pd.DataFrame(
         "lead": pd.Categorical(["I"] * 3, categories=grid_order, ordered=True),
     }
 )
-# Calibration label
-cal_label_df = pd.DataFrame({"time": [0.025], "voltage": [-0.25], "lead": _cal_lead, "label": ["1 mV"]})
+cal_label_df = pd.DataFrame({"time": [0.025], "voltage": [-0.28], "lead": _cal_lead, "label": ["1 mV"]})
 
-# Plot
-ecg_paper = "#FFF5EE"
-major_grid = "#E8A090"
-minor_grid = "#F0C8BC"
-signal_color = "#1a1a2e"
-
-# Standard ECG paper: 25mm/s → major lines every 0.2s, minor every 0.04s
-x_major = np.arange(0, duration + 0.01, 0.2).tolist()
+# Standard ECG paper: 25 mm/s → major lines every 0.2 s, minor every 0.04 s
 x_minor = np.arange(0, duration + 0.01, 0.04).tolist()
-# Vertical: 10mm/mV → major every 0.5mV, minor every 0.1mV
+# Vertical: 10 mm/mV → major every 0.5 mV, minor every 0.1 mV
 y_major = np.arange(-1.5, 1.6, 0.5).tolist()
 y_minor = np.arange(-1.5, 1.6, 0.1).tolist()
-
-# Show only 0.0, 0.5, 1.0, … on x-axis (grid lines at 0.2s/0.04s intervals remain)
+# Show only 0.0, 0.5, 1.0, … on x-axis (grid lines at 0.2 s/0.04 s intervals remain)
 x_labels = np.arange(0, duration + 0.01, 0.5).tolist()
 
 plot = (
     ggplot(df, aes(x="time", y="voltage"))
-    + geom_line(color=signal_color, size=0.7)
-    + geom_segment(
-        aes(x="x", xend="xend", y="y", yend="yend"), data=cal_seg_df, color=signal_color, size=0.9, inherit_aes=False
-    )
-    + geom_text(aes(label="label"), data=label_df, size=15, ha="left", va="top", fontweight="bold", color="#333333")
-    + geom_text(aes(label="label"), data=cal_label_df, size=12, ha="center", va="top", color="#333333")
+    + geom_line(color=TRACE, size=0.9)
+    + geom_segment(aes(x="x", xend="xend", y="y", yend="yend"), data=cal_seg_df, color=INK, size=1.0, inherit_aes=False)
+    + geom_text(aes(label="label"), data=label_df, size=5, ha="left", va="top", fontweight="bold", color=INK)
+    + geom_text(aes(label="label"), data=cal_label_df, size=3, ha="center", va="top", color=INK_SOFT)
     + facet_wrap("lead", ncol=4)
     + scale_x_continuous(breaks=x_labels, minor_breaks=x_minor, expand=(0.01, 0.01))
     + scale_y_continuous(breaks=y_major, minor_breaks=y_minor, expand=(0, 0))
     + coord_cartesian(xlim=(0, duration), ylim=(-1.6, 1.6))
-    + labs(title="ecg-twelve-lead · plotnine · pyplots.ai", x="Time (s)", y="Voltage (mV)")
+    + labs(title="ecg-twelve-lead · python · plotnine · anyplot.ai", x="Time (s)", y="Voltage (mV)")
     + theme(
-        figure_size=(16, 9),
-        panel_background=element_rect(fill=ecg_paper),
-        plot_background=element_rect(fill="white"),
-        panel_grid_major_x=element_line(color=major_grid, size=0.5),
-        panel_grid_major_y=element_line(color=major_grid, size=0.5),
-        panel_grid_minor_x=element_line(color=minor_grid, size=0.25),
-        panel_grid_minor_y=element_line(color=minor_grid, size=0.25),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_x=element_line(color=GRID_MAJOR, size=0.5),
+        panel_grid_major_y=element_line(color=GRID_MAJOR, size=0.5),
+        panel_grid_minor_x=element_line(color=GRID_MINOR, size=0.25),
+        panel_grid_minor_y=element_line(color=GRID_MINOR, size=0.25),
         strip_background=element_blank(),
         strip_text=element_blank(),
-        text=element_text(size=16),
-        axis_title=element_text(size=20),
-        axis_text_x=element_text(size=16, color="#666666"),
-        axis_text_y=element_text(size=14, color="#888888"),
-        plot_title=element_text(size=24, weight="bold", margin={"b": 12}),
-        panel_spacing_x=0.06,
-        panel_spacing_y=0.04,
+        text=element_text(size=7, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_text(size=7, color=INK_MUTED),
+        plot_title=element_text(size=13, weight="bold", color=INK, margin={"b": 10}),
+        panel_spacing_x=0.04,
+        panel_spacing_y=0.05,
         axis_ticks=element_blank(),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

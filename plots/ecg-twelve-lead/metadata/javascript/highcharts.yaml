@@ -1,0 +1,246 @@
+library: highcharts
+language: javascript
+specification_id: ecg-twelve-lead
+created: '2026-06-17T03:21:24Z'
+updated: '2026-06-17T03:25:44Z'
+generated_by: claude-opus
+workflow_run: 27663321924
+issue: 4554
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecg-twelve-lead/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Authentic clinical 12-lead layout: 3x4 grid arranged so rows read I/aVR/V1/V4,
+    II/aVL/V2/V5, III/aVF/V3/V6, plus a full-length Lead II rhythm strip across the
+    bottom — exactly the standard hospital format.'
+  - ECG paper is rendered natively from Highcharts major/minor gridlines (5 mm bold
+    / 1 mm fine red ruling) with grid squares kept truly square via margin-aware aspect-ratio
+    math — a creative, idiomatic use of the library's axis system.
+  - 'Realistic synthetic P-QRS-T morphology with correct clinical detail: aVR inverted,
+    R-wave progression across V1->V4->V6, ~71 bpm, faint deterministic baseline noise
+    via a fixed-seed LCG.'
+  - 1 mV / 10 mm calibration pulse drawn at the left margin of every band, and scale
+    (25 mm/s, 10 mm/mV) documented in the subtitle — spec calibration requirements
+    fully met.
+  - 'First data series is brand green #009E73; ECG paper red ruling is derived from
+    the Imprint matte-red anchor (#AE3030), so the spec-mandated paper color stays
+    inside the palette. Page chrome flips correctly between #FAF8F1 and #1A1A17.'
+  - Title matches the exact mandated format; lead labels are clear, bold, and theme-adaptive
+    in both renders.
+  weaknesses:
+  - Trace lineWidth is 1.2 CSS px (~2.4 native); authentic for ECG but the green traces
+    read slightly faint on the dark monitor surface — a touch more weight (e.g. 1.4-1.5)
+    would lift element visibility without losing the clinical look.
+  - Subtitle (14px) and lead labels (15px) are on the small side for a 3200px canvas;
+    they survive mobile down-scaling because the labels are bold, but bumping the
+    subtitle a couple px would improve legibility headroom.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white page (#FAF8F1) with a pale pink ECG-paper plot area (#FBEFEC) — spec-mandated medical paper color, not pure white.
+      Chrome: title "ecg-twelve-lead · javascript · highcharts · anyplot.ai" in dark ink, subtitle "Normal sinus rhythm · 25 mm/s · 10 mm/mV · 1 mV calibration" below it, both clearly readable. Lead labels (I, aVR, V1, V4, II, aVL, V2, V5, III, aVF, V3, V6, II) in bold dark text at the top-left of each cell — all readable. Red 1 mm/5 mm ruling subtle but visible.
+      Data: ECG traces in brand green #009E73; dark-ink 1 mV calibration pulses at the left of every band. P-QRS-T complexes clearly formed, aVR inverted, R-wave progression visible across precordial leads.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black page (#1A1A17) with a warm monitor-black plot area (#201A1A) — not pure black.
+      Chrome: title and subtitle in light ink (#F0EFE8 / inkSoft), fully readable. Lead labels and calibration pulses flip to light ink — readable, NO dark-on-dark failure. Red ruling slightly muted but visible.
+      Data: traces are the SAME brand green #009E73 as the light render — only the chrome flipped. Waveform morphology identical.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, subtitle 14px, labels 15px bold — all explicitly set
+          and readable in both themes; subtitle/labels slightly small for the canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; lead labels sit clear of traces
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 1.2px trace is authentic for ECG but reads slightly faint on dark
+          surface
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green trace has good contrast on both pink and dark surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas with balanced margins; canvas exactly 3200x1800
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles correctly omitted for ECG paper; units (mm/s, mm/mV)
+          conveyed in subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; paper red derived from Imprint #AE3030; page
+          chrome theme-correct in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Replicates a real clinical ECG printout — well above a configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: True-square grid via aspect-ratio math, subtle two-tier ruling, clean
+          plot border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Standard clinical layout, aVR inversion and R-wave progression tell
+          the diagnostic story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-channel 12-lead ECG grid — correct type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3x4 grid, rhythm strip, ECG paper, calibration, scale, labels all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: time->x (mm), mV->y (10 mm/mV) correctly scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format; legend correctly omitted, leads labeled directly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: P-QRS-T, per-lead morphology, aVR inversion, R-wave progression,
+          rhythm strip
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Normal sinus rhythm — realistic, neutral medical scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: mV amplitudes and ~71 bpm timing are clinically correct
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions used for signal synthesis — justified and clean
+          for this complexity, mild deduction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + deterministic math
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Idiomatic Highcharts.chart into #container; harness owns output'
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Clean use of plotOptions/series/axis config and margin control
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Major/minor gridlines repurposed as ECG paper; null-break line series
+          for calibration; scatter dataLabels as lead labels
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - grid-styling
