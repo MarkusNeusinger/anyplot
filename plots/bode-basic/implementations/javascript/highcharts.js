@@ -63,7 +63,8 @@ if (fGc !== null) {
             text: 'PM = ' + phaseMarginStr + '°',
             style: { color: t.palette[3], fontSize: '12px', fontWeight: '600' },
             rotation: 0,
-            verticalAlign: 'middle',
+            verticalAlign: 'top',
+            y: 16,
             x: 5
         }
     });
@@ -79,7 +80,8 @@ if (fPc !== null) {
             text: 'GM = ' + gainMarginStr + ' dB',
             style: { color: t.palette[4], fontSize: '12px', fontWeight: '600' },
             rotation: 0,
-            verticalAlign: 'middle',
+            verticalAlign: 'bottom',
+            y: -16,
             x: 5
         }
     });
@@ -204,7 +206,7 @@ Highcharts.chart('container', {
             name: 'Phase',
             data: phaseData,
             yAxis: 1,
-            color: t.palette[2]    // #4467A3 blue
+            color: t.palette[1]    // #C475FD lavender — canonical second series
         }
     ]
 });
