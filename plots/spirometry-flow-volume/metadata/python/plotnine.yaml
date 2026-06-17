@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: spirometry-flow-volume
 created: '2026-03-18T22:17:02Z'
-updated: '2026-06-17T04:08:15Z'
+updated: '2026-06-17T04:16:52Z'
 generated_by: claude-opus
 workflow_run: 27664797524
 issue: 4557
@@ -12,50 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spirometr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spirometry-flow-volume/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correct flow-volume loop: sharp expiratory rise to PEF then linear-ish decline,
-    symmetric U-shaped inspiratory limb below zero, closed shape connecting both limbs.'
-  - All required clinical annotations present — PEF labeled red focal point, FVC/FEV1/PEF/FEV1-FVC
-    ratio text box, dashed predicted-normal overlay for comparison.
-  - 'Strong data storytelling: amber ''Deficit vs predicted'' ribbon shades the gap
-    between measured and predicted expiratory limbs, giving the chart a clear clinical
-    narrative.'
-  - 'Theme adaptation is correct in both renders — warm off-white #FAF8F1 / warm near-black
-    #1A1A17 backgrounds, data colors identical, only chrome flips. Brand green #009E73
-    measured loop reads well on both surfaces.'
-  - 'Idiomatic plotnine grammar-of-graphics usage: geom_ribbon, scale_*_manual, merged
-    color/linetype legends via guides(), coord_cartesian framing.'
-  - Title matches required format exactly; axis labels 'Volume (L)' / 'Flow (L/s)'
-    carry units.
+  - 'Exact spec compliance: closed flow-volume loop with sharp expiratory rise to
+    PEF, symmetric U-shaped inspiratory limb, dashed predicted-normal overlay, and
+    a clinical callout box with FVC/FEV1/PEF/ratio.'
+  - 'First series is brand green #009E73 (measured), predicted normal is Imprint violet
+    #C475FD with a redundant dashed linetype — CVD-safe double encoding.'
+  - 'Strong plotnine grammar usage: geom_path for the loop, geom_ribbon for the amber
+    deficit band, layered geom_point + geom_text for the matte-red PEF focal point,
+    guides(override_aes) to merge color+linetype legends.'
+  - 'Both themes render correctly — warm #FAF8F1 / #1A1A17 backgrounds, theme-adaptive
+    ink, elevated legend and annotation boxes; data colors identical across themes.'
+  - 'Clear data storytelling: red PEF marker as focal point and amber deficit ribbon
+    visually communicate the measured-vs-predicted impairment.'
   weaknesses:
-  - Legend box at top-right is opaque and sits on top of the descending measured and
-    predicted expiratory limbs (volume ~2.7-3.6 L), occluding data and part of the
-    deficit ribbon. Move the legend to an empty region (e.g. lower-right inside the
-    loop) or make it semi-transparent so the curves remain visible behind it.
-  - Predicted-normal series uses the theme-adaptive muted gray (INK_MUTED) rather
-    than Imprint palette position 2 (#C475FD). Defensible as a muted reference baseline,
-    but it is a minor deviation from strict multi-series Imprint ordering — VQ-07
-    docked accordingly.
-  - Clinical annotation box text (size 4.4) and the 'PEF = 9.5 L/s' label (size 4.6)
-    are on the small side; readable at full 3200x1800 but borderline when scaled to
-    ~400 px mobile width. Consider a small bump for mobile legibility.
+  - Clinical callout box text (annotate size=5.0) and the PEF label (size=5.2) are
+    on the small side — readable at full 3200px but borderline when scaled to ~400px
+    mobile width; consider bumping ~10-15%.
+  - The fill legend for 'Deficit vs predicted' uses a blank name ' ' which leaves
+    a small empty header gap above that swatch — minor cosmetic awkwardness in the
+    legend block.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1), correct — not pure white.
-      Chrome: bold dark title "spirometry-flow-volume · python · plotnine · anyplot.ai" fully visible at top (no clipping). Axis titles "Volume (L)" / "Flow (L/s)" and tick labels are dark (INK_SOFT) and clearly readable. Subtle gray grid. Legend "Curve" top-right on elevated off-white box.
-      Data: measured loop solid brand green #009E73; predicted-normal dashed muted gray; red PEF focal point at ~(1.4, 9.5) with red "PEF = 9.5 L/s" label; amber (#DDCC77) "Deficit vs predicted" ribbon between expiratory limbs; bordered clinical text box bottom-left (FVC/FEV1/PEF/ratio). First series is #009E73 — confirmed.
-      Legibility verdict: PASS (one occlusion note: opaque legend covers part of the descending limbs, but no text is unreadable).
+      Background: warm off-white (#FAF8F1), not pure white. Correct.
+      Chrome: bold dark title "spirometry-flow-volume · python · plotnine · anyplot.ai" fully visible; axis titles "Volume (L)" / "Flow (L/s)" and tick labels in dark soft-ink, all readable. Subtle ~15% grid. Legend in elevated #FFFDF6 box top-right. Clinical callout box bottom-left with dark text on light fill, readable.
+      Data: measured loop solid brand green #009E73; predicted-normal loop dashed violet #C475FD; amber #DDCC77 deficit ribbon between expiratory limbs; matte-red #AE3030 PEF point + "PEF = 9.5 L/s" label at apex. First series is #009E73. Correct.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17), correct — not pure black.
-      Chrome: light title and axis/tick labels (light INK on dark) all clearly readable; no dark-on-dark failures. Grid subtle but visible. Legend on dark elevated (#242420) box with light text — readable.
-      Data: colors identical to light render — green measured solid, gray dashed predicted, red PEF point, olive/amber deficit ribbon, light-bordered clinical box. Brand green #009E73 still clearly visible on dark surface.
-      Legibility verdict: PASS (same legend-over-data occlusion as light; no readability failure).
+      Background: warm near-black (#1A1A17), not pure black. Correct.
+      Chrome: light-ink title and labels clearly visible against dark bg; tick labels in light soft-ink — no dark-on-dark failures. Grid subtle. Legend and clinical callout boxes use elevated #242420 fill with light text, both readable.
+      Data: colors identical to light render — green measured, violet dashed predicted, amber ribbon, red PEF marker. Only chrome flipped. Confirmed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,49 +56,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable both themes; clinical box + PEF label borderline
-          small for ~400px mobile.
+        comment: Fonts explicitly set and readable in both themes; clinical box +
+          PEF label slightly small for mobile
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap, but opaque legend occludes descending limbs/ribbon.
+        comment: No text/data collisions; legend and callout box sit in clear space
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines prominent (size 1.4), PEF marker size 5, sparse smooth curves
-          well rendered.
+        comment: Line size 1.4 and PEF point size 5 are prominent for this sparse-curve
+          data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/gray distinguishable; red used only for PEF point, not as sole
-          signal.
+        comment: Green vs violet CVD-safe plus redundant solid/dashed linetype encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped; legend covers some data.
+        comment: Canvas gate passed; nothing clipped; balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume (L) / Flow (L/s) with units; correct title.
+        comment: Volume (L) / Flow (L/s) with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series #009E73 + correct backgrounds + amber deficit anchor,
-          but predicted series uses muted gray instead of Imprint position 2.'
+        passed: true
+        comment: 'First series #009E73; violet position 2; amber + matte-red used
+          as semantic anchors; backgrounds theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -113,19 +105,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Polished clinical look, intentional palette and hierarchy.
+        comment: Custom Imprint palette, focal PEF point, deficit ribbon, clinical
+          callout — intentional hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Minimal theme, subtle grid, no spines; slightly hurt by legend-over-data.
+        comment: theme_minimal removes top/right spines, subtle grid, elevated legend
+          frame
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Red PEF focal point + deficit ribbon create a clear clinical narrative.
+        comment: Red PEF focal point + amber deficit ribbon communicate measured-vs-predicted
+          impairment
     spec_compliance:
       score: 15
       max: 15
@@ -135,26 +130,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Closed flow-volume loop, correct expiratory/inspiratory shape.
+        comment: Correct closed flow-volume loop
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: PEF marker, FEV1/FVC/PEF annotations, dashed predicted overlay all
-          present.
+        comment: PEF marker, FEV1/FVC/PEF annotations, dashed predicted overlay, distinct
+          styling — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Volume on x, Flow on y; full ranges shown.
+        comment: Volume on x, flow on y; expiratory positive, inspiratory negative
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; legend labels match curves.
+        comment: Title matches mandated format; legend labels Measured/Predicted normal/Deficit
     data_quality:
       score: 15
       max: 15
@@ -164,20 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Expiratory, inspiratory, predicted, deficit, PEF, clinical values
-          all shown.
+        comment: Shows expiratory + inspiratory limbs, PEF, predicted reference, and
+          deficit
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible spirometry values; neutral clinical context.
+        comment: Clinically plausible neutral values (FVC 4.8, FEV1 3.6, PEF 9.5,
+          ratio 75%)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FVC 4.8L, FEV1 3.6L, PEF 9.5 L/s, ratio 75% — sensible.
+        comment: Sensible L and L/s ranges for spirometry
     code_quality:
       score: 10
       max: 10
@@ -187,33 +183,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (analytic curves, no RNG).
+        comment: Fully deterministic (linspace/analytic curves, no RNG)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400, 8x4.5in.
+        comment: Saves plot-{THEME}.png via plot.save
     library_features:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -221,28 +217,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar-of-graphics: geom_ribbon, scale_*_manual, coord_cartesian,
-          theme tokens.'
+        comment: Grammar-of-graphics layering, manual scales, theme tokens
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Merged color+linetype legends via guides(); ribbon deficit overlay.
+        comment: geom_ribbon, geom_path, scale_linetype_manual, guides(override_aes)
+          layered composition
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - reference-overlay
-  - shaded-band
-  - focal-point-marker
+  - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - interpolation
-  - curve-synthesis
   styling:
   - publication-ready
-  - theme-adaptive
   - alpha-blending
