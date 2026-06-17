@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bode-basic: Bode Plot for Frequency Response
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-17
@@ -182,10 +182,10 @@ plot = (
         stroke=2.0,
     )
     + geom_text(
-        gm_label, aes(x="freq", y="value", label="label"), color=MARGIN_RED, size=12, fontweight="bold", ha="left"
+        gm_label, aes(x="freq", y="value", label="label"), color=MARGIN_RED, size=4, fontweight="bold", ha="left"
     )
     + geom_text(
-        pm_label, aes(x="freq", y="value", label="label"), color=MARGIN_BLUE, size=12, fontweight="bold", ha="left"
+        pm_label, aes(x="freq", y="value", label="label"), color=MARGIN_BLUE, size=4, fontweight="bold", ha="left"
     )
     + facet_wrap("~panel", ncol=1, scales="free_y")
     + scale_x_log10(
@@ -206,7 +206,7 @@ plot = (
         panel_grid_major=element_line(color=GRID_MAJOR, size=0.25),
         panel_grid_minor=element_line(color=GRID_MINOR, size=0.12),
         panel_border=element_rect(color=INK_SOFT, fill=None),
-        panel_spacing_y=0.15,
+        panel_spacing_y=0.05,
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
