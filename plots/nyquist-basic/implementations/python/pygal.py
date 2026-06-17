@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 nyquist-basic: Nyquist Plot for Control Systems
 Library: pygal 3.1.0 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-06-17
@@ -18,14 +18,15 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — series 1 is always #009E73
-# Critical point gets semantic red (#AE3030) — it IS the danger/critical marker
+# Imprint palette — canonical order; semantic exceptions noted
+# Critical point gets semantic red (#AE3030) — valid danger/critical exception
 CHART_COLORS = (
     "#009E73",  # Imprint pos 1 — positive frequency curve
-    "#4467A3",  # Imprint pos 3 — negative frequency curve (mirror)
-    "#AE3030",  # Imprint pos 5 (semantic: critical/danger) — critical point
-    INK_MUTED,  # muted anchor — unit circle (reference element)
+    "#C475FD",  # Imprint pos 2 — negative frequency curve (canonical order)
+    "#AE3030",  # Semantic red — critical point (danger marker exception)
+    INK_MUTED,  # Muted anchor — unit circle (reference element, not categorical)
     "#BD8233",  # Imprint pos 4 — frequency annotation markers
+    "#4467A3",  # Imprint pos 3 — direction arrows
 )
 
 # Data — Transfer function G(s) = 2 / [s(s+1)(s+2)]
@@ -118,6 +119,42 @@ freq_annotations = [
     for idx in [int(np.argmin(np.abs(omega - ft)))]
 ]
 chart.add("Frequency ω (rad/s)", freq_annotations, stroke=False, dots_size=14)
+
+# Direction arrows — V-chevron markers showing increasing-ω traversal direction
+# Three dots per arrow form a triangular arrowhead: tip on curve, wings back-left and back-right
+arrow_omegas = [0.4, 0.7, 1.2, 2.0]
+arrow_scale = 0.10  # back-leg length (data units)
+arrow_wing = 0.06  # half-width of arrowhead (data units)
+direction_markers = []
+
+for ao in arrow_omegas:
+    idx = int(np.argmin(np.abs(omega - ao)))
+    i0 = max(0, idx - 10)
+    i1 = min(len(omega) - 1, idx + 10)
+    dx = float(real_part[i1] - real_part[i0])
+    dy = float(imag_part[i1] - imag_part[i0])
+    length = math.sqrt(dx**2 + dy**2)
+    if length < 1e-10:
+        continue
+    ux, uy = dx / length, dy / length  # unit forward vector
+    px, py = -uy, ux  # perpendicular (90° CCW)
+    tx = float(real_part[idx])
+    ty = float(imag_part[idx])
+    direction_markers.extend(
+        [
+            {"value": (tx, ty), "label": f"→ ω = {ao} rad/s"},
+            {
+                "value": (tx - arrow_scale * ux + arrow_wing * px, ty - arrow_scale * uy + arrow_wing * py),
+                "label": None,
+            },
+            {
+                "value": (tx - arrow_scale * ux - arrow_wing * px, ty - arrow_scale * uy - arrow_wing * py),
+                "label": None,
+            },
+        ]
+    )
+
+chart.add("→ ω direction", direction_markers, stroke=False, dots_size=12)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
