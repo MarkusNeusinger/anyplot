@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 star-chart-constellation: Star Chart with Constellations
 Library: matplotlib 3.11.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-16
+Quality: 88/100 | Updated: 2026-06-17
 """
 
 import os
@@ -10,6 +10,8 @@ import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 
 # Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
@@ -288,32 +290,51 @@ edges = [
     ("Nash", "Kaus Media"),
 ]
 
+# Limit of the circular sky chart: declination floor (stars below this are off-map)
+DEC_FLOOR = -48.0
+R_MAX = 90.0 - DEC_FLOOR  # radial distance of the chart boundary
+
+
+# North-polar azimuthal-equidistant projection: equally spaced declination
+# circles give a natural *circular* sky boundary (the spec's preferred style).
+#   theta = RA (radians)   r = colatitude = 90deg - Dec
+def project(ra_h, dec_d):
+    theta = np.asarray(ra_h, dtype=float) * (np.pi / 12.0)
+    r = 90.0 - np.asarray(dec_d, dtype=float)
+    return theta, r
+
+
 # Background field stars (faint, for celestial-sphere context)
-n_bg = 300
+n_bg = 320
 bg_ra_hours = np.random.uniform(0, 24, n_bg)
-bg_dec_deg = np.random.uniform(-45, 70, n_bg)
+bg_dec_deg = np.random.uniform(DEC_FLOOR, 72, n_bg)
 bg_mag = np.random.uniform(4.0, 6.0, n_bg)
+bg_theta, bg_r = project(bg_ra_hours, bg_dec_deg)
+
+# Milky Way band — soft cloud of faint points along the galactic plane.
+# Convert galactic (l, b) -> equatorial (RA, Dec) via the standard NGP frame.
+ra_ngp, dec_ngp, l_ncp = np.radians(192.85948), np.radians(27.12825), np.radians(122.93192)
+n_mw = 2600
+mw_l = np.random.uniform(0, 2 * np.pi, n_mw)
+mw_b = np.random.normal(0.0, np.radians(8.5), n_mw)  # band thickness ~ +/-8.5deg
+mw_dec = np.arcsin(np.sin(dec_ngp) * np.sin(mw_b) + np.cos(dec_ngp) * np.cos(mw_b) * np.cos(l_ncp - mw_l))
+mw_ra = ra_ngp + np.arctan2(
+    np.cos(mw_b) * np.sin(l_ncp - mw_l),
+    np.sin(mw_b) * np.cos(dec_ngp) - np.cos(mw_b) * np.sin(dec_ngp) * np.cos(l_ncp - mw_l),
+)
+mw_theta, mw_r = project(np.degrees(mw_ra) / 15.0, np.degrees(mw_dec))
 
 # Extract named-star arrays
 star_names = list(stars.keys())
 star_ra_h = np.array([stars[s][0] for s in star_names])
 star_dec_d = np.array([stars[s][1] for s in star_names])
 star_mag = np.array([stars[s][2] for s in star_names])
-
-
-# Project equatorial coords onto matplotlib's Aitoff all-sky projection.
-# Aitoff wants longitude in [-pi, pi] and latitude in [-pi/2, pi/2]; negate RA
-# so the sky increases right-to-left (standard star-chart convention).
-star_lon = -((star_ra_h - 12.0) * np.pi / 12.0)
-star_lat = star_dec_d * np.pi / 180.0
-bg_lon = -((bg_ra_hours - 12.0) * np.pi / 12.0)
-bg_lat = bg_dec_deg * np.pi / 180.0
+star_theta, star_r = project(star_ra_h, star_dec_d)
 
 # Size mapping: brighter stars (lower magnitude) map to larger points
 max_mag, min_mag = 6.5, -1.5
 min_size, max_size = 5, 175
 star_sizes = max_size * ((max_mag - star_mag) / (max_mag - min_mag)) ** 1.5 + min_size
-bg_sizes = max_size * ((max_mag - bg_mag) / (max_mag - min_mag)) ** 1.5 + min_size
 
 # Color mapping by magnitude — Imprint sequential cmap (brand green -> blue).
 # Brightest stars (low magnitude) get brand green; faintest fade to blue.
@@ -321,29 +342,38 @@ imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", [BRAND, "#4467A3"
 star_color_norm = np.clip((star_mag - min_mag) / (max_mag - min_mag), 0, 1)
 star_colors = imprint_seq(star_color_norm)
 
-# Plot — Aitoff all-sky projection
+# Plot — square axes centered in the 3200x1800 canvas so the polar plot reads
+# as a true circle, leaving the side margins for the legends.
 fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-ax = fig.add_subplot(111, projection="aitoff", facecolor=PAGE_BG)
+ax = fig.add_axes([0.305, 0.085, 0.39, 0.83], projection="polar", facecolor=PAGE_BG)
+ax.set_theta_zero_location("N")
+ax.set_theta_direction(-1)  # RA increases clockwise from the top
+ax.set_rlim(0, R_MAX)
+ax.set_rorigin(0)
+
+# Milky Way band (deepest layer) — faint diffuse glow
+ax.scatter(mw_theta, mw_r, s=7, c=INK_MUTED, alpha=0.045, edgecolors="none", zorder=0)
 
 # Faint background field stars (context layer, muted)
-ax.scatter(bg_lon, bg_lat, s=bg_sizes, c=INK_MUTED, alpha=0.30, edgecolors="none", zorder=1)
+bg_sizes = max_size * ((max_mag - bg_mag) / (max_mag - min_mag)) ** 1.5 + min_size
+ax.scatter(bg_theta, bg_r, s=bg_sizes, c=INK_MUTED, alpha=0.30, edgecolors="none", zorder=1)
 
 # Constellation stick-figure lines (thin, semi-transparent structural ink)
 for s1, s2 in edges:
-    lon1 = -((stars[s1][0] - 12.0) * np.pi / 12.0)
-    lat1 = stars[s1][1] * np.pi / 180.0
-    lon2 = -((stars[s2][0] - 12.0) * np.pi / 12.0)
-    lat2 = stars[s2][1] * np.pi / 180.0
-    # Skip segments that would wrap across the projection boundary
-    if abs(lon1 - lon2) > np.pi:
-        continue
-    ax.plot([lon1, lon2], [lat1, lat2], color=INK_SOFT, linewidth=0.8, alpha=0.5, zorder=2)
+    t1, r1 = project(stars[s1][0], stars[s1][1])
+    t2, r2 = project(stars[s2][0], stars[s2][1])
+    # Unwrap so the segment takes the short way around the RA circle
+    if t2 - t1 > np.pi:
+        t2 -= 2 * np.pi
+    elif t1 - t2 > np.pi:
+        t2 += 2 * np.pi
+    ax.plot([t1, t2], [r1, r2], color=INK_SOFT, linewidth=0.8, alpha=0.5, zorder=2)
 
 # Soft halo behind the brightest stars (mag < 1.0) for a gentle glow
 bright_mask = star_mag < 1.0
 ax.scatter(
-    star_lon[bright_mask],
-    star_lat[bright_mask],
+    star_theta[bright_mask],
+    star_r[bright_mask],
     s=star_sizes[bright_mask] * 2.6,
     c=BRAND,
     alpha=0.10,
@@ -352,34 +382,40 @@ ax.scatter(
 )
 
 # Named stars — sized by magnitude, colored along the Imprint sequential ramp
-ax.scatter(star_lon, star_lat, s=star_sizes, c=star_colors, alpha=0.95, edgecolors=PAGE_BG, linewidth=0.4, zorder=3)
+ax.scatter(star_theta, star_r, s=star_sizes, c=star_colors, alpha=0.95, edgecolors=PAGE_BG, linewidth=0.4, zorder=3)
 
-# Ecliptic — dashed amber reference curve (Dec ~ obliquity * sin(ecliptic lon))
-ecl_lon = np.linspace(-np.pi, np.pi, 500)
-ecl_lat = 23.44 * np.sin(-ecl_lon) * np.pi / 180.0
-ax.plot(ecl_lon, ecl_lat, color=AMBER, linewidth=1.4, alpha=0.75, linestyle=(0, (7, 4)), zorder=2, label="Ecliptic")
+# Ecliptic — dashed amber reference curve. The ecliptic is the great circle
+# 23.44deg from the ecliptic pole; trace it in RA/Dec then project.
+eps = np.radians(23.44)
+ecl_lon = np.linspace(0, 2 * np.pi, 720)
+ecl_dec = np.degrees(np.arcsin(np.sin(eps) * np.sin(ecl_lon)))
+ecl_ra_h = (np.degrees(np.arctan2(np.cos(eps) * np.sin(ecl_lon), np.cos(ecl_lon))) / 15.0) % 24
+ecl_theta, ecl_r = project(ecl_ra_h, ecl_dec)
+# Break the curve where it wraps past the RA seam to avoid a chord across the chart
+seam = np.abs(np.diff(ecl_theta)) > np.pi
+ecl_theta[:-1][seam] = np.nan
+ax.plot(ecl_theta, ecl_r, color=AMBER, linewidth=1.4, alpha=0.8, linestyle=(0, (7, 4)), zorder=2)
 
-# Label the brightest stars (mag < 1.0) with tuned offsets
+# Label the brightest stars (mag < 1.0)
 bright_offsets = {
-    "Sirius": (8, 7),
-    "Vega": (7, 7),
-    "Arcturus": (7, -10),
-    "Capella": (-34, 6),
+    "Sirius": (7, -10),
+    "Vega": (8, 6),
+    "Arcturus": (8, -4),
+    "Capella": (-6, 9),
     "Rigel": (7, -10),
-    "Betelgeuse": (7, 7),
-    "Altair": (7, -10),
-    "Aldebaran": (-38, -8),
-    "Spica": (-30, -9),
-    "Pollux": (7, 7),
+    "Betelgeuse": (8, 6),
+    "Altair": (8, -8),
+    "Aldebaran": (-10, 8),
+    "Spica": (7, -10),
+    "Pollux": (8, 7),
 }
 for name, (ra, dec, mag, _) in stars.items():
     if mag < 1.0:
-        lon = -((ra - 12.0) * np.pi / 12.0)
-        lat = dec * np.pi / 180.0
+        t, r = project(ra, dec)
         ax.annotate(
             name,
-            (lon, lat),
-            fontsize=7,
+            (t, r),
+            fontsize=7.5,
             color=INK,
             alpha=0.9,
             xytext=bright_offsets.get(name, (7, 6)),
@@ -388,7 +424,7 @@ for name, (ra, dec, mag, _) in stars.items():
             path_effects=[pe.withStroke(linewidth=2, foreground=PAGE_BG, alpha=0.8)],
         )
 
-# Constellation names placed near each group's centroid
+# Constellation names placed near each group's centroid (circular mean in RA)
 constellation_names = {
     "Ori": "Orion",
     "UMa": "Ursa Major",
@@ -413,89 +449,158 @@ constellation_names = {
     "Sgr": "Sagittarius",
 }
 
-# Manual nudges (radians) to clear crowded regions
-label_offsets_rad = {
-    "CrB": (0.0, -0.18),
-    "Her": (0.15, 0.15),
-    "Boo": (-0.15, -0.18),
-    "Lyr": (-0.12, -0.15),
-    "Tau": (0.20, 0.16),
-    "Gem": (-0.14, 0.18),
-    "CMa": (-0.16, 0.20),
-    "Dra": (0.0, 0.10),
-    "Cyg": (0.10, 0.12),
-    "Aql": (0.0, -0.15),
-    "Sco": (-0.28, 0.10),
-    "Sgr": (0.28, 0.0),
-    "Vir": (0.15, -0.20),
-    "And": (0.0, 0.12),
-    "Per": (0.0, -0.12),
-    "Ori": (0.10, -0.24),
-    "Leo": (0.0, -0.10),
-}
-
-placed_labels = []
+# Seed each label at its constellation centroid (circular mean handles the
+# RA=0h seam), then relax overlaps with a force-based pass in projected
+# Cartesian space so the dense northern groups spread out legibly.
+label_seeds = []
 for abbr, full_name in constellation_names.items():
-    member_lon = [-((stars[s][0] - 12.0) * np.pi / 12.0) for s in star_names if stars[s][3] == abbr]
-    member_lat = [stars[s][1] * np.pi / 180.0 for s in star_names if stars[s][3] == abbr]
-    cx = np.mean(member_lon)
-    cy = np.mean(member_lat) - 0.06
+    member_t = np.array([project(stars[s][0], stars[s][1])[0] for s in star_names if stars[s][3] == abbr])
+    member_r = np.array([project(stars[s][0], stars[s][1])[1] for s in star_names if stars[s][3] == abbr])
+    ct = np.arctan2(np.mean(np.sin(member_t)), np.mean(np.cos(member_t)))
+    cr = np.mean(member_r)
+    label_seeds.append((ct, cr, full_name))
 
-    dx, dy = label_offsets_rad.get(abbr, (0.0, 0.0))
-    cx += dx
-    cy += dy
+xy = np.array([[r * np.cos(t), r * np.sin(t)] for t, r, _ in label_seeds])
+# Width-aware half-extents (data units) so long names reserve more room.
+half_w = np.array([len(full) * 0.95 + 2.0 for _, _, full in label_seeds])
+# Fixed obstacles: bright-star labels keep their place, so push names off them.
+fixed_xy = np.array(
+    [
+        [project(ra, dec)[1] * np.cos(project(ra, dec)[0]), project(ra, dec)[1] * np.sin(project(ra, dec)[0])]
+        for ra, dec, mag, _ in stars.values()
+        if mag < 1.0
+    ]
+)
+MIN_D_FIXED = 12.0
+for _ in range(200):
+    moved = False
+    for i in range(len(xy)):
+        for j in range(i + 1, len(xy)):
+            d = xy[i] - xy[j]
+            dist = np.hypot(d[0], d[1])
+            need = half_w[i] + half_w[j]
+            if 1e-6 < dist < need:
+                shift = (d / dist) * (need - dist) / 2.0
+                xy[i] += shift
+                xy[j] -= shift
+                moved = True
+        for fx in fixed_xy:
+            d = xy[i] - fx
+            dist = np.hypot(d[0], d[1])
+            if 1e-6 < dist < MIN_D_FIXED:
+                xy[i] += (d / dist) * (MIN_D_FIXED - dist)
+                moved = True
+    if not moved:
+        break
 
-    # Iterative nudge away from previously placed labels
-    for _ in range(3):
-        for px, py in placed_labels:
-            if abs(cx - px) < 0.22 and abs(cy - py) < 0.11:
-                cy -= 0.13
-                break
-        else:
-            break
-
-    placed_labels.append((cx, cy))
+for (x, y), (_, _, full_name) in zip(xy, label_seeds, strict=True):
+    nr = min(np.hypot(x, y), R_MAX - 4.0)
+    nt = np.arctan2(y, x)
     ax.text(
-        cx,
-        cy,
+        nt,
+        nr,
         full_name,
-        fontsize=7.5,
+        fontsize=8,
         color=INK_SOFT,
-        alpha=0.85,
+        alpha=0.9,
         ha="center",
-        va="top",
+        va="center",
         fontstyle="italic",
         fontweight="medium",
         zorder=4,
         path_effects=[pe.withStroke(linewidth=2.5, foreground=PAGE_BG, alpha=0.7)],
     )
 
-# Style the coordinate grid + ticks
-ax.grid(True, color=INK, linewidth=0.5, alpha=0.15, linestyle=(0, (4, 6)))
-ax.tick_params(axis="both", colors=INK_SOFT, labelsize=8, length=0, labelcolor=INK_SOFT)
+# Style the circular coordinate grid (RA spokes + Dec circles)
+ax.grid(True, color=INK, linewidth=0.5, alpha=0.16, linestyle=(0, (4, 6)))
+ax.set_axisbelow(True)
+ax.spines["polar"].set_color(INK_SOFT)
+ax.spines["polar"].set_alpha(0.5)
+ax.spines["polar"].set_linewidth(1.0)
 
-# Relabel Aitoff x-ticks (degrees) as Right Ascension hours
-xtick_locs = np.array([-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150])
-xtick_hours = 12.0 - xtick_locs / 15.0
-ax.set_xticklabels([f"{int(h) % 24}h" for h in xtick_hours], fontsize=8, color=INK_SOFT)
+# RA spokes every 2 hours, labelled in hours
+ax.set_xticks(np.arange(0, 2 * np.pi, np.pi / 6))
+ax.set_xticklabels([f"{(2 * k) % 24}h" for k in range(12)])
+
+# Dec circles: r = 90 - Dec  ->  +60, +30, 0 (equator), -30
+ax.set_rticks([30, 60, 90, 120])
+ax.set_yticklabels(["+60°", "+30°", "0°", "−30°"])
+ax.set_rlabel_position(99)
+ax.tick_params(axis="x", colors=INK_SOFT, labelsize=8, pad=2)
+ax.tick_params(axis="y", colors=INK_MUTED, labelsize=7)
+for lbl in ax.get_yticklabels():
+    lbl.set_path_effects([pe.withStroke(linewidth=2, foreground=PAGE_BG, alpha=0.7)])
+
+# Feature legend (ecliptic + Milky Way) — upper-right margin
+feature_handles = [
+    Line2D([0], [0], color=AMBER, lw=1.4, linestyle=(0, (5, 3)), label="Ecliptic"),
+    Patch(facecolor=INK_MUTED, alpha=0.35, edgecolor="none", label="Milky Way"),
+]
+leg1 = ax.legend(
+    handles=feature_handles,
+    loc="upper left",
+    bbox_to_anchor=(1.04, 1.02),
+    fontsize=8,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.9,
+    handlelength=1.8,
+    borderpad=0.7,
+)
+plt.setp(leg1.get_texts(), color=INK_SOFT)
+ax.add_artist(leg1)
+
+# Magnitude size legend — lower-right margin (size encodes brightness)
+mag_legend = [0.0, 2.0, 4.0]
+mag_labels = ["0  (bright)", "2", "4  (faint)"]
+size_handles = [
+    Line2D(
+        [0],
+        [0],
+        marker="o",
+        color="none",
+        markerfacecolor=imprint_seq((m - min_mag) / (max_mag - min_mag)),
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=0.4,
+        markersize=np.sqrt(max_size * ((max_mag - m) / (max_mag - min_mag)) ** 1.5 + min_size),
+        label=lab,
+    )
+    for m, lab in zip(mag_legend, mag_labels, strict=True)
+]
+leg2 = ax.legend(
+    handles=size_handles,
+    loc="lower left",
+    bbox_to_anchor=(1.04, -0.02),
+    fontsize=8,
+    title="Apparent magnitude",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.9,
+    labelspacing=1.1,
+    borderpad=0.8,
+    handletextpad=1.0,
+)
+plt.setp(leg2.get_texts(), color=INK_SOFT)
+leg2.get_title().set_color(INK)
+leg2.get_title().set_fontsize(8)
 
 # Title + footer subtitle
-ax.set_title(
-    "star-chart-constellation · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=16
+fig.text(
+    0.5,
+    0.95,
+    "star-chart-constellation · python · matplotlib · anyplot.ai",
+    ha="center",
+    fontsize=12,
+    fontweight="medium",
+    color=INK,
 )
 fig.text(
     0.5,
-    0.045,
-    "Right Ascension (hours) — Aitoff projection  |  Declination (°)  |  point size ∝ brightness",
+    0.035,
+    "Azimuthal-equidistant sky chart  |  Right Ascension (hours) · Declination (°)  |  point size ∝ brightness",
     ha="center",
     fontsize=9,
     color=INK_SOFT,
 )
 
-# Ecliptic legend
-leg = ax.legend(loc="lower right", fontsize=8, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, framealpha=0.9)
-if leg:
-    plt.setp(leg.get_texts(), color=INK_SOFT)
-
-fig.subplots_adjust(left=0.05, right=0.95, top=0.90, bottom=0.10)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=fig.get_facecolor())
