@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: star-chart-constellation
+created: '2026-06-17T00:10:28Z'
+updated: '2026-06-17T00:14:25Z'
+generated_by: claude-opus
+workflow_run: 27656247535
+issue: 4560
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/star-chart-constellation/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Real catalog data: actual RA/Dec positions and apparent magnitudes for ~96 named
+    stars (Vega 0.03, Arcturus -0.05, Deneb 1.25) across 17 northern constellations
+    — highly plausible and neutral.'
+  - Genuine north-polar azimuthal-equidistant projection with a circular celestial-equator
+    boundary, RA meridians + Dec parallels grid, labeled RA ticks (0h-22h) and Dec
+    ticks (+30/+60), plus a dashed amber ecliptic curve.
+  - Magnitude-to-radius mapping is inverted correctly (brighter = larger) and clearly
+    readable; faint deterministic field stars add depth without clutter.
+  - 'Clean theme-adaptive chrome: warm cream (#FAF8F1) light surface and warm near-black
+    (#1A1A17) dark surface with identical brand-green (#009E73) star data across both
+    renders.'
+  - Sophisticated layered z-index composition (stars, field, constellation lines,
+    ecliptic, equator, grid, label layers) — strong design polish and idiomatic Highcharts
+    scatter+line usage.
+  weaknesses:
+  - 'Star/constellation count falls short of the spec''s stated range: ~96 real named
+    stars over 17 constellations vs the requested 200-500 stars covering 20-30 constellations
+    (the 165 random faint field stars pad the visual count but are not catalogued/constellation-bearing).
+    Consider adding ~3-6 more constellations (e.g. Aquila, Triangulum, Lacerta, Camelopardalis)
+    to reach the 20+ range.'
+  - Optional Milky Way faint band from the spec is not rendered — acceptable since
+    optional, but would add storytelling depth.
+  - A few constellation labels (Cas, Cep, And, Aur) sit very close to their stars;
+    readable but slightly crowded — minor only.
+  - Small chrome text (12px RA/Dec ticks) becomes borderline when the square render
+    is scaled to ~400px mobile width; title and constellation labels remain clear.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), correct light surface — not pure white, not dark.
+      Chrome: bold dark title "star-chart-constellation · javascript · highcharts · anyplot.ai" fully visible at top; gray subtitle readable; RA tick labels (0h-22h) and Dec ticks (+30°,+60°) in soft gray, readable; italic dark constellation labels (UMa, UMi, Cas, Cep, Cyg, Lyr, Dra, Boo, CrB, Her, Peg, And, Per, Aur, Gem, Leo) all legible.
+      Data: brand green (#009E73) stars sized by magnitude; gray constellation stick-figure lines; dashed amber ecliptic on the right; gray equator boundary ring; subtle grid. First/only star series is #009E73. Confirmed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17), correct dark surface — not pure black, not light.
+      Chrome: white title fully visible; gray subtitle, RA/Dec ticks and white italic constellation labels all readable against the dark surface; no dark-on-dark failures.
+      Data: identical brand-green (#009E73) stars, same sizes/positions; only chrome flipped (lines/grid/equator/ticks lightened). Ecliptic dashed amber identical. Data colors match the light render exactly. Confirmed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Fonts explicitly set; all text readable both themes; 12px ticks borderline
+          at 400px mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding of a few constellation labels near stars; no severe
+          overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers scale with magnitude; faint field stars intentionally small;
+          lines visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green reads well on both surfaces; CVD-safe; no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400 square; circular sky fills the canvas; nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; descriptive subtitle; RA(h)/Dec(deg) ticks
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; amber ecliptic; chrome tokens; both backgrounds
+          theme-correct.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom projection, layered composition, ecliptic + grid — well above
+          generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, subtle grid, generous whitespace, clean chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Magnitude size hierarchy + labeled constellations guide the eye;
+          clear focal structure.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Star chart with constellation stick-figures on a sky projection —
+          exactly the spec.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Projection, magnitude sizing, lines, grid, labels, ecliptic all present;
+          star/constellation count below spec range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: RA/Dec projected correctly; magnitude inverted to size.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend appropriately disabled for single star
+          series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers magnitudes, constellations, grid, ecliptic; constellation
+          count lower than spec range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real star positions and magnitudes; neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic magnitudes, RA hours, Dec degrees.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small data-gen helpers (project/radius/rnd) — reasonable for the
+          complexity, slight deviation from no-functions ideal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses Highcharts global per contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness saves plot-{theme}.png/.html; current API.
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper chart config, series types, plotOptions, theme tokens.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: zIndex layering, per-point marker radius, dataLabel label layers,
+          custom tooltip formatter.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - scatter-plot
+  - custom-projection
+  - layered-series
+  - annotations
+  - coordinate-grid
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - coordinate-transform
+  - azimuthal-projection
+  styling:
+  - theme-adaptive
+  - publication-ready
+  - z-index-layering
