@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spirometry-flow-volume: Spirometry Flow-Volume Loop
-Library: seaborn 0.13.2 | Python 3.14.3
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-06-17
 """
 
 import os
