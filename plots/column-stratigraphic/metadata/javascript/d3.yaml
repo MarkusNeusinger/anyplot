@@ -1,0 +1,244 @@
+library: d3
+language: javascript
+specification_id: column-stratigraphic
+created: '2026-06-17T01:10:50Z'
+updated: '2026-06-17T01:14:30Z'
+generated_by: claude-opus
+workflow_run: 27658729079
+issue: 4573
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Six bespoke SVG <pattern> fills (stipple dots, horizontal dashes, brick, mixed
+    dashes, pebbles, dash-dot) approximate FGDC/USGS lithology symbols and give a
+    redundant pattern-plus-color encoding that reads even in grayscale
+  - 'Canonical Imprint palette in order with Sandstone = #009E73 as the first series;
+    data colors are identical across light and dark renders while only chrome flips'
+  - 'Strong stratigraphic conventions: depth axis increases downward in meters, period
+    bands merge consecutive same-age layers, full-width boundary rules mark period
+    changes, and formation labels use leader lines with lithology+thickness sub-labels'
+  - Realistic, neutral geology (Mesa Verde, Mancos, Greenhorn, Morrison, Entrada,
+    Chinle, Moenkopi, Kaibab, Coconino) spanning Cretaceous through Permian with plausible
+    thicknesses (14-38 m)
+  - Canvas is exactly 3200x1800; both themes pass the readability check with no clipping
+    or overlap
+  weaknesses:
+  - Landscape canvas leaves a large empty region in the lower-right quadrant below
+    the legend; a square orientation (or wider use of the right band) would balance
+    the inherently vertical stratigraphic column better
+  - Layers are drawn with forEach loops rather than D3 data-join (selection.data().join());
+    using a join would be more idiomatic and is the library's distinctive strength
+  - Two helper functions (buildPattern, drawLithoBox) are used; reasonable for six
+    patterns but slightly off the KISS/no-functions guideline
+  - Formation sub-labels at 13px and depth/age labels at 13-15px are fine at full
+    size but become small when the 3200px render is scaled to ~400px mobile width
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (~#FAF8F1), no white rect painted over it.
+      Chrome: title "column-stratigraphic · javascript · d3 · anyplot.ai" in dark ink centered top; "Depth (m)" rotated y-axis label; depth ticks 0-240 in dark ink; "Geological Age" header and period names (Cretaceous, Jurassic, Triassic, Permian) in bold dark ink; "Lithology" legend header. All text clearly readable.
+      Data: 9 stacked lithology boxes with tinted fills + pattern overlays — Sandstone green #009E73 stipple dots, Shale lavender dashes, Limestone blue brick, Siltstone ochre mixed dashes, Conglomerate red pebbles, Mudstone cyan dash-dot. First series (Sandstone) is brand green. Leader lines connect each box to formation+thickness labels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (~#1A1A17).
+      Chrome: title and period names in light ink; "Geological Age" / "Lithology" / depth ticks in soft light ink — all clearly visible, no dark-on-dark failures.
+      Data: identical lithology colors to the light render (green/lavender/blue/ochre/red/cyan patterns); only the box base-tint and chrome flip for the dark surface. Brand green remains visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set, readable both themes; sub-labels small
+          at 400px scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; leader lines keep formation labels clear
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patterns and boxes clearly visible on both surfaces
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant pattern encoding + CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 exact; nothing cut off (lower-right whitespace is
+          the only soft point)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth (m) with units; descriptive headers
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, Sandstone=#009E73 first, backgrounds correct
+          both themes
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom FGDC-style patterns, two-column legend, intentional layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle leader lines, boundary rules, no extra spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Period bands and depth axis guide the reader top-to-bottom
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stratigraphic column
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 distinct patterns, formations, ages, depth scale, boundary lines
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Depth increases downward; top/bottom correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match lithologies
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 layers, 6 lithologies, varied thickness, 4 periods
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Colorado Plateau formation names, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-260 m depths, 14-38 m thicknesses
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions for patterns/boxes; reasonable but not strictly
+          function-free
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 global only, no extra imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png/.html
+    library_features:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.scaleLinear, axisLeft, d3.groups, d3.range; forEach instead of
+          data-join
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG <pattern> defs and d3.groups for period merging
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - svg-patterns
+  - annotations
+  - leader-lines
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - helper-functions
+  dataprep:
+  - grouping
+  styling:
+  - publication-ready
+  - theme-adaptive
+  - alpha-blending
