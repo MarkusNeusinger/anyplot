@@ -1,0 +1,264 @@
+library: echarts
+language: javascript
+specification_id: column-stratigraphic
+created: '2026-06-17T01:20:40Z'
+updated: '2026-06-17T01:24:26Z'
+generated_by: claude-opus
+workflow_run: 27658807274
+issue: 4573
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/column-stratigraphic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'First lithology (Sandstone) anchored to brand green #009E73 with the rest following
+    the Imprint palette in canonical order; the semantic-red slot is deliberately
+    skipped for these neutral earth categories — exactly the right call.'
+  - FGDC/USGS-style lithology decals (stipple dots, broken dashes, staggered brick,
+    diagonal hatch, coarse pebbles, fine laminae) give six visually distinct, domain-correct
+    fill patterns — exceeds the spec's minimum of 5.
+  - Decal ink flips with the theme (dark texture on the light surface, light texture
+    on the dark surface) so the hatch stays legible on the saturated fills in BOTH
+    renders — a careful, non-obvious touch.
+  - Depth axis is inverted (increasing downward) per borehole convention with a labelled
+    'Depth (m)' scale; age/period sits left of the column and formation + lithology
+    sit right — a clean, readable geological narrative top-to-bottom.
+  - 'Idiomatic ECharts: stacked single-category bars carry color+decal and draw the
+    boundary lines via the ink border, while a custom renderItem series overlays the
+    formation/age labels in data coordinates.'
+  - Realistic, neutral data — genuine Western US formations (Niobrara, Morrison, Dakota,
+    Sundance, Bearpaw, Mowry, Frontier) with plausible ages and thicknesses across
+    Paleocene → Late Jurassic.
+  weaknesses:
+  - 'Minor: the implementation uses two helper functions (decalFor, renderLabels).
+    renderLabels is mandatory for an ECharts custom series and decalFor is a clean
+    lookup, so this is idiomatic rather than a real KISS violation — no action needed
+    unless strict no-function structure is enforced.'
+  - 'DE-03: all layers carry equal visual weight (appropriate for a stratigraphic
+    column), so there is no single focal point — acceptable for the plot type but
+    it caps Data Storytelling slightly below full marks.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1), not pure white. Correct.
+      Chrome: bold dark title "column-stratigraphic · javascript · echarts · anyplot.ai"
+        centered at top; dark "Depth (m)" rotated y-axis label; dark-grey tick labels
+        0..470; subtle warm gridlines. Bottom legend with 6 lithology swatches in
+        secondary-grey text. All chrome clearly readable against the light surface.
+      Data: a centered vertical column of 9 stacked layers. First lithology Sandstone
+        is brand green #009E73 (stipple dots), then Shale lavender (dashes), Limestone
+        blue (brick), Siltstone ochre (diagonal hatch), Conglomerate cyan (pebbles),
+        Mudstone rose (fine laminae). Crisp dark layer-boundary borders. Formation +
+        lithology labelled to the right of each layer (dark bold + grey), age/period to
+        the left (grey). Decal ink is dark, legible on the saturated fills.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17), not pure black. Correct.
+      Chrome: light title and "Depth (m)" label; light-grey tick labels; subtle light
+        gridlines; light legend text. No dark-on-dark anywhere — all chrome readable.
+      Data: data colors are IDENTICAL to the light render (green/lavender/blue/ochre/
+        cyan/rose in the same order). Only the chrome flipped. The decal ink flipped to
+        a light texture so the hatch stays visible on the fills. Layer borders are light.
+        Brand green remains clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 22, formation 17, lithology/age
+          14-15, axis 14-16); all readable in both themes and when scaled down
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Age left, formation/lithology right of column; no text or data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Fills, theme-adaptive decals and ink borders all crisp; 9 layers
+          for sparse data are prominent
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette plus redundant pattern + text encoding;
+          ink borders add contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); good proportions,
+          nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Depth (m)'' with units; x-axis hidden (correct for single column)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green; Imprint order, red slot skipped semantically;
+          backgrounds #FAF8F1/#1A1A17; both themes correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: FGDC-convention decals, theme-adaptive hatch ink, custom label overlay
+          — far beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome (left axis only), subtle grid, generous whitespace,
+          clean borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Inverted depth axis + dual-side labelling guide reading top-to-bottom;
+          no single focal point (appropriate for the plot type)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct vertical stratigraphic column
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 distinct lithology patterns, formation names, ages, depth scale,
+          boundary lines, downward depth — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 9 layers' top/bottom mapped to inverted depth axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; legend labels match lithology
+          types
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 layers, 6 lithologies, varied thickness, multiple geological ages
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Western US formation names, plausible ages/depths, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-470 m depths with sensible layer thicknesses
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helpers; renderLabels is mandatory for custom series and decalFor
+          is a clean lookup — idiomatic, minor structural deduction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses provided globals; no imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png/html; current ECharts 5.5.1 API
+    library_features:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked single-category bars + custom renderItem overlay + inverse
+          value axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ECharts decal pattern API and custom series renderItem — features
+          distinctive to ECharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - pattern-fill
+  - stacked-bar
+  - custom-render
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - publication-ready
