@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bode-basic: Bode Plot for Frequency Response
-Library: altair | Python
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-17
 """
 
 import os
