@@ -87,19 +87,20 @@ label_df <- data.frame(
   cluster = factor(leaf_clust)
 )
 
-plot_title <- "dendrogram-basic · r · ggplot2 · anyplot.ai"
+plot_title    <- "dendrogram-basic · r · ggplot2 · anyplot.ai"
+plot_subtitle <- "European countries clustered by life expectancy, GDP per capita & population · gapminder 2007 · Ward's linkage"
 
 # Plot — horizontal dendrogram via coord_flip; leaves on the right, root on the left
 p <- ggplot() +
   geom_segment(
     data = seg_df,
     aes(x = x, xend = xend, y = y, yend = yend),
-    color = INK_SOFT, linewidth = 0.55
+    color = INK_SOFT, linewidth = 0.7
   ) +
   geom_text(
     data  = label_df,
     aes(x = x, y = y, label = label, color = cluster),
-    hjust = 1, size = 2.8
+    hjust = 1, size = 3.2
   ) +
   scale_color_manual(
     values = setNames(IMPRINT_PALETTE[1:3], c("1", "2", "3")),
@@ -108,14 +109,15 @@ p <- ggplot() +
   guides(color = guide_legend(override.aes = list(label = "■", size = 4))) +
   scale_x_continuous(breaks = NULL, expand = c(0.03, 0.03)) +
   scale_y_continuous(
-    limits = c(-max_h * 0.55, max_h * 1.05),
+    limits = c(-max_h * 0.35, max_h * 1.05),
     breaks = pretty(c(0, max_h), n = 5)
   ) +
   coord_flip() +
   labs(
-    title = plot_title,
-    x     = NULL,
-    y     = "Ward's Distance"
+    title    = plot_title,
+    subtitle = plot_subtitle,
+    x        = NULL,
+    y        = "Ward's Distance"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -129,6 +131,7 @@ p <- ggplot() +
     axis.title.x       = element_text(color = INK, size = 10),
     axis.title.y       = element_blank(),
     plot.title         = element_text(color = INK, size = 12, face = "bold"),
+    plot.subtitle      = element_text(color = INK_SOFT, size = 8),
     legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                       linewidth = 0.3),
     legend.text        = element_text(color = INK_SOFT, size = 8),
