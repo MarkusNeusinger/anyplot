@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-18
@@ -28,10 +28,10 @@ from plotnine import (
     geom_segment,
     geom_vline,
     ggplot,
+    guide_legend,
+    guides,
     labs,
-    scale_alpha_identity,
-    scale_color_identity,
-    scale_size_identity,
+    scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -72,11 +72,11 @@ error_i = received_i - ideal_i[symbol_indices]
 error_q = received_q - ideal_q[symbol_indices]
 evm = np.sqrt(np.mean(error_i**2 + error_q**2)) / np.sqrt(avg_power) * 100
 
-df_received = pd.DataFrame({"i": received_i, "q": received_q, "color": RECEIVED_COLOR, "alpha": 0.4, "size": 3.5})
+df_received = pd.DataFrame({"i": received_i, "q": received_q, "series": "Received Symbols"})
+df_ideal = pd.DataFrame({"i": ideal_i, "q": ideal_q, "series": "Ideal Points"})
 
-df_ideal = pd.DataFrame({"i": ideal_i, "q": ideal_q, "color": IDEAL_COLOR, "alpha": 1.0, "size": 6.0})
-
-# Decision region shading (checkerboard, theme-adaptive)
+# Decision region shading — CHECKER_ALT provides more visible contrast than ELEVATED_BG in light mode
+CHECKER_ALT = "#EDEEE7" if THEME == "light" else ELEVATED_BG
 region_edges = [-4.5, -2, 0, 2, 4.5]
 rects = []
 for ri, xmin in enumerate(region_edges[:-1]):
@@ -87,7 +87,7 @@ for ri, xmin in enumerate(region_edges[:-1]):
                 "xmax": region_edges[ri + 1],
                 "ymin": ymin,
                 "ymax": region_edges[ci + 1],
-                "shade": PAGE_BG if (ri + ci) % 2 == 0 else ELEVATED_BG,
+                "shade": PAGE_BG if (ri + ci) % 2 == 0 else CHECKER_ALT,
             }
         )
 df_rects = pd.DataFrame(rects)
@@ -107,9 +107,11 @@ df_ev = pd.DataFrame(
     }
 )
 
-# Title — 62 chars on 2400px square canvas; reduce from 12pt default to 11pt to prevent overflow
+# Title — 62 chars; reduce to 9pt to prevent overflow with right legend narrowing the panel
 title = "scatter-constellation-diagram · python · plotnine · anyplot.ai"
-title_size = 11
+title_size = 9
+
+COLOR_MAP = {"Received Symbols": RECEIVED_COLOR, "Ideal Points": IDEAL_COLOR}
 
 # Plot
 plot = (
@@ -121,12 +123,13 @@ plot = (
         fill=df_rects["shade"].tolist(),
         alpha=0.8,
         inherit_aes=False,
+        show_legend=False,
     )
     # Decision boundary lines
-    + geom_vline(xintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5)
-    + geom_hline(yintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5)
+    + geom_vline(xintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5, show_legend=False)
+    + geom_hline(yintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5, show_legend=False)
     # Received symbols
-    + geom_point(data=df_received, mapping=aes(x="i", y="q", color="color", alpha="alpha", size="size"))
+    + geom_point(data=df_received, mapping=aes(x="i", y="q", color="series"), alpha=0.4, size=3.5)
     # Error vectors — made more prominent to highlight signal impairment
     + geom_segment(
         data=df_ev,
@@ -135,21 +138,19 @@ plot = (
         alpha=0.75,
         size=0.9,
         inherit_aes=False,
+        show_legend=False,
     )
     # Ideal constellation points (X markers)
-    + geom_point(
-        data=df_ideal, mapping=aes(x="i", y="q", color="color", alpha="alpha", size="size"), shape="X", stroke=1.5
-    )
-    + scale_color_identity()
-    + scale_alpha_identity()
-    + scale_size_identity()
+    + geom_point(data=df_ideal, mapping=aes(x="i", y="q", color="series"), shape="X", stroke=1.5, alpha=1.0, size=6.0)
+    + scale_color_manual(values=COLOR_MAP)
+    + guides(color=guide_legend(override_aes={"shape": ["o", "X"], "size": [3.5, 6.0], "alpha": [0.7, 1.0]}))
     # Tick positions at constellation coordinate values
     + scale_x_continuous(breaks=[-3, -1, 0, 1, 3], minor_breaks=[])
     + scale_y_continuous(breaks=[-3, -1, 0, 1, 3], minor_breaks=[])
     # EVM and SNR annotations
     + annotate("text", x=4.2, y=-3.7, label=f"EVM = {evm:.1f}%", size=4.5, ha="right", color=INK, fontweight="bold")
     + annotate(
-        "text", x=4.2, y=-4.15, label=f"SNR = {snr_db} dB  ·  {n_symbols} symbols", size=3.2, ha="right", color=INK_SOFT
+        "text", x=4.2, y=-4.15, label=f"SNR = {snr_db} dB  ·  {n_symbols} symbols", size=3.8, ha="right", color=INK_SOFT
     )
     + coord_fixed(ratio=1, xlim=(-4.5, 4.5), ylim=(-4.5, 4.5))
     + labs(x="In-Phase (I)", y="Quadrature (Q)", title=title)
@@ -164,7 +165,11 @@ plot = (
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         axis_line=element_line(color=INK_SOFT, size=0.6),
-        legend_position="none",
+        legend_position="right",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_blank(),
+        legend_key=element_rect(fill=PAGE_BG),
     )
 )
 
