@@ -1,84 +1,102 @@
 library: seaborn
+language: python
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:21:47Z'
-updated: '2026-03-17T23:33:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23220948491
+updated: '2026-06-18T03:22:59Z'
+generated_by: claude-sonnet
+workflow_run: 27733796531
 issue: 4562
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of seaborn kdeplot for density contours — a distinctive library
-    feature adding genuine analytical value
-  - Quadrant-based coloring with colorblind palette creates meaningful visual grouping
-    while being accessible
-  - All font sizes explicitly set and well-calibrated for canvas size
-  - Complete spec compliance with all required features implemented correctly
-  - Realistic data with proper 16-QAM signal characteristics and plausible EVM
+  - Perfect spec compliance across all required features (ideal markers, scatter,
+    boundaries, EVM, equal aspect ratio)
+  - Per-quadrant KDE contours with clip= correctly bounded by decision boundaries
+    — advanced seaborn usage
+  - Adaptive ideal marker edge colour (white in light, black in dark) shows thoughtful
+    theme-awareness beyond basic token set
+  - Imprint palette applied in correct canonical order; all chrome tokens properly
+    theme-adaptive across both renders
+  - 'Excellent data quality: realistic 16-QAM parameters, neutral domain, correct
+    EVM computation'
   weaknesses:
-  - KDE contour lines from adjacent quadrants overlap creating slight visual clutter
-    in boundary regions
-  - Quadrant labeling loop could be vectorized for cleaner code
-  image_description: 'The plot shows a 16-QAM constellation diagram on a square canvas
-    (3600x3600 px) with equal aspect ratio. Sixteen ideal constellation points are
-    displayed as large black "X" markers with white edges arranged in a 4x4 grid at
-    ±1, ±3 positions. Approximately 1200 received symbols appear as small semi-transparent
-    dots clustered around each ideal point, colored by quadrant: blue (Q1, +I/+Q),
-    orange (Q2, -I/+Q), teal/green (Q3, -I/-Q), and salmon/coral (Q4, +I/-Q) using
-    the seaborn colorblind palette. KDE density contour lines in matching colors surround
-    each cluster, showing signal density distribution. Dashed gray decision boundary
-    lines are drawn at -4, -2, 0, 2, 4 on both axes. The title reads "scatter-constellation-diagram
-    · seaborn · pyplots.ai". Axes are labeled "In-Phase (I)" and "Quadrature (Q)".
-    A styled EVM annotation box in the bottom-right reads "EVM = 9.9%". A legend in
-    the upper left shows the four quadrant labels. Top and right spines are removed.
-    Subtle dotted grid lines appear in the background.'
+  - Decision boundary dashed lines are quite faint (alpha=0.45, linewidth=0.8) — hard
+    to read at small display sizes; raise to alpha=0.6, linewidth=1.0
+  - Legend at lower-right (loc='lower right') partially occludes Q4 ochre scatter
+    points behind framealpha=0.9 box; move to 'lower left' or outside axes with bbox_to_anchor
+  - Tick label fontsize=8 is at the lower bound of readability on the 2400×2400 square
+    canvas; consider increasing to 9pt
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-constellation-diagram · python · seaborn · anyplot.ai" in dark ink, fully readable. Axis labels "In-Phase (I)" / "Quadrature (Q)" clear. Tick labels (±4, ±2, 0) readable at fontsize=8. Legend with quadrant entries readable.
+      Data: Q1 green (#009E73) upper-right, Q2 lavender (#C475FD) upper-left, Q3 blue (#4467A3) lower-left, Q4 ochre (#BD8233) lower-right. Ideal X markers in dark INK (#1A1A17) with white edges. Semi-transparent scatter (alpha=0.45). KDE contours per quadrant. Dashed decision boundaries at ±2.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text, fully readable on dark background. Axis labels and tick labels all light-coloured, no dark-on-dark failures. Legend and EVM annotation box use elevated dark background (#242420) with readable light text.
+      Data: All four quadrant colours identical to light render (#009E73 green, #C475FD lavender, #4467A3 blue, #BD8233 ochre). Ideal markers adapt to light cream (#F0EFE8) with dark edges, clearly visible. Brand green #009E73 prominent in Q1.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, legend=14/16,
-          EVM=18'
+        comment: Title 12pt, axis labels 10pt, ticks 8pt all readable in both themes;
+          minor deduction for slightly small tick labels on 2400px square
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good marker sizing for density; minor KDE contour overlap between
-          quadrants
+        comment: 'EVM and legend do not collide with axes; minor: lower-right legend
+          partially occludes Q4 scatter points behind opaque frame'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ideal X markers at s=200 prominent; scatter at s=20 alpha=0.45 appropriate
+          for 1200 points; KDE contours add density context
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind palette used, all quadrant colors distinguishable
+        comment: Four distinct Imprint hues; no red-green sole signal; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square figure with equal aspect ratio, well-balanced margins
+        comment: Square canvas 2400x2400 correct for symmetric plot; equal aspect
+          ratio; no clipping or canvas gate failure
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with standard engineering notation
+        comment: In-Phase (I) and Quadrature (Q) with standard notation; title matches
+          mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First quadrant #009E73; positions 2-4 in canonical Imprint order;
+          backgrounds #FAF8F1 light / #1A1A17 dark'
     design_excellence:
       score: 14
       max: 20
@@ -88,22 +106,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with meaningful quadrant coloring, KDE contours, styled
-          annotations
+        comment: Per-quadrant KDE with clip, adaptive ideal markers, cohesive quadrant
+          identity; faint decision boundaries hold back full score
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, refined legend styling; KDE overlap
-          prevents full polish
+        comment: Spines removed, subtle grid, semi-transparent scatter, styled EVM
+          callout, elevated legend background; KDE boundary noise minor
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy with ideal markers, quadrant grouping, EVM
-          metric context
+        comment: Quadrant colour + KDE guides the eye; decision boundaries segment
+          the story; EVM provides quantitative verdict; abstract Q1-Q4 labels slightly
+          reduce narrative clarity
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter constellation diagram
+        comment: Correct I/Q scatter plot for 16-QAM
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: ideal markers, received symbols, decision
-          boundaries, equal aspect, EVM, axis labels'
+        comment: Ideal X markers, semi-transparent scatter, dashed boundaries, equal
+          aspect, EVM annotation all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I on x-axis, Q on y-axis, all data visible
+        comment: I on X, Q on Y, symmetric ±4.5 limits, all 16 ideal grid points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: Mandated title format exact; quadrant legend with correct labels
     data_quality:
       score: 15
       max: 15
@@ -142,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 16 constellation points, noise spread, density contours, EVM
-          metric
+        comment: 'All constellation features: ideal points, clusters, KDE contours,
+          decision boundaries, EVM metric'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic 16-QAM digital communications scenario, neutral technical
-          domain
+        comment: Standard 16-QAM at ±1,±3; SNR=20dB realistic; 1200 symbols plausible;
+          neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard grid values, realistic SNR=20dB, plausible EVM ~9.9%
+        comment: ±4.5 axis limits give adequate margin around ±3 outer points; noise
+          produces realistic cluster spread
     code_quality:
       score: 10
       max: 10
@@ -166,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Flat sequential script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, matplotlib, numpy, pandas, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with correct EVM calculation
+        comment: Well-sectioned with comment headers, vectorised data generation,
+          clean KDE loop with zip+strict=True
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at dpi=300, current API
+        comment: Saves as plot-{THEME}.png without bbox_inches=tight; current seaborn
+          API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -200,21 +222,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Axes-level API with hue mapping, set_context/set_style theming;
-          minor: manual kdeplot iteration'
+        comment: Axes-level API, sns.set_theme for rc theming, hue+palette on scatterplot
+          — idiomatic throughout
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: kdeplot 2D density contours, hue-based palette mapping, set_context
-          scaling
+        comment: clip= on sns.kdeplot to bound contours per quadrant is distinctively
+          seaborn; demonstrates non-trivial statistical layer knowledge
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -222,5 +243,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting
