@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-constellation-diagram
 created: '2026-06-18T03:35:13Z'
-updated: '2026-06-18T03:41:15Z'
+updated: '2026-06-18T03:51:16Z'
 generated_by: claude-sonnet
 workflow_run: 27734360059
 issue: 4562
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'All 8 spec requirements fully implemented: 16-QAM, ideal cross markers, received
-    symbol density clouds, dashed decision boundaries, coord_fixed equal aspect ratio,
-    EVM annotation, symmetric limits, correct axis labels'
-  - 'Semantically appropriate color choices: brand green for received symbols, matte-red
-    as reference anchor for ideal points, plus redundant cross/dot shape encoding
-    for CVD safety'
-  - Technically accurate EVM calculation from the generated data (~10% at SNR ~20
-    dB -- correct)
-  - 'Complete theme-adaptive chrome: all text, lines, and backgrounds correctly flip
-    between light/dark; data colors are stable'
-  - Clean square canvas (2400x2400 px) with coord_fixed() enforcing required equal
-    aspect ratio
-  - No unnecessary decorations; replaced standard grid with meaningful domain-specific
-    dashed decision boundaries
+  - 'Perfect spec compliance: all 16-QAM features (ideal points, received symbols,
+    decision boundaries, EVM annotation, equal aspect ratio, symmetric axes) correctly
+    implemented'
+  - 'Semantic Imprint palette use: #009E73 for received signals (first series), #AE3030
+    for ideal reference points (semantic red — engineering convention)'
+  - guide_legend(override.aes) correctly customizes legend to show separate glyphs
+    for dot vs. cross with correct sizing/alpha
+  - EVM calculation is mathematically correct (sigma=sqrt(0.05), SNR ~20dB → EVM=10.0%)
+  - Both themes fully adaptive with proper INK/INK_SOFT/PAGE_BG token threading
+  - Square 2400×2400 canvas with coord_fixed() — correct choice for symmetric constellation
+    geometry
   weaknesses:
-  - library(dplyr) is imported but never used -- remove it (data is built with base
-    R only)
-  - No legend to label Received Symbols vs Ideal Points -- add a minimal legend so
-    the encoding is self-documenting
-  - EVM annotation size=3.5 is at the lower end of readability; consider bumping to
-    size=4.0 for better prominence
+  - Received symbol dot size (0.9) and alpha (0.30) produce very faint individual
+    points; while clusters are visible, the density contrast could be improved slightly
+    by raising alpha to 0.35-0.40
+  - Design Excellence could be elevated with light-fill decision regions (e.g., alternating
+    soft fill rectangles for the 16 symbol regions) to further aid region identification
+  - DE-01 could be pushed higher with a subtle annotation connecting the EVM to its
+    meaning (e.g., a brief subscript or context note)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 -- correct
-      Chrome: Title "scatter-constellation-diagram · r · ggplot2 · anyplot.ai" in dark ink at top-left (12pt), clearly readable. Axis labels "In-Phase (I)" and "Quadrature (Q)" in dark ink (10pt), readable. Tick labels -3, -1, 1, 3 in INK_SOFT (8pt), readable. EVM annotation "EVM = 10.0%" in INK_SOFT (size=3.5) in lower-right, visible. L-frame axis lines in INK_SOFT.
-      Data: 1600 received symbol dots in #009E73 brand green (size=0.9, alpha=0.30) clustered around 16 ideal constellation points in #AE3030 matte-red cross markers (size=4.5, stroke=2.0). Dashed decision boundaries at x=-2,0,2 and y=-2,0,2.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "scatter-constellation-diagram · r · ggplot2 · anyplot.ai" in dark #1A1A17 at 12pt — fully readable. Axis labels "In-Phase (I)" and "Quadrature (Q)" in dark ink at 10pt — clear. Tick labels -3, -1, 1, 3 on both axes in secondary ink #4A4A44 at 8pt — readable. EVM annotation "EVM = 10.0%" in bottom-right in secondary ink — visible.
+      Data: 16 green (#009E73) density clouds of received symbols (size=0.9, alpha=0.30) clustered around 16 matte-red (#AE3030) cross markers (shape=3, size=4.5). Three dashed gray decision boundaries at ±2 and 0 on each axis. Legend at bottom shows green dot + red cross correctly.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 -- correct
-      Chrome: Title in off-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark token), readable. EVM annotation also readable. No dark-on-dark issues -- all text uses light chrome tokens.
-      Data: Colors are identical to light render -- #009E73 green received symbols and #AE3030 red ideal cross markers unchanged. Decision boundary dashes appear lighter against the dark background, visible.
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title, axis labels, tick labels all rendered in light #F0EFE8/#B8B7B0 tones — clearly readable against dark background. No dark-on-dark failures. EVM annotation in secondary light ink — visible. Legend text in secondary light ink — readable.
+      Data: Colors identical to light render — #009E73 green clusters and #AE3030 red crosses unchanged. Decision boundaries appear as white/light-gray dashed lines. All data elements clearly distinguishable against near-black background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,49 +56,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt all readable in both
-          themes. EVM annotation size=3.5 (~10pt) is visible but slightly small.
+        comment: 'Title 12pt, axis labels 10pt, tick labels 8pt, EVM annotation size=4.0mm.
+          All readable in both themes. Minor deduction: received symbol dots at size=0.9
+          and alpha=0.30 are very faint individually, though density clusters are
+          clearly visible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; EVM label positioned in clear whitespace.
+        comment: No text or element overlaps in either render. EVM annotation placed
+          cleanly in bottom-right.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ideal cross markers prominent (size=4.5, stroke=2.0). Received dots
-          (size=0.9, alpha=0.30) appropriately small for 1600-point density; clusters
-          visible.
+        comment: Received symbol clusters clearly visible as Gaussian density clouds;
+          ideal crosses prominently rendered. Semi-transparent dots match spec requirement.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green and matte-red are distinct; redundant dot/cross shape
-          encoding adds CVD safety.
+        comment: Red-green pair used with shape redundancy (dots vs. crosses), CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 px canvas passes gate; coord_fixed() enforces equal
-          aspect ratio; comfortable margins.
+        comment: Square canvas 2400x2400 correct for symmetric plot; coord_fixed()
+          ensures equal aspect ratio; no content clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: In-Phase (I) and Quadrature (Q) labels match spec; title format correct.
+        comment: In-Phase (I) and Quadrature (Q) are descriptive with engineering
+          context. Title follows mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; ideal points use semantic #AE3030
-          (matte-red reference anchor). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'First series #009E73 correct; ideal points use #AE3030 (semantic
+          matte red - position 5). Backgrounds #FAF8F1/#1A1A17 correct. Both renders
+          theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -110,25 +111,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic colors, engineering-standard cross markers,
-          semi-transparent density visualization, dashed decision boundaries. Above
-          default but lacks legend.
+        comment: Intentional semantic color assignment, decision boundaries instead
+          of standard grid, coord_fixed, custom legend with override.aes. Goes beyond
+          ggplot2 defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; standard grid suppressed and replaced with
-          purposeful dashed boundaries; clean margins; no box frames.
+        comment: All panel grid lines removed, panel border removed, only axis lines
+          retained, legend box fill NA, generous plot margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy (red crosses draw eye to ideal positions,
-          green density clouds show noise); EVM annotation provides quantitative context.
+        comment: 'Clear visual hierarchy: red crosses anchor the eye, green density
+          clouds reveal noise distribution, EVM annotation provides key diagnostic
+          metric, decision boundaries guide region interpretation.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter plot with ideal reference points.
+        comment: Correct I/Q scatter with 16-QAM constellation, equal aspect ratio,
+          decision boundaries.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 8 spec features present: 16-QAM, cross markers, semi-transparent
-          dots, dashed decision boundaries, coord_fixed, EVM annotation, symmetric
-          limits, correct axis labels.'
+        comment: 'All required elements: 16 ideal points on +/-1/+/-3 grid, semi-transparent
+          received symbol dots, dashed decision boundaries, EVM annotation, symmetric
+          axis limits.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I on X, Q on Y; 4x4 grid at +-1,+-3; 1600 received symbols within
-          spec range.
+        comment: X=In-phase (I), Y=Quadrature (Q); all 16 constellation regions shown;
+          fully symmetric axis range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title correct. No legend to distinguish received symbols from ideal
-          points; encoding relies on visual convention without explicit labels.
+        passed: true
+        comment: 'Title: scatter-constellation-diagram · r · ggplot2 · anyplot.ai
+          correct. Legend labels Received Symbols and Ideal Points correct.'
     data_quality:
       score: 15
       max: 15
@@ -168,24 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all constellation diagram aspects: received clusters, ideal
-          points, decision boundaries, EVM metric.'
+        comment: Shows all 16 ideal points, 1600 received symbols, decision boundaries,
+          and EVM metric.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM at SNR ~20 dB is standard, neutral engineering example. EVM
-          calculation is technically accurate.
+        comment: 16-QAM at +/-1/+/-3, SNR ~20dB, EVM=10.0% — all realistic engineering
+          values. Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis limits +-4.5 give good visual margin; 100 symbols per point
-          gives clear density visualization.
+        comment: Standard 16-QAM grid, noise sigma=sqrt(0.05) appropriate for SNR
+          ~20dB, 100 symbols per point realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -193,32 +196,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but never used; data built with base R only
-          (do.call, lapply, data.frame).
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity. No fake UI.
+        comment: Clean, well-structured code; no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with sprintf('plot-%s.png', THEME) -- correct naming.
+        comment: Saves as plot-{THEME}.png using ragg::agg_png.
     library_mastery:
       score: 7
       max: 10
@@ -228,26 +230,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics layering; coord_fixed() for aspect ratio;
-          theme_minimal() base with theme() overrides; ragg::agg_png device; annotate()
-          for EVM.
+        comment: Layer composition, coord_fixed(), scale_color_manual(), guide_legend(override.aes=...),
+          theme_minimal() + theme() chain — all canonical ggplot2 patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_fixed() for equal-aspect constellation; geom_vline/geom_hline
-          with linetype=dashed for decision boundaries; layered multi-geom composition.
+        comment: guide_legend(override.aes) is distinctly ggplot2 for fine-grained
+          legend control; coord_fixed() canonical for equal aspect; expand.grid()+lapply()
+          for systematic constellation generation.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
   - annotations
+  - custom-legend
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
