@@ -1,0 +1,268 @@
+library: muix
+language: javascript
+specification_id: root-locus-basic
+created: '2026-06-18T00:26:48Z'
+updated: '2026-06-18T01:15:22Z'
+generated_by: claude-sonnet
+workflow_run: 27727834455
+issue: 4414
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/muix/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Mathematically rigorous root locus computation using Newton-Raphson iteration
+    — poles trace correctly from K=0 to K=90 with accurate breakaway (≈−0.845) and
+    imaginary-axis crossing (K=48, ±j2.83)
+  - 'Custom slot override (`slots={{ mark: CustomMark }}`) elegantly handles four
+    distinct mark shapes (×-poles, ▶-arrows, tiny dots for damping, circles for branches)
+    — idiomatic MUI X pattern'
+  - Amber ChartsReferenceLine at x=0 labeled 'Stability boundary (K=48)' creates a
+    strong visual focal point and storytelling anchor
+  - 'Imprint palette used correctly: Branch A green (#009E73), Branch B lavender,
+    Branch C blue; poles use ink color; damping lines use inkSoft — all theme-adaptive'
+  - 'Both light and dark renders pass readability: warm #FAF8F1 / #1A1A17 backgrounds,
+    light-on-dark chrome in dark render, no dark-on-dark failures'
+  - 'Data quality is excellent: three-pole academic transfer function G(s)=K/[s(s+2)(s+4)]
+    is a classic neutral example covering all root locus features (real-axis segments,
+    complex departure, stability crossing)'
+  - Gain direction arrows placed at branch midpoints (K≈45) computed from finite-difference
+    angles — correct directional storytelling
+  weaknesses:
+  - Constant natural frequency (ωn) circles missing — spec requires 'dashed or light
+    grid to indicate constant damping ratio AND natural frequency lines'; only damping
+    ratio rays are drawn, not the concentric ωn arcs from the origin
+  - Legend row is tight with 5 entries in a single horizontal line — 'Const. damping
+    ratio ζ=0.3, 0.5, 0.7' label and 'Branch B (s=−2 → lower half-plane)' label are
+    long and cause crowding; consider wrapping to two rows or abbreviating
+  - Stability boundary label ('Stability boundary (K=48)') rendered at fontSize 12
+    is small and may be hard to read at mobile scale (~400 px); increase to 14 or
+    move outside the chart area
+  - x-axis range is −9 to 3 (center at −3) while y-axis range is −6 to 6 (center at
+    0) — spec asks the plot to be centered on the origin with equal axis scaling;
+    adjust x range to e.g. −7 to 7 or −8 to 8 for a symmetric view
+  - Code has multiple top-level helper functions (polyVal, polyDeriv, findRealRoot,
+    complexPair, dirAngle) that deviate from KISS structure; acceptable given the
+    math, but could inline the trivial one-liners
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Title "root-locus-basic · javascript · muix · anyplot.ai" at top in dark ink, ~55% plot width, clearly readable. X-axis label "Real Axis σ" and Y-axis label "Imaginary Axis jω" in dark ink, balanced sizes. Tick labels at 14px CSS are readable. Legend row at top with 5 series labels — slightly crowded but legible.
+      Data: Branch A (brand green #009E73) curves upward from near the origin into the upper half-plane. Branch B (lavender #C475FD) mirrors downward. Branch C (blue #4467A3) is the real-axis branch traveling left from s=−4 toward −∞ with a solid horizontal line. Three open-loop pole × markers (black ink) at s=0, −2, −4. Dotted damping ratio rays (inkSoft, low opacity) fan outward at ζ=0.3, 0.5, 0.7. Triangle gain-direction arrows on each branch. Amber dashed vertical reference line at x=0 labeled "Stability boundary (K=48)".
+      Legibility verdict: PASS — all title, axis labels, tick labels, and legend entries are readable against the light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title and axis labels render in light ink (off-white), clearly readable against the dark background. Tick labels are light-colored and legible. Legend text appears in light ink. No dark-on-dark failures detected.
+      Data: Branch colors are identical to light render — brand green, lavender, blue remain the same. Open-loop pole markers appear as white × symbols on the dark background. Amber reference line remains visible. Damping dots are subtle but visible.
+      Legibility verdict: PASS — all text elements are readable in the dark theme. Chrome correctly flips from dark-on-light to light-on-dark. Data colors are identical between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, ticks 14px, axis labels
+          16px, legend 13px). Readable in both themes. Stability boundary label at
+          fontSize 12 is slightly small for mobile.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend row with 5 entries is tight but readable. No data overlaps.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Branches, poles, and arrows clearly visible. Damping dots intentionally
+          faint (reference lines) — acceptable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Amber reference line provides high contrast.
+          Pole markers use ink color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. x-axis is not centered on origin (−9 to
+          3 vs. −6 to 6 y-range). Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis σ and Imaginary Axis jω — descriptive with symbols.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, subsequent series follow Imprint order. Backgrounds
+          #FAF8F1/#1A1A17. Data colors identical across themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: custom × markers, gain arrow triangles,
+          amber reference line, density-appropriate scatter sizing. Professional look
+          but not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Explicit font sizing, intentional opacity on damping lines, dashed
+          reference line. MUI X ThemeProvider provides most chrome. No explicit spine
+          removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber stability boundary creates clear focal point. Gain arrows tell
+          pole migration story. Color differentiates three locus paths. Good visual
+          hierarchy for a technical plot.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot in complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Poles marked, branches with arrows, real-axis segments via branch
+          data, stability boundary, damping ratio lines. Missing: natural frequency
+          (ωn) circles. x-axis not centered on origin.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=real, y=imaginary, branches color-coded, K parametric.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Legend labels descriptive with branch start
+          points and direction.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All root locus features: real-axis segments, complex departure,
+          breakaway point, jω crossing, damping reference lines, gain arrows.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic control systems example G(s)=K/[s(s+2)(s+4)] — neutral, scientific,
+          textbook-quality.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: K=0→90 captures breakaway (≈3.08), jω crossing (48), and asymptotic
+          behavior. Axis limits cover all meaningful behavior.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Has 5 helper functions (polyVal, polyDeriv, findRealRoot, complexPair,
+          dirAngle) plus CustomMark component. Justified by math complexity but deviates
+          from KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — fixed K range, Newton-Raphson with fixed initial
+          guess.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 4 imports used: ScatterChart, ChartsReferenceLine, Box, Typography.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality, appropriate complexity for a root locus
+          implementation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component, skipAnimation set, window.ANYPLOT_SIZE
+          used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct use of slots={{ mark: CustomMark }}, ChartsReferenceLine,
+          skipAnimation, window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE — all idiomatic
+          MUI X patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom mark slot for SVG shape rendering and ChartsReferenceLine
+          are distinctive MUI X features not available in most other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
