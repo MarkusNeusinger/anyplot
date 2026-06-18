@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 83/100 | Updated: 2026-06-18
 """
 
 # Remove the script's own directory from sys.path so that `import bokeh` resolves
