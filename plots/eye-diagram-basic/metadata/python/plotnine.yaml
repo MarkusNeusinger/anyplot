@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:55Z'
-updated: '2026-06-18T02:15:24Z'
+updated: '2026-06-18T02:25:31Z'
 generated_by: claude-sonnet
 workflow_run: 27731855469
 issue: 4561
@@ -12,46 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct eye diagram chart type using geom_bin2d density heatmap — idiomatic plotnine
-    approach for dense overlapping traces
-  - Imprint imprint_seq gradient correctly applied (green low-density → blue high-density)
-    matching palette rules for continuous data
-  - Both eye height and eye width annotations with color-coded lavender and ochre
-    indicators as spec requires
-  - 'Full theme-adaptive chrome: backgrounds, title, axis, tick, legend colors all
-    flip correctly between light (#FAF8F1) and dark (#1A1A17) renders'
-  - Reproducible with np.random.seed(42), flat KISS script, all imports used
-  - Smooth transitions via moving-average kernel, realistic NRZ signal simulation
-    with per-bit jitter and Gaussian noise
+  - 'Correct and idiomatic plotnine approach: geom_bin2d with after_stat(''count'')
+    elegantly encodes trace density as a 2D histogram, perfectly suited for an eye
+    diagram visualization'
+  - 'Full spec compliance: all required features implemented including density heatmap
+    coloring, UI time axis, signal levels on voltage axis, NRZ simulation with realistic
+    noise and jitter, and optional eye height/width annotations'
+  - 'Excellent data storytelling: quantitative annotations for eye height (0.87 V)
+    and eye width (0.86 UI) with color-coded dashed lines guide the reader directly
+    to key signal quality metrics'
+  - 'Proper Imprint palette compliance: imprint_seq gradient (brand green #009E73
+    → blue #4467A3) for the continuous density heatmap, all theme-adaptive chrome
+    tokens correctly set for both light and dark renders'
+  - 'Perfect code quality: KISS structure with np.random.seed(42), clean imports,
+    no functions or classes, correct output filenames'
+  - 'Clean visual style: theme_void() removes all spines and grid for an uncluttered
+    engineering visualization, generous whitespace, explicit font sizes throughout'
   weaknesses:
-  - Annotation text (size=4mm ≈ 11pt) is on the small side for the large canvas —
-    positioned in the eye opening where contrast against near-white/near-black background
-    is limited; consider size=5-6 and adding a semi-transparent background rect
-  - geom_bin2d with high bin count (250×150) produces a noticeably blocky pixelated
-    edge at the transitions; a smoother imprint_seq density could be achieved with
-    finer bins or stat_density_2d, though bin2d is idiomatic
-  - No explicit alpha on the bin2d geom — for extreme density areas, a slight alpha
-    < 1 could soften the hard-edge saturation at the rail peaks
-  - Title fontsize adaptive formula applied but 12pt base with 67-char scaling is
-    fine; could consider slightly bolder or larger for visual hierarchy at small viewports
+  - 'Blocky/pixelated heatmap edges: geom_bin2d with bins=(160, 100) produces jagged,
+    staircase-like boundaries at the eye opening edges. Increasing to bins=(240, 150)
+    or bins=(300, 200) would yield smoother density boundaries and improve visual
+    sophistication (DE-01, DE-02)'
+  - 'Eye opening contrast in dark render: The empty eye opening areas render as near-black
+    (#1A1A17) background on the dark theme. While still distinguishable from the surrounding
+    teal/green density data, the contrast is lower than the striking white opening
+    in the light render. Adding a faint panel_grid or a very subtle inner border around
+    the plot area would help in dark mode'
+  - 'Data extends slightly beyond 2.0 UI: Jitter pushes some time values past the
+    nominal 2 UI window, causing the heatmap to extend to ~2.1 UI. Clipping the DataFrame
+    to [0, 2] before plotting with `df = df[(df[''time''] >= 0) & (df[''time''] <=
+    2)]` would contain the data within the expected range (VQ-05)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, visible throughout margins and in the two eye openings
-      Chrome: Title "eye-diagram-basic · python · plotnine · anyplot.ai" in bold dark (#1A1A17) text, well-proportioned (~70% width). Y-axis label "Voltage (V)" and X-axis label "Time (UI)" in dark INK, clearly readable. Tick labels (0.0, 0.5, 1.0, 1.5, 2.0 on X; 0.0, 0.5, 1.0 on Y) in INK_SOFT, visible. Legend "Trace Density" with 50-200 scale visible at right.
-      Data: imprint_seq gradient green (#009E73, low density) → blue (#4467A3, high density). Two eye openings clearly visible at ~0–1 UI and ~1–2 UI windows. The "1" and "0" rails show high blue density; transitions show green; eye openings show the PAGE_BG off-white. Lavender (#C475FD) dashed vertical line with "Eye Height 0.87 V" annotation; ochre (#BD8233) dashed horizontal line with "Eye Width 0.86 UI" annotation — both in the first eye opening.
-      Legibility verdict: PASS — all major text elements readable; annotation text (lavender/ochre in white eye opening) is small but distinguishable
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold dark title "eye-diagram-basic · python · plotnine · anyplot.ai" fully visible at top, spanning ~65% of canvas width. Y-axis label "Voltage (V)" and X-axis label "Time (UI)" in dark ink, clearly readable. Tick labels (0.0, 0.5, 1.0, 1.5, 2.0 on x; 0.0, 0.5, 1.0 on y) all readable in darker secondary-ink color. Legend "Trace Density" with gradient color bar on the right — clearly labeled.
+      Data: 2D density heatmap rendered with imprint_seq gradient (brand green #009E73 for low-density regions at the outer perimeter, transitioning through teal to blue #4467A3 for high-density regions near bit-transition boundaries). Two clear eye openings visible as large white rectangular spaces in the left half and right half of the 2 UI window. Lavender (#C475FD) dashed vertical line marks Eye Height (0.87 V) at t=0.5 UI with annotation text. Ochre (#BD8233) dashed horizontal line marks Eye Width (0.86 UI) at V=0.5 with annotation text. Data extends very slightly beyond x=2.0 UI due to jitter.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, fills margins and eye openings
-      Chrome: Title and axis labels flip to light (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected. Tick labels, legend text all light-colored and visible.
-      Data: Density colors identical to light render — same green-to-blue gradient, same eye shape. Eye openings show near-black panel background correctly. Lavender and ochre annotations unchanged, visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements read well on #1A1A17 surface
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in bold near-white text, fully visible. Axis labels and tick labels rendered in light secondary-ink color (#B8B7B0), all readable against the dark background. Legend "Trace Density" box rendered in elevated dark fill (#242420) with light text — readable. No dark-on-dark text failures observed.
+      Data: Density heatmap uses identical imprint_seq colors as the light render (green → blue gradient) — data colors are unchanged between themes, only chrome flips. Eye openings appear as near-black (#1A1A17) voids surrounded by the green/teal density data, with slightly lower contrast than the white openings in the light render but still clearly distinguishable. Lavender and ochre annotation lines and text remain identically colored and visible on the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures; brand green #009E73 visible in both renders
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,52 +67,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and ticks are clear in both themes. Annotation
-          text size=4mm is small but readable; contrast in the eye-opening white area
-          is moderate for lavender (#C475FD) but passes visually.
+        comment: 'All font sizes explicitly set; title, axis labels, ticks readable
+          in both themes. Minor deduction: annotation text (size=5 in geom units)
+          is slightly small relative to overall chart scale.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlaps. Eye Height and Eye Width labels positioned
-          within the first eye opening without overlapping each other or major data
-          elements.
+        comment: No overlapping text or data collisions. Both annotations placed in
+          the eye opening (empty region), avoiding data overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Density gradient clearly distinguishes signal rails from transitions
-          and eye openings. Annotations visible in both themes.
+        comment: Density heatmap clearly visible. Eye openings clearly distinguished
+          in light render (white). Dark render eye openings contrast (near-black on
+          dark background) is good but slightly less dramatic than light render.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used throughout; colorblind-safe selections.
+        comment: imprint_seq (green to blue) is CVD-safe. Annotation colors (lavender,
+          ochre) are distinguishable under all CVD modes.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: '3200×1800 canvas (8×4.5in @400dpi). Title proportioned well. Minor:
-          slightly blocky bin2d edges but not a layout issue per se.'
+        comment: 'Canvas dimensions correct (3200x1800). Plot fills canvas well. Minor:
+          data extends slightly past x=2.0 UI due to jitter, axis ticks only show
+          to 2.0 but heatmap extends to ~2.1.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axis labels include units: Voltage (V) and Time (UI). Title
-          matches spec-id format exactly.'
+        comment: 'Title follows required format. Axes labeled with units: ''Time (UI)''
+          and ''Voltage (V)''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient low=#009E73 (imprint_seq green endpoint), high=#4467A3
-          (imprint_seq blue endpoint) — correct imprint_seq. Backgrounds #FAF8F1 light
-          / #1A1A17 dark correct. Theme-adaptive chrome fully wired.'
+        comment: 'imprint_seq used for continuous density data (green #009E73 → blue
+          #4467A3). Plot backgrounds #FAF8F1/#1A1A17 correct. All chrome tokens theme-adaptive.
+          Identical data colors in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -114,24 +124,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful use of density heatmap with imprint_seq gradient; color-coded
-          dual annotations. Professional look but bin2d pixelation at edges prevents
-          top score.
+        comment: 'Above defaults: custom Imprint gradient, theme_void clean base,
+          meaningful color-coded annotations. Deduction: blocky geom_bin2d edges (pixelated
+          staircase boundaries) reduce visual sophistication.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() with manually added axis_line for clean minimal chrome.
-          Generous margins via plot_margin=0.02.
+        comment: 'theme_void removes all chrome noise (no spines, no grid), generous
+          whitespace. Deduction: pixelated heatmap boundaries from 160x100 bins limit
+          overall polish.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The eye openings are the clear focal point; annotations quantify
-          the key metrics (height/width). Second eye at 1–2 UI demonstrates repeat
-          pattern.
+        comment: Quantitative annotations (eye height 0.87 V, eye width 0.86 UI) directly
+          communicate signal quality metrics. Dual-eye 2-UI window shows signal period.
+          Good storytelling above default.
     spec_compliance:
       score: 15
       max: 15
@@ -141,54 +152,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram using density heatmap overlay of 400 traces across
-          a 2-UI window.
+        comment: Eye diagram correctly implemented as 2D density heatmap showing overlaid
+          trace density.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density coloring, time axis in UI, voltage axis, NRZ simulation with
-          noise+jitter, smooth transitions, eye height and width annotations — all
-          present.
+        comment: 'All features present: density heatmap coloring, UI-labeled time
+          axis, signal voltage levels, NRZ simulation with noise+jitter, smooth transitions
+          (moving average kernel), optional eye height/width annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X, voltage on Y, 2-UI window correctly shown.
+        comment: Time (UI) on x-axis, Voltage (V) on y-axis. Full 2 UI window displayed
+          with all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'eye-diagram-basic · python · plotnine · anyplot.ai'.
-          Legend shows 'Trace Density' scale.
+        comment: 'Title: ''eye-diagram-basic · python · plotnine · anyplot.ai'' —
+          correct format. Legend ''Trace Density'' labels gradient correctly.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 400 NRZ traces, density coloring, transitions, noise, jitter,
-          eye openings, and quantitative measurements.
+        comment: 'Shows all aspects: density gradient from transitions to stable levels,
+          clear eye opening, jitter effects visible at transition edges, 2 full UI
+          periods shown.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity test — realistic, neutral, industry-relevant
-          scenario.
+        comment: 'NRZ signal simulation is industry-standard for high-speed serial
+          links. Realistic parameters: noise sigma=0.05 (5% of amplitude), jitter
+          sigma=0.03 UI, 400 traces, moving-average bandwidth limiting.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 traces, 150 samples/UI, noise_sigma=0.05 (5% of amplitude), jitter_sigma=0.03
-          (3% UI) — all within spec.
+        comment: 0-2 UI time window, 0-1 V NRZ levels are physically correct. Eye
+          height 0.87 V and width 0.86 UI indicate a high-quality signal, which is
+          realistic for controlled simulation conditions.
     code_quality:
       score: 10
       max: 10
@@ -198,31 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Clean linear structure: imports → theme tokens → data simulation
+          → measurements → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used in the code.
+        comment: All imports used. Only os, numpy, pandas, and plotnine components
+          that are actually called.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the task.
+        comment: Appropriate complexity. Title font scaling formula is clean and well-commented.
+          No over-engineering or fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save() with explicit width/height/dpi.
+        comment: Saves as plot-{THEME}.png at correct dimensions using plot.save()
+          with dpi=400.
     library_mastery:
       score: 7
       max: 10
@@ -232,28 +251,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses geom_bin2d, after_stat('count') in aes, scale_fill_gradient,
-          annotate() for both segments and text, theme_void + theme() chaining — idiomatic
-          plotnine grammar-of-graphics approach.
+        comment: geom_bin2d with after_stat('count') for 2D density is idiomatic grammar-of-graphics.
+          scale_fill_gradient, theme_void, and theme() customization follow plotnine
+          best practices. Annotations use annotate() correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: after_stat('count') is a distinctive plotnine/ggplot2 statistical
-          transformation feature. annotate('segment') for measurement indicators.
-          Could further leverage plotnine scale_x_continuous expand tuning.
+        comment: after_stat('count') within an aesthetic mapping is a distinctive
+          plotnine/ggplot2 feature for computed statistics. The grammar-of-graphics
+          approach to layering density + annotations for an eye diagram is library-specific
+          and couldn't be replicated identically in matplotlib without significant
+          reimplementation.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - colorbar
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - binning
   styling:
+  - minimal-chrome
   - custom-colormap
+  - alpha-blending
