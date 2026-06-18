@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 76/100 | Updated: 2026-06-18
 """
 
 import os
