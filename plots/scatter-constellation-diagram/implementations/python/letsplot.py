@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-17
+Quality: 91/100 | Updated: 2026-06-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,16 @@ from lets_plot.export import ggsave as export_ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+RECEIVED_COLOR = "#009E73"  # Imprint position 1 — received symbols (primary data)
+IDEAL_COLOR = "#BD8233"  # Imprint position 4 ochre — ideal markers (colorblind-safe)
 
 # Data
 np.random.seed(42)
@@ -40,10 +52,14 @@ evm_percent = np.sqrt(np.mean(error_vectors**2)) / rms_reference * 100
 received_df = pd.DataFrame({"I": received_i, "Q": received_q})
 ideal_df = pd.DataFrame({"I": ideal_i, "Q": ideal_q})
 
-# Decision boundary rectangles for shaded regions
+# Decision boundary rectangles — theme-adaptive shading
+if THEME == "light":
+    colors_alt = ["#F0EDE5", "#E8E5DE"]
+else:
+    colors_alt = ["#222220", "#1E1E1B"]
+
 rects = []
 boundary_edges = [-4.5, -2, 0, 2, 4.5]
-colors_alt = ["#F0F4F8", "#E8EDF2"]
 for ri, (y0, y1) in enumerate(zip(boundary_edges[:-1], boundary_edges[1:], strict=True)):
     for ci, (x0, x1) in enumerate(zip(boundary_edges[:-1], boundary_edges[1:], strict=True)):
         rects.append({"xmin": x0, "xmax": x1, "ymin": y0, "ymax": y1, "fill": colors_alt[(ri + ci) % 2]})
@@ -60,89 +76,99 @@ evm_df = pd.DataFrame({"x": [3.8], "y": [4.1], "label": [f"EVM = {evm_percent:.1
 # Custom tick positions at constellation grid values
 tick_vals = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
 
+# Title with scaled font size — calibrated for ggsize(600,600)
+title = "16-QAM Constellation · scatter-constellation-diagram · python · letsplot · anyplot.ai"
+title_size = max(9, round(13 * 67 / len(title)))
+
 # Plot
 plot = (
     ggplot()  # noqa: F405
-    # Shaded decision regions (lets-plot geom_rect with identity scale)
+    # Shaded decision regions
     + geom_rect(  # noqa: F405
         data=rects_df,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),  # noqa: F405
         alpha=1.0,
-        color="white",
+        color=PAGE_BG,
         size=0.3,
     )
     + scale_fill_identity()  # noqa: F405
-    # Decision boundary grid lines
+    # Decision boundary lines
     + geom_vline(  # noqa: F405
         data=boundary_v,
         mapping=aes(xintercept="x"),  # noqa: F405
         linetype="dashed",
-        color="#B0B8C4",
+        color=INK_SOFT,
         size=0.5,
     )
     + geom_hline(  # noqa: F405
         data=boundary_h,
         mapping=aes(yintercept="y"),  # noqa: F405
         linetype="dashed",
-        color="#B0B8C4",
+        color=INK_SOFT,
         size=0.5,
     )
     # Axis lines through origin
-    + geom_hline(yintercept=0, color="#8899AA", size=0.7)  # noqa: F405
-    + geom_vline(xintercept=0, color="#8899AA", size=0.7)  # noqa: F405
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.7)  # noqa: F405
+    + geom_vline(xintercept=0, color=INK_SOFT, size=0.7)  # noqa: F405
+    # 2D density contours — lets-plot stat showing cluster density of received symbols
+    + geom_density2d(  # noqa: F405
+        data=received_df,
+        mapping=aes(x="I", y="Q"),  # noqa: F405
+        color=RECEIVED_COLOR,
+        alpha=0.4,
+        size=0.5,
+    )
     # Received symbols
     + geom_point(  # noqa: F405
         data=received_df,
         mapping=aes(x="I", y="Q"),  # noqa: F405
-        color="#306998",
-        size=3,
-        alpha=0.4,
+        color=RECEIVED_COLOR,
+        size=2.0,
+        alpha=0.35,
     )
-    # Ideal constellation points
+    # Ideal constellation markers (cross shape, Imprint ochre — colorblind-safe)
     + geom_point(  # noqa: F405
         data=ideal_df,
         mapping=aes(x="I", y="Q"),  # noqa: F405
-        color="#CC3333",
-        size=9,
+        color=IDEAL_COLOR,
+        size=7,
         shape=4,
-        stroke=3.5,
+        stroke=2.5,
     )
-    # EVM annotation with geom_label (lets-plot distinctive feature)
+    # EVM annotation with lets-plot geom_label styling
     + geom_label(  # noqa: F405
         data=evm_df,
         mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=15,
-        color="#1A2A3A",
-        fill="#FFFFFF",
-        alpha=0.85,
+        size=4,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.9,
         hjust=1,
-        label_padding=0.6,
-        label_r=0.3,
-        label_size=0.8,
+        label_padding=0.5,
+        label_r=0.2,
+        label_size=0.6,
     )
     + labs(  # noqa: F405
-        x="In-Phase (I)",
-        y="Quadrature (Q)",
-        title="16-QAM Constellation · scatter-constellation-diagram · letsplot · pyplots.ai",
+        x="In-Phase (I)", y="Quadrature (Q)", title=title
     )
     + coord_fixed()  # noqa: F405
     + scale_x_continuous(limits=[-4.5, 4.5], breaks=tick_vals)  # noqa: F405
     + scale_y_continuous(limits=[-4.5, 4.5], breaks=tick_vals)  # noqa: F405
+    + ggsize(600, 600)  # noqa: F405
     + theme(  # noqa: F405
-        plot_title=element_text(size=24, color="#1A2A3A", face="bold"),  # noqa: F405
-        axis_title=element_text(size=20, color="#3A4A5A"),  # noqa: F405
-        axis_text=element_text(size=16, color="#5A6A7A"),  # noqa: F405
-        panel_background=element_rect(fill="#F7F9FB", color="#D0D8E0", size=1),  # noqa: F405
-        plot_background=element_rect(fill="#FFFFFF"),  # noqa: F405
+        plot_title=element_text(size=title_size, color=INK, face="bold"),  # noqa: F405
+        axis_title=element_text(size=12, color=INK),  # noqa: F405
+        axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG, color=INK_SOFT, size=0.5),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG),  # noqa: F405
         panel_grid_major=element_blank(),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        axis_ticks=element_line(color="#B0B8C4", size=0.5),  # noqa: F405
-        axis_line=element_line(color="#B0B8C4", size=0.5),  # noqa: F405
-        plot_margin=[40, 20, 20, 20],
+        axis_ticks=element_line(color=INK_SOFT, size=0.5),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT, size=0.5),  # noqa: F405
+        plot_margin=[20, 20, 20, 20],
     )
-    + ggsize(1200, 1200)  # noqa: F405
 )
 
 # Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
+export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")
