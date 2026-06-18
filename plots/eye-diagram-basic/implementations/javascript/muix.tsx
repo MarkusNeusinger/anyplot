@@ -1,7 +1,3 @@
-// anyplot.ai
-// eye-diagram-basic: Signal Integrity Eye Diagram
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-18
 //# anyplot-orientation: landscape
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
@@ -37,25 +33,25 @@ function sigm(x: number): number {
 // Generate raw trace points: sigmoid transitions + random jitter + Gaussian noise
 const rawPts: Array<{ x: number; y: number }> = [];
 for (let i = 0; i < N_TRACES; i++) {
-  const b0 = rand() > 0.5 ? 1 : 0; // bit level before t=0
-  const b1 = rand() > 0.5 ? 1 : 0; // bit level in [0, 1] UI
-  const b2 = rand() > 0.5 ? 1 : 0; // bit level in [1, 2] UI
-  const j0 = randn() * 0.03; // transition jitter at t=0 (σ = 3% UI)
-  const j1 = randn() * 0.03; // transition jitter at t=1 (σ = 3% UI)
+  const b0 = rand() > 0.5 ? 1 : 0;
+  const b1 = rand() > 0.5 ? 1 : 0;
+  const b2 = rand() > 0.5 ? 1 : 0;
+  const j0 = randn() * 0.03;
+  const j1 = randn() * 0.03;
   for (let s = 0; s < N_SAMPLES; s++) {
     const time = (s / (N_SAMPLES - 1)) * 2;
     const voltage =
       b0 +
       (b1 - b0) * sigm(time - j0) +
       (b2 - b1) * sigm(time - 1 - j1) +
-      randn() * 0.05; // amplitude noise (σ = 5% of signal swing)
+      randn() * 0.05;
     rawPts.push({ x: time, y: voltage });
   }
 }
 
 // Bin all trace points into a 2D density grid (time × voltage)
-const TB = 60; // time bins
-const VB = 36; // voltage bins
+const TB = 60;
+const VB = 36;
 const V0 = -0.2;
 const V1 = 1.2;
 const grid = new Int32Array(TB * VB);
@@ -85,9 +81,13 @@ for (let ti = 0; ti < TB; ti++) {
   }
 }
 
+const TITLE_H = 52;
+const COLORBAR_H = 52;
+
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
+  const chartH = H - TITLE_H - COLORBAR_H;
 
   return (
     <Box
@@ -109,14 +109,16 @@ export default function Chart() {
           pt: "16px",
           pb: "4px",
           lineHeight: 1.2,
+          textAlign: "center",
         }}
       >
         eye-diagram-basic · javascript · muix · anyplot.ai
       </Typography>
       <ScatterChart
         width={W}
-        height={H - 52}
+        height={chartH}
         skipAnimation
+        margin={{ left: 70, right: 40, top: 20, bottom: 60 }}
         grid={{ vertical: false, horizontal: true }}
         zAxis={[
           {
@@ -134,13 +136,56 @@ export default function Chart() {
         series={[
           {
             data: eyeData,
-            markerSize: 12,
+            markerSize: 9,
             zAxisId: "density",
           },
         ]}
-        xAxis={[{ label: "Time (UI)", min: 0, max: 2, tickNumber: 5 }]}
-        yAxis={[{ label: "Voltage (V)", min: V0, max: V1, tickNumber: 7 }]}
+        xAxis={[
+          {
+            label: "Time (UI)",
+            min: 0,
+            max: 2,
+            tickNumber: 5,
+            labelStyle: { fontSize: 15, fontWeight: 500, fill: t.ink },
+            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+          },
+        ]}
+        yAxis={[
+          {
+            label: "Voltage (V)",
+            min: V0,
+            max: V1,
+            tickNumber: 7,
+            labelStyle: { fontSize: 15, fontWeight: 500, fill: t.ink },
+            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
+          },
+        ]}
       />
+      {/* Density scale colorbar */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+          pb: "14px",
+        }}
+      >
+        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>
+          Low density
+        </Typography>
+        <Box
+          sx={{
+            width: 200,
+            height: 14,
+            borderRadius: "3px",
+            background: `linear-gradient(to right, ${t.seq[0]}, ${t.seq[1]})`,
+          }}
+        />
+        <Typography sx={{ fontSize: "13px", color: t.inkSoft }}>
+          High density
+        </Typography>
+      </Box>
     </Box>
   );
 }
