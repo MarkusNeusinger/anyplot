@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: dendrogram-basic
 created: '2026-06-18T04:32:14Z'
-updated: '2026-06-18T04:37:34Z'
+updated: '2026-06-18T04:46:58Z'
 generated_by: claude-sonnet
 workflow_run: 27736409679
 issue: 986
@@ -12,42 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Implements complete average-linkage agglomerative clustering algorithm from scratch
-    in JavaScript — technically impressive and fully reproducible
-  - 'Smart use of Imprint palette: species-specific branches colored in palette[0-2],
-    cross-species structural bridges use inkSoft for clear visual differentiation'
-  - Both light and dark themes render correctly with proper theme-adaptive chrome
-    throughout — no dark-on-dark failures
-  - 'Correct Chart.js idioms: scatter+showLine, afterBuildTicks for custom tick placement,
-    per-dataset colors, animation: false'
+  - Implements full agglomerative (average-linkage) clustering from scratch in plain
+    JS — deterministic, self-contained, and correct
+  - 'Semantic color coding: species-specific sub-clusters use Imprint palette (green/lavender/blue),
+    mixed-species merges flip to theme-adaptive inkSoft — an elegant design decision
+    that encodes hierarchy semantically'
+  - Creative use of Chart.js scatter + showLine with one dataset per bridge segment
+    to render U-shaped connectors — non-trivial idiom that bypasses the library's
+    chart-type limit
+  - afterBuildTicks callback with custom label formatter correctly maps leaf positions
+    to species names in DFS order
+  - 'Both themes pass legibility check: correct pageBg (#FAF8F1 / #1A1A17), all chrome
+    (title, axis labels, ticks) adapts correctly via tokens'
+  - Real iris-dataset context with realistic Euclidean distances — scientifically
+    grounded and neutral
   weaknesses:
-  - '"Versiclr" is a typo in the hardcoded data labels — should be "Versicolor" (affects
-    all 4 Versicolor x-axis tick labels)'
-  - 'No color legend: viewers must infer species-color mapping from leaf label names,
-    which is workable but not immediately obvious when looking at the tree structure
-    above'
-  - Cross-species inkSoft bridges appear more visually prominent in dark mode (light
-    grey) than in light mode (dark charcoal), creating slight weight imbalance between
-    themes
+  - 'Both X and Y gridlines are shown — for a dendrogram, only horizontal (Y-axis)
+    gridlines help read merge heights; vertical gridlines add visual noise. Remove
+    x-axis grid with `grid: { display: false }` on the x scale.'
+  - X-axis tick font size is 13px, one px below the recommended 14px for the JS browser
+    harness — raise to 14 for consistency.
+  - 'No spine removal — Chart.js defaults to borders on all active axes. Setting `border:
+    { display: false }` and relying only on the axis line (or using `display: false`
+    for x-border) would give a cleaner L-shape aesthetic more aligned with the style
+    guide.'
+  - 'DE-01 and DE-02 have room to improve: the inter-species bridge color shift is
+    thoughtful but the overall layout lacks the final polish pass (e.g. more generous
+    top/bottom padding, removing x-axis gridlines, slightly larger title padding)
+    that would elevate it to publication-ready.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "dendrogram-basic · javascript · chartjs · anyplot.ai" in dark ink at top, readable. Y-axis label "Euclidean Distance" in dark ink, clearly legible. X-axis tick labels rotated 45° (specimen names), Y-axis tick labels 0–4.9, both in inkSoft — all readable.
-      Data: Setosa cluster (left 4 leaves) in brand green #009E73 (palette[0]). Versicolor cluster (center 4 leaves) in lavender #C475FD (palette[1]). Virginica cluster (right 4 leaves) in blue #4467A3 (palette[2]). Cross-species bridges in inkSoft #4A4A44 (dark charcoal). Proportional branch heights correctly encode Euclidean distances.
-      Note: "Versiclr" typo in hardcoded labels (should be "Versicolor")
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct pageBg for light theme
+      Chrome: Title "dendrogram-basic · javascript · chartjs · anyplot.ai" centered at top, dark ink color, clearly readable (~60% plot width). Y-axis title "Euclidean Distance" rotated, readable. X-axis tick labels (12 iris specimens, rotated 45°) readable. Y-axis ticks (0–4.9) readable in dark inkSoft color. Both-axis gridlines visible and subtle.
+      Data: Setosa sub-clusters rendered in #009E73 (brand green, palette[0]). Versicolor sub-clusters in #C475FD (lavender, palette[1]). Virginica sub-clusters in #4467A3 (blue, palette[2]). Cross-species bridge segments rendered in t.inkSoft (~#4A4A44, dark gray) — the color shift at merge boundaries is semantically meaningful and visually clear.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title in light text (#F0EFE8 range), axis labels in inkSoft #B8B7B0 — all clearly legible on dark surface. No dark-on-dark failures found.
-      Data: Colors identical to light render — Setosa green, Versicolor lavender, Virginica blue. Cross-species bridges now in inkSoft #B8B7B0 (light grey), slightly more visually prominent than in light mode but remains correct behavior.
-      Legibility verdict: PASS — all text clearly readable against near-black background
+      Background: Warm near-black #1A1A17 — correct pageBg for dark theme
+      Chrome: Title, y-axis title, axis tick labels all rendered in light ink colors (F0EFE8/B8B7B0 range) — clearly readable against dark background. Grid lines are subtle light-colored lines. No dark-on-dark failures detected.
+      Data: Setosa green, Versicolor lavender, Virginica blue — all identical to light render (only chrome flips). Cross-species bridges now render in t.inkSoft dark (#B8B7B0, light gray) — remains clearly visible on dark surface and still semantically distinct from colored species branches.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark issues; brand green #009E73 remains visible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,73 +65,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels readable in both themes. X-axis ticks
-          at 13px CSS slightly small but pass.
+        comment: All font sizes explicitly set (title=22, y-axis=16, ticks=13-14px).
+          X-axis ticks at 13px are one below the recommended 14px; otherwise well-proportioned
+          and readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 45-degree rotation prevents all label overlap; no collisions
+        comment: 45-degree tick label rotation prevents all overlap. No text collisions
+          with data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Species-colored branches highly visible; cross-species inkSoft bridges
-          readable
+        comment: Dendrogram lines at borderWidth 2.5 are clear and appropriately sized.
+          Species colors and inkSoft cross-species color are distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 0-2 for species, inkSoft for structural
-          bridges, CVD-safe
+        comment: Green/lavender/blue trio from Imprint palette is CVD-safe. inkSoft
+          for mixed-species merges is clearly differentiated by luminance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, title ~55% width, proportions clean, nothing
-          clipped
+        comment: Dendrogram fills canvas well. No content clipped. Canvas gate passed
+          (no /tmp/anyplot-canvas-gate.txt).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Euclidean Distance y-axis label descriptive, title format correct
+        comment: Y-axis labeled 'Euclidean Distance' — descriptive and correct. No
+          x-axis title needed; leaf labels serve as axis identification (dendrogram
+          convention).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First species uses brand green #009E73 via t.palette[0], backgrounds
-          correct for both themes'
+        comment: 'First series (Setosa) = #009E73; Versicolor = #C475FD (palette[1]);
+          Virginica = #4467A3 (palette[2]). Cross-species bridges use theme-adaptive
+          inkSoft. Backgrounds #FAF8F1/#1A1A17 correct. Colors identical across themes;
+          only chrome flips.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional color-coded species branches with inkSoft structural
-          connectors shows design thought
+        comment: 'Above library defaults: semantic species coloring with Imprint palette,
+          purposeful gray for cross-species merges, no legend (appropriate). Not yet
+          FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clean, legend-free layout, subtle grid, appropriate border styling
-          via t.inkSoft
+        comment: Axis border colors use theme tokens (good). However both X and Y
+          gridlines visible — dendrogram convention prefers only Y-axis (horizontal)
+          gridlines. Spines not removed. Some chrome token usage but minimal aesthetic
+          refinement overall.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding communicates species groupings within hierarchy; proportional
-          heights enable accurate distance reading
+        comment: Color coding immediately reveals the three species clusters and where
+          cross-species merges occur — effective visual hierarchy. Branch height scale
+          correctly encodes relative distances.
     spec_compliance:
       score: 15
       max: 15
@@ -131,115 +151,129 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dendrogram using Chart.js scatter+showLine approach
+        comment: Correct dendrogram with U-shaped connectors, leaf labels, and merge
+          heights. Vertical orientation as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical clustering, proportional merge heights, labeled leaf
-          nodes, tree branching all present
+        comment: Feature matrix (iris measurements), labels, linkage computation (average-linkage
+          agglomerative), branch heights proportional to merge distances. All spec
+          requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows leaf order, Y-axis shows Euclidean distance
+        comment: X-axis shows 12 leaf nodes in DFS order; Y-axis shows Euclidean distance
+          0–4.9. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed as species readable from leaf
-          labels
+        comment: Title is exactly 'dendrogram-basic · javascript · chartjs · anyplot.ai'.
+          No legend (correct — species info conveyed by branch color).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Multi-level merges, proportional heights, 3 species groups shown.
-          Minor: Versiclr typo; no color legend'
+        comment: '12 items across 3 species show all dendrogram features: leaf nodes,
+          intra-species merges at low distances, cross-species merges at higher distances,
+          tree structure with clear hierarchy.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic iris measurements, real-world neutral dataset, 12 items within
-          spec 10-50 range
+        comment: Uses real iris flower measurements (sepal/petal length and width).
+          Well-known neutral scientific dataset. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Euclidean distances 0-4.35 are correct for 4-feature iris measurements
+        comment: Euclidean distances in 4D iris measurement space (0–4.3) are realistic.
+          Setosa clusters tightest (~0.1–0.5), Virginica/Versicolor at ~1.0–4.3, correctly
+          reflecting known iris species separability.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: buildTree and collectBridges are necessary for task complexity; no
-          gratuitous abstraction
+        comment: Contains buildTree(), a dfs IIFE, and collectBridges() — functions
+          necessary for custom hierarchical clustering that Chart.js doesn't provide
+          natively. Acceptable complexity given the requirements, but functions are
+          present.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic
+        comment: Data is fully hardcoded (ITEMS array with fixed iris measurements).
+          Completely deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only harness-provided globals
+        comment: No imports — Chart.js is a global. Window tokens accessed correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean closure-based DFS and bridge collection
+        comment: Well-structured, no over-engineering. Functions are minimal and justified.
+          No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Uses harness correctly; orientation directive present; animation:
-          false set'
+        comment: 'Harness-controlled output. animation: false set. responsive/maintainAspectRatio
+          correct. No filesystem calls.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scatter + showLine=true with per-bridge datasets is idiomatic Chart.js
+          for custom path rendering. afterBuildTicks with custom formatter is an advanced
+          Chart.js pattern correctly applied. animation:false, responsive:true, maintainAspectRatio:false
+          all correct.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: scatter+showLine correct for line drawing; afterBuildTicks idiomatic;
-          responsive/maintainAspectRatio/animation all correct
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: afterBuildTicks, custom tick callbacks, per-dataset colors are Chart.js-specific
-          features used well
+        comment: afterBuildTicks callback (library-specific axis lifecycle hook) and
+          multi-dataset scatter approach for custom chart rendering are genuinely
+          Chart.js-distinctive. Could not be trivially replicated in another library
+          without significant rework.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - html-export
   - manual-ticks
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - hierarchical-clustering
   styling:
