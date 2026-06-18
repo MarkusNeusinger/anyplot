@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: bokeh 3.9.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-18
@@ -134,7 +134,7 @@ legend = Legend(
         LegendItem(label="Received Symbols (error magnitude)", renderers=[rx_renderer]),
         LegendItem(label="Ideal 16-QAM Points", renderers=[ideal_renderer]),
     ],
-    location="top_left",
+    location="bottom_right",
     label_text_font_size="28pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
@@ -146,7 +146,7 @@ p.add_layout(legend)
 
 # EVM annotation
 evm_label = Label(
-    x=2.2, y=-4.0, text=f"EVM = {evm_percent:.1f}%", text_font_size="32pt", text_color=INK, text_font_style="bold"
+    x=-4.3, y=-4.1, text=f"EVM = {evm_percent:.1f}%", text_font_size="32pt", text_color=INK, text_font_style="bold"
 )
 p.add_layout(evm_label)
 
