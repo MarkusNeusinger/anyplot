@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-constellation-diagram
 created: '2026-06-18T03:35:23Z'
-updated: '2026-06-18T03:42:08Z'
+updated: '2026-06-18T03:52:21Z'
 generated_by: claude-sonnet
 workflow_run: 27734425985
 issue: 4562
@@ -15,41 +15,34 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Correct 16-QAM data with ideal points at ±1,±3 grid and Gaussian noise model (noise_std=0.18)
-    giving a realistic EVM of ~8.1%
-  - 'Semantic color use: brand green #009E73 for received symbols and matte red #AE3030
-    (semantic anchor) for ideal reference points'
-  - Full theme-adaptive chrome with correct Makie INK/INK_SOFT token mapping — dark
-    theme passes readability checks with no dark-on-dark issues
-  - Equal aspect ratio via DataAspect() preserves the geometric meaning of the I/Q
-    diagram
-  - Decision boundaries replace generic grid — hlines!/vlines! at ±2 with subtle alpha=0.2
-    dashes provide domain-appropriate context
-  - Redundant marker shape encoding on ideal points (xcross + red) mitigates green/red
-    CVD ambiguity
+  - 'Full spec compliance: all 7 required features present and correctly implemented'
+  - Semantic Imprint palette usage -- brand green for received symbols, matte red
+    for ideal reference points -- with redundant encoding (size + shape + color)
+  - DataAspect() enforces the required equal-aspect constraint cleanly
+  - EVM computed from first principles and displayed with @sprintf formatting
+  - Clean theme-adaptive chrome with correct tokens throughout both renders
+  - Decision boundary loop is concise and well-parameterised
   weaknesses:
-  - Title fontsize=20 produces ~40 source pixels on the 2400×2400 canvas, slightly
-    below the style-guide target of ~67px — marginally small at mobile widths (~400px)
-  - EVM annotation uses INK (primary text weight) rather than INK_SOFT — a minor hierarchy
-    opportunity to differentiate the metric annotation from primary axis labels
-  - Received symbol markersize=8 is reasonable for 1200 points, but slightly denser
-    clusters (near busier ideal points) show minor visual congestion — markersize=6
-    with alpha=0.35 could improve separation
+  - Received symbol markersize=6 is on the small side for a 2400x2400 canvas; bumping
+    to 7-8 would improve cluster visibility without causing overplotting
+  - 'Design Excellence has room to grow: boundary lines could use a slightly stronger
+    dash pattern or colour tint to feel more intentional; EVM annotation could use
+    a slightly larger font for visual hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "scatter-constellation-diagram · julia · makie · anyplot.ai" in dark INK color, clearly readable. Axis labels "In-Phase (I)" and "Quadrature (Q)" in dark INK, readable. Tick labels (-2.5, 0.0, 2.5) in INK_SOFT, clearly readable. "EVM = 8.1%" annotation in INK at top-left, clearly readable. Legend at bottom with frame, all text readable.
-      Data: 1200 received symbols as semi-transparent green (#009E73) dots clustered around 16 ideal points. Ideal 16-QAM points shown as matte red (#AE3030) xcross markers, very prominent. Three horizontal and three vertical dashed decision boundary lines at ±2 separating the 16 symbol regions.
-      Legibility verdict: PASS — all text is readable against the warm off-white background.
+      Background: warm off-white #FAF8F1 -- correct
+      Chrome: title "scatter-constellation-diagram · julia · makie · anyplot.ai" in dark ink, clearly readable; axis labels "In-Phase (I)" and "Quadrature (Q)" readable; tick labels at 13pt visible; EVM = 8.1% annotation visible in top-left
+      Data: 16 clusters of received symbols in Imprint brand green #009E73 (alpha ~0.35, markersize=6); 16 ideal reference points as red crosses (#AE3030, xcross, markersize=20); dashed decision boundaries at x/y = -2,0,2 in subtle 20% alpha ink
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light #F0EFE8 color, clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0), clearly readable. EVM annotation in light INK color, readable. Legend text in INK_SOFT, clearly readable. Spine lines (left + bottom) in INK_SOFT, subtle.
-      Data: Data colors are IDENTICAL to light render — same brand green (#009E73) received symbols and matte red (#AE3030) ideal xcross markers. Decision boundary dashes are faint but visible.
-      Legibility verdict: PASS — no dark-on-dark issues. All chrome correctly flipped to light-on-dark. Brand green #009E73 remains clearly visible on the dark surface.
+      Background: warm near-black #1A1A17 -- correct
+      Chrome: title, axis labels, tick labels all in light-coloured text (#F0EFE8 / #B8B7B0) against dark surface; no dark-on-dark failures; legend background uses elevated dark token #242420
+      Data: data colors identical to light render -- green received symbols and red ideal crosses unchanged; decision boundaries subtly visible against dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -57,56 +50,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes with explicit font sizes. Title
-          at size=20 yields ~40 source px on 2400×2400 canvas, slightly below the
-          ~67px style-guide target — minor mobile-readability concern.
+        comment: 'All font sizes explicitly set. Title at 28pt, axis labels 16pt,
+          tick labels 13pt, EVM annotation 15pt, legend 14pt. Well-proportioned. Minor:
+          received symbol markersize=6 is small.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps. EVM annotation at (-4.2, 4.1) clear
-          of constellation data.
+        comment: No text or element collisions. EVM annotation positioned clear of
+          data.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Received symbols at markersize=8 with alpha=0.4 appropriate for 1200
-          points. Ideal xcross markers at markersize=20 highly prominent. Both clearly
-          distinguishable.
+        comment: Ideal points prominent at markersize=20. Received clusters visible
+          but markersize=6 is on the small side.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red CVD risk mitigated by redundant shape encoding (dots vs
-          xcross). CVD-safe design.
+        comment: CVD-safe Imprint palette. Redundant encoding via marker shape and
+          size.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas is the correct choice for a symmetric IQ
-          diagram. Equal aspect ratio via DataAspect() preserves constellation geometry.
-          Axis limits ±4.5 give adequate padding around ±3 constellation.
+        comment: Square canvas for equal-aspect. Plot fills canvas well. Legend in
+          dedicated grid row.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Axis labels 'In-Phase (I)' and 'Quadrature
-          (Q)' are descriptive with correct signal-processing notation.
+        comment: In-Phase (I) and Quadrature (Q) with unit notation. Correct title
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (received symbols) = #009E73 brand green. Ideal points
-          use #AE3030 matte red semantic anchor. Backgrounds #FAF8F1 light / #1A1A17
-          dark. Both themes correct.'
+        comment: 'First series #009E73, ideal points #AE3030 (semantic matte-red for
+          reference). Backgrounds #FAF8F1/#1A1A17. Chrome correct both themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,25 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4/8): deliberate semantic color assignment (signal=green,
-          reference=red), xcross marker for ideal points provides shape redundancy,
-          semi-transparent density perception for received symbols.'
+        comment: Above default. Semantic colour assignment, semi-transparent density
+          encoding, clean typography hierarchy.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2/6): top/right spines removed, grid replaced with
-          domain-appropriate dashed decision boundaries at ±2, subtle alpha=0.2 on
-          boundaries, legend with minimal frame and ELEVATED_BG.'
+        comment: Top/right spines removed. No cartesian grid (dashed decision boundaries
+          replace it). Subtle boundary alpha. Generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2/6): EVM annotation contextualizes signal quality
-          directly on the plot. Visual hierarchy (green cloud → red xcross → dashed
-          boundaries) guides the viewer through the QAM structure.'
+        comment: 'Clear visual hierarchy: large red crosses vs small green clouds
+          communicates signal fidelity. EVM annotation quantifies the story.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,32 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter plot showing 16-QAM constellation with received
-          symbols and ideal reference points.
+        comment: I/Q scatter constellation diagram, 16-QAM, dual-layer structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 16 ideal points as distinct xcross markers,
-          1200 semi-transparent received symbols, dashed decision boundaries at ±2,
-          equal aspect ratio, EVM annotation.'
+        comment: 'All 7 spec features present: ideal crosses, received dots, dashed
+          boundaries, DataAspect, EVM annotation, correct axes, symmetric limits.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I on x-axis, Q on y-axis. 16 ideal points at ±1,±3 (correct 16-QAM
-          grid). 1200 received symbols with Gaussian noise (noise_std=0.18, ~20 dB
-          SNR).
+        comment: I on X, Q on Y. Ideal grid at +/-1, +/-3. Received symbols correctly
+          scattered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''scatter-constellation-diagram · julia · makie · anyplot.ai''
-          — correct format. Legend: ''Received symbols (n = 1200)'' and ''Ideal 16-QAM
-          points'' — informative labels.'
+        comment: Title format correct. Legend labels descriptive and accurate.
     data_quality:
       score: 15
       max: 15
@@ -177,24 +159,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all constellation aspects: 16 symbol clusters, decision boundaries,
-          EVM metric, ideal reference points. Complete feature coverage.'
+        comment: All 16 QAM positions, noise spread, EVM metric, decision boundaries.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is a real-world modulation scheme used in Wi-Fi, 5G NR, cable.
-          Additive Gaussian noise model is the standard impairment model. Neutral
-          engineering context.
+        comment: 16-QAM wireless/SDR engineering domain, realistic 20dB SNR, EVM 8.1%.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1200 symbols within spec range (500-2000). Axis limits ±4.5 appropriate
-          for ±3 constellation. EVM=8.1% realistic for this noise level. Correct boundary
-          placement at ±2.
+        comment: '1200 symbols (spec: 500-2000), noise_std=0.18, symmetric +/-4.5
+          limits. Physically accurate.'
     code_quality:
       score: 10
       max: 10
@@ -204,35 +182,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Linear flow from data generation
-          to plot to save.
+        comment: Linear structure, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at top of script.
+        comment: Random.seed!(42) at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports are used: CairoMakie (plotting), Colors (colorant
-          literals), Printf (@sprintf for EVM), Random (seed + rand/randn), Statistics
-          (mean).'
+        comment: 'All 5 imports used: CairoMakie, Colors, Printf, Random, Statistics.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation, no fake interactivity, proper theme token usage
-          throughout. EVM calculation is mathematically correct (2D error vectors).
+        comment: Idiomatic Julia/Makie. RGBAf, @sprintf, DataAspect. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct format.
+        comment: save(plot-$(THEME).png, px_per_unit=2). Current API.
     library_mastery:
       score: 7
       max: 10
@@ -242,18 +216,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of scatter!, hlines!, vlines!, text!, Legend with fig[2,1]
-          layout, RGBAf color construction, DataAspect(), @sprintf macro. All idiomatic
-          CairoMakie patterns.
+        comment: 'Strong idioms: Axis inline kwargs, scatter!/hlines!/vlines! compositing,
+          DataAspect(), Legend as grid element, RGBAf().'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Makie-specific: DataAspect() for exact aspect control, RGBAf
-          for typed alpha colors, hlines!/vlines! as separate primitives (Makie idiom
-          vs pyplot-style), tellheight=true on Legend for layout-aware sizing, :xcross
-          symbol marker.'
+        comment: DataAspect, RGBAf, hlines!/vlines! loop, Legend as grid component.
+          Makie-idiomatic but core primitives rather than distinctive advanced features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
