@@ -5,87 +5,105 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-const COOL = t.palette[0];  // #009E73 brand green — cool climates branch
-const WARM = t.palette[3];  // #BD8233 ochre — warm climates branch
+const COOL = t.palette[0];  // #009E73 brand green — cool climates
+const WARM = t.palette[3];  // #BD8233 ochre — warm climates
 
-// Leaf label style — shown to the right of each city node
+// Leaf city labels — sized for readability at mobile viewports
 const LEAF_LABEL = {
   show: true,
   position: "right",
   verticalAlign: "middle",
   align: "left",
-  fontSize: 14,
+  fontSize: 17,
   color: t.inkSoft,
   distance: 10,
 };
 
-// 12 world cities hierarchically clustered by climate profile
-// Cool branch (green): Nordic — Oslo, Stockholm, Helsinki
-//                      Temperate — London, Paris, Amsterdam
-// Warm branch (ochre): Mediterranean — Barcelona, Rome, Athens
-//                      Tropical — Singapore, Bangkok, Mumbai
+// Sub-group cluster label (Nordic, Temperate, etc.) — italic annotation above node
+const clusterLabel = (color) => ({
+  show: true,
+  position: "top",
+  verticalAlign: "bottom",
+  align: "center",
+  fontSize: 12,
+  fontStyle: "italic",
+  color,
+  distance: 8,
+});
+
+// Leaf node helper — still needs per-node lineStyle/itemStyle since ECharts tree
+// does not cascade edge color from ancestor nodes to descendant edges
+const city = (name, color) => ({
+  name,
+  label: LEAF_LABEL,
+  lineStyle: { color },
+  itemStyle: { color },
+});
+
+// 12 world cities hierarchically clustered by climate profile (topology only —
+// ECharts tree uses uniform level spacing, not proportional merge distances)
 const treeData = {
-  name: "root",
+  name: "",
   label: { show: false },
   symbolSize: 4,
   itemStyle: { color: t.inkSoft },
   children: [
     {
-      name: "cool",
+      name: "Cool Climates",
       label: { show: false },
       lineStyle: { color: COOL },
       itemStyle: { color: COOL },
       children: [
         {
-          name: "nordic",
-          label: { show: false },
+          name: "Nordic",
+          label: clusterLabel(COOL),
           lineStyle: { color: COOL },
           itemStyle: { color: COOL },
           children: [
-            { name: "Oslo",      label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
-            { name: "Stockholm", label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
-            { name: "Helsinki",  label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
+            city("Oslo", COOL),
+            city("Stockholm", COOL),
+            city("Helsinki", COOL),
           ],
         },
         {
-          name: "temperate",
-          label: { show: false },
+          name: "Temperate",
+          label: clusterLabel(COOL),
           lineStyle: { color: COOL },
           itemStyle: { color: COOL },
           children: [
-            { name: "London",    label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
-            { name: "Paris",     label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
-            { name: "Amsterdam", label: LEAF_LABEL, lineStyle: { color: COOL }, itemStyle: { color: COOL } },
+            city("London", COOL),
+            city("Paris", COOL),
+            city("Amsterdam", COOL),
           ],
         },
       ],
     },
     {
-      name: "warm",
+      name: "Warm Climates",
       label: { show: false },
       lineStyle: { color: WARM },
       itemStyle: { color: WARM },
       children: [
         {
-          name: "mediterranean",
-          label: { show: false },
+          name: "Mediterranean",
+          label: clusterLabel(WARM),
           lineStyle: { color: WARM },
           itemStyle: { color: WARM },
           children: [
-            { name: "Barcelona", label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
-            { name: "Rome",      label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
-            { name: "Athens",    label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
+            city("Barcelona", WARM),
+            city("Rome", WARM),
+            city("Athens", WARM),
           ],
         },
         {
-          name: "tropical",
-          label: { show: false },
+          name: "Tropical",
+          label: clusterLabel(WARM),
           lineStyle: { color: WARM },
           itemStyle: { color: WARM },
           children: [
-            { name: "Singapore", label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
-            { name: "Bangkok",   label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
-            { name: "Mumbai",    label: LEAF_LABEL, lineStyle: { color: WARM }, itemStyle: { color: WARM } },
+            city("Singapore", WARM),
+            city("Bangkok", WARM),
+            city("Mumbai", WARM),
           ],
         },
       ],
@@ -96,7 +114,6 @@ const treeData = {
 // Init
 const chart = echarts.init(document.getElementById("container"));
 
-// Option
 chart.setOption({
   animation: false,
   backgroundColor: "transparent",
@@ -114,22 +131,14 @@ chart.setOption({
       left: 80,
       bottom: 28,
       children: [
-        {
-          type: "circle",
-          shape: { cx: 8, cy: 8, r: 7 },
-          style: { fill: COOL },
-        },
+        { type: "circle", shape: { cx: 8, cy: 8, r: 7 }, style: { fill: COOL } },
         {
           type: "text",
           left: 22,
           top: 0,
           style: { text: "Cool Climates", fill: t.inkSoft, fontSize: 13, fontFamily: "sans-serif" },
         },
-        {
-          type: "circle",
-          shape: { cx: 166, cy: 8, r: 7 },
-          style: { fill: WARM },
-        },
+        { type: "circle", shape: { cx: 166, cy: 8, r: 7 }, style: { fill: WARM } },
         {
           type: "text",
           left: 180,
@@ -147,7 +156,7 @@ chart.setOption({
       orient: "LR",
       left: "6%",
       right: "18%",
-      top: "15%",
+      top: "16%",
       bottom: "12%",
       symbol: "circle",
       symbolSize: 8,
