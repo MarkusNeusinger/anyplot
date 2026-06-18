@@ -1,43 +1,63 @@
 library: bokeh
+language: python
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:21:54Z'
-updated: '2026-03-17T23:33:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23220948618
+updated: '2026-06-18T03:35:56Z'
+generated_by: claude-sonnet
+workflow_run: 27733943058
 issue: 4562
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — every requirement from the specification is implemented
-  - Color-coding received symbols by error magnitude adds meaningful data storytelling
-    beyond what the spec required
-  - 'Strong use of Bokeh-specific features: HoverTool, LinearColorMapper with transform(),
-    dual PNG+HTML output'
-  - 'Clean visual refinement: removed grid, subtle axis styling, custom background'
-  - Physically accurate data generation with proper SNR-based noise modeling
+  - Imprint sequential colormap (green→blue) used correctly for continuous error-magnitude
+    data — adds a meaningful third dimension to the scatter without violating palette
+    rules
+  - Semantic red (#AE3030) for ideal 16-QAM reference points is the correct use of
+    the matte-red anchor; cross markers plus color gives redundant encoding
+  - match_aspect=True enforces the equal-aspect-ratio requirement; square 2400×2400
+    canvas is the right format for this symmetric constellation geometry
+  - Span elements for dashed decision boundaries are Bokeh-native and replace the
+    grid cleanly — the right approach for a constellation diagram
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all flip correctly
+    between light and dark; no dark-on-dark failures visible'
+  - LinearColorMapper + transform() pattern is idiomatic and distinctive Bokeh usage;
+    HoverTool adds real interactivity to the HTML artifact
+  - SNR-based noise model (20 dB) and 1000 received symbols are exactly within the
+    spec's 500-2000 range; EVM computed correctly from received vs ideal vectors
+  - np.random.seed(42) ensures reproducibility; KISS script structure with no functions
+    or classes
   weaknesses:
-  - Received symbol markers could be slightly larger for better individual visibility
-    at the 3600px canvas size
-  - Minor excess whitespace at canvas edges (range ±4.8 vs data extent ~±4.2)
-  image_description: The plot displays a 16-QAM constellation diagram on a light gray
-    (#F5F5F5) background. Sixteen clusters of received symbols are arranged in a 4×4
-    grid at I/Q coordinates ±1 and ±3. Each cluster centers on a red cross marker
-    representing the ideal constellation point. Received symbols are rendered as semi-transparent
-    dots color-coded using a Viridis colormap based on error vector magnitude — dark
-    purple/blue for symbols close to the ideal point, transitioning through teal/green
-    to yellow for larger deviations. Dashed gray decision boundary lines appear at
-    -2, 0, and 2 on both axes. The title reads "scatter-constellation-diagram · bokeh
-    · pyplots.ai". The x-axis is labeled "In-Phase (I)" and y-axis "Quadrature (Q)".
-    A legend in the top-left corner identifies "Received Symbols (color = error)"
-    and "Ideal 16-QAM Points". An EVM annotation "EVM = 7.4%" is positioned in the
-    lower-right area. The plot uses a square 3600×3600 canvas with equal aspect ratio.
+  - Legend label_text_font_size is 28pt, below the 34pt standard for a 2400×2400 canvas
+    — legend appears slightly small in both renders; raise to 34pt
+  - No ColorBar widget to explain the green→blue error-magnitude scale — viewers see
+    the gradient but cannot read quantitative error values off the color axis; add
+    a ColorBar positioned to the right of the plot
+  - Received symbol size=18 is just below the recommended ≥20 for 1000-point datasets;
+    alpha=0.55 is slightly above the ≤0.50 upper bound — together they cause mild
+    overplotting in the dense inner clusters; reduce to size=16 and alpha=0.45
+  - EVM annotation at 32pt is below the 34pt tick-label standard; increase to 34pt
+    for visual consistency with the rest of the chrome
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — PASS, not pure white, not dark.
+      Chrome: Title "scatter-constellation-diagram · python · bokeh · anyplot.ai" in dark ink, legible. X-axis label "In-Phase (I)" and Y-axis label "Quadrature (Q)" in dark ink, appropriately sized. Tick labels (−4, −2, 0, 2, 4) in muted dark (#4A4A44), visible. EVM annotation "EVM = 7.4%" in bold dark ink at bottom-left, clearly readable. Legend in bottom-right with elevated off-white box — text slightly small but readable.
+      Data: 1000 received symbols as semi-transparent scatter dots colored along the Imprint sequential colormap (green #009E73 → blue #4467A3) encoding error magnitude — teal dots near ideal centers, blue dots at greater distances. 16 ideal constellation points as large red cross markers (#AE3030) centered in each symbol cluster. Dashed decision boundary lines at ±2 on both axes clearly delineate the 16 symbol regions.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — PASS, not pure black, not light.
+      Chrome: Title and axis labels in light cream (#F0EFE8), clearly readable. Tick labels in muted light (#B8B7B0), visible. EVM annotation in light ink, readable. Legend box uses elevated dark fill (#242420) with muted-light border and label text — legible. No dark-on-dark failures detected.
+      Data: Data colors (teal-to-blue received symbols, matte-red ideal crosses) are identical to the light render — only the chrome has flipped. Dashed decision boundaries still visible in muted tone.
+      Legibility verdict: PASS — all text readable against the warm near-black background; theme adaptation is complete and correct.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -45,67 +65,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 36pt, labels 28pt, ticks 22pt,
-          legend 20pt, EVM 28pt). All text clearly readable.
+        comment: 'All font sizes explicitly set; title 50pt, axis labels 42pt, ticks
+          34pt all correct. Minor deduction: legend at 28pt below the 34pt standard.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend and EVM annotation well-positioned.
+        comment: No text overlap with other text or data elements. Expected scatter-point
+          clustering handled by alpha=0.55.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Received symbols (size=16, alpha=0.5) visible and appropriately sized.
-          Ideal crosses prominent at size=32.
+        comment: Ideal crosses at size=36 are prominently visible. Received symbols
+          at size=18 / alpha=0.55 are slightly below recommended (≥20 / ≤0.50) for
+          1000 points — mild overplotting in inner clusters.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential cmap (green→blue) is CVD-reasonably-safe. Cross
+          shape + color redundancy for ideal vs received points avoids hue-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Viridis256 colormap is colorblind-safe. Red crosses contrast well
-          against Viridis range.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Square canvas with match_aspect=True correct for constellation diagrams.
-          Minor wasted space at edges.
+        comment: Square 2400×2400 canvas is the correct choice for equal-aspect-ratio
+          constellation geometry. Canvas gate passed. Good min_border margins; no
+          clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: In-Phase (I) and Quadrature (Q) are domain-appropriate descriptive
-          labels.
+        comment: 'X: ''In-Phase (I)'', Y: ''Quadrature (Q)'' — both descriptive with
+          component notation. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential colormap (green #009E73 → blue #4467A3) used
+          correctly for continuous error-magnitude data. Ideal points use #AE3030
+          matte-red semantic anchor. Backgrounds #FAF8F1 / #1A1A17 correct. Chrome
+          adapts fully in both renders.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: Viridis color-mapping by error magnitude, custom
-          background, subtle axis styling, intentional color hierarchy.'
+        comment: 'Above-default: continuous colormap encoding of error magnitude adds
+          a meaningful third dimension; semantic red for reference points is thoughtful.
+          Not exceptional — no colorbar to explain the scale, visual hierarchy could
+          be stronger.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, outline removed, axis lines muted to gray, minor ticks
-          hidden, background customized.
+        comment: Decision boundaries replace the standard grid cleanly (correct for
+          constellation diagram). Box frame retained for constellation framing — appropriate.
+          Minor ticks removed. Legend box uses elevated fill. Above default 2.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Color-coding by error magnitude reveals deviation patterns. Red ideal
-          points as focal points. EVM annotation provides context.
+        comment: EVM annotation quantifies signal quality. Color gradient hints at
+          error distribution. However, the lack of a ColorBar means the gradient story
+          is implicit, not explicit.
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter constellation diagram.
+        comment: Correct I/Q scatter plot showing 16-QAM constellation with ideal
+          and received symbols.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 16-QAM, ideal crosses, semi-transparent
-          received symbols, decision boundaries, equal aspect, EVM.'
+        comment: 'All features: 16-QAM scheme, ideal cross markers, semi-transparent
+          received dots, dashed decision boundaries, equal aspect ratio, EVM annotation,
+          symmetric axis limits.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I mapped to x-axis, Q mapped to y-axis, all data visible.
+        comment: I on x-axis, Q on y-axis; 1000 received symbols (within 500-2000
+          range); symmetric ±4.5 limits centered at origin.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels descriptive and accurate.
+        comment: 'Title: ''scatter-constellation-diagram · python · bokeh · anyplot.ai''
+          — correct format. Legend labels: ''Received Symbols (error magnitude)''
+          and ''Ideal 16-QAM Points'' — descriptive and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -144,22 +185,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 16 constellation points, noise scatter, error magnitude
-          variation, decision boundaries.
+        comment: 'Shows all aspects: ideal reference points, received symbol clusters,
+          error magnitude coloring, decision boundaries, EVM metric.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is a standard real-world modulation scheme. SNR of 20dB is
-          realistic. Neutral technical domain.
+        comment: 16-QAM at SNR=20dB is standard for wireless communications. EVM=7.4%
+          is realistic. Neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 16-QAM levels, 1000 symbols, physically plausible noise,
-          EVM of 7.4% is reasonable.
+        comment: Constellation points at ±1, ±3 (standard 16-QAM levels). 1000 symbols
+          within the 500-2000 spec range. Axis limits ±4.5 provide appropriate margin.
     code_quality:
       score: 10
       max: 10
@@ -169,32 +210,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, style, glyphs, legend, annotation,
-          save.'
+        comment: 'Linear script: imports → tokens → data → figure → chrome → glyphs
+          → legend → annotation → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imported symbols are used: ColumnDataSource, HoverTool, Label,
+          Legend, LegendItem, LinearColorMapper, Span, transform.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Clean and Pythonic; no over-engineering; HoverTool is real interactivity
+          for the HTML artifact, not fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly; Selenium
+          screenshot pattern is the correct Bokeh approach.
     library_mastery:
       score: 9
       max: 10
@@ -204,28 +248,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Bokeh patterns: ColumnDataSource, figure(), scatter(), Span,
-          Label, Legend/LegendItem, LinearColorMapper with transform().'
+        comment: ColumnDataSource, transform() with LinearColorMapper, Span, Legend/LegendItem,
+          HoverTool, Selenium screenshot — all idiomatic Bokeh patterns used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool for interactive tooltips, LinearColorMapper with transform(),
-          dual PNG+HTML export, ColumnDataSource pattern.
+        comment: LinearColorMapper + transform() for color-encoding scatter by a third
+          variable is a distinctive Bokeh capability; Span for reference lines is
+          Bokeh-native; HoverTool provides real HTML interactivity.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
-  - minimal-chrome
