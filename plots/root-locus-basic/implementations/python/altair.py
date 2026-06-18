@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-18
@@ -139,6 +139,10 @@ for b in range(n_roots):
                 arrows.append({"ax": float(r0.real), "ay": float(r0.imag), "branch": f"Branch {b + 1}"})
 arrow_df = pd.DataFrame(arrows) if arrows else pd.DataFrame({"ax": [], "ay": [], "branch": []})
 
+# Stability boundary at imaginary axis (x=0) — key insight for non-control-theory readers
+stability_line_df = pd.DataFrame({"sx": [0.0, 0.0], "sy": [-4.5, 4.5], "ord": [0, 1]})
+stability_label_df = pd.DataFrame({"sx": [-0.12], "sy": [3.5], "label": ["Stability boundary"]})
+
 # Scales — shift x domain left to reduce empty right-half-plane space
 x_scale = alt.Scale(domain=[-5.0, 2.0], nice=False)
 y_scale = alt.Scale(domain=[-4.5, 4.5], nice=False)
@@ -190,7 +194,7 @@ damping_layer = (
 
 damping_label_layer = (
     alt.Chart(damping_label_df)
-    .mark_text(fontSize=9, color=INK_MUTED, fontStyle="italic", align="center")
+    .mark_text(fontSize=11, color=INK_MUTED, fontStyle="italic", align="center")
     .encode(x=alt.X("lx:Q", scale=x_scale), y=alt.Y("ly:Q", scale=y_scale), text="label:N")
 )
 
@@ -204,6 +208,18 @@ real_axis_layer = (
     alt.Chart(real_axis_df)
     .mark_line(strokeWidth=4, color=IMPRINT_PALETTE[0], opacity=0.2)
     .encode(x=alt.X("rx:Q", scale=x_scale), y=alt.Y("ry:Q", scale=y_scale), detail="seg:N", order="ord:Q")
+)
+
+stability_line_layer = (
+    alt.Chart(stability_line_df)
+    .mark_line(strokeWidth=1.3, strokeDash=[7, 4], color=INK_SOFT, opacity=0.65)
+    .encode(x=alt.X("sx:Q", scale=x_scale), y=alt.Y("sy:Q", scale=y_scale), order="ord:Q")
+)
+
+stability_label_layer = (
+    alt.Chart(stability_label_df)
+    .mark_text(fontSize=10, color=INK_SOFT, align="right", fontStyle="italic", dx=-6)
+    .encode(x=alt.X("sx:Q", scale=x_scale), y=alt.Y("sy:Q", scale=y_scale), text="label:N")
 )
 
 poles_layer = (
@@ -266,7 +282,9 @@ arrow_down_layer = (
 # Compose all layers
 chart = (
     (
-        locus_layer
+        stability_line_layer
+        + stability_label_layer
+        + locus_layer
         + damping_layer
         + damping_label_layer
         + wn_layer
@@ -296,7 +314,7 @@ chart = (
         ),
     )
     .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
-    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_axis(domain=False, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
     .interactive()
