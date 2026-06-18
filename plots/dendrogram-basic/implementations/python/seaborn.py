@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-18
@@ -111,11 +111,14 @@ for lbl in g.ax_heatmap.get_xticklabels():
     lbl.set_rotation(30)
     lbl.set_ha("right")
 
+# Remove the 'Species' column label from the row colors strip x-axis
+g.ax_row_colors.tick_params(bottom=False, labelbottom=False)
+
 # Style colorbar ticks
 g.cax.tick_params(labelsize=8, colors=INK_SOFT)
 g.cax.set_facecolor(PAGE_BG)
 
-# Species legend to the right of the heatmap
+# Species legend — placed outside the heatmap to the right to avoid data overlap
 legend_handles = [
     plt.Line2D([0], [0], marker="s", color="none", markerfacecolor=c, markeredgecolor=INK_SOFT, markersize=10, label=n)
     for n, c in species_colors.items()
@@ -123,7 +126,8 @@ legend_handles = [
 g.ax_heatmap.legend(
     handles=legend_handles,
     title="Species",
-    loc="upper right",
+    loc="upper left",
+    bbox_to_anchor=(1.02, 1.0),
     fontsize=8,
     title_fontsize=9,
     framealpha=0.95,
