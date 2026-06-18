@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: matplotlib 3.11.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-06-18
+Quality: 90/100 | Updated: 2026-06-18
 """
 
 import os
