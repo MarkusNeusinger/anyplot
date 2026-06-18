@@ -1,3 +1,7 @@
+// anyplot.ai
+// eye-diagram-basic: Signal Integrity Eye Diagram
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-18
 //# anyplot-orientation: landscape
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
