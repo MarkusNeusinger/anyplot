@@ -1,88 +1,108 @@
 library: plotnine
+language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:22:29Z'
-updated: '2026-03-20T21:56:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23362982110
+updated: '2026-06-18T00:16:37Z'
+generated_by: claude-sonnet
+workflow_run: 27727116160
 issue: 4414
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/plotnine/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance — all required root locus features implemented correctly
-  - Strong data storytelling with stable/unstable region shading and highlighted stability
-    boundary crossings
-  - Professional custom palette and typography
-  - Proper control engineering notation on axes
-  - Good use of plotnine-specific features (mizani formatters, guides customization)
+  - 'Comprehensive root locus implementation satisfying all spec requirements: stability
+    regions, damping ratio lines, natural frequency circles, axis crossing markers,
+    direction arrows, and breakaway annotation all present.'
+  - 'Exemplary Imprint palette compliance: canonical ordering for branches (#009E73,
+    #C475FD, #4467A3) with semantically justified use of #AE3030 (matte red) for instability
+    crossing markers.'
+  - 'Mathematically rigorous data generation: analytically computed breakaway point,
+    linear-interpolated axis crossings, correct real-axis locus segments.'
+  - Perfect theme adaptation across both renders — no dark-on-dark or light-on-light
+    failures.
+  - Clean idiomatic plotnine code using coord_fixed(), mizani formatters, annotate('rect')
+    region shading, and arrow() direction indicators.
   weaknesses:
-  - Minor crowding near the origin where multiple markers and segments overlap
-  - Annotation text size (9pt) is smaller than ideal relative to other text elements
-  - Natural frequency circles and damping ratio lines could be slightly more visible
-  image_description: 'The plot shows a root locus diagram for the transfer function
-    G(s) = 1/[s(s+1)(s+3)] with three branches colored blue (Branch 1), orange (Branch
-    2), and green (Branch 3). Open-loop poles are marked with X markers at s=0, s=-1,
-    and s=-3 on the real axis. A breakaway point is marked with a square marker near
-    s≈-0.45 with annotation "Breakaway K=0.63". Red diamond markers highlight imaginary
-    axis crossings at approximately ±1.7j with "K=12.0" labels. The left half-plane
-    is shaded light green with italic "Stable" label, and the right half-plane is
-    shaded light pink with italic "Unstable" label. Dashed gray damping ratio lines
-    (ζ=0.2, 0.4, 0.6, 0.8) radiate from the origin, and dotted gray natural frequency
-    circles (ωn=1, 2, 3, 4) are centered at the origin. Real axis segments of the
-    root locus are shown as thick brown lines. Direction arrows indicate increasing
-    gain. The axes use proper control engineering notation: "Real Axis (σ)" and "Imaginary
-    Axis (jω)" with custom tick labels. The plot uses equal axis scaling and square
-    format with a legend on the right.'
+  - Internal geom_text annotations (zeta damping labels at size=3.2, omega_n frequency
+    labels at size=3.2, breakaway annotation at size=3.0, K= crossing labels at size=3.0)
+    are small; at mobile scaling (~400px width) these elements become marginal — consider
+    increasing to 3.8-4.5.
+  - 'Chart area slightly compressed horizontally: coord_fixed aspect ratio combined
+    with right-side legend leaves less width for the plot panel; adjusting xlim or
+    reducing legend footprint would help.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "root-locus-basic · python · plotnine · anyplot.ai" bold centered, readable; axis labels "Real Axis (σ)" / "Imaginary Axis (jω)" in dark ink; tick labels in dark gray; legend in light box — all readable
+      Data: Branch 1 green #009E73 (short negative real axis segment), Branch 2 lavender #C475FD (arcs upper-right), Branch 3 blue #4467A3 (extends steeply upward); stability shading (pale green left, pale pink right); dashed damping-ratio lines with zeta labels; dotted natural frequency circles with omega_n labels; red diamond crossings labeled K=12.0; x-markers for open-loop poles; square for breakaway point; direction arrows on branches
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light cream (#F0EFE8 / #B8B7B0) — clearly readable; legend on elevated dark background (#242420) with light text; no dark-on-dark failures observed
+      Data: Identical data colors to light render — Branch 1 green #009E73, Branch 2 lavender #C475FD, Branch 3 blue #4467A3; stability shading adapts to dark tints; breakaway marker correctly renders as white square (fill=INK in dark mode); brand green #009E73 clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set for title (24), axes (20), ticks (16),
-          legend (14/16). Some annotation text at size=9 is on the smaller side.
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8).
+          Internal geom_text annotations (zeta labels size=3.2, omega_n labels size=3.2,
+          breakaway annotation size=3.0) are small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding near the origin where breakaway marker, pole markers,
-          and real axis segments converge.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Branch lines clear at size=1.5. Markers well-sized. Natural frequency
-          circles and damping lines could be slightly more visible.
+        comment: Branches, markers, and arrows well-sized. Branch 1 green segment
+          slightly thin behind real-axis segment overlay.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/green palette is colorblind-safe with good contrast.
+        comment: Imprint palette applied; CVD-safe; redundant marker-shape encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format fills canvas well. Legend positioned cleanly. Balanced
-          margins.
+        comment: Square 2400x2400 correct for symmetric plot. Minor horizontal compression
+          from coord_fixed + right-side legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (σ) and Imaginary Axis (jω) with proper engineering notation.
+        comment: Real Axis (sigma) and Imaginary Axis (jomega) descriptive with units.
+          Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Branch 1 = #009E73, Branches 2-3 follow Imprint canonical order.
+          #AE3030 used as semantic anchor for instability. Background #FAF8F1/#1A1A17.
+          Chrome correctly theme-adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -90,22 +110,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with stability region shading, custom palette, styled
-          legend. Clearly above defaults.
+        comment: Stability region shading, damping ratio guide lines, natural frequency
+          circles, direction arrows, and annotated crossing markers produce professional
+          engineering-quality chart well above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines, subtle grid, styled legend background.
-          Good refinement.
+        comment: theme_minimal base with custom overrides; subtle grid (alpha=0.12);
+          panel border retained (justified for coord_fixed). More refined than defaults
+          but all-spines box and legend frame keep it short of pristine.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Stability region shading, highlighted crossings, and annotations
-          create strong visual hierarchy.
+        comment: 'Clear visual hierarchy: stability regions orient viewer; direction
+          arrows convey gain increasing; red diamonds draw attention to stability
+          boundary; muted damping/frequency guides recede appropriately.'
     spec_compliance:
       score: 15
       max: 15
@@ -115,26 +138,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot showing pole migration in complex plane.
+        comment: Correct root locus chart with all required structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pole markers, branch curves with arrows,
-          real axis segments, crossings, damping/frequency guides, equal scaling.'
+        comment: Open-loop poles (x markers), locus branches with gain arrows, real
+          axis segments, imaginary axis crossings (red diamonds with K labels), damping
+          ratio and natural frequency guide grid, equal axis scaling via coord_fixed
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real/Imaginary correctly mapped. Appropriate axis range.
+        comment: Real part on X-axis, imaginary part on Y-axis, 3 branches for 3-pole
+          system. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels descriptive and accurate.
+        comment: 'Title: ''root-locus-basic · python · plotnine · anyplot.ai''. Legend
+          shows Markers (Breakaway Point, Open-loop Pole) and Branch (1, 2, 3) with
+          correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -144,57 +172,66 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all root locus features: branches, breakaway, crossings, real
-          axis segments, damping/frequency guides.'
+        comment: 'All root locus features shown: multi-branch trajectories, breakaway
+          point, imaginary axis crossings, real axis locus segments, direction of
+          increasing gain, damping/frequency guide overlays.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic control systems transfer function — textbook example appropriate
-          for engineering domain.
+        comment: G(s) = 1/[s(s+1)(s+3)] is a canonical control theory textbook transfer
+          function. Poles at 0, -1, -3 and derived breakaway/crossing values are mathematically
+          sound.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible pole locations and gain range covering all interesting behavior.
+        comment: Gain sweep K in [0,80] covers full pole migration. Axis range [-5.2,
+          2.2] x [-4.8, 4.8] correctly sized. Breakaway K~0.43 and crossing K~12 are
+          analytically correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper function jw_label_fn slightly breaks pure KISS structure.
+        passed: true
+        comment: 'Flat linear script: imports -> data computation -> DataFrame assembly
+          -> plot construction -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — polynomial roots, no randomness.
+        comment: Deterministic data (np.roots/np.linspace); no random generation;
+          no seed required.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, including mizani.formatters.
+        comment: 'All imports used: sys/os, numpy, pandas, mizani.formatters, all
+          plotnine symbols.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. No fake functionality.
+        comment: Appropriate complexity. Root-finding loop, crossing detection, breakaway
+          computation, and guide-line generation are all justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, uses current plotnine API.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=6, height=6. Current
+          plotnine API used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -202,28 +239,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses plotnine grammar of graphics with multiple geom layers,
-          aes mapping, scales, coord_fixed, theme customization.
+        comment: 'Expert grammar of graphics: layer composition via +, annotate(''rect'')
+          for shading without extra dataframes, coord_fixed() for equal scaling, mizani.formatters
+          for tick formatting, guide_legend() with override_aes.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses mizani custom_format, custom label function for jω notation,
-          guides() with order and override_aes.
-  verdict: REJECTED
+        comment: coord_fixed(), mizani formatter, annotate('rect') region shading,
+          and arrow() in geom_segment are distinctly plotnine/ggplot2 idioms. Not
+          5/5 as the arrow/geom_segment approach is also replicable in matplotlib.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - mizani
   techniques:
   - annotations
   - layer-composition
-  - custom-legend
-  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  - data-generation
+  dataprep:
+  - interpolation
   styling:
   - alpha-blending
-  - grid-styling
