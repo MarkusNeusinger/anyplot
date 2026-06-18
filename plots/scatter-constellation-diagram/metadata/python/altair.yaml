@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: scatter-constellation-diagram
 created: '2026-03-17T23:22:50Z'
-updated: '2026-06-18T03:24:33Z'
+updated: '2026-06-18T03:33:39Z'
 generated_by: claude-sonnet
 workflow_run: 27734017074
 issue: 4562
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Excellent spec compliance: all 8 required features present — 16-QAM ideal grid
-    at ±1/±3, dashed decision boundaries, received symbols with semi-transparency,
-    EVM annotation, correct axis labels, symmetric equal-aspect domain, interactive
-    hover selection'
-  - 'Correct Imprint continuous colormap: error-magnitude gradient uses imprint_seq
-    exactly (#009E73 → #4467A3), semantic matte red #AE3030 for ideal reference points
-    is the correct semantic anchor usage'
-  - 'Accurate physics: EVM=14.0% is mathematically correct for 16-QAM at SNR=20dB
-    (noise_std = sqrt(signal_power/SNR), EVM = sqrt(2)*noise_std/rms_signal ≈ 14.1%)'
-  - 'Idiomatic Altair layer composition: alt.layer() with separate layers for boundaries,
-    received symbols, ideal points, and EVM annotation; alt.selection_point() with
-    alt.condition() for hover-driven opacity/size changes'
-  - 'Perfect code quality: KISS structure, np.random.seed(42), clean imports, correct
-    plot-{THEME}.png and plot-{THEME}.html output, PIL padding to exact 2400×2400
-    canvas'
-  - 'Theme-adaptive chrome fully wired: all INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens
-    applied to configure_axis, configure_title, configure_view, configure_legend —
-    both renders pass readability checks'
+  - Strong Imprint palette usage with imprint_seq gradient (green→blue) for continuous
+    error magnitude encoding
+  - 'All spec requirements met: 16 ideal cross markers, semi-transparent received
+    symbols, dashed decision boundaries, EVM annotation, equal aspect ratio, correct
+    axis labels'
+  - Idiomatic Altair layer composition (h_rules + v_rules + received + ideal + evm_label)
+    is clean and expressive
+  - Interactive hover selection using alt.selection_point(nearest=True) with conditional
+    opacity/size is distinctively Altair and adds value in the HTML output
+  - 'Theme-adaptive chrome correctly implemented across both renders — no dark-on-dark
+    failures, correct backgrounds #FAF8F1 / #1A1A17'
+  - Perfect spec compliance and data quality — realistic 16-QAM telecommunications
+    scenario with mathematically correct EVM calculation
   weaknesses:
-  - 'Title format wrong: actual title is ''scatter-constellation-diagram · altair
-    · pyplots.ai'' but required format is ''scatter-constellation-diagram · python
-    · altair · anyplot.ai'' — missing ''python ·'' language component and uses ''pyplots.ai''
-    instead of ''anyplot.ai'''
-  - 'Four-sided bounding box not removed: configure_view(stroke=INK_SOFT) keeps all
-    four borders — use configure_view(stroke=None) or stroke=''transparent'' to remove
-    the box frame and improve visual refinement (DE-02)'
-  - EVM annotation fontSize=11 is slightly small for the canvas scale (11 × 4 = 44
-    source-px) — increase to fontSize=13 or 14 for better readability when thumbnail-scaled
-  - 'Design typography hierarchy could be stronger: title, axis labels, and EVM annotation
-    all share similar visual weight — consider fontWeight=''bold'' for title and bumping
-    title fontSize to 17-18 to create clearer hierarchy'
+  - 'DE-01/DE-02: Good aesthetic foundation but spines (all 4 axis domain lines) are
+    still present — for a constellation diagram the standard L-frame or no-spine approach
+    would improve visual refinement'
+  - 'DE-03: Color-coded error magnitude tells a story but visual hierarchy could be
+    stronger — consider making the ideal cross markers more prominent (e.g., slightly
+    larger or with a shadow/halo) to better anchor the eye'
+  - 'VQ-01: Tick labels at labelFontSize=10 are at the minimum readable size on the
+    2400×2400 canvas — bumping to 11–12 would improve mobile readability'
+  - 'VQ-03: Received symbol size=40 (opacity=0.35) produces faint dots at this density;
+    size=55–65 would improve cluster visibility without overplotting'
+  - 'LM-02: The interactive hover feature is good but the static PNG loses it — consider
+    adding a static visual cue (e.g., a subtle annotation indicating the nearest-point
+    feature exists in the HTML version)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-constellation-diagram · altair · pyplots.ai" in dark ink, clearly readable. Axis labels "In-Phase (I)" and "Quadrature (Q)" in dark INK_SOFT color, readable. Tick labels at ±5, ±4, ... ±1, 0 on both axes in dark INK_SOFT, readable. Dashed decision boundary lines (8-5 dash pattern) in muted gray, subtle and non-dominant.
-      Data: 1000 received symbols rendered as teal-to-blue circles (imprint_seq: #009E73 low-error → #4467A3 high-error), 16 ideal constellation points as red crosses (#AE3030 semantic anchor), Error Magnitude gradient legend on the right (0.0 to 1.1). EVM = 14.0% annotation in bold monospace dark text at top-right.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+      Background: warm off-white #FAF8F1 — correct, no pure white
+      Chrome: title "scatter-constellation-diagram · python · altair · anyplot.ai" in bold dark ink, fills ~78% of width, fully visible; X-axis label "In-Phase (I)" and Y-axis label "Quadrature (Q)" in dark ink, readable; numeric tick labels (-5 to 5) in secondary ink at small but legible size; "Error Mag." legend title and gradient labels (0.0–1.1) readable on elevated-bg frame
+      Data: 16 cross markers in matte red (#AE3030) at the 16-QAM ideal points — clearly visible at size=300; 1000 received symbols as small circles color-coded from brand green (#009E73, low error) to Imprint blue (#4467A3, high error) with opacity=0.35; dashed decision-boundary lines at ±2, ±4, 0 in INK_MUTED at opacity=0.45; "EVM = 14.0%" annotation in bold monospace ink in upper-right
+      Legibility verdict: PASS — all text readable, good contrast, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in near-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels rendered in #B8B7B0 (INK_SOFT dark token), clearly visible against near-black. Dashed boundary lines in muted tone, subtle but visible. Legend text in light INK_SOFT, readable. EVM annotation in near-white INK color, clearly readable.
-      Data: Received symbols maintain identical teal-to-blue gradient (imprint_seq colors #009E73 → #4467A3 unchanged from light render). Red cross ideal points (#AE3030) clearly visible. Colors identical to light render — only chrome has flipped.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements are light-colored and clearly visible against the near-black background
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: same title now in light cream (#F0EFE8), fully readable; axis labels in light INK token; tick labels in secondary light INK_SOFT (#B8B7B0), readable; legend frame in elevated dark bg (#242420) with light text — no dark-on-dark failures detected
+      Data: data colors are identical to light render — brand green → Imprint blue gradient unchanged; matte red cross markers at same positions; decision boundaries in lighter INK_MUTED (#A8A79F); EVM annotation in light INK
+      Legibility verdict: PASS — all text clearly readable on dark surface, no dark-on-dark failures, brand green #009E73 remains well-visible on the dark background
   criteria_checklist:
     visual_quality:
       score: 28
@@ -68,92 +64,86 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=16, axis=12, ticks=10, legend=10,
-          EVM annotation=11. Both themes readable. Minor deduction: EVM annotation
-          at fontSize=11 (44 source-px) is slightly small for thumbnail scaling.'
+        comment: Font sizes explicitly set throughout; title, axis labels, EVM annotation
+          all readable in both themes. Tick labels at labelFontSize=10 are at the
+          minimum — slightly small for mobile at 2400×2400.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap in either render. Legend positioned right, separated
-          from chart. EVM annotation at (4.0, 4.5) in upper-right corner with no collisions.
+        comment: No overlapping text elements; EVM annotation positioned at (4.0,
+          4.5) clear of data clusters; decision boundaries do not obscure text.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: '1000 symbols at size=40 / opacity=0.35 appropriate for density (300+
-          range). 16 clusters clearly distinguishable. Red crosses (size=300) prominent.
-          Minor: base opacity 0.35 makes individual symbols somewhat dim; 0.4 would
-          improve clarity.'
+        comment: Ideal crosses (size=300) clearly visible; 1000 received symbols at
+          size=40/opacity=0.35 visible but slightly faint — modestly undersized for
+          the cluster density at 2400×2400.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Sequential gradient distinguishable from ideal-point red crosses
-          by both color and shape (circle vs cross). CVD-safe: green-to-blue gradient
-          has good luminance variation; red crosses provide shape+color redundancy.'
+        comment: imprint_seq (green→blue) is CVD-safe; red cross markers differ from
+          circles by shape too — no red/green sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 format appropriate for constellation diagram. Chart
-          fills ~80% of canvas area. Symmetric equal-domain axes [-5.5, 5.5] preserve
-          constellation geometry. Legend compact on right side. No clipping detected.
+        comment: Square 2400×2400 canvas appropriate for symmetric constellation;
+          chart content fills ~55–60% of canvas; legend positioned right; balanced
+          whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''In-Phase (I)'' — descriptive with component notation.
-          Y-axis: ''Quadrature (Q)'' — descriptive with component notation. Both match
-          the standard IEEE/3GPP I/Q naming convention.'
+        comment: In-Phase (I) and Quadrature (Q) are standard RF engineering axis
+          labels with abbreviations. Title follows mandated format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly built from [#009E73, #4467A3] for continuous
-          error magnitude. Ideal points use #AE3030 (Imprint position 5, semantic
-          matte red) as error/reference anchor — legitimate semantic exception. Backgrounds
-          #FAF8F1/#1A1A17 correct. All chrome tokens theme-adaptive.'
+        comment: 'Continuous data uses imprint_seq (SEQ_LOW=#009E73, SEQ_HIGH=#4467A3).
+          Ideal point color #AE3030 is a valid semantic anchor (error/reference role).
+          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Thoughtful semantic color choices (imprint_seq for error gradient,
-          #AE3030 semantic anchor for reference points). Interactive hover with conditional
-          opacity/size is a design feature. Above generic defaults but not at publication-ready
-          level — typography hierarchy is modest, title weight not distinguished.'
+        comment: 'Strong design: custom Imprint palette, EVM annotation in monospace
+          adds domain-authentic feel, intentional semantic hierarchy (red ideal crosses
+          vs gradient received symbols). Above configured defaults but not FiveThirtyEight-level
+          polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid disabled — good. Dashed boundary lines replace grid with meaningful
-          structural guides. However, four-sided bounding box (configure_view stroke=INK_SOFT)
-          is not removed. Missing the canonical top/right spine removal per style
-          guide. Some refinement present but not fully polished.
+        comment: Grid disabled; dashed decision boundaries at low opacity are subtle;
+          legend styled with elevated-bg frame; configure_view(stroke=None) removes
+          view border. All 4 axis domain lines still visible — typical L-frame refinement
+          not applied.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EVM=14.0% annotation communicates signal quality concisely. Error-magnitude
-          color gradient creates visual hierarchy — viewer immediately sees which
-          symbols are well-received vs noisy. Decision boundaries help interpret symbol
-          decision regions. Hover selection adds exploratory depth. Above default
-          data display.
+        comment: 'Clear story: EVM = 14.0% gives immediate quality metric; error-magnitude
+          color gradient shows which symbols are noisiest; red ideal crosses create
+          strong focal anchors. Visual hierarchy guides eye well.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -161,36 +151,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter plot (constellation diagram). 16-QAM modulation
-          scheme with 16 ideal points on 4x4 grid and received symbol scatter.
+        comment: Correct I/Q scatter constellation diagram for 16-QAM.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 8 spec requirements met: 16-QAM scheme, ideal crosses (#AE3030),
-          semi-transparent received symbols, dashed decision boundaries, EVM annotation,
-          I/Q axis labels, equal aspect ratio (equal domains), origin-centered symmetric
-          limits.'
+        comment: 'All features present: ideal cross markers, semi-transparent received
+          symbols, dashed decision boundaries, EVM annotation, equal aspect ratio,
+          symmetric axis limits centered at origin.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I (in-phase) on X-axis, Q (quadrature) on Y-axis — correct. All 1000
-          received symbols visible within ±5.5 domain. Tooltips map I, Q, Error, Nearest
-          I/Q correctly.
+        comment: I on X-axis, Q on Y-axis; all 16 ideal points and 1000 received symbols
+          visible.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title ''scatter-constellation-diagram · altair · pyplots.ai'' is
-          wrong on two counts: (1) missing ''python ·'' language component — required
-          format is ''{spec-id} · {language} · {library} · anyplot.ai''; (2) uses
-          ''pyplots.ai'' instead of ''anyplot.ai''. Legend ''Error Mag.'' is reasonable
-          for the gradient. Score 1/3 (partially correct: spec-id and library present,
-          language and domain wrong).'
+        passed: true
+        comment: 'Title: ''scatter-constellation-diagram · python · altair · anyplot.ai''
+          — exact mandated format. Legend ''Error Mag.'' correctly labels the continuous
+          color scale.'
     data_quality:
       score: 15
       max: 15
@@ -200,27 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All constellation diagram features shown: 16-QAM full 4x4 symbol
-          grid, noise-scattered received symbols, error magnitude variation across
-          symbols, decision boundary structure, interactive exploration. 500-2000
-          symbol range met (1000 symbols).'
+        comment: 'Shows all aspects: 16 ideal points, noise-spread received symbols,
+          error magnitude variation, decision boundaries, computed EVM metric.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is a real, widely-used modulation scheme (Wi-Fi, LTE, 5G).
-          SNR=20dB is realistic for practical receivers. Ideal points at ±1/±3 match
-          the standard 16-QAM unit normalization. Neutral technical domain (wireless
-          communications engineering).
+        comment: 16-QAM is the canonical modulation scheme for Wi-Fi/5G/cable; 20
+          dB SNR is realistic; neutral telecommunications engineering domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values factually correct: signal_power computed from ideal constellation
-          (=10 for standard 16-QAM), noise_std=sqrt(signal_power/SNR)=0.316, EVM=sqrt(2)*noise_std/rms_signal=14.1%
-          matches displayed 14.0%. Physically consistent.'
+        comment: Standard 16-QAM grid at ±1, ±3; axis limits ±5.5 appropriate; EVM
+          ~14% is mathematically correct for 2D noise at 20 dB SNR; 1000 symbols is
+          appropriate sample size.
     code_quality:
       score: 10
       max: 10
@@ -230,37 +210,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear flow: sys.path fix → imports → theme
-          tokens → data generation → chart layers → combine → save. Multiple chart
-          layers appropriate for layered Altair spec.'
+        comment: No functions or classes; clean Imports → Data → Plot → Save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os (ANYPLOT_THEME), sys (path fix), altair,
-          numpy, pandas, PIL.Image (canvas padding). Standard library imports (os,
-          sys) per rules are fine.'
+        comment: 'All imports used: altair, numpy, pandas, PIL.Image; os/sys used
+          for theme and path fix.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Altair code. No over-engineering. sys.path manipulation
-          is a known necessary pattern. No fake UI elements.
+        comment: Clean Altair layer composition; interactive selection is appropriate
+          for an interactive library, not fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL padding to exact
-          2400x2400 target. Modern Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
+          API used.
     library_mastery:
       score: 9
       max: 10
@@ -270,20 +247,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Altair usage: alt.layer() composition, proper Q/N encoding
-          types, alt.Scale with domain control, alt.Legend, alt.Title with anchor/offset,
-          configure_view/configure_axis/configure_title/configure_legend theming —
-          all idiomatic Vega-Lite patterns.'
+        comment: 'Exemplary Altair: alt.layer() composition, configure_* for global
+          styling, alt.Scale with domain control, alt.condition() for reactive encoding,
+          alt.Title with anchor/offset — all idiomatic high-level API.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Altair-distinctive: selection_point(on=''pointerover'', nearest=True)
-          with alt.condition() for hover-driven opacity+size changes; tooltip encoding
-          with Tooltip(format=''.3f''); add_params() binding; HTML export alongside
-          PNG. These features are unique to Altair''s declarative grammar.'
-  verdict: REJECTED
+        comment: alt.selection_point(on='pointerover', nearest=True) with alt.condition()
+          for reactive size/opacity is distinctively Altair's Vega-Lite interaction
+          model. Layer composition of 5 chart types is clean and expressive in a way
+          unique to the grammar-of-graphics approach.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -291,7 +267,7 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
+  - colorbar
   patterns:
   - data-generation
   dataprep: []
