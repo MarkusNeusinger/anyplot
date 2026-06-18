@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-18
@@ -129,6 +129,7 @@ sns.scatterplot(
 )
 
 # ── Ideal constellation markers ────────────────────────────────────────────
+IDEAL_EDGE = "#FFFFFF" if THEME == "light" else "#000000"
 sns.scatterplot(
     data=df_ideal,
     x="In-Phase (I)",
@@ -136,7 +137,7 @@ sns.scatterplot(
     color=INK,
     s=200,
     marker="X",
-    edgecolor=PAGE_BG,
+    edgecolor=IDEAL_EDGE,
     linewidth=1.2,
     ax=ax,
     legend=False,
@@ -163,7 +164,7 @@ legend = ax.legend(
     title="Quadrant",
     title_fontsize=8,
     fontsize=7,
-    loc="upper left",
+    loc="lower right",
     framealpha=0.9,
     edgecolor=INK_SOFT,
     markerscale=1.5,
@@ -175,13 +176,13 @@ for text in legend.get_texts():
 # ── EVM annotation ─────────────────────────────────────────────────────────
 ax.text(
     0.97,
-    0.03,
+    0.97,
     f"EVM = {evm_pct:.1f}%",
     transform=ax.transAxes,
     fontsize=9,
     fontweight="medium",
     ha="right",
-    va="bottom",
+    va="top",
     color=INK,
     bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
