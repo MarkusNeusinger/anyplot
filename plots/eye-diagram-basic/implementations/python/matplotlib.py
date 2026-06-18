@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: matplotlib 3.11.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-18
@@ -19,8 +19,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Imprint sequential colormap for density heatmap (single-polarity continuous data)
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+# Imprint sequential colormap — 3-stop green→cyan→blue for richer visual depth
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#2ABCCD", "#4467A3"])
 imprint_seq.set_bad(color=PAGE_BG)
 
 # Data — simulated NRZ signal with controlled noise and jitter
@@ -71,15 +71,24 @@ eye_width = 1.0 - 4 * jitter_sigma  # ~0.88 UI
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-ax.imshow(h_masked, origin="lower", aspect="auto", extent=[0, 2, -0.3, 1.3], cmap=imprint_seq, interpolation="bilinear")
+im = ax.imshow(
+    h_masked, origin="lower", aspect="auto", extent=[0, 2, -0.3, 1.3], cmap=imprint_seq, interpolation="bilinear"
+)
 
-# Eye height annotation — vertical arrow in the second eye opening
-t_annot = 1.70
+# Nominal signal level reference lines at 0 V and 1 V
+for ref_v in (0.0, 1.0):
+    ax.axhline(ref_v, color=INK_SOFT, linestyle="--", linewidth=0.8, alpha=0.40)
+
+# Faint y-axis grid to aid voltage estimation (drawn above heatmap)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.6, color=INK)
+
+# Eye height annotation — vertical arrow in the second eye opening (shifted left from edge)
+t_annot = 1.62
 ax.annotate(
     "", xy=(t_annot, 0.10), xytext=(t_annot, 0.90), arrowprops={"arrowstyle": "<->", "color": INK_SOFT, "lw": 1.2}
 )
 ax.text(
-    1.745,
+    1.67,
     0.50,
     f"Eye H = {eye_height:.2f}V",
     fontsize=7,
@@ -103,6 +112,13 @@ ax.text(
     ha="center",
     bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85, "boxstyle": "round,pad=0.2"},
 )
+
+# Colorbar — trace density scale (primary matplotlib heatmap feature)
+cbar = fig.colorbar(im, ax=ax, shrink=0.75, pad=0.02, aspect=25)
+cbar.set_label("Trace density (log)", fontsize=8, color=INK_SOFT)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+cbar.ax.set_facecolor(PAGE_BG)
 
 # Style
 title = "eye-diagram-basic · python · matplotlib · anyplot.ai"
