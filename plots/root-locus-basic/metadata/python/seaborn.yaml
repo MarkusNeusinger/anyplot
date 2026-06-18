@@ -1,49 +1,59 @@
 library: seaborn
+language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:23:06Z'
-updated: '2026-03-20T21:36:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23362981725
+updated: '2026-06-17T23:55:01Z'
+generated_by: claude-sonnet
+workflow_run: 27726793724
 issue: 4414
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Mathematically correct root locus computation with proper branch tracking via
-    nearest-neighbor matching
-  - Excellent data storytelling with stability boundary as a prominent focal point
-  - All spec requirements fully implemented including damping ratio and natural frequency
-    reference lines
-  - Professional styling with custom palette, refined legend, and subtle reference
-    grid
-  - Clean deterministic code with well-organized structure
+  - 'Perfect Imprint palette compliance — Branch 1 #009E73, Branch 2 #C475FD, Branch
+    3 #4467A3 in canonical order; stability crossings semantically assigned to matte
+    red #AE3030; warm-cream and near-black backgrounds correct in both renders'
+  - 'Comprehensive spec compliance: open-loop poles (X markers), direction arrows
+    (annotate arrowheads), real-axis locus bands, stability boundary crossings (red
+    diamonds with callout), damping ratio reference lines (dashed), natural frequency
+    semicircles (dotted), equal-aspect canvas'
+  - Full theme adaptation — open-loop poles render in INK token (dark on light, light
+    on dark); all text chrome adapts cleanly; no dark-on-dark failures in the dark
+    render
+  - Engineering context communicated through legend title 'G(s) = 1 / [s(s+1)(s+3)]',
+    annotated stability crossing 'K = 12 | jω = ±1.73', and zeta labels on reference
+    lines
+  - Square 2400×2400 px canvas is the correct choice for an equal-aspect root-locus
+    plot; all font sizes explicitly set and well-proportioned
   weaknesses:
-  - Library mastery limited by inherent mismatch between seaborn strengths and root
-    locus plot type
-  - Canvas utilization slightly reduced by equal aspect ratio constraint within 16:9
-    figure
-  image_description: 'The plot displays a root locus diagram for the transfer function
-    G(s) = 1/[s(s+1)(s+3)]. Three branches are rendered in distinct colors: Branch
-    1 (steel blue) extends leftward along the real axis from the pole at s=0, Branch
-    2 (orange) curves upward from the real axis into the upper half of the complex
-    plane crossing the imaginary axis, and Branch 3 (green) curves downward into the
-    lower half-plane. Three large black X markers indicate open-loop poles at s=0,
-    s=-1, and s=-3. Two red diamond markers highlight the imaginary axis crossings
-    (stability boundary) at approximately ±j1.73. A prominent red annotation box reads
-    "K = 12 | jω = ±1.73" with an arrow pointing to the upper crossing. Faint dashed
-    gray lines show constant damping ratio contours with ζ=0.5 and ζ=0.9 labeled in
-    subtle italic gray text. Real-axis segments are highlighted with thicker semi-transparent
-    blue bands between [-8,-3] and [-1,0]. Direction arrows on each branch indicate
-    increasing gain. The legend in the upper-left shows the transfer function in italics
-    as its title with three branch labels. Top and right spines are removed. Title
-    reads "root-locus-basic · seaborn · pyplots.ai" with axes labeled "Real Axis (σ)"
-    and "Imaginary Axis (jω)". Equal aspect ratio is maintained.'
+  - 'Design Excellence ceiling: the center region near the origin is visually busy
+    where three branches converge, the stability diamonds, the axes, and the direction
+    arrows all cluster — DE-01 is 6/8 rather than 8/8 because the layout is polished
+    but not at FiveThirtyEight publication tier'
+  - 'Library Mastery LM-02: heavy reliance on matplotlib APIs (ax.annotate, ax.plot,
+    ax.text, ax.axhline, ax.axvline) for reference lines, direction arrows, and annotations
+    reduces seaborn distinctiveness; sns.lineplot''s hue-grouping is well-used but
+    more seaborn-native approaches for the decorative layers would raise LM-02'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "root-locus-basic · python · seaborn · anyplot.ai" in dark ink, approximately 60-65% of plot width, fully readable. Axis labels "Real Axis (σ)" and "Imaginary Axis (jω)" clearly visible at appropriate sizes. Tick labels small but legible.
+      Data: Branch 1 in #009E73 (brand green) as a near-horizontal line along the real axis; Branch 2 in #C475FD (lavender) rising to the upper-right; Branch 3 in #4467A3 (blue) descending to the lower-right. Open-loop poles at (0,0), (-1,0), (-3,0) as dark X markers. Stability boundary crossings at approximately (0, ±1.73) as large red diamonds (#AE3030). Annotation box "K = 12 | jω = ±1.73" with arrow pointing to upper crossing. Dashed damping ratio reference lines (ζ=0.3, 0.5, 0.7, 0.9) and dotted natural-frequency semicircles (ωn=2,4) in muted gray. Semi-transparent green bands on the real axis mark the locus segments. Legend in upper left with transfer function title.
+      Legibility verdict: PASS — all text clearly readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels now render in light cream (#F0EFE8), clearly readable against the dark background. Tick labels in secondary ink (#B8B7B0) — visible and not dark-on-dark.
+      Data: Branch colors identical to light render — #009E73, #C475FD, #4467A3. Open-loop poles now render as white X markers (INK token adapts correctly). Stability crossings remain matte red #AE3030. All data elements clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures detected; INK token correctly applied to axis labels, ticks, and title.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -51,44 +61,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotation 14pt, legend 13-14pt'
+        comment: 'All font sizes explicitly set: title 12pt (with length-ratio scaling),
+          axis labels 10pt, tick labels 8pt, legend 8pt. Well-proportioned in both
+          renders.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend, annotation, and damping labels
-          well-separated
+        comment: No text overlaps with other text or data elements. Annotation box
+          placed at (2.5, 3.53) — clear of branches.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Branch lines at 2.5 width, pole markers s=450, crossing markers s=380,
-          all clearly visible
+        comment: Locus branches at linewidth=2.5, open-loop poles at s=350, stability
+          crossings at s=300 — all clearly visible and well-sized.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; stability crossings use matte red with
+          redundant diamond shape encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/green palette is colorblind-safe; red for stability boundary
-          distinct
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Equal aspect ratio creates slightly square plot in 16:9 canvas, ~60-65%
-          utilization
+        comment: Square 2400×2400 px appropriate for equal-aspect root locus. Plot
+          fills ~70-80% of canvas with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (σ) and Imaginary Axis (jω) with proper mathematical notation
+        comment: 'Descriptive with units: ''Real Axis (σ)'' and ''Imaginary Axis (jω)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order for branches; stability
+          crossings semantically #AE3030; warm-cream/#1A1A17 backgrounds correct;
+          full chrome adaptation in both renders.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -96,22 +115,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, refined legend with italic transfer function title,
-          prominent red stability annotation
+        comment: 'Strong design above defaults: direction arrows, callout annotation,
+          reference lines with semantic coloring, transfer function in legend. Not
+          quite FiveThirtyEight tier but clearly polished.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, reference grid at very low alpha, refined legend
-          frame, generous whitespace
+        comment: Spines removed via sns.despine; grid alpha=0.12; reference lines
+          at low alpha (0.35/0.3); legend styled with custom title. Good but not 'every
+          detail polished'.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Stability boundary crossing as clear focal point, direction arrows
-          guide viewer, transfer function in legend
+        comment: Clear focal point at stability boundary (red diamonds + annotation);
+          direction arrows guide the viewer on how poles move; damping reference lines
+          give engineering context. Guides viewer to key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -121,27 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot showing pole migration as gain varies
+        comment: 'Correct root locus plot: continuous curves in complex plane, equal
+          aspect, centered on origin.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: X markers, direction arrows, real-axis segments,
-          stability crossings, reference grid, equal scaling'
+        comment: 'All spec features present: open-loop poles (X), no zeros (system
+          has none), direction arrows, real-axis segments, imaginary axis crossings,
+          damping ratio lines, natural frequency semicircles, equal aspect.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, all data visible within axis limits
+        comment: X=real part, Y=imaginary part; equal axis scaling; all data visible
+          within xlim/ylim.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend with branch labels and transfer function
-          title
+        comment: Title 'root-locus-basic · python · seaborn · anyplot.ai' correct.
+          Legend labels Branch 1/2/3 with transfer function context.
     data_quality:
       score: 15
       max: 15
@@ -151,21 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple branches, breakaway, complex conjugate migration, stability
-          crossing, real-axis segments
+        comment: 'Shows all aspects: three branches, gain variation K=0..200, imaginary
+          axis crossings, damping ratio lines, frequency semicircles, direction arrows,
+          real-axis segments.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic textbook transfer function G(s)=1/[s(s+1)(s+3)], widely used
-          in control theory
+        comment: G(s) = 1/[s(s+1)(s+3)] is a classic, real-world third-order control
+          system. Neutral engineering/science context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gain 0-200, poles at 0/-1/-3, K_critical=12 all mathematically correct
+        comment: Poles at 0, -1, -3 factually correct; K_critical=12 verified by Routh
+          criterion; jω crossings at ±√3 ≈ ±1.73 mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -175,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic mathematical computation, no random data
+        comment: Deterministic polynomial root-finding; no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports actively used
+        comment: os, matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity for branch tracking
+        comment: Clean, well-organized, appropriate complexity. Good pandas DataFrame
+          usage.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300, current API
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -209,25 +237,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of lineplot/scatterplot with hue, DataFrame data flow, set_theme,
-          despine
+        comment: sns.lineplot with hue-grouping, sns.scatterplot, sns.set_theme, sns.despine,
+          DataFrame-first API — idiomatic. Falls back to matplotlib for annotations/reference
+          lines which is acceptable but slightly reduces score.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn used for hue grouping and theming, but core visualization
-          relies on matplotlib for annotations and arrows
+        passed: true
+        comment: seaborn hue-based auto-legend for branches is distinctive; sort=False
+          preserves branch order. Many decorative elements use matplotlib APIs directly
+          rather than seaborn's more advanced features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
