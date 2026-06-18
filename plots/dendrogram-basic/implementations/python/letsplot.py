@@ -1,8 +1,9 @@
-""" pyplots.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 87/100 | Updated: 2026-04-05
+Library: letsplot | Python
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,7 @@ from lets_plot import (
     ggsize,
     labs,
     layer_tooltips,
-    scale_color_identity,
+    scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -34,7 +35,18 @@ from sklearn.datasets import load_iris
 
 LetsPlot.setup_html()
 
-# Data - Iris flower measurements (15 samples, 3 species)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — positions 1-4 in canonical order
+CLUSTER_COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+CLUSTER_BREAKS = ["Setosa", "Versicolor", "Virginica", "Cross-cluster"]
+
+# Data — Iris flower measurements (15 samples, 3 species)
 iris = load_iris()
 np.random.seed(42)
 indices = np.sort(np.concatenate([np.random.choice(np.where(iris.target == k)[0], 5, replace=False) for k in range(3)]))
@@ -45,21 +57,16 @@ labels = [f"{species_names[iris.target[i]][:3]}-{j + 1}" for j, i in enumerate(i
 # Hierarchical clustering (Ward's method)
 linkage_matrix = linkage(features, method="ward")
 
-# Build dendrogram coordinates from linkage matrix
+# Build dendrogram segment coordinates from linkage matrix
 n = len(labels)
 leaf_positions = {i: float(i) for i in range(n)}
 node_heights = dict.fromkeys(range(n), 0.0)
 segments = []
 
-# Color threshold — splits into 3 major clusters
+# Color threshold at 70% of max distance — splits into 3 major species clusters
 max_dist = linkage_matrix[:, 2].max()
 color_threshold = 0.7 * max_dist
 
-# Curated palette: muted, publication-quality tones
-palette = {"above": "#5B7B9A", "Setosa": "#2D8E6F", "Versicolor": "#D4883B", "Virginica": "#8B6AAE"}
-cluster_display = {"above": "Cross-cluster", "Setosa": "Setosa", "Versicolor": "Versicolor", "Virginica": "Virginica"}
-node_cluster = {i: labels[i].split("-")[0] for i in range(n)}
-# Map short prefixes to full species names
 prefix_to_species = {"Set": "Setosa", "Ver": "Versicolor", "Vir": "Virginica"}
 node_cluster = {i: prefix_to_species[labels[i].split("-")[0]] for i in range(n)}
 
@@ -73,104 +80,95 @@ for i, (left, right, dist, _) in enumerate(linkage_matrix):
     node_heights[new_node] = dist
 
     left_cl, right_cl = node_cluster[left], node_cluster[right]
-    node_cluster[new_node] = left_cl if left_cl == right_cl else "above"
-    cluster_label = node_cluster[new_node] if dist < color_threshold else "above"
-    color = palette[cluster_label]
-    display = cluster_display[cluster_label]
+    node_cluster[new_node] = left_cl if left_cl == right_cl else "Cross-cluster"
+    cluster_label = node_cluster[new_node] if dist < color_threshold else "Cross-cluster"
 
-    left_height = node_heights[left]
-    right_height = node_heights[right]
-
-    for seg in [
-        (left_pos, left_height, left_pos, dist),
-        (right_pos, right_height, right_pos, dist),
-        (left_pos, dist, right_pos, dist),
-    ]:
+    lh, rh = node_heights[left], node_heights[right]
+    for seg in [(left_pos, lh, left_pos, dist), (right_pos, rh, right_pos, dist), (left_pos, dist, right_pos, dist)]:
         segments.append(
             {
                 "x": seg[0],
                 "y": seg[1],
                 "xend": seg[2],
                 "yend": seg[3],
-                "color": color,
+                "cluster": cluster_label,
                 "merge_dist": round(dist, 2),
-                "cluster": display,
             }
         )
 
 segment_df = pd.DataFrame(segments)
 
-# Leaf labels and markers
-leaf_data = []
-for i in range(n):
-    species = prefix_to_species[labels[i].split("-")[0]]
-    leaf_data.append(
-        {"x": leaf_positions[i], "y": 0, "label": labels[i], "color": palette[species], "species": species}
-    )
+leaf_data = [
+    {"x": leaf_positions[i], "y": 0, "label": labels[i], "cluster": prefix_to_species[labels[i].split("-")[0]]}
+    for i in range(n)
+]
 label_df = pd.DataFrame(leaf_data)
 
-# Legend entries (manual via geom_point placed off-canvas, brought into legend via tooltips)
-legend_items = pd.DataFrame(
-    [
-        {"x": -99, "y": -99, "xend": -98, "yend": -99, "color": palette[s], "cluster": s, "merge_dist": 0}
-        for s in ["Setosa", "Versicolor", "Virginica", "above"]
-    ]
-)
-
-# Plot
 plot = (
     ggplot()
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend", color="color"),
+        aes(x="x", y="y", xend="xend", yend="yend", color="cluster"),
         data=segment_df,
-        size=2.0,
+        size=1.5,
         tooltips=layer_tooltips().title("@cluster").line("Merge distance|@merge_dist").min_width(180),
     )
     + geom_point(
-        aes(x="x", y="y", color="color"),
+        aes(x="x", y="y", color="cluster"),
         data=label_df,
-        size=5,
+        size=2.5,
         shape=16,
-        tooltips=layer_tooltips().title("@species").line("Sample|@label"),
+        show_legend=False,
+        tooltips=layer_tooltips().title("@cluster").line("Sample|@label"),
     )
     + geom_text(
-        aes(x="x", y="y", label="label", color="color"),
-        data=label_df.assign(y=-0.35),
+        aes(x="x", y="y", label="label", color="cluster"),
+        data=label_df.assign(y=-max_dist * 0.05),
         angle=45,
         hjust=1,
         vjust=1,
-        size=13,
+        size=4,
         family="monospace",
+        show_legend=False,
     )
-    + geom_hline(yintercept=color_threshold, linetype="dashed", color="#9EAAB8", size=0.8)
+    + geom_hline(yintercept=color_threshold, linetype="dashed", color=INK_MUTED, size=0.8)
     + geom_text(
         aes(x="x", y="y", label="label"),
-        data=pd.DataFrame([{"x": n - 1.5, "y": color_threshold + 0.25, "label": f"threshold = {color_threshold:.1f}"}]),
-        size=11,
-        color="#7A8A9A",
+        data=pd.DataFrame(
+            [{"x": n - 1.8, "y": color_threshold + max_dist * 0.03, "label": f"threshold = {color_threshold:.1f}"}]
+        ),
+        size=3.5,
+        color=INK_MUTED,
         hjust=1,
         family="monospace",
     )
-    + scale_color_identity()
+    + scale_color_manual(values=CLUSTER_COLORS, breaks=CLUSTER_BREAKS, name="Cluster")
     + scale_x_continuous(expand=[0.06, 0.02])
-    + scale_y_continuous(name="Ward Linkage Distance", expand=[0.15, 0.01], breaks=[0, 2, 4, 6, 8, 10, 12])
-    + labs(x="", title="dendrogram-basic · letsplot · pyplots.ai")
+    + scale_y_continuous(
+        name="Ward Linkage Distance",
+        limits=[-max_dist * 0.14, max_dist * 1.07],
+        expand=[0, 0],
+        breaks=[0, 2, 4, 6, 8, 10, 12],
+    )
+    + labs(x="", title="dendrogram-basic · letsplot · anyplot.ai")
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="#2C3E50"),
-        plot_background=element_rect(fill="white", color="white"),
-        axis_title_y=element_text(size=20, color="#4A5568", margin=[0, 12, 0, 0]),
-        axis_text_y=element_text(size=16, color="#6B7B8D"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title_y=element_text(size=12, color=INK_SOFT, margin=[0, 8, 0, 0]),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
         axis_text_x=element_blank(),
         axis_ticks_x=element_blank(),
-        axis_ticks_y=element_line(size=0.4, color="#D0D8E0"),
-        axis_line_y=element_line(size=0.6, color="#CBD5E0"),
-        panel_grid_major_y=element_line(size=0.3, color="#EDF2F7"),
-        plot_margin=[50, 30, 30, 20],
+        axis_ticks_y=element_line(size=0.4, color=INK_SOFT),
+        axis_line_y=element_line(size=0.6, color=INK_SOFT),
+        panel_grid_major_y=element_line(size=0.3, color=INK_MUTED),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=10, color=INK),
+        plot_margin=[25, 15, 20, 10],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
