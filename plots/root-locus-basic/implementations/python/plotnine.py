@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: plotnine 0.15.7 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-18
@@ -186,14 +186,6 @@ wn_label_df = pd.DataFrame(
 sigma_fmt = custom_format("{:.0f}")
 
 
-def jw_label_fn(values):
-    result = []
-    for v in values:
-        vi = int(round(v))
-        result.append("0" if vi == 0 else f"{vi}j")
-    return result
-
-
 # Plot
 plot = (
     ggplot()
@@ -207,13 +199,13 @@ plot = (
         damp_df, aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, linetype="dashed", size=0.45, alpha=0.5
     )
     + geom_text(
-        damp_label_df, aes(x="lx", y="ly", label="label"), color=INK_MUTED, size=2.8, fontstyle="italic", ha="center"
+        damp_label_df, aes(x="lx", y="ly", label="label"), color=INK_MUTED, size=3.2, fontstyle="italic", ha="center"
     )
     # Natural frequency circles
     + geom_path(
         wn_df, aes(x="real", y="imaginary", group="wn"), color=INK_SOFT, linetype="dotted", size=0.35, alpha=0.5
     )
-    + geom_text(wn_label_df, aes(x="real", y="imaginary", label="label"), color=INK_MUTED, size=2.8, fontstyle="italic")
+    + geom_text(wn_label_df, aes(x="real", y="imaginary", label="label"), color=INK_MUTED, size=3.2, fontstyle="italic")
     # Real axis segments
     + geom_segment(
         seg_df, aes(x="x_start", y="y", xend="x_end", yend="y"), color=INK_SOFT, size=2.0, alpha=0.45, linetype="solid"
@@ -253,7 +245,10 @@ plot = (
     + geom_vline(xintercept=0, color=INK_SOFT, size=0.4)
     + scale_color_manual(values=branch_colors)
     + scale_x_continuous(labels=sigma_fmt, breaks=[-5, -4, -3, -2, -1, 0, 1, 2])
-    + scale_y_continuous(labels=jw_label_fn, breaks=[-4, -3, -2, -1, 0, 1, 2, 3, 4])
+    + scale_y_continuous(
+        labels=lambda vs: ["0" if int(round(v)) == 0 else f"{int(round(v))}j" for v in vs],
+        breaks=[-4, -3, -2, -1, 0, 1, 2, 3, 4],
+    )
     + coord_fixed(ratio=1, xlim=(-5.2, 2.2), ylim=(-4.8, 4.8))
     + labs(
         title="root-locus-basic · python · plotnine · anyplot.ai",
