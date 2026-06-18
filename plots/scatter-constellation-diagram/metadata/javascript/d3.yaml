@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: scatter-constellation-diagram
+created: '2026-06-18T03:31:55Z'
+updated: '2026-06-18T03:39:13Z'
+generated_by: claude-sonnet
+workflow_run: 27734565356
+issue: 4562
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Exemplary spec compliance: every required feature present — ideal X crosses,
+    semi-transparent received dots, dashed decision boundaries at correct ±2/0 positions,
+    equal aspect ratio, EVM annotation computed from actual data'
+  - 'Excellent semantic color application: matte red #AE3030 for ideal reference points
+    matches the spec''s call for red crosses and the semantic role of the Imprint
+    palette''s position-5 anchor'
+  - Perfect reproducibility via Park-Miller LCG (seed 42) — no seeded Math.random
+    needed; a robust browser-side pattern
+  - Square canvas (2400×2400) with exactly equal inner dimensions (iw=ih=1020 CSS
+    px) ensures mathematically correct equal aspect ratio for the constellation geometry
+  - Dynamic EVM calculation from the actual generated noise — the displayed 5.2% is
+    accurate to the data, not hard-coded
+  weaknesses:
+  - Cross markers use forEach + append instead of a D3 data-join (.selectAll().data(idealPoints).join('g'))
+    — slightly non-idiomatic for D3
+  - Axis labels at 18px bold create a slightly compressed visual hierarchy vs. the
+    22px title (only 4px gap); could drop to 16px or reduce weight to regular for
+    a cleaner separation
+  - No d3.symbolCross usage for ideal points — the d3-shape module provides a built-in
+    cross symbol that would be more idiomatic and easier to maintain than manual line
+    pairs
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-constellation-diagram · javascript · d3 · anyplot.ai" at 22px bold in dark ink, centered; axis labels "In-Phase (I)" and "Quadrature (Q)" at 18px bold in dark ink; tick labels (-3, -1, 0, 1, 3) at 16px in secondary ink; legend text at 15px; EVM annotation at 17px bold — all clearly readable
+      Data: 800 semi-transparent green dots (#009E73, opacity 0.45, r=4) as received symbols; 16 red X crosses (#AE3030, stroke-width 3.5) as ideal points; dashed decision boundaries at 0 and ±2 with 0.28 opacity
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, legend text, EVM annotation all rendered in light off-white/secondary-light tones — clearly readable; no dark-on-dark failures observed
+      Data: Green dots (#009E73) and red crosses (#AE3030) identical to light render — only chrome flips
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 18px bold,
+          ticks 16px, legend 15px, EVM 17px bold); well-proportioned in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend in upper-right above top-right cluster; no text/data overlaps
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Received symbols (r=4, opacity 0.45) clearly visible in tight clusters;
+          ideal crosses (s=14, stroke 3.5) prominently visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green with redundant shape encoding (dots vs crosses) ensures
+          CVD accessibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas, exact equal inner dimensions (iw=ih=1020), symmetric
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive domain-specific labels: In-Phase (I) and Quadrature
+          (Q)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'palette[0]=#009E73 for received symbols; palette[4]=#AE3030 for
+          ideal points (correct semantic exception); backgrounds #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: semantic color choice, alpha blending,
+          EVM annotation. Not yet publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed boundaries (opacity 0.28), clip path, generous margins.
+          Axis lines and ticks retained (appropriate for technical diagram).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy green/red, tight clusters communicate signal
+          quality, EVM annotation provides quantitative verdict
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 16-QAM I/Q scatter constellation diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: ideal grid ±1/±3, received dots, X crosses, dashed
+          boundaries at ±2/0, equal aspect, EVM annotation, symmetric limits'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=I component, Y=Q component; all 16 ideal points and 800 received
+          symbols correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: scatter-constellation-diagram · javascript · d3 · anyplot.ai.
+          Legend: Received symbols (circle) and Ideal points (16-QAM) (cross)'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 symbol positions populated, noise clusters, decision boundaries,
+          quantitative EVM metric
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 16-QAM is standard for Wi-Fi/5G/DVB; Gaussian noise model is canonical;
+          neutral scientific domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized ±1/±3 grid is standard; NOISE_STD=0.115 → EVM 5.2% dynamically
+          computed, consistent with ~20dB SNR
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure; LCG helpers necessary for browser-side reproducibility
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Park-Miller LCG seed 42; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global and ANYPLOT_TOKENS/SIZE; no extraneous references
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic D3 joins, clean SVG grouping, clip path pattern; no fake
+          UI, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct square orientation directive; harness emits plot-{theme}.png
+          and .html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct D3 scales, axis generators with tickValues, data joins, clip-path;
+          cross markers use forEach+append instead of data binding
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG clipPath, data-driven boundary lines via array join, dynamic
+          EVM computation; could use d3.symbolCross for more idiomatic cross markers
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - clip-path
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
