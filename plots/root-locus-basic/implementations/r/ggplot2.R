@@ -5,8 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -67,7 +65,6 @@ poles <- data.frame(re = c(0, -2, -4), im = c(0, 0, 0))
 crossing <- data.frame(re = c(0, 0), im = c(sqrt(8), -sqrt(8)))
 
 # Arrow data: show direction of increasing gain along each branch
-# Pick a mid-gain point and a slightly higher gain point for arrow segments
 arrow_k_vals <- c(6, 18, 6)  # one per branch at a distinctive location
 branch_names <- c("Branch 1", "Branch 2", "Branch 3")
 
@@ -83,12 +80,54 @@ arrow_df <- bind_rows(lapply(seq_along(branch_names), function(i) {
   }
 }))
 
-# Title scaling: "root-locus-basic · r · ggplot2 · anyplot.ai" = 43 chars -> no shrink needed
+# Damping ratio reference lines: radial rays from origin at angle arccos(zeta)
+# from the negative real axis. A pole with damping ratio zeta lies at angle
+# (pi - arccos(zeta)) from the positive real axis => direction (-zeta, sqrt(1-zeta^2)).
+zeta_vals <- c(0.2, 0.4, 0.6, 0.8)
+plot_re_max <- 7
+plot_im_max <- 6
+
+zeta_df <- bind_rows(lapply(zeta_vals, function(z) {
+  re_end <- -plot_re_max * z
+  im_end <- plot_re_max * sqrt(1 - z^2)
+  # Clip to plot bounds
+  if (abs(im_end) > plot_im_max) {
+    sc <- plot_im_max / abs(im_end)
+    re_end <- re_end * sc
+    im_end <- im_end * sc
+  }
+  rbind(
+    data.frame(x = 0, y = 0, xend = re_end, yend =  im_end),
+    data.frame(x = 0, y = 0, xend = re_end, yend = -im_end)
+  )
+}))
+
+# Natural frequency circles: concentric circles at omega_n = 1..5
+omega_df <- bind_rows(lapply(1:5, function(w) {
+  theta <- seq(0, 2 * pi, length.out = 200)
+  data.frame(re = w * cos(theta), im = w * sin(theta), grp = paste0("wn", w))
+}))
+
+# Title
 plot_title <- "root-locus-basic · r · ggplot2 · anyplot.ai"
 title_size <- 12
 
 # Plot
 p <- ggplot(df, aes(x = re, y = im, color = branch, group = branch)) +
+  # Natural frequency circles (dashed, muted — behind locus)
+  geom_path(
+    data = omega_df,
+    aes(x = re, y = im, group = grp),
+    color = INK_MUTED, linewidth = 0.3, linetype = "dashed",
+    alpha = 0.55, inherit.aes = FALSE
+  ) +
+  # Damping ratio rays (dashed, muted — behind locus)
+  geom_segment(
+    data = zeta_df,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color = INK_MUTED, linewidth = 0.3, linetype = "dashed",
+    alpha = 0.55, inherit.aes = FALSE
+  ) +
   # Axis reference lines
   geom_hline(yintercept = 0, color = INK_SOFT, linewidth = 0.4) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.4) +
@@ -132,8 +171,8 @@ p <- ggplot(df, aes(x = re, y = im, color = branch, group = branch)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG,     color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG,     color = NA),
-    panel.grid.major  = element_line(color = INK,        linewidth = 0.15),
-    panel.grid.minor  = element_line(color = INK,        linewidth = 0.08),
+    panel.grid.major  = element_line(color = INK_MUTED,  linewidth = 0.15),
+    panel.grid.minor  = element_line(color = INK_MUTED,  linewidth = 0.08),
     panel.border      = element_blank(),
     axis.line         = element_line(color = INK_SOFT,   linewidth = 0.4),
     axis.title        = element_text(color = INK,        size = 10),
