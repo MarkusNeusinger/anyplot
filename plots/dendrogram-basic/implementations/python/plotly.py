@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
 Library: plotly 6.8.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-18
@@ -26,7 +26,7 @@ colorscale = [
     INK_SOFT,  # b → above-threshold merges (theme-adaptive)
     "#4467A3",  # c → Imprint blue (cluster 3)
     "#009E73",  # g → Imprint green, brand — first cluster colour
-    INK,  # k → dark ink
+    INK_SOFT,  # k → muted ink (softens above-threshold branch rendering)
     "#954477",  # m → Imprint rose
     "#C475FD",  # r → Imprint lavender (cluster 2)
     PAGE_BG,  # w → page background (theme-adaptive)
@@ -73,7 +73,14 @@ for trace in fig.data:
 
 # Dashed cut-threshold line marks the cluster boundary
 fig.add_shape(
-    type="line", x0=0, x1=1, xref="paper", y0=3.5, y1=3.5, yref="y", line={"color": INK_SOFT, "width": 2, "dash": "dash"}
+    type="line",
+    x0=0,
+    x1=1,
+    xref="paper",
+    y0=3.5,
+    y1=3.5,
+    yref="y",
+    line={"color": INK_SOFT, "width": 2, "dash": "dash"},
 )
 fig.add_annotation(
     x=0.98,
@@ -100,6 +107,7 @@ fig.update_layout(
         "tickangle": -35,
         "showline": False,
         "zeroline": False,
+        "mirror": False,
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
@@ -109,9 +117,26 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showline": False,
         "zeroline": False,
+        "mirror": False,
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
+    },
+    xaxis2={
+        "visible": False,
+        "showticklabels": False,
+        "showline": False,
+        "showgrid": False,
+        "zeroline": False,
+        "ticks": "",
+    },
+    yaxis2={
+        "visible": False,
+        "showticklabels": False,
+        "showline": False,
+        "showgrid": False,
+        "zeroline": False,
+        "ticks": "",
     },
     margin={"l": 80, "r": 40, "t": 80, "b": 100},
     hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 12, "bordercolor": INK_SOFT},
