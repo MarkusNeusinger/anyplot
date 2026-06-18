@@ -53,24 +53,16 @@ end
 # Pairwise Euclidean distances
 D = [sqrt(sum((features[i, :] .- features[j, :]).^2)) for i in 1:n, j in 1:n]
 
-# Complete-linkage agglomerative clustering (inline — no function wrapper)
-members  = [[i] for i in 1:n]
-active   = collect(1:n)
-merges   = Tuple{Int,Int,Float64}[]
+# Complete-linkage agglomerative clustering
+members = [[i] for i in 1:n]
+active  = collect(1:n)
+merges  = Tuple{Int,Int,Float64}[]
 
 while length(active) > 1
-    best_d = Inf
-    best_ai, best_bi = 1, 2
-    for ai in 1:length(active)
-        for bi in (ai + 1):length(active)
-            ca, cb = active[ai], active[bi]
-            d = maximum(D[p, q] for p in members[ca] for q in members[cb])
-            if d < best_d
-                best_d  = d
-                best_ai = ai
-                best_bi = bi
-            end
-        end
+    best_d, best_ai, best_bi = Inf, 1, 2
+    for ai in 1:length(active), bi in (ai + 1):length(active)
+        d = maximum(D[p, q] for p in members[active[ai]] for q in members[active[bi]])
+        d < best_d && ((best_d, best_ai, best_bi) = (d, ai, bi))
     end
     ca, cb = active[best_ai], active[best_bi]
     push!(merges, (ca, cb, best_d))
@@ -81,13 +73,9 @@ end
 
 n_merges = length(merges)
 
-# Build children map for tree traversal
-node_children = Dict{Int,Tuple{Int,Int}}()
-for (i, (ca, cb, _)) in enumerate(merges)
-    node_children[n + i] = (ca, cb)
-end
+# Build children map and DFS leaf order
+node_children = Dict{Int,Tuple{Int,Int}}(n + i => (ca, cb) for (i, (ca, cb, _)) in enumerate(merges))
 
-# Iterative DFS to get leaf display order
 stack      = [n + n_merges]
 leaf_order = Int[]
 while !isempty(stack)
@@ -116,7 +104,7 @@ for (i, (_, _, h)) in enumerate(merges)
     node_y[n + i] = h
 end
 
-# Node display colors: pure-species cluster → species color; mixed → INK_SOFT
+# Node colors: pure-species cluster → species color; mixed → INK_SOFT
 node_colors = fill(INK_SOFT, n + n_merges)
 for i in 1:n
     node_colors[i] = sp_color[species_vec[i]]
@@ -124,14 +112,18 @@ end
 for (i, _) in enumerate(merges)
     new_id = n + i
     sp_set = Set(species_vec[l] for l in members[new_id])
-    if length(sp_set) == 1
-        node_colors[new_id] = sp_color[only(sp_set)]
-    end
+    length(sp_set) == 1 && (node_colors[new_id] = sp_color[only(sp_set)])
 end
 
-# Ordered tick labels and max height
 ordered_labels = [leaf_labels[leaf_order[pos]] for pos in 1:n]
 max_height     = maximum(h for (_, _, h) in merges)
+
+# Species leaf position spans for vspan! background bands
+species_spans = Dict{String, Tuple{Float64,Float64}}()
+for sp in keys(sp_color)
+    positions = [Float64(pos) for (pos, lid) in enumerate(leaf_order) if species_vec[lid] == sp]
+    isempty(positions) || (species_spans[sp] = (minimum(positions) - 0.45, maximum(positions) + 0.45))
+end
 
 # Figure
 title_str = "Iris Clustering · dendrogram-basic · julia · makie · anyplot.ai"
@@ -151,12 +143,12 @@ ax = Axis(
     titlecolor         = INK,
     xlabel             = "Sample",
     ylabel             = "Distance (complete linkage)",
-    xlabelsize         = 14,
-    ylabelsize         = 14,
+    xlabelsize         = 16,
+    ylabelsize         = 16,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xticks             = (collect(1:n), ordered_labels),
-    xticklabelsize     = 10,
+    xticklabelsize     = 11,
     yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
@@ -171,7 +163,13 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15f0),
 )
 
-# Dendrogram branches — each vertical colored by child cluster; horizontal by merged cluster
+# Species background bands — vspan! is a Makie-specific primitive
+for (sp, (lo, hi)) in species_spans
+    c = sp_color[sp]
+    vspan!(ax, [lo], [hi]; color = RGBAf(Float32(red(c)), Float32(green(c)), Float32(blue(c)), 0.07f0))
+end
+
+# Dendrogram branches
 for (i, (ca, cb, h)) in enumerate(merges)
     xa, ya = node_x[ca], node_y[ca]
     xb, yb = node_x[cb], node_y[cb]
@@ -180,8 +178,19 @@ for (i, (ca, cb, h)) in enumerate(merges)
     lines!(ax, [xa, xb], [h, h]; color = node_colors[n + i], linewidth = 2.2)
 end
 
+# Leaf node markers — scatter! composing with lines! showcases Makie's geom layering
+leaf_x      = [node_x[leaf_order[pos]] for pos in 1:n]
+leaf_colors = [node_colors[leaf_order[pos]] for pos in 1:n]
+scatter!(ax, leaf_x, zeros(n); color = leaf_colors, markersize = 9, strokewidth = 0)
+
+# Internal merge node markers
+merge_x      = [node_x[n + i] for i in 1:n_merges]
+merge_y      = [h for (_, _, h) in merges]
+merge_colors = [node_colors[n + i] for i in 1:n_merges]
+scatter!(ax, merge_x, merge_y; color = merge_colors, markersize = 7, strokewidth = 0)
+
 xlims!(ax, 0.0, Float64(n) + 1.0)
-ylims!(ax, 0.0, max_height * 1.12)
+ylims!(ax, 0.0, max_height * 1.07)
 
 # Legend
 legend_items = [
