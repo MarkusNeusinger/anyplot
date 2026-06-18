@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-06-17
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-06-18
 """
 
 import sys
