@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: root-locus-basic
 created: '2026-06-18T02:12:37Z'
-updated: '2026-06-18T02:20:01Z'
+updated: '2026-06-18T02:34:44Z'
 generated_by: claude-sonnet
 workflow_run: 27729953362
 issue: 4414
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Mathematically accurate root locus using Newton\u2019s method + analytical deflation
-    — three branches for G(s)=K/[s(s+2)(s+4)] with correct breakaway at s\u2248-0.845
-  - 'Complete spec compliance: X markers for open-loop poles, directional arrows on
-    all three branches, jω-axis crossing circles at ±j·2√2 with K=48 labels, breakaway
-    annotation, equal-aspect complex plane'
-  - Domain-specific reference lines (constant ζ=0.3/0.5/0.707 damping ratio lines,
-    ωn=1–4 circles) add genuine control-theory value beyond the minimum
-  - 'Semantic color use: amber stability boundary (imaginary axis), Imprint palette
-    for branches in canonical order, matte red for pole markers — all with appropriate
-    alpha and opacity hierarchy'
-  - 'Both themes fully pass readability: warm off-white (#FAF8F1) light / near-black
-    (#1A1A17) dark, all text visible, no dark-on-dark failures'
+  - Analytically correct root locus computation using Newton's method + polynomial
+    deflation — the physics is exact, not approximated
+  - 'All spec requirements satisfied: poles with × markers, direction arrows, real
+    axis segments, jω crossings labeled with K=48, ζ/ωn reference grid, equal aspect
+    ratio, stability boundary'
+  - 'Exceptional semantic color choices: matte red (palette[4]) for open-loop poles,
+    amber for stability boundary — strongly aligned with Imprint palette semantics'
+  - Full theme adaptation with all chrome tokens correctly applied (ink, inkSoft,
+    grid, elevatedBg, amber); data colors identical across light and dark renders
+  - 'Rich data storytelling: directional arrows indicate increasing K, annotated breakaway
+    point (K≈3.1), labeled jω crossings (K=48), and prominent amber stability boundary
+    together tell the complete root locus narrative'
   weaknesses:
-  - Reference line labels (ζ=0.3, ζ=0.5, ζ=0.707, ωn=2, ωn=4) are set at 11–12px CSS
-    — small at mobile scale (~400px), increase to 13–14px for better readability
-  - Pole marker color is hardcoded as \u0022#AE3030\u0022 in both the drawing code
-    and legend items, rather than using t.palette[4] — minor palette token inconsistency
-  - Helper functions findRealRoot() and solveDeflated() increase code complexity beyond
-    the KISS ideal; the numerical logic could be inlined or pre-computed
-  - Legend box has no stroke border and uses only opacity=0.92 fill — a thin 1px border
-    in t.grid color would improve visual definition in both themes
-  - The convergence zone near s=0 (stability boundary dashed line, pole X marker,
-    jω-crossing circle, branch convergence) is slightly crowded — a small margin between
-    the jω circle label and the locus lines would help
+  - Breakaway point annotation 'K≈3.1' uses 11px font — below safe threshold for mobile
+    readability; increase to 13px minimum
+  - Damping ratio (ζ) and natural frequency (ωn) reference annotations at 13px are
+    borderline at mobile scale (~400px width); increase to 14px to match tick label
+    size
+  - Three helper functions (findRealRoot, solveDeflated, addArrow) technically violate
+    KISS structure; addArrow() especially could be simplified or inlined as it is
+    a simple polygon construction
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct light surface ✓
-      Chrome: Title "root-locus-basic · javascript · d3 · anyplot.ai" bold 22px, centered near top — fully readable dark text. Axis labels "Real Axis σ" (bottom) and "Imaginary Axis jω" (left, rotated) in 16px — readable. Tick labels -7 to 2 on x, -4 to 4 on y in 14px — readable. Legend in top-right with 5 items at 13px — readable.
-      Data: Three locus branches — green (#009E73, Branch 1 from s=0), lavender (#C475FD, Branch 2 from s=−2), blue (#4467A3, Branch 3 from s=−4). Red X markers (×) at open-loop poles (0, −2, −4). Amber (#DDCC77) dashed vertical line at imaginary axis (stability boundary). Amber circles at ±j·2.828 (K=48 crossing). Green dot at breakaway s≈−0.845 labeled K≈3.1. Dashed gray constant-ζ lines and ωn circles as subtle reference overlay.
-      Legibility verdict: PASS — all text readable; minor note: ζ/ωn reference labels at 11–12px are small but legible at full resolution.
+      Background: Warm off-white (#FAF8F1) — correct page surface for light theme
+      Chrome: Title "root-locus-basic · javascript · d3 · anyplot.ai" in bold dark ink (#1A1A17), readable. Axis labels "Real Axis σ" and "Imaginary Axis jω" at 16px in soft ink (#4A4A44), clear. Tick labels at 14px readable. Legend text at 13px readable.
+      Data: Three branch curves — brand green #009E73 (Branch 1, from s=0), lavender #C475FD (Branch 2, from s=−2), blue #4467A3 (Branch 3, from s=−4). Open-loop pole markers in matte red #AE3030 at s=0, s=−2, s=−4. Amber stability boundary dashed vertical line at jω axis. Amber circles at ±j·2.828 labeled K=48. Green breakaway marker at s≈−0.845 labeled K≈3.1. Constant ζ dashed lines (0.3, 0.5, 0.707) and ωn circle arcs (1, 2, 3, 4) as subtle reference grid.
+      Legibility verdict: PASS — all text readable. Smallest font (11px for K≈3.1) is borderline at mobile scale but readable at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark surface ✓
-      Chrome: Title, axis labels, and tick labels all render in light color (inkSoft token) against dark background — fully readable. Legend text in light color, legend box in elevated dark fill (#242420). No dark-on-dark failures detected.
-      Data: Branch colors are identical to light render (green/lavender/blue) — data palette unchanged ✓. Pole X markers, amber stability boundary, amber crossing circles, breakaway marker all visible. Reference lines (ζ, ωn) dashed in grid token — visible against dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all primary labels readable; ζ/ωn reference labels small but consistent with light render.
+      Background: Warm near-black (#1A1A17) — correct page surface for dark theme
+      Chrome: Title in light text (#F0EFE8) clearly visible against dark background. Axis labels, tick labels, legend text all in light soft ink (#B8B7B0). No dark-on-dark failures observed. Legend box uses dark elevated background (#242420) — properly contrasts with chart area.
+      Data: Branch colors IDENTICAL to light render — brand green, lavender, and blue unchanged. Amber stability boundary and jω crossing circles remain prominent. Matte red pole markers clearly visible. Reference grid lines (ζ and ωn) visible as subtle dashed elements.
+      Legibility verdict: PASS — all text is light-colored against dark background. No dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -61,83 +58,80 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title (22px), axis labels (16px), ticks (14px) all readable in both
-          themes. Reference line labels (ζ, ωn) at 11–12px are small for mobile readability
-          — minor deduction.
+        comment: Title, axis labels, tick labels readable in both themes. Breakaway
+          annotation at 11px is borderline at mobile scale; ζ/ωn labels at 13px also
+          marginal.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean; slight crowding near s=0 where stability boundary,
-          pole marker, jω-crossing circle and branch convergence zone are all co-located.
+        comment: No significant overlaps. Minor crowding near origin area (poles,
+          breakaway, branch convergence) but annotations avoid collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All locus branches (stroke-width 3), pole X markers, directional
-          arrows, jω-axis circles and breakaway dot are clearly visible in both themes.
+        comment: Branches clearly visible at 3px stroke. Directional arrows present.
+          Real-axis segment before breakaway is short and visually subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; three distinct hue families (green/purple/blue)
-          for branches; amber for warning/boundary is CVD-safe.
+        comment: Imprint palette positions 0-2 for branches, palette[4] matte red
+          for poles (semantic), amber for stability boundary. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400×2400 native) appropriate for complex plane. Equal-aspect
-          ratio maintained. Margins generous. Title occupies ~55% canvas width. Canvas
-          gate passed.
+        comment: Square format (2400x2400). Canvas gate passed. Equal aspect preserved.
+          Generous margins. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title matches required format. X: ''Real Axis σ'', Y: ''Imaginary
-          Axis jω'' — both include proper notation.'
+        comment: Real Axis σ and Imaginary Axis jω are descriptive with correct symbols.
+          Title follows exact spec-id · javascript · d3 · anyplot.ai format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Branch 1 = palette[0] = #009E73 ✓. Branches use canonical order.
-          Stability boundary uses amber (semantic). Pole markers use matte red (semantic,
-          hardcoded as #AE3030 = palette[4]). Both theme backgrounds correct.'
+        comment: 'First branch = #009E73 (palette[0]). Branches use Imprint positions
+          0-2. Poles use palette[4] semantic red. Backgrounds: #FAF8F1 light / #1A1A17
+          dark. Both themes correct.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic defaults: semantic color hierarchy (amber boundary,
-          red poles, Imprint branches), domain-specific reference overlay (ζ lines,
-          ωn circles), directional arrows. Legend box is plain. No typographic sophistication
-          beyond size/weight basics.'
+        comment: Domain-specific ζ damping lines and ωn circles as reference grid.
+          Excellent semantic color choices (matte red for poles, amber for stability
+          boundary). Multiple thoughtful annotations. Elevated legend box.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid at 0.12 opacity is excellent. Axis domains at 0.35 opacity (de-emphasized
-          but not removed — correct for full complex-plane view). Reference lines
-          use clip-path for clean clipping. Whitespace generous.
+        comment: L-shaped frame from D3 axis generators. Integer grid at opacity 0.12
+          extremely subtle. Real axis at 0.3, domain lines at 0.35. Clip-path for
+          bounds. Reference lines dashed at grid color.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: data branches dominant, reference lines
-          secondary, grid tertiary. Directional arrows guide viewer. Amber stability
-          boundary focal element. K annotations at critical points (breakaway, jω
-          crossing). Reference overlay adds context without dominating.'
+        comment: Direction arrows narrate increasing K. Breakaway and jω crossings
+          annotated with K values. Amber stability boundary creates visual emphasis.
+          Chart tells clear story about pole migration and instability onset at K=48.
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot in complex plane with multiple branches showing
-          pole migration.
+        comment: Correct root locus plot tracing closed-loop poles through complex
+          plane as K varies.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pole X markers, continuous branch curves,
-          directional arrows, real-axis segments (shown via branch paths), imaginary-axis
-          crossings marked, damping ratio and ωn reference lines, equal-aspect scaling.'
+        comment: 'All features: × markers for poles, continuous curves with direction
+          arrows, real axis segments, jω crossings with amber circles and K=48 labels,
+          ζ/ωn reference grid, centered origin with equal aspect.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part → x-axis, imaginary part → y-axis, gain K encoded via branch
-          trajectories and annotations.
+        comment: 'Real part on X, imaginary on Y. Domain [-7,2]×[-4.5,4.5] shows all
+          key features. K: 0→80 covers stability crossing at K=48.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''root-locus-basic · javascript · d3 · anyplot.ai'' ✓. Legend:
-          5 items covering poles, all three branches, and stability boundary.'
+        comment: 'Title: root-locus-basic · javascript · d3 · anyplot.ai — correct.
+          Legend labels branch origins, pole type, stability boundary.'
     data_quality:
       score: 15
       max: 15
@@ -180,22 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three branches, real-axis portion, complex region,
-          stability crossing, breakaway point, directional behavior.'
+        comment: 3 branches from 3 poles, complex conjugate pair formation after breakaway,
+          real-axis branch to -∞, asymptote behavior, stability boundary crossing
+          — all covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s)=K/[s(s+2)(s+4)] is a canonical textbook control system. Poles
-          at 0, -2, -4 are standard. Neutral educational context.
+        comment: G(s) = K/[s(s+2)(s+4)] is a canonical control systems textbook transfer
+          function. Analytically correct. Neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain [-7,2]×[-4.5,4.5] captures all critical features. 401 points
-          per branch provides smooth curves.
+        comment: 'Domain captures all key features: breakaway at s≈-0.845, jω crossing
+          at ±j2.828, real axis branch. K range 0→80 adequate margin beyond K=48 stability
+          crossing.'
     code_quality:
       score: 9
       max: 10
@@ -205,35 +201,37 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (findRealRoot, solveDeflated) increase complexity.
-          Justified by mathematical necessity but departs from flat-script ideal.
+        comment: Three helper functions (findRealRoot, solveDeflated, addArrow). Domain-justified
+          for Newton's method and deflation, but technically violates no-functions
+          guideline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: Newton''s method with fixed starting points,
-          no random numbers.'
+        comment: Fully deterministic. Analytical computation from fixed transfer function
+          coefficients. No RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only d3 global used, no unnecessary imports.
+        comment: No imports. Only d3 global and window globals (ANYPLOT_TOKENS, ANYPLOT_SIZE)
+          used, all accessed.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, commented for domain context, no fake UI, clear variable
-          naming.
+        comment: Clean organization with clear section comments. No fake UI. Math
+          comments explain control systems. Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 harness produces plot-light.png + plot-dark.png + plot-light.html
-          + plot-dark.html as required.
+        comment: Square orientation directive present. SVG sized from window.ANYPLOT_SIZE.
+          Harness generates plot-{theme}.png and .html.
     library_mastery:
       score: 7
       max: 10
@@ -243,17 +241,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct d3.select/append/call patterns, d3.scaleLinear with domain/range,
-          d3.axisBottom/axisLeft, d3.format, SVG group transforms. Uses datum()+line()
-          for path generation.
+        comment: 'Proper D3 patterns: selections, attr() chaining, scaleLinear with
+          domain/range, axisBottom/Left on selections, d3.line() with datum() binding,
+          clipPath via defs, d3.format for tick formatting.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: clip-path for plot boundary clipping is D3-idiomatic. d3.line with
-          .defined() for domain-boundary handling. Polygon-based arrow heads via direct
-          SVG. Theme tokens properly mapped to SVG fill/stroke.
+        comment: d3.line() with .defined() predicate for domain-clipping — proper
+          D3 idiom. clipPath/defs for bounded rendering. Multiple SVG primitive types
+          (path, polygon, line, circle, text, rect) via D3 selections.
   verdict: APPROVED
 impl_tags:
   dependencies: []
