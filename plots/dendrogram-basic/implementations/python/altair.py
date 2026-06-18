@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 88/100 | Updated: 2026-06-18
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-18
 """
 
 import os
