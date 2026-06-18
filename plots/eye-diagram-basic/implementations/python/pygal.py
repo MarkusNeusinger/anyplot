@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-18
@@ -147,6 +147,14 @@ eye_width_line = [
     {"value": (round(eye_left, 3), 0.5), "label": f"Eye Width: {eye_width:.3f} UI"},
     {"value": (round(eye_right, 3), 0.5), "label": f"Eye Width: {eye_width:.3f} UI"},
 ]
+# Rectangle bounding the eye aperture — closes the box so the open eye is the clear focal point
+eye_aperture_box = [
+    {"value": (round(eye_left, 3), round(eye_bottom, 3)), "label": "Eye Aperture"},
+    {"value": (round(eye_left, 3), round(eye_top, 3)), "label": "Eye Aperture"},
+    {"value": (round(eye_right, 3), round(eye_top, 3)), "label": "Eye Aperture"},
+    {"value": (round(eye_right, 3), round(eye_bottom, 3)), "label": "Eye Aperture"},
+    {"value": (round(eye_left, 3), round(eye_bottom, 3)), "label": "Eye Aperture"},
+]
 
 # pygal Style — theme-adaptive with Imprint sequential palette
 custom_style = Style(
@@ -155,7 +163,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=density_colors + (ANYPLOT_AMBER, ANYPLOT_AMBER),
+    colors=density_colors + (ANYPLOT_AMBER, ANYPLOT_AMBER, ANYPLOT_AMBER),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -179,10 +187,10 @@ chart = pygal.XY(
     x_title="Time (UI)",
     y_title="Voltage (V)",
     stroke=False,
-    dots_size=5,
+    dots_size=12,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=6,
     legend_box_size=22,
     show_x_guides=False,
     show_y_guides=False,
@@ -196,7 +204,6 @@ chart = pygal.XY(
     margin_bottom=100,
     spacing=15,
     js=[],
-    interpolate="hermite",
 )
 
 for i in range(N_BANDS):
@@ -218,6 +225,14 @@ chart.add(
     show_dots=True,
     dots_size=10,
     stroke_style={"width": 4, "dasharray": "10, 5"},
+    allow_interruptions=False,
+)
+chart.add(
+    "Eye Aperture",
+    eye_aperture_box,
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 3, "dasharray": "6, 4"},
     allow_interruptions=False,
 )
 
