@@ -25,8 +25,8 @@ const N_TRACES       = 500    # overlaid NRZ bit periods (spec: 200–500)
 const SAMPLES_PER_UI = 150    # time samples per unit interval
 const JITTER_SIGMA   = 0.03   # transition timing jitter (fraction of UI)
 const NOISE_SIGMA    = 0.05   # additive Gaussian noise amplitude (V)
-const N_BINS_T       = 160    # histogram bins along time axis
-const N_BINS_V       = 120    # histogram bins along voltage axis
+const N_BINS_T       = 300    # histogram bins along time axis
+const N_BINS_V       = 200    # histogram bins along voltage axis
 const V_MIN          = -0.30
 const V_MAX          =  1.30
 const T_STEP         = 2.0 / N_BINS_T
@@ -123,6 +123,25 @@ hm = heatmap!(ax, t_centers, v_centers, density_log;
     colormap  = ANYPLOT_SEQ,
     nan_color = PAGE_BG,
 )
+
+# Eye opening reference lines (spec: "Optionally annotate eye height and eye width")
+const ANNOT_COLOR = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.65)
+# Eye height: 20% and 80% voltage boundaries (NRZ: 0–1 V amplitude)
+hlines!(ax, [0.20, 0.80];
+    color     = ANNOT_COLOR,
+    linewidth = 1.5,
+    linestyle = :dash,
+)
+# Eye width: center of each eye opening at 0.5 and 1.5 UI
+vlines!(ax, [0.5, 1.5];
+    color     = ANNOT_COLOR,
+    linewidth = 1.5,
+    linestyle = :dash,
+)
+text!(ax, 0.52, 0.82; text = "Eye height: 0.60 V", color = INK_MUTED,
+    fontsize = 10, align = (:left, :bottom))
+text!(ax, 1.52, -0.24; text = "Eye width", color = INK_MUTED,
+    fontsize = 10, align = (:left, :bottom))
 
 Colorbar(fig[1, 2], hm;
     label          = "Trace Density (log scale)",
