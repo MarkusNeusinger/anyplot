@@ -109,6 +109,16 @@ root.descendants().forEach(d => {
   d.y = ih * (1 - d.data.h);
 });
 
+// Compute dominant family for each node (-1 = mixed subtree)
+root.descendants().forEach(d => {
+  if (d.data.family !== undefined) {
+    d._family = d.data.family;
+  } else {
+    const familySet = new Set(d.leaves().map(leaf => leaf.data.family));
+    d._family = familySet.size === 1 ? [...familySet][0] : -1;
+  }
+});
+
 // SVG
 const svg = d3.select("#container")
   .append("svg")
@@ -146,7 +156,7 @@ g.selectAll("line.hbar")
   .attr("y1", d => d.y)
   .attr("x2", d => d3.max(d.children, c => c.x))
   .attr("y2", d => d.y)
-  .attr("stroke", t.inkSoft)
+  .attr("stroke", d => d._family >= 0 ? families[d._family].color : t.inkSoft)
   .attr("stroke-width", 2)
   .attr("stroke-linecap", "round");
 
@@ -161,7 +171,7 @@ g.selectAll("line.vbar")
   .attr("y1", d => d.parent.y)
   .attr("x2", d => d.x)
   .attr("y2", d => d.y)
-  .attr("stroke", t.inkSoft)
+  .attr("stroke", d => d._family >= 0 ? families[d._family].color : t.inkSoft)
   .attr("stroke-width", 2)
   .attr("stroke-linecap", "round");
 
@@ -201,7 +211,7 @@ const yAxisGroup = g.append("g")
 
 yAxisGroup.selectAll("text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px");
+  .style("font-size", "14px");
 yAxisGroup.selectAll("line")
   .attr("stroke", t.grid);
 yAxisGroup.select(".domain")
@@ -226,15 +236,15 @@ families.forEach((fam, i) => {
     .attr("transform", `translate(0, ${i * 26})`);
 
   row.append("circle")
-    .attr("r", 5)
-    .attr("cx", 5)
+    .attr("r", 6)
+    .attr("cx", 6)
     .attr("fill", fam.color);
 
   row.append("text")
-    .attr("x", 16)
+    .attr("x", 18)
     .attr("y", 5)
     .attr("fill", t.inkSoft)
-    .style("font-size", "13px")
+    .style("font-size", "14px")
     .text(fam.name);
 });
 
