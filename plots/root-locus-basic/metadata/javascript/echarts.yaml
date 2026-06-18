@@ -1,0 +1,275 @@
+library: echarts
+language: javascript
+specification_id: root-locus-basic
+created: '2026-06-18T01:52:02Z'
+updated: '2026-06-18T02:16:42Z'
+generated_by: claude-sonnet
+workflow_run: 27730214522
+issue: 4414
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/echarts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Correct Imprint palette usage — brand green (#009E73) for locus, matte red (palette[4])
+    for poles as semantic exception, lavender for jω crossings
+  - 'All spec requirements met: × pole markers, arrows indicating gain direction,
+    real-axis segments, imaginary axis crossings, damping-ratio and natural-frequency
+    reference lines, equal axis scaling on square canvas'
+  - Mathematically rigorous data — correct transfer function G(s)=K/[s(s+1)(s+3)],
+    accurate breakaway at −0.45, correct imaginary axis crossing at ±j√3 (K=12)
+  - 'Thoughtful ECharts-specific techniques: custom SVG path for × pole markers, arrow
+    scatter series with computed symbolRotate for gain-direction indicators'
+  - Full theme-adaptive chrome — transparent background, t.ink/t.inkSoft/t.grid tokens
+    used throughout; both renders pass legibility check
+  weaknesses:
+  - Root Locus legend icon shows a circle-on-line (ECharts default) but the series
+    uses showSymbol:false — the legend icon does not match the actual rendering style;
+    use legend.data with icon override to show a plain line segment
+  - Helper functions cplxPair() and arrowAt() deviate from KISS flat structure — the
+    mathematical logic could be inlined or the comment block expanded to compensate
+  - jω crossing markers (symbolSize=18) are placed exactly on the locus curve making
+    them hard to distinguish from the line; increase to symbolSize=22 and/or add a
+    light stroke to make the stability-boundary markers stand out more prominently
+  - Left half of the complex plane (x ∈ [−6, −1]) is largely empty except for the
+    real-axis branch — the locus is heavily weighted to the right half; consider adjusting
+    the x range to [−5, 1.5] to balance visual weight
+  - 'DQ-01: no label or annotation identifies the breakaway point (~−0.45, 0), which
+    is a key feature of the root locus narrative'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light-theme surface.
+      Chrome: Title "root-locus-basic · javascript · echarts · anyplot.ai" in bold dark ink centered at top — fully readable. X-axis label "Real Axis" and Y-axis label "Imaginary Axis" in dark secondary ink — readable. Tick labels (−6 to 2 on x, −4 to 4 on y) in dark ink — readable. Legend at bottom shows "Root Locus / Open-Loop Poles / jω Crossings (K=12)" in dark secondary ink — readable.
+      Data: Three root locus branches in brand green (#009E73) — two complex-conjugate branches arcing from breakaway (~−0.45, 0) through the imaginary axis at ±j√3 and into the RHP, one real branch extending left toward −6. Open-loop poles at (0,0), (−1,0), (−3,0) as matte-red × markers (palette[4]). jω crossing markers as lavender diamonds (palette[1]) at (0, ±1.73). Gain-direction arrows in green overlaid on branches. Dashed light-gray reference lines for ζ=0.5 and ωn=2 circle.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark-theme surface.
+      Chrome: Title in light ink — fully readable against dark background. Axis labels and tick labels in light secondary ink — readable. Legend in light secondary ink — readable. Grid lines as subtle light-gray at low opacity — visible but not dominant.
+      Data: Locus branches remain brand green (#009E73) — identical to light render. Pole markers identical matte-red ×. jω crossing diamonds identical lavender. Gain arrows identical green. Reference dashed lines use t.grid at ~15% opacity — faintly visible, appropriate for reference-only elements.
+      Legibility verdict: PASS — all text uses light-colored tokens and reads clearly against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis name 14px, tick
+          labels 12px, legend 13px). All text readable in both themes. Minor deduction:
+          tick labels at 12px are on the smaller end for this square canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps observed. Arrow markers sit on the locus curve intentionally;
+          pole and crossing markers are distinct.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Locus lines (width 2.5) and pole markers (size 20) are clearly visible.
+          jω crossing markers (size 18) are placed exactly on the curve, making them
+          slightly hard to distinguish; could be symbolSize=22+ with a stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green locus + red poles + lavender crossings are perceptually distinct.
+          Imprint palette is CVD-safe by construction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square canvas with equal axis scaling (8 units × 8 units). Minor
+          issue: x range [−6, 2] leaves large empty space on the left half; most visual
+          activity is in [−1.5, 1.5]. The locus branches reach y≈±3.7 near the top/bottom
+          boundary.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. 'Real Axis' and 'Imaginary Axis' are the standard
+          labels for the complex plane — no physical units expected.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Root locus uses palette[0] (#009E73) ✓. Poles use palette[4] (#AE3030)
+          — semantic exception (poles→danger) appropriate ✓. jω crossings use palette[1]
+          (#C475FD) ✓. Background transparent (shows page bg) ✓. Data colors identical
+          between light and dark ✓.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Solid design: thoughtful semantic color assignments, custom SVG
+          path for × markers, arrow direction indicators. Above a configured default
+          (4) but not exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed reference lines, appropriate grid density, clean layout.
+          Keeping all four spines and full grid is justified for a complex-plane technical
+          plot.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Gain arrows create visual narrative of increasing K. Reference lines
+          (ζ=0.5, ωn=2) provide stability context. Above default but no breakaway
+          annotation or K-value labels at key points.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus implementation with all required elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: × pole markers, locus branches, gain
+          arrows, real-axis segments, imaginary axis crossings, damping-ratio and
+          natural-frequency reference lines, equal axis scaling. No zeros in this
+          system (N/A).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real axis on X, imaginary axis on Y, equal scaling. All branches
+          visible within plot bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title ''root-locus-basic · javascript · echarts · anyplot.ai'' correct.
+          Legend labels informative: ''Root Locus'', ''Open-Loop Poles'', ''jω Crossings
+          (K=12)''.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows all three branches, real-axis portions, complex portions with
+          arrows, breakaway region, imaginary axis crossings, and reference lines.
+          Minor deduction: no annotation marking the breakaway point at (−0.45, 0)
+          — a key root locus feature.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic G(s)=K/[s(s+1)(s+3)] — canonical 3rd-order control system
+          found in every control theory textbook. Neutral engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values mathematically correct: breakaway at −0.4514, jω crossing
+          at ±j√3≈±1.732 at K=12, asymptote centroid at −4/3. Vieta''s formula derivation
+          is sound.'
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (cplxPair, arrowAt) deviate from flat KISS structure.
+          Both are mathematically justified for this complex derivation, but the criterion
+          is strict.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data computed deterministically from fixed constants. No random
+          number generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — correctly uses echarts global and window.ANYPLOT_TOKENS.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured code. Mathematical derivation is sound and
+          well-commented. Helper functions are appropriately scoped.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init without explicit size/devicePixelRatio ✓. animation:false
+          ✓. Square orientation directive ✓.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ECharts idioms: showSymbol:false for pure-line series, legendHoverLink:false
+          + silent:true for decorative series, t.palette for color array, proper theme
+          token usage.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses ECharts-specific features: custom SVG path via path://M...
+          for × pole markers, symbol:''arrow'' with computed symbolRotate for gain-direction
+          indicators. Multiple series composition with shared legend entries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
