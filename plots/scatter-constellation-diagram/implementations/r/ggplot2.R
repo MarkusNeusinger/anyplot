@@ -4,7 +4,6 @@
 #' Quality: 86/100 | Created: 2026-06-18
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -68,18 +67,30 @@ p <- ggplot() +
   geom_hline(yintercept = boundaries,
              linetype = "dashed", color = INK_SOFT, linewidth = 0.45, alpha = 0.65) +
   # Received symbols — semi-transparent to reveal density clusters
-  geom_point(data = received, aes(x = i, y = q),
-             color = IMPRINT_PALETTE[1],
+  geom_point(data = received, aes(x = i, y = q, color = "Received Symbols"),
              size = 0.9, alpha = 0.30, shape = 16) +
   # Ideal constellation points — prominent cross markers (engineering convention)
-  geom_point(data = ideal_grid, aes(x = ideal_i, y = ideal_q),
-             color = IMPRINT_PALETTE[5],
+  geom_point(data = ideal_grid, aes(x = ideal_i, y = ideal_q, color = "Ideal Points"),
              size = 4.5, shape = 3, stroke = 2.0) +
   # EVM annotation (bottom-right corner)
   annotate("text",
            x = 4.25, y = -4.1,
            label = evm_label,
-           color = INK_SOFT, size = 3.5, hjust = 1) +
+           color = INK_SOFT, size = 4.0, hjust = 1) +
+  scale_color_manual(
+    values = c("Received Symbols" = IMPRINT_PALETTE[1],
+               "Ideal Points"     = IMPRINT_PALETTE[5]),
+    breaks = c("Received Symbols", "Ideal Points"),
+    name   = NULL
+  ) +
+  guides(color = guide_legend(
+    override.aes = list(
+      shape  = c(16, 3),
+      size   = c(2.5, 3.5),
+      alpha  = c(0.8, 1.0),
+      stroke = c(0.0, 1.5)
+    )
+  )) +
   scale_x_continuous(limits = axis_lim, breaks = qam_levels) +
   scale_y_continuous(limits = axis_lim, breaks = qam_levels) +
   coord_fixed() +
@@ -90,17 +101,22 @@ p <- ggplot() +
   ) +
   theme_minimal(base_size = 8) +
   theme(
-    plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
-    panel.background = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.border     = element_blank(),
-    axis.line        = element_line(color = INK_SOFT, linewidth = 0.5),
-    axis.ticks       = element_line(color = INK_SOFT, linewidth = 0.4),
-    axis.title       = element_text(color = INK, size = 10),
-    axis.text        = element_text(color = INK_SOFT, size = 8),
-    plot.title       = element_text(color = INK, size = 12, hjust = 0),
-    plot.margin      = margin(14, 18, 14, 14, "pt")
+    plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background  = element_rect(fill = PAGE_BG, color = NA),
+    panel.grid.major  = element_blank(),
+    panel.grid.minor  = element_blank(),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
+    axis.ticks        = element_line(color = INK_SOFT, linewidth = 0.4),
+    axis.title        = element_text(color = INK, size = 10),
+    axis.text         = element_text(color = INK_SOFT, size = 8),
+    plot.title        = element_text(color = INK, size = 12, hjust = 0),
+    plot.margin       = margin(14, 18, 14, 14, "pt"),
+    legend.background = element_rect(fill = NA, color = NA),
+    legend.key        = element_rect(fill = NA, color = NA),
+    legend.text       = element_text(color = INK_SOFT, size = 8),
+    legend.title      = element_blank(),
+    legend.position   = "bottom"
   )
 
 # --- Save ---
