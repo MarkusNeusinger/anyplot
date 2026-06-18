@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: dendrogram-basic
+created: '2026-06-18T04:33:30Z'
+updated: '2026-06-18T04:40:13Z'
+generated_by: claude-sonnet
+workflow_run: 27736128117
+issue: 986
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Expert use of Highcharts SVG renderer (render event, axis.toPixels, renderer.path/circle/text,
+    group destroy/recreate) to implement a dendrogram not in the core bundle — exactly
+    the right approach
+  - Semantic two-color scheme using Imprint palette positions 1 (#009E73) and 3 (#4467A3)
+    makes clusters immediately distinguishable before any label is read
+  - Inline cluster labels in matching colors ('Data Science', 'Systems & Web') provide
+    instant data storytelling without a legend
+  - All font sizes explicitly set; both light and dark themes fully readable with
+    correct warm-off-white / warm-near-black backgrounds and theme-adaptive chrome
+  - Deterministic hard-coded data with a meaningful real-world domain (programming
+    language paradigm clustering) — realistic and neutral
+  weaknesses:
+  - Leaf dots at radius:5 CSS px are slightly small on the 1600-px mount — increase
+    to radius:7 for better visual weight
+  - Leaf labels and inline cluster labels at 13px are at the lower end of the recommended
+    range — bump to 14px for improved mobile readability
+  - marginRight:30 is tight relative to the rotated C++ leaf label — increase to marginRight:50
+    to add breathing room on the right edge
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "dendrogram-basic · javascript · highcharts · anyplot.ai" in dark ink (#1A1A17) at 22px, ~60% width — well-proportioned. Subtitle in inkSoft. Y-axis title "Linkage Distance" in inkSoft at 16px. Tick labels in inkSoft at 14px. Rotated leaf labels in cluster colors (green/blue) at 13px. All text clearly readable.
+      Data: Brand green (#009E73) for Data Science cluster (Python, R, Julia, MATLAB); Imprint blue (#4467A3) for Systems & Web cluster (JavaScript, TypeScript, Java, C++). Root merge in inkSoft (dark gray). Leaf dots at each leaf. Inline cluster labels in matching colors. Horizontal grid lines subtle and appropriately themed.
+      Legibility verdict: PASS — no light-on-light issues, all text readable in both themes
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and subtitle switch to light-colored text (#F0EFE8 / #B8B7B0 approx), clearly readable. Y-axis title and tick labels light-colored on dark background. Root merge line switches to light-gray inkSoft — visible. Leaf labels retain green/blue colors and are readable on dark background.
+      Data: Data colors IDENTICAL to light render — brand green (#009E73) and Imprint blue (#4467A3) unchanged. Cluster labels retain their colors and are fully readable. Grid lines subtle and visible.
+      Legibility verdict: PASS — no dark-on-dark failures observed, all text legible against dark background
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 22px, subtitle 14px, y-axis
+          title 16px, tick labels 14px, leaf/cluster labels 13px. Both themes readable.
+          Minor: 13px labels at low end of recommended range.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between rotated leaf labels, cluster labels, or axis ticks.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Branches at strokeWidth 2.5 are clear. Leaf dots at radius 5 CSS
+          px are visible but slightly small; radius 7 would improve weight.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1 and 3 — CVD-safe and perceptually distinct. Root
+          in inkSoft is neutral structural color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Explicit margins give clean proportions. Plot fills ~65% of canvas.
+          Nothing cut off. marginRight 30 is tight but not clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis titled 'Linkage Distance' (descriptive). X-axis uses leaf
+          labels as categories (appropriate).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: GREEN=t.palette[0] (#009E73), BLUE=t.palette[2] (#4467A3). Imprint
+          palette, semantic assignment. Root in theme-adaptive inkSoft. Correct backgrounds
+          both themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: semantic two-color coding, inline
+          cluster labels, colored leaf labels. Not quite publication-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid in theme-adaptive color, explicit margins, no
+          unnecessary chrome. Good but not exceptional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-color hierarchy creates immediate visual emphasis on the two
+          clusters. Inline cluster labels provide instant interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dendrogram with horizontal merge bars, vertical drop lines,
+          leaf nodes, proportional branch heights.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Hierarchical clustering, proportional branch heights, leaf labels,
+          cluster membership via color.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=leaf positions, Y=linkage distance. All 8 items visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'dendrogram-basic · javascript · highcharts · anyplot.ai'.
+          No legend (correct).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Leaf nodes, pairwise merges at varying distances, sub-clusters, root
+          merge. Range from 0.8 to 5.0 demonstrates distance variation.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Programming languages clustered by paradigm features — real, neutral,
+          recognizable. Groupings are accurate to real-world perceptions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Linkage distances 0.8–5.0 are proportionally reasonable. Hierarchical
+          ordering factually consistent.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No user-defined functions or classes. Data as constants, chart in
+          single Highcharts.chart() call.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded and deterministic. No RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Only window.ANYPLOT_TOKENS used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, idiomatic destroy/recreate pattern for renderer group,
+          good comments explaining data structure.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness produces plot-{THEME}.png and .html. No deprecated API calls.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of chart.events.render, c.renderer.path/circle/text, renderer
+          group management (.g()/.destroy()), and axis.toPixels() — exactly the right
+          Highcharts patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts SVG renderer API is distinctive to this library. render-event
+          + group-destroy pattern and axis.toPixels() could not be replicated in Chart.js
+          or ECharts without significant rework.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling: []
