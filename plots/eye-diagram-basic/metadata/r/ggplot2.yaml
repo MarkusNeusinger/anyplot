@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:20:52Z'
-updated: '2026-06-18T02:27:20Z'
+updated: '2026-06-18T02:44:46Z'
 generated_by: claude-sonnet
 workflow_run: 27732135646
 issue: 4561
@@ -12,98 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - 'Complete dual-theme support: all chrome tokens (title, axis labels, ticks, grid,
-    legend) correctly adapt between #FAF8F1 and #1A1A17 surfaces with zero dark-on-dark
-    failures'
-  - 'Imprint sequential colormap (#009E73 → #4467A3) with trans=sqrt is an excellent
-    choice — the square-root scale gives perceptual weight to sparse-but-important
-    transition regions'
-  - Vectorized waveform generation via outer() is efficient, clean, and numerically
-    correct; the jitter and sigmoid bandwidth-limiting produce a realistic NRZ eye
-    pattern
-  - Canvas dimensions exactly 3200×1800, all font sizes follow the ggplot2 library
-    guide, no clipping or overflow in either render
+  - 'Correct imprint_seq colormap (#009E73 to #4467A3) applied to continuous density
+    data with proper na.value=PAGE_BG revealing the eye opening'
+  - Complete theme-adaptive chrome in both renders with no dark-on-dark or light-on-light
+    failures
+  - Informative eye-height annotation with computed 746 mV measurement provides immediate
+    quantitative insight
+  - Efficient vectorized NRZ simulation using outer()/findInterval/tabulate — no per-sample
+    R loop
+  - geom_raster(interpolate=TRUE) with manual 2D density grid is a distinctive ggplot2
+    technique
   weaknesses:
-  - geom_bin_2d(bins=100) produces a blocky pixelated appearance at sparse-data boundaries
-    — consider pre-computing a 2D count matrix and using geom_raster for smoother,
-    publication-quality density rendering
-  - The Density colorbar legend in the light render shows the green (#009E73) end
-    as nearly invisible/washed-out against the cream legend background; the low end
-    of the legend key could be misleading about the actual color range
-  - No eye height/eye width annotations — while optional per spec, adding reference
-    lines and text markers at the optimal sampling point would significantly improve
-    data storytelling (DE-03) and feature coverage (DQ-01)
+  - 'LM-02/DE-01 minor: Manual 2D density pre-computation (findInterval/tabulate/raster_df)
+    bypasses ggplot2 native stat pipeline — stat_density_2d(geom="raster", aes(fill=after_stat(density)),
+    interpolate=TRUE, n=c(200,150)) on eye_df would be more idiomatic and remove ~20
+    lines'
+  - 'DE-01 minor: Top and right spines could optionally be removed for a more contemporary
+    aesthetic (current 4-sided panel.border is justified for a scientific heatmap
+    but less distinctive)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
-      Chrome: Title "eye-diagram-basic · r · ggplot2 · anyplot.ai" in dark ink at 12pt — readable, ~55% of plot width. Axis labels "Voltage (V)" (Y) and "Time (UI)" (X) in dark ink at 10pt — balanced, readable. Tick labels in INK_SOFT (#4A4A44) at 8pt — small but legible. Grid lines extremely subtle (INK_MUTED, linewidth=0.15). Legend box has cream elevated background (#FFFDF6) with thin border; legend title "Density" and values (20/40/60/80) readable. No light-on-light text issues.
-      Data: Imprint sequential palette — brand green (#009E73) at low-density edges, blue (#4467A3) at high-density band centres. sqrt transform applied. Eye diagram shows two dense horizontal bands (V≈0 and V≈1) with transition arcs and clear eye openings filled by the page background.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "eye-diagram-basic · r · ggplot2 · anyplot.ai" dark ink top-left; axis labels "Time (UI)" and "Voltage (V)" dark and readable; tick labels at 0.0/0.5/1.0/1.5/2.0 (time) and 0.00/0.25/0.50/0.75/1.00 (voltage) clear; density colorbar legend with dark legend title/text — all readable
+      Data: imprint_seq gradient from #009E73 (low density) to #4467A3 (high density); two eye openings visible as light (PAGE_BG) regions; dashed INK_MUTED reference line at 0.5 UI; red #AE3030 eye-height bracket with "746 mV" label on right side
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
-      Chrome: Title in light cream (#F0EFE8) at 12pt — clearly readable against dark background. Axis labels in INK light variant — fully legible. Tick labels in INK_SOFT dark variant (#B8B7B0) — readable, no dark-on-dark failure observed. Grid lines subtle. Legend box has dark elevated background (#242420) with border; legend text is light and readable.
-      Data: Green→blue gradient is IDENTICAL to light render — same Imprint seq palette, same density distribution. Eye openings filled by near-black background, creating strong contrast with colored data bands — particularly striking effect in dark mode.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8; axis labels and ticks in #B8B7B0; legend text light-colored — all readable against dark background; no dark-on-dark failures observed
+      Data: Identical imprint_seq colors to light render (#009E73 to #4467A3); eye openings now blend into dark background (NA cells map to PAGE_BG=#1A1A17); red #AE3030 annotation bracket still visible; brand green #009E73 visible at low-density areas
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 12pt, axis labels 10pt, tick labels 8pt — all matching ggplot2
-          guide values; readable in both themes. Minor deduction: tick labels at 8pt
-          are at minimum comfortable size.'
+        comment: All font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt,
+          legend=8-9pt); balanced proportions; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions in either render.
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Density heatmap clearly visible. Minor deduction: geom_bin_2d(bins=100)
-          produces slightly blocky appearance at sparse-data edges.'
+        comment: Density heatmap clearly shows trace structure; eye openings unambiguous;
+          annotation bracket visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential green→blue is CVD-safe; no red-green sole-signal
-          encoding.
+        comment: 'imprint_seq green-to-blue is CVD-safe; red bracket uses semantic
+          #AE3030'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200×1800 confirmed. Title ~55% width. Legend on right does not crowd
-          plot. No overflow, no clipping.
+        comment: Canvas gate passed (3200x1800); well-proportioned; colorbar placement
+          correct
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Voltage (V) and Time (UI) are descriptive with units; mandated title
-          format is exact.
+        comment: Time (UI) and Voltage (V) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous density uses imprint_seq (#009E73→#4467A3). Background
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens are theme-adaptive.'
+        comment: 'imprint_seq (#009E73 to #4467A3) for continuous density data; background
+          tokens #FAF8F1/#1A1A17 correct; all chrome theme-adaptive'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,25 +106,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Imprint seq palette with sqrt transform is intentional and effective.
-          Custom legend styling adds polish. No additional annotations or visual hierarchy
-          beyond requirements.
+        comment: 'Thoughtful design above well-configured defaults: Imprint palette,
+          elevated legend background, subtle grid, theme-adaptive chrome. Not yet
+          FiveThirtyEight-level polish'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: All four spines retained (appropriate for enclosed heatmap per style
-          guide). Grid is very subtle (linewidth=0.15, INK_MUTED). Legend frame and
-          background styled.
+        comment: Subtle grid (linewidth=0.15, major-only), no minor grid, elevated
+          legend frame, generous margins. Panel border appropriate for scientific
+          heatmap type
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Green→blue density gradient intuitively communicates trace concentration.
-          Eye openings are unmistakable, especially in dark mode. No annotations guide
-          viewer to key measurements.
+        comment: Eye height measurement annotation creates clear focal point with
+          quantitative value (746 mV); dashed sampling reference guides viewer; density
+          gradient communicates trace concentration
     spec_compliance:
       score: 15
       max: 15
@@ -139,56 +134,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram via 2D density heatmap.
+        comment: Correct density heatmap eye diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density heatmap, time axis in UI, NRZ voltage levels, Gaussian noise
-          5%, timing jitter 3% UI, sigmoid transitions, 598 traces, 100 samples/UI
-          — all present.
+        comment: NRZ simulation with sigmoid transitions, Gaussian noise (5%), timing
+          jitter (3%), density heatmap coloring, time in UI, voltage 0-1V, eye-height
+          annotation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time 0–2 UI, Y=voltage in V; full data range visible.
+        comment: Time on X (0-2 UI), Voltage on Y, 598 overlaid traces, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'eye-diagram-basic · r · ggplot2 · anyplot.ai'.
-          Density legend labelled 'Density'.
+        comment: Title exact format; colorbar labeled Density
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All eye-diagram structural features present: dual signal levels,
-          transition edges, noise/jitter spread, 2-UI window. Minor deduction: no
-          eye height/width annotations.'
+        comment: Shows high-density trace bands, clear eye openings, transition jitter
+          spread, noise on flat segments — all key NRZ eye diagram aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ simulation with calibrated parameters (noise 5%, jitter 3% UI,
-          sigmoid k=18) realistic for SerDes/PCIe. Signal 0–1 V is standard. Technically
-          credible and neutral.
+        comment: NRZ is a real-world telecom/SerDes standard; noise sigma 5% and jitter
+          sigma 3% are physically realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 600 bits × 100 samp/UI = 60k samples; 598 overlaid traces in 2-UI
-          window is appropriate. Voltage range captures noise excursions (−0.15 to
-          +1.15 V).
+        comment: Signal levels 0-1V, 600-bit stream, 100 samples/UI — internally consistent
+          and domain-correct
     code_quality:
       score: 10
       max: 10
@@ -198,59 +189,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear flow: imports -> params -> data generation -> density computation
+          -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top.
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported; both used.
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized waveform generation via outer() is efficient and idiomatic
-          R. No fake functionality.
+        comment: Vectorized waveform generation; findInterval+tabulate for fast 2D
+          binning; outer() for sample matrix; idiomatic R
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) produces plot-light.png / plot-dark.png;
-          modern ggplot2/ragg API.
+        comment: sprintf('plot-%s.png', THEME) correct; linewidth= not deprecated
+          size= used throughout
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_raster(interpolate=TRUE), annotate(), scale_fill_gradient(),
+          coord_cartesian(clip=off), guide_colorbar — all high-level ggplot2 API
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: geom_bin_2d + scale_fill_gradient + trans=sqrt is canonical ggplot2
-          approach for 2D density. Theme layering over theme_minimal follows grammar-of-graphics
-          conventions correctly.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: sqrt-transformed fill scale and geom_bin_2d are ggplot2-specific
-          but not highly distinctive. No after_stat() transformations, coord_fixed(),
-          or advanced scale extensions used.
+        comment: geom_raster(interpolate=TRUE) with NA->na.value=PAGE_BG for eye opening
+          is ggplot2-specific. Manual density pre-computation rather than native stat_density_2d(geom=raster)
+          is a missed opportunity for idiomatic stat-layer usage
   verdict: APPROVED
 impl_tags:
   dependencies:
   - ragg
   techniques:
   - colorbar
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
@@ -258,3 +251,4 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
+  - grid-styling
