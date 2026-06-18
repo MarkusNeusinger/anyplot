@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-06-18
@@ -150,7 +150,7 @@ plot = (
         expand=[0, 0],
         breaks=[0, 2, 4, 6, 8, 10, 12],
     )
-    + labs(x="", title="dendrogram-basic · letsplot · anyplot.ai")
+    + labs(x="", title="dendrogram-basic · python · letsplot · anyplot.ai")
     + theme_void()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
