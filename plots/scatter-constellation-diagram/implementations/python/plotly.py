@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-17
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-06-18
 """
 
 import os
