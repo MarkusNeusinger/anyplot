@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:35:29Z'
-updated: '2026-06-18T02:10:28Z'
+updated: '2026-06-18T02:26:50Z'
 generated_by: claude-sonnet
 workflow_run: 27731574801
 issue: 4561
@@ -12,41 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all NRZ eye diagram features implemented correctly,
-    including bandwidth-limited transitions and proper noise/jitter parameters
-  - Excellent code quality — clean linear structure, proper seeding, all imports used
-  - Full Imprint palette compliance — imprint_seq correctly applied for density encoding,
-    complete theme-adaptive chrome in both renders
-  - Correct canvas dimensions (3200x1800 px, no bbox_inches=tight drift)
-  - Thoughtful colorbar theming (tick colors, label color, spine colors all set from
-    theme tokens)
+  - 2D density heatmap via sns.histplot with 2D binning is the optimal seaborn technique
+    for eye diagram — shows eye opening shape and trace concentration simultaneously
+  - imprint_seq colormap correctly selected for single-polarity density data; amber
+    anchor correctly used for engineering annotations
+  - 'Comprehensive NRZ simulation: Gaussian bandwidth-limited transitions, additive
+    noise (sigma=5%), random jitter (sigma=3%), and 400 overlaid traces'
+  - Theme-adaptive chrome applied to all elements including colorbar ticks, colorbar
+    label, spine colors, and annotation colors
+  - Correct savefig call without bbox_inches=tight — canvas dimensions preserved at
+    3200x1800
   weaknesses:
-  - 'Design Excellence is the main growth area: the eye opening — the central insight
-    of an eye diagram — is not visually emphasized. Adding annotations for eye height
-    and width (suggested as optional in spec) would dramatically improve storytelling.'
-  - Reference lines at 0V and 1V are unlabeled — annotating them as Logic 1 and Logic
-    0 would make the engineering context immediately clear.
-  - The eye opening is visible only as absence of data rather than being actively
-    highlighted — a subtle annotation or filled region marking the open eye area would
-    guide the viewer to the focal feature.
+  - 'Eye annotation elements are too thin/small: amber dashed rectangle at linewidth=0.9
+    and arrows at linewidth=1.0 are barely visible especially in light render; H:
+    / W: text at fontsize=6.5 and Logic 0/Logic 1 labels at fontsize=7 are very small
+    — increase to at least 9pt and linewidths to 1.5-2.0'
+  - Binned heatmap has a somewhat pixelated appearance due to discrete 300x180 bins
+    showing gaps between cells; consider using kde=True or overlaying a kdeplot for
+    smoother density rendering
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title 'eye-diagram-basic · python · seaborn · anyplot.ai' at fontsize=12, dark ink (#1A1A17), spans ~65% of plot width — fully readable. Axis labels 'Time (UI)' and 'Voltage (V)' at fontsize=10, dark ink — clearly readable. Tick labels at fontsize=8 in INK_SOFT (#4A4A44) — readable. Colorbar 'Trace Density' label and ticks in INK/INK_SOFT — readable.
-      Data: imprint_seq colormap (green #009E73 → blue #4467A3) encodes trace density. Green = sparse regions (eye opening edges, transitions), blue = high-density regions (NRZ signal rails at ~0V and ~1V). Eye opening clearly visible as transparent region. Two dashed reference lines at 0V and 1V (INK_SOFT, alpha=0.4).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct for light theme
+      Chrome: Title "eye-diagram-basic · python · seaborn · anyplot.ai" at fontsize=12 in dark ink, spans ~65% of plot width, fully readable. X-axis label "Time (UI)" and Y-axis label "Voltage (V)" in dark ink at fontsize=10, readable. Tick labels at fontsize=8 in INK_SOFT (#4A4A44), readable. Colorbar "Trace Density" label in dark ink, readable.
+      Data: imprint_seq colormap (brand green #009E73 at low density → blue #4467A3 at high density) encodes trace concentration. Two eye openings clearly visible as transparent (white) regions. Amber (#DDCC77) dashed rectangle outlines left eye opening with small H:/W: annotation arrows and text. Dashed reference lines at V=0 and V=1 faint but visible. Logic 0/Logic 1 small labels at right edge at fontsize=7.
+      Legibility verdict: PASS — all text readable, no light-on-light issues; annotation text (6.5pt) is small but technically present
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title text in light cream (#F0EFE8) — clearly readable against dark background. Axis labels in INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Colorbar label and ticks correctly light-colored. No dark-on-dark failures detected.
-      Data: Data colors (green #009E73 → blue #4467A3) are identical to light render — only chrome flipped. Eye opening appears as deep black void (plot background #1A1A17 showing through transparent bins), creating dramatic contrast with the dense signal rails. Reference lines visible as subtle dashed lines.
-      Legibility verdict: PASS — all text clearly readable against near-black background. Full theme-adaptive chrome correctly applied.
+      Background: Warm near-black #1A1A17 — correct for dark theme
+      Chrome: Title in light #F0EFE8, clearly readable against dark surface. Axis labels and tick labels in #B8B7B0 light gray, readable. Colorbar text in light color. No dark-on-dark failures detected. Spines in INK_SOFT (light gray in dark mode).
+      Data: Data colors identical to light render — same imprint_seq green-to-blue gradient. Eye openings appear near-black (transparent bins reveal #1A1A17 axes background). Amber annotations (rectangle, arrows, text) slightly more visible against dark background. Reference lines at V=0 and V=1 visible as soft dashed lines.
+      Legibility verdict: PASS — no dark-on-dark text issues; brand green #009E73 visible in density pattern
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,72 +55,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, labels=10, ticks=8). All
-          text readable in both themes. Colorbar label slightly small but legible.
+        comment: Main text sizes explicitly set (title=12, labels=10, ticks=8); annotation
+          text at 6.5pt and Logic labels at 7pt are small but present
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions anywhere.
+        comment: No text or data element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 2D histogram bins=[300, 180] provide excellent density resolution.
-          thresh=1 creates clean eye opening.
+        comment: Density heatmap and eye pattern clearly visible; amber annotations
+          thin (linewidth=0.9-1.0) and somewhat faint
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe. No red-green sole encoding.
+        comment: imprint_seq (green to blue) is CVD-safe and perceptually distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 px). No bbox_inches=tight. Good proportions.
+        comment: Plot fills canvas well; colorbar integrated cleanly; margins balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) are descriptive with units.
+        comment: Time (UI) and Voltage (V) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq correctly used. Backgrounds #FAF8F1 (light) / #1A1A17
-          (dark). Full theme-adaptive chrome.'
+        comment: 'imprint_seq for density; backgrounds #FAF8F1/#1A1A17; amber anchor
+          for annotations; chrome fully theme-adaptive'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Professional and clean with custom imprint_seq colormap, but overall
-          look is well-configured library default. No visual emphasis on the eye opening.
+        passed: true
+        comment: Professional with Imprint colormap and amber annotations above generic
+          defaults; not yet publication/FiveThirtyEight level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Despine applied, colorbar fully themed (tick colors, label, spines),
-          reference lines with alpha. Above default but not exceptional.
+        passed: true
+        comment: Top/right spines removed; no redundant grid; colorbar chrome-styled;
+          good whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Density coloring creates natural visual hierarchy. Reference lines
-          provide NRZ context. But the eye opening — the central story — is not annotated
-          or highlighted.
+        passed: true
+        comment: 'Amber rectangle highlights eye opening focal point; H:/W: measurements
+          add engineering narrative; density color guides viewer to transition zones'
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram as 2D density heatmap.
+        comment: Correct eye diagram via 2D density heatmap; two-eye NRZ pattern clearly
+          visible
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density coloring, time in UI, NRZ simulation with noise/jitter, gaussian
-          BW filter, reference levels all present.
+        comment: Density heatmap, UI time axis, NRZ levels, noise+jitter simulation,
+          bandwidth-limited transitions, eye measurements all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X (0-2 UI), Voltage on Y (-0.3 to 1.3 V), density in color.
+        comment: Time on X, Voltage on Y, 2 UI span, correct axis limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format. Colorbar substitutes legend
-          appropriately.
+        comment: Title matches required format; colorbar Trace Density label serves
+          as legend
     data_quality:
       score: 15
       max: 15
@@ -159,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: '400 traces (spec: 200-500). 200 samples/UI (spec: 100-200). Both
-          NRZ levels shown with visible transitions.'
+        comment: Both eye openings, transitions, noise spread, jitter effects, quantified
+          eye measurements all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic NRZ signal simulation with engineering-grade parameters.
+        comment: NRZ signal simulation with 400 traces is a genuine telecom/PCB signal
+          integrity scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voltage range -0.3 to 1.3 V, 2 UI time window, noise and jitter params
-          match spec exactly.
+        comment: Noise sigma=5%, jitter sigma=3% UI are realistic for a quality link;
+          standard NRZ voltage range
     code_quality:
       score: 10
       max: 10
@@ -183,32 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports -> theme -> colormap -> data -> plot ->
-          style -> save.'
+        comment: 'Linear: imports → tokens → colormap → data → measurements → plot
+          → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 imports used.
+        comment: 'All imports used: os, plt, np, pd, sns, LinearSegmentedColormap,
+          Rectangle, gaussian_filter1d'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean trace generation loop, no fake UI.
+        comment: Appropriate complexity for technical eye diagram; eye measurement
+          logic justified; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current seaborn API.
+        comment: Saves plot-{THEME}.png; no bbox_inches=tight; current API
     library_mastery:
       score: 7
       max: 10
@@ -218,26 +222,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.histplot with x+y for 2D histogram is correct seaborn pattern.
-          thresh=1 and cbar_kws are proper API. Above default.
+        comment: sns.histplot with 2D binning, thresh, cbar is idiomatic seaborn for
+          density visualization
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 2D statistical histogram via sns.histplot (stat=count, thresh) is
-          genuinely seaborn-distinctive. Could further leverage kdeplot or sns.set_context.
-  verdict: REJECTED
+        passed: true
+        comment: 2D histogram heatmap with thresh transparency and auto-colorbar is
+          distinctively seaborn
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
+  - annotations
+  - patches
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - custom-colormap
   - alpha-blending
