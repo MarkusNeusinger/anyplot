@@ -103,7 +103,7 @@ for (const z of zetaVals) {
   }
   refG.append("text")
     .attr("x", xs(ex) + 4).attr("y", ys(ey) - 4)
-    .attr("fill", t.grid).style("font-size", "12px")
+    .attr("fill", t.grid).style("font-size", "13px")
     .text(`ζ=${z}`);
 }
 
@@ -116,10 +116,10 @@ for (const wn of [1, 2, 3, 4]) {
 }
 refG.append("text")
   .attr("x", xs(0) + 2 * unitPx + 4).attr("y", ys(0) + 14)
-  .attr("fill", t.grid).style("font-size", "12px").text("ωn=2");
+  .attr("fill", t.grid).style("font-size", "13px").text("ωn=2");
 refG.append("text")
   .attr("x", xs(0) + 4 * unitPx + 4).attr("y", ys(0) + 14)
-  .attr("fill", t.grid).style("font-size", "12px").text("ωn=4");
+  .attr("fill", t.grid).style("font-size", "13px").text("ωn=4");
 
 // --- Imaginary axis (stability boundary) ------------------------------------
 g.append("line")
@@ -208,13 +208,14 @@ for (let b = 0; b < 3; b++) {
 }
 
 // --- Open-loop pole markers (×) --------------------------------------------
+const poleColor = t.palette[4];
 const poleG = g.append("g");
 for (const p of poles) {
   const px = xs(p.r), py = ys(p.i), s = 12;
   poleG.append("line").attr("x1", px - s).attr("y1", py - s).attr("x2", px + s).attr("y2", py + s)
-    .attr("stroke", "#AE3030").attr("stroke-width", 3.5).attr("stroke-linecap", "round");
+    .attr("stroke", poleColor).attr("stroke-width", 3.5).attr("stroke-linecap", "round");
   poleG.append("line").attr("x1", px - s).attr("y1", py + s).attr("x2", px + s).attr("y2", py - s)
-    .attr("stroke", "#AE3030").attr("stroke-width", 3.5).attr("stroke-linecap", "round");
+    .attr("stroke", poleColor).attr("stroke-width", 3.5).attr("stroke-linecap", "round");
 }
 
 // --- jω-axis crossing markers (K = 48, s = ±j·2√2) ------------------------
@@ -225,7 +226,7 @@ for (const sign of [1, -1]) {
     .attr("fill", t.amber).attr("stroke", t.ink).attr("stroke-width", 1.5);
   g.append("text")
     .attr("x", xs(0) + 13).attr("y", ys(sign * jwCross) + (sign > 0 ? -4 : 12))
-    .attr("fill", t.inkSoft).style("font-size", "12px")
+    .attr("fill", t.inkSoft).style("font-size", "13px")
     .text("K=48");
 }
 
@@ -240,7 +241,7 @@ g.append("text")
 
 // --- Legend -----------------------------------------------------------------
 const legendItems = [
-  { color: "#AE3030", label: "Open-loop poles (K=0)", type: "x" },
+  { color: poleColor, label: "Open-loop poles (K=0)", type: "x" },
   { color: t.palette[0], label: "Branch 1: from s=0", type: "line" },
   { color: t.palette[1], label: "Branch 2: from s=−2", type: "line" },
   { color: t.palette[2], label: "Branch 3: from s=−4", type: "line" },
@@ -250,7 +251,8 @@ const lx = iw - 252, ly0 = 22;
 g.append("rect")
   .attr("x", lx - 10).attr("y", ly0 - 12)
   .attr("width", 265).attr("height", legendItems.length * 24 + 22)
-  .attr("fill", t.elevatedBg).attr("rx", 5).attr("opacity", 0.92);
+  .attr("fill", t.elevatedBg).attr("rx", 5).attr("opacity", 0.92)
+  .attr("stroke", t.grid).attr("stroke-width", 1);
 
 legendItems.forEach((item, i) => {
   const liy = ly0 + i * 24;
