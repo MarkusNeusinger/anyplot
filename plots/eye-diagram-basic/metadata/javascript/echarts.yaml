@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:28:38Z'
-updated: '2026-06-18T02:35:31Z'
+updated: '2026-06-18T02:56:33Z'
 generated_by: claude-sonnet
 workflow_run: 27732402220
 issue: 4561
@@ -12,95 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Realistic NRZ signal simulation with correct noise (5% sigma) and jitter (3% UI)
-    parameters — produces authentic-looking eye diagram
-  - Sqrt density normalization improves perceptual dynamic range and makes trace-crossing
-    regions clearly visible
-  - Browser-compatible LCG with seed 42 provides fully deterministic data generation
-  - Correct Imprint palette usage for continuous data via t.seq stops in visualMap
-    inRange.color
-  - 'All required spec features implemented: density heatmap, correct axis units (UI
-    and V), bandwidth-limited sigmoid transitions, 400 overlaid traces'
-  - Clean minimal code structure with appropriately justified helper functions (LCG,
-    gauss, sigmoid) for browser environment
-  - Perfect canvas gate pass and both themes render correctly with theme-adaptive
-    chrome
+  - Correct eye diagram as 2D density heatmap with Imprint sequential colormap, background-blending
+    for zero-density areas creates clean visual
+  - NRZ reference lines at 0 V and 1 V annotated with dashed lines, amber bidirectional
+    arrows for eye height (0.70 V) and eye width (0.80 UI)
+  - Deterministic data generation using seeded LCG + Box-Muller Gaussian + sigmoid
+    bandwidth limiting — complete and realistic NRZ simulation
+  - Sqrt-normalization of density for improved perceptual dynamic range — good technique
+    for heatmap density display
+  - 'Full spec compliance: time axis in UI, voltage axis in V, 400 overlaid traces,
+    jitter and noise within spec parameters, optional eye measurements included'
+  - Spines, axis lines, and split lines all removed for clean heatmap look; category
+    axes used to achieve precise bin alignment
   weaknesses:
-  - 'DE-01 4/8: Aesthetic sophistication is at well-configured default level. Lacks
-    the extra design choices to reach publication quality — remove top/right axis
-    lines (axisLine: { show: false } on both axes + axisTick: { show: false }), add
-    a subtle horizontal markLine at y=0 and y=1 to visually anchor the NRZ logic levels,
-    or add an optional descriptive title prefix like ''NRZ Signal Integrity · '' to
-    provide domain context.'
-  - 'DE-02 4/6: Axis tick marks and axis lines are still showing. Removing them would
-    greatly clean up the chrome. The visualMap text ''Dense''/''Sparse'' could be
-    styled with a slightly larger fontSize (e.g. 14) to improve balance with the plot
-    title.'
-  - 'LM-02 3/5: The heatmap + visualMap approach is standard ECharts but lacks a feature
-    that really shows ECharts mastery. Consider adding ECharts markLine to annotate
-    the eye height (vertical span of open eye at t=1 UI) and eye width (horizontal
-    span at the 0.5V midpoint) — the spec explicitly mentions this as an optional
-    enhancement and it would be distinctive to ECharts'' built-in markLine/markArea
-    capabilities.'
-  - 'VQ-01 7/8: Minor imbalance — in the dark render the namegap values work well
-    but the overall label hierarchy could be slightly sharper. Consider adding a descriptive
-    subtitle or pushing title fontsize to 24 for better proportion against the large
-    canvas.'
+  - 'Amber annotation labels (''H: 0.70 V'', ''W: 0.80 UI'') use t.amber (#DDCC77)
+    for text on the light-mode background (#FAF8F1) — contrast ratio ~1.5:1, nearly
+    invisible in plot-light.png. Switch annotation label color to t.ink for light
+    mode or use t.inkSoft; reserve t.amber for the arrow lines only, or increase the
+    label fontsize to ≥13px.'
+  - Amber eye-measurement arrows also barely visible in light mode — the thin 2px
+    amber lines blend into the warm off-white surface. Consider adding a subtle shadow/outline
+    or using t.ink for the arrows in light mode.
+  - Helper functions lcg(), gauss(), sig() break strict KISS structure — acceptable
+    for complex signal simulation but noted as minor CQ-01 deduction.
+  - DE-03 storytelling is impaired by low annotation visibility in light mode — the
+    key insight (eye height and width measurements) is only clearly communicated in
+    the dark render.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme-adaptive background, not pure white.
-      Chrome: Title "eye-diagram-basic · javascript · echarts · anyplot.ai" in bold dark text (~65% canvas width), clearly readable. Y-axis label "Voltage (V)" vertical on left, X-axis label "Time (UI)" horizontal at bottom — both readable with appropriate sizing. Tick labels at 0.0/0.5/1.0/1.5/2.0 (time) and -0.5/0.0/0.5/1.0/1.5 (voltage) in inkSoft dark text. visualMap legend ("Dense"/"Sparse") on right with vertical color bar.
-      Data: Density heatmap from background (#FAF8F1) through teal (#009E73) to blue (#4467A3). Two prominent horizontal dense bands at ~0V and ~1V NRZ logic levels. Clear open "eye" regions at ~0.5V mid-voltage, most visible between t≈0.1–0.9 UI and t≈1.1–1.9 UI. Transition crossing regions at t≈0 and t≈1 show denser teal/blue patterns. Sqrt normalization makes fine structure visible.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface. No pure white.
+      Chrome: Title "eye-diagram-basic · javascript · echarts · anyplot.ai" in dark ink, clearly readable. Y-axis label "Voltage (V)" and X-axis label "Time (UI)" both readable in inkSoft. Tick labels (0.0/0.5/1.0/1.5/2.0 on X; -0.5/0.0/0.5/1.0/1.5 on Y) clearly legible. Colorbar legend "Dense"/"Sparse" legible. NRZ reference lines at ~0 V and ~1 V visible as dashed marks.
+      Data: Heatmap uses Imprint sequential (pageBg → t.seq[0] → t.seq[1]) — sparse areas fade into background, dense areas show teal-to-blue. Eye opening clearly visible as two rectangular white-ish regions at UI=0.5 and UI=1.5. Amber crosshair arrows present but VERY faint — #DDCC77 on #FAF8F1 has ~1.5:1 contrast ratio, labels "H: 0.70 V" and "W: 0.80 UI" barely discernible.
+      Legibility verdict: PASS for axes/title/ticks; MARGINAL FAIL for amber annotation labels (poor contrast on light surface).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme-adaptive background, not pure black.
-      Chrome: Title in light/white text at top, clearly readable against dark background. Axis labels and tick labels appear in lighter color (inkSoft dark-theme token), all clearly visible. visualMap "Dense"/"Sparse" labels in light text. No dark-on-dark failures detected.
-      Data: Identical teal-to-blue data colors as light render — dense bands at 0V and 1V are the same teal/blue palette, confirming data color identity between themes. Sparse areas fade to the dark background instead of the light background, creating a dramatically different but equally clear visual. Eye openings appear as clear dark voids between the signal bands.
-      Legibility verdict: PASS — all text clearly readable against near-black background. Chrome flipped correctly; data colors identical to light render.
+      Background: Warm near-black #1A1A17 — correct dark theme surface. No pure black.
+      Chrome: Title in light ink, clearly readable. Axis labels and tick labels in light inkSoft, clearly readable. Colorbar "Dense"/"Sparse" labels readable. No dark-on-dark issues anywhere. NRZ dashed reference lines visible.
+      Data: Same heatmap colors — teal/green to blue gradient, identical to light render. Amber arrows ("H: 0.70 V", "W: 0.80 UI") are CLEARLY visible against dark background — excellent contrast. The eye openings are dramatic and immediately recognizable.
+      Legibility verdict: PASS — all elements clearly readable, data colors identical to light render, chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22, labels 14, visualMap 13).
-          Readable in both themes. Very minor: nameGap values slightly asymmetric
-          (44 vs 58) but justified by Y-axis tick width.'
+        comment: Font sizes explicitly set (title 24px, labels 14px). Axes and chrome
+          readable in both themes. Amber annotation labels (#DDCC77) have poor contrast
+          on light background (~1.5:1) — barely visible in plot-light.png.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — heatmap, axes, and visualMap are well-separated.
+        comment: No overlapping text — tick labels spaced by every 50th bin (0.0/0.5/1.0/1.5/2.0),
+          colorbar well-positioned on right.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Density heatmap is clearly visible in both themes. Sqrt normalization
-          shows fine structure. Eye openings are prominent.
+        comment: Heatmap density well-adapted to 80,000 bin-samples. Eye opening clearly
+          visible. Amber measurement arrows barely visible in light mode.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential colormap (green to blue) is CVD-safe. No red-green-only
-          encoding.
+        comment: Imprint sequential colormap (green→blue) is CVD-safe. Good luminance
+          range from background to dense areas.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills ~75% of canvas. Balanced margins.
-          visualMap positioned appropriately within right margin.
+        comment: Canvas gate passed. Plot fills canvas well with grid margins (left:100,
+          right:140, top:80, bottom:78). Colorbar at right:18. Balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,39 +105,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq via t.seq[0] and t.seq[1] for continuous density
-          data. Background starts at t.pageBg (theme-adaptive) for zero-density areas
-          — valid density-visualization approach. Backgrounds correct (#FAF8F1 light
-          / #1A1A17 dark). Chrome tokens used throughout.'
+        comment: 'Continuous data uses Imprint sequential (t.seq) as required. Background
+          transparent → page shows correct #FAF8F1/#1A1A17. Data colors identical
+          across themes; only chrome flips.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default level. Correct palette and clean layout,
-          but lacks design choices that would elevate to publication quality (axis
-          line removal, reference line annotations at logic levels, or a descriptive
-          title prefix).
+        passed: true
+        comment: Professional density heatmap with background-blending sparse areas.
+          Amber arrows add measurement context. Above well-configured default but
+          not publication-ready polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Grid disabled (splitLine: false) is a good refinement above default.
-          Axis lines and tick marks still present. visualMap is clean but default-styled.'
+        passed: true
+        comment: Spines removed, axis lines hidden, ticks hidden, split lines hidden
+          — clean heatmap look. Above default.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Sqrt-normalized density coloring creates clear visual hierarchy —
-          dense logic-level bands attract the eye and the open eye region is the unmistakable
-          focal point. Data choice is excellent for the domain. No annotations for
-          eye metrics, which were listed as optional in spec.
+        passed: true
+        comment: NRZ reference lines and eye measurement annotations guide viewer,
+          but amber annotations barely visible in light render undermines the storytelling
+          for half the audience.
     spec_compliance:
       score: 15
       max: 15
@@ -154,31 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: eye diagram as density heatmap with color intensity showing
-          trace overlap frequency.'
+        comment: 'Correct: eye diagram as 2D density heatmap of overlaid signal periods.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: density heatmap coloring, 400 overlaid NRZ
-          traces, time axis in UI, voltage axis 0/1 V levels, Gaussian noise (5% sigma),
-          jitter (3% sigma), sigmoid bandwidth-limiting.'
+        comment: 'All spec features: density heatmap coloring, time axis in UI, voltage
+          axis with NRZ levels, noise sigma 5%, jitter sigma 3%, sigmoid bandwidth
+          limiting, eye height + width annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: time 0-2 UI, Y: voltage -0.5 to 1.5V. All data visible and correctly
-          mapped.'
+        comment: Time (0–2 UI) on X-axis, Voltage (V) on Y-axis, density mapped to
+          color intensity.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''eye-diagram-basic · javascript · echarts · anyplot.ai''
-          — correct format. visualMap labels ''Dense''/''Sparse'' are appropriate
-          for the single continuous series.'
+        comment: 'Title: ''eye-diagram-basic · javascript · echarts · anyplot.ai''.
+          Colorbar with Dense/Sparse labels.'
     data_quality:
       score: 15
       max: 15
@@ -188,63 +176,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all eye diagram aspects: NRZ logic levels, Gaussian noise,
-          timing jitter, bandwidth-limited transitions, high-density trace overlay,
-          clear eye opening.'
+        comment: 400 overlaid traces with NRZ noise, timing jitter, sigmoid transitions.
+          Eye opening clearly visible. Reference levels at 0 V and 1 V. Eye height
+          and width measured.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic NRZ digital signal simulation for telecom/PCB engineering.
-          Noise and jitter parameters are credible for a real channel.
+        comment: NRZ signal integrity — real telecommunications engineering scenario.
+          Not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-1V NRZ logic levels, 0-2 UI time window, 5% noise sigma, 3% jitter
-          sigma — all appropriate for a good-but-realistic digital channel.
+        comment: 0–2 UI time window correct for eye diagrams. -0.5 to 1.5 V voltage
+          range with margins around 0/1 V NRZ levels. Noise 5%, jitter 3% — realistic
+          for high-speed serial links.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean flow: LCG/gauss/sig helpers → data generation → density grid
-          → chart init → setOption. Helpers are minimal and necessary for browser
-          environment.'
+        comment: Three helper functions (lcg, gauss, sig) break strict KISS. Justified
+          for complex signal simulation but technically non-compliant.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG seeded at 42, fully deterministic. Correct approach for browser
-          environment without seeded Math.random.
+        comment: Seeded LCG with _s=42 — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed — only window globals used. All globals (ANYPLOT_TOKENS,
-          echarts, container) used correctly.
+        comment: No imports. Only uses window.ANYPLOT_TOKENS and echarts globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Uint32Array for grid is memory-efficient.
-          sqrt normalization is elegant. No fake UI elements.
+        comment: Well-structured, appropriate complexity. Uint32Array density grid
+          is efficient. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. No devicePixelRatio (correct). backgroundColor:
-          transparent (correct). Harness handles output files.'
+        comment: Harness handles output. Current ECharts API throughout.
     library_mastery:
       score: 7
       max: 10
@@ -254,25 +239,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses ECharts heatmap with category axes (not value axes) for precise
-          bin control, visualMap with inRange.color, emphasis: { disabled: true }
-          to prevent hover artifacts. Above the ''correct but not best patterns''
-          baseline.'
+        comment: Correct use of heatmap series, category axes for bin alignment, visualMap
+          for continuous coloring, markLine for annotations. Good idiomatic patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses ECharts-specific visualMap with custom color stops and category-axis
-          heatmap for density binning. This is somewhat distinctive but remains standard
-          ECharts usage. Opportunity to use markLine for eye-height/width annotations
-          — a feature distinctive to ECharts.
-  verdict: REJECTED
+        passed: true
+        comment: markLine with bidirectional arrows and custom labels — distinctive
+          ECharts feature. visualMap with pageBg as zero-density anchor is a creative
+          ECharts-specific technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
