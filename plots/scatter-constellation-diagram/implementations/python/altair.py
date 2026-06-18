@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-18
@@ -137,7 +137,7 @@ ideal_layer = (
 # Layer: EVM annotation
 evm_label = (
     alt.Chart(df_evm)
-    .mark_text(fontSize=11, fontWeight="bold", align="right", font="monospace")
+    .mark_text(fontSize=13, fontWeight="bold", align="right", font="monospace")
     .encode(x="I:Q", y="Q:Q", text="label:N", color=alt.value(INK))
 )
 
@@ -147,9 +147,15 @@ chart = (
         width=460,
         height=460,
         background=PAGE_BG,
-        title=alt.Title("scatter-constellation-diagram · altair · pyplots.ai", fontSize=16, anchor="middle", offset=10),
+        title=alt.Title(
+            "scatter-constellation-diagram · python · altair · anyplot.ai",
+            fontSize=17,
+            fontWeight="bold",
+            anchor="middle",
+            offset=10,
+        ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
