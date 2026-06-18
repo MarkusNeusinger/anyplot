@@ -1,3 +1,7 @@
+// anyplot.ai
+// dendrogram-basic: Basic Dendrogram
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 91/100 | Created: 2026-06-18
 //# anyplot-orientation: landscape
 // anyplot.ai
 // dendrogram-basic: Basic Dendrogram
