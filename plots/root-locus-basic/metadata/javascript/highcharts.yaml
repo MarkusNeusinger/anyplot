@@ -1,0 +1,262 @@
+library: highcharts
+language: javascript
+specification_id: root-locus-basic
+created: '2026-06-18T01:12:00Z'
+updated: '2026-06-18T01:37:32Z'
+generated_by: claude-sonnet
+workflow_run: 27727275765
+issue: 4414
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Mathematically rigorous cubic root computation using Cardano formula and trigonometric
+    method — correct branch tracking across all K
+  - Custom Highcharts SVG symbol (x_pole) for open-loop pole markers — idiomatic and
+    precise
+  - Post-render gain-direction arrows via chart.renderer.path() with trigonometric
+    orientation — showcases advanced Highcharts renderer
+  - 'Semantic color assignment: matte red (palette[4]) for stability boundary crossings
+    — appropriate semantic exception'
+  - Square canvas orientation chosen correctly for equal-axis-scaling requirement
+    of root locus
+  - Damping ratio guide lines (ζ=0.5 and ζ=0.7) with ShortDash style add engineering
+    context without visual clutter
+  - All theme tokens applied correctly — transparent background, inkSoft for chrome,
+    t.grid for grid lines
+  weaknesses:
+  - Missing natural frequency (ωn) concentric-circle guide lines — spec says both
+    damping ratio AND natural frequency lines; only ζ lines are present
+  - Two helper functions (cubicRoots, dampingLine) deviate from the KISS no-functions
+    preference; acceptable for this math-heavy chart but worth noting
+  - Legend text is slightly small at the bottom in both renders — may be hard to read
+    at mobile scale (~400px wide)
+  - Gain-direction arrows are small (len=10, w=5 px) — may not be visible at thumbnail
+    sizes; consider increasing to len=14, w=7
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "root-locus-basic · javascript · highcharts · anyplot.ai" in dark ink, readable; X-axis "Real Axis (σ)" and Y-axis "Imaginary Axis (jω)" in inkSoft; tick labels in inkSoft at 14px — all legible against the light background; solid axis plotLines at x=0 and y=0 for orientation; subtle dashed damping-ratio guide lines (ζ=0.5, ζ=0.7) from origin toward upper/lower quadrants
+      Data: Branch 1 (green #009E73) starting at origin, moving complex-upward crossing the imaginary axis into the RHP; Branch 2 (lavender #C475FD) going complex-downward as conjugate pair; Branch 3 (blue #4467A3) horizontal along negative real axis going left to −∞; × markers at OL poles (0, −2, −4) in dark ink; red diamonds (matte red #AE3030) at jω crossings (0, ±2.828); gain-direction arrows on all three branches; legend at bottom with 5 entries
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8 / #B8B7B0); tick labels light-colored against dark background; grid lines subtle; all text clearly readable against the dark background — no dark-on-dark failures
+      Data: Data colors identical to light render — Branch 1 green, Branch 2 lavender, Branch 3 blue, red diamonds at crossings, white × markers for poles; gain arrows visible; legend entries readable at bottom
+      Legibility verdict: PASS — all text legible against dark background; brand green #009E73 clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks/legend). Readable in both themes. Legend text at bottom slightly small
+          at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Branches, markers, arrows, and guide lines all clearly visible. Line
+          width 2.5px appropriate for the density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette; CVD-safe; matte red for stability boundary has good
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Square canvas (2400x2400) correct for symmetric complex-plane plot.
+          x: -7 to 5 (12 units), y: -6 to 6 (12 units) — equal scaling. No clipping.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real Axis (σ) and Imaginary Axis (jω) — descriptive with appropriate
+          engineering symbols.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Canonical palette order for branches 1-3.
+          palette[4] (matte red) for stability boundary — valid semantic exception.
+          Transparent background shows theme surface correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom SVG symbol for x_pole markers. Post-render trigonometric arrows
+          via chart.renderer.path(). Semantic matte red for stability boundary. Dashed
+          damping guide lines. Clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Transparent background, subtle ShortDash guide lines, plotLines for
+          axis crosshairs, t.grid for subtle grid. Standard Highcharts spines retained
+          (appropriate for scientific chart).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: red diamonds catch eye at stability boundary;
+          gain arrows narrate pole trajectory; damping guide lines provide engineering
+          context. Stability insight is immediately apparent.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct root locus plot with continuous pole-trajectory curves.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'OL poles (x markers) present. Continuous curves with gain arrows
+          present. Real axis segments shown implicitly via branch trajectories. jω
+          crossings prominently marked. Damping ratio lines present. Missing: natural
+          frequency (omega_n) concentric-circle guide lines — spec requires both damping
+          ratio AND natural frequency reference lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on X axis, imaginary on Y axis. Equal axis scaling on square
+          canvas.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''root-locus-basic · javascript · highcharts · anyplot.ai''
+          — correct. Legend labels all match series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows 3 branches, OL poles, stability crossings, gain direction,
+          breakaway behavior, real axis and complex trajectories, damping guide lines.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic G(s) = K/(s(s+2)(s+4)) textbook transfer function. Mathematically
+          accurate with correct Cardano/trigonometric method.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Breakaway at s≈-0.845, K≈3.08 and jω crossing at K=48, s=±j2√2 are
+          mathematically correct. Axis ranges appropriate.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (cubicRoots, dampingLine) deviate from strict
+          no-functions rule, though appropriate for this math-heavy implementation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic mathematical computation — no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (JS global Highcharts only). No unused code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized sections, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) call. Harness handles
+          PNG output.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert-level Highcharts: animation:false on both levels, credits
+          disabled, theme tokens correctly mapped, chart.renderer for post-render
+          additions, zIndex management, plotLines for axis guides.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts.SVGRenderer.prototype.symbols extension for custom x_pole
+          symbol is uniquely Highcharts-native. chart.renderer.path() for post-render
+          SVG directional arrows is a distinctive Highcharts renderer capability.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
