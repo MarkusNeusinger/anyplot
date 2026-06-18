@@ -1,7 +1,7 @@
 # anyplot.ai
 # root-locus-basic: Root Locus Plot for Control Systems
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-06-18
+# Quality: 88/100 | Created: 2026-06-18
 
 using CairoMakie
 using Colors
