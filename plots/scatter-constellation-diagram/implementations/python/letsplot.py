@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
-Library: letsplot 4.9.0 | Python 3.14.3
+Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 91/100 | Updated: 2026-06-18
 """
 
