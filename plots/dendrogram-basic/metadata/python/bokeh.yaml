@@ -1,56 +1,61 @@
 library: bokeh
+language: python
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:43Z'
-updated: '2026-04-05T21:15:38Z'
-generated_by: claude-opus-4-6
-workflow_run: 20457532402
-issue: 0
-python_version: 3.14.3
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/bokeh/plot.html
-quality_score: 90
-impl_tags:
-  dependencies:
-  - scipy
-  techniques:
-  - hover-tooltips
-  - manual-ticks
-  - custom-legend
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - columndatasource
-  dataprep:
-  - hierarchical-clustering
-  styling:
-  - grid-styling
-  - alpha-blending
+updated: '2026-06-18T04:16:34Z'
+generated_by: claude-sonnet
+workflow_run: 27735852988
+issue: 986
+language_version: 3.13.13
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent manual dendrogram construction with proper U-shaped connectors and leaf
-    ordering
-  - Interactive HoverTool showing merge distance, cluster size, and member names on
-    each branch
-  - Semantic color coding (within vs between-cluster) with threshold line tells a
-    clear clustering story
-  - Sqrt scaling on y-axis improves visibility of lower-level merges
-  - Dual output (PNG + HTML) leverages Bokeh interactive strengths
+  - 'Semantically meaningful color assignment: green (#009E73) for within-cluster
+    cohesion and matte red (#AE3030) for between-cluster separation — exactly matching
+    the Imprint palette''s semantic anchors'
+  - Rich interactive HoverTool with line_policy='interp' on multi_line branches, exposing
+    merge distance, cluster size, and left/right member lists — a distinctive Bokeh
+    capability not replicable in static libraries
+  - Sqrt-scale transformation on Y-axis spreads lower-level merges for better readability
+  - Cluster threshold dashed line + annotation adds analytical context and creates
+    a clear visual focal point
+  - 'Both theme renders fully functional: correct PAGE_BG (#FAF8F1 / #1A1A17), theme-adaptive
+    INK tokens on all chrome elements — no dark-on-dark or light-on-light failures'
+  - Canonical font sizes (50pt title, 42pt axis labels, 34pt ticks/legend) produce
+    well-proportioned text at 3200x1800
+  - 'Clean axis: axis_line_color=None, all tick line colors removed, x-grid off, y-grid
+    at 15% alpha'
   weaknesses:
-  - Axis lines still visible; removing them would further refine visual appearance
-  - Branch line_width could be slightly increased for finest merges on 4800px canvas
-  image_description: 'The plot displays a vertical dendrogram of 15 iris flower samples
-    (5 each of Setosa, Versicolor, Virginica) using Ward''s method with sqrt-scaled
-    y-axis. X-axis labels are rotated ~45 degrees showing sample names (e.g., "Setosa-4",
-    "Versicolor-1", "Virginica-3"). Teal (#0F7B6C) lines represent within-cluster
-    merges and warm red (#C0392B) lines represent between-cluster merges. A dashed
-    horizontal line labeled "cluster threshold" separates the two color regimes. The
-    hierarchical structure clearly shows three species clusters: Setosa on the left,
-    Versicolor in the middle, and Virginica on the right, with the final cross-species
-    merge at the top in red. Legend in top-left shows "Within-cluster" and "Between-cluster"
-    with a clean bordered background. The background is light gray (#FAFAFA), y-grid
-    is subtle dashed lines, x-grid is hidden, and the outline is removed.'
+  - 'VQ-04 (minor): The two series (Within-cluster / Between-cluster) are distinguished
+    solely by green (#009E73) vs. matte red (#AE3030). For deuteranopia/protanopia
+    users this hue pair is hard to separate — consider adding a secondary encoding
+    such as line_dash=''dashed'' for the Between-cluster series or a line_dash pattern
+    to make the categories distinguishable without color alone.'
+  - 'DE-01 (moderate): Aesthetic sophistication is solid but not quite FiveThirtyEight-level
+    — the legend sits in the default top_left without visual integration into the
+    chart story, and the threshold annotation uses italic text without further emphasis.
+    A subtle background rectangle under the ''cluster threshold'' label, or a bolder
+    annotation arrow, would lift the design.'
+  - 'LM-02 (minor): The interactive HTML is not exploiting Bokeh''s full power — no
+    TapTool, no JS callback to highlight sub-trees on hover, no panel/widget for dynamic
+    threshold adjustment. These are optional but would raise Library Mastery distinctiveness.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface, no pure white.
+      Chrome: Title "dendrogram-basic · python · bokeh · anyplot.ai" in dark #1A1A17, spanning ~50% of canvas width — clearly readable. Y-axis label "Distance (Ward's Method, √ scale)" in dark ink, italicized. X-axis label "Iris Sample" in dark ink. Tick labels in #4A4A44 (INK_SOFT) — readable at this size. Legend top-left with ELEVATED_BG fill and INK_SOFT border: "Within-cluster" and "Between-cluster" labels readable. Cluster threshold dashed line with italic "cluster threshold" annotation in INK_MUTED — visible.
+      Data: Within-cluster branches in #009E73 (brand green); between-cluster (cross-species) top branch in #AE3030 (matte red). U-shaped connectors at 6pt line width. Three natural species groupings (Setosa left, Versicolor center, Virginica right) clearly visible. Y-axis tick labels 0–3.5 on sqrt scale. X-axis: 15 rotated (45°) leaf labels (Setosa-1 to Virginica-5). Y-grid: subtle horizontal lines at 15% alpha.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, no pure black.
+      Chrome: Title in light #F0EFE8 — clearly readable against dark background. Axis labels in light ink. Tick labels in #B8B7B0 (INK_SOFT dark) — visible and readable against #1A1A17, no dark-on-dark failure. Legend with #242420 (ELEVATED_BG dark) fill and #B8B7B0 border — well contrasted. Cluster threshold annotation in #A8A79F (INK_MUTED dark) — visible.
+      Data: Branch colors identical to light render — within-cluster #009E73 and between-cluster #AE3030. Data colors unchanged between themes as required. Y-grid subtle horizontal lines at 15% alpha against dark background.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,62 +66,87 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 30pt, axis labels 24pt, x-ticks
-          18pt, y-ticks 20pt, legend 22pt'
+        comment: 'All font sizes explicitly set: 50pt title, 42pt axis labels, 34pt
+          ticks and legend. Proportions well-balanced in both renders. No overflow,
+          no clipping.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45 degrees with generous min_border_bottom,
-          no collisions
+        comment: Rotated 45-degree x-axis tick labels clear. No label-to-label or
+          label-to-data overlap. Legend and threshold annotation don't collide with
+          branches.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines at line_width=4 are good but could be slightly thicker for
-          finest branches
+        comment: 6pt line_width for dendrogram branches is well-adapted to sparse
+          tree structure. Threshold dashed line visible. All 15 leaf labels rendered.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Teal vs warm red is colorblind-safe
+        comment: Semantic use of green/red is justified by domain convention. However,
+          green-vs-red is the sole distinguishing signal between the two series —
+          protanopia/deuteranopia users cannot separate them by hue alone. No secondary
+          encoding (line dash, width) added.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Dendrogram fills plot area well. min_border settings provide generous
+          margins. Canvas gate passed. No content cut off at any edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with method context
+        comment: 'Y-axis: ''Distance (Ward''s Method, sqrt scale)'' — descriptive
+          with method and scale. X-axis: ''Iris Sample'' appropriate. Title follows
+          required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73 (brand green). Second series = #AE3030 (matte
+          red) — valid semantic exception for clustering separation. Both backgrounds
+          correct: #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive.
+          Data colors identical across both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Intentional color palette, custom typography, professional polish
+        comment: 'Above ''well-configured default'': semantic color assignment, sqrt
+          scale transformation, threshold annotation all show intentional design.
+          Not yet FiveThirtyEight-level — legend sits in default position, threshold
+          label lacks visual hierarchy beyond italics.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid hidden, y-grid subtle, outline removed, selective tick styling
+        comment: Axis lines removed (axis_line_color=None), all tick line colors removed,
+          x-grid disabled, y-grid at 15% alpha, legend styled with elevated background.
+          Clear refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding within vs between-cluster, threshold line, sqrt scaling
+        comment: Color-coded within/between cluster branches create visual hierarchy.
+          Threshold line + annotation creates a clear focal point showing when species
+          diverge. Sqrt scale reveals lower-level merge structure. Viewer is guided
+          toward the three-species clustering story.
     spec_compliance:
       score: 15
       max: 15
@@ -126,49 +156,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dendrogram with hierarchical tree structure
+        comment: Correct dendrogram implemented via U-shaped multi_line connectors
+          built from scipy linkage matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Ward's method, proportional branch heights, vertical orientation,
-          sample labels
+        comment: 'Tree-like structure, branch heights proportional to merge distances,
+          scipy.cluster.hierarchy used, iris species data, 15 samples in readable
+          range. Bonus: threshold annotation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows samples in leaf order, Y-axis shows merge distances
+        comment: 'X-axis: leaf sample labels ordered by leaves_list. Y-axis: merge
+          distances (sqrt-scaled). Leaf order correct via Ward''s linkage.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: 'Title: ''dendrogram-basic · python · bokeh · anyplot.ai'' — exact
+          required format. Legend: ''Within-cluster'' / ''Between-cluster'' — semantically
+          appropriate.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three distinct clusters with varying merge distances, within and
-          between-cluster merges
+        comment: Shows hierarchical tree with multiple merge levels, within-cluster
+          and between-cluster merges, three distinct species groupings, sqrt scale
+          for visual spread.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris flower measurements - classic, neutral scientific dataset
+        comment: Iris flower species (Setosa, Versicolor, Virginica) with realistic
+          petal/sepal measurements. Neutral scientific dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic iris measurement ranges
+        comment: Ward's linkage distances are realistic for normalized iris measurements.
+          15 samples (5 per species) is in the spec's recommended 10-50 range.
     code_quality:
       score: 10
       max: 10
@@ -178,45 +216,73 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, computation, plotting, save'
+        comment: 'Flat structure: tokens → data → clustering → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (io, os, time, Path, numpy, bokeh, PIL, scipy, selenium)
+          are used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean manual dendrogram construction, appropriate complexity
+        comment: Clean Pythonic code. Linkage loop builds segment arrays efficiently.
+          HoverTool is legitimate for Bokeh (not fake interactivity).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, also HTML
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
+          API (output_file + save + Selenium).
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, multi_line, HoverTool, Span, Label, FixedTicker
+        comment: ColumnDataSource, multi_line, HoverTool with renderers, Span, Label,
+          FixedTicker, major_label_overrides — all idiomatic Bokeh patterns used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with branch tooltips, hover visual feedback, HTML export
+        comment: HoverTool with line_policy='interp' on multi_line — distinctively
+          Bokeh. Rich tooltip columns (merge distance, cluster size, member lists)
+          in ColumnDataSource. hover_line_width/hover_line_color properties on branch
+          renderer. HTML output for interactive use. Falls short of 5 — no TapTool,
+          JS callbacks, or widget-based threshold interaction.
   verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - selenium
+  - pillow
+  techniques:
+  - hover-tooltips
+  - html-export
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - columndatasource
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - alpha-blending
+  - grid-styling
