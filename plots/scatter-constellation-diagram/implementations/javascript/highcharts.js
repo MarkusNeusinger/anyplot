@@ -1,7 +1,3 @@
-// anyplot.ai
-// scatter-constellation-diagram: Digital Modulation Constellation Diagram
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-18
 //# anyplot-orientation: square
 // anyplot.ai
 // scatter-constellation-diagram: Digital Modulation Constellation Diagram
@@ -51,20 +47,14 @@ for (const { x: ip, y: qp } of idealPoints) {
 const AVG_SIGNAL_POWER = 10;
 const evmPct = (Math.sqrt(sumSqErr / received.length / AVG_SIGNAL_POWER) * 100).toFixed(1);
 
-// Decision boundaries for 16-QAM (midpoints between adjacent symbol levels)
+// Decision boundary positions (midpoints between adjacent symbol levels)
 const BOUNDARIES = [-2, 0, 2];
-const makeDecisionLine = (val) => ({
-    value: val,
-    color: t.inkSoft,
-    dashStyle: 'Dash',
-    width: 1.2,
-    zIndex: 2,
-});
 
-Highcharts.chart('container', {
+const chart = Highcharts.chart('container', {
     chart: {
         type: 'scatter',
         backgroundColor: 'transparent',
+        plotBorderWidth: 0,
         animation: false,
         style: { fontFamily: 'inherit' },
     },
@@ -75,7 +65,7 @@ Highcharts.chart('container', {
         style: { color: t.ink, fontSize: '21px', fontWeight: '600' },
     },
     subtitle: {
-        text: `16-QAM · EVM = ${evmPct}%`,
+        text: '16-QAM Constellation · SNR ≈ 20 dB',
         style: { color: t.inkSoft, fontSize: '14px' },
     },
     xAxis: {
@@ -90,7 +80,13 @@ Highcharts.chart('container', {
         tickColor: t.inkSoft,
         gridLineWidth: 0,
         labels: { style: { color: t.inkSoft, fontSize: '14px' } },
-        plotLines: BOUNDARIES.map(makeDecisionLine),
+        plotLines: BOUNDARIES.map(val => ({
+            value: val,
+            color: t.inkSoft,
+            dashStyle: 'Dash',
+            width: 1.2,
+            zIndex: 2,
+        })),
     },
     yAxis: {
         title: {
@@ -104,7 +100,13 @@ Highcharts.chart('container', {
         tickColor: t.inkSoft,
         gridLineWidth: 0,
         labels: { style: { color: t.inkSoft, fontSize: '14px' } },
-        plotLines: BOUNDARIES.map(makeDecisionLine),
+        plotLines: BOUNDARIES.map(val => ({
+            value: val,
+            color: t.inkSoft,
+            dashStyle: 'Dash',
+            width: 1.2,
+            zIndex: 2,
+        })),
     },
     legend: {
         itemStyle: { color: t.inkSoft, fontSize: '14px' },
@@ -143,3 +145,22 @@ Highcharts.chart('container', {
         },
     ],
 });
+
+// EVM annotation placed directly on the plot area via Highcharts SVG renderer
+chart.renderer.label(
+    `EVM = ${evmPct}%`,
+    chart.plotLeft + 8,
+    chart.plotTop + 8
+).css({
+    color: t.inkSoft,
+    fontSize: '13px',
+    fontWeight: '600',
+    fontFamily: 'inherit',
+}).attr({
+    fill: t.elevatedBg,
+    stroke: t.grid,
+    'stroke-width': 1,
+    padding: 6,
+    r: 3,
+    zIndex: 5,
+}).add();
