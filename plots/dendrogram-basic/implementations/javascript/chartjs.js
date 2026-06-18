@@ -13,10 +13,10 @@ const ITEMS = [
   { label: "Setosa 2",    f: [4.9, 3.0, 1.4, 0.2] },
   { label: "Setosa 3",    f: [4.7, 3.2, 1.3, 0.2] },
   { label: "Setosa 4",    f: [5.0, 3.6, 1.4, 0.2] },
-  { label: "Versiclr 1",  f: [7.0, 3.2, 4.7, 1.4] },
-  { label: "Versiclr 2",  f: [6.4, 3.2, 4.5, 1.5] },
-  { label: "Versiclr 3",  f: [6.9, 3.1, 4.9, 1.5] },
-  { label: "Versiclr 4",  f: [5.5, 2.3, 4.0, 1.3] },
+  { label: "Versicolor 1", f: [7.0, 3.2, 4.7, 1.4] },
+  { label: "Versicolor 2", f: [6.4, 3.2, 4.5, 1.5] },
+  { label: "Versicolor 3", f: [6.9, 3.1, 4.9, 1.5] },
+  { label: "Versicolor 4", f: [5.5, 2.3, 4.0, 1.3] },
   { label: "Virginica 1", f: [6.3, 3.3, 6.0, 2.5] },
   { label: "Virginica 2", f: [5.8, 2.7, 5.1, 1.9] },
   { label: "Virginica 3", f: [7.1, 3.0, 5.9, 2.1] },
@@ -81,7 +81,7 @@ leafOrder.forEach((idx, pos) => { leafPos[idx] = pos; });
 // --- Species → Imprint palette color ---
 function speciesColor(name) {
   if (name === "Setosa")   return t.palette[0];  // brand green
-  if (name === "Versiclr") return t.palette[1];  // lavender
+  if (name === "Versicolor") return t.palette[1];  // lavender
   return t.palette[2];                            // blue
 }
 
