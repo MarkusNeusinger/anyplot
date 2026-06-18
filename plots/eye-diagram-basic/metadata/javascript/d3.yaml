@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:30:58Z'
-updated: '2026-06-18T02:36:52Z'
+updated: '2026-06-18T02:55:11Z'
 generated_by: claude-sonnet
 workflow_run: 27732338024
 issue: 4561
@@ -12,131 +12,149 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: all required eye diagram features implemented correctly
-    (density heatmap, NRZ simulation, sigmoid BW-limiting, reference lines, 400 traces,
-    2-UI window)'
-  - Deterministic LCG RNG ensures reproducibility without browser Math.random()
-  - Correct Imprint sequential colormap via tok.seq tokens; full theme-adaptive chrome
-    in both renders
-  - 'Highly idiomatic D3: direct Int32Array to SVG rect data binding for density heatmap;
-    d3.interpolateRgbBasis for multi-stop color interpolation'
-  - 'Strong data storytelling: eye opening, density hot-spots at bit levels, dashed
-    crosshair reference lines all contribute to signal integrity narrative'
-  - 'Perfect data quality: realistic SerDes parameters (noise sigma=5%, jitter sigma=3%
-    UI), appropriate NRZ voltage levels'
+  - Sophisticated hybrid canvas+SVG architecture with per-pixel bilinear interpolation
+    between histogram bins — eliminates banding and pixelation in the density heatmap
+  - Deterministic LCG RNG with fixed seed 42 produces a fully reproducible, self-contained
+    implementation with no network requests
+  - Correct Imprint seq colormap (tok.pageBg → tok.seq[0] → tok.seq[1]) maps zero-density
+    regions to the page background for seamless blending in both themes
+  - Well-chosen dashed reference lines at 0 V and 1 V signal levels plus a center
+    line at 1 UI mark the optimal sampling instant without cluttering the plot
+  - 'Theme-adaptive chrome is complete: tok.ink for title and axis labels, tok.inkSoft
+    for tick text and domain lines — no dark-on-dark failures in the dark render'
   weaknesses:
-  - 'Vertical banding/striping artifacts throughout the entire heatmap: The 200-bin
-    grid over approximately 1420px CSS inner width yields non-integer cell width (approximately
-    7.1px per bin). SVG sub-pixel rendering creates regular gaps/overlaps that appear
-    as dark vertical stripes — a venetian-blind pattern visible in both renders. Fix:
-    replace the SVG rect grid with an HTML5 canvas element for the heatmap layer.
-    Draw histogram data to ImageData at pixel level for smooth, artifact-free density
-    rendering. Keep all SVG axis/label/reference-line code unchanged.'
-  - 'Pixelated/blocky cell texture: At 200x120 bins over a 1420x730px plot area each
-    cell is approximately 7x6px, producing a clearly pixelated texture. The canvas-based
-    approach resolves this by enabling per-pixel color mapping for a smooth, publication-quality
-    heatmap appearance appropriate for an eye diagram.'
+  - 'SC-02 minor: spec requires 100–200 samples per UI, but 160 samples over the 2
+    UI window yields only 80 samples/UI per trace — increase SAMPLES to at least 200
+    (100/UI) for spec compliance'
+  - 'DE-01/DE-02 ceiling: the plot reads as a well-configured density chart but lacks
+    the extra narrative polish (e.g. a short subtitle, an eye-height annotation callout,
+    or a colorbar/legend for the density scale) that would push it to publication-ready
+    tier'
+  - Canvas element is sized in CSS px (iw × ih) without devicePixelRatio compensation
+    — at DPR=2 the canvas backing store is 2× upscaled, which is mitigated by bilinear
+    interpolation but could be sharper with explicit pixel-density handling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
-      Chrome: Title "eye-diagram-basic · javascript · d3 · anyplot.ai" in dark ink at top, clearly visible. Axis labels "Time (UI)" and "Voltage (V)" in dark ink, readable. Tick labels (-0.2V to 1.2V, 0 UI to 2 UI) in secondary dark ink, readable at 14px. Dashed reference lines at 0V, 1V, and 1 UI in secondary ink color. All chrome elements are dark on light — legible.
-      Data: Green-to-blue Imprint sequential gradient (tok.pageBg → tok.seq[0] → tok.seq[1]). Signal density regions rendered in teal/green (low density) to blue-green (high density). Eye opening (zero-trace region) appears as the background cream color. Characteristic NRZ eye shape clearly visible with X-shaped crossing at center and open aperture. First series starts from brand green #009E73 (tok.seq[0]).
-      Artifact: Prominent vertical banding (venetian-blind striping) throughout entire heatmap from non-integer SVG cell widths (1420px / 200 bins ≈ 7.1px).
-      Legibility verdict: PASS — all text readable; eye shape unambiguous; artifact is visual quality issue only
+      Background: Warm off-white (#FAF8F1) fills the entire canvas — correct theme surface.
+      Chrome: Title "eye-diagram-basic · javascript · d3 · anyplot.ai" in dark ink at 22px is
+        clearly readable, spanning ~65% of canvas width. Y-axis label "Voltage (V)" rotated
+        -90° on the left side is fully visible. X-axis label "Time (UI)" centred below the
+        plot is clearly readable. Tick labels ("-0.2 V" through "1.2 V" on Y; "0 UI" through
+        "2 UI" on X) at 14px are fully legible — all dark text on the cream background with
+        no crowding or clipping.
+      Data: The density heatmap transitions from the warm cream background (zero density) through
+        brand green (#009E73 — tok.seq[0]) to a bright cyan-teal (midpoint overshoot of the
+        B-spline interpolator between seq[0]=#009E73 and seq[1]=#4467A3) for high density.
+        The characteristic eye-shaped opening is clearly visible in the centre of the 2 UI
+        window. Horizontal dashed reference lines at 0 V and 1 V mark the NRZ signal levels.
+        A vertical dashed line at 1 UI marks the optimal sampling instant.
+      Legibility verdict: PASS — all text is dark on cream, no crowding, no clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface
-      Chrome: Title and all axis labels/ticks render in light ink (tok.ink / tok.inkSoft) — fully readable against dark background. No dark-on-dark failures observed. Dashed reference lines are light-colored and visible.
-      Data: Colors identical to light render — same Imprint sequential green-to-blue gradient. Eye opening now appears as the dark background color, creating effective negative-space eye shape. Hot-spots at 0V and 1V stable bit levels clearly visible as bright green-blue regions.
-      Artifact: Same vertical banding pattern as light render, slightly more pronounced on dark background.
-      Legibility verdict: PASS — all text readable; data colors identical to light render; no chrome failures
+      Background: Warm near-black (#1A1A17) — correct dark-theme surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light ink (tok.ink / tok.inkSoft)
+        against the dark background — no dark-on-dark failure. Every text element is clearly
+        readable. The dashed reference lines use tok.inkSoft with opacity, remaining visible
+        without overwhelming the heatmap.
+      Data: The density heatmap now transitions from the dark page background through the same
+        seq color stops. The high-density signal rails and transition zones render as the same
+        bright cyan-teal colour seen in the light render — data colour identity confirmed.
+        The eye opening appears as the dark background, creating a visually striking contrast
+        that is arguably more dramatic than the light render. Horizontal and vertical reference
+        lines remain visible.
+      Legibility verdict: PASS — all text is light on dark, no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (22px title, 16px axis labels, 14px
-          ticks). Readable in both themes. Minor: tick labels at 14px are at the lower
-          end for this canvas size.'
+        comment: All font sizes explicitly set (title 22px/600, axis labels 16px,
+          tick labels 14px). Well-proportioned across both themes. Title spans ~65%
+          of canvas width — expected for the mandated format.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps in either render.
+        comment: No text overlaps. Y-axis ticks evenly spaced. No legend to collide
+          with data. Reference lines do not obscure labels.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Eye shape and density gradient clearly visible. Prominent vertical
-          banding artifacts (non-integer SVG cell widths) create a venetian-blind
-          striping pattern reducing visual clarity.
+        comment: Density heatmap is vivid and clearly communicates trace concentration.
+          Reference lines visible in both themes. Eye opening prominently shown.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue Imprint cmap is CVD-safe. Good luminance
-          contrast between empty background and dense signal regions.
+        comment: Imprint seq colormap is CVD-safe. No red-green sole distinguishing
+          signal. High contrast between eye opening and dense signal rails.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~75% of canvas. Balanced margins. Good whitespace. No
-          canvas overflow.
+        comment: Plot fills the canvas well with balanced margins (top 80, bottom
+          90, left 110, right 70). No content clipped. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) — descriptive with units.
+        comment: 'X: ''Time (UI)'' with unit; Y: ''Voltage (V)'' with unit. Tick labels
+          also include units directly (V suffix, UI suffix).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses tok.seq[0]/tok.seq[1] (Imprint sequential stops) for density
-          colormap. Background #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive.'
+        comment: Sequential density colormap uses tok.seq[0] (#009E73) and tok.seq[1]
+          (#4467A3) — correct Imprint seq for single-polarity data. pageBg as zero-density
+          base blends seamlessly with background. Theme-adaptive chrome is correct
+          in both renders.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Good design intent (density heatmap, Imprint colormap, dashed reference
-          lines) but pixelated/striped rendering artifacts prevent true visual sophistication.
-          Well-configured library default territory.
+        passed: true
+        comment: Professional density heatmap with smooth bilinear interpolation.
+          Hybrid canvas+SVG is an advanced technique. Clean, intentional visual hierarchy.
+          Not quite FiveThirtyEight-level (no annotations for eye metrics, no colorbar/legend
+          for density).
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clean axis styling, subtle dashed reference lines, theme tokens applied
-          throughout. Vertical banding artifacts throughout the plot area are the
-          primary refinement failure.
+        passed: true
+        comment: 'Good refinement: only left and bottom axes shown, tick lines use
+          opacity 0.35, domain lines use opacity 0.5. Dashed reference lines are tasteful.
+          Could add a subtle Y-only grid or density legend for additional polish.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Effective storytelling: density hot-spots at 0V and 1V show stable
-          bit levels; open eye aperture communicates signal quality; dashed crosshairs
-          at t=1 UI and nominal voltage levels provide engineering context.'
+        comment: Eye diagram inherently tells a clear story — wide open eye signals
+          clean NRZ transmission. Dashed lines at 0V, 1V, and 1 UI reinforce the signal
+          integrity narrative. Density coloring highlights where traces concentrate.
+          Viewer grasps the signal quality immediately.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -144,29 +162,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram as density heatmap. Shows overlaid NRZ traces.
-          Characteristic X-shaped crossing and eye opening visible.
+        comment: Correct eye diagram implemented as a density heatmap with overlaid
+          NRZ traces.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Density heatmap coloring, time axis in UI, NRZ simulation with Gaussian
-          noise (sigma=5%) and jitter (sigma=3% UI), sigmoid BW-limiting filter, dashed
-          reference lines at 0V/1V, 2-UI window with 400 traces — all present.
+        comment: 'Density heatmap coloring ✓, time axis in UI ✓, voltage axis ✓, NRZ
+          simulation with noise and jitter ✓, sigmoid bandwidth limiting ✓, 400 traces
+          (within 200-500 range) ✓. Minor: 160 samples over 2 UI = 80 samples/UI,
+          below the spec minimum of 100/UI.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X, Voltage on Y, density encoded in color. All data visible.
+        comment: 'X: time [0, 2] UI; Y: voltage [-0.25, 1.25] V. Correct NRZ voltage
+          range showing signal rails at 0 and 1.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'eye-diagram-basic · javascript · d3 · anyplot.ai' — exact
-          required format. No legend needed for single-variable density heatmap.
+        comment: 'Title: ''eye-diagram-basic · javascript · d3 · anyplot.ai'' — matches
+          required format exactly. No legend needed (single density series).'
     data_quality:
       score: 15
       max: 15
@@ -176,23 +196,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all eye diagram aspects: stable 0/1 levels, bit transitions,
-          eye opening, jitter spread, noise blur, density variation.'
+        comment: 'Shows all eye diagram aspects: eye opening, signal rails at 0V and
+          1V, transition smearing from jitter, noise spreading in steady-state regions,
+          density variation across the 2 UI window.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real NRZ signal integrity context; 0-1V NRZ levels; physically plausible
-          noise and jitter parameters for SerDes characterization.
+        comment: Signal integrity testing context for NRZ digital communications.
+          Noise sigma 5% of amplitude and jitter sigma 3% UI are realistic engineering
+          parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voltage range -0.25 to 1.25V appropriate for NRZ with noise; 2 UI
-          time window canonical for eye diagrams; sigma_noise=5%, sigma_jitter=3%
-          UI are realistic values.
+        comment: 0-1 V NRZ levels are standard normalized values. Noise and jitter
+          parameters match real-world SerDes specifications. 400 traces provides good
+          statistical density.
     code_quality:
       score: 10
       max: 10
@@ -202,37 +224,40 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: RNG setup, data generation, histogram, scales, SVG
-          mount, heatmap, reference lines, axes, title. Helper functions (rand, randn,
-          sigmoid) are minimal and necessary.'
+        comment: 'Linear structure: RNG setup → data generation → 2D histogram → canvas
+          render → SVG overlay. Two helper functions (rand, randn) are minimal and
+          required for deterministic browser RNG.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG RNG seeded at 42.
+        comment: Fixed LCG seed (_rng = 42) produces deterministic output across all
+          runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only global d3 and window.ANYPLOT_TOKENS/SIZE per
-          D3 harness contract.
+        comment: No imports — uses d3 global and window.ANYPLOT_TOKENS / ANYPLOT_SIZE
+          as provided by the harness.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic; no fake interactivity; no over-engineering.
+        comment: Appropriate complexity for pixel-level density rendering. No fake
+          functionality. Bilinear interpolation loop is clearly commented and logically
+          structured.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 SVG rendered by harness to plot-{theme}.png + plot-{theme}.html
-          as required.
+        comment: SVG sized from window.ANYPLOT_SIZE. Harness saves plot-{theme}.png
+          and plot-{theme}.html. Current D3 7.9 API used throughout.
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -240,24 +265,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Full idiomatic D3: data join (.join(rect)), d3.scaleSequential with
-          d3.interpolateRgbBasis, d3.axisBottom/Left, clip path via defs, g.append(g).call(axis)
-          pattern throughout.'
+        comment: 'Idiomatic D3 throughout: d3.select chain, d3.scaleLinear/scaleSequential,
+          d3.axisBottom/axisLeft, d3.interpolateRgbBasis, d3.color().rgb() for color
+          extraction.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: SVG-rect density heatmap built entirely from D3 primitives (binding
-          Int32Array histogram data directly to rects). Multi-stop color interpolation
-          via d3.interpolateRgbBasis([pageBg, seq[0], seq[1]]) is distinctively D3-native.
-  verdict: REJECTED
+        comment: Hybrid canvas+SVG architecture is a hallmark D3 technique for pixel-level
+          data (used in D3 gallery density examples). ImageData manipulation with
+          ctx.createImageData / ctx.putImageData for efficient per-pixel rendering.
+          This approach is uniquely well-suited to D3 and not easily replicated in
+          other charting libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - matrix-construction
@@ -265,4 +290,3 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
-  - alpha-blending
