@@ -1,6 +1,7 @@
-"""anyplot.ai
-dendrogram-basic: Iris Species Clustering
-Library: plotnine 0.15.3 | Python 3.14.3
+""" anyplot.ai
+dendrogram-basic: Basic Dendrogram
+Library: plotnine 0.15.7 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-18
 """
 
 import os
