@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-06-18
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-18
 """
 
 import os
