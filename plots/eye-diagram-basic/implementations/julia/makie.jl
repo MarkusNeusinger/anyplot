@@ -1,7 +1,7 @@
 # anyplot.ai
 # eye-diagram-basic: Signal Integrity Eye Diagram
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-18
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 87/100 | Created: 2026-06-18
 
 using CairoMakie
 using Colors
