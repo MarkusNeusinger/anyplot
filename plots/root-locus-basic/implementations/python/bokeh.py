@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-06-18
@@ -99,6 +99,7 @@ p = figure(
     y_axis_label="Imaginary Axis (jω)",
     x_range=Range1d(-5.5, 1.5),
     y_range=Range1d(-y_max, y_max),
+    match_aspect=True,
     toolbar_location=None,  # prevents toolbar adding ~30-50px above canvas in PNG
     min_border_bottom=160,  # room for 34pt x-tick labels + 42pt x-axis label
     min_border_left=180,  # room for 34pt y-tick labels + 42pt y-axis label
@@ -130,9 +131,16 @@ for wn in [1, 2, 3, 4]:
     p.line(
         x=arc_x.tolist(), y=(-arc_y).tolist(), line_color=INK_MUTED, line_width=1.5, line_alpha=0.45, line_dash="dotted"
     )
-    # Label at leftmost point of arc to avoid overlap with top-right legend
+    # Label at leftmost point of arc; ωn=1 shifted up to avoid overlap with centroid annotation
     p.add_layout(
-        Label(x=-wn - 0.1, y=0.25, text=f"ωn={wn}", text_font_size="22pt", text_color=INK_MUTED, text_alpha=0.9)
+        Label(
+            x=-wn - 0.1,
+            y=(0.55 if wn == 1 else 0.25),
+            text=f"ωn={wn}",
+            text_font_size="22pt",
+            text_color=INK_MUTED,
+            text_alpha=0.9,
+        )
     )
 
 # Real-axis locus segments: [-1, 0] and (-∞, -3]
@@ -210,7 +218,7 @@ for b in range(n_branches):
 # Engineering annotations at key control theory points
 p.add_layout(
     Label(
-        x=0.2,
+        x=-1.5,
         y=w_crit + 0.3,
         text=f"jω-crossing: K=12, ω=√3≈{w_crit:.2f}",
         text_font_size="26pt",
