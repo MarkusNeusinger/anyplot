@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-06-18
+Quality: 84/100 | Updated: 2026-06-18
 """
 
 import os
