@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: plotnine 0.15.7 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-06-18
 """
 
 import os
@@ -114,7 +113,7 @@ title_fs = max(8, round(12 * (67 / n if n > 67 else 1.0)))
 # Plot
 plot = (
     ggplot(df, aes(x="time", y="voltage"))
-    + geom_bin2d(aes(fill=after_stat("count")), bins=(250, 150))
+    + geom_bin2d(aes(fill=after_stat("count")), bins=(160, 100), alpha=0.9)
     + scale_fill_gradient(low=TRACE_LOW, high=TRACE_HIGH, name="Trace\nDensity")
     + scale_x_continuous(expand=(0, 0), breaks=[0, 0.5, 1.0, 1.5, 2.0], name="Time (UI)")
     + scale_y_continuous(expand=(0, 0.02), breaks=[0, 0.5, 1.0], name="Voltage (V)")
@@ -134,7 +133,7 @@ plot = (
         y=0.65,
         label=f"Eye Height\n{eye_height_val:.2f} V",
         color=ANN_HEIGHT,
-        size=4,
+        size=5,
         ha="left",
         va="center",
     )
@@ -145,7 +144,7 @@ plot = (
         y=0.35,
         label=f"Eye Width\n{eye_width_val:.2f} UI",
         color=ANN_WIDTH,
-        size=4,
+        size=5,
         ha="center",
         va="center",
     )
