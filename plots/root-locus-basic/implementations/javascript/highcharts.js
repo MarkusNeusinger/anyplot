@@ -3,7 +3,7 @@
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
 // Quality: 81/100 | Created: 2026-06-18
 
-//# anyplot-orientation: landscape
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -68,7 +68,7 @@ Highcharts.SVGRenderer.prototype.symbols.x_pole = function(x, y, w, h) {
 };
 
 // --- Series definitions --------------------------------------------------
-const branchColors = [t.palette[0], t.palette[2], t.palette[1]]; // green, blue, purple
+const branchColors = [t.palette[0], t.palette[1], t.palette[2]]; // canonical palette order
 const branchNames  = [
   "Branch 1  (OL pole s = 0)",
   "Branch 2  (OL pole s = −2)",
@@ -113,10 +113,10 @@ const crossSeries = {
   zIndex: 5,
 };
 
-// Constant damping-ratio guide lines (ζ = 0.5, ζ = 0.7), clipped at y = ±5.5
+// Constant damping-ratio guide lines (ζ = 0.5, ζ = 0.7), clipped at y = ±6
 function dampingLine(zeta, upper) {
   const slope = Math.sqrt(1 - zeta * zeta) / zeta;
-  const yLim  = 5.5;
+  const yLim  = 6;
   const xEnd  = -(yLim / slope);
   return {
     type:      "line",
@@ -136,7 +136,7 @@ const guideSeries = [
 ];
 
 // --- Chart ---------------------------------------------------------------
-Highcharts.chart("container", {
+const chart = Highcharts.chart("container", {
   chart: {
     backgroundColor: "transparent",
     animation:       false,
@@ -154,7 +154,7 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels:        { style: { color: t.inkSoft, fontSize: "14px" } },
-    min: -9, max: 2,
+    min: -7, max: 5,
     plotLines: [{ value: 0, color: t.inkSoft, width: 1.5, zIndex: 3 }],
   },
   yAxis: {
@@ -164,7 +164,7 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     gridLineWidth: 1,
     labels:        { style: { color: t.inkSoft, fontSize: "14px" } },
-    min: -5.5, max: 5.5,
+    min: -6, max: 6,
     plotLines: [{ value: 0, color: t.inkSoft, width: 1.5, zIndex: 3 }],
   },
   legend: {
@@ -174,4 +174,38 @@ Highcharts.chart("container", {
   },
   plotOptions: { series: { animation: false } },
   series: [...guideSeries, ...branchSeries, poleSeries, crossSeries],
+});
+
+// --- Gain-direction arrows (post-render) ---------------------------------
+// Filled triangle tips at K=20 and K=60 oriented tangent to each branch,
+// indicating the direction of increasing gain as required by the spec.
+[20, 60].forEach(arrowK => {
+  const idx = Math.round(arrowK / K_MAX * N_STEPS);
+  if (idx < 2 || idx >= N_STEPS - 1) return;
+
+  for (let b = 0; b < 3; b++) {
+    const [x,  y]  = branches[b][idx];
+    const [nx, ny] = branches[b][idx + 1];
+    const [px, py] = branches[b][idx - 1];
+
+    const dx = nx - px, dy = ny - py;
+    if (dx * dx + dy * dy < 1e-10) return;
+
+    const cx = chart.xAxis[0].toPixels(x, false);
+    const cy = chart.yAxis[0].toPixels(y, false);
+
+    // SVG y increases downward, so negate dy for the pixel-space angle
+    const θ = Math.atan2(-dy, dx);
+    const [cos_θ, sin_θ] = [Math.cos(θ), Math.sin(θ)];
+    const [len, w] = [10, 5];
+
+    chart.renderer.path([
+      'M', cx + len * cos_θ,                       cy + len * sin_θ,
+      'L', cx - (len / 3) * cos_θ - w * sin_θ,     cy - (len / 3) * sin_θ + w * cos_θ,
+      'L', cx - (len / 3) * cos_θ + w * sin_θ,     cy - (len / 3) * sin_θ - w * cos_θ,
+      'Z',
+    ])
+      .attr({ fill: branchColors[b], 'stroke-width': 0, zIndex: 6 })
+      .add();
+  }
 });
