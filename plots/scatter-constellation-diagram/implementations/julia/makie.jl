@@ -56,7 +56,7 @@ title_str = "scatter-constellation-diagram · julia · makie · anyplot.ai"
 ax = Axis(
     fig[1, 1];
     title              = title_str,
-    titlesize          = 20,
+    titlesize          = 28,
     titlecolor         = INK,
     xlabel             = "In-Phase (I)",
     ylabel             = "Quadrature (Q)",
@@ -92,8 +92,8 @@ end
 
 # Received symbols — Imprint brand green (first series), semi-transparent
 recv_plt = scatter!(ax, recv_i, recv_q;
-    color       = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.4f0),
-    markersize  = 8,
+    color       = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.35f0),
+    markersize  = 6,
     strokewidth = 0,
 )
 
@@ -109,7 +109,7 @@ ideal_plt = scatter!(ax, ideal_i, ideal_q;
 text!(ax, -4.2, 4.1;
     text     = @sprintf("EVM = %.1f%%", evm_pct),
     fontsize = 15,
-    color    = INK,
+    color    = INK_SOFT,
 )
 
 # Legend
