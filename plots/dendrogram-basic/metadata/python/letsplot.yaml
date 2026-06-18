@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: dendrogram-basic
 created: '2025-12-23T10:01:23Z'
-updated: '2026-06-18T04:26:56Z'
+updated: '2026-06-18T04:33:45Z'
 generated_by: claude-sonnet
 workflow_run: 27736204075
 issue: 986
@@ -15,38 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 quality_score: 87
 review:
   strengths:
-  - Manual dendrogram geometry construction from the linkage matrix demonstrates real
-    algorithm understanding rather than relying on a scipy shortcut
-  - Species-color-coding with semantic Cross-cluster override tells the hierarchical
-    story immediately
-  - 'Excellent palette compliance: canonical Imprint positions 1-4 in correct order,
-    accurate backgrounds in both themes'
-  - 'Full theme-adaptive chrome: all non-data elements flip correctly between light
-    and dark'
-  - layer_tooltips() with merge distance and sample labels leverages a genuine letsplot
-    differentiator
-  - 'Perfect code quality: seed set, clean imports, no functions/classes, both output
-    formats saved'
+  - 'Full spec compliance: Ward linkage dendrogram with scipy, correct axis labels,
+    title format, and 15-sample iris dataset within the 10-50 recommended range'
+  - 'Imprint palette in canonical order (green/lavender/blue/ochre) correctly applied
+    to clusters, with first series (Setosa) using brand green #009E73'
+  - Theme-adaptive chrome is fully wired — PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED
+    tokens used throughout title, axis, grid, legend, and annotations
+  - Interactive tooltips via letsplot's native layer_tooltips() API — idiomatic and
+    distinctive library feature, also exports plot-{THEME}.html
+  - Color threshold line at 70% of max distance with annotation adds clear data storytelling
+    — reveals which merges cross species boundaries
+  - Both light and dark renders are fully legible with no dark-on-dark or light-on-light
+    failures; data colors identical across both themes
   weaknesses:
-  - 'Title missing the python language token: is ''dendrogram-basic · letsplot · anyplot.ai'',
-    should be ''dendrogram-basic · python · letsplot · anyplot.ai'''
-  - Plot area is slightly width-constrained due to the right-side legend; reducing
-    legend right margin or repositioning could give the dendrogram more breathing
-    room
-  - Leaf dots (geom_point size=2.5) are small relative to the canvas; slightly larger
-    (size=3-4) would improve visibility without cluttering
+  - Leaf label text (geom_text size=4mm) at the bottom is on the smaller side for
+    the canvas scale — readable but could be bumped to size=4.5-5 for mobile readability
+  - Minor crowding potential between the threshold annotation text and the rightmost
+    dendrogram segment, though no actual pixel overlap observed
+  - 'Design Excellence could be elevated further: the dendrogram structure itself
+    is clear but there is no explicit annotation or callout highlighting the three
+    main species groupings, which would reinforce the data story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "dendrogram-basic · letsplot · anyplot.ai" bold dark ink, fully readable. Y-axis label "Ward Linkage Distance" in INK_SOFT, clearly visible. Y-axis tick labels (0, 2, 4, 6, 8, 10) in INK_SOFT. X-axis leaf labels (Set-1 through Vir-15) rotated 45° in species colors, readable monospace. Threshold annotation "threshold = 7.4" in muted ink. Legend "Cluster" with Setosa/Versicolor/Virginica/Cross-cluster entries all readable on elevated background (#FFFDF6).
-      Data: Dendrogram segments in Imprint palette: Setosa #009E73 (green), Versicolor #C475FD (lavender), Virginica #4467A3 (blue), Cross-cluster #BD8233 (ochre). Dashed threshold line at y=7.4. All clusters visible and distinguishable. Ward linkage structure clearly shows Setosa separating early, Versicolor/Virginica merging at higher distance.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Bold title "dendrogram-basic · python · letsplot · anyplot.ai" in dark INK (#1A1A17), clearly readable. Y-axis label "Ward Linkage Distance" in INK_SOFT, readable. Y-axis tick labels (0, 2, 4, 6, 8, 10) in INK_SOFT, readable. No X-axis tick labels (leaf labels serve this role).
+      Data: Dendrogram segments colored by cluster — Setosa in brand green #009E73, Versicolor in lavender #C475FD, Virginica in blue #4467A3, Cross-cluster merges in ochre #BD8233. Dashed threshold line at 7.4 in INK_MUTED. 15 rotated leaf labels (Set-1 to Vir-15) in monospace font, colored by species, readable at 45-degree angle. Legend "Cluster" with all four entries on the right.
+      Legibility verdict: PASS — all text readable against the warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light ink (#F0EFE8), bold and clearly visible. Y-axis label in INK_SOFT (#B8B7B0), readable. Y-axis tick labels in INK_SOFT. X-axis leaf labels colored by species, readable. Threshold annotation in muted light tone, readable. Legend background elevated dark (#242420) with light text — no dark-on-dark failures.
-      Data: All four Imprint data colors (green, lavender, blue, ochre) are pixel-identical to the light render — only chrome flips. Brand green #009E73 is prominently visible. Dashed threshold line rendered in light muted tone. Complete structure visible.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title in light #F0EFE8 (INK token for dark), clearly readable. Y-axis label and tick labels in #B8B7B0 (INK_SOFT for dark), readable. Legend title and text are light-colored and readable. Threshold annotation text in INK_MUTED (dark variant), readable.
+      Data: Dendrogram segment colors are identical to light render — Setosa #009E73, Versicolor #C475FD, Virginica #4467A3, Cross-cluster #BD8233. Leaf labels colored by cluster, readable against dark background. Brand green #009E73 is visible and distinct on the dark surface.
+      Legibility verdict: PASS — all text readable against the near-black background. No dark-on-dark failures detected. Chrome correctly inverted while data colors remain constant.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -57,81 +57,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title (16pt), Y-axis label (12pt),
-          tick labels (10pt), leaf labels (~11pt equivalent at scale=4) all readable
-          in both themes. Leaf labels and threshold annotation are on the smaller
-          end but legible.
+        comment: Title, axis labels, tick labels all readable in both themes. Leaf
+          labels (size=4mm) at bottom are slightly small but legible.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Dendrogram structure, rotated leaf labels, threshold annotation and
-          legend are all collision-free.
+        comment: No overlap detected. Rotated leaf labels well-spaced. Threshold annotation
+          doesn't collide with dendrogram.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Segments (size=1.5) clearly visible; leaf dots (size=2.5) are small
-          but serve as anchors. Main dendrogram structure fully visible.
+        comment: Dendrogram segments (size=1.5) clearly visible. Leaf dots (size=2.5)
+          appropriate for dendrogram context.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-4 used; CVD-safe, no red-green sole-signal
-          pairing.
+        comment: Imprint palette is CVD-safe. 4 colors used — all within safe discrimination
+          range.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct. Plot area slightly compressed horizontally
-          due to right-side legend occupying ~25% of canvas width.
+        comment: Canvas gate passed (800x450 ggsize x scale=4 = 3200x1800). Good proportions,
+          adequate margins, no overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Ward Linkage Distance' is descriptive; empty X-axis label
-          is appropriate for dendrogram.
+        comment: 'Y-axis: ''Ward Linkage Distance'' is descriptive. Title follows
+          mandated format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Setosa) = #009E73; positions 1-4 in canonical order.
-          Backgrounds #FAF8F1 light / #1A1A17 dark correct.'
+        comment: 'Setosa=#009E73 (first series, brand green), then canonical Imprint
+          order. Backgrounds #FAF8F1 light / #1A1A17 dark. Both renders correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Manually constructs dendrogram geometry from linkage matrix, species-aware
-          color coding with Cross-cluster semantic override, threshold annotation.
-          Well above default 4.
+        comment: 'Above default (4): custom Imprint palette, monospace font for leaf
+          labels, threshold visualization, color-coded cluster segments show intentional
+          design choices.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void base with selective re-additions; subtle grid; elevated
-          legend background; generous margins. Above default 2.
+        comment: 'Above default (2): theme_void base cleanly removes unnecessary spines,
+          custom grid with INK_MUTED, elevated legend background, good whitespace
+          via plot_margin.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded clusters + dashed threshold creates immediate narrative.
-          Cross-cluster ochre shows where species boundaries are crossed. Above default
-          2.
+        comment: 'Above default (2): threshold line creates a clear narrative breakpoint
+          distinguishing within-species vs cross-species merges. Color coding guides
+          viewer from leaf to root.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,31 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical dendrogram with Ward hierarchical clustering on
-          iris data.
+        comment: Correct dendrogram type with hierarchical clustering structure.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: scipy linkage computed from iris features, leaf labels present, branch
-          heights proportional to merge distances, 15 samples in recommended 10-50
-          range.
+        comment: scipy.cluster.hierarchy linkage used, labels shown, branch heights
+          proportional to merge distances, 15 samples within 10-50 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X positions map to leaf samples, Y-axis maps to Ward distance, hierarchical
-          structure correctly rendered.
+        comment: X shows samples in hierarchical order, Y shows Ward linkage distance.
+          Axes cover full data range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'dendrogram-basic · letsplot · anyplot.ai' — missing the
-          required python language token. Should be 'dendrogram-basic · python · letsplot
-          · anyplot.ai'. Legend labels correct.
+        passed: true
+        comment: 'Title: ''dendrogram-basic · python · letsplot · anyplot.ai''. Legend
+          ''Cluster'' with all four cluster labels.'
     data_quality:
       score: 15
       max: 15
@@ -173,23 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hierarchical structure, proportional branch heights, leaf labels,
-          species cluster identity, threshold annotation, and interactive tooltips
-          with merge distance info.
+        comment: 'Covers all dendrogram aspects: hierarchical merging, distance-proportional
+          heights, leaf labels, cluster coloring, threshold visualization.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris flower dataset is a canonical real-world biology dataset; Ward
-          clustering correctly separates Setosa from Versicolor/Virginica. Fully neutral.
+        comment: Real Iris dataset with biologically meaningful species clustering.
+          Neutral scientific data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 samples (5 per species) within recommended 10-50 range; distances
-          0-10.5 are authentic Ward linkage values for iris feature space.
+        comment: 15 samples (5 per species) — ideal for a readable dendrogram. Distance
+          range 0-10.6 makes sense for Ward's method on Iris features.
     code_quality:
       score: 10
       max: 10
@@ -199,33 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear procedural script.
+        comment: No functions or classes. Linear procedural flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; iris dataset is deterministic.
+        comment: np.random.seed(42) ensures reproducible sample selection.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported symbol from lets_plot, scipy, and sklearn is actually
-          used.
+        comment: All imported symbols are used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual dendrogram construction from linkage matrix is appropriately
-          complex; no fake UI.
+        comment: No fake functionality. Appropriate complexity for a custom dendrogram
+          implementation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct naming
+          convention.
     library_mastery:
       score: 7
       max: 10
@@ -235,15 +230,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; proper layer_tooltips() integration; theme_void()
-          + selective theme() overrides is idiomatic letsplot customization.
+        comment: 'Correct ggplot grammar, layer composition with geom_segment/geom_point/geom_text,
+          scale_color_manual with breaks, theme_void + theme customization. Minor:
+          could use more scale_* idiomatic patterns.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with multi-field configuration is letsplot-distinctive.
-          HTML export alongside PNG is another distinctive feature. Both used purposefully.
+        comment: Uses layer_tooltips() — letsplot's native interactive tooltip API.
+          Also exports HTML output. These are distinctive letsplot capabilities not
+          available in static libraries.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -251,9 +248,9 @@ impl_tags:
   - sklearn
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - dataset-loading
   - iteration-over-groups
