@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-06-18
@@ -90,6 +90,7 @@ custom_style = Style(
         "#4467A3",  # Zero — Imprint blue
         "#DDCC77",  # Breakaway — amber (caution marker)
         "#2ABCCD",  # Stability Boundary — Imprint cyan
+        "#009E73",  # Direction arrows — same color as root locus
     ),
     title_font_size=66,
     label_font_size=56,
@@ -180,7 +181,7 @@ for b in range(n_branches):
     locus_pts.append(None)
 
 chart.add(
-    "Root Locus", locus_pts, stroke_style={"width": 6, "linecap": "round"}, show_dots=False, allow_interruptions=True
+    "Root Locus", locus_pts, stroke_style={"width": 9, "linecap": "round"}, show_dots=False, allow_interruptions=True
 )
 
 # Real-axis locus segments — ochre, thick to distinguish from guides
@@ -193,7 +194,8 @@ chart.add(
     "Real-Axis Locus",
     real_pts,
     stroke_style={"width": 10, "linecap": "round"},
-    show_dots=False,
+    show_dots=True,
+    dots_size=7,
     allow_interruptions=True,
 )
 
@@ -212,6 +214,46 @@ chart.add("Breakaway", breakaway_pts, stroke=False, dots_size=20)
 # Stability boundary (jω axis crossings) — cyan, clearly marks instability threshold
 jw_pts = [{"value": (0.0, im), "label": f"jω crossing: s = {im:+.3f}j, K = {K:.2f}"} for im, K in jw_crossings]
 chart.add("Stability Boundary", jw_pts, stroke=False, dots_size=17)
+
+# Direction arrows along complex locus branches — V-shaped tick marks indicating increasing K
+arrow_pts = []
+arrow_target_gains = [3, 8, 20, 60, 180]
+arrow_size = 0.28
+for b in range(n_branches):
+    for target_K in arrow_target_gains:
+        idx = int(np.argmin(np.abs(gains - target_K)))
+        if idx < 3:
+            continue
+        x, y = float(loci[idx, b].real), float(loci[idx, b].imag)
+        if abs(y) < 0.25 or not (-5.8 <= x <= 3.8 and -4.8 <= y <= 4.8):
+            continue
+        dx = float(loci[idx, b].real - loci[idx - 3, b].real)
+        dy = float(loci[idx, b].imag - loci[idx - 3, b].imag)
+        length = np.sqrt(dx**2 + dy**2)
+        if length < 1e-6:
+            continue
+        dx, dy = dx / length, dy / length
+        px, py = -dy, dx
+        bx = x - dx * arrow_size
+        by = y - dy * arrow_size
+        arrow_pts.extend(
+            [
+                (round(bx + px * arrow_size * 0.55, 3), round(by + py * arrow_size * 0.55, 3)),
+                (round(x, 3), round(y, 3)),
+                (round(bx - px * arrow_size * 0.55, 3), round(by - py * arrow_size * 0.55, 3)),
+            ]
+        )
+        arrow_pts.append(None)
+
+if arrow_pts:
+    chart.add(
+        "→ increasing gain",
+        arrow_pts,
+        stroke_style={"width": 4, "linecap": "round"},
+        show_dots=False,
+        stroke=True,
+        allow_interruptions=True,
+    )
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
