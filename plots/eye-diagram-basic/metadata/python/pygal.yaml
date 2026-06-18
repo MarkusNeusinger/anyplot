@@ -1,50 +1,58 @@
 library: pygal
+language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:35:46Z'
-updated: '2026-03-18T00:08:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23221365490
+updated: '2026-06-18T02:29:14Z'
+generated_by: claude-sonnet
+workflow_run: 27731927566
 issue: 4561
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/pygal/plot.html
-quality_score: 83
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Oscilloscope-themed dark background with viridis palette is domain-appropriate
-    and visually striking
-  - Complete spec compliance including optional eye height/width measurement annotations
-  - Realistic NRZ signal simulation with proper engineering parameters (400 traces,
-    5% noise, 3% jitter)
-  - Interactive HTML export with per-point density percentage tooltips leverages pygal
-    native SVG capabilities
-  - 10-band density gradient with 4-pass smoothing filter produces reasonable color
-    gradation
+  - Imprint sequential colormap (#009E73→#4467A3) correctly applied for density heatmap
+    — single-polarity continuous data gets imprint_seq as required
+  - Monospace (Courier New) font intentionally chosen for signal-integrity technical
+    aesthetic, giving oscilloscope-panel feel
+  - 'All required eye-diagram features implemented: density coloring, bandwidth-limited
+    sigmoid transitions, Gaussian noise + jitter, and optional eye height/width/aperture
+    annotations'
+  - 'Complete theme adaptation: PAGE_BG, INK, INK_MUTED all switch correctly, data
+    colors unchanged between light and dark renders'
+  - Amber (#DDCC77) used correctly as semantic caution/measurement anchor for eye
+    annotation markers — outside the categorical pool
+  - Comprehensive pygal XY usage with per-series stroke_style dasharray, allow_interruptions,
+    and legend_at_bottom_columns — all pygal-specific features
   weaknesses:
-  - Dot-matrix rendering inherent to pygal XY scatter creates visible discrete grid
-    rather than smooth continuous density
-  - Eye measurement annotation dots/lines are barely visible against the density field
-  - Legend with 12 items in 2 rows is somewhat crowded
-  - Most computation is numpy-based with pygal used primarily as a final renderer
-  image_description: The plot renders an eye diagram on a dark navy/indigo (#0a0a2e)
-    background with oscilloscope-style aesthetics. The title "eye-diagram-basic ·
-    pygal · pyplots.ai" is displayed at the top in light text using monospace (Courier
-    New) font. The X-axis labeled "Time (UI)" spans 0 to 2 with ticks at 0.25 increments.
-    The Y-axis labeled "Voltage (V)" ranges from -0.2 to 1.2. The eye pattern is rendered
-    as a fine grid of colored dots (240x140 resolution, dots_size=5) using a 10-stop
-    viridis-inspired palette from dark purple (#440154, minimal density) through blue,
-    teal, green to bright yellow (#fde725, peak density). Two clear eye openings are
-    visible centered at ~0.5 UI and ~1.5 UI. High-density yellow/green bands concentrate
-    at the 0V and 1V NRZ signal levels, with lower-density purple/blue at transition
-    edges. Small eye measurement annotation dots are visible for eye height and eye
-    width, rendered with dashed stroke lines. A 2-row legend at the bottom shows 10
-    density band names (Minimal through Peak) plus Eye Height and Eye Width labels
-    across 6 columns. The overall aesthetic is professional and domain-appropriate,
-    resembling an oscilloscope display.
+  - Tight canvas margins (margin=30) let density dots reach very close to canvas edges
+    on left, right, and top, giving a slightly cramped layout — increase margin to
+    60-80 px on all sides to allow breathing room around the data field
+  - Density grid filling loop (`for x, y in zip(xi[valid], yi[valid])`) is a Python-level
+    nested iteration over potentially 33,600 cells — vectorize with np.add.at or np.ravel_multi_index
+    for cleaner, faster code
+  - 'DE-01/DE-02: Design is solid but could reach higher polish — removing the default
+    pygal border/frame (if feasible via style.opacity=0 on the chart border) and ensuring
+    even margins would lift the aesthetic further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "eye-diagram-basic · python · pygal · anyplot.ai" in dark near-black ink, clearly readable above the plot. Y-axis label "Voltage (V)" and X-axis label "Time (UI)" in dark ink, fully visible. Tick labels (0 to 2 UI, -0.2 to 1.2 V) in dark muted tone, all readable. Legend at bottom shows all 11 series (8 density bands + 3 annotation series) in two rows of 6 — small but legible.
+      Data: Density heatmap field using Imprint sequential colormap green (#009E73) → blue (#4467A3) across 8 bands (Rare → Peak). Two characteristic eye-shaped openings clearly visible as white (#FAF8F1) voids at ~0.45 UI and ~1.45 UI, confirming proper NRZ 2-UI eye diagram. Amber (#DDCC77) dashed annotation markers visible at center of eye openings for Eye H (0.70V) and Eye W (0.59UI). Dashed aperture rectangle in amber outlines the eye opening. Data dots extend very close to canvas edges on left, right, and top — tight margins.
+      Legibility verdict: PASS — all text readable, dark ink on warm off-white background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and all axis labels render in light (#F0EFE8-range) text, clearly visible against the dark background. Tick labels are in light muted tone, all readable. Legend at bottom is light-text on dark background — readable. No dark-on-dark text failures observed.
+      Data: Density colormap colors are identical to light render — same green-to-blue gradient (#009E73 → #4467A3). Eye openings appear as near-black (#1A1A17) voids against the density field, providing strong contrast. Amber annotation markers and dashed lines remain fully visible. Dense areas (blue, #4467A3) create strong contrast against the dark eye-void regions. Margins remain tight as in light render.
+      Legibility verdict: PASS — all text readable in light ink on near-black background, data colors unchanged from light render, amber annotations visible.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -52,67 +60,94 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=56, labels=36, legend=32). All readable.
-          Monospace font thematic but slightly less legible.
+        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44). Title, axis labels, tick labels, and legend all readable in
+          both themes. Monospace font proportional and appropriate for technical context.
+          Minor deduction: margins so tight that the overall composition feels slightly
+          cramped.'
       - id: VQ-02
         name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected. Legend at bottom in two rows of 6 columns
+          — all entries spaced cleanly. X-axis tick labels (0 to 2 UI) and Y-axis
+          tick labels well-separated.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No overlap in data area. Legend with 12 items in 6 columns is somewhat
-          crowded with long labels.
-      - id: VQ-03
-        name: Element Visibility
-        score: 4
-        max: 6
-        passed: true
-        comment: 240x140 grid with dots_size=5 produces visible eye pattern. Discrete
-          dot-matrix pattern still somewhat coarse. Eye annotation dots barely visible.
+        comment: 'Density gradient from green to blue clearly visible. Eye openings
+          unambiguous in both themes. Amber annotation markers visible though small.
+          Minor deduction: outermost low-density bands (Rare, Low) are somewhat faint
+          at the scatter boundary.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis-inspired 10-stop palette is colorblind-safe. Excellent contrast
-          against dark background.
+        comment: Imprint sequential palette (green→blue) is perceptually uniform and
+          CVD-safe. Amber annotations provide sufficient contrast against both density
+          field and eye-opening background.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins. Some unused space
-          from margin settings.
+        comment: 'Canvas 3200×1800 (landscape, correct). Good utilization — density
+          field fills the plot area meaningfully. Deduction: margin=30 is too tight;
+          density dots reach very close to canvas edges on left, right, and top, giving
+          insufficient breathing room.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) are descriptive with units.
+        comment: 'X: ''Time (UI)'' — descriptive with units. Y: ''Voltage (V)'' —
+          descriptive with units. Title: ''eye-diagram-basic · python · pygal · anyplot.ai''
+          — correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Density uses imprint_seq (#009E73→#4467A3) — correct for single-polarity
+          continuous data. Amber (#DDCC77) correctly used as semantic measurement
+          anchor. Light bg=#FAF8F1, dark bg=#1A1A17. Data colors identical across
+          themes; only chrome flips. Full compliance.
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Dark oscilloscope theme is domain-specific and intentional. Viridis
-          10-stop palette, monospace font. Clearly above defaults.
+        comment: 'Strong design above defaults: intentional monospace font for signal-integrity
+          oscilloscope aesthetic, imprint_seq colormap elegantly applied for density,
+          amber annotations semantically correct. Constrained by pygal''s limited
+          spine/frame removal, but within those limits the implementation is polished.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid guides disabled, dark background for contrast, consistent font
-          family, organized legend, stroke_width=0 removes visual noise.
+        comment: Grid disabled (show_x_guides=False, show_y_guides=False) — correct
+          for a dense density plot. Legend well-organized at bottom in multiple columns.
+          Custom style applied throughout. Margin=30 causing tight edges is the main
+          visual refinement gap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color density gradient communicates signal integrity. Eye annotations
-          add measurement context. Viewer immediately understands signal quality.
+        comment: 'Visual hierarchy is clear: the density gradient tells the signal
+          concentration story, the eye openings are the natural focal point, and the
+          amber annotations provide measurement callouts. The aperture rectangle frames
+          the eye opening explicitly. Guides the viewer toward the key signal integrity
+          metrics.'
     spec_compliance:
       score: 15
       max: 15
@@ -122,51 +157,64 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct eye diagram with density-colored overlaid traces as XY scatter
-          heatmap.
+        comment: Correct eye diagram with density heatmap coloring. Uses pygal XY
+          scatter with 8 density bands to approximate a continuous density field.
+          Two eye openings visible in a 2-UI window as required.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: density coloring, NRZ, noise, jitter, sigmoid
-          transitions, eye annotations.'
+        comment: 'All spec features: density coloring via color intensity (8 bands
+          imprint_seq), time axis in UI, voltage axis showing NRZ levels, synthetic
+          NRZ with Gaussian noise (sigma=5%) and jitter (sigma=3% UI), bandwidth-limited
+          sigmoid transitions, eye height and width annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Time(UI), Y=Voltage(V), color=density. All correct.
+        comment: 'X: time 0–2 UI (correct). Y: voltage –0.25 to 1.25 V covering NRZ
+          0/1 levels (correct). Density shown via color bands. All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows density bands and eye measurements.
+        comment: 'Title: ''eye-diagram-basic · python · pygal · anyplot.ai'' — exact
+          correct format. Legend: 8 density bands + Eye H 0.70V + Eye W 0.59UI + Eye
+          Aperture — comprehensive and accurate.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows NRZ levels, transitions, noise, jitter, eye openings, eye measurements.
-          Could show more eye closure variation.
+        comment: 'Shows all eye diagram aspects: double eye opening, density concentration
+          at 0V and 1V bit levels, transition smearing due to jitter and noise, eye
+          opening with measurable height (0.70V) and width (0.59UI). 400 traces provide
+          realistic statistical density.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity analysis is a real engineering application.
-          Neutral technical domain.
+        comment: 'Realistic NRZ serial link simulation with np.random.seed(42). Physically
+          plausible: 6 random bits per trace, sigmoid transitions, Gaussian noise
+          (sigma=0.05 V), jitter (sigma=0.03 UI). Matches real high-speed digital
+          signal integrity testing context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 traces, 0-1V NRZ, 5% noise, 3% jitter, 200 samples/UI. All realistic.
+        comment: Voltage range –0.25 to 1.25 V appropriate for NRZ 0/1 signal with
+          noise margins. 2 UI window is standard. 400 traces at 200 samples/UI gives
+          dense statistical coverage. Noise and jitter levels (5% amplitude, 3% UI)
+          are realistic for a moderate-quality serial link.
     code_quality:
       score: 9
       max: 10
@@ -176,57 +224,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, density, smoothing, chart,
-          save. No functions/classes.'
+        comment: 'Linear flow: imports → theme tokens → data simulation → density
+          grid → band assignment → chart → save. No functions or classes defined.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before any stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys/importlib needed for name collision workaround.
+        comment: importlib, os, sys (standard library for pygal import workaround),
+          numpy (data generation), pygal+Style (plotting). All used, none redundant.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: sys.path manipulation is hacky but necessary. Per-cell label formatting
-          in nested loop is verbose.
+        passed: true
+        comment: 'Minor deduction: the density grid filling uses a Python-level `for
+          x, y in zip(xi[valid], yi[valid])` loop. With 80,000 scatter points this
+          is slow and could be replaced with `np.add.at(density, (yi[valid], xi[valid]),
+          1)` for cleaner vectorized code. The rest is purposeful.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current pygal API.
+        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
+          render(is_unicode=True) + file write. Correct output filenames for pygal
+          (interactive library).
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY with Style, chart.add(), per-series overrides. But
-          density computation is numpy-based with pygal as renderer.
+        comment: 'Good idiomatic pygal: Style object for all theme tokens, XY chart
+          for scatter data, dict-based data points with labels for tooltips, chart.add()
+          with per-series stroke/show_dots/stroke_style overrides, legend_at_bottom_columns.
+          allow_interruptions used correctly.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom Style, per-point labels, stroke_style dasharray, allow_interruptions,
-          legend_at_bottom_columns, HTML SVG export, js=[].
-  verdict: REJECTED
+        comment: Uses pygal-specific per-series stroke_style with dasharray for dashed
+          annotation lines, per-series dots_size override, legend_at_bottom_columns
+          for multi-column layout, HTML interactive export with embedded SVG. These
+          are genuinely pygal-specific features not available in matplotlib/seaborn.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
@@ -234,5 +292,4 @@ impl_tags:
   dataprep:
   - binning
   styling:
-  - dark-theme
   - custom-colormap
