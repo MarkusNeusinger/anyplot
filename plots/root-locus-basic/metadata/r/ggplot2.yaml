@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: root-locus-basic
 created: '2026-06-18T00:07:14Z'
-updated: '2026-06-18T00:13:25Z'
+updated: '2026-06-18T00:28:04Z'
 generated_by: claude-sonnet
 workflow_run: 27727430705
 issue: 4414
@@ -12,49 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - Accurate numerical root locus computed via polyroot() across 1000 gain values
-    — physically correct pole trajectories for G(s)=K/(s(s+2)(s+4))
-  - 'Full theme adaptation: background, text, grid, legend frame, and pole markers
-    all flip correctly between #FAF8F1 and #1A1A17 surfaces'
-  - Correct use of coord_equal() to preserve geometric relationships in the complex
-    plane
-  - 'Domain-appropriate marker encoding: × shape for open-loop poles, filled diamond
-    for imaginary axis crossings at the stability boundary'
-  - 'Imprint palette used canonically (branch 1 = #009E73, branch 2 = #C475FD, branch
-    3 = #4467A3); semantic red #AE3030 correctly chosen for stability-boundary crossings'
-  - Arrows on each branch via geom_segment(arrow=...) clearly communicate direction
-    of increasing gain
+  - Correct numerical root locus computed via polyroot for a classic 3rd-order system
+    G(s) = K/(s(s+2)(s+4)); imaginary axis crossing at K=48 derived analytically via
+    Routh-Hurwitz
+  - Domain-specific reference grid (damping ratio rays zeta=0.2/0.4/0.6/0.8 and natural
+    frequency circles omega_n=1-5) adds professional control-system context
+  - Full Imprint palette compliance with theme-adaptive chrome; pole markers correctly
+    flip between black (light) and white (dark) via INK token
+  - Direction arrows on all three branches using geom_segment with closed arrow heads
+    correctly indicating increasing gain K direction
+  - Equal-aspect scaling (coord_equal) preserves geometric relationships as required
+    by the specification
+  - Clean linear code structure; modern linewidth= API throughout; set.seed(42) for
+    reproducibility
   weaknesses:
-  - Missing damping ratio (zeta) and natural frequency (omega_n) reference lines —
-    the spec explicitly requires 'a dashed or light grid to indicate constant damping
-    ratio and natural frequency lines'. These are radial rays from the origin (at
-    arccos(zeta) angles) and concentric circles (radius = omega_n), NOT the standard
-    Cartesian grid. Add them as geom_path/geom_segment layers with dashed linetype
-    and INK_MUTED color before the locus branches.
-  - 'Unused imports: library(tidyr) and library(scales) are loaded but no functions
-    from either package are called in the script. Remove both to keep imports clean.'
-  - 'Grid uses raw INK (#1A1A17 light / #F0EFE8 dark) at linewidth 0.15 rather than
-    the style-guide recommended rgba-opacity approach. Consider switching panel.grid.major
-    to element_line(color = INK_MUTED, linewidth = 0.15) for softer grid lines that
-    better recede behind data.'
+  - 'Branch tracking discontinuity at the breakaway point (K~3.08): the order(Im(r))
+    sort swaps which physical pole each branch label tracks as the system transitions
+    from 3 real roots to 1 real + 2 complex roots, causing geom_path to draw a spurious
+    real-axis segment from s~-0.845 to s=-4 through the non-locus region. Fix: track
+    branches by nearest-neighbour distance to previous root positions instead of sorting
+    by imaginary part, or restructure by generating pre/post-breakaway data frames
+    with explicit branch assignments.'
+  - 'xlim=c(-7,2) leaves ~1.5 units of unnecessary empty space to the left (real-axis
+    branch only reaches x~-5.5 at K=40). Fix: tighten to coord_equal(xlim=c(-6,1),
+    ylim=c(-6,6)) to better frame the locus.'
+  - 'Gain range K=0 to 40 leaves the locus 17% short of the imaginary axis crossing
+    (K=48). Fix: extend gain_vals to K=55 so the locus visually reaches past the crossing
+    point.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white.
-      Chrome: Title "root-locus-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17, spanning ~55% of canvas width — fully readable. Axis labels "Real Axis" and "Imaginary Axis" in dark ink at 10pt, tick labels in #4A4A44 at 8pt — all clearly visible. Legend box has elevated background with INK_SOFT border; all legend text readable.
-      Data: Branch 1 (green #009E73) traces the lower complex-plane path from pole at (0,0) downward. Branch 2 (lavender #C475FD) forms the real-axis segment running from approx (-5.5, 0) to (-1, 0). Branch 3 (blue #4467A3) traces the upper complex-plane path crossing the imaginary axis. Open-loop poles marked with bold × markers (shape=4) in dark ink at 3 positions on the real axis (0, -2, -4). Imaginary axis crossings at (0, ±√8 ≈ ±2.83) marked with red diamonds (#AE3030). Gain-direction arrows visible on each branch.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "root-locus-basic · r · ggplot2 · anyplot.ai" in dark near-black ink (#1A1A17), clearly readable. X-axis label "Real Axis" and Y-axis label "Imaginary Axis" in dark ink at 10pt, readable. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Grid lines subtle (linewidth 0.15/0.08 in INK_MUTED with alpha).
+      Data: Three root locus branches — Branch 1 in #009E73 (brand green), Branch 2 in #C475FD (lavender), Branch 3 in #4467A3 (blue). Open-loop poles at s=0,-2,-4 marked with bold × in near-black. Red diamond markers (#AE3030) at imaginary axis crossings (0, ±2.83j). Dashed concentric circles (omega_n=1-5) and radial rays (zeta=0.2-0.8) in muted gray. Direction arrows on all three branches. Legend boxed with elevated background.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, no pure black.
-      Chrome: Title and axis labels rendered in light #F0EFE8, tick labels in #B8B7B0 — all visible against the dark surface. Legend background is elevated dark #242420 with subtle border. No dark-on-dark failures detected. Open-loop pole × markers render in white (INK flips to #F0EFE8) — clearly visible.
-      Data: Branch colors are identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — data palette unchanged between themes as required. Red diamond stability-boundary markers (#AE3030) clearly visible. Grid lines lighter/white-tinted and more visible than in light mode, but still subtle.
-      Legibility verdict: PASS — all text readable against the near-black surface; theme adaptation complete and correct.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels switch to near-white (#F0EFE8) for primary text, #B8B7B0 for secondary text (ticks, legend). All text clearly readable against dark background. No dark-on-dark failures observed. Pole markers flip from near-black to near-white (via INK token) — correctly visible. Legend box uses elevated dark background #242420.
+      Data: All three Imprint palette branch colors (#009E73, #C475FD, #4467A3) are identical to the light render — data colors unchanged. Red diamond stability crossings (#AE3030) remain visible. Dashed reference grid adapts appropriately.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,48 +64,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; axis text at 8pt is slightly small
-          but functional
+        comment: 'All font sizes explicitly set per style guide (title=12, axis=10,
+          ticks=8). Readable in both themes. Minor: 8pt ticks approach mobile readability
+          threshold.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-data or text-text overlaps visible in either render
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All branches, poles, and crossing markers clearly visible; lavender
-          branch (real-axis segment) slightly thinner visually but distinguishable
+        comment: All locus branches, arrows, pole markers, stability crossings, and
+          reference grid clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; no red-green sole encoding
+        comment: Imprint palette is CVD-safe. Direction arrows and legend labels add
+          redundant encoding beyond hue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct; coord_equal creates near-square plot area
-          in landscape which leaves some empty horizontal space
+        comment: Equal-aspect scaling preserved. xlim=c(-7,2) leaves ~1.5 units excess
+          empty space to the left; locus only reaches ~x=-5.5.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; axes labeled 'Real Axis' / 'Imaginary
-          Axis' — appropriate for control systems plot
+        comment: Real Axis and Imaginary Axis are correct and descriptive for a complex-plane
+          plot.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Branch 1 = #009E73; canonical Imprint order 1-3 for 3 series; backgrounds
-          correct for both themes'
+        comment: 'Branch 1 = #009E73, multi-series uses Imprint positions 1-3. Light
+          bg #FAF8F1, dark bg #1A1A17. Chrome is theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -113,25 +117,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Domain-specific marker encoding (× for poles, ◇ for stability crossings)
-          shows intentional design beyond defaults
+        comment: Above default (4). Domain-specific reference grid (damping ratio
+          rays + omega_n circles) with Imprint palette and elevated legend background
+          demonstrates genuine control-system design intent.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: panel.border removed; axis lines present; legend has elevated background.
-          Grid is functional but the INK-colored grid (even at linewidth 0.15) is
-          slightly more prominent than the muted recommended approach
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Pole migration story is clear: starting points (×), direction arrows,
-          stability boundary (◇) all communicate the control-theory narrative'
+        comment: Panel border removed; axis lines used instead. Reference elements
+          use alpha=0.55 and INK_MUTED. Grid linewidth 0.15/0.08 is appropriately
+          subtle.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Direction arrows and red stability-boundary markers tell a control-system
+          story. Branch tracking discontinuity at K~3.08 reduces narrative clarity.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,59 +144,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus implementation with polyroot()-computed trajectories
-          for third-order system
+        comment: Correct root locus plot with continuous curves, direction arrows,
+          and control-system reference grid.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Present: open-loop pole × markers, continuous locus branches with
-          gain-direction arrows, imaginary-axis crossing markers. Missing: constant
-          damping ratio / natural frequency reference grid lines (spec: ''dashed or
-          light grid to indicate constant damping ratio and natural frequency lines'')'
+        passed: true
+        comment: 'Poles marked with x, direction arrows, imaginary axis crossings,
+          damping ratio and omega_n reference grid, equal-axis scaling all present.
+          Deduction: Im-sort branch tracking discontinuity at K~3.08 draws spurious
+          segment through non-locus region.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Re(pole) → X axis, Im(pole) → Y axis; coord_equal preserves geometric
-          relationships; gain K encoded through branch progression
+        comment: Real and imaginary axes correctly assigned; gain K drives locus trajectories.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'root-locus-basic · r · ggplot2 · anyplot.ai' exactly matches
-          required format; legend labels branches correctly
+        comment: 'Title: root-locus-basic · r · ggplot2 · anyplot.ai. Legend shows
+          Branch 1/2/3 matching data.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Covers poles, complex branches, real-axis segment, gain-direction
-          arrows, imaginary-axis crossings. Missing: zeta/omega_n reference grid reduces
-          full coverage'
+        comment: 'All root locus features covered: 3 branches, open-loop poles, stability
+          crossings, direction arrows, damping ratio grid, natural frequency circles,
+          equal-axis scaling.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s)=K/(s(s+2)(s+4)) is a classic textbook third-order system — realistic
-          and pedagogically appropriate
+        comment: G(s) = K/(s(s+2)(s+4)) is a classic 3rd-order control systems textbook
+          example. Imaginary axis crossing at K=48 derived via Routh-Hurwitz. Domain-appropriate
+          damping ratios and natural frequencies.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Real axis -7 to 2 captures all pole start/end behavior; imaginary
-          axis -6 to 6 comfortably brackets the crossing at ±√8 ≈ ±2.83
+        comment: Gain swept K=0 to 40 covering the key dynamics. Plot range covers
+          the relevant region. Numerical root computation via polyroot is accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -199,34 +204,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat procedural script throughout
+        comment: 'Linear: theme tokens -> data generation -> plot layers -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top; polyroot() is deterministic
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(tidyr) and library(scales) are imported but no functions
-          from either package are called in the script
+        passed: true
+        comment: ggplot2, dplyr, ragg -- all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable; no fake functionality; arrow segment construction
-          is necessarily verbose but appropriate
+        comment: Appropriate complexity. lapply loops for root computation are idiomatic
+          R. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave(sprintf('plot-%s.png', THEME), device=ragg::agg_png, width=8,
-          height=4.5, dpi=400) — correct
+        comment: Saves as plot-{THEME}.png via sprintf. Modern linewidth= used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -236,22 +240,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_path for non-monotone complex curves (correct over geom_line);
-          scale_color_manual; coord_equal; theme_minimal base with layered overrides
-          — solid idiomatic ggplot2
+        comment: 'Good ggplot2 grammar: geom_path with group aesthetic, geom_segment
+          with arrow() decoration, coord_equal(), scale_color_manual, inherit.aes=FALSE
+          for reference elements.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_segment with arrow() parameter for gain-direction indicators;
-          multiple distinct shape codes (shape=4 for ×, shape=18 for ◇); coord_equal
-          for enforced aspect ratio — ggplot2-specific features used effectively
+        comment: coord_equal(xlim,ylim) for constrained equal-aspect zoom, multiple
+          geom layers with inherit.aes=FALSE, arrow(type='closed') on geom_segment
+          -- all ggplot2-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
