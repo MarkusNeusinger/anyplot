@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-constellation-diagram
 created: '2026-06-18T03:20:43Z'
-updated: '2026-06-18T03:28:35Z'
+updated: '2026-06-18T03:44:29Z'
 generated_by: claude-sonnet
 workflow_run: 27734220242
 issue: 4562
@@ -12,97 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: 16-QAM constellation with correct ideal points, received
-    symbols, decision boundaries, EVM metric, and symmetric axis limits'
-  - 'Excellent data quality: realistic 16-QAM scenario with physically accurate symbol
-    grid (±1,±3), proper SNR (~20 dB), deterministic LCG for reproducibility'
-  - Highcharts-idiomatic use of plotLines for decision boundaries — avoids hardcoded
-    grid lines in favor of axis-native reference lines
-  - 'Well-calibrated marker sizing: radius 3 with ~40% alpha for 64-point clusters,
-    radius 11 diamonds for ideal points — density adaptation is effective'
-  - 'Both light and dark renders fully theme-correct: transparent background over
-    pageBg, all chrome from t.ink/t.inkSoft/t.grid tokens'
+  - 'Near-perfect spec compliance: all required features present — 16-QAM ideal points,
+    received symbol clusters, dashed decision boundaries, EVM annotation, equal aspect
+    ratio, and correct axis labels'
+  - Deterministic data generation with fixed-seed LCG (seed=42195) and Box-Muller
+    transform produces reproducible constellation noise
+  - Excellent use of Highcharts SVG renderer API (chart.renderer.label()) for the
+    styled EVM annotation box — idiomatic and precise placement
+  - Semi-transparent received symbols (palette[0] + '66', radius 3) correctly convey
+    cluster density without overwhelming the ideal point markers
+  - 'Strong visual hierarchy: large red diamond markers (radius 11) immediately catch
+    the eye as ideal reference points, then secondary attention goes to the green
+    symbol clouds'
   weaknesses:
-  - 'Design excellence is near but not at 90-point threshold — DE-01 (5/8) and DE-02
-    (4/6) could be elevated with more visual polish: consider chart border removal
-    (chart.plotBorderWidth: 0), EVM annotation directly on the plot area rather than
-    only in subtitle, or a refined legend position'
-  - 'CQ-01 deduction: code defines 3 helper functions (lcg, randn, makeDecisionLine)
-    — while lcg/randn are necessary for browser-based deterministic RNG, makeDecisionLine
-    could be inlined for KISS compliance'
-  - 'LM-02 could be stronger: the plotLines usage is good but the implementation doesn''t
-    leverage Highcharts'' subtitle, boost, or renderer APIs for extra polish'
+  - 'DE-02: The chart retains the default Highcharts axis border lines at full weight
+    (lineColor: t.inkSoft); softening these to match the dashed decision boundaries
+    or removing top/right equivalents would improve visual refinement'
+  - 'VQ-03: Received symbol marker radius (3) causes the tight clusters (NOISE_STD=0.12)
+    to appear as near-solid blobs rather than showing cloud structure; increasing
+    to radius 4–5 would preserve the semi-transparent effect while revealing more
+    scatter detail'
+  - 'DE-01: The chart uses the Highcharts default frame/border around the plot area;
+    setting plotBorderWidth: 0 and relying on axis lines creates a cleaner look —
+    this is already in the code but the chart border is still visible'
+  - 'VQ-01 minor: EVM annotation text is 13px, slightly below the 14px minimum guideline;
+    raise to 14px for consistency with other secondary text elements'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "scatter-constellation-diagram · javascript · highcharts · anyplot.ai" in dark ink, clearly readable; subtitle "16-QAM · EVM = 5.5%" in softer dark ink; axis labels "In-Phase (I)" and "Quadrature (Q)" in dark secondary text; tick labels readable at −4 to +4 range; legend box with subtle border at bottom
-      Data: 16 clusters of small semi-transparent green (#009E73, ~40% alpha) dots scattered around 16 large solid red (#AE3030) diamond markers arranged in a 4×4 grid at ±1,±3; dashed decision boundary lines at ±2 and 0 on both axes
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-constellation-diagram · javascript · highcharts · anyplot.ai" in dark ink at top, fully visible; subtitle "16-QAM Constellation · SNR ≈ 20 dB" below in softer ink; X-axis "In-Phase (I)" and Y-axis "Quadrature (Q)" labels clearly visible; tick labels from -4 to 4 on both axes in secondary ink; EVM = 5.5% label box in top-left corner of plot area readable
+      Data: 16 red diamond markers (palette[4] = #AE3030) at the 4×4 QAM grid positions — clearly visible at large radius; 1024 semi-transparent green circles (palette[0] = #009E73 at 40% opacity) form tight clouds around each diamond; dashed reference lines at ±2 and 0 on both axes creating a 4×4 decision boundary grid
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark surface, not pure black
-      Chrome: Title and subtitle in light cream text, clearly readable against dark background; axis labels and tick labels in light secondary text, no dark-on-dark issues detected; legend box with visible border, light text on elevated dark background
-      Data: Green received symbol clusters (#009E73) and red ideal point diamonds (#AE3030) are identical in color to the light render — only chrome flipped; decision boundary lines appear as lighter dashed lines against the dark background
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures observed
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light ink/inkSoft colors against the dark background — all clearly readable; EVM annotation box uses elevatedBg fill (#242420) with grid-colored border, text in inkSoft; legend at bottom shows light-colored text
+      Data: Received symbol clouds remain the same #009E73 green (identical to light render) — clearly visible against dark background; ideal point diamonds remain the same #AE3030 red; decision boundary dashed lines visible in inkSoft color
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly adapts to dark theme; brand green #009E73 reads clearly against #1A1A17; data colors identical to light render as required
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 21px, subtitle 14px, axis titles
-          16px, tick/legend labels 14px); well-proportioned in both themes
+        comment: 'All font sizes explicitly set (21px title, 16px axis titles, 14px
+          ticks/legend); readable in both themes. Minor ding: EVM annotation at 13px
+          is slightly below the 14px secondary-text guideline.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend at bottom clear of data area
+        comment: No text-on-text or text-on-data overlap. EVM box sits in the top-left
+          corner well clear of the nearest data cluster.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Radius 3 + 40% alpha for 64-point clusters is well-calibrated; radius
-          11 diamonds for ideal points are prominently visible
+        comment: Ideal point diamonds (radius 11) are prominently visible. Received
+          symbol clouds (radius 3, 40% alpha, 1024 points) are visible but the tight
+          clustering (NOISE_STD=0.12) causes near-solid blobs; radius 4-5 would reveal
+          more structure.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green/red combination compensated by redundant encoding: circle
-          vs diamond shape AND size difference (radius 3 vs 11)'
+        comment: 'Green (palette[0]) vs red (palette[4]) pairing mitigated by strong
+          redundant encoding: size difference (radius 3 vs 11) and marker shape difference
+          (circle vs diamond) ensure CVD users can distinguish both series.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for symmetric constellation; good margins,
-          legend well-positioned at bottom
+        comment: Square orientation (2400x2400) correct for equal-aspect constellation
+          diagram. Plot fills the canvas well with symmetric axes -4.5 to 4.5. No
+          edge clipping. Canvas gate passed (no gate file found).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: In-Phase (I) and Quadrature (Q) are standard telco notation with
-          unit-style parentheses
+        comment: 'Axis labels use correct domain terminology: ''In-Phase (I)'' and
+          ''Quadrature (Q)'' with implied units. Title follows the mandated format
+          exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series palette[0]=#009E73; ideal points use palette[4]=#AE3030
-          (semantic matte red, spec explicitly suggests red markers); backgrounds
-          and chrome theme-correct in both renders
+        comment: 'First series (Received Symbols) uses palette[0] = #009E73. Second
+          series (Ideal Points) uses palette[4] = #AE3030 — justified semantic exception
+          since spec explicitly suggests red for ideal points. Background is transparent
+          (inherits #FAF8F1/#1A1A17). Data colors identical across both themes. All
+          chrome is theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -110,25 +124,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color assignment, diamond vs circle marker
-          types, alpha-transparency density encoding, EVM in subtitle — but not yet
-          FiveThirtyEight publication level'
+        comment: 'Above ''well-configured default'' (4) due to: styled EVM annotation
+          box with border/fill/padding, large diamond ideal point markers with white
+          outline, semi-transparent received symbols, and decision boundaries as structural
+          plotLines. Not publication-ready (no spine removal equivalent, default chart
+          frame visible).'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: gridLineWidth:0 with domain-specific decision boundary plotLines
-          only — good minimalism; transparent background; subtle legend border; alpha
-          on received symbols
+        comment: 'Intentional grid removal (gridLineWidth: 0) replaced by decision
+          boundary reference lines is a good design choice. Semi-transparent markers,
+          legend border styling. Default Highcharts axis border lines still at full
+          weight — some refinement above default but not polished.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: large red diamonds vs small transparent
-          green dots immediately communicates ideal vs noisy; EVM subtitle gives quantitative
-          context; decision boundaries show symbol regions'
+        comment: 'Clear visual hierarchy: large red diamonds as focal reference points,
+          green clouds as secondary received data. EVM annotation quantifies the quality
+          story directly on the chart. Decision boundaries contextualize the symbol
+          regions. Viewer immediately grasps the SNR/noise concept.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +156,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter with two-series overlay (received + ideal)
+        comment: Correct scatter chart type for constellation diagram. Square orientation
+          ensures equal aspect ratio for accurate geometry.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 16-QAM, ideal points as large distinct red markers, received symbols
-          as smaller semi-transparent dots, dashed decision boundaries, EVM in subtitle,
-          symmetric axis limits
+        comment: 'All features present: ideal points as large distinct markers, received
+          symbols as smaller semi-transparent dots, dashed decision boundaries, equal
+          aspect ratio, correct axis labels, EVM annotation, symmetric axis limits
+          centered at origin.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: I on X-axis, Q on Y-axis; full ±3 symbol grid visible within ±4.5
-          axis limits
+        comment: 16 ideal points on 4x4 QAM grid at ±1, ±3. 1024 received symbols
+          (64 per ideal point, within 500-2000 range). I/Q axes correctly mapped.
+          Symmetric range -4.5 to 4.5.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: scatter-constellation-diagram · javascript · highcharts ·
-          anyplot.ai; legend: Received Symbols / Ideal Points'
+        comment: Title is 'scatter-constellation-diagram · javascript · highcharts
+          · anyplot.ai' — correct format. Legend labels 'Received Symbols' and 'Ideal
+          Points' are descriptive and accurate.
     data_quality:
       score: 15
       max: 15
@@ -170,60 +192,66 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 16 QAM symbols shown, received noise clouds, ideal reference
-          points, decision boundaries, EVM metric
+        comment: 'Shows all aspects of a constellation diagram: 16-QAM modulation
+          scheme, both ideal reference points and noisy received symbols, decision
+          boundaries, EVM metric, SNR specification in subtitle. Comprehensive coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is the standard real-world example; 20 dB SNR and 5.5% EVM
-          are realistic for a good wireless channel
+        comment: Real wireless communications engineering scenario. 16-QAM at SNR
+          ~20 dB is a standard practical scenario. Neutral technical domain (no controversial
+          content).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Symbol grid at ±1,±3 is canonical 16-QAM normalization; NOISE_STD=0.12
-          gives physically accurate EVM; 64 symbols/point (1024 total) is realistic
+        comment: SNR ~20 dB with NOISE_STD=0.12 is physically reasonable for 16-QAM
+          (symbol spacing 2, noise is 6% of spacing). EVM ~5.5% is factually correct
+          for these parameters. Ideal points at ±1, ±3 are the canonical 16-QAM positions.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Defines 3 helper functions (lcg, randn, makeDecisionLine) — lcg/randn
-          are necessary for browser-side deterministic RNG; makeDecisionLine reduces
-          BOUNDARIES.map repetition but could be inlined
+        comment: Two small helper functions (lcg, randn) are practically necessary
+          for JavaScript's lack of seeded Math.random(), explicitly recommended by
+          the Highcharts library guide. Overall structure is linear and clear.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with fixed seed 42195, fully deterministic
+        comment: Fixed seed (42195) with deterministic LCG produces identical output
+          on every render.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; all globals (Highcharts, window.ANYPLOT_TOKENS)
-          are used
+        comment: No imports — uses window globals only (Highcharts, ANYPLOT_TOKENS).
+          All globals are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriate complexity for the visualization
+        comment: Clean, well-organized code with logical sections (LCG helpers, data
+          generation, chart configuration). No over-engineering, no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', ...) correct; animation:false in both
-          chart and plotOptions; credits disabled; no explicit width/height
+        comment: 'Uses anyplot-orientation: square directive, calls Highcharts.chart(''container'',
+          {...}), sets animation: false in both locations, disables credits. Correct
+          API usage throughout.'
     library_mastery:
       score: 7
       max: 10
@@ -233,22 +261,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scatter series type, plotLines for axis annotations, colors
-          array from palette, transparent background, enableMouseTracking:false —
-          very good idiomatic usage
+        comment: 'Good idiomatic Highcharts usage: plotLines for reference lines,
+          colors array for palette override, chart.backgroundColor: ''transparent'',
+          enableMouseTracking: false for static render, plotBorderWidth: 0 for clean
+          frame. Above the 3/5 default.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: plotLines for decision boundaries is a Highcharts-specific API; hex
-          color + alpha suffix for transparency; subtitle used elegantly for EVM context
-  verdict: REJECTED
+        comment: Uses chart.renderer.label() — Highcharts SVG renderer API for precise
+          annotation placement — which is distinctly Highcharts. Also uses plotLines
+          with dashStyle (Highcharts-specific pattern). Above default (1/5).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
