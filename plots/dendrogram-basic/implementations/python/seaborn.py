@@ -1,25 +1,54 @@
-""" pyplots.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-04-05
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-06-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Style - leverage seaborn's distinctive theming
-sns.set_theme(style="white", rc={"axes.linewidth": 0.8, "font.family": "sans-serif"})
-sns.set_context("talk", font_scale=1.2)
+# Theme tokens (Imprint palette, theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Custom palette starting with Python Blue
-species_palette = sns.color_palette(["#306998", "#E8843C", "#4EA86B"])
+# Imprint categorical palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential colormap for single-polarity heatmap values
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
+
+# Species colors: Imprint positions 1-3
 species_names = ["Setosa", "Versicolor", "Virginica"]
-species_colors = dict(zip(species_names, species_palette, strict=True))
+species_colors = dict(zip(species_names, IMPRINT_PALETTE[:3], strict=True))
 
-# Data - use seaborn's iris dataset (30 samples for readable dendrogram)
+# Apply theme-adaptive seaborn theme before any figure is created
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — iris dataset, 10 samples per species (30 total for readable dendrogram)
 np.random.seed(42)
 iris = sns.load_dataset("iris")
 samples = (
@@ -29,7 +58,7 @@ samples = (
 feature_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width"]
 features = samples[feature_cols].copy()
 
-# Build sample labels: Species-Number
+# Sample labels: Species-Number
 counters = dict.fromkeys(["setosa", "versicolor", "virginica"], 0)
 labels = []
 species_list = []
@@ -39,79 +68,72 @@ for species in samples["species"]:
     species_list.append(species.title())
 
 features.index = labels
-
-# Rename columns to readable format
 features.columns = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"]
 
-# Row colors by species - seaborn distinctive feature for annotating clusters
+# Row color strip by species (seaborn's distinctive clustermap feature)
 row_colors = pd.Series([species_colors[sp] for sp in species_list], index=labels, name="Species")
 
-# sns.clustermap - seaborn's distinctive hierarchical clustering + dendrogram
-# This IS the idiomatic seaborn way to visualize dendrograms with data context
+# Plot — square canvas suits the symmetric clustermap grid layout
 g = sns.clustermap(
     features,
     method="ward",
     row_colors=row_colors,
     col_cluster=True,
-    cmap=sns.color_palette("viridis", as_cmap=True),
-    figsize=(16, 9),
+    cmap=imprint_seq,
+    figsize=(6, 6),
     dendrogram_ratio=(0.25, 0.12),
     linewidths=0.5,
-    linecolor="white",
+    linecolor=PAGE_BG,
     cbar_kws={"label": "Feature Value"},
-    tree_kws={"linewidths": 1.8, "colors": "#666666"},
+    tree_kws={"linewidths": 2.0, "colors": INK_SOFT},
     xticklabels=True,
     yticklabels=True,
 )
 
-# Customize the row dendrogram (main dendrogram showing sample clustering)
-row_dendro_ax = g.ax_row_dendrogram
-row_dendro_ax.set_xlabel("Distance (Ward)", fontsize=14)
+g.figure.set_facecolor(PAGE_BG)
 
-# Customize heatmap axis labels
-g.ax_heatmap.set_xlabel("Iris Features", fontsize=20)
-g.ax_heatmap.set_ylabel("Iris Samples (by Species)", fontsize=20)
-g.ax_heatmap.tick_params(axis="both", labelsize=13)
+# Axis labels and tick sizes
+g.ax_heatmap.set_xlabel("Iris Features", fontsize=10, color=INK)
+g.ax_heatmap.set_ylabel("Iris Samples (by Species)", fontsize=10, color=INK)
+g.ax_heatmap.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Color y-axis (sample) labels by species
+# Color y-axis labels by species for visual storytelling
 for lbl in g.ax_heatmap.get_yticklabels():
     species = lbl.get_text().rsplit("-", 1)[0]
     if species in species_colors:
         lbl.set_color(species_colors[species])
         lbl.set_fontweight("bold")
 
-# Color x-axis (feature) labels
+# Style x-axis (feature) labels
 for lbl in g.ax_heatmap.get_xticklabels():
-    lbl.set_fontsize(14)
+    lbl.set_fontsize(8)
+    lbl.set_color(INK_SOFT)
     lbl.set_rotation(30)
     lbl.set_ha("right")
 
-# Style the colorbar
-cbar = g.cax
-cbar.tick_params(labelsize=12)
-cbar.set_ylabel("Feature Value", fontsize=14)
+# Style colorbar ticks
+g.cax.tick_params(labelsize=8, colors=INK_SOFT)
+g.cax.set_facecolor(PAGE_BG)
 
-# Add species legend using scatter proxies
+# Species legend to the right of the heatmap
 legend_handles = [
-    plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=c, markersize=12, label=n)
+    plt.Line2D([0], [0], marker="s", color="none", markerfacecolor=c, markeredgecolor=INK_SOFT, markersize=10, label=n)
     for n, c in species_colors.items()
 ]
 g.ax_heatmap.legend(
     handles=legend_handles,
     title="Species",
-    loc="upper left",
-    bbox_to_anchor=(1.15, 1.0),
-    fontsize=12,
-    title_fontsize=13,
+    loc="upper right",
+    fontsize=8,
+    title_fontsize=9,
     framealpha=0.95,
-    edgecolor="#cccccc",
-    fancybox=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
 
-# Title - placed on the figure
-g.figure.suptitle("dendrogram-basic \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium", y=1.02)
+# Title
+title = "dendrogram-basic · python · seaborn · anyplot.ai"
+g.figure.suptitle(title, fontsize=12, fontweight="medium", color=INK, y=0.99)
 
-# Visual refinement
-sns.despine(ax=g.ax_heatmap, left=False, bottom=False)
-
-g.figure.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — square canvas: figsize=(6,6) × dpi=400 → 2400×2400 px (no bbox_inches)
+g.figure.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
