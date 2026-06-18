@@ -111,11 +111,14 @@ ax = Axis(
     aspect             = DataAspect(),
 )
 
+# Imaginary axis (stability boundary): thin vertical reference at x=0
+vlines!(ax, [0.0]; color = RGBAf(INK.r, INK.g, INK.b, 0.15f0), linewidth = 1.0)
+
 # Constant natural-frequency arcs (left half-plane semicircles, dotted)
 for wn in (2.0, 4.0, 6.0)
     th = range(π / 2, 3π / 2; length = 120)
     lines!(ax, wn .* cos.(th), wn .* sin.(th);
-        color     = RGBAf(INK.r, INK.g, INK.b, 0.10f0),
+        color     = RGBAf(INK.r, INK.g, INK.b, 0.15f0),
         linestyle = :dot,
         linewidth = 1.0,
     )
@@ -132,7 +135,7 @@ for (zeta, lbl) in ((0.3, "ζ=0.3"), (0.5, "ζ=0.5"), (0.7, "ζ=0.7"))
     text!(ax, 0.52 * r_ext * sx + 0.15, 0.52 * r_ext * sy;
         text     = lbl,
         color    = INK_SOFT,
-        fontsize = 11,
+        fontsize = 13,
         align    = (:left, :center),
     )
 end
@@ -180,7 +183,7 @@ scatter!(ax, [0.0, 0.0], [jw_y, -jw_y];
 text!(ax, 0.2, jw_y + 0.38;
     text     = "±j$(round(jw_y; digits = 2))\n(K = 48)",
     color    = INK_SOFT,
-    fontsize = 11,
+    fontsize = 13,
     align    = (:left, :center),
 )
 
