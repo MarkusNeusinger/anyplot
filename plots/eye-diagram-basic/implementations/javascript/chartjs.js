@@ -1,7 +1,7 @@
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-18
+// Quality: 90/100 | Created: 2026-06-18
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

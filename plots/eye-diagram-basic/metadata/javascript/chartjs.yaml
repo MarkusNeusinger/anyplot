@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:26:15Z'
-updated: '2026-06-18T02:32:54Z'
+updated: '2026-06-18T02:51:03Z'
 generated_by: claude-sonnet
 workflow_run: 27732271311
 issue: 4561
@@ -12,46 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Excellent eye diagram with characteristic double-eye pattern clearly visible in
-    both renders; two eye openings at t≈0.5 and t≈1.5 UI are immediately legible.
-  - 'Sophisticated deterministic data pipeline: LCG seeded at 42 → Box-Muller Gaussian
-    → sigmoid bandwidth-limited transitions — exactly matching the spec''s signal
-    model.'
-  - Clever alpha-stacking approach (t.palette[0]+"0f" at ~6% opacity) creates an effective
-    density visualization from Chart.js's multi-dataset line architecture.
-  - 'Perfect spec compliance: trace count (300), noise sigma (5%), jitter sigma (3%
-    UI), axis units (UI, V), and NRZ model all match the specification precisely.'
-  - Theme-adaptive chrome fully implemented; dark render shows identical data colors
-    with correctly flipped backgrounds, text, and grid tokens — no dark-on-dark failures.
-  - 'Performance optimization with parsing: false is appropriate for the 302-dataset
-    payload.'
+  - Density-based color accumulation (green sparse → blue dense) is the right technique
+    for eye diagrams — executed correctly with 300 overlaid traces using physically
+    motivated alpha values.
+  - Deterministic LCG + Box-Muller + sigmoid rise/fall produces a technically accurate,
+    fully reproducible NRZ simulation matching real high-speed serial link eye diagrams.
+  - Custom afterDraw plugin for bracket-style eye height annotations at both UI sampling
+    points is a sophisticated and idiomatic use of the Chart.js plugin API.
+  - Both light and dark themes pass readability with no dark-on-dark failures; chrome
+    is fully theme-adaptive via t.ink / t.inkSoft throughout.
+  - 'Full spec compliance: all required features implemented including noise (σ=5%),
+    jitter (σ=3% UI), bandwidth-limited sigmoid transitions, correct axis units, and
+    correct title format.'
   weaknesses:
-  - 'DE-01: A true density-to-color ramp using t.seq (e.g., transitioning traces from
-    t.palette[0] toward t.seq[1] as they stack) would fulfill the spec''s "hot colors
-    indicating high trace density" note and elevate aesthetic sophistication.'
-  - 'CQ-01: Minor — utility functions rand/randn/sigmoid/refLine add ~15 lines of
-    abstraction that could be inlined; acceptable trade-off for readability.'
-  - 'VQ-03: Alpha-stacking alone does not produce a warm/cool hue shift at dense regions;
-    the densest areas appear as solid green rather than a shifted color. Not a disqualifying
-    flaw given palette constraints, but noted for a potential improvement.'
+  - Eye annotation label set at 12px CSS (ctx.font = '500 12px sans-serif') — at mobile
+    scale (~400px width) this renders at ~3px and is effectively unreadable; raise
+    to at least 14px to match tick label sizing.
+  - refLine() convenience function is called exactly twice and adds minor unnecessary
+    layering — optionally inline as two dataset literals for a flatter KISS structure.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "eye-diagram-basic · javascript · chartjs · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Voltage (V)" and X-axis label "Time (UI)" in dark ink. Tick labels in muted dark tone (#4A4A44). Dashed reference lines at 0.0 V and 1.0 V in inkSoft. Grid lines subtle and not dominant.
-      Data: 300 semi-transparent brand green (#009E73 + 0f alpha) traces creating characteristic double-eye pattern; two eye openings visible at t≈0.5 and t≈1.5 UI. Dense regions appear as richer green through opacity accumulation.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "eye-diagram-basic · javascript · chartjs · anyplot.ai" at 22px — clearly readable dark text. Y-axis label "Voltage (V)" at 16px readable. X-axis label "Time (UI)" at 16px readable. Tick labels at 14px readable. Eye annotation "Eye H ≈ 0.63 V" at 12px — readable at full size but marginal at mobile scale.
+      Data: Green (#009E73) traces for transition/sparse regions at very low alpha (3.5–5.5%); blue (#4467A3) for dense stable-rail regions at 12.5% alpha. 300 accumulated traces form two NRZ eye openings spanning 0–2 UI. Dashed reference lines at 0 V and 1 V in t.inkSoft. Bracket annotations with vertical span and crossbars at t=0.5 and t=1.5 UI.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title and axis labels in light cream/off-white (#F0EFE8), clearly readable against dark surface. Tick labels in light muted tone (#B8B7B0). No dark-on-dark failures observed. Grid lines subtle and visible.
-      Data: Same brand green (#009E73) traces with identical alpha — data colors unchanged from light render, only chrome flipped. Eye pattern appears even more dramatic on dark background.
-      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct theme surface.
+      Chrome: Title readable in light cream (t.ink = #F0EFE8 equivalent). Axis labels and tick labels rendered in light color — fully readable against dark background. Eye annotation "Eye H ≈ 0.63 V" uses t.ink — appears light/cream, readable. No dark-on-dark failures detected.
+      Data: Green and blue trace colors identical to light render — only chrome flips. Eye openings, rail density, and bracket annotations all visible and clear.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,53 +55,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes; font
-          sizes match library guide defaults (22/16/14 CSS px); slight deduction as
-          title reads a touch small but within acceptable range.
+        comment: 'Main font sizes explicitly set (title=22px, axis=16px, ticks=14px)
+          and well-proportioned in both themes. Minor deduction: eye annotation text
+          at 12px CSS is too small for mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 300 overlapping traces are intentional by design; no text-text or
-          text-data collisions.
+        comment: No overlapping text elements or text-data collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Alpha-stacking density effect works well. Minor deduction: spec
-          calls for hot colors at dense regions; implementation uses single-hue opacity
-          stack instead.'
+        comment: 300 traces at very-low-alpha accumulate correctly to produce density
+          heatmap. Eye openings, rail regions, and transitions are all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series using brand green; no red-green sole signal; CVD-safe.
+        comment: Imprint green and blue are CVD-safe with good perceptual contrast.
+          Density encoding distinguishable without hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 3200x1800, canvas gate passed, no overflow, generous padding,
-          title fills ~55% of width.
+        comment: Landscape orientation correct. Plot fills canvas well. No content
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) include correct units; title matches required
-          format exactly.
+        comment: Time (UI) and Voltage (V) are descriptive with correct units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data uses t.palette[0] (#009E73); backgrounds #FAF8F1/#1A1A17; chrome
-          tokens applied throughout; both renders theme-correct.'
+        comment: 't.palette[0] (#009E73) for primary traces; t.seq[1] (#4467A3) for
+          dense-rail traces — both Imprint members. Background #FAF8F1 light / #1A1A17
+          dark. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,25 +108,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: alpha-stacking 300 traces with t.palette[0]+0f is
-          an intentional density-visualization choice. Medium font weight (500) for
-          title. Dashed reference lines are professional context.'
+        comment: 'Clearly above defaults: density-based two-color ramp, low-alpha
+          accumulation technique, and clean bracket annotations create a professional
+          eye diagram. Not quite publication-ready but well above configured-default
+          baseline.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: spines removed (border: false), legend hidden, tooltips
-          disabled, carefully tuned padding. Grid retained appropriately for technical
-          diagram.'
+        comment: Axis borders removed, legend hidden, tooltips disabled, grid uses
+          t.grid token. Good refinement above library defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: density effect tells clear story about signal concentration;
-          two eye openings communicate NRZ signal quality clearly. Optional eye-height/width
-          annotations would further elevate.'
+        comment: Density coloring creates visual hierarchy (open eye vs dense rails).
+          Quantified eye height annotations at sampling points guide reader to the
+          key signal-integrity metric.
     spec_compliance:
       score: 15
       max: 15
@@ -141,31 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct eye diagram: 300 NRZ traces each spanning 2 UI, overlaid
-          with alpha to reveal density.'
+        comment: 'Correct eye diagram: overlaid NRZ traces forming characteristic
+          dual eye openings.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color density via alpha stacking; Time (UI) axis; Voltage (V) axis
-          with 0/1 reference levels; Gaussian noise (Box-Muller); timing jitter; sigmoid
-          transitions. Optional eye-metrics annotation not implemented (spec says
-          optionally).
+        comment: 300 traces, density heatmap coloring, UI axis, voltage axis, noise
+          sigma=5%, jitter sigma=3% UI, sigmoid transitions, eye height annotation
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: time in [0,2] UI; Y: voltage in [-0.3,1.3] V; 300 traces within
-          200-500 spec; 201 samples/trace within 100-200/UI spec.'
+        comment: 'X: Time [0,2] UI; Y: Voltage [-0.3, 1.3] V; all data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'eye-diagram-basic · javascript · chartjs · anyplot.ai';
-          legend correctly hidden for single-series eye diagram.
+        comment: Title exact format. No legend correct for unlabeled multi-trace density
+          plot.
     data_quality:
       score: 15
       max: 15
@@ -175,24 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: NRZ with random bit sequences, additive Gaussian noise (sigma=5%),
-          timing jitter (sigma=3% UI), sigmoid bandwidth limiting, dashed reference
-          lines at bit levels, 300 overlaid traces.
+        comment: Shows both rails, transitions, jitter-smeared edges, noise on rails,
+          density variation, and quantified eye opening.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Parameters are textbook NRZ signal-integrity values; normalized UI
-          time axis is standard; noise/jitter sigmas match spec guidance exactly.
+        comment: Technically accurate NRZ simulation matches real high-speed serial
+          link eye diagrams.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 traces (within 200-500); 100 samples/UI x 2 UI = 201 pts/trace
-          (within 100-200/UI); voltage range [-0.3, 1.3] V appropriate for NRZ with
-          noise headroom.
+        comment: 0-1 V NRZ, 5% noise, 3% UI jitter, 2 UI window — all domain-correct
+          values.
     code_quality:
       score: 9
       max: 10
@@ -202,62 +193,62 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four small utility functions (rand, randn, sigmoid, refLine). Functions
-          1-3 are concise single-purpose math utilities; refLine avoids repeating
-          config twice. All justified but strictly KISS would inline.
+        comment: rand/randn/sigmoid justified by LCG requirement; refLine() is a minor
+          unnecessary abstraction called only twice; eyeAnnotationPlugin required
+          by Chart.js API.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with fixed seed 42; Box-Muller derived from same
-          LCG; fully reproducible.
+        comment: Deterministic LCG seeded at 42 — correct for browser JS where Math.random()
+          is not seedable.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only window.ANYPLOT_TOKENS and the pre-loaded Chart
-          global.
+        comment: No imports; uses only globals (window.ANYPLOT_TOKENS, Chart) — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable names, appropriate complexity, no fake interactivity,
-          no dead code.
+        comment: Clean, well-commented, no fake interactive elements, appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness owns file saving; current Chart.js 4.4.7 API used throughout.
+        comment: Harness emits plot-{theme}.png + plot-{theme}.html; Chart.js 4.4.7
+          API used correctly.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Chart.js usage: parsing: false for pre-processed {x,y} data,
+          animation: false, responsive/maintainAspectRatio pattern, layout.padding,
+          scale border config.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Above default: parsing:false for performance with 302 datasets is
-          advanced Chart.js knowledge; {x,y} object notation; correct type:linear
-          for x-scale; all mandatory flags present.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: true
-        comment: 'Above default: uses Chart.js multi-dataset architecture creatively
-          — 302 independent line datasets with individual borderColor (palette[0]+0f)
-          to simulate density via alpha accumulation. parsing:false optimization is
-          library-specific.'
+        comment: 'Custom afterDraw plugin for bracket annotations is Chart.js-specific;
+          parsing: false is a Chart.js optimization for dense datasets. Core multi-series
+          overlay is generalizable.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
