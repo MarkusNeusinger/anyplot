@@ -1,38 +1,52 @@
 library: altair
+language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:52Z'
-updated: '2026-03-18T00:09:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23221365349
+updated: '2026-06-18T02:29:44Z'
+generated_by: claude-sonnet
+workflow_run: 27731780037
 issue: 4561
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/altair/plot.html
-quality_score: 89
+language_version: 3.13.13
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Domain-appropriate dark theme with inferno colormap creates a professional signal
-    integrity visualization
-  - All spec requirements fully implemented including eye height/width annotations
-    with computed measurements
-  - Clean well-structured code with efficient histogram2d density approach
-  - Informative subtitle and annotations tell the signal quality story effectively
+  - Correct imprint_seq colormap (#009E73→#4467A3) applied seamlessly to density heatmap
+  - Excellent mark_rect x2/y2 encoding for seamless tile rendering — distinctive Altair
+    technique that eliminates tiling gaps
+  - 'Perfect spec compliance: eye height and width annotations with diamond markers
+    and measurement labels'
+  - Both themes correctly adapted with all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG)
+  - Realistic NRZ signal simulation with correct noise/jitter parameters and raised-cosine
+    transitions
+  - KISS structure followed — flat script, np.random.seed(42), clean imports
   weaknesses:
-  - Minor rect tiling artifacts visible as faint grid-like gaps in low-density regions
-  - Legend font sizes (12-14pt) slightly small for the canvas size
-  - Could push library mastery further with additional Altair-specific features
-  image_description: 'The plot displays an NRZ signal eye diagram on a dark navy background
-    (#0a0a1a). Two dense horizontal bands rendered as a density heatmap using the
-    inferno colormap (dark purple for low density, bright orange/yellow for high density)
-    sit at the 0V and 1V signal levels. Transition regions between the two levels
-    form the characteristic eye-shaped opening in the center. Cyan dashed lines annotate
-    "Eye Height: 0.808 V" (vertical) and "Eye Width: 0.92 UI" (horizontal) within
-    the eye opening. Four cyan diamond markers highlight the eye corners. The title
-    reads "eye-diagram-basic · altair · pyplots.ai" with subtitle "NRZ signal eye
-    diagram — 300 traces with 5% noise and 3% jitter". A "Log Density" color legend
-    with inferno gradient sits on the right. Axes are labeled "Time (UI)" and "Voltage
-    (V)".'
+  - Eye Height annotation label positioned over the high-density heatmap region at
+    (1.22, 0.69) — causes partial overlap with heatmap data; reposition to lower-density
+    area (e.g., inside the eye opening gap or to the right of the vertical rule outside
+    the main data area)
+  - Missing decision-boundary reference line at 0.5 V using the neutral color anchor
+    — this would anchor the storytelling by visually separating high/low signal regions
+    and elevate DE-03
+  - configure_view(stroke=INK_SOFT) draws a subtle box frame around the chart area;
+    removing stroke for a frameless look would improve visual refinement (DE-02)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "eye-diagram-basic · python · altair · anyplot.ai" in dark ink, subtitle in INK_SOFT; all readable. X-axis label "Time (UI)" and Y-axis label "Voltage (V)" clearly visible. Tick labels at 10px readable. Log Density colorbar legend on right with ELEVATED_BG fill and INK_SOFT border.
+      Data: Density heatmap rendered as rectangular bins using mark_rect with x2/y2. Low-density cells render in #009E73 (brand green), high-density in #4467A3 (blue) — correct imprint_seq two-stop range. Eye opening clearly visible at center. Red (#AE3030) dashed annotation lines show eye height and width with diamond markers. Annotation text "Eye Height: 0.808 V" and "Eye Width: 0.92 UI" in bold red, readable though Eye Height label sits on the heatmap data region.
+      Legibility verdict: PASS — all text readable; minor annotation overlap with heatmap data but text remains distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title and axis labels in light cream (#F0EFE8), tick labels in #B8B7B0 — all readable against dark background. No dark-on-dark failures. Legend fills to #242420 (ELEVATED_BG dark) with INK_SOFT border.
+      Data: Density heatmap colors identical to light render — same green-to-blue imprint_seq with no change. Red annotation elements remain prominent and readable. Eye opening shape identical to light render.
+      Legibility verdict: PASS — complete theme-adaptive chrome; no dark-on-dark text issues.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -43,65 +57,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set. Legend text (12-14pt) slightly small
-          for canvas.
+        comment: 'All font sizes explicitly set (title 16px, axis 12px, ticks 10px,
+          legend 12px, annotations 12px). Readable in both themes. Minor: annotation
+          labels at 12px are slightly small at mobile scale.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements. Annotations cleanly positioned.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Density heatmap clearly visible. Minor rect tiling artifacts in low-density
-          regions.
+        comment: Eye Height annotation text at (1.22, 0.69) partially overlaps the
+          high-density heatmap region, though red color provides sufficient contrast
+          for readability. Eye Width text sits cleanly in the eye opening.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density heatmap bins render at optimal resolution. Diamond markers
+          (size=120) and annotation rules clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe. Cyan annotations
-          contrast well.
+        comment: Imprint sequential cmap is CVD-safe. Red annotation vs teal/blue
+          provides high contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well. Legend near
+          plot on right. Good margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) - descriptive with units.
+        comment: Time (UI) and Voltage (V) — both with correct units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq range=[#009E73, #4467A3]. Background #FAF8F1
+          light / #1A1A17 dark. All chrome tokens correctly applied.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Dark theme domain-appropriate. Inferno with cyan accents is professional
-          and cohesive.
+        comment: 'Strong design: intentional density coloring with imprint_seq, measurement
+          annotations with matte-red, informative subtitle, dual-theme adaptation.
+          Clearly above defaults but not FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, custom dark background. Minor
-          rect gap artifacts.
+        comment: Grid disabled (Grid=False) is a significant refinement. Good whitespace.
+          However configure_view(stroke=INK_SOFT) leaves a subtle box frame around
+          chart area that could be removed for cleaner look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Eye measurements annotate key metrics. Subtitle explains parameters.
-          Density coloring guides attention.
+        comment: Annotations with exact eye height/width measurements directly communicate
+          the key signal integrity metrics. Density coloring highlights trace concentration.
+          Could be elevated with a 0.5V decision boundary reference line to separate
+          high/low signal regions.
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density heatmap eye diagram.
+        comment: 'Correct: eye diagram as density heatmap with overlaid traces, eye
+          opening clearly visible.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including density coloring, annotations,
-          noise, jitter, sigmoid transitions.
+        comment: Density heatmap coloring, time in UI, voltage axis, eye measurements
+          annotated, NRZ simulation with noise and jitter — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Time (UI), Y=Voltage (V), color=log density. All correct.
+        comment: 'X: Time (UI), Y: Voltage (V), color: log density — all correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Log Density legend properly configured.
+        comment: 'Title: ''eye-diagram-basic · python · altair · anyplot.ai'' — correct
+          format. Legend: ''Log Density'' colorbar with gradient.'
     data_quality:
       score: 15
       max: 15
@@ -140,20 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both bit levels, transitions, noise, jitter, and measurable
-          eye opening.
+        comment: Shows both eye openings (0→1 and 1→0 transitions), noise spreading,
+          density variation, eye metrics.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity is a real engineering scenario. Neutral domain.
+        comment: NRZ signal simulation with realistic parameters (5% noise, 3% jitter).
+          Subtitle provides context. Telecom signal integrity domain is neutral and
+          professional.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-1V amplitude, 5% noise, 3% jitter, 300 traces - all realistic.
+        comment: 0-1V NRZ binary signal levels, 300 traces (within spec 200-500),
+          realistic noise/jitter values.
     code_quality:
       score: 10
       max: 10
@@ -163,63 +197,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: 'Flat script: imports → data generation → binning → chart → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: os, sys, altair, numpy, pandas, PIL.Image — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with appropriate complexity. Histogram2d approach
-          is efficient.
+        comment: Clean, appropriate complexity. No fake functionality. sys.path fix
+          for shadowing is a legitimate guard.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PAD-only pattern correctly
+          implemented.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Altair: mark_rect with x2/y2 encoding, + operator for layer
+          composition, configure_* for theme, alt.Title for subtitle/fontsize — all
+          idiomatic Altair patterns.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper declarative encoding, layer composition, configure methods.
-          Pre-binning is pragmatic workaround.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Tooltips, HTML export, declarative layering are Altair-distinctive.
-  verdict: REJECTED
+        comment: x2/y2 encoding for exact bin-edge rect tiles is distinctive to Vega-Lite/Altair
+          — not easily replicated in other libraries. Altair layer composition (+)
+          also distinctive.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
   dataprep:
   - binning
   styling:
-  - dark-theme
   - custom-colormap
