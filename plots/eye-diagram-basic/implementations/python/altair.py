@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: altair 6.2.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-06-18
@@ -79,8 +79,8 @@ for trace in range(n_traces):
     all_voltage.extend(trace_voltage.tolist())
 
 # Pre-bin into 2D histogram for density heatmap
-time_bins = 200
-voltage_bins = 150
+time_bins = 350
+voltage_bins = 225
 time_edges = np.linspace(-0.05, 2.05, time_bins + 1)
 voltage_edges = np.linspace(-0.2, 1.2, voltage_bins + 1)
 
@@ -175,7 +175,7 @@ ann_labels = pd.DataFrame(
 )
 labels = (
     alt.Chart(ann_labels)
-    .mark_text(color=ANNOTATION_COLOR, fontSize=14, fontWeight="bold", align="center", baseline="middle")
+    .mark_text(color=ANNOTATION_COLOR, fontSize=12, fontWeight="bold", align="center", baseline="middle")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
