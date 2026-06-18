@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-basic: Basic Dendrogram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-06-18
@@ -163,7 +163,8 @@ title_fontsize = round(66 * 67 / title_len) if title_len > 67 else 66
 
 # Extended color tuple: U-shape colors + reference line colors (amber + ink)
 u_shape_colors = tuple(color for color, _, _, _ in u_shapes)
-all_series_colors = u_shape_colors + (ANYPLOT_AMBER, INK_SOFT)
+BETWEEN_SPECIES_COLOR = IMPRINT_PALETTE[3]  # #BD8233 ochre — distinct from gray inter-cluster bridge
+all_series_colors = u_shape_colors + (ANYPLOT_AMBER, BETWEEN_SPECIES_COLOR)
 
 # Style — Imprint palette, theme-adaptive chrome
 custom_style = Style(
@@ -189,7 +190,7 @@ chart = pygal.XY(
     style=custom_style,
     title=title,
     x_title="Sample",
-    y_title="Distance (Ward's Method)",
+    y_title="Ward's Distance",
     show_legend=True,
     show_dots=False,
     fill=False,
@@ -199,9 +200,9 @@ chart = pygal.XY(
     x_label_rotation=35,
     truncate_label=30,
     xrange=(-1.0, n + 0.2),
-    range=(0, max_dist * 1.05),
+    range=(0, max_dist * 1.08),
     margin_top=50,
-    margin_bottom=140,
+    margin_bottom=80,
     margin_left=100,
     margin_right=80,
     legend_at_bottom=True,
@@ -247,10 +248,7 @@ key_merges = sorted(linkage_matrix[:, 2])
 within_cluster_max = key_merges[n - 4]
 between_cluster = key_merges[-2]
 
-for ref_dist, ref_label in [
-    (within_cluster_max, f"Within-species max (d={within_cluster_max:.1f})"),
-    (between_cluster, f"Between-group merge (d={between_cluster:.1f})"),
-]:
+for ref_dist, ref_label in [(within_cluster_max, "Within-species max"), (between_cluster, "Between-species merge")]:
     chart.add(
         ref_label,
         [(-0.8, ref_dist), (n - 0.2, ref_dist)],
