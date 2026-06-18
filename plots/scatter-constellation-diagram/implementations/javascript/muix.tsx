@@ -124,13 +124,13 @@ export default function Chart() {
       height={window.ANYPLOT_SIZE.height}
       skipAnimation
       colors={["rgba(0,158,115,0.5)", t.palette[4]]}
-      margin={{ top: 72, bottom: 72, left: 80, right: 36 }}
+      margin={{ top: 72, bottom: 72, left: 72, right: 72 }}
       series={[
         {
           id: "received",
           label: "Received symbols",
           data: receivedData,
-          markerSize: 4,
+          markerSize: 5,
           valueFormatter: (v) => `I=${v.x.toFixed(2)}, Q=${v.y.toFixed(2)}`,
         },
         {
@@ -163,6 +163,8 @@ export default function Chart() {
       sx={{
         "& .MuiChartsAxis-line": { stroke: inkSoft },
         "& .MuiChartsAxis-tick": { stroke: inkSoft },
+        "& .MuiChartsAxis-top .MuiChartsAxis-line": { display: "none" },
+        "& .MuiChartsAxis-right .MuiChartsAxis-line": { display: "none" },
       }}
     >
       {BOUNDARIES.map((val) => (
