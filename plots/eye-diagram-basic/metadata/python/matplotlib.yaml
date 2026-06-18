@@ -1,79 +1,104 @@
 library: matplotlib
+language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:18Z'
-updated: '2026-03-17T23:38:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23221365040
+updated: '2026-06-18T02:18:51Z'
+generated_by: claude-sonnet
+workflow_run: 27731504659
 issue: 4561
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent dark-theme design with custom colormap perfectly suited to signal integrity
-    visualization domain
-  - Clean density heatmap approach using histogram2d + log1p + imshow with gaussian
-    interpolation
-  - All spec requirements met with realistic NRZ signal parameters
-  - Professional appearance that would fit in an engineering publication
+  - 3-stop Imprint sequential colormap (green→cyan→blue) produces richer heatmap depth
+    than the basic 2-stop version while staying within palette constraints
+  - Log-scaled histogram with Gaussian smoothing and masked low-density background
+    delivers a crisp, professional eye diagram with clean eye openings
+  - Eye height and width annotations are well-placed in the second eye opening without
+    crowding the visualization
+  - 'Perfect spec compliance: all required features (noise, jitter, sigmoid transitions,
+    measurements) correctly implemented'
+  - Reproducible seed, clean imports, correct canvas dimensions, theme-adaptive chrome
+    in both renders
   weaknesses:
-  - No eye height/width measurement annotations (spec lists as optional but would
-    enhance storytelling)
-  image_description: The plot displays a signal integrity eye diagram on a dark navy
-    background (#0f0f23). The x-axis is labeled "Time (UI)" ranging from 0.0 to 2.0,
-    and the y-axis is labeled "Voltage (V)" ranging from 0.00 to 1.00. The title reads
-    "eye-diagram-basic · matplotlib · pyplots.ai" in light gray text. The diagram
-    shows two clear eye-shaped openings formed by overlapping NRZ signal traces rendered
-    as a 2D density heatmap. High-density regions where many traces overlap (at the
-    0V and 1V signal levels) appear in bright yellow/orange, while lower-density transition
-    regions between signal levels appear in cyan/blue tones against the dark background.
-    The transitions between bit levels show smooth sigmoid-shaped curves. Top and
-    right spines are removed; bottom and left spines are rendered in light gray.
+  - Annotation text at 7pt may be too small for mobile-scaled views (~400 px); consider
+    raising to 8–9pt
+  - Y-axis grid alpha at 0.10 falls below the style guide target of 15–25%; marginally
+    too faint on both renders
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "eye-diagram-basic · python · matplotlib · anyplot.ai" in dark INK (#1A1A17) at 12pt, clearly readable. Axis labels "Time (UI)" and "Voltage (V)" in dark ink at 10pt, readable. Tick labels (0.0–2.0 and 0–1.0) in INK_SOFT (#4A4A44) at 8pt, readable. Colorbar label "Trace density (log)" and tick labels in INK_SOFT, readable.
+      Data: Density heatmap with 3-stop Imprint sequential cmap — brand green #009E73 at low density, cyan #2ABCCD at medium density, blue #4467A3 at high density. Signal rails at 0 V and 1 V are deep blue; transition arcs are green/cyan; eye openings are clear transparent voids showing the background. Eye height annotation arrow (vertical, t=1.62) and "Eye H = 0.80V" label box visible. Eye width annotation arrow (horizontal, y=0.44) and "Eye W = 0.88 UI" label box visible. Dashed reference lines at 0 V and 1 V are subtle.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light INK (#F0EFE8) — clearly readable on dark background. Axis labels in light ink, readable. Tick labels in INK_SOFT (#B8B7B0) — readable, no dark-on-dark failures. Annotation boxes use ELEVATED_BG (#242420) fill with INK_SOFT text, both readable. Colorbar label and ticks in INK_SOFT, readable.
+      Data: Data colors are identical to light render — same green #009E73 → cyan #2ABCCD → blue #4467A3 gradient. Eye openings show dark background (#1A1A17). Signal rails remain deep blue, transition arcs green/cyan — confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16'
+        comment: 'All font sizes explicitly set (title=12pt, axes=10pt, ticks=8pt,
+          colorbar=8pt). Minor deduction: annotation text at 7pt may be too small
+          at mobile scale (~400 px).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Eye height and width annotations in distinct quadrants, no collisions
+          with each other or the colorbar.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density heatmap with gaussian interpolation renders clearly
+        comment: Heatmap density crisp; signal rails in deep blue, transition arcs
+          in green/cyan, eye openings as transparent voids.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential dark-blue-to-yellow colormap is colorblind-safe
+        comment: Imprint sequential cmap is CVD-safe; eye opening distinguished by
+          absence of color rather than hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well in 16:9 format
+        comment: Canvas gate passed (3200x1800). Good canvas utilization, top/right
+          spines removed, colorbar fits cleanly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) — descriptive with units
+        comment: Time (UI) and Voltage (V) both include units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq 3-stop extension using Imprint palette members only
+          (#009E73 → #2ABCCD → #4467A3). Backgrounds correct. Chrome theme-adaptive
+          in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -81,19 +106,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom dark theme with crafted colormap, strong design above defaults
+        comment: Custom 3-stop colormap, Gaussian smoothing with log-scaling, masked
+          low-density background, rounded annotation boxes with semi-transparent elevated
+          fills.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, custom colors, dark background, no grid
+        comment: Top/right spines removed, y-axis-only grid at alpha=0.10 (slightly
+          below 15-25% target), dashed reference lines, refined annotation boxstyle.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Density coloring creates natural visual hierarchy
+        comment: Eye measurements (H=0.80V, W=0.88 UI) quantify signal quality. Log-scale
+          density reveals signal concentration. Reference lines provide nominal-level
+          context.
     spec_compliance:
       score: 15
       max: 15
@@ -103,25 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density heatmap eye diagram
+        comment: Eye diagram correctly implemented as 2D density heatmap with overlaid
+          periods.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All required features present
+        comment: Density coloring, UI time axis, voltage axis with signal levels,
+          NRZ simulation, noise+jitter, sigmoid transitions, eye H and W annotations.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in UI, Y=voltage, correct mapping
+        comment: 'X: time [0,2] UI; Y: voltage [-0.3,1.3] V. 400 traces x 150 samples
+          via 2D histogram.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed
+        comment: Title exactly 'eye-diagram-basic · python · matplotlib · anyplot.ai'.
+          Colorbar labeled 'Trace density (log)'.
     data_quality:
       score: 15
       max: 15
@@ -131,20 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both signal levels, eye openings, density variation, jitter
-          and noise effects
+        comment: 'All required features: overlaid traces, noise, jitter, bandwidth-limited
+          transitions, density coloring, optional measurements.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity — real engineering scenario
+        comment: NRZ signal simulation with realistic telecom parameters (noise_sigma=0.05,
+          jitter_sigma=0.03, 400 traces, 150 samples/UI).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 traces, 150 samples/UI, realistic noise and jitter values
+        comment: Voltage [-0.3,1.3] V with noise margin. Eye H=0.80V and W=0.88 UI
+          physically realistic for given sigma parameters.
     code_quality:
       score: 10
       max: 10
@@ -154,31 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: 'Linear: Imports → Tokens → Data → Histogram → Plot → Save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (os, pyplot, numpy, LinearSegmentedColormap, gaussian_filter)
+          actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for signal generation
+        comment: Clean, appropriately complex for a 2D density heatmap. No fake UI
+          elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as f'plot-{THEME}.png' with no bbox_inches argument. Current
+          API throughout.
     library_mastery:
       score: 7
       max: 10
@@ -188,23 +228,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ax methods, histogram2d + imshow pipeline
+        comment: Consistent Axes methods (ax.imshow, ax.axhline, ax.annotate, ax.text,
+          ax.yaxis.grid, fig.colorbar, ax.tick_params, ax.spines).
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap, gaussian interpolation, log1p density scaling
+        comment: scipy.ndimage gaussian_filter on 2D histogram, np.log1p log-scaling,
+          np.ma.masked_where for background clipping, LinearSegmentedColormap construction.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
+  - colorbar
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep:
   - binning
   styling:
   - custom-colormap
-  - dark-theme
+  - alpha-blending
+  - grid-styling
