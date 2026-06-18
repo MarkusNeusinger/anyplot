@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-18
@@ -99,7 +99,7 @@ for zeta in [0.2, 0.4, 0.6, 0.8]:
             )
         )
     fig.add_annotation(
-        x=x_vals[-1], y=y_vals[-1] + 0.12, text=f"ζ={zeta}", showarrow=False, font={"size": 9, "color": INK_MUTED}
+        x=x_vals[-1], y=y_vals[-1] + 0.12, text=f"ζ={zeta}", showarrow=False, font={"size": 10, "color": INK_MUTED}
     )
 
 # Constant natural frequency arcs (ωn = 1, 2, 3, 4, 5)
@@ -121,7 +121,7 @@ for wn in [1, 2, 3, 4, 5]:
         y=wn * np.sin(np.pi * 0.55) + 0.12,
         text=f"ωn={wn}",
         showarrow=False,
-        font={"size": 9, "color": INK_MUTED},
+        font={"size": 10, "color": INK_MUTED},
     )
 
 # Stability boundary — imaginary axis shaded band
@@ -304,21 +304,25 @@ fig.update_layout(
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "x": 0.01,
-        "y": 0.99,
+        "x": 0.99,
+        "y": 0.01,
+        "xanchor": "right",
+        "yanchor": "bottom",
         "itemsizing": "constant",
     },
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
     hoverlabel={"bgcolor": ELEVATED_BG, "font_size": 12, "bordercolor": INK_SOFT},
 )
 
-# Transfer function subtitle
+# Transfer function subtitle — lower-left, clear of legend (lower-right) and ζ labels (upper-left)
 fig.add_annotation(
     text="G(s) = 1 / s(s+1)(s+3)",
     xref="paper",
     yref="paper",
-    x=0.5,
-    y=1.01,
+    x=0.03,
+    y=0.03,
+    xanchor="left",
+    yanchor="bottom",
     showarrow=False,
     font={"size": 10, "color": INK_MUTED, "family": "Courier New, monospace"},
 )
