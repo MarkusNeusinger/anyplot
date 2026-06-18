@@ -1,14 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 82/100 | Updated: 2026-04-05
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-06-18
 """
+
+import os
+import sys
+
+
+# Prevent this file (pygal.py) from shadowing the installed pygal package
+_here = os.path.dirname(os.path.realpath(__file__))
+sys.path = [p for p in sys.path if os.path.realpath(p) != _here]
+os.chdir(_here)
 
 import numpy as np
 import pygal
 from pygal.style import Style
 from scipy.cluster.hierarchy import fcluster, linkage
 
+
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"
+
+# Imprint categorical palette — first series is always #009E73
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Data - Iris flower measurements (4 features for 15 samples)
 np.random.seed(42)
@@ -93,9 +113,13 @@ for leaf_id in range(n):
     species = labels[leaf_id].rsplit("-", 1)[0]
     cluster_species[cid] = species
 
-# Colorblind-safe palette: blue, teal, amber (high contrast, avoids red-green)
-species_colors = {"Setosa": "#306998", "Versicolor": "#D4872C", "Virginica": "#7B4EA3"}
-mixed_color = "#5C6370"
+# Species colors from Imprint palette (positions 1-3)
+species_colors = {
+    "Setosa": IMPRINT_PALETTE[0],  # #009E73 brand green
+    "Versicolor": IMPRINT_PALETTE[1],  # #C475FD lavender
+    "Virginica": IMPRINT_PALETTE[2],  # #4467A3 blue
+}
+mixed_color = INK_MUTED  # theme-adaptive for inter-cluster merges
 
 # Build U-shape series with color and distance metadata
 u_shapes = []
@@ -124,46 +148,49 @@ for idx in range(len(linkage_matrix)):
         node_cluster[new_node] = -1
         color = mixed_color
 
-    # Stroke width scales with merge distance for visual hierarchy
-    stroke_w = 3.5 + 6 * (dist / max_dist)
+    # Stroke width scales with merge distance — minimum 5 ensures lower branches stay visible
+    stroke_w = 5 + 8 * (dist / max_dist)
 
     u_shapes.append((color, stroke_w, dist, [(x_left, h_left), (x_left, dist), (x_right, dist), (x_right, h_right)]))
 
 # Ordered labels for x-axis
 ordered_labels = [labels[i] for i in leaf_order]
 
-# Style - refined for publication quality at 4800x2700
+# Title with length-scaled fontsize
+title = "Iris Species Clustering · dendrogram-basic · python · pygal · anyplot.ai"
+title_len = len(title)
+title_fontsize = round(66 * 67 / title_len) if title_len > 67 else 66
+
+# Extended color tuple: U-shape colors + reference line colors (amber + ink)
+u_shape_colors = tuple(color for color, _, _, _ in u_shapes)
+BETWEEN_SPECIES_COLOR = IMPRINT_PALETTE[3]  # #BD8233 ochre — distinct from gray inter-cluster bridge
+all_series_colors = u_shape_colors + (ANYPLOT_AMBER, BETWEEN_SPECIES_COLOR)
+
+# Style — Imprint palette, theme-adaptive chrome
 custom_style = Style(
-    background="#FFFFFF",
-    plot_background="#FAFAFA",
-    foreground="#2d2d2d",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#e0e0e0",
-    colors=tuple(color for color, _, _, _ in u_shapes),
-    title_font_size=56,
-    label_font_size=38,
-    major_label_font_size=36,
-    legend_font_size=34,
-    value_font_size=28,
-    stroke_width=4,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=all_series_colors,
+    title_font_size=title_fontsize,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=5,
     opacity=1.0,
-    guide_stroke_color="#e8e8e8",
-    major_guide_stroke_color="#d8d8d8",
-    title_font_family="Helvetica, Arial, sans-serif",
-    label_font_family="Helvetica, Arial, sans-serif",
-    major_label_font_family="Helvetica, Arial, sans-serif",
-    legend_font_family="Helvetica, Arial, sans-serif",
-    value_font_family="Helvetica, Arial, sans-serif",
 )
 
-# Chart - leveraging pygal XY with extensive configuration
+# Chart — pygal XY configured as dendrogram (3200×1800 landscape)
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Iris Species Clustering · dendrogram-basic · pygal · pyplots.ai",
+    title=title,
     x_title="Sample",
-    y_title="Distance (Ward's Method)",
+    y_title="Ward's Distance",
     show_legend=True,
     show_dots=False,
     fill=False,
@@ -173,9 +200,9 @@ chart = pygal.XY(
     x_label_rotation=35,
     truncate_label=30,
     xrange=(-1.0, n + 0.2),
-    range=(0, max_dist * 1.05),
+    range=(0, max_dist * 1.08),
     margin_top=50,
-    margin_bottom=140,
+    margin_bottom=80,
     margin_left=100,
     margin_right=80,
     legend_at_bottom=True,
@@ -186,17 +213,17 @@ chart = pygal.XY(
     js=[],
 )
 
-# Custom x-axis labels at leaf positions with formatted names
+# Custom x-axis labels at leaf positions
 chart.x_labels = list(range(n))
 chart.x_labels_major = list(range(n))
 chart.x_value_formatter = lambda x: ordered_labels[int(round(x))] if 0 <= round(x) < n else ""
 
-# Y-axis: custom labels with formatted distances
+# Y-axis: formatted distances
 y_max_nice = int(np.ceil(max_dist))
 step = 1 if y_max_nice <= 6 else 2
 chart.y_labels = [{"value": v, "label": f"{v:.0f}"} for v in range(0, y_max_nice + 1, step)]
 
-# Draw dendrogram - each U-shape as its own series with scaled stroke
+# Draw dendrogram — each U-shape as its own series
 color_to_species = {v: k for k, v in species_colors.items()}
 color_to_species[mixed_color] = "Inter-cluster"
 
@@ -208,7 +235,6 @@ for color, stroke_w, dist, points in u_shapes:
     else:
         series_name = None
 
-    # Use pygal's per-series formatter for distance tooltips
     chart.add(
         series_name,
         [{"value": p, "label": f"d={dist:.2f}"} for p in points],
@@ -217,23 +243,19 @@ for color, stroke_w, dist, points in u_shapes:
         allow_interruptions=False,
     )
 
-# Add invisible reference series for key distance annotations via pygal secondary axis
-# Mark the two most important merge distances with horizontal reference lines
+# Reference lines for key distance thresholds — amber color, clearly visible
 key_merges = sorted(linkage_matrix[:, 2])
-within_cluster_max = key_merges[n - 4]  # Highest within-cluster merge
-between_cluster = key_merges[-2]  # Second-to-last merge (between two groups)
+within_cluster_max = key_merges[n - 4]
+between_cluster = key_merges[-2]
 
-for ref_dist, ref_label in [
-    (within_cluster_max, f"Within-species max (d={within_cluster_max:.1f})"),
-    (between_cluster, f"Between-group merge (d={between_cluster:.1f})"),
-]:
+for ref_dist, ref_label in [(within_cluster_max, "Within-species max"), (between_cluster, "Between-species merge")]:
     chart.add(
         ref_label,
         [(-0.8, ref_dist), (n - 0.2, ref_dist)],
         show_dots=False,
-        stroke_style={"width": 2, "dasharray": "12, 8", "linecap": "butt"},
+        stroke_style={"width": 4, "dasharray": "16, 8", "linecap": "butt"},
     )
 
-# Save
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save — both PNG and interactive HTML
+chart.render_to_file(f"plot-{THEME}.html")
+chart.render_to_png(f"plot-{THEME}.png")
