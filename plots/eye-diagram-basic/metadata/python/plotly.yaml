@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:38Z'
-updated: '2026-06-18T02:08:45Z'
+updated: '2026-06-18T02:21:08Z'
 generated_by: claude-sonnet
 workflow_run: 27731644056
 issue: 4561
@@ -12,101 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct eye diagram technique using go.Histogram2d with density heatmap rendering
-    400 overlaid NRZ traces
-  - Clever colorscale anchoring zero-density to PAGE_BG so eye openings blend naturally
-    into the background across both themes
-  - 'Full theme-adaptive chrome: all text, backgrounds, grid, and annotation box use
-    correct INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens'
-  - Eye height annotation with dotted bracket line provides useful signal quality
-    metric and clear focal point
-  - Vectorized data generation with realistic raised-cosine (tanh) transitions, additive
-    noise, and jitter matching spec parameters exactly
-  - Clean KISS code structure with proper np.random.seed(42) for reproducibility and
-    no unnecessary abstractions
+  - 'Perfect spec compliance: all required features (density heatmap, NRZ simulation,
+    noise, jitter, tanh transitions, eye metrics annotations) implemented correctly'
+  - Vectorized NRZ signal generation using broadcasting is efficient and clean
+  - Eye height/width measurement annotations with bracket lines create an effective
+    focal point that directly communicates signal quality
+  - Theme-adaptive chrome is correctly threaded through all elements; both renders
+    are fully readable with no dark-on-dark failures
+  - Colorbar refined (no outline, transparent background, partial length) avoids the
+    default cluttered look
   weaknesses:
-  - Eye width measurement is not shown — the spec mentions it as optional but adding
-    it alongside eye height would complete the signal integrity story and improve
-    DQ-01 feature coverage
-  - 'Design excellence is mid-range: the colorbar and annotation are well-executed
-    but the overall aesthetic lacks additional polish such as a descriptive title
-    prefix (e.g. Signal Integrity Eye Diagram ·) or a faint horizontal reference line
-    at the 0 V and 1 V logic levels to anchor the voltage axis visually'
-  - Colorbar title uses HTML line-break (Trace<br>Density) which renders correctly
-    in HTML export but may not render in all static contexts — prefer a plain-space
-    label or vertical orientation
+  - 'VQ-07 partial: colorscale imprint_seq is modified from canonical — adds PAGE_BG
+    anchor at position 0.0 and shifts green to 0.35; fix by using [[0.0, #009E73],
+    [1.0, #4467A3]] or if keeping the PAGE_BG anchor for background blending, note
+    it as an intentional density-display design choice'
+  - 'DE-01 at 5/8: design is cohesive but visual composition is primarily driven by
+    the raw histogram output; adding more intentional visual hierarchy could push
+    toward strong design tier'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "eye-diagram-basic · python · plotly · anyplot.ai" at font size 16, dark INK color, centered at top — fully readable. X-axis label "Time (UI)" and Y-axis label "Voltage (V)" at font size 12 in INK color — readable. Tick labels at font size 10 in INK_SOFT (#4A4A44) — readable. Colorbar label "Trace Density" in INK_SOFT — readable.
-      Data: Density heatmap transitions from PAGE_BG (#FAF8F1) at zero density through brand green (#009E73) at mid density to blue (#4467A3) at peak density. Classic double-eye pattern visible with clear eye openings that blend into background. Eye height annotation box with green (#009E73) border and text at (0.5 UI, 0.5 V), elevated bg #FFFDF6. Dotted vertical green line from mean-low to mean-high voltage at x=0.5 UI.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "eye-diagram-basic · python · plotly · anyplot.ai" in dark INK (#1A1A17) at 16px, clearly readable at ~70% width; axis labels "Time (UI)" and "Voltage (V)" in INK at 12px; tick labels in INK_SOFT (#4A4A44) at 10px; colorbar label "Trace Density" and ticks in INK_SOFT — all readable
+      Data: Density heatmap transitioning PAGE_BG (zero density) → #009E73 green (medium density) → #4467A3 blue (peak density); two clear eye openings visible; accent green (#009E73) bracket lines mark eye height at t=0.5 and eye width at V=0.5; annotation box with ELEVATED_BG (#FFFDF6) fill and accent border shows "Eye Height: 0.99 V / Eye Width: 0.74 UI"; faint dashed reference lines at 0 V and 1 V
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title visible in INK (#F0EFE8, warm off-white) on dark background — readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) against dark background — readable. Colorbar labels in INK_SOFT — readable. No dark-on-dark failures detected.
-      Data: Density heatmap colors (green #009E73 to blue #4467A3) are identical to light render — only the zero-density point changes to #1A1A17 (PAGE_BG for dark theme) which is correct chrome behavior for this eye diagram design. Eye height annotation with #009E73 text and border on elevated bg #242420 — readable. Brand green #009E73 clearly visible against dark background throughout.
-      Legibility verdict: PASS — all text readable, correct theme adaptation, no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light INK (#F0EFE8), axis labels in INK, tick labels in INK_SOFT (#B8B7B0); colorbar title and ticks in INK_SOFT — all readable against dark surface; no dark-on-dark failures detected
+      Data: Density colors identical to light render — #009E73 green at medium density, #4467A3 blue at peak density; same eye pattern and annotation visible; annotation box uses ELEVATED_BG (#242420) with accent green border
+      Legibility verdict: PASS — all text clearly readable against dark background; brand green #009E73 fully visible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes with correct size hierarchy (title
-          16px, axes 12px, ticks 10px). Minor: colorbar title uses HTML line-break.'
+        comment: All font sizes explicitly set (title=16px, axis=12px, ticks=10px);
+          balanced proportions in both themes; title at ~70% width as expected for
+          long mandated title
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Annotation box at eye center is well-placed inside the eye opening.
-          No text-on-text overlaps.
+        comment: No text or element collisions; annotation placed cleanly in first
+          eye opening
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density heatmap with zsmooth=best clearly shows eye pattern. Annotation
-          and bracket line are visible in both themes.
+        comment: Density heatmap clearly renders the eye pattern; bracket lines and
+          annotation box well-defined in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq colorscale (green to blue) is CVD-safe. No red-green
-          sole signal.
+        comment: Green-to-blue sequential cmap provides good luminance separation;
+          no red-green only discrimination
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas. Margins l=80,r=60,t=80,b=65. No overflow
-          or clipping. Colorbar well-positioned.
+        comment: Landscape 3200x1800 correctly set; data fills canvas well; colorbar
+          in right margin; margins appropriate (l=80, r=60, t=80, b=65)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title correct format. X: Time (UI), Y: Voltage (V) — both descriptive
-          with units.'
+        comment: Time (UI) and Voltage (V) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'imprint_seq colorscale anchored at PAGE_BG for zero density (eye
-          openings blend to background). Non-zero density uses #009E73 to #4467A3.
-          Backgrounds #FAF8F1/#1A1A17 correct.'
+        passed: false
+        comment: 'Modified imprint_seq: [[0.0, PAGE_BG], [0.35, #009E73], [1.0, #4467A3]]
+          instead of canonical [[0.0, #009E73], [1.0, #4467A3]]; theme chrome and
+          backgrounds correct'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,23 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Zero-density=background-color technique is sophisticated.
-          Annotation with bracket line adds polish. Layout is professional.
+        comment: 'Above generic default: custom density palette, branded accent annotation
+          box, bracket markers, logic-level reference lines; below strong design tier'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default. Spines handled correctly (mirror=False, showline left/bottom).
-          Grid at 15% opacity. Colorbar styled with no outline/border.
+        comment: Subtle grid (rgba 0.15), L-shaped frame (mirror=False), colorbar
+          refinement (outlinewidth=0, transparent bgcolor)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default. Eye height annotation creates a clear focal point.
-          Density heatmap guides viewer to high-frequency paths. Only eye height shown,
-          not eye width.
+        comment: Annotation box with bracket lines creates focal point answering signal
+          quality; reference lines provide engineering context
     spec_compliance:
       score: 15
       max: 15
@@ -140,56 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: 2D histogram (go.Histogram2d) creates density heatmap eye
-          diagram with overlapping traces.'
+        comment: Histogram2d density heatmap correctly implements eye diagram per
+          spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density coloring, time axis in UI, voltage axis, synthetic NRZ with
-          noise and jitter, smooth transitions (tanh), eye height annotation.
+        comment: Density coloring, NRZ simulation, Gaussian noise (5%), jitter (3%
+          UI), tanh smooth transitions, eye height/width annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Time 0-2 UI, Y: Voltage (V). 400 traces x 150 samples/UI within
-          spec range (200-500 traces, 100-200 samples).'
+        comment: Time on X in UI, voltage on Y in V, 400 traces spanning 0-2 UI
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: eye-diagram-basic · python · plotly · anyplot.ai. Colorbar
-          titled Trace Density.'
+        comment: Title matches required format; colorbar serves as legend for single-series
+          density
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Double-eye pattern, density heatmap, 400 overlaid traces, eye height
-          measurement. Eye width not annotated (optional per spec but would complete
-          feature coverage).
+        comment: Shows eye openings, crossover transition regions, noise floor, jitter
+          spread, logic levels, 2-UI window
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal with noise_sigma=0.05 and jitter_sigma=0.03 matches spec
-          parameters. Eye height ~0.99 V for clean 0/1 signal is realistic. Neutral
-          technical domain.
+        comment: NRZ signal integrity for high-speed serial links is genuine engineering
+          domain; 400-trace overlay realistic for oscilloscope eye capture
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voltage -0.2 to ~1.1 V appropriate for NRZ. Time 0-2 UI for 2 UI
-          eye diagram. 400 traces in 200-500 range.
+        comment: 0-1V NRZ signal, 3% UI jitter and 5% amplitude noise are textbook-realistic
+          for PCB signal integrity
     code_quality:
       score: 10
       max: 10
@@ -199,33 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes or unnecessary functions. Clean top-level script.
+        comment: 'Flat structure: imports -> tokens -> data generation -> eye metrics
+          -> figure -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: Only os, numpy, plotly.graph_objects imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized data generation using numpy broadcasting (np.broadcast_to).
-          Clean organization of theme tokens, data generation, plotting, layout.
+        comment: Vectorized NRZ generation using broadcasting and tanh; eye-width
+          gap analysis via np.diff + np.argmax is concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
-          and fig.write_html correct.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
     library_mastery:
       score: 7
       max: 10
@@ -235,16 +225,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Histogram2d is the idiomatic choice. update_layout, add_annotation,
-          add_shape all used correctly. Proper colorscale dict format.
+        comment: go.Histogram2d with zsmooth=best is canonical Plotly approach for
+          density heatmaps; add_shape and add_annotation used correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: zsmooth=best (plotly-specific 2D histogram smoothing), hovertemplate
-          with custom format strings, colorbar dict with thickness/len/outlinewidth,
-          HTML export with CDN plotlyjs.
+        comment: Uses go.Histogram2d density heatmap with zsmooth (not replicable
+          in matplotlib without manual binning), interactive HTML with hovertemplate,
+          colorbar with inline title
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -253,10 +243,10 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - custom-colormap
