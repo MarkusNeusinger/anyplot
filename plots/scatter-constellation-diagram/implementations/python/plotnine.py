@@ -1,8 +1,16 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-17
+Library: plotnine | Python 3.13
+Quality: pending | Updated: 2026-06-18
 """
+
+import os
+import sys
+
+
+# Remove this script's own directory from sys.path to prevent it from
+# shadowing the installed plotnine library when run as `python plotnine.py`.
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 
 import numpy as np
 import pandas as pd
@@ -12,6 +20,7 @@ from plotnine import (
     coord_fixed,
     element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_point,
@@ -29,6 +38,18 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — received symbols use position 1 (brand green); ideal points use matte red (semantic: target reference)
+RECEIVED_COLOR = "#009E73"  # Imprint position 1 — always first series
+IDEAL_COLOR = "#AE3030"  # Imprint matte red — ideal reference markers
 
 # Data
 np.random.seed(42)
@@ -51,13 +72,11 @@ error_i = received_i - ideal_i[symbol_indices]
 error_q = received_q - ideal_q[symbol_indices]
 evm = np.sqrt(np.mean(error_i**2 + error_q**2)) / np.sqrt(avg_power) * 100
 
-df_received = pd.DataFrame({"i": received_i, "q": received_q, "color": "#306998", "alpha": 0.35, "size": 3.0})
+df_received = pd.DataFrame({"i": received_i, "q": received_q, "color": RECEIVED_COLOR, "alpha": 0.4, "size": 3.5})
 
-df_ideal = pd.DataFrame({"i": ideal_i, "q": ideal_q, "color": "#D04848", "alpha": 1.0, "size": 7})
+df_ideal = pd.DataFrame({"i": ideal_i, "q": ideal_q, "color": IDEAL_COLOR, "alpha": 1.0, "size": 6.0})
 
-df_all = pd.concat([df_received, df_ideal], ignore_index=True)
-
-# Decision region background rectangles (checkerboard shading)
+# Decision region shading (checkerboard, theme-adaptive)
 region_edges = [-4.5, -2, 0, 2, 4.5]
 rects = []
 for ri, xmin in enumerate(region_edges[:-1]):
@@ -68,15 +87,15 @@ for ri, xmin in enumerate(region_edges[:-1]):
                 "xmax": region_edges[ri + 1],
                 "ymin": ymin,
                 "ymax": region_edges[ci + 1],
-                "shade": "#F0F4F8" if (ri + ci) % 2 == 0 else "#FFFFFF",
+                "shade": PAGE_BG if (ri + ci) % 2 == 0 else ELEVATED_BG,
             }
         )
 df_rects = pd.DataFrame(rects)
 
-# Decision boundaries
+# Decision boundaries at ±2 and 0
 boundary_vals = [-2, 0, 2]
 
-# Error vector samples — show a few error vectors for storytelling
+# Error vector samples — connect ideal to received for visual storytelling
 rng = np.random.default_rng(42)
 ev_idx = rng.choice(n_symbols, size=12, replace=False)
 df_ev = pd.DataFrame(
@@ -88,62 +107,66 @@ df_ev = pd.DataFrame(
     }
 )
 
+# Title — 62 chars on 2400px square canvas; reduce from 12pt default to 11pt to prevent overflow
+title = "scatter-constellation-diagram · python · plotnine · anyplot.ai"
+title_size = 11
+
 # Plot
 plot = (
-    ggplot(df_all, aes(x="i", y="q"))
+    ggplot(df_received, aes(x="i", y="q"))
     # Decision region shading
     + geom_rect(
         data=df_rects,
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         fill=df_rects["shade"].tolist(),
-        alpha=0.6,
+        alpha=0.8,
         inherit_aes=False,
     )
     # Decision boundary lines
-    + geom_vline(xintercept=boundary_vals, linetype="dashed", color="#AAAAAA", size=0.5)
-    + geom_hline(yintercept=boundary_vals, linetype="dashed", color="#AAAAAA", size=0.5)
+    + geom_vline(xintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5)
+    + geom_hline(yintercept=boundary_vals, linetype="dashed", color=INK_SOFT, size=0.5)
     # Received symbols
     + geom_point(data=df_received, mapping=aes(x="i", y="q", color="color", alpha="alpha", size="size"))
-    # Error vectors (distinctive plotnine feature: geom_segment)
+    # Error vectors — made more prominent to highlight signal impairment
     + geom_segment(
         data=df_ev,
         mapping=aes(x="i_start", y="q_start", xend="i_end", yend="q_end"),
-        color="#D04848",
-        alpha=0.5,
-        size=0.6,
+        color=IDEAL_COLOR,
+        alpha=0.75,
+        size=0.9,
         inherit_aes=False,
     )
-    # Ideal constellation points
+    # Ideal constellation points (X markers)
     + geom_point(
         data=df_ideal, mapping=aes(x="i", y="q", color="color", alpha="alpha", size="size"), shape="X", stroke=1.5
     )
     + scale_color_identity()
     + scale_alpha_identity()
     + scale_size_identity()
-    # Custom tick positions at constellation points (distinctive plotnine feature)
+    # Tick positions at constellation coordinate values
     + scale_x_continuous(breaks=[-3, -1, 0, 1, 3], minor_breaks=[])
     + scale_y_continuous(breaks=[-3, -1, 0, 1, 3], minor_breaks=[])
-    # Annotations
+    # EVM and SNR annotations
+    + annotate("text", x=4.2, y=-3.7, label=f"EVM = {evm:.1f}%", size=4.5, ha="right", color=INK, fontweight="bold")
     + annotate(
-        "text", x=4.2, y=-3.7, label=f"EVM = {evm:.1f}%", size=16, ha="right", color="#222222", fontweight="bold"
-    )
-    + annotate(
-        "text", x=4.2, y=-4.15, label=f"SNR = {snr_db} dB  ·  {n_symbols} symbols", size=11, ha="right", color="#777777"
+        "text", x=4.2, y=-4.15, label=f"SNR = {snr_db} dB  ·  {n_symbols} symbols", size=3.2, ha="right", color=INK_SOFT
     )
     + coord_fixed(ratio=1, xlim=(-4.5, 4.5), ylim=(-4.5, 4.5))
-    + labs(x="In-Phase (I)", y="Quadrature (Q)", title="scatter-constellation-diagram · plotnine · pyplots.ai")
+    + labs(x="In-Phase (I)", y="Quadrature (Q)", title=title)
     + theme_minimal()
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, weight="bold", ha="center"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        figure_size=(6, 6),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=title_size, weight="bold", ha="center", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        axis_line=element_line(color="#333333", size=0.6),
+        axis_line=element_line(color=INK_SOFT, size=0.6),
         legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
