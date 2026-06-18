@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: pygal | Python 3.13
-Quality: pending | Updated: 2026-06-18
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-06-18
 """
 
 import os
