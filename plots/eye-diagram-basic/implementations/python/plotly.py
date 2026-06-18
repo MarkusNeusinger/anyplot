@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-18
@@ -65,7 +65,23 @@ all_voltage = voltage.ravel()
 center_mask = (all_time > 0.35) & (all_time < 0.65)
 high_at_center = all_voltage[center_mask & (all_voltage > 0.5)]
 low_at_center = all_voltage[center_mask & (all_voltage < 0.5)]
-eye_height = np.mean(high_at_center) - np.mean(low_at_center)
+mean_high = float(np.mean(high_at_center))
+mean_low = float(np.mean(low_at_center))
+eye_height = mean_high - mean_low
+
+# Compute eye width: largest time gap where no traces cross the 0.5 V midpoint
+# (first eye only, 0–1 UI)
+midband_mask = (all_voltage > 0.4) & (all_voltage < 0.6) & (all_time > 0.0) & (all_time < 1.0)
+transition_times = np.sort(all_time[midband_mask])
+if len(transition_times) > 1:
+    gaps = np.diff(transition_times)
+    max_gap_idx = int(np.argmax(gaps))
+    eye_open_start = float(transition_times[max_gap_idx])
+    eye_open_end = float(transition_times[max_gap_idx + 1])
+    eye_width_ui = eye_open_end - eye_open_start
+else:
+    eye_open_start, eye_open_end = 0.2, 0.8
+    eye_width_ui = 0.6
 
 # Plot — density heatmap with smoothing to reduce graininess
 fig = go.Figure(
@@ -77,7 +93,7 @@ fig = go.Figure(
         zsmooth="best",
         colorscale=imprint_seq,
         colorbar={
-            "title": {"text": "Trace<br>Density", "font": {"size": 12, "color": INK_SOFT}},
+            "title": {"text": "Trace Density", "font": {"size": 12, "color": INK_SOFT}},
             "tickfont": {"size": 10, "color": INK_SOFT},
             "thickness": 14,
             "len": 0.7,
@@ -90,32 +106,43 @@ fig = go.Figure(
     )
 )
 
-# Eye height annotation — uses brand green for visibility on both themes
 ACCENT = "#009E73"
 
+# Faint horizontal reference lines at NRZ nominal logic levels (0 V and 1 V)
+for logic_v in [0.0, 1.0]:
+    fig.add_shape(
+        type="line",
+        x0=0,
+        x1=n_ui,
+        y0=logic_v,
+        y1=logic_v,
+        line={"color": INK_SOFT, "width": 1, "dash": "dash"},
+        opacity=0.35,
+    )
+
+# Vertical bracket line marking the eye height span at t=0.5 UI
+fig.add_shape(type="line", x0=0.5, x1=0.5, y0=mean_low, y1=mean_high, line={"color": ACCENT, "width": 2, "dash": "dot"})
+
+# Horizontal bracket line marking the eye width span at y=0.5 V
+fig.add_shape(
+    type="line", x0=eye_open_start, x1=eye_open_end, y0=0.5, y1=0.5, line={"color": ACCENT, "width": 2, "dash": "dot"}
+)
+
+# Combined signal quality annotation at center of first eye
 fig.add_annotation(
     x=0.5,
     y=0.5,
-    text=f"Eye Height: {eye_height:.2f} V",
+    text=f"Eye Height: {eye_height:.2f} V<br>Eye Width:  {eye_width_ui:.2f} UI",
     showarrow=False,
-    font={"size": 11, "color": ACCENT, "family": "monospace"},
+    font={"size": 10, "color": ACCENT, "family": "monospace"},
     bgcolor=ELEVATED_BG,
     bordercolor=ACCENT,
     borderwidth=1,
     borderpad=6,
+    align="left",
 )
 
-# Bracket line marking the eye height span
-fig.add_shape(
-    type="line",
-    x0=0.5,
-    x1=0.5,
-    y0=float(np.mean(low_at_center)),
-    y1=float(np.mean(high_at_center)),
-    line={"color": ACCENT, "width": 2, "dash": "dot"},
-)
-
-# Title — 48 chars, below 67-char baseline so no fontsize shrinkage needed
+# Title
 title = "eye-diagram-basic · python · plotly · anyplot.ai"
 
 fig.update_layout(
