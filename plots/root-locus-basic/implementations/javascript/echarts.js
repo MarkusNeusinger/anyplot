@@ -1,3 +1,7 @@
+// anyplot.ai
+// root-locus-basic: Root Locus Plot for Control Systems
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-18
 //# anyplot-orientation: square
 // anyplot.ai
 // root-locus-basic: Root Locus Plot for Control Systems
