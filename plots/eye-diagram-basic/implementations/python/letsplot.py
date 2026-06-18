@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-06-18
@@ -14,6 +14,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
+    geom_hline,
     geom_raster,
     geom_segment,
     geom_text,
@@ -42,9 +43,9 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Oscilloscope screen always dark (domain-appropriate regardless of theme)
 SCOPE_BG = "#000004"
 
-# Imprint palette — Imprint-anchored oscilloscope density colormap:
-# scope background → brand green → lavender → near-white phosphor glow
-DENSITY_COLORS = ["#000004", "#009E73", "#C475FD", "#F0EFE8"]
+# Imprint palette — imprint_seq colormap anchored to scope background:
+# scope black → brand green → Imprint blue (imprint_seq with dark low)
+DENSITY_COLORS = ["#000004", "#009E73", "#4467A3"]
 
 # Imprint cyan for eye measurement annotations
 ANN_COLOR = "#2ABCCD"
@@ -130,7 +131,7 @@ eye_width = eye_right - eye_left
 height_x = 1.34
 height_seg = pd.DataFrame({"x": [height_x], "y": [eye_bottom], "xend": [height_x], "yend": [eye_top]})
 width_seg = pd.DataFrame({"x": [eye_left], "y": [eye_mid_v], "xend": [eye_right], "yend": [eye_mid_v]})
-height_label = pd.DataFrame({"x": [height_x + 0.04], "y": [eye_mid_v], "label": [f"Eye Height: {eye_height:.2f} V"]})
+height_label = pd.DataFrame({"x": [height_x + 0.08], "y": [eye_mid_v], "label": [f"Eye Height: {eye_height:.2f} V"]})
 width_label = pd.DataFrame(
     {"x": [(eye_left + eye_right) / 2], "y": [eye_mid_v - 0.09], "label": [f"Eye Width: {eye_width:.2f} UI"]}
 )
@@ -151,6 +152,8 @@ plot = (
         .line("Voltage: @voltage V")
         .line("Density: @density")
     )
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.6, linetype="dashed", alpha=0.5)
+    + geom_hline(yintercept=1, color=INK_SOFT, size=0.6, linetype="dashed", alpha=0.5)
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"), data=height_seg, color=ANN_COLOR, size=1.2, inherit_aes=False
     )
@@ -158,10 +161,10 @@ plot = (
         aes(x="x", y="y", xend="xend", yend="yend"), data=width_seg, color=ANN_COLOR, size=1.2, inherit_aes=False
     )
     + geom_text(
-        aes(x="x", y="y", label="label"), data=height_label, color=ANN_COLOR, size=4, hjust=0, inherit_aes=False
+        aes(x="x", y="y", label="label"), data=height_label, color=ANN_COLOR, size=5, hjust=0, inherit_aes=False
     )
     + geom_text(
-        aes(x="x", y="y", label="label"), data=width_label, color=ANN_COLOR, size=4, hjust=0.5, inherit_aes=False
+        aes(x="x", y="y", label="label"), data=width_label, color=ANN_COLOR, size=5, hjust=0.5, inherit_aes=False
     )
     + scale_fill_gradientn(
         colors=DENSITY_COLORS, name="Trace\nDensity", guide=guide_colorbar(barwidth=10, barheight=200, nbin=256)
