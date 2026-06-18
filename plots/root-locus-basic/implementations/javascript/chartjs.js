@@ -1,7 +1,7 @@
 // anyplot.ai
 // root-locus-basic: Root Locus Plot for Control Systems
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 80/100 | Created: 2026-06-18
+// Quality: 86/100 | Created: 2026-06-18
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

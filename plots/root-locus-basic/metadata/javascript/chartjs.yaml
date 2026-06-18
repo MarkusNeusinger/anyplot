@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: root-locus-basic
 created: '2026-06-18T00:20:48Z'
-updated: '2026-06-18T00:28:12Z'
+updated: '2026-06-18T00:57:09Z'
 generated_by: claude-sonnet
 workflow_run: 27727591689
 issue: 4414
@@ -12,49 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/javascript/chartjs/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Mathematically rigorous root locus computation using Durand-Kerner iterative root
-    finding with 600 points per branch — smooth, accurate curves
-  - 'Correct Imprint palette usage: brand green (#009E73) for first branch, canonical
-    order for subsequent branches, amber for stability-boundary semantic role, all
-    data colors theme-invariant'
-  - Theme-adaptive chrome fully wired through t.ink, t.inkSoft, t.pageBg, t.grid,
-    t.amber tokens — no hardcoded hex for chrome elements; dark render reads cleanly
-    with no dark-on-dark failures
-  - 'Meaningful point styles: crossRot for open-loop poles (control-systems x convention),
-    triangle for stability boundary — adds semantic redundant encoding beyond color
-    alone'
-  - Custom beforeDraw background plugin ensures canvas background matches the page
-    surface token correctly; dynamic title font-size scaling adapts to string length
+  - Sophisticated Durand-Kerner root-finding algorithm correctly traces all three
+    locus branches with 600 data points each, producing smooth and accurate pole trajectories
+    for G(s) = K/[s(s+2)(s+4)]
+  - Three custom Chart.js plugins implement gain-direction arrows (afterDatasetsDraw
+    with canvas path drawing), theme-adaptive background (beforeDraw fillRect), and
+    inline ζ/ωn reference labels using scale.getPixelForValue() for precise coordinate
+    conversion
+  - 'All spec-required features present: open-loop pole × markers, amber stability-boundary
+    triangles at ±j√8 ≈ ±j2.83, constant-ζ damping-ratio rays and constant-ωn natural-frequency
+    semicircular arcs as dashed overlays, and per-branch gain-direction arrows'
+  - Legend filter correctly excludes the six reference-overlay datasets (ζ and ωn
+    lines) so the legend shows only the three locus branches, open-loop poles, and
+    stability boundary — clean and focused
+  - Imprint palette used in canonical order (palette[0] green, palette[1] lavender,
+    palette[2] blue) for branches; amber anchor for stability boundary; data colors
+    identical between light and dark renders with correct theme-adaptive chrome throughout
   weaknesses:
-  - 'Gain-direction arrows missing: spec requires arrows indicating the direction
-    of increasing gain on each locus branch — add small triangle annotations at midpoints
-    of each branch pointing in the direction of increasing K'
-  - 'Constant damping-ratio / natural-frequency reference lines missing: spec calls
-    for a dashed or light grid to indicate constant zeta and omega_n lines — implement
-    as radial ζ-lines (0.3, 0.5, 0.7) and concentric ω_n arcs as extra dashed datasets
-    with grid color at low opacity'
-  - 'Non-equal axis pixel scaling on landscape canvas distorts the complex plane geometry:
-    X range 10 units displayed over 3200px vs Y range 10 units over 1800px — fix by
-    setting y.min/max to approximately -2.8/2.8 (or equivalent) so pixels-per-unit
-    is equal on both axes, preserving geometric relationships as specified'
+  - 'ωn=2 label is positioned right-aligned at x=-2 (the exact x of the open-loop
+    pole at -2), causing the trailing characters of the label to overlap with the
+    × marker (pointRadius=12). Fix: offset the label further left, e.g. use x = xs.getPixelForValue(-wn)
+    - 20 instead of -6, or shift the ωn=2 entry to x=-2.3 so the text clears the marker.'
+  - 'ζ reference labels are drawn at py = ys.getPixelForValue(Y_MAX) + 2, placing
+    them at the very top boundary of the plot area with only 2 CSS px of clearance.
+    Combined with the minimal top padding (layout.padding.top = 4), the upper region
+    feels cramped. Fix: set Y_MAX to 3.3 or draw ζ labels 8–10 px lower (py + 10)
+    so they sit comfortably inside the chart with breathing room.'
+  - Layout padding is very tight (top:4, right:20, bottom:10, left:10), reducing whitespace
+    around the plot. Increase to at least {top:16, right:24, bottom:16, left:16} to
+    give axis labels and tick numbers more room.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "root-locus-basic · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Five-item legend in inkSoft at top. Axis labels "Real Axis" and "Imaginary Axis" in dark ink. Tick labels in inkSoft. Subtle Cartesian grid.
-      Data: Branch 1 in Imprint brand green (#009E73), Branch 2 in Imprint lavender (#C475FD), Branch 3 in Imprint blue (#4467A3). Open-loop pole crossRot markers in dark ink at (0,0), (-2,0), (-4,0). Amber triangles at (0, +/-2.83) for stability boundary. First series is #009E73.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white (#FAF8F1), matching the required surface — not pure white.
+      Chrome: Title "root-locus-basic · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Axis labels "Real Axis" and "Imaginary Axis" in dark ink, readable. Tick labels in inkSoft, readable. Legend shows five entries (three branches, open-loop poles, stability boundary) in one row, readable.
+      Data: Three locus branches in Imprint palette order — Branch 1 (green #009E73) starting at origin and curving up through the stability crossing; Branch 2 (lavender #C475FD) starting at -2 and curving downward; Branch 3 (blue #4467A3) going left from -4 as a horizontal line. Open-loop pole × markers at 0, -2, -4 on the real axis. Amber stability-boundary triangles at ±j2.83 on the imaginary axis. Constant-ζ damping-ratio rays (0.3, 0.5, 0.7) and constant-ωn semicircular arcs (1, 2, 3) rendered as subtle dashed overlays. Gain-direction arrows on each branch. First series is #009E73 ✓.
+      Overlap note: The "ωn=2" label and the × marker at the open-loop pole x=-2 are in the same area; the trailing characters of the label slightly overlap the marker.
+      Legibility verdict: PASS — all text readable; minor overlap of ωn=2 label with × marker at x=-2.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and axis labels in light ink (#F0EFE8), clearly readable against dark background. Legend text in light inkSoft. Tick labels in light inkSoft. Subtle grid in dark-theme grid token. Open-loop pole markers switch to light ink (white-ish). No dark-on-dark failures observed.
-      Data: Colors are identical to light render — same green, lavender, blue for branches; same amber triangles for stability boundary. Data colors theme-invariant as required.
-      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17), matching the required dark surface — not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly readable against the dark background. Axis labels and tick labels in theme-adapted light tones, all readable. No dark-on-dark failures observed; no black text on near-black background.
+      Data: Locus branch colors identical to the light render — green Branch 1, lavender Branch 2, blue Branch 3. Open-loop pole markers visible as light × symbols. Amber stability-boundary triangles visible at ±j2.83. Reference ζ/ωn dashed overlays visible against dark background. Data colors are identical to the light render; only chrome (text, grid, background) flips.
+      Legibility verdict: PASS — all text and data elements readable on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -62,80 +67,90 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 22px adaptive, axis titles 15px,
-          ticks 13px, legend 14px); readable in both themes; five-item legend row
-          slightly tight but not overlapping
+        comment: 'All font sizes explicitly set; title 22px adaptive, axis labels
+          15px, tick labels 13px, legend 14px, ref labels 22px bold. Readable in both
+          themes. Minor deduction: ωn label cluster on real axis slightly crowded;
+          ζ labels at Y_MAX boundary tight.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text-text or text-data collision in either render
+        comment: 'Minimal overlap: ωn=2 label right-aligned at x=-2 slightly overlaps
+          the × marker at the open-loop pole at -2. Other text elements are clear.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Branch lines 2.5px, pole crossRot markers radius 12, stability triangles
-          radius 10 — all clearly visible
+        comment: 'All locus branches clearly visible with borderWidth=2.5. Gain-direction
+          arrows functional. Open-loop poles and stability markers prominent. Minor:
+          arrows at fixed midIdx may not always be at the most visually informative
+          curve point.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with CVD-safe hues; amber for caution; redundant
-          marker shapes add differentiation
+        comment: 'Imprint palette positions 1-3 used for branches — CVD-safe. Amber
+          anchor for stability boundary. Redundant encoding: branches also distinguished
+          by trajectory (horizontal, upper, lower arcs).'
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: X range 10 units over 3200px vs Y range 10 units over 1800px — unequal
-          pixel-per-unit ratio distorts complex plane geometry; violates spec equal
-          axis scaling requirement
+        passed: true
+        comment: 'Canvas gate passed. Plot fills canvas well. Minor deduction: layout
+          padding very tight (top:4, right:20, bottom:10, left:10), leaving minimal
+          breathing room at top and bottom edges.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis and Imaginary Axis descriptive; title follows correct anyplot
-          format
+        comment: Title correct format. Axes labeled 'Real Axis' and 'Imaginary Axis'
+          — appropriate descriptive labels for the complex plane; units not applicable
+          for this dimensionless system.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, subsequent branches follow Imprint canonical
-          order; background uses pageBg token; chrome tokens correctly flip between
-          themes; amber used for stability boundary'
+        comment: 'First series (Branch 1) uses t.palette[0] = #009E73. Multi-series
+          in canonical Imprint order. Background via t.pageBg (#FAF8F1 light, #1A1A17
+          dark). Chrome tokens used for all non-data elements. Data colors identical
+          between renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Above defaults with intentional crossRot markers, triangle markers,
-          amber semantic role, dynamic title scaling. Missing gain-direction arrows
-          and damping/NF reference overlay reduces polish.
+        passed: true
+        comment: 'Above defaults: three custom Chart.js plugins, gain-direction arrows,
+          filtered legend, adaptive title font size. Not quite FiveThirtyEight-level
+          due to the ωn overlap and tight layout.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Layout padding, usePointStyle, subtle grid present. Chart.js box
-          frame not removed. Minimal beyond-defaults refinement.
+        passed: true
+        comment: 'Axis border removed (border: {display: false}). Grid via theme token
+          (subtle). Reference overlays styled as dashed thin lines. Tight padding
+          prevents a higher score.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-coded branches + pole markers + stability markers create hierarchy.
-          Missing gain-direction arrows prevents viewer from reading gain flow immediately.
+        passed: true
+        comment: 'Good storytelling: gain-direction arrows show pole migration direction,
+          stability-boundary markers highlight the key engineering insight (K=48 →
+          imaginary axis crossing), reference ζ/ωn grid provides control design context.
+          Clear focal point.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,120 +158,137 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus in complex plane using scatter+showLine
+        comment: Root locus plot correctly implemented as Chart.js scatter with showLine:true.
+          Three branches trace pole migration through complex plane as K increases
+          from 0 to 70.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Poles marked, stability boundary marked, real-axis segments shown.
-          MISSING: gain-direction arrows. MISSING: constant damping-ratio/natural-frequency
-          reference lines.'
+        passed: true
+        comment: 'All spec features present: open-loop pole × markers, locus branches
+          as continuous curves, gain-direction arrows, real-axis segments (naturally
+          traced by root locus computation), imaginary axis crossings (stability boundary
+          triangles at ±j√8), constant-ζ rays, constant-ωn arcs. No zeros in this
+          system — zero markers N/A.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, all 600-point branches visible
+        comment: X=Real Axis (real part of closed-loop poles), Y=Imaginary Axis (imaginary
+          part). All three branches fully traced. Axes span the full range of pole
+          motion.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly root-locus-basic · javascript · chartjs · anyplot.ai;
-          legend entries descriptively label each branch with origin pole
+        comment: 'Title: ''root-locus-basic · javascript · chartjs · anyplot.ai''
+          — correct format. Legend shows Branch 1/2/3, Open-loop poles, Stability
+          boundary. Reference overlays correctly filtered from legend.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows 3 branches, breakaway, complex trajectories, stability markers.
-          Missing arrows and zeta/omega_n reference overlay reduces demonstrative
-          coverage.
+        passed: true
+        comment: 'Shows all root locus features: real-axis branches, complex-plane
+          migration, breakaway point at ≈-0.845, stability boundary crossing, asymptotic
+          behavior. Both real and imaginary parts of pole motion covered.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s)=K/[s(s+2)(s+4)] is canonical textbook transfer function; all
-          landmarks mathematically correct; non-controversial
+        comment: G(s)=K/[s(s+2)(s+4)] is a classic control systems textbook example.
+          Poles at 0, -2, -4 are physically realistic (marginally stable + stable
+          open-loop poles). Neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis ranges show all relevant locus paths; stability crossings and
-          breakaway within visible region
+        comment: K range 0–70 correctly spans from open-loop poles through stability
+          crossing (K=48) and beyond. Axis range X:-8.33 to 2.34, Y:-3 to 3 covers
+          all branch activity. Breakaway at ≈-0.845 visible. Equal pixel-per-unit
+          scaling preserves geometric relationships.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Two helper functions evalCubic and cubicRoots for Durand-Kerner root
-          finder; mathematically justified but deviates from flat KISS ideal
+        passed: true
+        comment: Two helper functions (evalCubic, cubicRoots) are minimal and necessary
+          — polynomial root finding is unavoidable for a root locus plot. No over-engineering
+          or unnecessary abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: fixed initial guesses for Durand-Kerner, no
-          RNG'
+        comment: Durand-Kerner initialized with fixed complex seeds {re:0.5,im:0.6},
+          {re:-0.7,im:0.3}, {re:0.2,im:-0.8}. No random number generation. Deterministic
+          for all K values.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart is a global; all code self-contained
+        comment: No imports — Chart.js is a global, ANYPLOT_TOKENS from window. Only
+          used globals referenced.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, no fake UI, no over-engineering
+        comment: Clean, well-organized code with appropriate complexity for the task.
+          Custom plugins properly structured. No fake UI or interactivity simulated.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual file save; uses current Chart.js 4.4.7 API correctly
+        comment: 'Chart.js harness contract followed: canvas appended to #container,
+          animation:false, responsive:true, maintainAspectRatio:false. Orientation
+          directive on its own line. Harness generates plot-{theme}.png and .html.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Chart.js usage: scatter type with showLine for line-connected
+          trajectories, pointRadius:0 on branch datasets, custom pointStyle for landmarks,
+          legend filter function, borderDash for reference overlays, plugin registration
+          pattern.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Scatter+showLine+pointRadius:0 for continuous curves is idiomatic
-          Chart.js; crossRot and triangle pointStyles; usePointStyle in legend; beforeDraw
-          plugin for background; animation:false and maintainAspectRatio:false correctly
-          set
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Custom beforeDraw plugin, mixed dataset rendering (line series +
-          discrete marker series), dynamic title font-size scaling. Does not exploit
-          Chart.js annotation plugin or advanced features.
-  verdict: REJECTED
+        comment: 'Chart.js plugin API (beforeDraw, afterDatasetsDraw hooks) used for
+          background painting, gain arrows, and reference labels. scale.getPixelForValue()
+          for data→pixel coordinate conversion — distinctively Chart.js. Legend filter
+          is also a Chart.js-specific API. Slight deduction: similar canvas-drawing
+          approaches exist in other libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
