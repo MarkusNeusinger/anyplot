@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-18
+Quality: 89/100 | Updated: 2026-06-18
 """
 
 import os
