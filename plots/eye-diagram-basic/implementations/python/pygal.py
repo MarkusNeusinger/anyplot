@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 83/100 | Updated: 2026-06-18
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-18
 """
 
 import importlib
