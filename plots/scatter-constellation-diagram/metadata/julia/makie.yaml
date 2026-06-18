@@ -1,0 +1,238 @@
+library: makie
+language: julia
+specification_id: scatter-constellation-diagram
+created: '2026-06-18T03:35:23Z'
+updated: '2026-06-18T03:52:21Z'
+generated_by: claude-sonnet
+workflow_run: 27734425985
+issue: 4562
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Full spec compliance: all 7 required features present and correctly implemented'
+  - Semantic Imprint palette usage -- brand green for received symbols, matte red
+    for ideal reference points -- with redundant encoding (size + shape + color)
+  - DataAspect() enforces the required equal-aspect constraint cleanly
+  - EVM computed from first principles and displayed with @sprintf formatting
+  - Clean theme-adaptive chrome with correct tokens throughout both renders
+  - Decision boundary loop is concise and well-parameterised
+  weaknesses:
+  - Received symbol markersize=6 is on the small side for a 2400x2400 canvas; bumping
+    to 7-8 would improve cluster visibility without causing overplotting
+  - 'Design Excellence has room to grow: boundary lines could use a slightly stronger
+    dash pattern or colour tint to feel more intentional; EVM annotation could use
+    a slightly larger font for visual hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 -- correct
+      Chrome: title "scatter-constellation-diagram · julia · makie · anyplot.ai" in dark ink, clearly readable; axis labels "In-Phase (I)" and "Quadrature (Q)" readable; tick labels at 13pt visible; EVM = 8.1% annotation visible in top-left
+      Data: 16 clusters of received symbols in Imprint brand green #009E73 (alpha ~0.35, markersize=6); 16 ideal reference points as red crosses (#AE3030, xcross, markersize=20); dashed decision boundaries at x/y = -2,0,2 in subtle 20% alpha ink
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 -- correct
+      Chrome: title, axis labels, tick labels all in light-coloured text (#F0EFE8 / #B8B7B0) against dark surface; no dark-on-dark failures; legend background uses elevated dark token #242420
+      Data: data colors identical to light render -- green received symbols and red ideal crosses unchanged; decision boundaries subtly visible against dark background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set. Title at 28pt, axis labels 16pt,
+          tick labels 13pt, EVM annotation 15pt, legend 14pt. Well-proportioned. Minor:
+          received symbol markersize=6 is small.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions. EVM annotation positioned clear of
+          data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ideal points prominent at markersize=20. Received clusters visible
+          but markersize=6 is on the small side.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Redundant encoding via marker shape and
+          size.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas for equal-aspect. Plot fills canvas well. Legend in
+          dedicated grid row.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: In-Phase (I) and Quadrature (Q) with unit notation. Correct title
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, ideal points #AE3030 (semantic matte-red for
+          reference). Backgrounds #FAF8F1/#1A1A17. Chrome correct both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default. Semantic colour assignment, semi-transparent density
+          encoding, clean typography hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed. No cartesian grid (dashed decision boundaries
+          replace it). Subtle boundary alpha. Generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: large red crosses vs small green clouds
+          communicates signal fidelity. EVM annotation quantifies the story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: I/Q scatter constellation diagram, 16-QAM, dual-layer structure.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All 7 spec features present: ideal crosses, received dots, dashed
+          boundaries, DataAspect, EVM annotation, correct axes, symmetric limits.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: I on X, Q on Y. Ideal grid at +/-1, +/-3. Received symbols correctly
+          scattered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. Legend labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 QAM positions, noise spread, EVM metric, decision boundaries.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 16-QAM wireless/SDR engineering domain, realistic 20dB SNR, EVM 8.1%.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: '1200 symbols (spec: 500-2000), noise_std=0.18, symmetric +/-4.5
+          limits. Physically accurate.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear structure, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 5 imports used: CairoMakie, Colors, Printf, Random, Statistics.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic Julia/Makie. RGBAf, @sprintf, DataAspect. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, px_per_unit=2). Current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong idioms: Axis inline kwargs, scatter!/hlines!/vlines! compositing,
+          DataAspect(), Legend as grid element, RGBAf().'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: DataAspect, RGBAf, hlines!/vlines! loop, Legend as grid component.
+          Makie-idiomatic but core primitives rather than distinctive advanced features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
