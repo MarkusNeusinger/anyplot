@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-constellation-diagram
 created: '2026-06-18T03:29:42Z'
-updated: '2026-06-18T03:37:32Z'
+updated: '2026-06-18T03:49:56Z'
 generated_by: claude-sonnet
 workflow_run: 27734495294
 issue: 4562
@@ -12,115 +12,111 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-constellation-diagram/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Complete spec compliance: all required features present (16-QAM constellation,
-    ideal points as red crosses, received symbols as semi-transparent green dots,
-    dashed decision boundaries at ±2/0, EVM annotation, equal-aspect square format,
-    correct axis labels).'
-  - 'Excellent use of Chart.js plugin API: background-fill plugin ensures proper theme-adaptive
-    pageBg on every render; canvas-API EVM annotation plugin draws the quantitative
-    insight directly on the plot.'
-  - Deterministic data generation via fixed-seed LCG — correct solution for a browser
-    environment where Math.random() cannot be seeded.
-  - 'Semantic color choice: #009E73 (Imprint brand green) for received symbols (primary
-    data), #AE3030 (Imprint matte-red anchor) for ideal reference points — matches
-    standard signal-processing convention for constellation diagrams.'
-  - Legend filter cleanly hides boundary-line datasets so only meaningful series appear
-    in the legend.
-  - 'Perfect code quality: flat KISS structure, reproducible seed, no over-engineering.'
+  - Custom squareAspect plugin (afterLayout hook) elegantly enforces equal aspect
+    ratio for accurate I/Q geometry — a Chart.js-native solution
+  - 'All spec requirements met: 16-QAM constellation, cross-style ideal points, semi-transparent
+    received symbols, dashed decision boundaries at ±2/0, EVM annotation, symmetric
+    axis limits ±4.5, correct axis labels'
+  - 'Correct Imprint palette: palette[0] (#009E73) for received symbols, semantic
+    matte-red #AE3030 for ideal reference points — with cross/circle shape redundancy
+    ensuring CVD safety'
+  - Deterministic LCG (seed 42) replaces Math.random() for full reproducibility in
+    the headless render harness
+  - Three custom inline plugins (bgFill, squareAspect, evmLabel) using Chart.js lifecycle
+    hooks demonstrate strong library mastery
+  - Legend filter removes decision-boundary line datasets from the legend — clean
+    UX detail
+  - 'Both renders fully theme-correct: warm off-white light / near-black dark backgrounds,
+    all chrome (text, grid, EVM label) adapts to theme tokens'
   weaknesses:
-  - 'Equal aspect ratio only approximated via square canvas (2400×2400). Chart.js
-    does not enforce a 1:1 inner chartArea ratio; the Y-axis labels and legend consume
-    different horizontal vs. vertical space, potentially skewing the constellation
-    geometry. Fix: add a custom afterLayout/afterResize plugin that reads chart.chartArea
-    and reduces whichever dimension is larger so the data viewport is forced to a
-    square (e.g., `if (w > h) { chartArea.left += (w-h)/2; chartArea.right -= (w-h)/2;
-    }`).'
-  - 'All 4 axis borders visible (Chart.js defaults). Remove them with `border: { display:
-    false }` inside each scale definition for cleaner visual refinement and higher
-    DE-02.'
-  - 'DE-01 limited by reliance on Chart.js defaults for the overall visual frame.
-    Consider adding a thin ink-colored stroke (`borderColor: t.inkSoft`, `borderWidth:
-    0.5`) to the received-symbol markers to improve definition in the dark render
-    where the semi-transparent green dots can appear low-contrast against the near-black
-    background.'
+  - Received symbol alpha at 50% ('80' hex suffix) is slightly more transparent than
+    optimal for ~50 points per cluster (style guide recommends 0.7–0.9 for 30–100
+    point density); consider 'B3' (70%) hex suffix for better individual-point visibility
+    within clusters
+  - Aesthetic sophistication is above-default but not at editorial quality level —
+    the chart reads as a well-engineered technical plot rather than a publication-ready
+    visualization; consider adding subtle radial or depth emphasis to differentiate
+    inner vs outer constellation points
+  - 'Grid density is moderately high: 9 regular grid lines + 3 dashed decision boundaries
+    per axis = 12 visual lines each axis; the regular chart grid could be suppressed
+    (grid: { display: false }) in favour of only the dashed decision boundaries to
+    reduce visual noise'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "scatter-constellation-diagram · javascript · chartjs · anyplot.ai" in dark ink, spanning ~75% of plot width, clearly readable. Axis titles "In-Phase (I)" (x) and "Quadrature (Q)" (y) in dark ink, readable. Tick labels (-4.5 to 4.5 in steps of 1) in muted dark ink, readable. Legend at top shows "Received Symbols" (green circle) and "Ideal Points (16-QAM)" (red cross), both clearly visible. EVM annotation "EVM = 8.9%" in bold dark ink at top-right of chart area.
-      Data: 800 received symbols as semi-transparent teal-green (#009E73 at ~50% opacity) circular dots, clustered in 16 distinct groups around the 4×4 QAM grid positions. 16 ideal points as large red cross markers (#AE3030) clearly visible at the center of each cluster. Dashed decision boundaries at x/y = -2, 0, +2 in muted ink, clearly visible. Subtle regular grid lines in theme grid color.
-      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — confirmed correct light surface
+      Chrome: Title "scatter-constellation-diagram · javascript · chartjs · anyplot.ai" in dark ink, clearly visible. Axis labels "In-Phase (I)" and "Quadrature (Q)" in dark ink, appropriately sized. Tick labels (-4, -3, -2, -1, 0, 1, 2, 3, 4) in dark-soft ink, readable. EVM annotation "EVM = 8.9%" in dark bold text, upper-right chart area.
+      Data: 800 received symbol dots in #009E73 (brand green) at 50% alpha, radius 5. 16 ideal points as red (#AE3030) crosses, radius 12, prominently visible. Dashed decision boundaries at -2, 0, +2 on both axes in soft ink. Legend shows colored symbols for both datasets.
+      Layout: Square canvas with square chart area enforced by custom plugin. Equal aspect ratio preserved. Symmetric axes -4.5 to 4.5.
+      Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface.
-      Chrome: Title visible in light ink against dark background. Axis titles and tick labels are rendered in light/muted colors, all readable. Legend visible at top. EVM annotation "EVM = 8.9%" readable in upper-right corner. No dark-on-dark failure observed.
-      Data: Received symbol colors are identical to the light render (#009E73 teal-green at ~50% opacity). The green dots are well-visible against the dark background. Red cross markers (#AE3030) slightly lower contrast against dark background but still clearly identifiable within the clusters. Dashed decision boundaries visible in muted light color.
-      Legibility verdict: PASS — all text elements are readable against the dark background; no dark-on-dark failures detected. Brand green #009E73 is clearly visible on the dark surface.
+      Background: Warm near-black #1A1A17 — confirmed correct dark surface, not pure black
+      Chrome: Title and axis labels in light ink (#F0EFE8 equivalent), clearly visible. Tick labels in light-soft ink, readable. EVM annotation "EVM = 8.9%" in light text — no dark-on-dark failures detected. Legend text in light ink.
+      Data: Received symbol colors (#009E73 green) IDENTICAL to light render — only chrome flipped. Ideal points (#AE3030 red) also identical. Dashed decision boundaries use soft light ink.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, legend 16px, axis titles
-          16px, ticks 14px, EVM 17px bold). Well-proportioned in both renders. Minor:
-          EVM canvas label uses raw ''sans-serif'' font-family via ctx.font rather
-          than inheriting Chart.js default font stack.'
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          14px, legend 16px, EVM label 17px bold). Readable in both themes at full
+          resolution. No overflow or clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. EVM annotation at top-right does not overlap legend
-          or data. Legend sits above chart area. No tick label collisions.
+        comment: No text overlaps text or data elements. Legend positioned above chart
+          area. EVM label neatly placed in upper-right corner.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: '800 received symbols at pointRadius=5 CSS px (~10 source px diameter)
-          with 50% alpha — appropriate for ~50 points per cluster. Ideal cross markers
-          at pointRadius=12 are prominent. Minor: red crosses slightly low-contrast
-          against dark background in dark render.'
+        comment: Received symbols at radius 5 with 50% alpha (hex '80') are visible
+          but slightly over-transparent for ~50 points/cluster; style guide recommends
+          0.7-0.9 alpha for 30-100 point density. Ideal crosses at radius 12 are excellent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red combination mitigated by redundant shape encoding (circle
-          vs. cross). CVD-affected users can distinguish by shape. Legend and annotation
-          also label the series explicitly.
+        comment: Green/red combination is CVD-safe due to shape redundancy (circles
+          vs crosses). Elements distinguishable by shape alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas format appropriate for equal-aspect constellation.
-          No content cut off. Good margins. Plot fills canvas well.
+        comment: Square canvas appropriate for constellation geometry. Custom squareAspect
+          plugin enforces equal aspect ratio. Chart fills canvas well with balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''In-Phase (I)'', Y-axis: ''Quadrature (Q)'' — exactly as
-          spec requires. Title follows mandated format.'
+        comment: Axes labeled 'In-Phase (I)' and 'Quadrature (Q)' matching spec exactly.
+          Title in mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses t.palette[0] (#009E73). Ideal points use #AE3030
-          (Imprint matte-red semantic anchor for error/reference role — standard convention
-          in signal processing). Background uses t.pageBg (#FAF8F1 light / #1A1A17
-          dark). Chrome (ink, inkSoft, grid) fully theme-adaptive.'
+        comment: 'First series uses palette[0] (#009E73). Ideal points use semantic
+          #AE3030 (matte red = reference/marker role). Background uses t.pageBg. All
+          chrome uses theme tokens. Data colors identical in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -128,27 +124,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom EVM canvas annotation plugin,
-          cross pointStyle for ideal markers, legend filter for clean legend, dual-dataset
-          boundary approach. Not FiveThirtyEight-level due to visible Chart.js borders
-          and standard axis styling.'
+        comment: 'Above well-configured default: semantic color choices, custom inline
+          plugins, EVM annotation, semi-transparent markers. Not yet at editorial/FiveThirtyEight
+          level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid via t.grid color, dashed decision boundaries, clean legend
-          with filter. Chart.js shows all 4 axis border lines (no spine removal),
-          limiting refinement score.
+        comment: 'Axis borders hidden (border: {display: false}), subtle grid, semi-transparent
+          markers. Grid slightly busy (9 regular + 3 dashed per axis) but required
+          boundaries are present.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: EVM annotation gives immediate quantitative
-          insight, red crosses mark the ideal positions (target), green dots show
-          actual reception quality. Decision boundaries frame the symbol regions.
-          Viewer immediately understands signal quality from cluster tightness.'
+        comment: 'Clear visual hierarchy: prominent red crosses (ideal) vs semi-transparent
+          green dots (received). EVM quantifies quality. Decision boundaries frame
+          symbol regions. Viewer immediately understands the story.'
     spec_compliance:
       score: 15
       max: 15
@@ -158,31 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct I/Q scatter constellation diagram with both received symbols
-          and ideal reference points.
+        comment: Correct scatter plot type for I/Q constellation diagram with 16-QAM
+          modulation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 16-QAM, ideal cross markers, semi-transparent
-          received dots, dashed decision boundaries at ±2/0, EVM annotation, symmetric
-          axis limits, equal-aspect square format, correct axis labels.'
+        comment: 'All features present: 16-QAM ideal points as crosses, received symbols
+          as semi-transparent dots, dashed decision boundaries at ±2/0, equal aspect
+          ratio, correct axis labels, EVM annotation, symmetric limits.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=In-Phase (I), Y=Quadrature (Q). Both axes span -4.5 to +4.5 symmetrically.
-          All 16 clusters visible.
+        comment: I component on X, Q component on Y. All 16 ideal points visible.
+          All 800 received symbols within -4.5 to 4.5 range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''scatter-constellation-diagram · javascript · chartjs ·
-          anyplot.ai'' — correct format. Legend: ''Received Symbols'' and ''Ideal
-          Points (16-QAM)'' — descriptive and accurate.'
+          anyplot.ai''. Legend: ''Received Symbols'' and ''Ideal Points (16-QAM)''.
+          Boundary lines correctly filtered from legend.'
     data_quality:
       score: 15
       max: 15
@@ -192,23 +186,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: ideal 16-QAM grid, realistic Gaussian noise,
-          EVM calculation, decision regions, 800 samples across all 16 symbol positions.'
+        comment: 'Shows all aspects: 4x4 QAM grid, Gaussian noise scatter, ideal reference
+          points, decision boundaries, EVM metric.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 16-QAM is a real-world modulation used in Wi-Fi, 5G, DVB. Signal
-          context is neutral engineering/technology.
+        comment: 16-QAM with standard {±1,±3}² grid is the textbook modulation scheme.
+          EVM 8.9% is realistic for ~20 dB SNR scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized 16-QAM grid at {-3,-1,+1,+3}^2 is standard. 800 samples
-          (within spec's 500-2000 range). Gaussian noise σ=0.20 gives EVM≈8.9% — realistic
-          for a good channel.
+        comment: Axis ±4.5 provides appropriate margin around ±3 ideal points. Noise
+          sigma 0.20 gives realistic cluster spread. P_avg=10 for this grid is correct.
     code_quality:
       score: 10
       max: 10
@@ -218,63 +211,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: tokens → data generation → mount → chart config.
-          LCG/randn helpers are minimal and necessary for browser determinism.'
+        comment: Helper functions lcg(), randn(), mkBoundary() are necessary and minimal.
+          Clear data → mount → chart structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) ensures identical output on every render
-          — correct solution for browser without seeded Math.random.
+        comment: Deterministic LCG with seed=42. No Math.random() (correctly avoided
+          for render harness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses window globals (Chart, ANYPLOT_TOKENS, ANYPLOT_THEME)
-          as required by harness.
+        comment: No imports needed — Chart is pre-loaded global. No unused references.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. mkBoundary helper is compact and DRY. No over-engineering,
-          no fake functionality.
+        comment: mkBoundary() helper reduces repetition for 6 boundary lines. Custom
+          plugins are well-structured inline objects. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows harness contract: appends canvas to #container, uses responsive/maintainAspectRatio/animation:false.
-          No filesystem calls.'
+        comment: 'Harness handles PNG/HTML output. animation: false, responsive: true,
+          maintainAspectRatio: false all set correctly.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use: scatter type, mixed line datasets for boundaries, pointStyle:
+          ''cross'', legend filter function, usePointStyle/pointStyleWidth in legend.
+          Idiomatic Chart.js patterns throughout.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic Chart.js: multi-dataset scatter, plugin array for custom
-          draw hooks, legend filter callback, pointStyle for marker shapes, linear
-          scale with explicit min/max. Well above generic usage.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses Chart.js plugin array API (beforeDraw for background, afterDraw
-          for EVM canvas text) — a Chart.js-specific mechanism. Uses pointStyle: ''cross''
-          (Chart.js scatter feature). Legend filter callback to exclude boundary datasets
-          from legend display.'
-  verdict: REJECTED
+        comment: Three custom inline plugins using Chart.js lifecycle hooks (beforeDraw,
+          afterLayout, afterDraw) are distinctively Chart.js. The squareAspect plugin
+          modifying chart.chartArea in afterLayout is particularly clever and library-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
