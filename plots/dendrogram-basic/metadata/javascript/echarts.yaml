@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: dendrogram-basic
 created: '2026-06-18T04:44:03Z'
-updated: '2026-06-18T04:51:37Z'
+updated: '2026-06-18T05:11:44Z'
 generated_by: claude-sonnet
 workflow_run: 27736548089
 issue: 986
@@ -12,238 +12,223 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Excellent semantic color coding: brand green (#009E73) for cool climates and
-    Imprint ochre (#BD8233) for warm climates — intuitive real-world color mapping
-    that immediately communicates the two main groups'
-  - Both light and dark themes render correctly with warm off-white / near-black backgrounds,
-    and all chrome (title, subtitle, legend) is properly theme-adaptive
-  - Clean minimal design with no unnecessary axes or grid lines — appropriate for
-    a dendrogram where the tree topology is the message
-  - Factually accurate geographical climate groupings (Nordic, Temperate, Mediterranean,
-    Tropical) with 12 real-world cities spanning the full cool-to-warm spectrum
-  - 'Correct ECharts idioms: animation: false, transparent background, no explicit
-    devicePixelRatio, expandAndCollapse: false to prevent interactive collapse'
+  - Semantic Imprint palette assignment — cool climates = brand green (#009E73), warm
+    climates = ochre (#BD8233) — is both visually intuitive and palette-compliant
+  - Subtitle adds meaningful context below the mandated title
+  - Per-node italic cluster labels (Nordic, Temperate, Mediterranean, Tropical) add
+    hierarchical interpretation without cluttering leaf nodes
+  - Both themes fully pass readability checks — all chrome uses t.ink/t.inkSoft tokens
+    correctly
+  - 'Data context is excellent: 12 real-world cities in geographically accurate climate
+    groups'
+  - 'expandAndCollapse: false and roam: false correctly disable interactive features
+    for static PNG output'
   weaknesses:
-  - 'Leaf city labels (fontSize: 14) become very small at 400px mobile viewport —
-    the 400px thumbnail shows barely readable city names; increase leaf label fontSize
-    to 16-18 to improve mobile legibility'
-  - 'No quantitative distance axis: a true dendrogram shows merge distances proportionally
-    on an axis (e.g., X-axis for horizontal layout), but the ECharts tree chart shows
-    topology only; consider adding a schematic distance axis or horizontal scale ticks
-    to convey the distance-proportional meaning'
-  - 'Code verbosity: lineStyle and itemStyle are set individually on all 12 leaf nodes;
-    test whether ECharts tree inherits these from parent branch nodes and remove per-leaf
-    overrides if they are unnecessary'
-  - 'DE-01 opportunity: design is clean and correct but the two-color dendrogram could
-    be elevated with sub-group labels (e.g., ''Nordic'', ''Temperate'') shown as subtle
-    annotations near the branch nodes, adding interpretive hierarchy without clutter'
-  - The semantic exception for ochre (palette[3] for 'Warm Climates') is valid, but
-    skipping palette[1] and palette[2] should be noted; canonical order would use
-    palette[0] (green, used) and palette[1] (lavender) — the semantic override to
-    ochre for warmth is correct but worth confirming the intent is clear
+  - Branch heights are uniform (ECharts tree uses level-based spacing), not proportional
+    to merge distances as the spec requests — this is an ECharts structural limitation,
+    acknowledged in the code comment, but it is a spec gap
+  - Helper functions city() and clusterLabel() deviate from strict KISS structure
+    (no-functions pattern)
+  - Cluster labels at fontSize 12px CSS are the smallest text element; borderline
+    at mobile scale (~400px viewport)
+  - 'LM-02: color cascading to descendant edges requires verbose per-node lineStyle
+    repetition rather than a native ECharts inheritance mechanism — limits how distinctive
+    the usage feels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "dendrogram-basic · javascript · echarts · anyplot.ai" centered, bold, clearly dark text. Subtitle "Hierarchical clustering of 12 world cities by climate profile" in softer dark tone. Bottom-left custom legend with colored circle swatches labeled "Cool Climates" and "Warm Climates" — all readable.
-      Data: Horizontal left-to-right tree. Root node at far left, two main branches diverging — upper branch in brand green (#009E73, Cool Climates: Oslo, Stockholm, Helsinki, London, Paris, Amsterdam), lower branch in Imprint ochre (#BD8233, Warm Climates: Barcelona, Rome, Athens, Singapore, Bangkok, Mumbai). Node circles at 8px, branch lines at 1.8px width. City name labels at 14px on the right side, readable at full resolution.
-      Legibility verdict: PASS at desktop. MARGINAL at 400px mobile — city labels become very small (≈3px rendered), barely readable at mobile viewport.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "dendrogram-basic · javascript · echarts · anyplot.ai" in dark ink (~22px CSS), readable. Subtitle "Hierarchical clustering of 12 world cities by climate profile" in inkSoft below. Custom graphic legend at bottom-left shows green/ochre circles with "Cool Climates" / "Warm Climates" labels — readable.
+      Data: Two color families — brand green (#009E73) for Cool Climates branch (Oslo, Stockholm, Helsinki, London, Paris, Amsterdam) and ochre (#BD8233) for Warm Climates branch (Barcelona, Rome, Athens, Singapore, Bangkok, Mumbai). Italic cluster labels (Nordic, Temperate, Mediterranean, Tropical) annotate mid-level nodes. Leaf city names labeled to the right at fontSize 17.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, no overflow.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title and subtitle text are light-colored and clearly visible against the dark background. Legend labels ("Cool Climates", "Warm Climates") are light-toned. No dark-on-dark failure observed — all text reads comfortably against the near-black surface.
-      Data: Colors are identical to the light render — brand green for cool branch, ochre for warm branch, confirming Imprint data colors are theme-independent. Node and line colors unchanged.
-      Legibility verdict: PASS at desktop. Same mobile-scale concern as light render (small leaf labels).
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and subtitle use light ink (t.ink = #F0EFE8 on dark) — clearly readable against dark background. Leaf city labels use t.inkSoft (#B8B7B0 on dark) — readable. Legend circles and text visible. No dark-on-dark failures.
+      Data: Data colors are identical to light render — brand green (#009E73) for cool climates, ochre (#BD8233) for warm climates. Color identity across themes confirmed.
+      Legibility verdict: PASS — all text readable, chrome correctly adapts to dark surface, data colors unchanged.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, leaf labels
-          14px, legend 13px). Desktop readable. Mobile (400px) shows very small city
-          labels at ~3px rendered — fontSize 16-18 recommended for leaf labels.
+        comment: All font sizes explicitly set (title 22px, leaf labels 17px, cluster
+          labels 12px, legend 13px). Readable in both themes. Cluster labels at 12px
+          CSS are borderline small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements. Tree nodes well spaced vertically.
+        comment: No text overlaps — leaf labels are well-spaced, cluster labels sit
+          above nodes without collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Branch lines (1.8px) and node circles (8px) clearly visible in both
-          themes. Color contrast between green/ochre branches is strong.
+        comment: Node circles at symbolSize 8, line width 1.8 — clearly visible. Colors
+          distinguish two climate families.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used. Green (#009E73) and ochre (#BD8233) are CVD-safe
-          and distinguishable without relying on hue alone.
+        comment: Green (#009E73) vs ochre (#BD8233) — CVD-safe, good luminance contrast
+          against both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Tree fills canvas well: left 6% to right ~82%, top 15% to bottom
-          88%. Empty space in the middle between cool/warm branches is structural
-          to the dendrogram layout, not wasted space.'
+        comment: Tree fills canvas well (left 6%, right 18%, top 16%, bottom 12%).
+          No clipping. Legend well-placed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes appropriate for dendrogram. Title and subtitle
-          are descriptive. Custom legend labels are clear.
+        comment: Mandated title format correct. Subtitle adds meaningful context.
+          No X/Y axes needed for tree chart.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and main) series uses #009E73. Second group uses palette[3]=#BD8233
-          (ochre) as semantic exception for warm/earth tones — valid. Background #FAF8F1
-          (light) and #1A1A17 (dark) correct. All chrome theme-adaptive.'
+        comment: 'First series = #009E73 (brand green) for Cool Climates. Warm Climates
+          = #BD8233 (ochre, Imprint slot 4) — semantic match. Backgrounds correct
+          (#FAF8F1 light / #1A1A17 dark). All chrome theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: semantic two-color design (cool=green, warm=ochre)
-          adds meaning beyond aesthetics. Custom legend with circle swatches. Subtitle
-          adds context. Not yet publication-level — lacks sub-group labels or distance
-          axis.'
+        comment: 'Strong design: semantic palette (cool=green, warm=ochre) is both
+          intuitive and brand-compliant. Subtitle, italic cluster annotations, and
+          clean minimalist layout elevate this above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes, no grid (appropriate for dendrogram). Clean minimal composition.
-          Transparent background inherits theme surface. Some further refinement possible
-          (spacing, line weight variation by depth).
+        comment: No unnecessary axes or grid — appropriate for tree chart. Explicit
+          line width and margins. Clean but not every detail is polished to maximum.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-color semantic mapping immediately communicates cool/warm split.
-          Geographic sub-grouping implied by hierarchy. Clear visual narrative without
-          annotations. Would be stronger with sub-group labels (Nordic, Temperate,
-          etc.) near internal nodes.
+        comment: Two-color hierarchy immediately communicates the cool/warm climate
+          split. Cluster labels (Nordic, Temperate, Mediterranean, Tropical) add interpretive
+          depth. Visual hierarchy guides the viewer.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ECharts tree chart in orthogonal left-to-right orientation is the
-          correct ECharts equivalent for a dendrogram. However, lacks the quantitative
-          distance axis that defines a true dendrogram (branch heights not proportional
-          to merge distances).
+        comment: ECharts tree series with LR orthogonal layout correctly renders a
+          dendrogram structure.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Hierarchical tree structure with labels present. 12 items in 10-50
-          recommended range. Horizontal orientation chosen for long labels (spec compliant).
-          Missing: proportional branch heights representing merge distances.'
+        comment: Hierarchical structure, labels, and multi-level clustering all present.
+          Branch heights are NOT proportional to merge distances (ECharts uniform
+          spacing) — spec-noted limitation, acknowledged in code.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Left-to-right orientation correctly used for labeled dendrogram.
-          All 12 cities visible as leaves. Hierarchy correctly represented with 3
-          levels below root.
+        comment: 'Tree topology correctly maps climate hierarchy: 2 major groups →
+          4 sub-groups → 12 leaf cities.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title exactly matches required format: ''dendrogram-basic · javascript
-          · echarts · anyplot.ai''. Custom graphic legend labels match data groups.'
+        comment: Title = 'dendrogram-basic · javascript · echarts · anyplot.ai'. Custom
+          graphic legend with colored circles for Cool/Warm Climates.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows multiple levels of hierarchy (root → main branches → sub-branches
-          → leaves), two distinct clusters with internal sub-grouping. Missing quantitative
-          distance dimension that would show varying merge distances within the dendrogram.
+        comment: Full 4-level hierarchy (root → climate group → sub-cluster → city).
+          Shows 12 nodes across 4 sub-clusters — comprehensive dendrogram.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world neutral scenario: world cities clustered by climate profile.
-          Factually grounded in established climate science. Not controversial.'
+        comment: '12 real world cities in accurate climate groupings: Nordic (Oslo/Stockholm/Helsinki),
+          Temperate (London/Paris/Amsterdam), Mediterranean (Barcelona/Rome/Athens),
+          Tropical (Singapore/Bangkok/Mumbai).'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Climate groupings are factually accurate: Nordic (Oslo, Stockholm,
-          Helsinki — subarctic), Temperate (London, Paris, Amsterdam — maritime/continental),
-          Mediterranean (Barcelona, Rome, Athens), Tropical (Singapore, Bangkok, Mumbai).
-          All placements are climatologically correct.'
+        comment: Climate groupings are climatologically accurate. Two-level Cool/Warm
+          split is geographically correct. Sub-cluster assignments are factually sound.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions or classes. Data → Init → Option linear structure.
+        comment: Uses city() and clusterLabel() helper functions, deviating from pure
+          no-functions KISS pattern. Helpers reduce repetition but technically violate
+          KISS criterion.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded. Fully deterministic, no RNG needed.
+        comment: All data is hard-coded. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No explicit imports. ECharts accessed via global. No unused declarations.
+        comment: No imports needed (ECharts is a browser global). No unused code.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: LEAF_LABEL constant defined once and reused (good). However, lineStyle
-          and itemStyle set individually on all 12 leaf nodes is verbose — test whether
-          parent branch nodes cascade these to avoid per-leaf repetition.
+        comment: Clean and well-commented. Comment about ECharts edge-color cascade
+          limitation is informative. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. echarts.init without explicit size or devicePixelRatio.
-          Harness writes plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
-          correctly.'
+        comment: 'animation: false set. echarts.init() without explicit size/devicePixelRatio.
+          Correct ECharts API usage.'
     library_mastery:
       score: 7
       max: 10
@@ -253,24 +238,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ECharts tree chart usage with expandAndCollapse: false,
-          initialTreeDepth: -1, roam: false. Uses graphic component for custom legend.
-          Appropriate settings for a static dendrogram render.'
+        comment: Uses ECharts tree series correctly with layout/orient/expandAndCollapse/initialTreeDepth.
+          Per-node label positioning is idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-branch color coding via itemStyle and lineStyle at node level
-          — an ECharts-specific pattern that requires knowing the tree chart's node-level
-          style inheritance. Custom graphic component for legend swatches shows beyond-basic
-          ECharts usage.
-  verdict: REJECTED
+        comment: Per-node custom styling (lineStyle, itemStyle, label per tree node)
+          is ECharts-distinctive. Custom graphic legend elements are also ECharts-specific.
+          However, color cascading requires verbose per-node repetition.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep:
