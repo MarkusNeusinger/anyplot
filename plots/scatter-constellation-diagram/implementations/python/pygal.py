@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-constellation-diagram: Digital Modulation Constellation Diagram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-06-18
@@ -90,7 +90,7 @@ custom_style = Style(
     ),
     font_family=font,
     title_font_family=font,
-    title_font_size=52,
+    title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
@@ -98,13 +98,13 @@ custom_style = Style(
     value_font_size=36,
     tooltip_font_size=30,
     tooltip_font_family=font,
-    opacity=0.65,
+    opacity=0.52,
     opacity_hover=0.95,
     stroke_opacity=1,
     stroke_opacity_hover=1,
 )
 
-axis_labels = [{"value": v, "label": f"{v:+.0f}"} for v in [-4, -3, -2, -1, 0, 1, 2, 3, 4]]
+axis_labels = [{"value": v, "label": "0" if v == 0 else f"{v:+.0f}"} for v in [-4, -3, -2, -1, 0, 1, 2, 3, 4]]
 
 # Chart — square canvas for equal aspect ratio (2400×2400 canonical)
 chart = pygal.XY(
