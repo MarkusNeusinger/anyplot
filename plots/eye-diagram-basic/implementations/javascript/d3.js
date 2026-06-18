@@ -1,7 +1,7 @@
 // anyplot.ai
 // eye-diagram-basic: Signal Integrity Eye Diagram
-// Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-18
+// Library: d3 7.9.0 | JavaScript 22
+// Quality: pending | Created: 2026-06-18
 
 const tok = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -16,16 +16,14 @@ function randn() {
   return Math.sqrt(-2 * Math.log(Math.max(rand(), 1e-9))) * Math.cos(2 * Math.PI * rand());
 }
 
-// Bandwidth-limited NRZ signal parameters
 const N_TRACES = 400;
 const SAMPLES = 160;
 const NOISE_SIGMA = 0.05;
 const JITTER_SIGMA = 0.03;
 const BW = 0.15;
+const sigmoid = (x) => 1 / (1 + Math.exp(-x / BW));
 
-const sigmoid = x => 1 / (1 + Math.exp(-x / BW));
-
-// Build all trace points: each trace is a 2-UI window with 3 random bits
+// Build trace points: 2-UI window, 3 random NRZ bits per trace
 const allPoints = [];
 for (let i = 0; i < N_TRACES; i++) {
   const b0 = rand() > 0.5 ? 1 : 0;
@@ -35,15 +33,16 @@ for (let i = 0; i < N_TRACES; i++) {
   const j1 = randn() * JITTER_SIGMA;
   for (let s = 0; s < SAMPLES; s++) {
     const tm = (s / (SAMPLES - 1)) * 2;
-    const v = b0
-      + (b1 - b0) * sigmoid(tm - j0)
-      + (b2 - b1) * sigmoid(tm - 1 - j1)
-      + randn() * NOISE_SIGMA;
+    const v =
+      b0 +
+      (b1 - b0) * sigmoid(tm - j0) +
+      (b2 - b1) * sigmoid(tm - 1 - j1) +
+      randn() * NOISE_SIGMA;
     allPoints.push([tm, v]);
   }
 }
 
-// 2D histogram: bin trace points for density heatmap
+// 2D histogram for density heatmap
 const BINS_X = 200;
 const BINS_Y = 120;
 const V_MIN = -0.25;
@@ -61,33 +60,87 @@ for (const [tm, v] of allPoints) {
 }
 const maxCount = Math.max(...hist);
 
-// Color scale: page background → Imprint green → Imprint blue (sequential)
-const colorScale = d3.scaleSequential()
+// Color scale: pageBg → Imprint green → Imprint blue
+const colorScale = d3
+  .scaleSequential()
   .domain([0, maxCount])
   .interpolator(d3.interpolateRgbBasis([tok.pageBg, tok.seq[0], tok.seq[1]]));
 
-// SVG mount
-const svg = d3.select("#container").append("svg")
-  .attr("width", width).attr("height", height);
+// Precompute per-bin RGBA for efficient bilinear interpolation
+const binRgba = new Uint8Array(BINS_X * BINS_Y * 4);
+for (let bi = 0; bi < BINS_X * BINS_Y; bi++) {
+  const { r, g, b } = d3.color(colorScale(hist[bi])).rgb();
+  binRgba[bi * 4] = r;
+  binRgba[bi * 4 + 1] = g;
+  binRgba[bi * 4 + 2] = b;
+  binRgba[bi * 4 + 3] = 255;
+}
 
-// Clip path for plot area
-svg.append("defs").append("clipPath").attr("id", "plotarea")
-  .append("rect").attr("width", iw).attr("height", ih);
+// --- Hybrid canvas + SVG layout -------------------------------------------
+// Canvas carries the heatmap using per-pixel ImageData with bilinear
+// interpolation between bin centers — eliminates both banding and pixelation.
+// SVG handles axes, reference lines, labels, and title on top.
+d3.select("#container").style("position", "relative");
+
+const canvasEl = d3
+  .select("#container")
+  .append("canvas")
+  .attr("width", iw)
+  .attr("height", ih)
+  .style("position", "absolute")
+  .style("left", `${margin.left}px`)
+  .style("top", `${margin.top}px`);
+
+const ctx = canvasEl.node().getContext("2d");
+const imgData = ctx.createImageData(iw, ih);
+const pixels = imgData.data;
+
+// Per-pixel bilinear interpolation: map each canvas pixel to fractional bin
+// coordinates and blend the four surrounding bin colors for smooth output.
+for (let py = 0; py < ih; py++) {
+  const fy = (py + 0.5) * BINS_Y / ih - 0.5;
+  const by0 = Math.max(0, Math.floor(fy));
+  const by1 = Math.min(BINS_Y - 1, by0 + 1);
+  const wdy1 = Math.max(0, Math.min(1, fy - by0));
+  const wdy0 = 1 - wdy1;
+
+  for (let px = 0; px < iw; px++) {
+    const fx = (px + 0.5) * BINS_X / iw - 0.5;
+    const bx0 = Math.max(0, Math.floor(fx));
+    const bx1 = Math.min(BINS_X - 1, bx0 + 1);
+    const wdx1 = Math.max(0, Math.min(1, fx - bx0));
+    const wdx0 = 1 - wdx1;
+
+    const i00 = (by0 * BINS_X + bx0) * 4;
+    const i10 = (by0 * BINS_X + bx1) * 4;
+    const i01 = (by1 * BINS_X + bx0) * 4;
+    const i11 = (by1 * BINS_X + bx1) * 4;
+
+    const w00 = wdx0 * wdy0;
+    const w10 = wdx1 * wdy0;
+    const w01 = wdx0 * wdy1;
+    const w11 = wdx1 * wdy1;
+
+    const pi = (py * iw + px) * 4;
+    pixels[pi] = w00 * binRgba[i00] + w10 * binRgba[i10] + w01 * binRgba[i01] + w11 * binRgba[i11];
+    pixels[pi + 1] = w00 * binRgba[i00 + 1] + w10 * binRgba[i10 + 1] + w01 * binRgba[i01 + 1] + w11 * binRgba[i11 + 1];
+    pixels[pi + 2] = w00 * binRgba[i00 + 2] + w10 * binRgba[i10 + 2] + w01 * binRgba[i01 + 2] + w11 * binRgba[i11 + 2];
+    pixels[pi + 3] = 255;
+  }
+}
+ctx.putImageData(imgData, 0, 0);
+
+// SVG layer for axes, reference lines, labels, and title
+const svg = d3
+  .select("#container")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height)
+  .style("position", "absolute")
+  .style("left", "0")
+  .style("top", "0");
 
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-// Density heatmap cells
-const cellW = iw / BINS_X;
-const cellH = ih / BINS_Y;
-g.append("g").attr("clip-path", "url(#plotarea)")
-  .selectAll("rect")
-  .data(hist)
-  .join("rect")
-  .attr("x", (_, i) => (i % BINS_X) * cellW)
-  .attr("y", (_, i) => Math.floor(i / BINS_X) * cellH)
-  .attr("width", cellW + 0.6)
-  .attr("height", cellH + 0.6)
-  .attr("fill", d => colorScale(d));
 
 // Linear scales for overlay elements
 const xScale = d3.scaleLinear().domain([T_MIN, T_MAX]).range([0, iw]);
@@ -96,8 +149,10 @@ const yScale = d3.scaleLinear().domain([V_MIN, V_MAX]).range([ih, 0]);
 // Dashed reference lines at nominal NRZ voltage levels (0 V and 1 V)
 for (const level of [0, 1]) {
   g.append("line")
-    .attr("x1", 0).attr("x2", iw)
-    .attr("y1", yScale(level)).attr("y2", yScale(level))
+    .attr("x1", 0)
+    .attr("x2", iw)
+    .attr("y1", yScale(level))
+    .attr("y2", yScale(level))
     .attr("stroke", tok.inkSoft)
     .attr("stroke-dasharray", "8,5")
     .attr("stroke-opacity", 0.55)
@@ -106,18 +161,23 @@ for (const level of [0, 1]) {
 
 // Dashed vertical line at t = 1 UI (sampling instant / eye center)
 g.append("line")
-  .attr("x1", xScale(1)).attr("x2", xScale(1))
-  .attr("y1", 0).attr("y2", ih)
+  .attr("x1", xScale(1))
+  .attr("x2", xScale(1))
+  .attr("y1", 0)
+  .attr("y2", ih)
   .attr("stroke", tok.inkSoft)
   .attr("stroke-dasharray", "8,5")
   .attr("stroke-opacity", 0.55)
   .attr("stroke-width", 1.5);
 
 // Axes
-const xAxis = g.append("g").attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(xScale).ticks(5).tickFormat(d => `${d} UI`));
-const yAxis = g.append("g")
-  .call(d3.axisLeft(yScale).ticks(6).tickFormat(d => d.toFixed(1) + " V"));
+const xAxis = g
+  .append("g")
+  .attr("transform", `translate(0,${ih})`)
+  .call(d3.axisBottom(xScale).ticks(5).tickFormat((d) => `${d} UI`));
+const yAxis = g
+  .append("g")
+  .call(d3.axisLeft(yScale).ticks(6).tickFormat((d) => d.toFixed(1) + " V"));
 
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", tok.inkSoft).style("font-size", "14px");
@@ -127,7 +187,8 @@ for (const ax of [xAxis, yAxis]) {
 
 // Axis labels
 g.append("text")
-  .attr("x", iw / 2).attr("y", ih + 65)
+  .attr("x", iw / 2)
+  .attr("y", ih + 65)
   .attr("text-anchor", "middle")
   .attr("fill", tok.ink)
   .style("font-size", "16px")
@@ -135,15 +196,18 @@ g.append("text")
 
 g.append("text")
   .attr("transform", "rotate(-90)")
-  .attr("x", -ih / 2).attr("y", -80)
+  .attr("x", -ih / 2)
+  .attr("y", -80)
   .attr("text-anchor", "middle")
   .attr("fill", tok.ink)
   .style("font-size", "16px")
   .text("Voltage (V)");
 
 // Chart title
-svg.append("text")
-  .attr("x", width / 2).attr("y", 48)
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 48)
   .attr("text-anchor", "middle")
   .attr("fill", tok.ink)
   .style("font-size", "22px")
