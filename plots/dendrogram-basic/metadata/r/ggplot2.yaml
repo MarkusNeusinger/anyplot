@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: dendrogram-basic
 created: '2026-06-18T04:30:56Z'
-updated: '2026-06-18T04:40:27Z'
+updated: '2026-06-18T04:56:41Z'
 generated_by: claude-sonnet
 workflow_run: 27736275992
 issue: 986
@@ -12,50 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogra
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: hierarchical clustering, leaf labels, branch heights
-    all correct'
-  - Correct Imprint palette — cluster 1 as brand green (#009E73), cluster 2 lavender
-    (#C475FD), cluster 3 blue (#4467A3)
-  - 'Excellent theme adaptation — both renders fully readable with appropriate chrome
-    flipping between #FAF8F1 and #1A1A17'
-  - Real gapminder data (European development indicators) provides meaningful, neutral,
-    real-world context
-  - Custom legend with guides(override.aes = list(label = '■', size = 4)) is polished
-    and distinctly ggplot2
-  - coord_flip() creates clean horizontal dendrogram orientation with proper axis
-    labels
-  - All font sizes explicitly set (title 12pt, axis title 10pt, tick labels 8pt, geom_text
-    2.8)
+  - Manual dendrogram geometry built from ggplot2 primitives (geom_segment + geom_text
+    + coord_flip) demonstrates deep grammar-of-graphics mastery
+  - 'Cluster coloring on leaf labels uses Imprint palette positions 1-3 correctly
+    (#009E73, #C475FD, #4467A3) providing clear visual grouping'
+  - Both light and dark themes render correctly with proper theme-adaptive chrome
+    — no dark-on-dark failures
+  - Real-world gapminder data (20 European countries by life expectancy, GDP, population)
+    with informative subtitle providing full context
+  - Canvas is exactly 3200x1800 landscape, all sizing follows ggplot2 style guide,
+    legend framed with ELEVATED_BG and INK_SOFT border
   weaknesses:
-  - Y-axis limits extend to -max_h*0.55 (~-4.4) while country labels sit at only -0.02*max_h
-    (~-0.16), creating visible wasted space on the left side of the plot that is disproportionate
-    to the label area
-  - Cluster legend labels are abstract numbers ('1', '2', '3') with no narrative;
-    a descriptive subtitle or cluster annotations contextualizing the grouping (e.g.
-    'Nordic/Western', 'Southern', 'Eastern Europe') would add storytelling
-  - Design sophistication limited to cluster coloring — additional polish (typography
-    emphasis, subtle cluster banding or separator lines, or an explanatory subtitle)
-    would elevate to publication quality
-  - Manual dendrogram segment construction via loops is verbose and lower-level than
-    idiomatic R/ggplot2; ggdendro::dendro_data() provides segment data more elegantly
-    if available in the CI runtime
-  - Segment linewidth=0.55 is slightly thin for the root-level branches at large merge
-    distances — slightly thicker (0.7-0.8) would improve visual weight balance
+  - No x-axis grid lines (horizontal after coord_flip) — a subtle grid on Ward's Distance
+    axis would help readers estimate merge heights without visual clutter
+  - Segment-building uses three nested for-loops with pre-allocated vectors; a vectorized
+    or functional approach (mapply/vapply) would be cleaner idiomatic R
+  - legend uses guide_legend(override.aes=list(label='■')) to force filled-square
+    swatches — a minor workaround that works but is fragile if ggplot2 internals change
+  - country labels at geom_text size=3.2mm (~9pt) are tight for 20 items in 1800px
+    vertical space — readable but on the small side; size=3.5 would add comfort
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "dendrogram-basic · r · ggplot2 · anyplot.ai" in bold dark ink (#1A1A17) at top-left — clearly readable. Legend box with "Cluster" title and three colored ■ swatches (green, lavender, blue) centered at top. X-axis (Ward's Distance) tick labels (0, 2, 4, 6, 8) in INK_SOFT (#4A4A44) and axis title "Ward's Distance" in INK (#1A1A17) — both clearly readable.
-      Data: 20 country labels right-aligned at the left of the dendrogram, colored by cluster: green (#009E73) for one cluster group, lavender (#C475FD) for the Nordic/wealthy group, blue (#4467A3) for a third group. Dendrogram segments in dark gray INK_SOFT — clearly visible against the cream background. Branch heights proportional to Ward's distances (0–8 range).
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Chrome: Title "dendrogram-basic · r · ggplot2 · anyplot.ai" in bold dark #1A1A17 at 12pt — fully readable. Subtitle in muted #4A4A44 at 8pt — readable. "Ward's Distance" x-axis label in dark ink at 10pt — readable. Tick labels (0, 2, 4, 6, 8) in INK_SOFT at 8pt — readable.
+      Data: Horizontal dendrogram with 20 European countries. Leaf labels colored by cluster: lavender (#C475FD) for Northern/Western Europe cluster (Norway, Iceland, Finland, Belgium, Austria, Netherlands, Greece, Ireland, Denmark), green (#009E73) for Italy/France cluster, blue (#4467A3) for Eastern Europe cluster (Croatia, Albania, Montenegro, Bosnia and Herzegovina, Hungary, Bulgaria, Poland, Czech Republic, Germany). Dendrogram branches in INK_SOFT color against warm off-white background — clearly visible. Legend at top with styled border shows all three clusters.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title and all labels rendered in light near-white (#F0EFE8 INK token) — clearly readable against dark background. Axis tick labels and "Ward's Distance" label in lighter INK_SOFT (#B8B7B0). Legend box uses elevated dark background (#242420) with subtle border. Dendrogram segments rendered in light gray INK_SOFT (#B8B7B0) — clearly visible against dark background. No dark-on-dark failures observed.
-      Data: Cluster colors (#009E73, #C475FD, #4467A3) are identical to the light render — only chrome flipped. Country labels retain their cluster colors and are readable against the dark background.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues, data colors invariant between themes.
+      Chrome: Title in light #F0EFE8 — fully readable against dark background. Subtitle in #B8B7B0 — readable. Axis labels and tick marks in appropriate light colors — no dark-on-dark failures detected. Legend background uses ELEVATED_BG #242420 with INK_SOFT border — visible and styled correctly.
+      Data: Same cluster coloring as light render — #009E73 (green), #C475FD (lavender), #4467A3 (blue) — identical data colors, only chrome flips. Dendrogram branches appear in light/muted color against dark background — clearly visible. All country labels readable in their cluster colors on the dark surface.
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -66,55 +56,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt, axis title 10pt, tick
-          labels 8pt, country labels geom_text 2.8mm≈8pt). Readable in both themes.
-          Minor deduction: country labels at size=2.8 are on the small side for 20
-          items on a 1800px-tall canvas.'
+        comment: Title, subtitle, axis labels and tick labels all readable in both
+          themes. Country labels at 3.2mm (~9pt) are slightly snug for 20 items but
+          readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping labels — 20 countries are evenly spaced. Legend does
-          not overlap data.
+        comment: 20 leaf labels are tight but do not overlap in either render. One
+          point off for the snug spacing that could be an issue in edge cases.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Dendrogram segments (linewidth=0.55mm) clearly visible at 400 DPI.
-          Cluster-colored labels clearly distinguishable. Both themes render distinctly.
+        comment: Dendrogram branches clearly visible, cluster-colored leaf labels
+          clearly distinguishable in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue (Imprint positions 1-3) are CVD-distinguishable.
-          No red-green-only signal.
+        comment: 'Three Imprint palette colors (#009E73, #C475FD, #4467A3) are perceptually
+          distinct and CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Correct 3200×1800 canvas. Good margins. Minor deduction: y-axis
-          limits extend to -max_h*0.55 but labels are at -max_h*0.02, creating a visible
-          empty zone on the left beyond the country names.'
+        comment: Correct 3200x1800 canvas. Good margins. Country labels fit within
+          bounds including 'Bosnia and Herzegovina'. Legend at top well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is correct format. 'Ward's Distance' is descriptive for the
-          x-axis. No y-axis label (appropriate — country names serve as leaf labels).
+        comment: Title in correct format, 'Ward's Distance' axis label is descriptive,
+          no x-axis label appropriate for dendrogram leaves.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First cluster uses #009E73 (brand green). Clusters 2-3 use #C475FD
-          (lavender) and #4467A3 (blue) — canonical Imprint order. Background #FAF8F1
-          light / #1A1A17 dark. Data colors invariant between themes. Chrome fully
-          theme-adaptive.'
+        comment: 'Imprint palette positions 1-3 used correctly. Plot backgrounds are
+          #FAF8F1 (light) and #1A1A17 (dark). Data colors identical across themes.'
     design_excellence:
       score: 12
       max: 20
@@ -124,28 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: cluster coloring of leaf labels creates
-          intentional visual hierarchy. Custom legend with ■ override.aes is polished.
-          However, no descriptive subtitle, no cluster boundary annotations, and no
-          extra design flourishes that would reach publication quality.'
+        comment: 'Above default (4): intentional cluster-colored labels, clean horizontal
+          orientation, styled legend frame, no grid/spines, good typography hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid completely removed (appropriate for dendrogram), generous margins
-          (20px all sides), themed legend with border, y-axis ticks/labels removed.
-          Clearly above default — panel.grid.major/minor blanked explicitly and axis
-          elements cleaned up. Left empty space is a minor layout imperfection.
+        comment: 'Above default (2): grid fully removed (appropriate for dendrogram),
+          no spines via theme_minimal, generous margins, subtle legend border.'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Cluster coloring guides the reader to identify three development
-          groups (Nordic/Western, Southern, Eastern Europe). Real gapminder data adds
-          meaning. But cluster labels are abstract numbers with no narrative overlay
-          — the story requires domain knowledge to interpret.
+        comment: 'Above default (2): cluster coloring creates clear visual grouping,
+          horizontal layout for country readability, subtitle provides full data context.'
     spec_compliance:
       score: 15
       max: 15
@@ -155,31 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dendrogram with hierarchical clustering. Branch
-          heights proportional to Ward's merge distances.
+        comment: Correct hierarchical dendrogram with proper tree structure and proportional
+          branch heights.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: numeric feature matrix (lifeExp, gdpPercap,
-          pop), string labels (country names), linkage matrix computed from features,
-          20 items (within 10-50 range), horizontal orientation, proportional branch
-          heights.'
+        comment: Branch heights proportional to merge distances, cluster identification
+          via cutree, readable horizontal labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ward's Distance on horizontal axis (correct after coord_flip). All
-          20 countries shown as leaves. Merge heights correctly positioned.
+        comment: Leaf positions map to countries, y-axis maps to Ward's distance,
+          colors map to cluster assignments.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'dendrogram-basic · r · ggplot2 · anyplot.ai' — exact correct
-          format. Legend shows 'Cluster' with 3 colored swatches.
+        comment: Title 'dendrogram-basic · r · ggplot2 · anyplot.ai' correct. Legend
+          'Cluster' with labels 1, 2, 3.
     data_quality:
       score: 15
       max: 15
@@ -189,25 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dendrogram aspects: hierarchical structure, proportional
-          merge heights, leaf labels, cluster assignment. Ward''s linkage is a specific,
-          meaningful method. Multiple merge levels clearly visible.'
+        comment: 'Full hierarchical clustering shown: tree structure, merge heights,
+          leaf identification, cluster coloring.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European countries clustered by life expectancy, GDP per capita,
-          and population from gapminder 2007 — real-world data, neutral topic, comprehensible
-          domain.
+        comment: gapminder real-world data, European countries by life expectancy/GDP/population
+          — neutral and plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 countries in the recommended 10-50 range. Ward's distances (0-8)
-          are appropriate for z-score normalized features. Hierarchical structure
-          is meaningful and correct.
+        comment: 20 items within spec's 10-50 recommendation. Ward's distance 0-8
+          is sensible for standardized features.
     code_quality:
       score: 10
       max: 10
@@ -217,38 +192,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: theme tokens → data → clustering → geometry computation
-          → plot → save. No unnecessary functions or classes.'
+        comment: No functions or classes. Direct flat script. Loop complexity is appropriate
+          for building dendrogram geometry.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: No random operations used. Gapminder data + hclust with Ward's method
-          is fully deterministic. No seed needed.
+        comment: No set.seed() needed — gapminder is a fixed dataset and hclust is
+          deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (ggplot2, dplyr, ragg, gapminder) are actively used.
-          No unused imports.
+        comment: ggplot2, dplyr, ragg, gapminder — all four packages are actually
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity. Code is clear. The segment construction
-          loops are verbose but necessary since ggplot2 has no native dendrogram geom.
+        comment: No fake UI. Appropriate complexity for manual dendrogram construction.
+          Segment loop is verbose but correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png. Uses linewidth= (not
-          deprecated size=) for geom_segment. Correct API.
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device.
+          Correct canvas dimensions.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -256,30 +231,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses ggplot2 grammar correctly: geom_segment + geom_text + coord_flip
-          + scale_color_manual + guides + theme layering. Minor gap: manual dendrogram
-          segment construction is lower-level than using ggdendro::dendro_data(),
-          which would be more idiomatic R/ggplot2 for this plot type.'
+        comment: 'Idiomatic ggplot2: coord_flip(), scale_color_manual(), guides()
+          with override.aes, theme_minimal() + theme() layering.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: guides(color = guide_legend(override.aes = list(label = '■', size
-          = 4))) is distinctly ggplot2 — override.aes mechanism has no direct equivalent
-          in other libraries. coord_flip() for horizontal layout is also ggplot2-specific.
-          Manual hclust→segment pipeline shows solid ggplot2 knowledge.
-  verdict: REJECTED
+        comment: Builds custom dendrogram from geom_segment + geom_text — a distinctive
+          ggplot2 strength (grammar of graphics as primitives for non-native chart
+          types). coord_flip() + hjust for horizontal leaves.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - gapminder
   techniques:
-  - custom-legend
   - layer-composition
+  - custom-legend
   patterns:
   - dataset-loading
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - hierarchical-clustering
   - normalization
