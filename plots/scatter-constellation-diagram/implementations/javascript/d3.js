@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-constellation-diagram: Digital Modulation Constellation Diagram
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-18
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-18
 
 //# anyplot-orientation: square
 
