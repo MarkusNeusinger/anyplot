@@ -1,4 +1,8 @@
-"""anyplot.ai — dendrogram-basic · matplotlib"""
+""" anyplot.ai
+dendrogram-basic: Basic Dendrogram
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-18
+"""
 
 import os
 import sys
