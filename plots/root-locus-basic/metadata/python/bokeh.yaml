@@ -1,95 +1,116 @@
 library: bokeh
+language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:23:12Z'
-updated: '2026-03-20T21:51:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23362981928
+updated: '2026-06-18T00:16:07Z'
+generated_by: claude-sonnet
+workflow_run: 27726956752
 issue: 4414
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent engineering context with analytically correct data (Routh criterion,
-    breakaway computation, asymptote centroid)
-  - Strong visual storytelling through targeted annotations at key control theory
-    points
-  - Clean design with removed axis lines/ticks, subtle grid, and professional color
-    scheme
-  - Good use of Bokeh-specific features (HoverTool, HTML export, Span)
-  - All spec requirements fully met including direction arrows, real-axis segments,
-    and guide lines
+  - 'Semantically correct Imprint palette assignments: brand green for main locus,
+    matte red for stability boundary (danger anchor), lavender for conjugate branch
+    pair'
+  - 'Strong control-engineering data storytelling: stability boundary prominently
+    highlighted, direction arrows present, key numeric values annotated at critical
+    engineering points (K=12, K=0.63, centroid)'
+  - 'Complete spec coverage: all required features present including real-axis segments,
+    damping ratio and natural frequency guide lines, match_aspect=True for geometric
+    fidelity'
+  - 'Excellent theme adaptation: both renders pass readability checks with proper
+    chrome token usage throughout'
+  - 'Perfect code quality: linear, deterministic, idiomatic Bokeh with all required
+    artifacts (HTML + PNG)'
   weaknesses:
-  - Damping ratio and natural frequency guide lines are extremely faint (alpha 0.25-0.3),
-    reducing their utility as reference guides
-  - Minor legend overlap with guide line labels in the top-right corner
-  - Locus scatter points are small (size=6); slightly larger would improve visibility
-  image_description: 'The plot displays a root locus diagram for the transfer function
-    G(s) = 1/(s(s+1)(s+3)) on a light gray (#FAFAFA) background. The title "root-locus-basic
-    · bokeh · pyplots.ai" appears at the top left in dark text. The x-axis is labeled
-    "Real Axis (σ)" and the y-axis "Imaginary Axis (jω)". Three open-loop poles are
-    marked with large dark × markers at s=0, s=-1, and s=-3 on the real axis. Two
-    blue real-axis locus segments extend from -1 to 0 and from -5.5 to -3. Two orange
-    complex branches curve symmetrically upward and downward from a breakaway point
-    near σ=-0.451, crossing the imaginary axis at approximately ±j1.73. Red diamond
-    markers highlight the jω-axis crossings with a bold red annotation "jω-crossing:
-    K=12, ω=√3≈1.73". A blue square marker indicates the breakaway point with annotation
-    "Breakaway: σ=-0.451, K=0.63". A small gray circle marks the centroid at σ=-1.33
-    with italic annotation. Faint dotted damping ratio lines (ζ=0.6, ζ=0.8 visible)
-    radiate from the origin, and faint dotted natural frequency arcs (ωn=1, 2, 3 visible)
-    appear as semicircles. A dashed red line along the imaginary axis indicates the
-    stability boundary. A blue triangle arrow on one branch indicates the direction
-    of increasing gain. The legend in the top-right lists: Real-axis locus, Complex
-    branches, Open-loop poles, Stability crossing (K=12), and Breakaway (K=0.63).'
+  - Legend text at 28pt is below the 34pt guideline — slightly small at full canvas
+    resolution; increase p.legend.label_text_font_size to 34pt
+  - Damping ratio labels for zeta=0.2 and zeta=0.4 are placed at y > 4 (outside the
+    visible range) and disappear silently; shift them inside the visible axes or skip
+    labels for lines that exit the view
+  - Direction arrows use triangle scatter markers rather than Bokeh native Arrow glyph
+    — consider from bokeh.models import Arrow, VeeHead for geometrically accurate
+    direction arrows
+  - Full rectangular outline preserved via p.outline_line_color = INK_SOFT; removing
+    or lightening the top/right border would improve visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "root-locus-basic · python · bokeh · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Imaginary Axis (jω)" and X-axis label "Real Axis (σ)" in dark ink at 42pt. Tick labels in INK_SOFT (#4A4A44) at 34pt — readable. Legend in top-right with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border; legend text at 28pt (below 34pt guideline but still readable).
+      Data: Real-axis locus in brand green #009E73 (thick horizontal segments). Complex branches (2 & 3) in lavender #C475FD forming smooth curves. Open-loop poles as black X markers (size=45). Stability crossings as red diamonds (#AE3030, size=35). Breakaway as blue square (#4467A3, size=30). Direction triangles visible. Damping ratio guide lines (ζ=0.6, ζ=0.8 labeled) and natural frequency arcs (ωn=1–4 labeled) in muted gray dotted lines. Engineering annotations in red and blue.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in light tokens (#F0EFE8 / #B8B7B0). Legend background uses elevated dark token (#242420). No dark-on-dark failures — all text elements use light colors against the near-black surface.
+      Data: Colors identical to light render — brand green #009E73, lavender #C475FD, red #AE3030 diamonds, blue #4467A3 square all unchanged. Direction arrows, guide lines, and annotations retain their respective colors and are clearly distinguishable. Brand green #009E73 clearly legible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 72pt, axis labels 48pt, ticks
-          36pt, annotations 24-28pt'
+        comment: Title, axis labels, and tick labels correctly sized. Legend text
+          at 28pt below 34pt guideline; damping ratio labels for zeta=0.2 and 0.4
+          placed outside visible y_range and silently disappear.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor overlap between legend and guide line labels in top-right area
+        comment: Mild crowding around x=-1 to x=0 where centroid annotation, omega_n=1
+          label, pole markers, and breakaway annotation converge; no hard overlaps
+          visible.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Locus branches visible but scatter size=6 is small; damping/frequency
-          guide lines extremely faint
+        comment: All data elements clearly visible. Locus branches form smooth curves;
+          pole X markers prominent (size=45); stability-crossing diamonds (size=35)
+          and breakaway square (size=30) easily spotted.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe. Matte red used semantically for stability
+          boundary. No red-green sole distinguishing signal.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange colorblind-safe palette with shape differentiation for
-          markers
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas use; minor issue with branch extending near y-range edge
+        comment: Canvas gate passed (3200x1800). Title proportion within guidelines.
+          No text overflow or clipping. match_aspect=True preserves geometric fidelity.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with engineering symbols: Real Axis (σ), Imaginary
-          Axis (jω)'
+        comment: 'Title format correct. Axis labels descriptive with mathematical
+          symbols: Real Axis (sigma) and Imaginary Axis (jomega).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (real-axis locus) = #009E73. Complex branches = #C475FD
+          (position 2). Stability boundary = #AE3030 (semantic danger anchor). Backgrounds
+          #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -97,21 +118,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with custom palette, Helvetica typography, clean color
-          scheme
+        comment: Well above generic default. Intentional visual hierarchy with guide
+          lines at reduced alpha. Multiple marker types encode distinct engineering
+          concepts. Direction arrows and stability boundary span show deliberate design
+          thought.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Axis lines/ticks removed, subtle grid, styled background and legend
+        comment: Grid subtle (alpha=0.12), minor ticks removed, legend has polished
+          elevated background. Full rectangular outline preserved rather than L-shaped
+          spine removal per style guide default.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Annotations at key engineering points tell a clear stability analysis
-          story
+        comment: Strong control-engineering narrative. Stability boundary prominently
+          highlighted, direction arrows show increasing-gain direction, key numeric
+          values annotated at critical points. Damping ratio and frequency guide lines
+          serve as design references without competing with data.
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +148,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus plot with pole migration through complex plane
+        comment: Correct root locus visualization in the complex plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: pole markers, locus curves, arrows, real-axis
-          segments, crossings, guide lines'
+        comment: Open-loop poles with X markers, locus branches with direction arrows,
+          real-axis segments, imaginary-axis crossings marked prominently, damping
+          ratio and natural frequency guide lines, match_aspect=True for equal axis
+          scaling.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real/imaginary axes correctly mapped, gain parameterizes curves
+        comment: Real part on x-axis, imaginary part on y-axis, branches distinguished
+          by color, gain K used in hover tooltips and annotations.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, legend labels descriptive and correct
+        comment: 'Title: root-locus-basic · python · bokeh · anyplot.ai. Legend: Real-axis
+          locus, Complex branches, Open-loop poles, Stability crossing (K=12), Breakaway
+          (K=0.63).'
     data_quality:
       score: 15
       max: 15
@@ -150,22 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all root locus aspects: branches, breakaway, complex conjugates,
-          axis crossings, asymptotes'
+        comment: 'G(s)=1/(s(s+1)(s+3)) covers all major root-locus features: real-axis
+          locus, complex-conjugate pair, stability crossing, breakaway point, asymptote
+          centroid. All 3 branches traced.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic control systems transfer function with proper engineering
-          terminology
+        comment: Classic control theory transfer function. Neutral educational domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible gain range and pole locations; analytically correct critical
-          values
+        comment: Gain swept 0 to 80 with variable density near low gains. Axis range
+          covers complete root locus.
     code_quality:
       score: 10
       max: 10
@@ -175,62 +207,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, style, save'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical computation
+        comment: Deterministic (polynomial root computation, no random elements).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. sys.path manipulation includes cleanup.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Well-organized; PIL import inline near bottom is non-blocking.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png, current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. HoverTool for interactive
+          HTML. Current Bokeh 3.x API.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, proper figure configuration, idiomatic
-          styling
+        comment: ColumnDataSource with per-point color column, HoverTool, Label and
+          Span via add_layout(), Range1d, output_file + Selenium pattern, toolbar_location=None.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: HoverTool, HTML export, Span model, active_scroll are distinctively
-          Bokeh features
+        comment: Good use of Label, Span, HoverTool, per-point coloring, match_aspect.
+          Direction arrows implemented as triangle scatter markers rather than native
+          Arrow+VeeHead glyph model.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   - columndatasource
+  - matrix-construction
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
