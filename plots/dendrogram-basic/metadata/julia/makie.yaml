@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: dendrogram-basic
+created: '2026-06-18T04:46:00Z'
+updated: '2026-06-18T05:04:29Z'
+generated_by: claude-sonnet
+workflow_run: 27736344826
+issue: 986
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Custom hierarchical clustering implemented from scratch in pure Julia — correct
+    complete-linkage agglomerative algorithm with proper DFS leaf ordering
+  - Branch segments are individually colored by species purity (single-species subtrees
+    share the species color; cross-species merges use INK_SOFT) — sophisticated visualization
+    technique
+  - vspan! background bands per species group add visual depth and reinforce cluster
+    identity at 7% alpha — distinctively Makie
+  - 'Full theme adaptation: all chrome tokens (title, axis labels, tick labels, spines,
+    legend, grid) flip correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - Canvas correctly targets 3200×1800 px via Figure(size=(1600,900)) + px_per_unit=2
+  - Clean Legend with LineElement handles shows all four visual categories (3 species
+    + Mixed)
+  - xgridvisible=false keeps only the y-grid, reducing clutter on a chart where x-positions
+    are purely ordinal
+  weaknesses:
+  - 'Palette order deviation: Versicolor assigned IMPRINT_PALETTE[3] (#4467A3 blue)
+    and Virginica assigned IMPRINT_PALETTE[2] (#C475FD lavender), swapping positions
+    2 and 3. Iris species have no strong real-world color associations, so canonical
+    1→2→3 order should be used: Setosa=#009E73, Versicolor=#C475FD, Virginica=#4467A3.'
+  - Leaf node markers (markersize=9) and internal merge node markers (markersize=7)
+    are very small relative to the 3200×1800 canvas — they add subtle polish but are
+    barely distinguishable at thumbnail scale. Consider markersize=12 for leaves and
+    markersize=9 for internals.
+  - Design Excellence is solid but not exceptional — the chart is functional and well-styled
+    but lacks a clear focal point or annotation that draws the viewer to the key story
+    (e.g., the late Setosa merge indicating it is the most distinct species).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "Iris Clustering · dendrogram-basic · julia · makie · anyplot.ai" in dark INK (#1A1A17), clearly readable. X-axis label "Sample" and Y-axis label "Distance (complete linkage)" in dark INK. Tick labels (Se1–Se5, Ve1–Ve5, Vi1–Vi5 on x; 0, 2, 4 on y) in INK_SOFT (#4A4A44), readable. Top and right spines removed; left and bottom spines in INK_SOFT. Subtle y-only grid at 15% opacity.
+      Data: Setosa subtree branches in #009E73 (brand green), Versicolor subtree in #4467A3 (blue), Virginica subtree in #C475FD (lavender). Cross-species merge branches rendered in INK_SOFT (dark gray). Three species background bands via vspan! at 7% alpha add soft colored fills behind each group. Small dot markers at leaf (markersize=9) and internal merge nodes (markersize=7). Legend on right shows all four categories with LineElement handles.
+      Legibility verdict: PASS — all title, axis labels, and tick labels are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background. Axis labels in INK token (light cream). Tick labels in INK_SOFT (#B8B7B0, light gray) — readable, no dark-on-dark failure. Spines and grid lines adapt correctly to dark chrome tokens.
+      Data: Data colors are identical to light render — Setosa branches in #009E73, Versicolor in #4467A3, Virginica in #C475FD. Mixed/cross-species branches in INK_SOFT (#B8B7B0, light gray in dark mode) — clearly visible against dark background. Species background vspan bands appear as subtle dark-tinted overlays. Legend background uses ELEVATED_BG (#242420) with light label text.
+      Legibility verdict: PASS — all text elements are readable against the dark background. No dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes with explicit font sizes; xticklabelsize=11
+          is slightly small at full canvas scale but passes legibility check
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Leaf labels well-spaced across 15 leaf positions; no overlapping
+          text or text-data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Branches clearly visible; leaf markers (markersize=9) and internal
+          markers (markersize=7) are small but identifiable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; no red-green only distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); legend placed in fig[1,2] column;
+          no clipping; good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Sample'' and ''Distance (complete linkage)'';
+          title uses correct format with descriptive prefix'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). Minor: Versicolor uses IMPRINT_PALETTE[3]
+          and Virginica uses IMPRINT_PALETTE[2] — positions 2 and 3 swapped from canonical
+          order; iris species have no real-world color associations justifying this
+          reordering'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Color-coded branches by species purity (pure subtrees get species
+          color, mixed gets INK_SOFT), background vspan bands, custom LineElement
+          legend — above default sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-grid only at 15% alpha, clean legend,
+          good whitespace — above default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color coding effectively tells the clustering story; background bands
+          reinforce groupings; hierarchy is visually clear
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dendrogram with complete-linkage agglomerative clustering
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Tree structure, branch heights proportional to merge distances, labeled
+          leaf nodes, hierarchical grouping all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: sample positions; Y-axis: Euclidean distance; all 15 leaves
+          shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Iris Clustering · dendrogram-basic · julia · makie · anyplot.ai''
+          — correct format with descriptive prefix. Legend maps species to colors
+          plus Mixed'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows complete hierarchical merge structure, species grouping, distance
+          proportionality, and mixed-cluster transitions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic Iris dataset — real, well-known, neutral; 5 samples per species
+          gives readable 15-leaf dendrogram
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 items is ideal for a readable dendrogram; Euclidean distances
+          in plausible range (~0–5)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Pure top-level script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42); clustering is deterministic on fixed dataset
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (CairoMakie, Colors, Random, RDatasets) are actively
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean custom clustering implementation; no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(joinpath(@__DIR__, 'plot-$(THEME).png'), fig; px_per_unit=2)
+          — correct
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Figure/Axis setup, primitive-based compositing (lines!,
+          scatter!), Legend with handles — good Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: vspan! for background bands, per-segment color control, Legend with
+          LineElement, fig[1,1]+fig[1,2] column layout — distinctively Makie
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - rdatasets
+  techniques:
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - dataset-loading
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - alpha-blending
