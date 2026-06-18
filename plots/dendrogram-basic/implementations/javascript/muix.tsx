@@ -1,8 +1,7 @@
 // anyplot.ai
 // dendrogram-basic: Basic Dendrogram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-18
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 83/100 | Created: 2026-06-18
 
 const t = window.ANYPLOT_TOKENS;
 
