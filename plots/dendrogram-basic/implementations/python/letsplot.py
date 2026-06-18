@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dendrogram-basic: Basic Dendrogram
-Library: letsplot | Python
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-18
 """
 
 import os
