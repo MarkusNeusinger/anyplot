@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:53Z'
-updated: '2026-06-18T02:23:53Z'
+updated: '2026-06-18T02:33:44Z'
 generated_by: claude-sonnet
 workflow_run: 27732069965
 issue: 4561
@@ -12,100 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Domain-appropriate oscilloscope aesthetic (scope-black panel inside warm chrome
-    page) is a sophisticated, intentional design choice that elevates the plot beyond
-    generic defaults.
-  - 'Uses Imprint palette members (#009E73, #C475FD) as colormap anchors and Imprint
-    cyan (#2ABCCD) for annotations — palette-aware even in continuous context.'
-  - 'Perfect spec compliance: all required features (density heatmap, NRZ simulation
-    with noise+jitter, sigmoid transitions, UI-labeled axes, measurement annotations)
-    are implemented correctly.'
-  - Realistic signal simulation with calibrated noise (5% amplitude) and jitter (3%
-    UI) parameters; 7-bit window with interior extraction avoids boundary artifacts.
-  - Clean KISS code with correct reproducibility seed; layer_tooltips() with custom
-    line/format chains showcases lets-plot's distinctive interactive feature.
+  - Domain-appropriate oscilloscope screen effect (dark panel with glowing trace density)
+    creates a visually authentic and publication-level design
+  - 'Full spec compliance: 2D density heatmap, NRZ simulation with jitter and noise,
+    eye height and width annotations'
+  - Excellent data quality with realistic NRZ parameters (noise σ=5%, jitter σ=3%)
+    and 400 overlaid traces producing a clear eye shape
+  - Theme-adaptive chrome correctly implemented — title, axis labels, and tick labels
+    flip cleanly between warm off-white and near-black backgrounds
+  - Idiomatic letsplot usage with layer_tooltips(), guide_colorbar(), and geom_raster
+    for efficient high-density raster rendering
   weaknesses:
-  - 'VQ-07: Density colormap ["#000004", "#009E73", "#C475FD", "#F0EFE8"] is a custom
-    4-stop gradient — does not match the mandated imprint_seq (green->blue) or imprint_div.
-    Replace with colors=["#000004", "#009E73", "#4467A3"] to stay Imprint-compliant
-    while preserving oscilloscope aesthetic.'
-  - 'VQ-01/VQ-02: Annotation text (geom_text(size=4)) is small and the Eye Height
-    label is crowded near the crosshair junction. Increase to size=5 and shift height
-    label further right (height_x + 0.08) for breathing room.'
-  - 'DE-03: No nominal voltage reference lines (0 V = LOW, 1 V = HIGH). Adding two
-    geom_hline dashed lines at y=0 and y=1 in INK_SOFT color with low alpha would
-    reinforce the signal-integrity story.'
+  - 'VQ-07 partial: uses a 3-stop gradient ["#000004", "#009E73", "#4467A3"] instead
+    of the prescribed imprint_seq (["#009E73", "#4467A3"]); the dark anchor is domain-motivated
+    but deviates from the strict Imprint cmap rule'
+  - 'DE-02: grid and tick removal is good, but outer chrome spines around the raster
+    panel have default appearance — explicit axis_line removal is present but a more
+    polished border treatment around the scope panel would lift refinement further'
+  - 'DE-01: oscilloscope aesthetic is strong but annotation typography (cyan size-5
+    text) could benefit from a slightly bolder weight or drop-shadow to improve legibility
+    against dense trace regions'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 outer chrome. Inner oscilloscope panel uses #000004 (near-black) — domain-appropriate layered design.
-      Chrome: Title "eye-diagram-basic · python · letsplot · anyplot.ai" in bold dark #1A1A17, ~65% plot width. Axis labels "Time (UI)" / "Voltage (V)" in #4A4A44, size=12. Tick labels in #4A4A44, size=10. All clearly readable.
-      Data: Density colormap #000004 → #009E73 → #C475FD → #F0EFE8. Two eye openings clearly visible. Cyan (#2ABCCD) measurement segments and labels (Eye Height: 0.68 V, Eye Width: 0.79 UI). Colorbar legend on right with elevated #FFFDF6 background.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "eye-diagram-basic · python · letsplot · anyplot.ai" is bold, dark-ink, centered at top (~65% width, well-proportioned). Axis labels "Time (UI)" and "Voltage (V)" in dark secondary ink (#4A4A44). Tick labels (0.0/0.5/1.0/1.5/2.0 on X; 0.0/0.5/1.0 on Y) in same secondary ink — all clearly readable. Colorbar "Trace Density" label and values (0.2–1.0) fully legible against the elevated-bg legend box.
+      Data: Dark oscilloscope panel (SCOPE_BG=#000004) hosts the 2D density heatmap. Zero-density areas are black (blending with panel), mid-density glows green (#009E73), high-density shifts to Imprint blue (#4467A3). Two characteristic eye openings are clearly visible. Dashed horizontal lines at 0 V and 1 V mark NRZ signal levels. Cyan (#2ABCCD) annotation segments and labels show Eye Width (0.79 UI) and Eye Height (0.68 V).
+      Legibility verdict: PASS — all text fully readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17. Inner panel #000004 blends slightly with dark chrome but remains distinguishable.
-      Chrome: Title and axis labels flip to light #F0EFE8 / #B8B7B0 — clearly readable on dark background. No dark-on-dark failure. Legend uses #242420 elevated background with light border.
-      Data: Colors identical to light render — density gradient unchanged (green → lavender → near-white). Cyan annotations visible and legible.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink (#F0EFE8 / #B8B7B0) — all clearly readable against the dark surface. Colorbar legend text also uses light secondary ink. No dark-on-dark failures observed.
+      Data: Oscilloscope panel remains #000004 (domain-appropriate; constant across both themes). Density gradient is visually identical to light render — black→green→blue, same eye shape, same cyan annotations. Brand green (#009E73) still visible and distinctive.
+      Legibility verdict: PASS — no dark-on-dark text; all chrome elements correctly themed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes. Annotation
-          labels (geom_text size=4) are small but legible at full resolution; potentially
-          marginal at mobile scale.
+        comment: All font sizes explicitly set; title, axis labels, ticks, legend
+          text proportional and readable at full resolution and mobile scale in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Slight crowding where Eye Height label meets crosshair junction at
-          (~1.38, 0.55). No severe collision.
+        comment: No text or element overlap; annotations positioned outside dense
+          trace regions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: geom_raster 2D histogram is ideal for high-density trace data. Density
-          gradient clearly shows trace concentration.
+        comment: Density heatmap clearly shows trace distribution; oscilloscope panel
+          contrast ensures all density levels are distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Cyan annotation on scope-black provides ample contrast. Colormap
-          is perceptually monotone.
+        comment: Black-green-blue gradient provides luminance steps distinguishable
+          under CVD; cyan annotations contrast well against the heatmap
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) x scale=4 = 3200x1800. Generous plot_margin=[40,30,20,20].
-          Legend well-placed. No overflow.
+        comment: 3200x1800 landscape canvas; plot fills canvas well; generous plot_margin=[40,30,20,20];
+          legend positioned right without crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) are descriptive with units. Title follows
-          mandated format.
+        comment: 'X: ''Time (UI)'', Y: ''Voltage (V)'' — both descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Plot backgrounds #FAF8F1/#1A1A17 correct. Chrome tokens flip correctly.
-          BUT density colormap [#000004, #009E73, #C475FD, #F0EFE8] is a custom 4-stop
-          gradient, not imprint_seq or imprint_div.'
+        comment: Uses 3-stop gradient ['#000004','#009E73','#4467A3'] instead of prescribed
+          imprint_seq ['#009E73','#4467A3']. Dark anchor is domain-motivated (scope
+          background), but deviates from strict Imprint cmap rule. Chrome is correctly
+          themed in both renders.
     design_excellence:
       score: 14
       max: 20
@@ -115,25 +112,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Domain-specific oscilloscope aesthetic with scope-black panel inside
-          warm-chrome page. Annotation lines in Imprint cyan are intentional palette
-          choice. Clearly above generic defaults.
+        comment: Domain-specific oscilloscope aesthetic (dark panel + glowing trace
+          density) is a publication-level design choice clearly above generic defaults.
+          Warm chrome contrast with dark panel is well-executed.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Tick marks hidden, axis lines hidden, grid removed (all appropriate).
-          Legend styled with elevated background. Generous margins. Room for further
-          polish (inner scope border, annotation callouts).
+        comment: Grid removed, axis lines and ticks removed, generous margins, elevated
+          legend background. Good refinement but scope panel border treatment is default;
+          explicit polish on that boundary would lift further.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Density gradient draws eye to trace-concentration regions. Eye measurements
-          annotated with exact values. Could be strengthened with reference lines
-          at nominal 0V/1V NRZ levels.
+        comment: Density coloring naturally guides the eye to high-traffic trace regions;
+          annotated eye measurements (height=0.68V, width=0.79UI) provide quantitative
+          story; dashed signal-level lines add context. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D density heatmap of overlaid trace periods.
+        comment: 'Correct: 2D density heatmap overlaying NRZ signal traces — authentic
+          eye diagram'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color-intensity density heatmap, time axis in UI, NRZ signal with
-          noise+jitter, sigmoid transitions, optional eye height/width annotations
-          — all present.
+        comment: Color intensity via density heatmap; time axis in UI; voltage axis
+          with NRZ levels; Gaussian noise; jitter on transition times; sigmoid filter
+          for bandwidth limiting; optional eye measurements annotated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in UI [0,2], Y=voltage, fill=trace density. 2-UI window correct.
+        comment: X=time (UI), Y=voltage (V), fill=density — all correctly mapped;
+          axes cover full signal range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'eye-diagram-basic · python · letsplot · anyplot.ai'.
-          Colorbar labeled 'Trace Density'.
+        comment: 'Title: ''eye-diagram-basic · python · letsplot · anyplot.ai'' —
+          correct format; legend ''Trace Density'' with colorbar is appropriate'
     data_quality:
       score: 15
       max: 15
@@ -174,22 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: NRZ eye pattern, both eye openings, density gradient, measurement
-          annotations — all key features covered.
+        comment: 'Shows all eye diagram features: overlapping traces, density variation,
+          clear eye opening, jitter (transitional blur), noise (speckle), NRZ bit
+          transitions, 2 UI window'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Noise sigma 5% amplitude, jitter sigma 3% UI, sigmoid transitions
-          — realistic engineering parameters. Neutral technical context.
+        comment: Realistic NRZ signal integrity scenario with 400 traces, 150 samples/UI,
+          σ_noise=5%, σ_jitter=3% — values typical for PCB/SerDes signal integrity
+          analysis
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 traces (within 200-500 spec range), 150 samples/UI (within 100-200
-          range), 2-UI window, 0-1V NRZ levels.
+        comment: Voltage range [-0.3, 1.3] V with 0/1 NRZ levels; 2 UI time window;
+          all values correct for NRZ signal integrity context
     code_quality:
       score: 10
       max: 10
@@ -199,52 +200,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code, no functions or classes.
+        comment: 'Linear structure: imports → theme tokens → data generation → 2D
+          histogram → annotation DataFrames → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 17 lets-plot symbols imported are used; os/numpy/pandas all used.
+        comment: All imports used; no extraneous packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic ggplot-style layer composition. Real tooltips (not
-          simulated). Good variable naming.
+        comment: Well-structured; complexity appropriate for the eye measurement algorithm;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: geom_raster for dense regular grid (correct over geom_tile), scale_fill_gradientn
-          for multi-stop colormap, guide_colorbar with barwidth/barheight/nbin, all
-          idiomatic.
+        comment: ggplot() + geom_raster() + scale/theme layers — idiomatic grammar
+          of graphics; guide_colorbar() for colorbar control; layer_tooltips() for
+          interactive tooltips
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: layer_tooltips() with per-field .format() and .line() chains is lets-plot-specific.
-          Dual PNG+HTML output uses interactive capability. guide_colorbar(nbin=256)
-          shows library depth.
+        comment: layer_tooltips() with .format() and .line() chains is distinctively
+          letsplot; geom_raster for efficient large-array rendering; ggsave scale=4
+          for high-res export; HTML output for interactivity
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -256,10 +258,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - binning
   - normalization
   styling:
   - custom-colormap
-  - minimal-chrome
