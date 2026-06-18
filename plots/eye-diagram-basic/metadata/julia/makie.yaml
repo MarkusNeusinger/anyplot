@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: eye-diagram-basic
 created: '2026-06-18T02:30:03Z'
-updated: '2026-06-18T02:36:52Z'
+updated: '2026-06-18T02:49:03Z'
 generated_by: claude-sonnet
 workflow_run: 27732202402
 issue: 4561
@@ -12,42 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Correct density heatmap eye diagram with clear two-eye openings and meaningful
-    green-to-blue (imprint_seq) density gradient
-  - All font sizes explicitly set with full theme-adaptive chrome — titlecolor, xlabelcolor,
-    ylabelcolor, tick colors all properly wired to INK/INK_SOFT tokens in both themes
-  - 'Perfect spec compliance: 500 NRZ traces, 150 samples/UI, noise_sigma=5%, jitter_sigma=3%,
-    sigmoid (raised-cosine-like) transitions, log-scale density'
-  - 'Clean KISS code structure: theme tokens → simulation → 2D histogram → heatmap
-    → save; reproducible with Random.seed!(42)'
-  - NaN cells rendered as PAGE_BG (theme-adaptive) gives clean eye openings that blend
-    with the canvas surface — intentional and correct
+  - Density heatmap approach exactly matches spec requirement for color intensity
+    showing trace overlap frequency
+  - 'Full theme-adaptive chrome: all INK/INK_SOFT/INK_MUTED tokens applied to every
+    text element, both renders clean and readable'
+  - Imprint sequential colormap (brand green → blue) correctly applied for continuous
+    density data
+  - Optional eye height and eye width annotations implemented with dashed reference
+    lines and measurement text
+  - Log-scale density reveals subtle trace distribution from sparse to dense regions
+  - Canvas exactly 3200×1800 px via size=(1600,900) + px_per_unit=2; canvas gate passed
+  - All font sizes explicitly set (title dynamic, axis labels 14, ticks 12, annotations
+    10)
+  - NaN handling via nan_color=PAGE_BG makes empty eye openings transparent to background,
+    theme-correct in both renders
+  - Reproducible with Random.seed!(42); deterministic data generation
+  - 'Clean KISS structure: no functions or classes, linear flow throughout'
   weaknesses:
-  - Heatmap bin resolution (160x120) produces visible blocky pixelation at eye opening
-    boundaries — increase N_BINS_T to at least 300 and N_BINS_V to at least 200 for
-    smoother density rendering on the 3200x1800 canvas
-  - 'No data storytelling layer: the eye diagram is clear but passive — the viewer
-    must self-interpret the open eye pattern; consider adding optional eye-height
-    annotation (dashed horizontal lines at 20% and 80% voltage) and eye-width annotation
-    (dashed vertical lines at 0.5 and 1.5 UI) as referenced in the spec''s ''Optionally
-    annotate'' note'
-  - DE-03 limited by absence of visual hierarchy markers — a brief subtitle or reference
-    lines would contextualize the clean eye opening as evidence of good signal integrity
+  - 'LM-01 slightly below full marks: uses Makie idioms correctly but `size=` vs `resolution=`
+    migration already done (good); could leverage Observables or Recipe system for
+    more distinctive Makie usage'
+  - 'LM-02: distinctive Makie features present (colsize! Relative, nan_color, RGBAf)
+    but could demonstrate more unique Makie capabilities like custom recipes or band!
+    for confidence regions'
+  - 'VQ-01 minor: annotation text at fontsize=10 (20px effective) is on the small
+    side — borderline readable at 400px mobile width'
+  - 'DE-02 could be refined: grid opacity at 12% is within range but colorbar width=18
+    is narrow; a slightly wider colorbar (22-24) would improve readability of tick
+    labels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "eye-diagram-basic · julia · makie · anyplot.ai" in dark ink, clearly readable. X-axis label "Time (UI)" and Y-axis label "Voltage (V)" in dark ink. Tick labels in INK_SOFT (#4A4A44). Colorbar label "Trace Density (log scale)" readable on right side.
-      Data: Two eye openings visible as warm off-white (NaN=PAGE_BG) gaps at ~0.2–0.8 UI and ~1.2–1.8 UI, from ~0.2–0.8 V. Dense regions (transition crossings) rendered in deep blue (#4467A3 end of imprint_seq). Lower-density regions in brand green (#009E73 start of imprint_seq). Log-scale density gradient clearly distinguishable. Heatmap shows some visible block pixelation (~20x15 px bins).
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — matches the required surface exactly; not pure white.
+      Chrome: Title "eye-diagram-basic · julia · makie · anyplot.ai" is dark and clearly readable at top. X-axis label "Time (UI)" and Y-axis label "Voltage (V)" appear dark against the light background. Tick labels (0.0/0.5/1.0/1.5/2.0 on x; 0.0/0.5/1.0 on y) are slightly softer dark (#4A4A44 INK_SOFT) but fully readable. Top and right spines removed; left and bottom spines in INK_SOFT.
+      Data: Density heatmap in Imprint sequential colormap (brand green #009E73 at low density → blue #4467A3 at high density). Two characteristic eye openings clearly visible as empty (off-white NaN areas) surrounded by green-to-blue density bands. Horizontal dense bands at ~0V and ~1V (NRZ levels); diagonal crossing zones at 0.5 UI and 1.5 UI. Dashed reference lines at 0.20V and 0.80V (eye height) and at 0.5 UI and 1.5 UI (eye width) visible as subtle muted gray. "Eye height: 0.60 V" text annotation visible near top-right of left eye; "Eye width" label near bottom of plot. Colorbar on right shows trace density log scale.
+      Legibility verdict: PASS — all title, axis labels, tick labels, colorbar label, and annotation text are readable against the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and all axis/tick labels are light-colored (INK = #F0EFE8 in dark mode), clearly readable against the dark background. Colorbar tick labels and label visible. No dark-on-dark failures observed — tick labels are distinctly lighter than the background.
-      Data: Eye openings now appear as near-black voids (NaN=PAGE_BG=#1A1A17), blending into the dark background — correct and intentional. Data colors (green→blue imprint_seq gradient) are identical to light render. The dense blue regions at transition crossings remain clearly visible. Sparse outer noise scatter in brand green.
-      Legibility verdict: PASS — all chrome is light on dark; no dark-on-dark failures; data colors identical to light render
+      Background: Warm near-black #1A1A17 — matches the required dark surface exactly; not pure black.
+      Chrome: Title text is light-colored (#F0EFE8 INK) and clearly readable. Axis labels and tick labels appear as light gray (#B8B7B0 INK_SOFT) against the dark background — all readable. Top and right spines removed; remaining spines in INK_SOFT light gray.
+      Data: The same Imprint sequential colormap (green #009E73 → blue #4467A3) is used — data colors are identical to the light render, confirming only chrome flipped. Eye openings now appear as very dark near-black areas (NaN rendered as #1A1A17) surrounded by the green-to-blue density heatmap — strong visual contrast maintained. Dashed reference lines appear as subtle light-gray (#B8B7B0 at 65% opacity) — visible. Annotation text in #A8A79F (INK_MUTED dark token) appears as muted but readable light gray. Colorbar tick labels appear light.
+      Legibility verdict: PASS — all text elements render light against the dark background; no dark-on-dark failures detected. Data colors identical between themes.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -55,84 +62,86 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: titlesize computed from length formula,
-          xlabelsize=14, ylabelsize=14, xticklabelsize=12, yticklabelsize=12, colorbar
-          labelsize=12/10. Proportional and readable in both themes.'
+        comment: 'All font sizes explicitly set (titlesize dynamic, xlabelsize/ylabelsize=14,
+          tick labels=12, annotations=10). Title ~70-75% width — expected for 46-char
+          mandated title. All text readable in both themes. Minor deduction: annotation
+          text at fontsize=10 (20px effective) is borderline small at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Colorbar properly positioned in layout
-          column 2.
+        comment: No overlapping elements. Annotations placed in distinct regions (y=0.82
+          and y=-0.24). Colorbar separate from plot.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density heatmap clearly visible and meaningful. Minor deduction for
-          blocky pixelation from 160x120 bin grid on 3200x1800 canvas — each bin is
-          ~20x15 display pixels, creating jagged eye boundaries.
+        comment: Density heatmap clearly visible with full range from sparse (green)
+          to dense (blue). Dashed reference lines appropriately subtle. Eye openings
+          clearly visible as empty regions.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe. Good luminance contrast
-          between low and high density regions.
+        comment: Imprint sequential colormap (green→blue) is CVD-safe. Strong luminance
+          contrast between empty eye openings and dense trace regions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). colsize!(fig.layout, 1, Relative(0.90))
-          gives 90% to plot, 10% to colorbar. Balanced margins. No clipping.
+        comment: Canvas gate passed (3200x1800). colsize! Relative(0.90) gives 90%
+          to plot, 10% to colorbar. Well-balanced layout, no content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) — descriptive with units. Title matches
-          required format.
+        comment: 'X: ''Time (UI)'' with units. Y: ''Voltage (V)'' with units. Colorbar:
+          ''Trace Density (log scale)'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (cgrad #009E73→#4467A3) correctly used for single-polarity
-          continuous density data. NaN color = PAGE_BG (theme-adaptive). Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) confirmed in both renders. Chrome tokens
-          fully wired.'
+        comment: 'ANYPLOT_SEQ = cgrad([#009E73, #4467A3]) is the correct imprint_seq
+          colormap. Background #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.
+          Data colors identical between renders.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: imprint_seq colormap deliberate, NaN=PAGE_BG is
-          elegant, colorbar properly integrated, L-spine frame. Clean and professional
-          but not exceptional.'
+        comment: 'Strong design: log-scale density with Imprint sequential colormap
+          on warm background is professional and distinctive. Carefully calibrated
+          annotation with muted colors. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, xgridcolor/ygridcolor at 0.12 alpha (subtle),
-          colorbar width=18 (narrow but readable), proper whitespace via colsize.
+        comment: 'Good refinement: top/right spines removed, grid at 12% opacity,
+          colorbar narrowed (width=18). Custom tick positions. Some room to improve:
+          colorbar slightly narrow, minor grid opacity tuning possible.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Eye pattern is displayed clearly but passively — no annotations for
-          eye height/width, no subtitle contextualizing signal quality, no reference
-          lines to guide viewer interpretation.
+        passed: true
+        comment: 'Good storytelling: dashed reference lines at eye boundary voltages
+          (0.20V, 0.80V) and eye center positions (0.5, 1.5 UI) actively mark the
+          signal quality measurements. ''Eye height: 0.60 V'' annotation is an explicit
+          insight. Log scale reveals subtle density variation.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,30 +151,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density heatmap eye diagram — 2D histogram approach is standard
-          for eye diagrams.
+        comment: Correct eye diagram implemented via density heatmap — matches spec
+          requirement for 'color intensity (density heatmap coloring)' explicitly.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density heatmap coloring, time in UI, voltage levels, NRZ simulation,
-          Gaussian noise (5%), jitter (3%), sigmoid transitions, 500 traces, 150 samples/UI
-          — all present.
+        comment: 'All features present: 500 traces (spec: 200-500), Gaussian noise
+          sigma=5%, jitter sigma=3% UI, bandwidth-limited sigmoid transitions, time
+          axis in UI, voltage axis 0-1V NRZ, optional eye height/width annotations
+          implemented.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time (0–2 UI) on X-axis, Voltage (-0.30–1.30 V) on Y-axis. Correctly
-          mapped.
+        comment: X=time [0,2] UI, Y=voltage [-0.30,1.30]V, density mapped to Imprint
+          sequential color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'eye-diagram-basic · julia · makie · anyplot.ai' — exact
-          required format. Colorbar is the appropriate legend for continuous density.
+        comment: Title 'eye-diagram-basic · julia · makie · anyplot.ai' — correct
+          format. Colorbar is the appropriate scale indicator for density; no categorical
+          legend needed.
     data_quality:
       score: 15
       max: 15
@@ -175,21 +186,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both NRZ levels (0V and 1V), transition crossings, noise scatter
-          at extremes, jitter spread at transitions, 2 complete UI eye openings.
+        comment: 'Shows all eye diagram aspects: double-eye openings, horizontal NRZ
+          level bands, diagonal transition zones, jitter-induced edge spreading, noise
+          broadening. Log-scale density reveals full dynamic range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal, telecom/PCIe engineering context, neutral and comprehensible.
+        comment: NRZ signal integrity simulation is a real, neutral telecommunications
+          engineering scenario. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voltage -0.30 to 1.30 V (headroom around 0/1 NRZ levels), noise 5%
-          and jitter 3% are realistic SerDes parameters.
+        comment: Signal amplitude 0-1V, jitter 3% UI, noise 5% amplitude — exactly
+          matches spec recommendations. Y-axis extended to [-0.30, 1.30] to accommodate
+          noise excursions.
     code_quality:
       score: 10
       max: 10
@@ -199,34 +213,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: tokens → simulation → histogram → plot → save. No functions
-          or classes.'
+        comment: 'Clean linear flow: imports → theme tokens → simulation params →
+          data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set.
+        comment: Random.seed!(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: using CairoMakie, Colors, Random — all three are used.
+        comment: Only CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized ops with @. and .+=, eachindex loop for histogram, clamp
-          for bounds — idiomatic Julia. No over-engineering.
+        comment: Clean, well-organized with meaningful constant names. Efficient density
+          histogram with clamp bounds. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct naming
-          and API.
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2) — correct. Uses size=
+          (Makie 0.20+ API) appropriately.
     library_mastery:
       score: 7
       max: 10
@@ -236,21 +250,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: heatmap!, Colorbar, Axis, Figure with layout grid, colsize!, xlims!/ylims!,
-          RGBAf for grid opacity — idiomatic Makie patterns throughout.
+        comment: 'Correctly uses Figure/Axis layout grid, heatmap! with nan_color,
+          Colorbar linked to hm, hlines!/vlines!/text! primitives, colsize! for layout
+          control. Uses size= (current API). Minor gap: could use band! or more Makie-native
+          constructs.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: nan_color=PAGE_BG for theme-adaptive NaN rendering (Makie-specific),
-          colsize!(fig.layout, 1, Relative(0.90)) layout proportioning, RGBAf() for
-          inline RGBA — uses Makie-distinctive features.
-  verdict: REJECTED
+        comment: 'Uses Makie-distinctive features: colsize!(fig.layout, 1, Relative(0.90))
+          layout system, nan_color on heatmap for transparent empty cells, RGBAf for
+          typed color construction, cgrad for colormap. Good but not pushing Makie''s
+          unique strengths fully.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
@@ -260,3 +278,4 @@ impl_tags:
   - binning
   styling:
   - custom-colormap
+  - alpha-blending
