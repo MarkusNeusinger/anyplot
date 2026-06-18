@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:23:37Z'
-updated: '2026-06-18T00:03:29Z'
+updated: '2026-06-18T00:19:35Z'
 generated_by: claude-sonnet
 workflow_run: 27726875032
 issue: 4414
@@ -12,49 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Complete root locus implementation with mathematically verified data (Routh-Hurwitz
-    K=12, breakaway s≈-0.451)
-  - Rich interactive hover showing σ, jω, and gain K simultaneously via customdata
-    — a Plotly-distinctive feature
-  - 'Excellent data storytelling: stability boundary, direction arrows, and quantitative
-    annotations create an educational narrative'
-  - All theme-adaptive chrome tokens correctly applied; both renders fully legible
-  - Square canvas with scaleanchor=x preserves equal-axis geometry essential for complex
-    plane interpretation
+  - Mathematically accurate root locus computation with correct nearest-neighbor branch
+    tracking across 1500 gain steps
+  - 'All spec features implemented: poles, stability boundary, reference damping-ratio
+    and natural-frequency lines, direction arrows, critical point annotations'
+  - 'Excellent use of Plotly-specific interactivity: hover shows K values per point
+    on each branch; HTML output with embedded JS'
+  - Classic control theory transfer function G(s)=1/[s(s+1)(s+3)] with correct critical
+    gain K=12 (Routh-Hurwitz) and breakaway point at sigma=-0.451
+  - Full Imprint palette compliance and complete theme-adaptive chrome in both light
+    and dark renders
+  - Perfect scores in Spec Compliance (15/15), Data Quality (15/15), and Code Quality
+    (10/10)
   weaknesses:
-  - 'ζ=0.6 and ζ=0.8 annotation labels overlap with the legend box entries in the
-    upper-left area; ζ=0.4 is at the legend right border. Fix: move legend to lower-right
-    corner (x=0.99, y=0.01, xanchor=right, yanchor=bottom) to free up upper-left for
-    damping-ratio annotations.'
-  - 'The subtitle annotation (G(s) = 1 / s(s+1)(s+3) at paper y=1.01) is visually
-    crowded against the ζ=0.2 label at the top of the plot. Fix: place subtitle at
-    xref=paper, yref=paper, x=0.97, y=0.03, xanchor=right, yanchor=bottom (lower-right,
-    away from data).'
-  - 'ζ/ωn annotation fontsizes are 9px (36 source-px) — just below the 10px floor
-    for tertiary text. Fix: increase to 10px.'
-  - 'LM-02: customdata hover is Plotly-distinctive but HTML interactivity potential
-    is underused. Consider adding an updatemenu dropdown to toggle reference lines
-    on/off.'
+  - 'Annotation crowding in upper plot area: zeta=0.2 label (approx data coords -1.06,
+    5.3) and omega_n=5 label (-0.78, 5.1) are too close and visually conflict; spread
+    zeta and omega_n labels further apart by increasing y-offset from +0.12 to +0.3
+    or limiting number of reference lines shown'
+  - Legend renders in upper-left despite code specifying x=0.99, y=0.01 (lower-right),
+    likely because constrain=domain with scaleanchor=x overrides paper-coordinate
+    legend placement, causing legend to overlap zeta=0.4/0.6 labels; fix by using
+    x=0.02, y=0.98, xanchor=left, yanchor=top to explicitly target the upper-left
+    where Plotly actually renders it
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "root-locus-basic · python · plotly · anyplot.ai" clearly readable in dark ink #1A1A17; axis labels "Real Axis (σ)" and "Imaginary Axis (jω)" readable in #1A1A17; tick labels readable in #4A4A44; ζ/ωn annotation labels in #6B6A63; legend box uses #FFFDF6 elevated background with #4A4A44 border and text
-      Data: Branch 1 in #009E73 (brand green), Branch 2 in #C475FD (lavender), Branch 3 in #4467A3 (blue); open-loop poles as × in #1A1A17; jω crossing diamonds in #AE3030; breakaway star in #BD8233; real-axis segments in rgba(0,158,115,0.18); stability boundary as pink shaded band
-      Crowding issue: ζ=0.6 and ζ=0.8 labels overlap with legend box entries in the upper-left; ζ=0.4 is at the legend right border; subtitle at paper y=1.01 is crowded against ζ=0.2 label
-      Legibility verdict: PASS (all text readable, but annotation crowding reduces visual clarity in upper-left area)
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface, not pure white.
+      Chrome: Title "root-locus-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Real Axis (sigma)" and "Imaginary Axis (jomega)" in dark ink. Tick labels in INK_SOFT (#4A4A44). Legend box in elevated-background (#FFFDF6) with border — all readable. Some annotation text crowding near zeta=0.2 and omega_n=5 in upper plot area reduces individual label clarity but remains legible.
+      Data: Branch 1 in brand green #009E73, Branch 2 in lavender #C475FD, Branch 3 in blue #4467A3 — Imprint positions 1-3. Open-loop poles as dark cross markers. jomega-axis crossing diamonds in #AE3030. Breakaway star in #BD8233. Direction arrows on each branch.
+      Legibility verdict: PASS (minor crowding in upper annotation region does not prevent reading)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title readable in light #F0EFE8; axis labels in #F0EFE8; tick labels in #B8B7B0; tertiary annotations (ζ, ωn) in #A8A79F; legend box uses #242420 elevated background with #B8B7B0 border; no dark-on-dark failures observed
-      Data: Branch colors identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue all clearly distinguishable against dark background; jω crossing diamonds in #AE3030 (matte red, visible on dark bg); breakaway star in #BD8233 (ochre, visible)
-      Same annotation crowding in upper-left area as light render
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title and axis labels in light cream (#F0EFE8), tick labels in #B8B7B0, legend text in #B8B7B0 — all readable against dark background. No dark-on-dark failures detected. Grid lines are low-opacity light rgba. Legend background uses dark elevated token #242420.
+      Data: Branch colors identical to light render — green #009E73, lavender #C475FD, blue #4467A3 — confirming data colors are theme-invariant. Open-loop pole markers display in light ink (F0EFE8). jomega-crossing diamonds and breakaway star retain same data colors as light render.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -62,55 +59,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 16px, axis labels 12px, ticks
-          10px at scale=4). Minor deduction: ζ/ωn annotation labels at 9px (36 source-px)
-          are slightly below the 10px guideline for tertiary text.'
+        comment: All font sizes explicitly set (title 16pt, axis labels 12pt, ticks
+          10pt, annotations 10pt). Readable in both themes. Minor deduction for crowded
+          annotation area.
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
-        passed: false
-        comment: ζ=0.6 and ζ=0.8 labels overlap with legend box entries in the upper-left;
-          ζ=0.4 is at the legend right border; subtitle annotation at paper y=1.01
-          is crowded against ζ=0.2 label.
+        passed: true
+        comment: 'Moderate overlap: zeta=0.2 and omega_n=5 labels conflict in upper
+          data area; legend box overlaps zeta=0.4/0.6 labels. Main branch data unaffected.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All data elements well-sized: branch lines 2.5px, × poles size=16,
-          diamond markers size=14, star size=18. Direction arrows clearly visible.'
+        comment: Branch lines, pole markers, jomega-crossing diamonds, breakaway star,
+          and direction arrows all clearly visible at correct sizes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Red and ochre markers use PAGE_BG border
-          for definition.
+        comment: Imprint palette is CVD-safe; redundant encoding (symbol shapes) removes
+          red-green ambiguity.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas ideal for complex plane. Margins l=80, r=40,
-          t=80, b=60 are balanced. No canvas edge clipping.
+        comment: 'Square 2400x2400 appropriate for complex plane. Canvas gate passed.
+          Minor deduction: legend renders upper-left despite code intending lower-right
+          due to scaleanchor interaction.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real Axis (σ) and Imaginary Axis (jω) with proper control-theory
-          notation.
+        comment: Real Axis (sigma) and Imaginary Axis (jomega) — descriptive with
+          engineering notation.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Branch 1: #009E73, Branch 2: #C475FD, Branch 3: #4467A3. Background
-          #FAF8F1/#1A1A17. All chrome tokens theme-adaptive. Data colors identical
-          across both renders.'
+        comment: 'First series #009E73, branches 2-3 follow Imprint positions 2-3.
+          Critical markers use Imprint positions 4-5 for semantic roles. Both backgrounds
+          correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,24 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: layered visual hierarchy (reference lines
-          → stability indicator → branches → key points). Not yet publication-ready
-          due to annotation crowding reducing polish.'
+        comment: 'Above configured default: engineering-specific reference grid (zeta-lines,
+          omega_n-arcs), stability boundary band, direction arrows, annotated critical
+          points, themed legend box.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (15% opacity), custom legend box with ELEVATED_BG, INK_SOFT
-          zero lines. All four spines retained (appropriate for complex plane).
+        comment: Subtle dashed/dotted reference lines at low opacity, theme-adaptive
+          grid at rgba 15%, elevated-background legend frame. Deduction for annotation
+          crowding.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Stability boundary as central focal point, direction arrows guide
-          through pole migration, K=12 and K≈0.63 annotated, damping/frequency reference
-          lines provide navigational context.
+        comment: Stability boundary red band as focal point, K=12 annotated, breakaway
+          labeled, direction arrows guide viewer through pole migration. Control theory
+          narrative clearly communicated.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus for 3-pole open-loop system, all branches present.
+        comment: Correct root locus plot in complex plane.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Open-loop poles (×), locus branches with direction arrows, real-axis
-          segments, imaginary-axis crossing, damping/frequency reference grid, equal-axis
-          scaling.
+        comment: 'All spec requirements met: open-loop poles (x markers), locus branches,
+          direction arrows, real axis segments, imaginary axis crossing, damping ratio
+          lines, natural frequency arcs, equal axis scaling.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on σ axis, imaginary part on jω axis, all data visible
-          within ±5.5 range.
+        comment: Real axis on sigma (x), imaginary axis on jomega (y). Equal scaling
+          via scaleanchor. All three branches shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title root-locus-basic · python · plotly · anyplot.ai correct. Legend
-          labels identify branches by origin pole plus special markers.
+        comment: 'Title: root-locus-basic · python · plotly · anyplot.ai. Legend labels
+          match data.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all root locus features: 3 branches with distinct behaviors,
-          breakaway, jω crossing, real-axis segment, direction of increasing gain.'
+        comment: 'Shows all aspects: three branch types, real axis segments, stability
+          boundary crossing, breakaway point, direction of increasing gain, reference
+          damping/frequency lines.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s) = 1/(s(s+1)(s+3)) is a classical PID design textbook example;
-          neutral engineering context.
+        comment: Classic control theory transfer function G(s)=1/[s(s+1)(s+3)]. Neutral
+          scientific/educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct: Routh-Hurwitz gives K_crit=12 with crossings
-          at ±j√3; breakaway at s≈-0.451.'
+        comment: Poles at 0, -1, -3 are standard. Critical gain K=12 (Routh-Hurwitz)
+          and jomega crossings at +/-j*sqrt(3) are mathematically correct. Breakaway
+          at sigma=-0.451 correctly computed.
     code_quality:
       score: 10
       max: 10
@@ -202,36 +202,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: Imports → constants → data → traces → layout → save.
-          No functions or classes.'
+        comment: Imports -> data computation -> traces -> layout -> save. No unnecessary
+          abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: np.roots on fixed polynomial coefficients.'
+        comment: 'Fully deterministic: polynomial root computation is algebraic, no
+          random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: Only os, numpy, and plotly.graph_objects imported; all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Root-tracking greedy-assignment loop is appropriate for branch-continuity
-          correctness. No over-engineering.
+        comment: Clean, Pythonic. Nearest-neighbor branch-tracking loop is appropriately
+          complex. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html both saved. Current Plotly
-          API used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -239,18 +239,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of customdata for K values in hover tooltips, add_annotation
-          with pixel-based axref/ayref for direction arrows, add_shape for stability
-          boundary.
+        comment: Uses go.Figure with add_trace, add_annotation, add_shape, update_layout
+          idiomatically. Custom hovertemplate with customdata for per-point K values
+          is idiomatic Plotly.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: hovertemplate with customdata shows σ, jω, and K on hover; write_html
-          for interactive export; pixel-based annotation arrows. Could push further
-          with updatemenu for toggling reference lines.
-  verdict: REJECTED
+        comment: Rich interactive hover showing K value at each point along root locus
+          branches (Plotly-only). Pixel-coordinate arrow annotations (axref=pixel,
+          ayref=pixel). HTML output with embedded JS.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
