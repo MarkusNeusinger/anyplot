@@ -1,8 +1,16 @@
-""" pyplots.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-20
+Quality: 89/100 | Updated: 2026-06-17
 """
+
+import sys
+
+
+# sys.path[0] is the script directory — remove it so 'plotnine' resolves to the installed package
+sys.path.pop(0)
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -35,8 +43,24 @@ from plotnine import (
 )
 
 
-# Data - Transfer function G(s) = 1 / [s(s+1)(s+3)]
-# Open-loop poles at s = 0, -1, -3; no zeros
+# Theme tokens — Imprint style guide
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — branch colors at positions 1, 2, 3
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+branch_colors = IMPRINT_PALETTE[:3]
+
+# Stability region shading — theme-adaptive warm tints
+STABLE_FILL = "#E8F5E9" if THEME == "light" else "#0F2015"
+UNSTABLE_FILL = "#FFEBEE" if THEME == "light" else "#200F0F"
+
+# Transfer function G(s) = 1 / [s(s+1)(s+3)]
+# Open-loop poles at s=0, -1, -3; no open-loop zeros
 # Characteristic equation: s^3 + 4s^2 + 3s + K = 0
 open_loop_poles = np.array([0.0, -1.0, -3.0])
 open_loop_zeros = np.array([])
@@ -65,7 +89,7 @@ for K in gains:
 
 df = pd.DataFrame(branch_data)
 
-# Find imaginary axis crossings (stability boundary)
+# Imaginary axis crossings (stability boundary)
 crossings = []
 for branch in df["branch"].unique():
     branch_df = df[df["branch"] == branch].reset_index(drop=True)
@@ -80,207 +104,184 @@ for branch in df["branch"].unique():
             cross_gain = branch_df.loc[i - 1, "gain"] + frac * (branch_df.loc[i, "gain"] - branch_df.loc[i - 1, "gain"])
             crossings.append({"real": 0.0, "imaginary": cross_imag, "gain": cross_gain})
 
-# Find breakaway point on the real axis (where branches depart from real axis)
-# dK/ds = 0 => derivative of -(s^3 + 4s^2 + 3s) = -(3s^2 + 8s + 3) = 0
+# Breakaway point: dK/ds = 0  →  -(3s^2 + 8s + 3) = 0
 breakaway_roots = np.roots([3, 8, 3])
 breakaway_s = breakaway_roots[(breakaway_roots > -1) & (breakaway_roots < 0)][0]
 breakaway_K = -(breakaway_s**3 + 4 * breakaway_s**2 + 3 * breakaway_s)
 
-# Real axis segments: to the left of an odd number of real poles+zeros
+# Real axis segments on the root locus (left of odd count of poles+zeros)
 real_features = np.sort(np.concatenate([open_loop_poles, open_loop_zeros]))
-real_axis_segments = []
-x_min_axis = -5.0
-test_points = np.linspace(x_min_axis, 1.0, 2000)
-for x in test_points:
-    count = np.sum(real_features >= x)
-    if count % 2 == 1:
-        real_axis_segments.append(x)
+real_axis_segs = []
+for x in np.linspace(-5.0, 1.0, 2000):
+    if np.sum(real_features >= x) % 2 == 1:
+        real_axis_segs.append(x)
 
-# Build segment intervals
 seg_intervals = []
-if len(real_axis_segments) > 0:
-    seg_start = real_axis_segments[0]
-    for i in range(1, len(real_axis_segments)):
-        if real_axis_segments[i] - real_axis_segments[i - 1] > 0.01:
-            seg_intervals.append((seg_start, real_axis_segments[i - 1]))
-            seg_start = real_axis_segments[i]
-    seg_intervals.append((seg_start, real_axis_segments[-1]))
+if real_axis_segs:
+    seg_start = real_axis_segs[0]
+    for i in range(1, len(real_axis_segs)):
+        if real_axis_segs[i] - real_axis_segs[i - 1] > 0.01:
+            seg_intervals.append((seg_start, real_axis_segs[i - 1]))
+            seg_start = real_axis_segs[i]
+    seg_intervals.append((seg_start, real_axis_segs[-1]))
 
 seg_df = pd.DataFrame(seg_intervals, columns=["x_start", "x_end"])
 seg_df["y"] = 0.0
 
-# Arrow indicators for direction of increasing gain
+# Direction-of-increasing-gain arrows on each branch
 arrows = []
 for branch in df["branch"].unique():
-    branch_df = df[df["branch"] == branch].reset_index(drop=True)
-    mid_idx = len(branch_df) * 2 // 5
-    if mid_idx > 0:
+    b_df = df[df["branch"] == branch].reset_index(drop=True)
+    mid = len(b_df) * 2 // 5
+    if mid > 0:
         arrows.append(
             {
-                "x": branch_df.loc[mid_idx - 1, "real"],
-                "y": branch_df.loc[mid_idx - 1, "imaginary"],
-                "xend": branch_df.loc[mid_idx, "real"],
-                "yend": branch_df.loc[mid_idx, "imaginary"],
+                "x": b_df.loc[mid - 1, "real"],
+                "y": b_df.loc[mid - 1, "imaginary"],
+                "xend": b_df.loc[mid, "real"],
+                "yend": b_df.loc[mid, "imaginary"],
             }
         )
 
 arrow_df = pd.DataFrame(arrows)
 
-# Poles markers
+# Markers: open-loop poles and breakaway point
 pole_df = pd.DataFrame({"real": open_loop_poles, "imaginary": np.zeros(len(open_loop_poles)), "type": "Open-loop Pole"})
-
-crossing_df = pd.DataFrame(crossings)
-
-# Breakaway point marker
 breakaway_df = pd.DataFrame([{"real": breakaway_s, "imaginary": 0.0, "type": "Breakaway Point"}])
-
-# Combined markers for legend via scale_shape_manual
 marker_df = pd.concat([pole_df, breakaway_df], ignore_index=True)
 
-# Damping ratio lines — radiate from origin into the LEFT half-plane (stable region)
-damping_ratios = [0.2, 0.4, 0.6, 0.8]
-damp_lines = []
+crossing_df = pd.DataFrame(crossings)
+crossing_label_df = crossing_df.copy()
+crossing_label_df["label"] = crossing_label_df["gain"].apply(lambda g: f"K={g:.1f}")
+
+# Damping ratio guide lines radiating from origin into left half-plane
 radius = 4.8
-for zeta in damping_ratios:
+damp_lines = []
+for zeta in [0.2, 0.4, 0.6, 0.8]:
     theta = np.arccos(zeta)
     x_end = -radius * zeta
-    y_end_pos = radius * np.sin(theta)
-    damp_lines.append({"x": 0, "y": 0, "xend": x_end, "yend": y_end_pos, "label": f"ζ={zeta}"})
-    damp_lines.append({"x": 0, "y": 0, "xend": x_end, "yend": -y_end_pos, "label": f"ζ={zeta}"})
+    y_pos = radius * np.sin(theta)
+    damp_lines += [
+        {"x": 0, "y": 0, "xend": x_end, "yend": y_pos, "label": f"ζ={zeta}"},
+        {"x": 0, "y": 0, "xend": x_end, "yend": -y_pos, "label": f"ζ={zeta}"},
+    ]
 
 damp_df = pd.DataFrame(damp_lines)
-
-# Damping ratio labels (placed along upper lines, offset from endpoints)
 damp_label_df = damp_df[damp_df["yend"] > 0].copy()
 damp_label_df["lx"] = damp_label_df["xend"] * 0.75
 damp_label_df["ly"] = damp_label_df["yend"] * 0.75
 
 # Natural frequency circles
-wn_values = [1.0, 2.0, 3.0, 4.0]
 wn_data = []
-for wn in wn_values:
-    theta = np.linspace(0, 2 * np.pi, 100)
-    for t in theta:
+for wn in [1.0, 2.0, 3.0, 4.0]:
+    for t in np.linspace(0, 2 * np.pi, 100):
         wn_data.append({"real": wn * np.cos(t), "imaginary": wn * np.sin(t), "wn": f"ωn={wn}"})
 
 wn_df = pd.DataFrame(wn_data)
+wn_label_df = pd.DataFrame(
+    [{"real": -0.5, "imaginary": wn + 0.2, "label": f"ωn={int(wn)}"} for wn in [1.0, 2.0, 3.0, 4.0]]
+)
 
-# Natural frequency labels (placed at top-left of each circle)
-wn_label_df = pd.DataFrame([{"real": -0.5, "imaginary": wn + 0.2, "label": f"ωn={int(wn)}"} for wn in wn_values])
-
-# Crossing annotations
-crossing_label_df = crossing_df.copy()
-crossing_label_df["label"] = crossing_label_df["gain"].apply(lambda g: f"K={g:.1f}")
-
-# Branch colors — cohesive palette starting with Python Blue
-branch_colors = ["#306998", "#E8833A", "#5BA65B"]
-
-# Mizani custom formatters for axis labels (distinctive plotnine feature)
+# Axis label formatters (mizani)
 sigma_fmt = custom_format("{:.0f}")
 
 
-# Custom label function for imaginary axis — displays ±Nj with special "0" at origin
 def jw_label_fn(values):
-    labels = []
+    result = []
     for v in values:
-        v_int = int(round(v))
-        if v_int == 0:
-            labels.append("0")
-        else:
-            labels.append(f"{v_int}j")
-    return labels
+        vi = int(round(v))
+        result.append("0" if vi == 0 else f"{vi}j")
+    return result
 
 
-# Plot — square format (3600x3600) for coord_fixed root locus
+# Plot
 plot = (
     ggplot()
-    # Subtle stability region shading
-    + annotate("rect", xmin=-5.5, xmax=0, ymin=-5, ymax=5, fill="#E8F5E9", alpha=0.25)
-    + annotate("rect", xmin=0, xmax=2.5, ymin=-5, ymax=5, fill="#FFEBEE", alpha=0.2)
-    + annotate("text", x=-4.6, y=4.2, label="Stable", color="#2E7D32", size=9, fontstyle="italic", alpha=0.6)
-    + annotate("text", x=1.3, y=4.2, label="Unstable", color="#C62828", size=9, fontstyle="italic", alpha=0.6)
-    # Damping ratio guide lines — increased visibility
+    # Stability region shading
+    + annotate("rect", xmin=-5.5, xmax=0, ymin=-5, ymax=5, fill=STABLE_FILL, alpha=0.45)
+    + annotate("rect", xmin=0, xmax=2.5, ymin=-5, ymax=5, fill=UNSTABLE_FILL, alpha=0.45)
+    + annotate("text", x=-4.6, y=4.3, label="Stable", color="#009E73", size=3.5, fontstyle="italic")
+    + annotate("text", x=1.3, y=4.3, label="Unstable", color="#AE3030", size=3.5, fontstyle="italic")
+    # Damping ratio guide lines
     + geom_segment(
-        damp_df, aes(x="x", y="y", xend="xend", yend="yend"), color="#AAAAAA", linetype="dashed", size=0.6, alpha=0.7
+        damp_df, aes(x="x", y="y", xend="xend", yend="yend"), color=INK_SOFT, linetype="dashed", size=0.45, alpha=0.5
     )
-    # Damping ratio labels directly on plot
     + geom_text(
-        damp_label_df, aes(x="lx", y="ly", label="label"), color="#777777", size=9, fontstyle="italic", ha="center"
+        damp_label_df, aes(x="lx", y="ly", label="label"), color=INK_MUTED, size=2.8, fontstyle="italic", ha="center"
     )
-    # Natural frequency circles — increased visibility
+    # Natural frequency circles
     + geom_path(
-        wn_df, aes(x="real", y="imaginary", group="wn"), color="#BBBBBB", linetype="dotted", size=0.5, alpha=0.55
+        wn_df, aes(x="real", y="imaginary", group="wn"), color=INK_SOFT, linetype="dotted", size=0.35, alpha=0.5
     )
-    # Natural frequency labels
-    + geom_text(wn_label_df, aes(x="real", y="imaginary", label="label"), color="#888888", size=9, fontstyle="italic")
-    # Real axis segments of root locus
+    + geom_text(wn_label_df, aes(x="real", y="imaginary", label="label"), color=INK_MUTED, size=2.8, fontstyle="italic")
+    # Real axis segments
     + geom_segment(
-        seg_df, aes(x="x_start", y="y", xend="x_end", yend="y"), color="#8B5E3C", size=2.5, alpha=0.55, linetype="solid"
+        seg_df, aes(x="x_start", y="y", xend="x_end", yend="y"), color=INK_SOFT, size=2.0, alpha=0.45, linetype="solid"
     )
-    # Root locus branches
-    + geom_path(df, aes(x="real", y="imaginary", color="branch", group="branch"), size=1.5, alpha=0.9)
-    # Direction arrows
-    + geom_segment(
-        arrow_df, aes(x="x", y="y", xend="xend", yend="yend"), color="#222222", size=1.2, arrow=arrow(length=0.15)
-    )
-    # Open-loop poles and breakaway point via shape mapping
-    + geom_point(
-        marker_df, aes(x="real", y="imaginary", shape="type"), size=5, color="#222222", stroke=2, fill="#222222"
-    )
+    # Root locus branches — Imprint palette positions 1, 2, 3
+    + geom_path(df, aes(x="real", y="imaginary", color="branch", group="branch"), size=1.1, alpha=0.9)
+    # Direction-of-increasing-gain arrows
+    + geom_segment(arrow_df, aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=0.9, arrow=arrow(length=0.15))
+    # Open-loop poles (×) and breakaway point (□)
+    + geom_point(marker_df, aes(x="real", y="imaginary", shape="type"), size=4, color=INK, stroke=1.5, fill=INK)
     + scale_shape_manual(values={"Open-loop Pole": "x", "Breakaway Point": "s"}, name="Markers")
-    # Imaginary axis crossings (stability boundary)
-    + geom_point(crossing_df, aes(x="real", y="imaginary"), shape="D", size=4.5, color="#D62728", stroke=1.5)
-    # Crossing gain annotations — offset to avoid overlap
+    # Imaginary axis crossings — Imprint matte red: semantic role (instability boundary)
+    + geom_point(crossing_df, aes(x="real", y="imaginary"), shape="D", size=4, color="#AE3030", stroke=1.2)
     + geom_text(
         crossing_label_df,
         aes(x="real", y="imaginary", label="label"),
-        color="#D62728",
-        size=9,
+        color="#AE3030",
+        size=3.0,
         ha="left",
         nudge_x=0.4,
         nudge_y=0.3,
         fontweight="bold",
     )
-    # Breakaway annotation — moved further from origin to reduce clutter
+    # Breakaway point annotation
     + annotate(
         "text",
         x=breakaway_s - 0.8,
         y=-0.7,
         label=f"Breakaway\nK={breakaway_K:.2f}",
-        color="#555555",
-        size=9,
+        color=INK_SOFT,
+        size=3.0,
         ha="center",
         fontweight="bold",
     )
-    # Axes
-    + geom_hline(yintercept=0, color="#888888", size=0.5)
-    + geom_vline(xintercept=0, color="#888888", size=0.5, linetype="solid")
+    # Axes (real and imaginary)
+    + geom_hline(yintercept=0, color=INK_SOFT, size=0.4)
+    + geom_vline(xintercept=0, color=INK_SOFT, size=0.4)
     + scale_color_manual(values=branch_colors)
-    # Mizani formatters for axis tick labels (distinctive plotnine/mizani feature)
     + scale_x_continuous(labels=sigma_fmt, breaks=[-5, -4, -3, -2, -1, 0, 1, 2])
     + scale_y_continuous(labels=jw_label_fn, breaks=[-4, -3, -2, -1, 0, 1, 2, 3, 4])
     + coord_fixed(ratio=1, xlim=(-5.2, 2.2), ylim=(-4.8, 4.8))
-    + labs(title="root-locus-basic · plotnine · pyplots.ai", x="Real Axis (σ)", y="Imaginary Axis (jω)", color="Branch")
-    # Plotnine guides() for legend customization (distinctive feature)
+    + labs(
+        title="root-locus-basic · python · plotnine · anyplot.ai",
+        x="Real Axis (σ)",
+        y="Imaginary Axis (jω)",
+        color="Branch",
+    )
     + guides(
         shape=guide_legend(order=1, override_aes={"size": 4}), color=guide_legend(order=2, override_aes={"size": 2})
     )
     + theme_minimal()
     + theme(
-        figure_size=(12, 12),
-        plot_title=element_text(size=24, weight="bold", ha="center"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
+        figure_size=(6, 6),
+        plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=10, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
-        legend_background=element_rect(fill="#FAFAFA", color="#DDDDDD", size=0.5),
-        legend_key_size=20,
-        panel_grid_major=element_line(color="#F5F5F5", size=0.2),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
+        legend_key_size=14,
+        panel_grid_major=element_line(color=INK, size=0.2, alpha=0.12),
         panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
     )
 )
 
-# Save as square format for coord_fixed root locus
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
