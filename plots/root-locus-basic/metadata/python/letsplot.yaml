@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:21:41Z'
-updated: '2026-06-18T00:44:38Z'
+updated: '2026-06-18T00:52:41Z'
 generated_by: claude-sonnet
 workflow_run: 27728537354
 issue: 4414
@@ -12,45 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Comprehensive feature coverage: all spec-required elements (poles, zeros, damping
-    lines, frequency arcs, stability crossings, directional arrows) are present and
-    correctly positioned'
-  - 'Excellent theme adaptation: both light and dark renders pass readability check
-    with no dark-on-dark failures; all chrome tokens correctly flipped'
-  - 'Strong data storytelling: stability-crossing highlight (red diamonds + K ≈ 7.2
-    annotation + region labels) makes the engineering insight immediately clear'
-  - Code is clean, flat, and reproducible; all font sizes explicitly set
-  - Interactive layer_tooltips with rich formatting demonstrate letsplot distinctive
-    capability
+  - 'Perfect spec compliance — all required elements present: open-loop poles (×),
+    zero (○), imaginary-axis stability crossings (◆), direction arrows, ζ/ωn reference
+    guides, and equal-axis scaling via coord_fixed'
+  - 'Sophisticated letsplot-specific usage: layer_tooltips() with .format()/.line()
+    chains for gain/real/imaginary, HTML export, and arrow() in geom_segment — genuine
+    use of library-distinctive features'
+  - 'Clear data storytelling: STABLE/UNSTABLE region labels, LHP green tint, critical-gain
+    K≈7.2 annotation, and directional arrows convey control-systems insight directly'
+  - 'Correct theme-adaptive chrome in both renders — all text, grid tokens, and backgrounds
+    flip properly between #FAF8F1 and #1A1A17 surfaces'
+  - 'Realistic control-systems data: G(s)=(s+3)/[s(s+1)(s+2)(s+4)] computed via numpy
+    polynomial arithmetic produces authentic root-locus geometry'
+  - Caption encodes the full marker legend (× = poles, ○ = zero, ◆ = stability crossing),
+    reducing legend clutter
   weaknesses:
-  - 'Title is missing the language identifier. Current: root-locus-basic · letsplot
-    · anyplot.ai. Required: root-locus-basic · python · letsplot · anyplot.ai. Fix:
-    update the labs(title=...) string.'
-  - Branch 2 (lavender) is barely visible. It is a short real-axis segment from -2
-    to -3 that is obscured by overlapping pole markers, zero marker, and arrow geoms.
-    Consider increasing line size for all branches from 1.5 to 2.0 or reducing pole/zero
-    marker size from 6 to 4.
-  - 'Top-of-canvas whitespace: coord_fixed with given xlim/ylim leaves a noticeable
-    empty stripe above the title in the square canvas. A small reduction in top plot_margin
-    or slight ylim adjustment would better fill the canvas.'
+  - 'Branch 2 (lavender #C475FD) is nearly invisible — it is a correct short real-axis
+    segment from s=−2 to s=−3, but at size=2.0 it reads as a tiny stub; increase its
+    visual weight (size=3.0 or add a direct geom_text label ''Branch 2'') so all four
+    branches are clearly distinguishable in the legend'
+  - Caption text at size=9 is very small at 2400×2400; raise to size=10 for mobile
+    readability
+  - Zeta guide labels (size=3.5mm) are small near the LHP; consider size=4.0 to improve
+    legibility when plot is scaled to thumbnail size
+  - The ζ=0.2 label and Branch 4 locus crowd each other near the top-right LHP; a
+    slight radial offset outward (from 0.50 to 0.55 of r_max for the ζ=0.2 position)
+    would prevent visual collision
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "root-locus-basic · letsplot · anyplot.ai" bold dark text — readable. Axis labels "Real axis (σ)" / "Imaginary axis (jω)" dark, readable. Tick labels dark gray, readable. Caption at bottom small (size=9) but readable.
-      Data: Branch 1 green #009E73 horizontal line at real axis. Branch 2 lavender #C475FD very short barely-visible segment near x=-2 to -3. Branch 3 blue #4467A3 curve going into lower complex plane. Branch 4 ochre #BD8233 curve going into upper-RHP. Red diamonds for stability crossings. Black × poles and ○ zero markers.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 — correct Imprint surface, no pure white
+      Chrome: Title "root-locus-basic · python · letsplot · anyplot.ai" in bold dark ink, clearly readable; "Real axis (σ)" and "Imaginary axis (jω)" axis labels in bold dark ink, legible; tick labels in INK_SOFT (#4A4A44), readable; caption at bottom is small (size=9) but just legible; zeta labels (ζ=0.2–0.8) in INK_MUTED, small but visible
+      Data: Branch 1 (teal #009E73) along real axis from 0 toward −∞; Branch 2 (lavender #C475FD) tiny stub from s=−2 to s=−3 — barely visible; Branch 3 (blue #4467A3) curves downward into LHP; Branch 4 (ochre #BD8233) exits upward through imaginary axis; poles (×) and zero (○) in black ink clearly visible; red diamonds at ±j≈1.8 mark stability crossings; K≈7.2 annotated in red; STABLE label in green, UNSTABLE in red; direction arrows in black on branches; dashed ζ guide lines and ωn arcs in subtle grid-rule color; LHP green tint
+      Legibility verdict: PASS — all main text elements are readable against the light background; only minor concern is small caption text
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title, axis labels, tick labels all in light tones (INK_SOFT = #B8B7B0 for secondary, INK = #F0EFE8 for primary). No dark-on-dark failures. Caption readable. Legend has dark elevated background #242420.
-      Data: Data colors identical to light render — Branch 1 green, Branch 2 lavender (still barely visible), Branch 3 blue, Branch 4 ochre. Direction arrows are white (INK in dark theme). Red diamonds for stability crossings visible.
-      Legibility verdict: PASS
+      Background: warm near-black #1A1A17 — correct Imprint dark surface, no pure black
+      Chrome: Title and axis labels in light ink (#F0EFE8), clearly readable against dark background; tick labels in #B8B7B0, legible; poles (×) and zero (○) now render in light ink (INK adaptive), clearly visible on dark surface; direction arrows in light ink, visible; no dark-on-dark failures observed
+      Data: All four branch colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) — data palette unchanged; stability crossing diamonds in #AE3030 (red), visible; K≈7.2 in red, readable; LHP green tint still present; STABLE/UNSTABLE labels retain their semantic colors
+      Legibility verdict: PASS — all text and data elements are readable against the dark background; theme chrome inverts correctly
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -58,49 +63,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; all text readable in both themes; minor
-          deduction for small caption (size=9) and zeta-labels (size=3.5)
+        comment: 'Title, axis labels, tick labels all explicitly sized and readable
+          in both themes. Minor deduction: caption size=9 is quite small; zeta labels
+          size=3.5mm are small at thumbnail scale.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No meaningful text collisions in either render
+        comment: 'No severe collisions. Minor crowding: zeta=0.2 label and Branch
+          4 locus are close; K≈7.2 annotation near stability crossing markers.'
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Branch 2 (lavender) is a very short real-axis segment barely visible
-          due to overlap with pole/zero markers and arrow geoms
+        passed: true
+        comment: Branches 1, 3, 4 clearly visible. Branch 2 is a physically correct
+          but very short real-axis stub (s=−2 to −3) that is barely distinguishable
+          at size=2.0.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green-only signaling
+        comment: Imprint palette used correctly. Poles/zeros use theme-adaptive ink
+          color (not data colors). No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for complex-plane geometry; moderate empty
-          space at top due to coord_fixed aspect preservation
+        comment: Canvas gate passed (2400×2400). coord_fixed(ratio=1) preserves complex-plane
+          geometry. Legend on right, caption at bottom. Well-proportioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real axis (sigma) and Imaginary axis (jomega) with units
+        comment: Real axis (σ) and Imaginary axis (jω) are descriptive with units.
+          Title matches required format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint canonical order; backgrounds #FAF8F1/#1A1A17;
-          chrome flips correctly; data colors identical across themes'
+        comment: 'First branch #009E73. Branches 2-4 follow canonical Imprint order.
+          Backgrounds #FAF8F1/#1A1A17. Data colors identical between renders.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -108,25 +118,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: Imprint palette, typographic hierarchy, stable-region
-          shading, zeta/omega_n reference overlays, STABLE/UNSTABLE labels, axis symbols,
-          styled legend. Below FiveThirtyEight level.'
+        comment: Above default (4). LHP green tint, staggered radial zeta labels,
+          complex-plane axis symbols (jω, σ), and critical-gain annotation show genuine
+          design intent. Not exceptional due to visual density from many overlaid
+          reference elements.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Default panel grid removed; custom dashed reference overlays; backgrounds
-          explicitly set; legend border styled; axis lines customized
+        comment: Above default (2). Panel grids blanked, replaced by explicit reference
+          lines. Legend background styled with ELEVATED_BG. Axis lines appropriate
+          for complex-plane context. Moderate refinement level.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Stability crossing prominently highlighted; gain-direction arrows;
-          STABLE/UNSTABLE region labels; damping-ratio overlays add interpretive context
+        comment: Above default (2). STABLE/UNSTABLE labels, directional arrows, K≈7.2
+          annotation, and green LHP tint together tell the stability story clearly.
+          Reference-line density slightly competes with the locus branches.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,52 +147,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus in complex plane with 4 branches
+        comment: Correct root locus plot with complex-plane trajectories.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Poles x, zero o, directional arrows, real-axis segments, stability
-          crossings, damping lines, frequency arcs, equal-axis scaling all present
+        comment: Poles (×), zero (○), stability crossings, direction arrows, ζ guide
+          lines, ωn arcs, real-axis segment, equal-axis scaling — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part X-axis, imaginary part Y-axis, all data visible
+        comment: X=real (σ), Y=imaginary (jω), color=branch — correct mappings.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing language identifier. Should be root-locus-basic · python
-          · letsplot · anyplot.ai. Legend labels correct.
+        passed: true
+        comment: Title 'root-locus-basic · python · letsplot · anyplot.ai' is exact.
+          Legend shows Branch 1-4 labels.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Real-axis segments, complex breakaway, stability crossings, asymptotic
-          behavior demonstrated; Branch 2 short path limits full coverage
+        comment: 4 branches, 1400 total points, poles, zero, stability crossings,
+          ζ/ωn reference — comprehensive coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: G(s) = (s+3)/[s(s+1)(s+2)(s+4)] is a textbook-realistic 4th-order
-          transfer function, neutral educational context
+        comment: G(s)=(s+3)/[s(s+1)(s+2)(s+4)] is a textbook-realistic transfer function,
+          neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Gain sweep 0-120 appropriate; stability crossing K≈7.2 numerically
-          consistent; complex-plane bounds with equal scaling
+        comment: K=0..120 appropriate for this system. Axis limits −5.5..3.5 × −4.5..4.5
+          capture all branch behavior.
     code_quality:
       score: 10
       max: 10
@@ -189,31 +202,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data computation, plot assembly, save'
+        comment: No functions or classes. Linear code flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic polynomial root computation, no random numbers
+        comment: Fully deterministic — numpy polynomial arithmetic, no random state.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; explicit aes import justified
+        comment: All imports used. wildcard import with noqa comments is idiomatic
+          for lets_plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI elements; logical organization
+        comment: Clean, well-organized. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API.
     library_mastery:
       score: 7
       max: 10
@@ -223,23 +237,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar: geom_path, geom_segment with arrow(), geom_point,
-          geom_text, geom_rect, scale_color_manual, coord_fixed, theme customization'
+        comment: geom_path for continuous curves, coord_fixed for equal-axis, scale_color_manual
+          for Imprint palette, ggsize+scale=4 for correct canvas — all idiomatic lets_plot
+          patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with .format() and .line() chains is distinctly
-          letsplot; arrow() in geom_segment; HTML export alongside PNG
-  verdict: REJECTED
+        comment: layer_tooltips() with .format()/.line() chains leverages lets_plot's
+          interactive tooltip API well. HTML export and arrow() in geom_segment are
+          library-specific. Good use of lets_plot's distinctive interactive capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
