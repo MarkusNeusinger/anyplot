@@ -73,7 +73,8 @@ new Chart(canvas, {
         label: 'Received Symbols',
         data: receivedSymbols,
         backgroundColor: t.palette[0] + '80',
-        borderColor: 'transparent',
+        borderColor: t.inkSoft,
+        borderWidth: 0.5,
         pointRadius: 5,
         pointHoverRadius: 5,
       },
@@ -121,6 +122,7 @@ new Chart(canvas, {
         max: 4.5,
         ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 1 },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: 'In-Phase (I)',
@@ -134,6 +136,7 @@ new Chart(canvas, {
         max: 4.5,
         ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 1 },
         grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: 'Quadrature (Q)',
@@ -155,11 +158,30 @@ new Chart(canvas, {
       },
     },
     {
+      // Force inner chartArea to a square so the I/Q geometry is preserved 1:1
+      id: 'squareAspect',
+      afterLayout(chart) {
+        const ca = chart.chartArea;
+        const w = ca.right - ca.left;
+        const h = ca.bottom - ca.top;
+        if (w > h) {
+          const d = (w - h) / 2;
+          ca.left += d;
+          ca.right -= d;
+        } else if (h > w) {
+          const d = (h - w) / 2;
+          ca.top += d;
+          ca.bottom -= d;
+        }
+      },
+    },
+    {
       id: 'evmLabel',
       afterDraw(chart) {
         const { ctx, chartArea } = chart;
+        const fontFamily = Chart.defaults.font.family || 'sans-serif';
         ctx.save();
-        ctx.font = 'bold 17px sans-serif';
+        ctx.font = `bold 17px ${fontFamily}`;
         ctx.fillStyle = t.ink;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
