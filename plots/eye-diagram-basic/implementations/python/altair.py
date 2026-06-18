@@ -1,13 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 eye-diagram-basic: Signal Integrity Eye Diagram
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 89/100 | Updated: 2026-03-18
+Library: altair 6.2.1 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-06-18
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the installed altair package on sys.path
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
+del _here
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ANNOTATION_COLOR = "#AE3030"  # Imprint matte-red for measurement indicators
 
 # Data
 np.random.seed(42)
@@ -61,30 +79,24 @@ for trace in range(n_traces):
     all_voltage.extend(trace_voltage.tolist())
 
 # Pre-bin into 2D histogram for density heatmap
-time_bins = 300
-voltage_bins = 180
+time_bins = 350
+voltage_bins = 225
 time_edges = np.linspace(-0.05, 2.05, time_bins + 1)
 voltage_edges = np.linspace(-0.2, 1.2, voltage_bins + 1)
 
 hist, _, _ = np.histogram2d(all_time, all_voltage, bins=[time_edges, voltage_edges])
 
-time_centers = (time_edges[:-1] + time_edges[1:]) / 2
-voltage_centers = (voltage_edges[:-1] + voltage_edges[1:]) / 2
-
-# Compute pixel-aligned rect sizes that fully tile with no gaps
-time_range = 2.1  # domain extent visible
-voltage_range = 1.4  # domain extent visible
-rect_width = (time_range / time_bins) * (1600 / time_range) + 1.5
-rect_height = (voltage_range / voltage_bins) * (900 / voltage_range) + 1.5
-
+# Use exact bin edges (x/x2/y/y2) for seamless tiling — no pixel arithmetic needed
 rows = []
 for i in range(time_bins):
     for j in range(voltage_bins):
         if hist[i, j] > 0:
             rows.append(
                 {
-                    "time_ui": round(float(time_centers[i]), 4),
-                    "voltage_v": round(float(voltage_centers[j]), 4),
+                    "t_left": round(float(time_edges[i]), 5),
+                    "t_right": round(float(time_edges[i + 1]), 5),
+                    "v_bottom": round(float(voltage_edges[j]), 5),
+                    "v_top": round(float(voltage_edges[j + 1]), 5),
                     "density": float(hist[i, j]),
                 }
             )
@@ -92,89 +104,82 @@ for i in range(time_bins):
 df = pd.DataFrame(rows)
 df["log_density"] = np.log1p(df["density"])
 
-# Compute eye measurements for annotations
+# Eye measurements for annotations
+all_time_arr = np.array(all_time)
+all_voltage_arr = np.array(all_voltage)
 mid_time = 1.0
 eye_center_v = amplitude / 2
-mid_mask = (np.array(all_time) > 0.9) & (np.array(all_time) < 1.1)
-mid_voltages = np.array(all_voltage)[mid_mask]
+
+mid_mask = (all_time_arr > 0.9) & (all_time_arr < 1.1)
+mid_voltages = all_voltage_arr[mid_mask]
 high_voltages = mid_voltages[mid_voltages > eye_center_v]
 low_voltages = mid_voltages[mid_voltages <= eye_center_v]
 eye_top = float(np.percentile(high_voltages, 5)) if len(high_voltages) > 0 else 0.9
 eye_bottom = float(np.percentile(low_voltages, 95)) if len(low_voltages) > 0 else 0.1
-eye_height = eye_top - eye_bottom
+eye_height_val = eye_top - eye_bottom
 
-mid_v_mask = (np.array(all_voltage) > 0.4) & (np.array(all_voltage) < 0.6)
-transition_times = np.array(all_time)[mid_v_mask]
+mid_v_mask = (all_voltage_arr > 0.4) & (all_voltage_arr < 0.6)
+transition_times = all_time_arr[mid_v_mask]
 left_transitions = transition_times[transition_times < 1.0]
 right_transitions = transition_times[transition_times >= 1.0]
 eye_left = float(np.percentile(left_transitions, 95)) if len(left_transitions) > 0 else 0.3
 eye_right = float(np.percentile(right_transitions, 5)) if len(right_transitions) > 0 else 1.7
-eye_width = eye_right - eye_left
+eye_width_val = eye_right - eye_left
 
-# Plot — dark theme for signal integrity visualization
-bg_color = "#0a0a1a"
-text_color = "#c8c8d4"
-tick_color = "#666680"
-annotation_color = "#00e5ff"
+# Title scaling: 67-char baseline at 16px default for altair
+title_str = "eye-diagram-basic · python · altair · anyplot.ai"
+title_fontsize = max(11, round(16 * 67 / max(len(title_str), 67)))
 
-# Heatmap using mark_rect with precise sizing for seamless tiling
+# Heatmap using exact bin edges (x2/y2) — eliminates tiling gaps
 heatmap = (
     alt.Chart(df)
-    .mark_rect(width=rect_width, height=rect_height)
+    .mark_rect()
     .encode(
-        x=alt.X("time_ui:Q", title="Time (UI)", scale=alt.Scale(domain=[0, 2])),
-        y=alt.Y("voltage_v:Q", title="Voltage (V)", scale=alt.Scale(domain=[-0.15, 1.15])),
+        x=alt.X("t_left:Q", title="Time (UI)", scale=alt.Scale(domain=[0, 2])),
+        x2=alt.X2("t_right:Q"),
+        y=alt.Y("v_bottom:Q", title="Voltage (V)", scale=alt.Scale(domain=[-0.15, 1.15])),
+        y2=alt.Y2("v_top:Q"),
         color=alt.Color(
             "log_density:Q",
-            scale=alt.Scale(scheme="inferno"),
-            legend=alt.Legend(
-                title="Log Density",
-                titleColor=text_color,
-                labelColor=text_color,
-                titleFontSize=14,
-                labelFontSize=12,
-                gradientLength=200,
-                orient="right",
-            ),
+            scale=alt.Scale(range=["#009E73", "#4467A3"]),  # Imprint sequential
+            legend=alt.Legend(title="Log Density", gradientLength=200, orient="right"),
         ),
         tooltip=[
-            alt.Tooltip("time_ui:Q", title="Time (UI)", format=".3f"),
-            alt.Tooltip("voltage_v:Q", title="Voltage (V)", format=".3f"),
+            alt.Tooltip("t_left:Q", title="Time (UI)", format=".3f"),
+            alt.Tooltip("v_bottom:Q", title="Voltage (V)", format=".3f"),
             alt.Tooltip("density:Q", title="Trace Count", format=".0f"),
         ],
     )
 )
 
 # Eye height annotation (vertical dashed line)
-ann_height = pd.DataFrame([{"x": mid_time + 0.02, "y": eye_bottom, "y2": eye_top}])
 height_rule = (
-    alt.Chart(ann_height)
-    .mark_rule(color=annotation_color, strokeWidth=2.5, strokeDash=[8, 4])
+    alt.Chart(pd.DataFrame([{"x": mid_time + 0.05, "y": eye_bottom, "y2": eye_top}]))
+    .mark_rule(color=ANNOTATION_COLOR, strokeWidth=2.5, strokeDash=[8, 4])
     .encode(x="x:Q", y="y:Q", y2="y2:Q")
 )
 
 # Eye width annotation (horizontal dashed line)
-ann_width = pd.DataFrame([{"x": eye_left, "x2": eye_right, "y": eye_center_v}])
 width_rule = (
-    alt.Chart(ann_width)
-    .mark_rule(color=annotation_color, strokeWidth=2.5, strokeDash=[8, 4])
+    alt.Chart(pd.DataFrame([{"x": eye_left, "x2": eye_right, "y": eye_center_v}]))
+    .mark_rule(color=ANNOTATION_COLOR, strokeWidth=2.5, strokeDash=[8, 4])
     .encode(x="x:Q", x2="x2:Q", y="y:Q")
 )
 
-# Annotation labels — positioned inside eye opening, away from dense regions
+# Measurement labels
 ann_labels = pd.DataFrame(
     [
-        {"x": mid_time + 0.15, "y": eye_center_v + 0.16, "text": f"Eye Height: {eye_height:.3f} V"},
-        {"x": (eye_left + eye_right) / 2, "y": eye_center_v - 0.12, "text": f"Eye Width: {eye_width:.2f} UI"},
+        {"x": mid_time + 0.22, "y": eye_center_v + 0.19, "text": f"Eye Height: {eye_height_val:.3f} V"},
+        {"x": (eye_left + eye_right) / 2, "y": eye_center_v - 0.16, "text": f"Eye Width: {eye_width_val:.2f} UI"},
     ]
 )
 labels = (
     alt.Chart(ann_labels)
-    .mark_text(color=annotation_color, fontSize=16, fontWeight="bold", align="center", baseline="middle")
+    .mark_text(color=ANNOTATION_COLOR, fontSize=12, fontWeight="bold", align="center", baseline="middle")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Diamond markers at eye opening corners for visual emphasis
+# Diamond markers at eye opening corners
 eye_markers = pd.DataFrame(
     [
         {"x": mid_time, "y": eye_top},
@@ -185,38 +190,64 @@ eye_markers = pd.DataFrame(
 )
 markers = (
     alt.Chart(eye_markers)
-    .mark_point(shape="diamond", color=annotation_color, size=100, filled=True, opacity=0.9)
+    .mark_point(shape="diamond", color=ANNOTATION_COLOR, size=120, filled=True, opacity=0.9)
     .encode(x="x:Q", y="y:Q")
 )
 
+# Compose layers and configure
 chart = (
     (heatmap + height_rule + width_rule + labels + markers)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            "eye-diagram-basic · altair · pyplots.ai",
-            fontSize=28,
+            title_str,
+            fontSize=title_fontsize,
             fontWeight=500,
-            color=text_color,
-            subtitle="NRZ signal eye diagram — 300 traces with 5% noise and 3% jitter",
-            subtitleFontSize=16,
-            subtitleColor="#8888a0",
+            color=INK,
+            subtitle="NRZ signal — 300 traces · 5% noise · 3% jitter",
+            subtitleFontSize=13,
+            subtitleColor=INK_SOFT,
         ),
     )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
-        labelColor=text_color,
-        titleColor=text_color,
-        tickColor=tick_color,
-        domainColor=tick_color,
+        labelFontSize=10,
+        titleFontSize=12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        tickColor=INK_SOFT,
+        domainColor=INK_SOFT,
         grid=False,
     )
-    .configure_view(stroke=None, fill=bg_color)
-    .configure(background=bg_color)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=12,
+        titleFontSize=12,
+    )
+    .configure_title(color=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Pad to exact 3200×1800
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save HTML
+chart.save(f"plot-{THEME}.html")
