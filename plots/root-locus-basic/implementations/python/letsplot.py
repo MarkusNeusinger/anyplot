@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-06-18
@@ -165,7 +165,7 @@ plot = (
     + geom_path(  # noqa: F405
         aes(x="real", y="imaginary", color="branch"),
         data=df,
-        size=1.5,
+        size=2.0,
         alpha=0.9,
         tooltips=layer_tooltips()  # noqa: F405
         .format("gain", ".2f")
@@ -283,7 +283,7 @@ plot = (
     + labs(  # noqa: F405
         x="Real axis (σ)",
         y="Imaginary axis (jω)",
-        title="root-locus-basic · letsplot · anyplot.ai",
+        title="root-locus-basic · python · letsplot · anyplot.ai",
         caption="G(s) = (s+3)/[s(s+1)(s+2)(s+4)]  ·  × = poles  ·  ○ = zero  ·  ◆ = stability crossing",
     )
     # Equal-axis scaling preserves geometry (circles stay circular)
