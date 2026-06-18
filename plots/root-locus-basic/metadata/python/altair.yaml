@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: root-locus-basic
 created: '2026-03-20T21:26:28Z'
-updated: '2026-06-18T00:16:45Z'
+updated: '2026-06-18T00:29:12Z'
 generated_by: claude-sonnet
 workflow_run: 27727037415
 issue: 4414
@@ -12,56 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/root-locu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/root-locus-basic/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Correct root locus computation for G(s)=1/[s(s+1)(s+2)] using nearest-neighbor
-    branch sorting
-  - 'All required spec features present: poles (×), direction arrows (triangles),
-    stability crossings (diamonds with labels), breakaway point, damping ratio guide
-    lines, natural frequency arcs, and real-axis locus segments'
-  - Perfect Imprint palette compliance — Branch 1 green (#009E73), Branch 2 lavender
-    (#C475FD), Branch 3 blue (#4467A3); semantic red (#AE3030) used appropriately
-    for poles and crossings
-  - Excellent theme adaptation in both renders — warm off-white (#FAF8F1) light bg,
-    warm near-black (#1A1A17) dark bg, all chrome tokens properly threaded
-  - Idiomatic Altair layer composition (+) combining 11 mark layers with detail/order
-    encodings for continuous branches
-  - Informative subtitle 'G(s) = 1/[s(s+1)(s+2)] · Closed-Loop Poles vs Gain K' adds
-    immediate context
-  - Interactive tooltips with gain K value on hover — uses Altair's native interactivity
-    well
+  - 'Comprehensive spec coverage: all required root locus features (poles, branches,
+    crossings, real-axis segments, direction arrows, damping/omega_n guide lines,
+    breakaway point) implemented in a single chart'
+  - 'Correct Imprint palette application with semantic use of #AE3030 for boundary-critical
+    markers (poles, crossings)'
+  - Fully theme-adaptive chrome with all six tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    INK_MUTED) applied correctly to every element
+  - Clean 13-layer Altair composition using idiomatic patterns (detail encoding, order
+    encoding, configure_* methods)
+  - 'Excellent data quality: G(s)=1/[s(s+1)(s+2)] is a canonical control-systems example
+    with pedagogically rich locus behavior'
   weaknesses:
-  - 'Visual crowding near origin: the breakaway square at (-0.42, 0), the pole cross
-    at (0, 0), and the branch direction arrows all cluster in a small area around
-    x∈[-0.5, 0] — consider offsetting the breakaway label or reducing marker sizes
-    in this region'
-  - Damping ratio guide labels (ζ=0.2, 0.4, 0.6, 0.8) set at fontSize=9 which is the
-    smallest acceptable size; slightly harder to read at mobile scale — increase to
-    fontSize=10 or 11
-  - 'Design Excellence could be elevated: removing the axis box (all 4 spines) would
-    give a more open look fitting for a complex-plane diagram; a subtle RULE-color
-    grid at the imaginary axis (jω=0 line) would make the stability boundary more
-    prominent without adding visual noise'
-  - 'Data storytelling opportunity: the imaginary axis (jω=0) stability boundary line
-    is implicit — adding an explicit vertical dashed reference at x=0 labeled ''Stability
-    boundary'' would immediately communicate the key insight of the root locus without
-    requiring control-theory knowledge'
+  - 'Non-equal axis scaling: x domain spans 7 units in width=500 px, y spans 9 units
+    in height=460 px, producing ~71 px/unit vs ~51 px/unit — natural frequency arcs
+    appear oval rather than circular, violating the spec''s ''equal axis scaling''
+    requirement. Fix: adjust x/y domain ranges or width/height ratio so pixels-per-unit
+    is equal (e.g., use width=height=480 with symmetric domains like x=[-4.5,4.5]
+    and y=[-4.5,4.5]).'
+  - Breakaway point square marker is relatively small (size=180) compared to pole
+    cross markers (size=420); consider increasing to ~280 for better visual consistency.
+  - 'LM-02: Implementation does not exploit Vega-Lite selections or parameter-driven
+    interactivity that would distinguish Altair from a static library translation.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Bold dark title "root-locus-basic · python · altair · anyplot.ai" fully readable; subtitle "G(s) = 1/[s(s+1)(s+2)] · Closed-Loop Poles vs Gain K" in muted dark ink; axis labels "Real Axis (σ)" and "Imaginary Axis (jω)" in dark ink; tick labels (-5 to 2 on x, -4 to 4 on y) clear and well-spaced. All text reads well against the cream background.
-      Data: Three branch lines — Branch 1 in #009E73 (green, moving left along real axis), Branch 2 in #C475FD (lavender, curving up to upper-right), Branch 3 in #4467A3 (blue, curving down to lower-right). Open-loop poles (×) in semantic red #AE3030 at (0,0), (-1,0), (-2,0). Imaginary axis crossings shown as red diamonds at (0, ±√2≈±1.41) with labels "jω = j√2 (K=6)" and "jω = −j√2 (K=6)". Breakaway point shown as gray square near (-0.42, 0). Damping ratio guide lines (dashed, ζ=0.2/0.4/0.6/0.8) and natural frequency arcs (ωn=1,2,3,4) in muted gray-dashed style. Direction arrows (triangles) near imaginary axis crossing.
-      Legibility verdict: PASS — all text readable; damping ratio labels (fontSize=9) are slightly small but still legible.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "root-locus-basic · python · altair · anyplot.ai" in dark ink, clearly readable. Subtitle in secondary ink (INK_SOFT). Axis labels "Real Axis (σ)" and "Imaginary Axis (jω)" in dark ink. Tick labels in secondary ink. All readable against light background.
+      Data: Branch 1 = #009E73 (brand green) along negative real axis; Branch 2 = #C475FD (lavender) curving upward; Branch 3 = #4467A3 (blue) curving downward. Open-loop poles at s=0,-1,-2 shown as red (#AE3030) cross markers. Imaginary crossings at ±j√2 shown as red diamonds with bold labels. Breakaway point as grey square. Damping ratio lines (zeta=0.2,0.4,0.6,0.8) as subtle dashed muted lines. Natural frequency arcs (wn=1-4) as subtle dashed lines. Stability boundary as dashed vertical line at x=0 with "Stability boundary" label. Real axis segments as low-opacity green thick lines. Direction arrows on complex branches.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title and subtitle in light off-white (#F0EFE8) — fully readable against dark background. Axis labels and tick labels in light ink (#B8B7B0) — all clearly visible. Legend box has slightly elevated dark fill (#242420), border in muted ink. No dark-on-dark failures detected.
-      Data: Data colors are identical to light render — Branch 1 green (#009E73), Branch 2 lavender (#C475FD), Branch 3 blue (#4467A3), pole markers and crossing diamonds in red (#AE3030). Branches remain clearly distinguishable from the dark background. Dashed guide lines (damping ratios, ωn arcs) visible in muted style against dark surface.
-      Legibility verdict: PASS — all text legible; theme adaptation is correct throughout both chrome and data layers.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, subtitle, axis labels, tick labels, legend text all render in light ink tokens (#F0EFE8/#B8B7B0). All clearly readable against dark background. No dark-on-dark failures. Legend box fill uses elevated dark token (#242420). Guide line labels use INK_MUTED token (light muted on dark).
+      Data: Colors identical to light render — Branch 1 green, Branch 2 lavender, Branch 3 blue. Pole markers and crossing labels in #AE3030 red clearly visible on dark surface. Brand green #009E73 clearly visible on dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -69,89 +59,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, subtitle=11, axis title=12,
-          tick labels=10); all text readable in both themes. Damping ratio labels
-          at fontSize=9 are slightly small but still legible at the 2400x2400 canvas.
+        comment: Font sizes explicitly set; all text readable in both themes. Minor
+          crowding of crossing annotation labels near stability boundary.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Crowding near the origin: breakaway square at (-0.42,0), pole cross
-          at (0,0), and direction arrows cluster in a small area. Not severe but noticeable.
-          Pole crosses at (-1,0) and (-2,0) are well spaced.'
+        comment: Good separation. Crossing labels with dx=18 offset are close to stability
+          boundary but do not critically overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Branch lines at strokeWidth=2.5 are clearly visible. Pole markers
-          (size=420), crossing diamonds (size=360), breakaway square (size=180), and
-          direction arrows (size=200) all visible. Minor quibble: arrow markers could
-          be slightly larger.'
+        comment: All primary elements clearly visible. Real axis segments at opacity=0.2
+          intentionally subtle; breakaway square marker somewhat small vs pole markers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Redundant encoding via shape (lines,
-          crosses, diamonds, squares, triangles) ensures distinguishability beyond
-          color.
+        comment: Imprint palette; CVD-safe; shape redundancy on pole/crossing markers
+          removes red-green sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for complex plane. Good space utilization,
-          no clipping, balanced whitespace. Legend positioned top-right within bounds.
+        comment: Square 2400x2400 appropriate for root locus. Canvas gate passed.
+          Good whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Real Axis (σ)'' — descriptive with standard notation.
-          Y-axis: ''Imaginary Axis (jω)'' — descriptive with proper engineering notation.'
+        comment: Real Axis (sigma) and Imaginary Axis (jomega) with correct math notation.
+          Subtitle provides context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Branch 1=#009E73 (first series correct). Branch 2=#C475FD, Branch
-          3=#4467A3 — correct Imprint positions 2-3. Semantic red #AE3030 for poles/crossings
-          is appropriate semantic use. Backgrounds #FAF8F1/#1A1A17 correct. Data colors
-          identical across themes.'
+        comment: 'Branch 1=#009E73 first series. Positions 2-3 canonical. Semantic
+          #AE3030 for poles/crossings. Correct backgrounds both themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default (4). Semantic color usage (red for critical locations),
-          informative subtitle, well-layered composition with varying stroke styles
-          (solid vs dashed). Not quite publication-ready but shows intentional design.
+        comment: 'Above default: intentional 13-layer composition with semantic color
+          hierarchy; Imprint palette correctly applied; guide elements deliberately
+          subtle.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid on data area (grid:False), dashed lines for guide elements
-          at low opacity, theme-adaptive chrome well configured. Could further refine
-          by removing all 4 axis spines (keeping just the axis lines) for a more open
-          complex-plane look.
+        comment: Grid disabled; dashed guide elements with calibrated opacity; no
+          distracting chrome; generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Crossing markers are labeled with values (jω = j√2, K=6), direction
-          arrows guide the eye along increasing gain. Stability boundary is implicitly
-          shown by crossings. Missing: explicit x=0 stability boundary line that would
-          immediately communicate the concept to non-control-theory readers.'
+        comment: Stability boundary and imaginary crossings highlighted; direction
+          arrows convey gain progression; breakaway annotated; guide lines provide
+          engineering context.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -159,28 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct root locus in complex plane with continuous branch curves.
+        comment: 'Correct root locus: complex plane with pole trajectories as function
+          of gain K.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: open-loop poles (×), branch curves with
-          arrows, real axis segments, imaginary axis crossings, damping ratio guide
-          lines.'
+        comment: 'All features present. Deduction: non-equal axis scaling — x=~71
+          px/unit vs y=~51 px/unit distorts circular arcs, violating spec''s equal-scaling
+          requirement.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x-axis, imaginary part on y-axis. Full range visible.
+        comment: real->X, imaginary->Y, branch->color, gain->tooltip. Full data range
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'root-locus-basic · python · altair · anyplot.ai' matches required
-          format. Legend labels 'Branch 1/2/3' are appropriate.
+        comment: Title is 'root-locus-basic · python · altair · anyplot.ai'. Legend
+          labels match branch names.
     data_quality:
       score: 15
       max: 15
@@ -190,23 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all root locus features: 3 branches, breakaway point, imaginary
-          axis crossings, real axis locus, direction of increasing gain, stability
-          guide lines.'
+        comment: 'All root locus aspects: poles, multi-branch trajectories, real-axis
+          segments, crossings, breakaway, damping lines, wn arcs, direction arrows.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard textbook transfer function G(s)=1/[s(s+1)(s+2)] — well-known
-          neutral educational example from control theory.
+        comment: G(s)=1/[s(s+1)(s+2)] is canonical control textbook example, neutral,
+          non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Mathematically correct: open-loop poles at 0,-1,-2; imaginary axis
-          crossing at ±√2 when K=6; breakaway at s≈-0.42 — all analytically verified.'
+        comment: Gain 0.001-80 captures full trajectory through stability at K=6;
+          domain fits locus well.
     code_quality:
       score: 10
       max: 10
@@ -216,69 +197,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → layers → compose → save. No functions
-          or classes.'
+        comment: No functions or classes; linear structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — analytical computation from transfer function
-          coefficients, no random data.
+        comment: Fully deterministic polynomial root solving.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path fix), altair, numpy, pandas, PIL.Image.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. sys.path fix is a legitimate workaround
-          for Altair shadowing.
+        comment: Idiomatic Altair layer composition; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. PIL padding
-          to exact 2400x2400 target.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with padding to 2400x2400.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good Altair idioms: mark_line/mark_point/mark_text, detail encoding
-          for multi-series paths, order encoding for connected lines, configure_*
-          for theming, .interactive(). Slightly below expert for not using transforms
-          or selections.'
+        comment: Correct :Q/:N encodings, detail for multi-segment lines, order for
+          line ordering, configure_* for theme-adaptive chrome, .interactive() for
+          tooltips.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Layer composition with 11 layers (+operator) is Altair-distinctive.
-          detail encoding to segment multi-series lines without grouping is idiomatic.
-          .interactive() HTML export. Could further leverage Vega-Lite selections
-          for gain highlighting.
-  verdict: REJECTED
+        passed: false
+        comment: Good layer composition but does not leverage Vega-Lite selections,
+          parameters, or transforms that distinguish Altair from static libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
-  - matrix-construction
+  - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
