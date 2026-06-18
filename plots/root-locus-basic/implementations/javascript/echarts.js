@@ -1,3 +1,4 @@
+//# anyplot-orientation: square
 // anyplot.ai
 // root-locus-basic: Root Locus Plot for Control Systems
 // Library: echarts 5.5.1 | JavaScript 22.22.3
@@ -61,6 +62,23 @@ for (let i = 0; i <= 360; i++) {
 const poles = [[0, 0], [-1, 0], [-3, 0]];
 const jwCross = [[0, Math.sqrt(3)], [0, -Math.sqrt(3)]]; // ±j√3, K=12
 
+// Gain-direction arrows: symbolRotate = atan2(dx, dy) maps chart tangent to
+// ECharts clockwise-from-up convention (right→90°, up→0°, left→-90°, down→180°)
+function arrowAt(path, idx) {
+  const i = Math.max(1, Math.min(path.length - 2, idx));
+  const dx = path[i + 1][0] - path[i - 1][0];
+  const dy = path[i + 1][1] - path[i - 1][1];
+  return { value: path[i], symbolRotate: Math.atan2(dx, dy) * 180 / Math.PI };
+}
+
+const gainArrows = [
+  arrowAt(bA, Math.floor(N1 * 0.70)),        // phase 1, bA: leftward (K↑ toward breakaway)
+  arrowAt(bB, Math.floor(N1 * 0.70)),        // phase 1, bB: rightward (K↑ toward breakaway)
+  arrowAt(bA, N1 + Math.floor(N2 * 0.45)),   // phase 2, bA: upper-right (K↑ along complex branch)
+  arrowAt(bB, N1 + Math.floor(N2 * 0.45)),   // phase 2, bB: lower-right (K↑ along complex branch)
+  arrowAt(bC, N1 + Math.floor(N2 * 0.55)),   // phase 2, bC: leftward (K↑ along real branch)
+];
+
 // ── Chart ─────────────────────────────────────────────────────────────────────
 const chart = echarts.init(document.getElementById("container"));
 
@@ -82,7 +100,9 @@ chart.setOption({
     textStyle: { color: t.inkSoft, fontSize: 13 },
   },
 
-  grid: { left: 110, right: 60, top: 80, bottom: 110 },
+  // Square grid (2200×2200 within 2400×2400 canvas) for equal axis scaling:
+  // x range 8 units and y range 8 units → 275 px/unit on each axis
+  grid: { left: 120, right: 80, top: 80, bottom: 120 },
 
   xAxis: {
     type: "value",
@@ -115,7 +135,7 @@ chart.setOption({
   },
 
   series: [
-    // ζ = 0.5 damping-ratio reference lines (subtle dashed)
+    // ζ = 0.5 damping-ratio reference lines (subtle dashed, excluded from legend)
     {
       type: "line",
       data: zeta05up,
@@ -132,7 +152,7 @@ chart.setOption({
       silent: true,
       legendHoverLink: false,
     },
-    // ωn = 2 natural frequency reference circle
+    // ωn = 2 natural frequency reference circle (now renders as true circle)
     {
       type: "line",
       data: wnCircle,
@@ -141,7 +161,7 @@ chart.setOption({
       silent: true,
       legendHoverLink: false,
     },
-    // Root locus branches (A upper, B lower, C real — same legend entry)
+    // Root locus branches (A upper, B lower, C real — share one legend entry)
     {
       name: "Root Locus",
       type: "line",
@@ -162,6 +182,16 @@ chart.setOption({
       data: bC,
       showSymbol: false,
       lineStyle: { color: t.palette[0], width: 2.5 },
+    },
+    // Gain-direction arrows (excluded from legend — decorative overlay)
+    {
+      type: "scatter",
+      data: gainArrows,
+      symbol: "arrow",
+      symbolSize: 14,
+      itemStyle: { color: t.palette[0] },
+      silent: true,
+      legendHoverLink: false,
     },
     // Open-loop poles (× markers via rotated cross shape)
     {
