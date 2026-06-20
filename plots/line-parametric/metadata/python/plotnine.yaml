@@ -1,42 +1,64 @@
 library: plotnine
+language: python
 specification_id: line-parametric
 created: '2026-03-20T10:36:50Z'
-updated: '2026-03-20T10:58:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339035321
+updated: '2026-06-20T22:59:43Z'
+generated_by: claude-sonnet
+workflow_run: 27886088912
 issue: 4424
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-parametric/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - 'Excellent spec compliance: all required features (equal aspect ratio, color gradient,
-    two curves, start/end markers) present and correct'
-  - Custom gradient palette creates visually appealing and informative progression
-    from navy to rose
-  - Idiomatic plotnine usage with proper grammar of graphics layering
-  - Clean deterministic code with no unnecessary complexity
+  - Imprint sequential colormap (green→blue) mapped to normalized parameter t creates
+    an elegant, mathematically meaningful direction cue along the path
+  - Dual-marker system (circle=Start, diamond=End) with redundant shape+color encoding
+    provides clear traversal direction beyond just the gradient
+  - facet_wrap with equations in panel titles ('x = sin(3t), y = sin(2t)') adds educational
+    value and immediately communicates the mathematical context
+  - coord_equal() correctly prevents geometric distortion of the closed Lissajous
+    figure and the expanding spiral
+  - theme_void() base plus manually re-added subtle grid (alpha=0.15) achieves a clean
+    look without losing spatial reference
+  - 'Theme-adaptive chrome is correctly implemented in both renders: INK / INK_SOFT
+    tokens thread through all text, strips, legend, and backgrounds'
+  - Code is clean, linear KISS structure — no functions or classes, fully deterministic
+    (linspace only), idiomatic plotnine grammar composition
+  - guide_colorbar(nbin=200) produces a smooth color bar rather than a banded one,
+    matching the continuous nature of the gradient
   weaknesses:
-  - 'Minor canvas utilization: spiral panel has some wasted whitespace due to coord_equal
-    with spiral smaller extent versus endpoint position'
-  image_description: The plot displays two parametric curves in a side-by-side faceted
-    layout on a white background. The left panel shows a Lissajous figure (x=sin(3t),
-    y=sin(2t)) — a self-intersecting figure-eight-like pattern spanning [-1, 1] on
-    both axes. The right panel shows a spiral curve (x=t·cos(t), y=t·sin(t)) that
-    winds outward from the origin. Both curves use a continuous color gradient from
-    deep navy (t=0) through teal, light cyan, gold/yellow, to vivid pink/rose (t=tmax)
-    to indicate the direction of parameter progression. Start points are marked with
-    dark blue filled circles, end points with pink diamonds. The title reads "line-parametric
-    · plotnine · pyplots.ai" in bold dark text. Axis labels are "Horizontal Position
-    x(t)" and "Vertical Position y(t)". A "Direction" legend on the right shows the
-    start/end marker shapes, and a "Parameter t" colorbar displays the full gradient
-    scale with labels 0, ¼, ½, ¾, tmax. Facet strip labels show the curve equations.
-    Subtle dashed grid lines appear on a clean white background.
+  - In the Lissajous panel, the Start (t=0) and End (t=tmax) markers both land at
+    (0,0) since the Lissajous figure is a closed curve — the two markers stack on
+    each other, making the direction cue at that panel slightly ambiguous (the gradient
+    colorbar compensates, but the marker overlap is visually inelegant)
+  - 'DE-01 moderate: design is strong and clearly above library defaults, but stops
+    short of publication-ready polish — lacks any emphasis element (annotation, highlighted
+    feature curve, or reference line) that would give a viewer a clear focal point
+    beyond ''here are two parametric curves'''
+  - 'LM-02 moderate: uses faceting, coord_equal, and guide ordering (all good plotnine
+    features), but the visualization could demonstrate a more distinctively grammar-of-graphics
+    technique such as stat_function for curve generation or aes(group=) without explicit
+    faceting for overlay comparison'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-parametric · python · plotnine · anyplot.ai" in bold dark ink, clearly readable at ~70% canvas width. Axis titles "Horizontal Position x(t)" and "Vertical Position y(t)" in dark ink at appropriate 10pt. Tick labels (-1.0, -0.5, 0.0, 0.5, 1.0) in slightly softer dark ink. Strip labels ("Lissajous · x = sin(3t), y = sin(2t)" and "Spiral · x = t·cos(t), y = t·sin(t)") in bold dark ink on slightly elevated warm-white strip background. All text clearly readable.
+      Data: Two facet panels — left shows a Lissajous (3:2) figure (figure-8 with two inner loops), right shows an Archimedean spiral expanding outward. Both curves colored with the imprint_seq gradient (brand green #009E73 at t=0 → medium teal → slate blue #4467A3 at tmax). Green circle markers for Start (t=0) and red diamond markers for End (t=tmax). In the Lissajous panel both markers land at (0,0) and overlap. In the spiral panel, the green circle is near the spiral origin and the red diamond marks the outer endpoint at approximately (1.0, 0). Colorbar on the right with labels 0, ¼, ½, ¾, tmax. Subtle grid lines visible.
+      Legibility verdict: PASS — all text, tick labels, legend, and data clearly readable against light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all axis/tick labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Strip labels rendered as light text on dark elevated background (#242420). Legend box has dark elevated background with light text. No dark-on-dark text issues observed.
+      Data: Gradient colors are identical to the light render — brand green → teal → blue along the parametric path; the two-color transition is equally visible on the dark surface. Start/End markers identical in color (green circle, red diamond). Colorbar still clearly readable.
+      Legibility verdict: PASS — both chrome and data are readable in the dark render. Brand green #009E73 visible on dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -44,39 +66,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=26pt, axis_title=20pt, axis_text=16pt,
-          legend_title=17pt, strip_text=17pt'
+        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
+          strip=9, legend=8). Well-proportioned in both themes. No overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No text overlaps. Start/End markers co-locate at Lissajous origin
+          (0,0) — inherent to closed curves, not an implementation error.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves at size=2.5 with alpha=0.94, markers at size=8 with stroke
-          clearly visible
+        comment: geom_path size=1.0 with 1000 points per curve renders smooth, clearly
+          visible gradient lines. Start/End markers (size=3.5) appropriately prominent.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. Start (circle) vs End (diamond)
+          use both color AND shape redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Navy-teal-gold-rose gradient is colorblind-friendly
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good two-panel layout, minor whitespace in spiral panel due to coord_equal
+        comment: Both facet panels fill the 16:9 canvas well. Legend is adjacent to
+          plot area. coord_equal() ensures correct proportions. No wasted space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with mathematical notation appropriate for domain
+        comment: '''Horizontal Position x(t)'' and ''Vertical Position y(t)'' are
+          descriptive and include the parametric variable notation.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_color_gradientn with IMPRINT_SEQ=[#009E73, #4467A3] is the
+          correct imprint_seq single-polarity cmap. Background #FAF8F1 light / #1A1A17
+          dark. All chrome tokens theme-adaptive.'
     design_excellence:
       score: 15
       max: 20
@@ -86,22 +120,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom 6-color gradient palette, thoughtful typography, intentional
-          color hierarchy
+        comment: 'Strong design: intentional gradient coloring of parametric path,
+          semantic start/end marker design, mathematical equation titles in facets.
+          Clearly above library defaults. Not quite FiveThirtyEight-level (lacks focal
+          point or annotation-driven emphasis).'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: theme_void base with subtle dashed grid, custom legend styling, clean
-          backgrounds
+        comment: theme_void() removes all spines. Subtle grid (alpha=0.15). axis_ticks=element_blank().
+          Elevated backgrounds for legend and strips. Precise margin/padding control.
+          Very refined, just short of 'every detail polished'.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient tells progression story, start/end markers guide viewer,
-          equations in facet labels
+        comment: Color gradient along t is an effective storytelling device showing
+          how the curve unfolds over time. Two contrasting curve types (closed Lissajous
+          vs expanding spiral) make a clear comparison. Equation labels add educational
+          value.
     spec_compliance:
       score: 15
       max: 15
@@ -111,28 +150,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with two example curves
+        comment: Correct parametric curve plot with geom_path. Both Lissajous and
+          spiral included.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal aspect ratio, color gradient, two curves, start/end markers,
-          sufficient density
+        comment: Equal aspect ratio (coord_equal), color gradient along t (scale_color_gradientn
+          with imprint_seq), both required curves, start/end markers, 1000 points
+          for smoothness — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) and y(t) correctly computed and mapped
+        comment: x(t) on x-axis, y(t) on y-axis. Correct Lissajous formula (sin(3t),
+          sin(2t)) and spiral. All data visible within panels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: Title is 'line-parametric · python · plotnine · anyplot.ai' — exact
+          required format. Direction legend labels match data ('Start (t = 0)', 'End
+          (t = tmax)'). Parameter t colorbar correctly labeled.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -140,20 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Self-intersecting closed curve and open expanding spiral demonstrate
-          key parametric behaviors
+        comment: Shows both a closed self-intersecting Lissajous (demonstrating 3:2
+          frequency ratio) and an expanding Archimedean spiral. Color gradient shows
+          parameter evolution. Start/end markers demonstrate direction.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Well-known mathematical curves, neutral scientific context
+        comment: Lissajous figures are used in physics and signal analysis; spiral
+          curves in antenna design and natural growth. Classical mathematical curves,
+          neutral topic, real-world applications stated in spec.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mathematically correct values, appropriate t ranges
+        comment: Lissajous in [-1,1] both axes is correct for sin-based parametric.
+          Spiral normalized by 4π to keep within display range is factually appropriate.
+          All values mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -163,33 +212,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure, no functions/classes
+        comment: 'Linear flow: imports → theme tokens → data → markers → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic mathematical functions
+        comment: Fully deterministic — only np.linspace, no random calls. No seed
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports from plotnine are used. numpy and pandas used for data
+          generation/manipulation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity
+        comment: Clean Pythonic code. Grammar of graphics used correctly. Theme block
+          is verbose but that is expected in plotnine for full customization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5,
+          units='in'. verbose=False is clean.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -197,28 +251,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert grammar of graphics usage: aes, geom_path, facet_wrap, scale_color_gradientn,
-          coord_equal'
+        comment: 'Expert idiomatic plotnine: grammar of graphics composition (geom_path
+          + geom_point with separate data=markers), facet_wrap with scales=''free'',
+          coord_equal, scale_color_gradientn with guide_colorbar, combined guides()
+          ordering.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ggplot-specific layering, facet_wrap, guide_colorbar, scale_shape_manual
-          + scale_fill_manual
+        comment: 'Uses plotnine-specific features: faceting with free scales, coord_equal,
+          guide ordering via guides(). Grammar composition of two geom layers with
+          different datasets is distinctly ggplot2/plotnine. Could go further with
+          stat_function or more ggplot2-idiomatic approaches.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - layer-composition
   - colorbar
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
   - custom-colormap
   - alpha-blending
-  - grid-styling
+  - minimal-chrome
