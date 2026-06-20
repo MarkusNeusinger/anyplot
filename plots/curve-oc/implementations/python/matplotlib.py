@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -62,15 +62,15 @@ ax.fill_between(
 # Consumer's risk (β): probability of accepting a bad lot — #AE3030 for semantic error role
 ltpd_mask = fraction_defective >= ltpd
 ax.fill_between(
-    fraction_defective[ltpd_mask], 0, first_curve[ltpd_mask], alpha=0.25, color="#AE3030", label="Consumer's risk (β)"
+    fraction_defective[ltpd_mask], 0, first_curve[ltpd_mask], alpha=0.40, color="#AE3030", label="Consumer's risk (β)"
 )
 
 # AQL and LTPD reference lines
 ax.axvline(x=aql, color=INK_MUTED, linestyle="--", linewidth=1.2, alpha=0.8)
 ax.axvline(x=ltpd, color=INK_MUTED, linestyle="--", linewidth=1.2, alpha=0.8)
 
-ax.text(aql + 0.001, 0.97, "AQL", fontsize=7, fontweight="bold", color=INK_SOFT, ha="left", va="top")
-ax.text(ltpd + 0.001, 0.97, "LTPD", fontsize=7, fontweight="bold", color=INK_SOFT, ha="left", va="top")
+ax.text(aql + 0.001, 0.97, "AQL", fontsize=8, fontweight="bold", color=INK_SOFT, ha="left", va="top")
+ax.text(ltpd + 0.001, 0.97, "LTPD", fontsize=8, fontweight="bold", color=INK_SOFT, ha="left", va="top")
 
 # Producer's risk annotation at AQL for first plan
 pa_at_aql = sum(comb(n0, k) * aql**k * (1 - aql) ** (n0 - k) for k in range(c0 + 1))
@@ -104,8 +104,8 @@ ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0%}"))
 ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda y, _: f"{y:.0%}"))
 ax.xaxis.set_major_locator(mticker.MultipleLocator(0.02))
 
-# Title: 43 chars < 67, so default 12pt
-title = "curve-oc · matplotlib · anyplot.ai"
+# Title: 44 chars < 67, so default 12pt
+title = "curve-oc · python · matplotlib · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.set_xlabel("Fraction Defective (p)", fontsize=10, color=INK)
 ax.set_ylabel("Probability of Acceptance P(accept)", fontsize=10, color=INK)
