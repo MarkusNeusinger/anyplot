@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -127,14 +127,14 @@ plot = (
     + scale_y_continuous(
         limits=(0, 108), breaks=[0, 20, 40, 60, 80, 100], labels=["0%", "20%", "40%", "60%", "80%", "100%"]
     )
-    + annotate("text", x=11.8, y=22.5, label="20% threshold", size=2.5, color=INK_MUTED, ha="right", fontstyle="italic")
+    + annotate("text", x=8, y=22.5, label="20% threshold", size=2.5, color=INK_MUTED, ha="right", fontstyle="italic")
     + annotate(
         "label",
         x=6,
         y=55,
         label="Improvement\ngap",
         size=3.0,
-        color=IMPRINT_PALETTE[2],
+        color=INK_SOFT,
         fill=ELEVATED_BG,
         alpha=0.85,
         ha="center",
@@ -154,7 +154,7 @@ plot = (
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
         legend_key=element_rect(fill="none", color="none"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
