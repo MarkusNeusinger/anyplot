@@ -1,3 +1,7 @@
+// anyplot.ai
+// heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-20
 //# anyplot-orientation: square
 // anyplot.ai
 // heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
