@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: histogram-capability
 created: '2026-06-20T15:15:51Z'
-updated: '2026-06-20T15:21:43Z'
+updated: '2026-06-20T15:32:44Z'
 generated_by: claude-sonnet
 workflow_run: 27875008027
 issue: 4552
@@ -12,35 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all five required elements (histogram, normal curve,
-    LSL, USL, target, Cp/Cpk) fully implemented'
-  - 'Semantically correct color assignment: matte red for specification limits, ochre
-    for target, blue for the analytical overlay — all from the Imprint palette'
-  - 'Proper dual-theme adaptation: chrome tokens correctly flip while data colors
-    stay constant; dark render has no dark-on-dark failure'
-  - 'Modern ggplot2 idioms: after_stat(density), stat_function(), and annotate("label",...)
-    used correctly'
-  - 'Realistic domain scenario: process slightly off-center (Cpk < Cp) illustrates
-    a meaningful capability situation'
+  - 'Semantic color assignment is excellent: matte red (#AE3030) for spec limits communicates
+    danger zones naturally, while keeping data in brand green for a within-spec visual
+    story.'
+  - Full theme adaptation with ELEVATED_BG annotation box handled correctly for both
+    light and dark renders — annotation box fill and text color both flip appropriately.
+  - after_stat(density) and stat_function(fun=dnorm) are exactly the right modern
+    ggplot2 patterns; the code demonstrates genuine ggplot2 expertise.
+  - Data parameters (N=200, sigma=0.012mm, slightly off-center mu) create a realistic,
+    non-trivial process capability scenario with Cp > Cpk showing genuine process
+    drift.
+  - All required capability elements (histogram, normal fit, LSL, USL, target, Cp,
+    Cpk) are correctly implemented and clearly visible.
   weaknesses:
-  - library(dplyr) is imported but never used — remove this unused import
-  - The blue normal distribution curve has no legend entry or inline label — viewers
-    must infer it; add an inline label or annotation for the normal fit
+  - Normal fit label (size=3.2, italic blue on dark background) is at the lower end
+    of contrast in the dark render; consider increasing to size=3.5 or switching to
+    INK_SOFT token for label color in dark theme.
+  - DE-01 could be elevated by adding a subtle shaded rectangle (annotate rect) between
+    LSL and USL to visually reinforce the specification window — fill=brand green
+    at alpha~0.04.
+  - 'DE-03 data storytelling could be enhanced with a subtitle or caption stating
+    the capability verdict directly, e.g. subtitle = ''Process capable: Cp=1.43, Cpk=1.15
+    — slightly off-center'' in INK_SOFT.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "Shaft Diameter · histogram-capability · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17); axis labels "Shaft Diameter (mm)" and "Density" in dark ink at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt — all clearly readable
-      Data: Histogram bars in Imprint brand green #009E73 (alpha=0.75, white bar edges); fitted normal curve in Imprint blue #4467A3; LSL/USL dashed vertical lines in matte red #AE3030 with bold "LSL"/"USL" labels; target dot-dash line in Imprint ochre #BD8233 with "Target" label; Cp/Cpk annotation box with elevated fill #FFFDF6 showing "Cp = 1.43 / Cpk = 1.15"
-      Legibility verdict: PASS — all text readable against off-white background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Shaft Diameter · histogram-capability · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) — readable. Axis labels "Shaft Diameter (mm)" and "Density" in dark ink (#1A1A17). Tick labels (9.950–10.050 on x, 0–30 on y) in INK_SOFT (#4A4A44) — readable. Major grid lines at linewidth=0.2 subtle but visible.
+      Data: Histogram bars in Imprint brand green (#009E73) with alpha=0.75 and cream bar outlines. Normal distribution curve in blue (#4467A3) linewidth=1.2. LSL/USL dashed vertical lines in matte red (#AE3030). Target dot-dash line in ochre (#BD8233). Annotation labels "LSL", "USL", "Target", "Normal fit" in their respective data colors. Cp/Cpk box with elevated cream background (#FFFDF6) and dark text.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, no clipping detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and axis labels render in near-white (#F0EFE8); tick labels in light gray (#B8B7B0); Cp/Cpk annotation box uses elevated dark fill (#242420) with light border and white text — all clearly readable against dark surface
-      Data: Histogram bars, normal curve, spec-limit lines, and target line carry identical data colors to the light render — #009E73, #4467A3, #AE3030, #BD8233 are all unchanged; Cp/Cpk values identical (1.43, 1.15)
-      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 remains clearly visible on the dark background
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and axis labels in light cream (#F0EFE8) — readable against dark background. Tick labels in #B8B7B0 — readable. Grid lines lighter than background (INK_SOFT #B8B7B0 in dark mode). No dark-on-dark failures detected. Cp/Cpk annotation box has dark fill (#242420) with light text (#F0EFE8) and thin visible border — theme-correct.
+      Data: Histogram bars remain identical Imprint green (#009E73). Normal curve identical blue (#4467A3). LSL/USL lines identical matte red (#AE3030). Target line identical ochre (#BD8233). All data colors unchanged from light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable. The "Normal fit" italic label in #4467A3 on #1A1A17 background is at lower contrast (approx 2.7:1) but visually legible. No critical failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -51,50 +59,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt; readable in both themes
-          at full and mobile scale
+        comment: 'All sizes explicitly set (title=12, axis.title=10, axis.text=8,
+          annotations 3.2-3.8). Readable in both themes. Minor: Normal fit annotation
+          at size=3.2 is at the small end for mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: LSL/USL/Target labels and Cp/Cpk box are well separated; no collisions
-          detected
+        comment: No text overlaps detected. All labels well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars, normal curve, spec lines, and annotations all clearly
-          distinguishable
+        comment: 200 data points, 25 bins, alpha=0.75 is density-appropriate. All
+          visual elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Elements labelled independently of color; semantic red for limits
-          has text labels as redundant encoding
+        comment: Imprint palette used. Redundant line styles (dashed for LSL/USL,
+          dot-dash for target) beyond color. CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 correct landscape; title ~60% width; generous margins;
-          no overflow or clipping
+        comment: Canvas gate passed (3200x1800). Good canvas utilization. Wide spec
+          limit margins are intentional for capability plots.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units; Density; title includes descriptive
-          prefix and all required fields
+        comment: Shaft Diameter (mm) with units on x-axis, Density on y-axis. Title
+          has correct optional descriptive prefix.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; semantic red for limits; Imprint ochre for
-          target; correct backgrounds both themes'
+        comment: 'Histogram #009E73 (pos 1), curve #4467A3 (pos 3), target #BD8233
+          (pos 4), spec limits #AE3030 (pos 5, correct semantic exception). Backgrounds
+          and chrome theme-adaptive in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -104,22 +113,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color coding, alpha-blended bars with page-bg
-          edges, polished annotation box
+        comment: Thoughtful semantic colors, theme-adaptive annotation box, well-composed
+          layers. Above defaults but not FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed, minor grid blank, subtle grid linewidth 0.2,
-          L-frame via axis.line, generous margins
+        comment: L-shaped frame, no minor grid, major grid linewidth=0.2 subtle, bar
+          outlines in PAGE_BG for clean separation, explicit margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Distribution vs spec limits immediately readable; off-center mean
-          creates authentic capability narrative; Cp/Cpk quantify the story
+        comment: Semantic red for spec limits communicates danger zones. Off-center
+          distribution (Cp > Cpk) shows realistic process drift. Cp/Cpk annotation
+          adds quantitative context.
     spec_compliance:
       score: 15
       max: 15
@@ -129,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Histogram with fitted normal distribution overlay; correct for process
-          capability
+        comment: 'Correct process capability plot: histogram + fitted normal curve
+          + LSL/USL lines + target line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All five required elements: histogram, normal curve, LSL, USL, target
-          line, Cp/Cpk annotation'
+        comment: 'All features present: histogram, normal fit (stat_function+dnorm),
+          LSL+USL lines (dashed red), target line (dot-dash ochre), Cp+Cpk computed
+          and annotated.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurements, Y=density via after_stat; curve fitted from sample
-          mean and SD
+        comment: Measurements on x-axis, density on y-axis. All 200 data points represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; inline labels serve
-          as legend for spec elements
+        comment: 'Title: Shaft Diameter · histogram-capability · r · ggplot2 · anyplot.ai.
+          Language r correct. No legend needed — inline labels used appropriately.'
     data_quality:
       score: 15
       max: 15
@@ -161,24 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Distribution shape, spec limits, target, fitted curve, Cp/Cpk; off-center
-          scenario adds realism
+        comment: 'Shows all features: histogram, overlaid normal fit, dual spec limits,
+          target value, capability indices.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter (mm) precision machining; plausible tolerances; neutral
-          quality-engineering topic
+        comment: Shaft diameter manufacturing scenario from spec examples. LSL=9.95,
+          USL=10.05 realistic precision machining tolerance. Neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 9.95-10.05 mm range; Cp=1.43/Cpk=1.15 realistic; SIGMA=0.012 appropriate
-          for precision parts
+        comment: N=200 within 50-500 spec recommendation. Sigma=0.012mm realistic
+          precision. Cp=1.43, Cpk=1.15 realistic capability indices showing capable
+          but slightly off-center process.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -186,55 +197,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script; no functions or classes
+        comment: 'Linear flow: imports -> theme tokens -> process params -> data generation
+          -> plot layers -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top
+        comment: set.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but not used anywhere in the script
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organised with section comments; appropriate complexity; no
-          fake UI
+        comment: Clean, well-commented ggplot2 code. Each layer documented. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-${THEME}.png via ragg::agg_png; correct naming
+        comment: ggsave with sprintf('plot-%s.png', THEME). ragg::agg_png device.
+          Modern linewidth= API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use: after_stat(density) modern computed variable, stat_function(fun=dnorm)
+          for distribution overlay, annotate(''label'') for styled boxes, proper grammar-of-graphics
+          layering.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: after_stat(density), stat_function(fun=dnorm), annotate('label',...),
-          geom_vline(), proper theme layering
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: stat_function() for analytical overlay, annotate('label') for styled
-          callout box, after_stat() computed variable, fine-grained theme element
-          control
+        comment: 'stat_function for mathematical function overlay is distinctively
+          ggplot2. after_stat computed variables and annotate(''label'') with fill/border
+          are idiomatic. Minor deduction: well-known pattern, does not push more advanced
+          ggplot2 capabilities.'
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - dplyr
+  - ragg
   techniques:
   - annotations
   - layer-composition
@@ -243,4 +257,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
