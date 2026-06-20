@@ -1,15 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 93/100 | Created: 2026-03-16
+Quality: pending | Updated: 2026-06-20
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the installed altair package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - Monthly signup cohorts tracked over 12 weeks
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — positions 1→5 for five cohorts
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
+# Data — monthly signup cohorts tracked weekly for 12 weeks
 np.random.seed(42)
 
 cohorts = {
@@ -33,47 +53,35 @@ for i, (cohort_label, info) in enumerate(cohorts.items()):
 
 df = pd.DataFrame(rows)
 
-# Colorblind-safe palette (Tol-inspired)
 cohort_labels = list(df["Cohort"].unique())
-colors = ["#88CCEE", "#44AA99", "#DDCC77", "#CC6677", "#332288"]
 order_domain = list(range(5))
-opacity_range = [0.45, 0.59, 0.73, 0.87, 1.0]
+opacity_range = [0.60, 0.70, 0.80, 0.90, 1.0]
 width_range = [1.8, 2.4, 3.0, 3.6, 4.2]
 size_range = [60, 90, 120, 150, 180]
 
-# Interactive highlight on hover
+# Interactive hover highlight
 highlight = alt.selection_point(fields=["Cohort"], on="pointerover", empty=False)
 
 # Reference line at 20% retention threshold
 threshold_df = pd.DataFrame({"y": [20]})
-threshold = alt.Chart(threshold_df).mark_rule(strokeDash=[8, 6], strokeWidth=2, color="#666666").encode(y="y:Q")
+threshold = alt.Chart(threshold_df).mark_rule(strokeDash=[8, 6], strokeWidth=2, color=INK_MUTED).encode(y="y:Q")
 threshold_label = (
     alt.Chart(threshold_df)
-    .mark_text(text="20% Target", align="left", dx=5, dy=-12, fontSize=16, fontWeight="bold", color="#666666")
+    .mark_text(text="20% Target", align="left", dx=5, dy=-12, fontSize=11, fontWeight="bold", color=INK_MUTED)
     .encode(x=alt.value(20), y="y:Q")
 )
 
-# Shared axis encodings
-x_enc = alt.X(
-    "Week:Q",
-    title="Weeks Since Signup",
-    scale=alt.Scale(domain=[0, 12]),
-    axis=alt.Axis(labelFontSize=18, titleFontSize=22, tickMinStep=1),
-)
-y_enc = alt.Y(
-    "Retention (%):Q",
-    title="Retention (%)",
-    scale=alt.Scale(domain=[0, 100]),
-    axis=alt.Axis(labelFontSize=18, titleFontSize=22, format=".0f"),
-)
+# Axis encodings
+x_enc = alt.X("Week:Q", title="Weeks Since Signup", scale=alt.Scale(domain=[0, 12]), axis=alt.Axis(tickMinStep=1))
+y_enc = alt.Y("Retention (%):Q", title="Retention (%)", scale=alt.Scale(domain=[0, 100]), axis=alt.Axis(format=".0f"))
 color_enc = alt.Color(
     "Cohort:N",
-    scale=alt.Scale(domain=cohort_labels, range=colors),
+    scale=alt.Scale(domain=cohort_labels, range=IMPRINT_PALETTE),
     sort=cohort_labels,
-    legend=alt.Legend(title="Cohort", titleFontSize=18, labelFontSize=16, symbolStrokeWidth=4, symbolSize=200),
+    legend=alt.Legend(title="Cohort", symbolStrokeWidth=3, symbolSize=150),
 )
 
-# Lines — single Chart, graduated styling via order-based scales
+# Lines with graduated width and opacity — newer cohorts thicker and more opaque
 lines = (
     alt.Chart(df)
     .mark_line()
@@ -97,14 +105,14 @@ lines = (
     .add_params(highlight)
 )
 
-# Points
+# Points with graduated size matching the line hierarchy
 points = (
     alt.Chart(df)
     .mark_point(filled=True)
     .encode(
         x="Week:Q",
         y="Retention (%):Q",
-        color=alt.Color("Cohort:N", scale=alt.Scale(domain=cohort_labels, range=colors), legend=None),
+        color=alt.Color("Cohort:N", scale=alt.Scale(domain=cohort_labels, range=IMPRINT_PALETTE), legend=None),
         opacity=alt.condition(
             highlight,
             alt.value(1.0),
@@ -119,33 +127,58 @@ points = (
     )
 )
 
-# Combine layers
+title_str = "line-retention-cohort · python · altair · anyplot.ai"
 chart = (
     alt.layer(threshold, threshold_label, lines, points)
     .properties(
-        width=1600,
-        height=900,
+        width=607,
+        height=320,
+        background=PAGE_BG,
         title=alt.Title(
-            "line-retention-cohort · altair · pyplots.ai",
-            fontSize=28,
+            title_str,
+            fontSize=16,
             fontWeight="bold",
+            color=INK,
             subtitle="Newer cohorts retain better — product improvements are working",
-            subtitleFontSize=18,
-            subtitleColor="#555555",
+            subtitleFontSize=12,
+            subtitleColor=INK_SOFT,
         ),
     )
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
-        gridColor="#D0D0D0",
-        gridOpacity=0.3,
-        domainWidth=0,
-        tickColor="#888888",
-        labelColor="#333333",
-        titleColor="#222222",
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.15,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
     )
-    .configure_view(strokeWidth=0)
-    .configure(background="#FAFAFA")
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
+    .configure_title(color=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — landscape canvas target: 3200 × 1800
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
