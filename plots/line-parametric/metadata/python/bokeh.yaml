@@ -1,47 +1,56 @@
 library: bokeh
+language: python
 specification_id: line-parametric
 created: '2026-03-20T10:39:02Z'
-updated: '2026-03-20T11:08:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339035325
+updated: '2026-06-20T23:09:35Z'
+generated_by: claude-sonnet
+workflow_run: 27885997516
 issue: 4424
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-parametric/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-parametric/bokeh/plot.html
-quality_score: 85
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Viridis color gradient to show parameter progression along both
-    curves
-  - Well-chosen pair of parametric curves (Lissajous + spiral) demonstrating different
-    behaviors
-  - Clean, idiomatic Bokeh code with good use of ColumnDataSource and multi_line
-  - 'Polished styling: subtle grid, custom typography, styled legends, distinct start/end
-    markers'
-  - Dual output (PNG + HTML) leverages Bokeh interactive capabilities
+  - Excellent use of Bokeh's multi_line with per-segment gradient coloring — beautifully
+    visualizes parameter direction of traversal along both curves
+  - Both spec-required curve types present (Lissajous figure and Archimedean spiral)
+    in a clean gridplot dual-panel layout
+  - 'Imprint sequential colormap (green #009E73 → blue #4467A3) correctly applied
+    to continuous parameter t data with matching ColorBar'
+  - Fully theme-adaptive chrome — light and dark renders both look professional with
+    no dark-on-dark or light-on-light failures
+  - Clear start/end markers (circle at t=0, square at t end) with legend and colorbars
+    provide full quantitative context
+  - Equal aspect ratio (match_aspect=True) correctly applied to prevent geometric
+    distortion of both curve types
   weaknesses:
-  - Colorbars defined in code but not visible in rendered PNG output — the quantitative
-    parameter scale is lost
-  - Design excellence could be further elevated with more distinctive visual treatment
-  - Library mastery could leverage more Bokeh-specific features (e.g., HoverTool in
-    HTML version)
-  image_description: The plot displays two side-by-side panels on a light off-white
-    background. The left panel shows a Lissajous figure (x = sin(3t), y = sin(2t))
-    — a complex self-intersecting curve rendered with a Viridis color gradient progressing
-    from dark purple/blue (start, t ≈ 0) through teal/green to yellow (end, t ≈ 2π).
-    A dark circle marks the start point and a yellow square marks the end point. A
-    "t = π" annotation in gray italic text appears near the midpoint. The right panel
-    shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) also colored with Viridis
-    gradient, spiraling outward from the center. Start (circle) and end (square) markers
-    are visible, with a "t = 2π" midpoint annotation. Both panels have legends identifying
-    Start and End points, subtle dashed grid lines, and italic axis labels. The main
-    title "line-parametric · bokeh · pyplots.ai" appears at the top with a subtitle
-    about Viridis palette. Notably, the colorbars defined in code for showing the
-    parameter t scale are not visible in the rendered output.
+  - Helper functions _lerp_hex and make_segment_source deviate from KISS no-functions
+    guideline; the lerp logic could be inlined and make_segment_source unrolled for
+    the two panels
+  - Font sizes are below style guide defaults (title 36pt vs 50pt, axis labels 32pt
+    vs 42pt, tick labels 26pt vs 34pt) — while partially justified by the dual-panel
+    layout, the sizes are still noticeably small
+  - 'DE-02: Axis lines (spines) are still rendered on all four sides rather than an
+    L-shape; removing top and right axis lines would improve visual refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white ~#FAF8F1 — correct, not pure white
+      Chrome: Title "line-parametric · python · bokeh · anyplot.ai" visible in dark ink at top of left panel; "Archimedean Spiral · line-parametric · python · bokeh · anyplot.ai" at top of right panel — both readable. Axis labels in italic dark ink (x(t)=sin(3t), y(t)=sin(2t), x(t)=t·cos(t), y(t)=t·sin(t)) clearly readable. Tick labels in soft dark color (#4A4A44) readable. Colorbars with "t (rad)" label present on right side of each panel.
+      Data: Lissajous figure in left panel with green-to-blue gradient along the 1000-segment curve; Archimedean spiral in right panel with same gradient. Green circle (#009E73) at start, blue square (#4467A3) at end. Line width 9 makes gradient clearly visible.
+      Legibility verdict: PASS — all text elements readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black ~#1A1A17 — correct, not pure black
+      Chrome: Title and axis labels in light cream (#F0EFE8) clearly visible against dark background. Tick labels in soft light color (#B8B7B0) readable. No dark-on-dark text failures. Legend and colorbar frames properly themed.
+      Data: Gradient curve colors are identical to light render (green #009E73 → blue #4467A3) — only chrome flipped. Curves clearly distinguishable against dark background.
+      Legibility verdict: PASS — all text elements readable against warm near-black background
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,68 +58,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 34pt, labels 26pt, ticks 20pt,
-          legend 22pt). Readable throughout. Minor: some rendered text slightly compact.'
+        comment: All font sizes explicitly set; readable in both themes; sizes below
+          style guide defaults (36pt vs 50pt title) but justified by dual-panel layout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legends, labels, annotations clearly
-          separated.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Curves visible with line_width=7, markers at size=34. Color gradient
-          clear. Colorbars not visible in render.
+        comment: Line width 9 makes gradient clearly visible; 1000 points gives smooth
+          curves; start/end markers size 30 very visible
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential (green to blue) is CVD-safe; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Viridis palette is perceptually uniform and colorblind-safe.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Two-panel gridplot uses space reasonably. Equal aspect ratio creates
-          some unused space. Colorbars absent.
+        comment: Dual-panel fills canvas well; match_aspect required by spec; balanced
+          whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with mathematical notation providing context.
+        comment: Descriptive mathematical axis labels with function notation; correct
+          title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential (green #009E73 → blue #4467A3) for continuous
+          parameter; backgrounds #FAF8F1 / #1A1A17; theme-correct chrome both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom Viridis palette, styled typography, custom background, styled
-          legends. Above defaults but not publication-level.
+        comment: 'Strong design: gradient coloring along parametric curves is sophisticated;
+          dual-panel with dual colorbars shows intentional hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha 0.12, dashed), custom axis styling, minor ticks
-          removed, styled outline border.
+        comment: Grid at 0.12 alpha is subtle; outline_line_color=None removes box
+          frame; good legend padding; but all four spines still rendered
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient conveys parameter progression. Start/end markers with
-          distinct shapes guide viewer. Midpoint annotations add context.
+        comment: Gradient color guides viewer through parameter space; two curve types
+          (closed vs open) are instructive; start/end markers clarify traversal direction
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,109 +135,112 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with Lissajous and Archimedean spiral.
+        comment: Correct parametric curve plots; both curve subtypes present
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Equal aspect, color gradient, start/end markers, 1000 points. Colorbars
-          not rendering in PNG.
+        comment: Equal aspect ratio, gradient coloring, two example curves, labeled
+          start/end points, sufficient point density (1000)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed for both curves. Axes display full data range.
+        comment: x(t) and y(t) correctly mapped for both Lissajous and spiral
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format via HTML Div. Legend labels identify Start/End
-          with parameter values.
+        comment: Both titles in correct format; legend labels match start/end points
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Two distinct parametric curves: Lissajous (closed, self-intersecting)
-          and spiral (open, expanding).'
+        comment: Shows closed curve (Lissajous with self-intersections) and open spiral;
+          both demonstrate distinct behaviors of parametric curves
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real mathematical/physics constructs. Neutral, educational context.
+        comment: Lissajous figures are real physics/signal analysis tools; Archimedean
+          spiral has real engineering and natural science applications
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard mathematical ranges for both curve types.
+        comment: Lissajous t∈[0,2π] gives correct [-1,1] range; spiral t∈[0,4π] gives
+          appropriate expansion
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, segments, figures, styling, layout,
-          save.'
+        comment: Uses two helper functions (_lerp_hex, make_segment_source) — small
+          deduction for no-functions guideline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: trigonometric functions with fixed parameters.'
+        comment: Fully deterministic — only np.linspace and mathematical functions,
+          no random
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imported modules are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Styling loop reduces duplication.
+        comment: Clean, no over-engineering; sys.path manipulation is necessary for
+          bokeh.py naming conflict
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Current Bokeh API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic ColumnDataSource, multi_line, gridplot, ColorBar+LinearColorMapper,
+          figure with proper parameters
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic Bokeh: ColumnDataSource, multi_line, ColorBar, LinearColorMapper,
-          gridplot, Div.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Multi_line per-segment coloring, HTML Div title, dual PNG+HTML output,
-          match_aspect.
-  verdict: REJECTED
+        comment: multi_line with per-segment color list is a distinctive Bokeh technique
+          for gradient lines; ColorBar+LinearColorMapper combo is Bokeh-specific
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - colorbar
-  - annotations
   - subplots
   - html-export
   patterns:
@@ -229,5 +249,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
   - edge-highlighting
