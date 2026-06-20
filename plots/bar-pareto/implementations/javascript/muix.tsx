@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-pareto: Pareto Chart with Cumulative Line
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 70/100 | Created: 2026-06-20
+// Quality: 88/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-pareto: Pareto Chart with Cumulative Line
