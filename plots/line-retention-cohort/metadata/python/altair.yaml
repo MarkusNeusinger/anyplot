@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-retention-cohort
 created: '2026-03-16T20:46:06Z'
-updated: '2026-06-20T03:32:18Z'
+updated: '2026-06-20T03:42:08Z'
 generated_by: claude-sonnet
 workflow_run: 27858608592
 issue: 4572
@@ -12,136 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-rete
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Imprint palette positions 1-5 used in canonical order, with brand green #009E73
-    correctly assigned to Jan 2025 (first series)'
-  - Graduated line width and opacity creates intentional visual hierarchy — newer
-    cohorts (thicker, more opaque) are visually prominent
-  - 'Full spec compliance: all curves start at 100%, 20% reference line with label,
-    legend includes cohort sizes (n=X,XXX format)'
-  - Interactive hover highlight via alt.selection_point() with conditional stroke
-    width and opacity — genuine Altair interactivity, not faked
-  - Clean layer composition (threshold rule + label + lines + points) with idiomatic
-    alt.layer()
-  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully theme-adaptive with
-    all chrome tokens correctly applied
-  - Descriptive subtitle 'Newer cohorts retain better — product improvements are working'
-    adds data storytelling context
+  - 'Excellent Altair usage: declarative interactive selection (alt.selection_point
+    + alt.condition) across three encoding channels simultaneously (strokeWidth, opacity,
+    size) — distinctively Vega-Lite pattern not easily replicated in static libraries'
+  - Graduated visual hierarchy (older cohorts thinner and more transparent) directly
+    implements the spec requirement for de-emphasizing older cohorts
+  - Distinct marker shapes (circle, square, cross, diamond, triangle-up) provide CVD-safe
+    redundant encoding beyond what the spec requires
+  - Narrative subtitle 'Newer cohorts retain better — product improvements are working'
+    elevates the chart from data display to data storytelling
+  - Perfect theme adaptation across both renders — all chrome tokens correctly threaded
+    through title, ticks, grid, legend, and view background
+  - The 20% reference line with text label is elegantly implemented using a separate
+    mark_rule + mark_text layer composition
   weaknesses:
-  - 5 cohorts use color as the sole categorical discriminator — with 5 series at the
-    CVD borderline (ΔE_CVD ≈ 13.7-10.7), adding distinct marker shapes per cohort
-    would improve accessibility
-  - Chart area has full-grid coverage creating a slightly boxed visual — consider
-    removing the top/right axis domain lines via configure_axis(domain=False) to produce
-    an L-shaped or open frame more aligned with the style guide's spine guidance
-  - 'DE-01 headroom: the design is well-executed but conventional; a more distinctive
-    layout treatment (e.g. direct series labels at week 12 instead of a separate legend
-    panel) would elevate aesthetics'
-  - The 20% Target label (fontSize=11) is on the smaller side at scale_factor=4 —
-    increase to fontSize=13 for better mobile readability at the 400px srcset size
+  - X-axis gridlines are present alongside Y-axis gridlines; for a line chart the
+    style guide recommends Y-axis-only grid — add configure_axisX(grid=False) to remove
+    X-axis grid for a cleaner look (DE-02)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — no pure white visible.
-      Chrome: Bold title "line-retention-cohort · python · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Subtitle "Newer cohorts retain better — product improvements are working" in INK_SOFT. Axis labels "Retention (%)" (Y) and "Weeks Since Signup" (X) in dark text, 12px. Tick labels (0–100 Y, 0–12 X) in INK_SOFT, 10px — all readable. Legend panel on right with "Cohort" title and 5 entries in INK_SOFT on ELEVATED_BG (#FFFDF6) with border. "20% Target" annotation in INK_MUTED at the dashed reference line.
-      Data: 5 cohort lines in Imprint palette order — Jan 2025 brand-green #009E73, Feb 2025 lavender #C475FD, Mar 2025 blue #4467A3, Apr 2025 ochre #BD8233, May 2025 matte-red #AE3030. Graduated width and opacity (older cohorts thinner/more-transparent, newer thicker/more-opaque). All lines start at (0, 100%) and decay over 12 weeks. Filled circle markers at each data point. Dashed horizontal rule at y=20.
-      Legibility verdict: PASS — all text elements are clearly visible against the warm off-white background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-retention-cohort · python · altair · anyplot.ai" in bold dark text spans ~70% of plot width (expected for 67-char mandated title). Subtitle "Newer cohorts retain better — product improvements are working" in softer dark text below. X-axis label "Weeks Since Signup" and Y-axis label "Retention (%)" both clearly readable. Tick labels on both axes clearly visible. Legend on the right with cohort label + n= sizes in dark text on light elevated background.
+      Data: 5 cohort lines in Imprint palette order: #009E73 (Jan 2025), #C475FD (Feb 2025), #4467A3 (Mar 2025), #BD8233 (Apr 2025), #AE3030 (May 2025). First series is brand green #009E73. Graduated line widths (1.8–4.2) and opacities (0.60–1.0) emphasize newer cohorts. Distinct marker shapes (circle, square, cross, diamond, triangle-up). Dashed reference line at 20% clearly labeled "20% Target".
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle rendered in INK (#F0EFE8) — light cream on dark background, clearly readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — clearly legible against dark surface. Legend on right with ELEVATED_BG (#242420) fill and INK_SOFT border — text readable. Grid lines subtle at 15% opacity. "20% Target" annotation in INK_MUTED (#A8A79F) — readable. No dark-on-dark text failure detected.
-      Data: Data colors are identical to the light render — same Imprint palette positions 1-5 with the same graduated width/opacity hierarchy. Brand green #009E73 remains clearly visible on the dark surface. All 5 cohort lines and their markers are clearly distinguishable.
-      Legibility verdict: PASS — all text elements are clearly visible against the near-black background. No dark-on-dark issues. Chrome adaptation is correct.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and legend all rendered in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). All clearly readable against the dark background. No dark-on-dark failures observed. Legend box uses elevated dark background (#242420) with light stroke. Grid lines subtle but visible.
+      Data: All five data colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 are theme-independent. Brand green #009E73 clearly visible on dark surface. Graduated widths/opacities and marker shapes preserved identically.
+      Legibility verdict: PASS — all text readable, chrome correctly flipped for dark theme
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text clearly readable in both themes. Font sizes appropriate:
-          title 16px, axis labels 12px, tick labels 10px, legend 10px. ''20% Target''
-          annotation at fontSize=11 is slightly small for mobile readability at 400px
-          srcset.'
+        comment: All font sizes explicitly set (title=16, subtitle=12, axis=12, ticks=10,
+          legend=10). Title spans ~70% of plot width — expected for 67-char mandated
+          title. Axis labels balanced. No overflow in either theme.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps detected. Week-0 cluster at 100% is inherent to
-          retention chart type. Legend is in separate right panel with clear separation
-          from data.
+        comment: No text-on-text or text-on-data overlap. Legend cleanly positioned
+          to the right. Lines converge at week 0 but markers remain distinguishable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 cohort lines and markers clearly visible in both renders. Graduated
-          size/opacity creates intentional hierarchy without obscuring any series.
+        comment: Graduated line widths (1.8–4.2px) and marker sizes (60–180 area units)
+          with distinct shapes. All cohorts clearly visible at medium data density
+          (5 × 13 = 65 points).
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Imprint palette used (CVD-safe). With 5 series at the CVD borderline
-          (ΔE_CVD ≈ 13.7-10.7), distinct marker shapes would improve accessibility
-          but are not present — only color + size variation.
+        comment: 5 Imprint palette colors plus 5 distinct marker shapes provide strong
+          CVD-safe redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions with generous whitespace. Title
-          centered and at correct proportion (~68% width). Legend properly placed.
-          No clipping or overflow detected.
+        comment: Chart fills ~60% of the 3200x1800 canvas with balanced margins. Legend
+          adjacent to data. Correct padding implementation applied.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Retention (%)' with % unit, X-axis 'Weeks Since Signup'.
-          Title matches mandated format exactly. Descriptive subtitle added.
+        comment: '"Weeks Since Signup" (X) and "Retention (%)" (Y) — both descriptive
+          with appropriate units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Jan 2025 = #009E73 (brand green). Canonical Imprint
-          palette positions 1-5 in order. Backgrounds #FAF8F1 (light) and #1A1A17
-          (dark) correct. Both renders fully theme-adaptive.'
+        comment: 'First series #009E73 correct. Subsequent positions match Imprint
+          canonical order through slot 5. Backgrounds #FAF8F1/#1A1A17 correct. Both
+          theme chromes correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: graduated opacity/width creates deliberate visual
-          hierarchy, descriptive subtitle adds storytelling, legend includes cohort
-          sizes. Conventional composition overall — direct end-of-line labels would
-          elevate further.'
+        comment: 'Strong design: graduated line widths/opacities for cohort emphasis,
+          distinct marker shapes, narrative subtitle, reference line annotation, Imprint
+          palette. Clearly above defaults but not yet FiveThirtyEight publication-level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid at 15% opacity, theme-adaptive chrome, elevated legend
-          background. Full-coverage grid creates slightly boxed appearance — removing
-          top/right axis domains to L-shape would improve refinement.
+        comment: 'Good refinement: domain=False removes axis lines, gridOpacity=0.15
+          very subtle, strokeWidth=0 removes view border. Deduction: both X and Y
+          gridlines present — Y-axis-only preferred for line charts.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 20% reference benchmark line with label, subtitle frames the insight,
-          newer cohorts are visually prominent via graduated encoding. Clear directional
-          story visible from chart.
+        comment: Narrative subtitle explicitly frames the insight. Graduated visual
+          emphasis directs eye to newest cohort. The 20% reference line provides contextual
+          benchmarking. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-series line chart with retention curves.
+        comment: 'Correct: multi-cohort retention line chart with all curves starting
+          at 100%.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All curves start at 100% at week 0, distinct colors, legend with
-          cohort label + size (n=X,XXX), Y-axis 0-100%, gridlines, weeks-since-signup
-          X-axis, older cohorts thinner/more-transparent, 20% dashed reference line.
+        comment: 'All spec features present: 5 cohorts, 13 time points each, legend
+          with label+size, Y-axis 0-100%, 20% dashed reference line, graduated opacity/width
+          for cohort ordering.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Week (time since signup), Y=Retention (%), color=Cohort. 5 cohorts
-          (within 3-6 range), 13 time periods (within 6-12 range).
+        comment: 'X: Weeks Since Signup (0-12); Y: Retention (%) 0-100. Correct exponential
+          decay with all curves starting at 100%.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'line-retention-cohort · python · altair · anyplot.ai'.
-          Legend entries in 'Jan 2025 (n=1,245)' format matching spec.
+        comment: 'Title: ''line-retention-cohort · python · altair · anyplot.ai''.
+          Legend labels: ''Jan 2025 (n=1,245)'' etc. — exact format specified in spec.'
     data_quality:
       score: 15
       max: 15
@@ -183,23 +171,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: multiple cohort lines, exponential decay, improving
-          trend, graduated visual emphasis, reference threshold.'
+        comment: 5 cohorts with different retention profiles, clear cohort-over-cohort
+          improvement trend, realistic noise, curves crossing 20% at different time
+          points.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly cohorts Jan-May 2025 with realistic sizes (1,102-1,510).
-          Exponential decay with improving half-life (3.5→6.2 weeks) accurately models
-          product improvement. Retention values realistic.
+        comment: Monthly SaaS product cohorts (Jan-May 2025) tracked weekly for 12
+          weeks. Cohort sizes 1,102-1,510 realistic. Neutral business analytics scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weeks 0-12, retention 0-100%, cohort sizes ~1,100-1,500 all appropriate
-          for the domain.
+        comment: Retention 0-100%. Weekly time units appropriate. Cohort sizes realistic
+          for SaaS. Decay rates produce plausible retention at week 12 (5-15% range
+          realistic for monthly cohorts).
     code_quality:
       score: 10
       max: 10
@@ -209,33 +198,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Direct procedural script.
+        comment: 'Clean linear flow: imports → theme tokens → data generation → encodings
+          → chart composition → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before any random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas, PIL — all used.
+        comment: 'All imports used: os, sys, altair, numpy, pandas, PIL.Image.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized. Modern Python zip(strict=True). Elegant use of alt.condition()
-          for interactive state. No fake UI.
+        comment: Clean, Altair-idiomatic code with appropriate complexity. sys.path
+          manipulation is a known shadowing-prevention pattern. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current altair
-          6.0.0 API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API. Canvas resize-and-pad pattern correctly implemented.
     library_mastery:
       score: 9
       max: 10
@@ -245,16 +235,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper encoding types (Q, N, O), alt.layer() composition, configure_*
-          chain, alt.condition() for selection state, add_params().
+        comment: 'Expert use of Altair''s declarative grammar: alt.selection_point(),
+          alt.condition() for conditional encodings, alt.layer() for composition,
+          proper :Q/:O/:N encoding types, configure_axis/view/legend/title.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: alt.selection_point() for hover highlight, conditional stroke width
-          + opacity + size via alt.condition(), ordinal encoding for graduated properties,
-          layer composition of 4 marks, HTML export.
+        comment: 'Interactive hover selection via alt.selection_point() with alt.condition()
+          changing strokeWidth, opacity, and size simultaneously — distinctively Vega-Lite
+          declarative interaction. Layer composition with rule+text+line+point is
+          distinctively Altair. Slight deduction: the interactive highlight is only
+          fully demonstrable in HTML, not the static PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -262,10 +255,12 @@ impl_tags:
   techniques:
   - layer-composition
   - hover-tooltips
-  - annotations
   - html-export
+  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
   styling:
   - alpha-blending
