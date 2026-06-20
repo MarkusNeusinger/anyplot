@@ -1,7 +1,7 @@
 // anyplot.ai
 // spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
