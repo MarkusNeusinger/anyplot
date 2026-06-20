@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-Library: plotly | Python
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-20
 """
 
 import os
