@@ -1,7 +1,3 @@
-// anyplot.ai
-// line-retention-cohort: User Retention Curve by Cohort
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-retention-cohort: User Retention Curve by Cohort
@@ -50,10 +46,15 @@ const rng = makeLcg(42);
 // Newer cohorts retain better — product improving month over month
 const retentionData = COHORTS.map((_, i) => buildCurve(rng, 17 + i * 3.5));
 
+// Visual hierarchy: older cohorts fade back, newer stand out
+const LINE_WIDTHS   = [1.5, 1.75, 2.0, 2.25, 2.75];
+const LINE_OPACITIES = [0.45, 0.6, 0.75, 0.875, 1.0];
+
 // Imprint palette: first series (#009E73) through position 5 via t.palette
 const SERIES = COHORTS.map((c, i) => ({
+  id: `cohort-${i}`,
   data: retentionData[i],
-  label: `${c.label}  (n = ${c.size.toLocaleString()})`,
+  label: `${c.label}  (n = ${c.size.toLocaleString()})`,
   color: t.palette[i],
   showMark: false,
   curve: "monotoneX",
@@ -88,6 +89,8 @@ export default function Chart() {
           tickMinStep: 1,
           labelStyle: { fontSize: 16, fill: t.inkSoft },
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+          disableLine: true,
+          disableTicks: true,
         }]}
         yAxis={[{
           min: 0,
@@ -96,9 +99,19 @@ export default function Chart() {
           labelStyle: { fontSize: 16, fill: t.inkSoft },
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           tickMinStep: 10,
+          disableLine: true,
+          disableTicks: true,
         }]}
         grid={{ horizontal: true }}
         margin={{ top: 60, right: 240, bottom: 80, left: 90 }}
+        sx={{
+          "& .MuiLineElement-series-cohort-0": { strokeWidth: LINE_WIDTHS[0], opacity: LINE_OPACITIES[0] },
+          "& .MuiLineElement-series-cohort-1": { strokeWidth: LINE_WIDTHS[1], opacity: LINE_OPACITIES[1] },
+          "& .MuiLineElement-series-cohort-2": { strokeWidth: LINE_WIDTHS[2], opacity: LINE_OPACITIES[2] },
+          "& .MuiLineElement-series-cohort-3": { strokeWidth: LINE_WIDTHS[3], opacity: LINE_OPACITIES[3] },
+          "& .MuiLineElement-series-cohort-4": { strokeWidth: LINE_WIDTHS[4], opacity: LINE_OPACITIES[4] },
+          "& .MuiChartsGrid-line": { opacity: 0.22, strokeDasharray: "3 3" },
+        }}
         slotProps={{
           legend: {
             position: { vertical: "middle", horizontal: "right" },
@@ -113,7 +126,7 @@ export default function Chart() {
           y={20}
           label="20% retention target"
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
-          labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
+          labelStyle={{ fill: t.inkSoft, fontSize: 14 }}
           labelAlign="end"
         />
       </LineChart>
