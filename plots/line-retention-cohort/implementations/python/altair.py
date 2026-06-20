@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: altair 6.0.0 | Python 3.14.3
-Quality: pending | Updated: 2026-06-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import os
