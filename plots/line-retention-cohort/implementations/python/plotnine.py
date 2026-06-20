@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-16
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -32,6 +34,16 @@ from plotnine import (
 )
 
 
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
 # Data
 np.random.seed(42)
 
@@ -60,96 +72,98 @@ df = pd.DataFrame(rows)
 cohort_labels = list(df["cohort"].unique())
 df["cohort"] = pd.Categorical(df["cohort"], categories=cohort_labels, ordered=True)
 
-# Alpha: ensure oldest is still readable
+# Alpha: oldest is most faded, newest is full opacity
 alpha_values = [0.6, 0.7, 0.8, 0.9, 1.0]
 alpha_map = dict(zip(cohort_labels, alpha_values, strict=True))
 df["line_alpha"] = df["cohort"].map(alpha_map).astype(float)
 
-# Line width: thinner for older, bolder for newer
+# Line width: thinner for older cohorts, bolder for newer
 size_values = [1.0, 1.2, 1.4, 1.6, 2.0]
 size_map = dict(zip(cohort_labels, size_values, strict=True))
 df["line_size"] = df["cohort"].map(size_map).astype(float)
 
-# Ribbon data: show spread between oldest and newest cohort
+# Ribbon between oldest and newest cohort to show improvement gap
 oldest_label = cohort_labels[0]
 newest_label = cohort_labels[-1]
 df_oldest = df[df["cohort"] == oldest_label][["week", "retention"]].rename(columns={"retention": "ymin"})
 df_newest = df[df["cohort"] == newest_label][["week", "retention"]].rename(columns={"retention": "ymax"})
 df_ribbon = df_oldest.merge(df_newest, on="week")
 
-# Colors: refined palette with clear progression
-colors = ["#94B8D1", "#6A9EC1", "#306998", "#E07941", "#C94420"]
-
-# Endpoint labels for storytelling
+# Endpoint labels — stagger the two closest to prevent overlap
 df_endpoints = df[df["week"] == 12].copy()
 df_endpoints["ret_label"] = df_endpoints["retention"].apply(lambda x: f"{x:.0f}%")
 
+sorted_ends = df_endpoints.sort_values("retention").reset_index(drop=True)
+y_offsets = {row["cohort"]: 0.0 for _, row in df_endpoints.iterrows()}
+if abs(sorted_ends.loc[1, "retention"] - sorted_ends.loc[0, "retention"]) < 5:
+    y_offsets[sorted_ends.loc[0, "cohort"]] = -3.0
+    y_offsets[sorted_ends.loc[1, "cohort"]] = 3.0
+df_endpoints["label_y"] = df_endpoints.apply(lambda row: row["retention"] + y_offsets.get(row["cohort"], 0.0), axis=1)
+
 # Plot
+title = "line-retention-cohort · python · plotnine · anyplot.ai"
+
 plot = (
     ggplot(df, aes(x="week", y="retention", color="cohort", group="cohort"))
     + geom_ribbon(
-        aes(x="week", ymin="ymin", ymax="ymax"), data=df_ribbon, inherit_aes=False, fill="#306998", alpha=0.07
+        aes(x="week", ymin="ymin", ymax="ymax"), data=df_ribbon, inherit_aes=False, fill=IMPRINT_PALETTE[0], alpha=0.08
     )
-    + geom_hline(yintercept=20, linetype="dashed", color="#AAAAAA", size=0.7)
+    + geom_hline(yintercept=20, linetype="dashed", color=INK_SOFT, size=0.7)
     + geom_line(aes(alpha="line_alpha", size="line_size"))
     + scale_alpha_identity()
     + scale_size_identity()
     + geom_point(aes(alpha="line_alpha"), size=2.5, show_legend=False)
-    + geom_text(aes(label="ret_label"), data=df_endpoints, nudge_x=0.5, size=10, ha="left", show_legend=False)
-    + scale_color_manual(values=colors)
-    + scale_x_continuous(breaks=range(0, 13), labels=[str(w) for w in range(0, 13)], expand=(0.02, 0.8))
+    + geom_text(
+        aes(y="label_y", label="ret_label"),
+        data=df_endpoints,
+        nudge_x=0.45,
+        size=3.0,
+        ha="left",
+        show_legend=False,
+        color=INK_SOFT,
+    )
+    + scale_color_manual(values=IMPRINT_PALETTE)
+    + scale_x_continuous(breaks=list(range(0, 13)), labels=[str(w) for w in range(0, 13)], expand=(0.02, 0.8))
     + scale_y_continuous(
         limits=(0, 108), breaks=[0, 20, 40, 60, 80, 100], labels=["0%", "20%", "40%", "60%", "80%", "100%"]
     )
-    + annotate(
-        "text",
-        x=11.8,
-        y=22.5,
-        label="20% retention threshold",
-        size=11,
-        color="#888888",
-        ha="right",
-        fontstyle="italic",
-    )
+    + annotate("text", x=8, y=22.5, label="20% threshold", size=2.5, color=INK_MUTED, ha="right", fontstyle="italic")
     + annotate(
         "label",
         x=6,
         y=55,
         label="Improvement\ngap",
-        size=10,
-        color="#306998",
-        fill="#F0F4F8",
+        size=3.0,
+        color=INK_SOFT,
+        fill=ELEVATED_BG,
         alpha=0.85,
         ha="center",
         label_size=0,
     )
-    + labs(
-        x="Weeks Since Signup",
-        y="Retained Users",
-        color="Cohort",
-        title="line-retention-cohort · plotnine · pyplots.ai",
-    )
+    + labs(x="Weeks Since Signup", y="Retained Users (%)", color="Cohort", title=title)
     + guides(color=guide_legend(override_aes={"size": 3, "alpha": 1}))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(family="sans-serif", size=14, color="#333333"),
-        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
-        axis_title=element_text(size=20, color="#444444"),
-        axis_text=element_text(size=16, color="#555555"),
-        legend_title=element_text(size=18, weight="bold"),
-        legend_text=element_text(size=14),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        text=element_text(family="sans-serif", size=7, color=INK_SOFT),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position="right",
-        legend_background=element_rect(fill="#FAFAFA", color="#E0E0E0", size=0.5),
+        legend_background=element_rect(fill=ELEVATED_BG, color="none"),
         legend_key=element_rect(fill="none", color="none"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#EBEBEB", size=0.4, alpha=0.6),
-        axis_line_x=element_line(color="#333333", size=0.5),
-        axis_line_y=element_line(color="#333333", size=0.5),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        axis_line_x=element_line(color=INK_SOFT, size=0.5),
+        axis_line_y=element_line(color=INK_SOFT, size=0.5),
         plot_margin=0.04,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
