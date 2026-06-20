@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-parametric: Parametric Curve Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-20
@@ -114,9 +114,9 @@ liss_cbar = ColorBar(
     color_mapper=LinearColorMapper(palette=IMPRINT_SEQ256, low=0, high=round(2 * np.pi, 2)),
     ticker=BasicTicker(desired_num_ticks=5),
     title="t (rad)",
-    title_text_font_size="26pt",
+    title_text_font_size="28pt",
     title_text_color=INK,
-    major_label_text_font_size="22pt",
+    major_label_text_font_size="24pt",
     major_label_text_color=INK_SOFT,
     label_standoff=14,
     width=44,
@@ -129,7 +129,7 @@ p1.add_layout(liss_cbar, "right")
 p2 = figure(
     width=PANEL_W,
     height=PANEL_H,
-    title="Archimedean Spiral",
+    title="Archimedean Spiral · line-parametric · python · bokeh · anyplot.ai",
     x_axis_label="x(t) = t·cos(t)",
     y_axis_label="y(t) = t·sin(t)",
     toolbar_location=None,
@@ -165,9 +165,9 @@ spiral_cbar = ColorBar(
     color_mapper=LinearColorMapper(palette=IMPRINT_SEQ256, low=0, high=round(4 * np.pi, 2)),
     ticker=BasicTicker(desired_num_ticks=5),
     title="t (rad)",
-    title_text_font_size="26pt",
+    title_text_font_size="28pt",
     title_text_color=INK,
-    major_label_text_font_size="22pt",
+    major_label_text_font_size="24pt",
     major_label_text_color=INK_SOFT,
     label_standoff=14,
     width=44,
@@ -181,23 +181,22 @@ p2.add_layout(spiral_cbar, "right")
 for p in [p1, p2]:
     p.background_fill_color = PAGE_BG
     p.border_fill_color = PAGE_BG
-    p.outline_line_color = INK_SOFT
-    p.outline_line_width = 1
+    p.outline_line_color = None  # L-shaped frame: axes provide the bottom+left boundary
 
     p.title.text_color = INK
-    p.title.text_font_size = "28pt"
+    p.title.text_font_size = "36pt"
     p.title.text_font_style = "normal"
 
     p.xaxis.axis_label_text_color = INK
     p.yaxis.axis_label_text_color = INK
-    p.xaxis.axis_label_text_font_size = "28pt"
-    p.yaxis.axis_label_text_font_size = "28pt"
+    p.xaxis.axis_label_text_font_size = "32pt"
+    p.yaxis.axis_label_text_font_size = "32pt"
     p.xaxis.axis_label_text_font_style = "italic"
     p.yaxis.axis_label_text_font_style = "italic"
     p.xaxis.major_label_text_color = INK_SOFT
     p.yaxis.major_label_text_color = INK_SOFT
-    p.xaxis.major_label_text_font_size = "22pt"
-    p.yaxis.major_label_text_font_size = "22pt"
+    p.xaxis.major_label_text_font_size = "26pt"
+    p.yaxis.major_label_text_font_size = "26pt"
     p.xaxis.axis_line_color = INK_SOFT
     p.yaxis.axis_line_color = INK_SOFT
     p.xaxis.major_tick_line_color = INK_SOFT
@@ -212,7 +211,7 @@ for p in [p1, p2]:
     p.legend.background_fill_color = ELEVATED_BG
     p.legend.border_line_color = INK_SOFT
     p.legend.label_text_color = INK_SOFT
-    p.legend.label_text_font_size = "24pt"
+    p.legend.label_text_font_size = "26pt"
     p.legend.glyph_width = 36
     p.legend.glyph_height = 36
     p.legend.location = "top_right"
