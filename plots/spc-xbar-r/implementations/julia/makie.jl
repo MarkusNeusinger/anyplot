@@ -1,7 +1,7 @@
 # anyplot.ai
 # spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-# Library: CairoMakie | Julia 1.11
-# Quality: pending | Created: 2026-06-20
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 88/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors
