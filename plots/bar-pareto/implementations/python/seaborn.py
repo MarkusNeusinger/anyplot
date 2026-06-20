@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Library: seaborn | Python 3.13
+Quality: 92/100 | Updated: 2026-06-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,94 +12,115 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Manufacturing defect types sorted by frequency
+# Theme tokens (Imprint palette — theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1 — dominant bars (≤80%)
+LINE_COLOR = "#AE3030"  # Imprint semantic red — cumulative threshold line
+
+# Apply seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — 10 surface-quality defect categories (paint/surface/rework domain), descending frequency
 data = pd.DataFrame(
     {
         "defect": [
-            "Scratches",
+            "Paint blistering",
+            "Surface scratches",
             "Dents",
-            "Misalignment",
+            "Weld flaws",
             "Cracks",
+            "Rework marks",
             "Discoloration",
-            "Burrs",
-            "Warping",
             "Contamination",
+            "Burrs",
+            "Edge chips",
         ],
-        "count": [142, 118, 84, 67, 45, 31, 22, 11],
+        "count": [156, 124, 93, 71, 58, 37, 24, 16, 10, 7],
     }
 )
 
-# Compute cumulative percentage
+# Cumulative percentage
 cumulative_pct = np.cumsum(data["count"]) / data["count"].sum() * 100
 
-# Plot setup using seaborn theming
-sns.set_context("talk", font_scale=1.1)
-sns.set_style("whitegrid", {"axes.grid": False})
-pareto_palette = sns.color_palette(["#306998" if cum <= 80 else "#A3BFCF" for cum in cumulative_pct])
-fig, ax1 = plt.subplots(figsize=(16, 9))
+# Bar colors: dominant (≤80%) → brand green; tail → muted (Imprint semantic anchors)
+bar_colors = [BRAND if cum <= 80 else INK_MUTED for cum in cumulative_pct]
 
-# Bars - descending order (already sorted)
-sns.barplot(data=data, x="defect", y="count", hue="defect", palette=pareto_palette, legend=False, width=0.7, ax=ax1)
+# Canvas — 3200 × 1800 px landscape (hard contract: figsize=(8,4.5) × dpi=400)
+fig, ax1 = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax1.set_facecolor(PAGE_BG)
 
-# Count annotations on bars
+# Bars
+sns.barplot(data=data, x="defect", y="count", hue="defect", palette=bar_colors, legend=False, width=0.72, ax=ax1)
+
+# Count annotations above each bar
 for i, (_, row) in enumerate(data.iterrows()):
     ax1.text(
         i,
         row["count"] + 3,
-        str(row["count"]),
+        str(int(row["count"])),
         ha="center",
         va="bottom",
-        fontsize=14,
+        fontsize=7,
         fontweight="bold",
-        color="#306998" if cumulative_pct.iloc[i] <= 80 else "#8a9bae",
+        color=BRAND if cumulative_pct.iloc[i] <= 80 else INK_MUTED,
     )
 
-# Primary y-axis styling
-ax1.set_xlabel("Defect Type", fontsize=20)
-ax1.set_ylabel("Frequency (Count)", fontsize=20)
-ax1.tick_params(axis="both", labelsize=16)
-ax1.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+# Primary axis styling
+ax1.set_xlabel("Defect Type", fontsize=10, color=INK)
+ax1.set_ylabel("Frequency (Count)", fontsize=10, color=INK)
+ax1.tick_params(axis="x", labelsize=7, colors=INK_SOFT, rotation=28)
+ax1.tick_params(axis="y", labelsize=8, colors=INK_SOFT)
+ax1.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax1.set_axisbelow(True)
+ax1.set_ylim(0, data["count"].max() * 1.22)
 sns.despine(ax=ax1, top=True, right=True)
 
-# Secondary y-axis for cumulative percentage
+# Secondary y-axis — cumulative percentage
 ax2 = ax1.twinx()
-ax2.plot(
-    range(len(data)),
-    cumulative_pct,
-    color="#E85D3A",
-    marker="o",
-    markersize=10,
-    linewidth=3,
-    markeredgecolor="white",
-    markeredgewidth=2,
-    zorder=5,
-)
-ax2.set_ylabel("Cumulative %", fontsize=20, color="#E85D3A")
-ax2.set_ylim(0, 105)
-ax2.tick_params(axis="y", labelsize=16, colors="#E85D3A")
+ax2.patch.set_alpha(0)  # transparent so ax1 background shows through
+
+sns.lineplot(x=range(len(data)), y=cumulative_pct, color=LINE_COLOR, marker="o", markersize=5, linewidth=2.5, ax=ax2)
+for line in ax2.get_lines():
+    line.set_markeredgecolor(PAGE_BG)
+    line.set_markeredgewidth(1.5)
+
+ax2.set_ylabel("Cumulative %", fontsize=10, color=LINE_COLOR)
+ax2.set_ylim(0, 110)
+ax2.tick_params(axis="y", labelsize=8, colors=LINE_COLOR)
+ax2.yaxis.grid(False)
 sns.despine(ax=ax2, top=True, left=True, right=False)
-ax2.spines["right"].set_color("#E85D3A")
+ax2.spines["right"].set_color(LINE_COLOR)
 
 # 80% reference line
-ax2.axhline(y=80, color="#E85D3A", linestyle="--", linewidth=1.5, alpha=0.5)
-ax2.text(
-    len(data) - 0.5,
-    81.5,
-    "80%",
-    fontsize=14,
-    color="#E85D3A",
-    fontweight="semibold",
-    alpha=0.7,
-    ha="right",
-    va="bottom",
-)
+ax2.axhline(y=80, color=LINE_COLOR, linestyle="--", linewidth=1.2, alpha=0.55)
+ax2.text(len(data) - 0.5, 82, "80%", fontsize=8, color=LINE_COLOR, ha="right", va="bottom")
 
 # Title
-ax1.set_title("bar-pareto · seaborn · pyplots.ai", fontsize=24, fontweight="medium", pad=16)
+title = "bar-pareto · python · seaborn · anyplot.ai"
+ax1.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
 
-# Y-axis room for annotations
-ax1.set_ylim(0, data["count"].max() * 1.18)
+fig.subplots_adjust(left=0.08, right=0.88, top=0.93, bottom=0.20)
 
-fig.subplots_adjust(left=0.08, right=0.90, top=0.92, bottom=0.10)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches so figsize × dpi lands on exact 3200 × 1800
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
