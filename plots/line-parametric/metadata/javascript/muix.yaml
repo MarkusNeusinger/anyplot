@@ -1,0 +1,237 @@
+library: muix
+language: javascript
+specification_id: line-parametric
+created: '2026-06-20T23:11:39Z'
+updated: '2026-06-20T23:30:47Z'
+generated_by: claude-sonnet
+workflow_run: 27886500095
+issue: 4424
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/muix/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Imprint sequential gradient correctly starts with brand green and communicates
+    parameter traversal direction elegantly
+  - Both required curve types (Lissajous and Archimedean spiral) rendered correctly
+    with equal aspect ratios enforced programmatically
+  - 'Both light and dark renders pass theme checks — correct backgrounds (#FAF8F1
+    / #1A1A17), theme-adaptive chrome, identical data colors'
+  - Full point density (800 pts/curve x 20 segments) produces smooth parametric curves
+    with smooth color transitions
+  - Creative segmented-series gradient technique works cleanly within MUI X community
+    constraints — no Pro/Premium features used
+  weaknesses:
+  - Sub-panel captions with mathematical formulas at 14px CSS are borderline small
+    for mobile readability — consider 15-16px CSS for the formula sub-panel captions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "line-parametric · javascript · muix · anyplot.ai" centered in dark ink (#1A1A17); sub-panel captions in secondary ink with mathematical formulas; axis labels "x(t)" and "y(t)" in dark ink; tick labels in secondary ink; footer caption in secondary ink
+      Data: Color gradient from #009E73 (brand green) at t=start to #4467A3 (blue) at t=end via 20 gradient segments; left panel shows Lissajous figure cross/figure-8 pattern; right panel shows expanding Archimedean spiral
+      Legibility verdict: PASS — all text readable against light background; sub-panel captions are small (14px CSS) but readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Same two-panel layout with theme-adaptive light text; title, axis labels, tick labels, sub-captions, and footer all appear in off-white / secondary light ink — no dark-on-dark failures
+      Data: Color gradient identical to light render (#009E73 to #4467A3) — data colors unchanged between themes as required
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title and axis labels readable in both themes; sub-panel captions
+          with mathematical formulas at 14px CSS are borderline small for mobile scaling
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean two-panel layout, no text or data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 800-point density per curve produces smooth visible parametric lines;
+          gradient clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential gradient is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; equal-aspect-ratio enforced programmatically;
+          balanced two-panel layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x(t) and y(t) descriptive; title follows required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq endpoints used (brand green start, blue end); backgrounds
+          #FAF8F1 / #1A1A17 correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Gradient direction-encoding elevates above default; two-panel layout
+          intentional; clean composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid deliberately disabled; legend hidden and replaced with footer
+          caption
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green-to-blue gradient effectively communicates traversal direction;
+          footer provides explicit key
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve rendering using dense scatter segments
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal aspect ratios, color gradient for direction, both required
+          curves, sufficient point density
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x(t) / y(t) axes correctly mapped; full parameter ranges covered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend hidden replaced by informative
+          footer
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Both curve types, gradient direction, equal aspect ratio present;
+          no explicit start/end point dot annotations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lissajous figures and Archimedean spirals are real mathematical/physics
+          curves; deterministic data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lissajous +/-1.25, spiral +/-14; both match the parametric ranges
+          used
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: lerpColor and buildGradientSeries are minimal, purposeful helpers;
+          no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic trigonometric data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ScatterChart, Box, Typography — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Gradient segmentation approach is clean and reusable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default export; harness handles output files
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, skipAnimation,
+          slotProps.legend usage; Box/Typography for layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of ScatterChart with 20 gradient-colored segment series
+          to achieve parametric line rendering within MUI X community constraints
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
