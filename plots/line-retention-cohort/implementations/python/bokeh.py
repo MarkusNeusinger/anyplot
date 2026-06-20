@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: bokeh | Python 3.14
-Quality: 90/100 | Created: 2026-03-16
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import io
