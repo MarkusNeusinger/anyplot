@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 84/100 | Updated: 2026-06-20
+Quality: 91/100 | Updated: 2026-06-20
 """
 
 import os
