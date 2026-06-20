@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:58Z'
-updated: '2026-06-20T13:06:31Z'
+updated: '2026-06-20T13:18:25Z'
 generated_by: claude-sonnet
 workflow_run: 27871597470
 issue: 4551
@@ -12,38 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    propagate to every element in both renders with no dark-on-dark or light-on-light
-    failures'
-  - 'Triple redundant encoding for OOC points (color #AE3030 + diamond marker + size
-    24px vs 16px) makes anomalies immediately recognizable'
-  - Correct SPC constants (A2=0.577, D3=0.0, D4=2.114 for n=5) with realistic CNC
-    machining data generating natural out-of-control events in both X-bar and R charts
-  - 'Idiomatic Bokeh: ColumnDataSource, BoxAnnotation, Span, HoverTool, shared x_range,
-    Legend with LegendItem — leverages the library model layer fully'
-  - Conditional lwl_r guard (> 0 check) correctly handles the D3=0 asymmetric lower
-    bound case for the R chart
+  - Accurate SPC X-bar/R implementation using correct constants (A2=0.577, D3=0, D4=2.114
+    for n=5) with properly computed UCL/LCL at ±3σ and warning limits at ±2σ
+  - 'Semantically excellent color coding: #009E73 (green=in-control), #AE3030 (red=OOC),
+    #DDCC77 (amber=warning) — all Imprint palette or anchor values with obvious semantic
+    roles'
+  - Zone fills via BoxAnnotation provide immediate visual context for process zones
+    (green=safe, amber=warning), substantially elevating the chart above a plain line
+    plot
+  - 'OOC points use redundant encoding: larger size (24 vs 16), diamond vs circle
+    marker shape, AND color — fully CVD-safe'
+  - 'Complete theme adaptation throughout: background, axis labels, tick labels, grid,
+    legend box, and text annotations all adapt correctly between #FAF8F1 light and
+    #1A1A17 dark surfaces'
+  - Shared x_range between the two panels keeps them perfectly synchronized — idiomatic
+    Bokeh
+  - CDP setDeviceMetricsOverride ensures exact 3200×1800 pixel output regardless of
+    Chrome viewport chrome
+  - 'Elevated background fills on ±2σ callout labels (#FFFDF6 / #242420) improve readability
+    of amber text in both themes'
   weaknesses:
-  - 'Title missing ''python'' language component: actual title is ''spc-xbar-r · bokeh
-    · anyplot.ai'', required format is ''spc-xbar-r · python · bokeh · anyplot.ai'''
-  - Amber +/-2sigma annotation labels (#DDCC77) have low contrast (~1.56:1) on light
-    background (#FAF8F1) — add text_outline_color=INK_SOFT or background_fill_color
-    on those Label objects to lift legibility in light mode
+  - R chart lower warning limit label (−2σ at y≈0.041) is placed below the visible
+    y-axis range (visible range starts ~0.05), so the label is either invisible or
+    rendered outside the plot area — adjust the R chart's y_range start to include
+    lwl_r, or omit the −2σ label when it falls below the axis range
+  - Right-side annotations on X-bar chart span a narrow mm range (UCL=25.073 to LCL=24.930
+    = 0.143mm), placing UCL, +2σ, X̄̄, −2σ, and LCL labels in tight proximity — reduce
+    label font size from 24pt to 18pt or add small y-offsets (±0.003) to improve separation
+  - Legend is duplicated in both panels (identical In Control / Out of Control entries)
+    — consider keeping legend only in the top panel and adding a brief text note in
+    the bottom panel instead
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "spc-xbar-r · bokeh · anyplot.ai" in bold dark (#1A1A17) text — clearly visible. Axis labels "X-bar (Sample Mean, mm)" and "R (Sample Range, mm)" and "Sample Number" in dark ink at 42pt — readable. Tick labels at 34pt in INK_SOFT (#4A4A44) — readable. Right-side limit annotations (UCL, LCL, center line, +/-2sigma) in colored text matching lines — readable. Legend in top-left with ELEVATED_BG (#FFFDF6) fill, INK_SOFT border, INK_SOFT label text — readable.
-      Data: Green line #009E73 connecting 30 sample means; green circles (in-control, size=16); red diamonds #AE3030 (out-of-control, size=24) at samples 9, 18, 25 in X-bar chart and sample 13 in R chart. Dashed red UCL/LCL lines, solid dark center line, dotted amber +/-2sigma lines. Subtle green zone fill in center region, amber zone fills in warning bands.
-      Legibility verdict: PASS — all text readable. NOTE: amber #DDCC77 annotation labels have ~1.56:1 contrast on #FAF8F1 (below 3:1), technically a low-contrast issue but still perceptible.
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white.
+      Chrome: Bold black title "spc-xbar-r · python · bokeh · anyplot.ai" at top. Y-axis labels "X̄ (Sample Mean, mm)" and "R (Sample Range, mm)" in dark ink, clearly readable. Tick labels in INK_SOFT (#4A4A44). Grid lines present on y-axis only with subtle alpha (~0.12), x-grid hidden.
+      X-bar chart: Green (#009E73) line with green circle markers for in-control points. Red (#AE3030) larger diamond markers at samples ~9, ~18, and ~25 (out-of-control). Dashed red UCL and LCL horizontal lines, solid dark center line. Dotted amber ±2σ warning lines. Subtle green zone fill for ±2σ region, amber zone fills for ±2σ–±3σ outer zones. Right-side annotations: UCL=25.073, +2σ, X̄̄=25.002, −2σ, LCL=24.930 — labels are close together given narrow data range.
+      R chart: Same green line/dots for ranges, single red diamond at sample 13 (range spike 3.5×). UCL=0.263 and R̄=0.124 labels visible on right; +2σ label visible; −2σ label at y≈0.041 appears below or at the boundary of the visible y-axis range.
+      Data: First series #009E73 confirmed. OOC points in #AE3030 confirmed. Warning lines in #DDCC77 confirmed.
+      Legibility verdict: PASS — all title, axis, and tick text readable. Minor concern: right-side annotation labels close together at narrow y-range.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8 text — clearly visible against dark background. Axis labels in #F0EFE8 — readable. Tick labels in #B8B7B0 — readable. Right-side limit annotations in respective colors (red UCL/LCL, light ink center line, amber +/-2sigma) — all readable. Legend with #242420 fill and #B8B7B0 text — readable. NO dark-on-dark failures detected.
-      Data: Colors identical to light render — green line #009E73, green in-control circles, red diamonds #AE3030 for OOC. Amber +/-2sigma lines and labels visible at ~11:1 contrast on dark bg. Zone fills same transparent green and amber.
-      Legibility verdict: PASS — all text and data elements clearly readable; theme adaptation complete.
+      Background: Near-black #1A1A17 — correct, clearly not pure black.
+      Chrome: Title visible in light cream color (#F0EFE8 / INK on dark). Axis labels in #F0EFE8, tick labels in INK_SOFT (#B8B7B0) — all readable against dark surface. Grid remains subtle.
+      X-bar chart: Same layout as light render. Green line and markers identical to light render (#009E73). Red diamond OOC points identical. Control limit lines, zone fills all visible. Right-side UCL/LCL/X̄̄ labels visible; amber ±2σ labels readable with elevated dark background (#242420).
+      R chart: Same green line. Red diamond at sample 13. UCL=0.263 and R̄=0.124 visible. The −2σ label issue persists in dark render as well (near or below visible axis range).
+      Data colors: Identical to light render — green #009E73 for in-control, red #AE3030 for OOC, amber #DDCC77 for warnings. Only chrome flips.
+      No dark-on-dark failures detected: all text uses theme-adapted INK/INK_SOFT tokens.
+      Legibility verdict: PASS — both themes render correctly and readably.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,81 +72,88 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome text readable in both renders. Amber +/-2sigma annotation
-          labels (#DDCC77) have low contrast (~1.56:1) on light background (#FAF8F1)
-          — below recommended 3:1 minimum but still legible.
+        comment: 'All font sizes explicitly set at correct bokeh pt values (50pt title,
+          42pt axis labels, 34pt ticks/legend). Both themes legible. Minor deduction:
+          right-side control limit annotations are close-set in a narrow 0.143mm y-range.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or annotations in either render
+        comment: No overlap detected in either render. Annotations are tight but non-overlapping.
+          Legend positioned top-left away from data line.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 data points with appropriate marker sizes (in-control=16px circles,
-          OOC=24px diamonds); triple redundant encoding for OOC visibility
+        comment: In-control markers size=16, OOC diamonds size=24 — well-adapted to
+          30-sample density. Line width 3.0 is prominent. Zone fills at alpha=0.07-0.08
+          are subtle but visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; redundant encoding (shape + size + color)
-          eliminates reliance on red-green distinction alone
+        comment: 'CVD-safe: OOC vs in-control differentiated by color AND marker shape
+          (diamond vs circle) AND size — redundant encoding makes the distinction
+          accessible under all CVD types.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); two panels properly proportioned;
-          margins adequate; no clipping
+        comment: Canvas gate passed (3200x1800). Two panels fill the canvas well with
+          10px spacing. min_border reserves sufficient space for large font labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on all axes; note title format issue
-          (SC-04)
+        comment: 'Title format correct. Y-axis labels include units: ''X̄ (Sample
+          Mean, mm)'' and ''R (Sample Range, mm)''. X-axis: ''Sample Number''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green); OOC uses #AE3030 (slot 5 semantic
-          red); warning uses #DDCC77 (amber anchor); backgrounds #FAF8F1 light / #1A1A17
-          dark — all correct'
+        comment: 'First series #009E73 (brand green). OOC in #AE3030 (Imprint semantic
+          anchor for error). Warning lines in #DDCC77 (amber anchor). Backgrounds
+          #FAF8F1 light / #1A1A17 dark. All theme-adaptive chrome correct in both
+          renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: semantic color coding (green=OK, red=error, amber=warning),
-          OOC marker size hierarchy (24 vs 16px), colored annotation labels match
-          limit lines. Zone fills subtle.'
+        comment: 'Strong design: semantic color roles are intentional and well-executed,
+          zone fills add professional depth, redundant OOC encoding (shape+size+color)
+          shows design thinking. Elevated callout backgrounds for warning labels polish.
+          Not yet publication-ready FiveThirtyEight level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: outline removed, top panel x-axis hidden for clean
-          stacked appearance, y-grid only at 12% alpha, x-grid disabled, proper min_border
-          reservations'
+        comment: 'Good refinement: outer border removed (outline_line_color=None),
+          x-grid hidden (alpha=0.0), y-grid subtle (alpha=0.12), minor ticks removed,
+          generous min_border margins. Missing: explicit top/right axis spine suppression
+          that would achieve the cleanest L-frame.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: triple-encoded OOC markers create clear focal point,
-          zone fills guide eye to control regions, direct limit annotations eliminate
-          need for a separate legend'
+        comment: 'Good storytelling: zone fills immediately communicate process zones
+          (green=safe, amber=caution), OOC points are visually prominent — the story
+          ''these samples went out of control'' is immediately readable. Visual hierarchy
+          guides the eye.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,29 +161,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SPC X-bar and R chart, vertically stacked with shared x-axis
+        comment: Correct X-bar/R SPC chart with vertically stacked panels sharing
+          x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: UCL/LCL dashed and labeled; center line solid; OOC points highlighted
-          with distinct color+shape+size; +/-2sigma warning limits shown
+        comment: 'All spec features present: center line (solid, labeled), UCL/LCL
+          (dashed), ±2σ warning limits (dotted), OOC highlighted (different color+shape+size),
+          shared x-axis, standard SPC constants (A2/D3/D4).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sample numbers 1-30; Y-top: sample means (X-bar); Y-bottom: sample
-          ranges (R); all data visible'
+        comment: 'X-bar chart: sample_means vs sample_ids. R chart: sample_ranges
+          vs sample_ids. All 30 samples visible.'
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing ''python'' language component. Actual: ''spc-xbar-r
-          · bokeh · anyplot.ai''. Required: ''spc-xbar-r · python · bokeh · anyplot.ai''.
-          Legend labels In Control / Out of Control are correct.'
+        passed: true
+        comment: 'Title: ''spc-xbar-r · python · bokeh · anyplot.ai'' ✓. Legend: ''In
+          Control'' / ''Out of Control'' in both panels ✓.'
     data_quality:
       score: 15
       max: 15
@@ -168,23 +194,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full SPC feature set: X-bar panel + R panel, zone fills for C/B
-          zones, OOC detection in both charts, warning limits (+/-2sigma), center
-          line, UCL/LCL control limits'
+        comment: 'Shows all SPC aspects: center line, UCL/LCL at ±3σ, warning limits
+          at ±2σ, OOC detection in both X-bar (samples 9, 18, 25) and R charts (sample
+          13). Zone fills for process zones. In-control and OOC series both present.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter measurements at 25mm target with +/-0.05mm sigma
-          and n=5 subgroups — industry-standard precision machining, neutral and plausible
+        comment: 'CNC shaft diameter measurements — real manufacturing quality control
+          scenario. Values realistic: 25.0mm target, 0.05mm std dev, subgroups of
+          5. Neutral context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct SPC constants (A2=0.577, D3=0, D4=2.114 for n=5); computed
-          limits from data; realistic mm-scale values with deliberate process shifts
+        comment: 30 samples within spec range (20-50). Subgroup size 5 with correct
+          SPC constants for n=5. Injected shifts (+0.15, -0.18, +0.20mm) produce realistic
+          OOC exceedances. Range spike (×3.5) is plausible for machining anomaly.
     code_quality:
       score: 10
       max: 10
@@ -194,33 +222,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean imperative flow
+        comment: 'Linear: imports → data generation → SPC calculations → figure construction
+          → export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: 'All imports used: sys (path fix), os (env), time (sleep), Path (file
+          ops), numpy, bokeh.io/models/plotting, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; shared x_range between panels is clean; conditional
-          lwl_r guard handles D3=0 case correctly
+        comment: Appropriate complexity. sys.path.pop(0) workaround for self-shadowing
+          correctly commented. CDP override for exact viewport dimensions is a professional
+          touch.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses Selenium per library
-          guide; CDP setDeviceMetricsOverride for exact viewport
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (required for interactive
+          bokeh). No bare plot.png. Current bokeh 3.9.1 API.
     library_mastery:
       score: 9
       max: 10
@@ -230,19 +261,19 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multiple ColumnDataSources for separate series; HoverTool with rich
-          tooltips; BoxAnnotation for zone fills; Span for limit lines; Label for
-          annotations; Legend with LegendItem; column() layout; shared x_range — fully
-          idiomatic Bokeh
+        comment: Expertly uses ColumnDataSource, Span, BoxAnnotation, Label, HoverTool,
+          Legend/LegendItem, column() layout, shared x_range, Range1d — all idiomatic
+          Bokeh patterns for this use case.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool shows real-time X-bar/R values with UCL/LCL context; HTML
-          export retains full interactivity; shared x_range synchronizes panel pan/zoom;
-          CDP viewport override ensures exact canvas. Could use CustomJS for enhanced
-          interactivity to reach max.
+        comment: Uses BoxAnnotation for zone shading (Bokeh-distinctive), Span for
+          reference lines, Label for data-coordinate annotations, shared x_range for
+          synchronized panels, HoverTool with structured tooltips including control
+          limit values. CDP override for exact screenshot dimensions is above-average
+          engineering.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -251,12 +282,11 @@ impl_tags:
   - hover-tooltips
   - html-export
   - annotations
-  - custom-legend
   - subplots
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
