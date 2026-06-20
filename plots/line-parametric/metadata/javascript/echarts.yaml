@@ -1,0 +1,270 @@
+library: echarts
+language: javascript
+specification_id: line-parametric
+created: '2026-06-20T23:06:29Z'
+updated: '2026-06-20T23:31:44Z'
+generated_by: claude-sonnet
+workflow_run: 27886455914
+issue: 4424
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Uses ECharts visualMap component with per-point dimension encoding (dimension:
+    2) for a t-direction gradient — idiomatic and sophisticated'
+  - Two-panel multi-grid layout shows Lissajous and Archimedean spiral side by side,
+    each with correct equal aspect ratio
+  - Imprint sequential colormap (t.seq) correctly applied for continuous direction
+    encoding — data colors identical between light and dark
+  - Mathematical formula annotations as subtitle components provide excellent context
+    for each curve
+  - Start/end markers using circle vs. diamond symbols clearly show traversal direction;
+    caption explains the encoding
+  - Deterministic in-memory data generation using pure math functions — no random
+    state
+  - 'All ANYPLOT_TOKENS used correctly: ink, inkSoft, grid, seq, palette; background
+    transparent to inherit page background'
+  weaknesses:
+  - 'DE-02: Grid could be removed or further reduced — the smooth parametric curves
+    are sufficiently prominent without a full X+Y grid on both panels; removing grid
+    would add visual clarity'
+  - 'VQ-02: The ''t = 0, 2π'' label at the Lissajous origin sits in the densest crossing
+    area where multiple curve segments overlap — mild text-on-data overlap; consider
+    positioning the label outside the curve at an offset'
+  - 'DE-01: Annotation marker labels (t=0, t=4π) could be styled with a subtle background
+    fill (elevatedBg token) for better legibility against dense curve data'
+  - 'VQ-05: The header area (155px of 900px CSS height) is slightly generous — tightening
+    top offsets would allow larger plot panels'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "line-parametric · javascript · echarts · anyplot.ai" bold dark (#1A1A17) centered at top (fontSize 22). Panel subtitles "Lissajous Figure / x = sin(3t) y = sin(2t)" and "Archimedean Spiral / x = t·cos(t) y = t·sin(t)" in inkSoft at fontSize 14 — clearly readable. Caption "Color encodes direction of increasing t" centered at fontSize 12 — readable. Axis labels x(t)/y(t) in inkSoft at fontSize 14. Tick labels at fontSize 12. All text reads well against the light background.
+      Data: Left panel — Lissajous figure rendered as 1200 scatter points colored by Imprint sequential gradient (green #009E73 → blue #4467A3) encoding direction of increasing t. Green circle with dark border marks origin (start/end at t=0,2π). Right panel — Archimedean spiral with same gradient; green circle at origin (t=0), blue diamond at endpoint (t=4π). Both curves are smooth and well-defined. Grid lines subtle using t.grid color.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues, gradient direction encoding clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title, axis labels, panel subtitles, and caption all rendered in light colors and clearly readable against the dark background. No dark-on-dark failures. Grid lines adapt to the lighter theme-grid token and remain subtle but visible. Axis lines and tick-label colors use inkSoft token correctly.
+      Data: Data colors are identical to the light render — the green-to-blue Imprint sequential gradient is theme-independent as required. Both Lissajous and spiral curves show the same color progression. Start and end markers retain their colors. No color drift between themes.
+      Legibility verdict: PASS — all text readable on dark background, no dark-on-dark failures, data colors correctly theme-invariant
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, panel labels 14px, caption
+          12px, axis labels 14px, ticks 12px). Readable in both themes. Minor: caption
+          at 12px is on the small side for the canvas size.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mild overlap of 't = 0, 2π' label with dense curve crossings at Lissajous
+          origin. Label is still readable. No text-on-text overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 1200 scatter points at symbolSize 8 create smooth dense curves. Gradient
+          clearly visible. Start/end markers appropriately prominent (size 20/16).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential colormap (green to blue) is CVD-safe. Both ends
+          of the gradient are distinguishable under deuteranopia/protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Two-panel layout well proportioned. Header area (155/900 CSS px)
+          slightly generous. 't = 4π' label near right edge but not clipped. Both
+          panels have equal aspect ratios as required.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format. Axis labels x(t)/y(t) are appropriate mathematical
+          notation for parametric curves.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 't.seq (Imprint sequential green→blue) correctly used for continuous
+          direction encoding. Background transparent inheriting #FAF8F1 (light) /
+          #1A1A17 (dark). Data colors theme-invariant. Chrome fully adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: uses continuous gradient for direction encoding,
+          two-panel layout, mathematical formula subtitles, and distinctive markers.
+          Not FiveThirtyEight-level but clearly thoughtful design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks hidden, grid uses theme-adaptive color, transparent background,
+          clean axis lines. Grid present on both axes of both panels — could be removed
+          for a cleaner look.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: gradient direction encoding is the key insight,
+          start/end markers show traversal, caption explains the encoding. Two curve
+          types contrast closed vs. open behavior. Visual hierarchy guides the viewer.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot. Both Lissajous and spiral present
+          as required by spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: equal aspect ratios (symmetric min/max
+          on both axes), direction encoding via t.seq gradient, two curve examples,
+          start/end point labels, 1200 points for smooth rendering.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct encode {x:0, y:1} with third dimension for visualMap. Axis
+          ranges encompass all data points.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-parametric · javascript · echarts · anyplot.ai'' —
+          correct format. Caption replaces legend for the continuous encoding.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all parametric curve aspects: self-intersecting closed curve
+          (Lissajous), open expanding curve (spiral), direction encoding, start/end
+          markers, sufficient point density.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real mathematical curves with scientific applications (physics, signal
+          analysis, antenna design). Neutral context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lissajous bounded by [-1,1] (correct for sin functions). Spiral extends
+          to ±4π ≈ ±12.57, axis range ±14 appropriate. 1200 points well within the
+          200-2000 spec range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: Data → Chart init → setOption. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — data computed from pure math functions (sin,
+          cos, Array.from). No random state.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; echarts is a global. All globals (t, chart) used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented code. Good separation of Lissajous vs spiral
+          data sections. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles PNG and HTML output. Chart initialized on #container
+          with animation: false. No deprecated APIs.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses multi-grid panels, xAxisIndex/yAxisIndex coordination,
+          encode-based data dimension mapping, z-index layering, and visualMap for
+          per-point color — all idiomatic ECharts patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses ECharts-specific visualMap dimension binding (dimension: 2)
+          for per-point color encoding, and multi-grid with coordinated axes. These
+          are distinctive ECharts capabilities. Stop short of 5 as the encode+visualMap
+          pattern, while distinctive, is the standard way to do this in ECharts.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
