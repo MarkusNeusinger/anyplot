@@ -1,8 +1,16 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-19
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-20
 """
+
+import os
+import sys
+
+
+# Prevent this file from shadowing the plotnine library (same filename as the lib)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _script_dir]
 
 import numpy as np
 import pandas as pd
@@ -10,6 +18,7 @@ from plotnine import (
     aes,
     after_stat,
     annotate,
+    coord_cartesian,
     element_blank,
     element_line,
     element_rect,
@@ -28,89 +37,127 @@ from plotnine import (
 from scipy import stats
 
 
-# Data - shaft diameter measurements (mm)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette (theme-independent data colors)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BRAND = IMPRINT_PALETTE[0]  # #009E73 — first series: histogram bars
+BLUE = IMPRINT_PALETTE[2]  # #4467A3 — target line
+RED = IMPRINT_PALETTE[4]  # #AE3030 — LSL/USL limits (semantic error anchor)
+
+# Data — shaft diameter measurements (mm)
 np.random.seed(42)
 target = 10.00
 lsl = 9.95
 usl = 10.05
-# Mean slightly above target to demonstrate Cp vs Cpk difference
+# Mean slightly above target to illustrate Cp vs Cpk difference
 measurements = np.random.normal(loc=10.008, scale=0.012, size=200)
 
 # Capability indices
-mean = np.mean(measurements)
+mean_val = np.mean(measurements)
 sigma = np.std(measurements, ddof=1)
 cp = (usl - lsl) / (6 * sigma)
-cpk = min((usl - mean) / (3 * sigma), (mean - lsl) / (3 * sigma))
+cpk = min((usl - mean_val) / (3 * sigma), (mean_val - lsl) / (3 * sigma))
 
 df = pd.DataFrame({"diameter": measurements})
 
-# Lambda for stat_function layer (KISS)
-norm_pdf = lambda x: stats.norm.pdf(x, mean, sigma)  # noqa: E731
-peak_density = norm_pdf(mean)
+# Fitted normal PDF
+norm_pdf = lambda x: stats.norm.pdf(x, mean_val, sigma)  # noqa: E731
+peak_density = norm_pdf(mean_val)
 
-# Spec zone dataframe for shaded region
-spec_zone = pd.DataFrame({"xmin": [lsl], "xmax": [usl], "ymin": [0], "ymax": [peak_density * 1.05]})
+# Specification zone — ymax set very high so the top edge is clipped by the panel,
+# eliminating the abrupt visual boundary from the previous implementation
+spec_zone = pd.DataFrame({"xmin": [lsl], "xmax": [usl], "ymin": [0.0], "ymax": [peak_density * 3.0]})
 
-# Colorblind-safe palette: red for limits, teal for target (high contrast pair)
-limit_color = "#c0392b"
-target_color = "#1a9988"
-bar_color = "#306998"
-curve_color = "#1a3d5c"
-text_color = "#2c3e50"
+# Capability statistics box label
+stats_label = f"Cp  = {cp:.2f}\nCpk = {cpk:.2f}\nμ    = {mean_val:.4f}\nσ    = {sigma:.4f}"
 
-# Plot using plotnine grammar of graphics layers
+# Title fontsize — scale linearly off 67-char baseline
+title = "histogram-capability · python · plotnine · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_size = max(8, round(12 * ratio))
+
+# Plot
 plot = (
     ggplot(df, aes(x="diameter"))
-    # Shaded specification zone between LSL and USL
+    # Spec zone shading (extends beyond visible y range to avoid abrupt upper edge)
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),
         data=spec_zone,
-        fill="#2ecc71",
-        alpha=0.08,
+        fill=BRAND,
+        alpha=0.07,
         inherit_aes=False,
     )
-    + geom_histogram(aes(y=after_stat("density")), bins=25, fill=bar_color, color="white", alpha=0.75)
-    + stat_function(fun=norm_pdf, color=curve_color, size=2, n=300)
-    + geom_vline(xintercept=lsl, linetype="dashed", color=limit_color, size=1.2)
-    + geom_vline(xintercept=usl, linetype="dashed", color=limit_color, size=1.2)
-    + geom_vline(xintercept=target, linetype="dashdot", color=target_color, size=1.0)
-    + annotate("text", x=lsl - 0.003, y=peak_density * 0.95, label="LSL", size=13, color=limit_color, fontweight="bold")
-    + annotate("text", x=usl + 0.003, y=peak_density * 0.95, label="USL", size=13, color=limit_color, fontweight="bold")
-    + annotate(
-        "text", x=target + 0.004, y=peak_density * 0.82, label="Target", size=12, color=target_color, fontweight="bold"
-    )
+    # Histogram bars (density scale)
+    + geom_histogram(aes(y=after_stat("density")), bins=25, fill=BRAND, color=PAGE_BG, alpha=0.8)
+    # Fitted normal distribution curve
+    + stat_function(fun=norm_pdf, color=INK, size=1.0, n=300)
+    # Specification limit lines
+    + geom_vline(xintercept=lsl, linetype="dashed", color=RED, size=1.2)
+    + geom_vline(xintercept=usl, linetype="dashed", color=RED, size=1.2)
+    # Target line
+    + geom_vline(xintercept=target, linetype="dashdot", color=BLUE, size=1.0)
+    # Limit labels
+    + annotate("text", x=lsl - 0.003, y=peak_density * 0.95, label="LSL", size=4.0, color=RED, fontweight="bold")
+    + annotate("text", x=usl + 0.003, y=peak_density * 0.95, label="USL", size=4.0, color=RED, fontweight="bold")
     + annotate(
         "label",
-        x=mean + 3.5 * sigma,
-        y=peak_density * 0.72,
-        label=f"Cp  = {cp:.2f}\nCpk = {cpk:.2f}\n\u03bc    = {mean:.4f}\n\u03c3    = {sigma:.4f}",
-        size=13,
-        color=text_color,
-        ha="left",
-        fill="#f0f3f5",
-        alpha=0.9,
-        label_padding=0.7,
-        label_size=0.5,
+        x=target + 0.004,
+        y=peak_density * 0.82,
+        label="Target",
+        size=4.2,
+        color=BLUE,
+        fontweight="bold",
+        fill=ELEVATED_BG,
+        alpha=0.85,
+        label_size=0.3,
+        label_padding=0.4,
     )
-    + labs(x="Shaft Diameter (mm)", y="Density", title="histogram-capability \u00b7 plotnine \u00b7 pyplots.ai")
+    # Capability statistics box (theme-adaptive fill and text color)
+    + annotate(
+        "label",
+        x=mean_val + 3.5 * sigma,
+        y=peak_density * 0.70,
+        label=stats_label,
+        size=4.0,
+        color=INK,
+        ha="left",
+        fill=ELEVATED_BG,
+        alpha=0.95,
+        label_padding=0.7,
+        label_size=0.4,
+    )
+    + labs(x="Shaft Diameter (mm)", y="Density", title=title)
     + scale_x_continuous(breaks=np.round(np.arange(9.94, 10.07, 0.01), 2).tolist())
-    + scale_y_continuous(expand=(0, 0, 0.08, 0))
+    + scale_y_continuous(expand=(0, 0, 0, 0))
+    # Clip y-axis to data range; spec zone extends to ymax*3 so it fills the panel
+    # without a visible upper boundary edge
+    + coord_cartesian(ylim=(0, peak_density * 1.15))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14, color=text_color, family="sans-serif"),
-        axis_title=element_text(size=20, margin={"t": 12, "r": 12}),
-        axis_text=element_text(size=16, color="#555555"),
-        axis_title_x=element_text(margin={"t": 14}),
-        axis_title_y=element_text(margin={"r": 14}),
-        plot_title=element_text(size=24, weight="bold", margin={"b": 16}),
-        plot_background=element_rect(fill="white", color="white"),
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_title_x=element_text(margin={"t": 10}),
+        axis_title_y=element_text(margin={"r": 10}),
+        plot_title=element_text(size=title_size, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#e0e0e0", size=0.3),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         plot_margin=0.04,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
