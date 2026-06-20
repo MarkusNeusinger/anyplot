@@ -90,24 +90,39 @@ ref_lines <- data.frame(
            "cl", "bound", "bound")
 )
 
-# Right-side text annotations for UCL / CL / LCL
+# Right-side text annotations (UCL / +2σ / CL / LCL; skip -2σ — too close to LCL)
 N_RIGHT   <- n_samples + 2L
-X_LIM_MAX <- n_samples + 10L
+X_LIM_MAX <- n_samples + 8L  # reduced from +10 to cut wasted horizontal space
 
 ann_data <- data.frame(
   chart = factor(
-    c(rep(CHART_X, 3L), rep(CHART_R, 2L)),
+    c(rep(CHART_X, 4L), rep(CHART_R, 2L)),
     levels = CHART_LEVELS
   ),
   x     = N_RIGHT,
-  y     = c(ucl_x, xbar_bar, lcl_x, ucl_r, rbar),
+  y     = c(ucl_x, uwl_x, xbar_bar, lcl_x, ucl_r, rbar),
   label = c(
     sprintf("UCL = %.3f", ucl_x),
+    "+2σ",
     sprintf("CL = %.3f",  xbar_bar),
     sprintf("LCL = %.3f", lcl_x),
     sprintf("UCL = %.3f", ucl_r),
     sprintf("CL = %.3f",  rbar)
   )
+)
+
+# OOC callout annotations — label each flagged sample with its number
+ooc_x_ids <- which(ooc_x)
+ooc_r_ids <- which(ooc_r)
+
+ooc_callouts <- data.frame(
+  chart = factor(
+    c(rep(CHART_X, length(ooc_x_ids)), rep(CHART_R, length(ooc_r_ids))),
+    levels = CHART_LEVELS
+  ),
+  sample_id = c(ooc_x_ids, ooc_r_ids),
+  y         = c(xbar[ooc_x_ids], rng[ooc_r_ids]),
+  label     = paste0("n=", c(ooc_x_ids, ooc_r_ids))
 )
 
 title_str <- "spc-xbar-r · r · ggplot2 · anyplot.ai"
@@ -147,17 +162,27 @@ p <- ggplot(df_all, aes(x = sample_id, y = value)) +
     values = c("In control" = 16L, "Out of control" = 18L),
     guide  = "none"
   ) +
+  # OOC callout labels — sample number above each flagged diamond
+  geom_text(
+    data     = ooc_callouts,
+    aes(x = sample_id, y = y, label = label),
+    color    = IMPRINT_PALETTE[5],
+    size     = 2.5,
+    vjust    = -1.4,
+    fontface = "bold"
+  ) +
   # Right-side limit annotations
   geom_text(
     data  = ann_data,
     aes(x = x, y = y, label = label),
-    hjust = 0, size = 2.4, color = INK_SOFT
+    hjust = 0, size = 2.8, color = INK_SOFT
   ) +
   facet_wrap(~ chart, ncol = 1L, scales = "free_y") +
   scale_x_continuous(
     breaks = seq(5L, n_samples, 5L),
     limits = c(1L, X_LIM_MAX)
   ) +
+  scale_y_continuous(expand = expansion(mult = c(0.08, 0.15))) +
   labs(x = "Sample Number", y = NULL, title = title_str) +
   theme_minimal(base_size = 8) +
   theme(
