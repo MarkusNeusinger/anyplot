@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
-Library: altair | Python
-Quality: 94/100 | Updated: 2026-06-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 # Remove the script's own directory from sys.path so the installed altair
