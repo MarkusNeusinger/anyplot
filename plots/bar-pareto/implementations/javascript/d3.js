@@ -79,6 +79,15 @@ g.append("line")
   .attr("stroke-width", 2)
   .attr("stroke-dasharray", "10,5");
 
+g.append("text")
+  .attr("x", iw - 6)
+  .attr("y", y2(80) - 7)
+  .attr("text-anchor", "end")
+  .attr("fill", t.amber)
+  .style("font-size", "13px")
+  .style("font-weight", "600")
+  .text("80% threshold");
+
 // --- Cumulative percentage line (Imprint palette position 3, blue) ---
 const lineGen = d3.line()
   .x(d => x(d.category) + x.bandwidth() / 2)
@@ -87,7 +96,7 @@ const lineGen = d3.line()
 g.append("path").datum(data)
   .attr("fill", "none")
   .attr("stroke", t.palette[2])
-  .attr("stroke-width", 2.5)
+  .attr("stroke-width", 3)
   .attr("d", lineGen);
 
 // Markers at center-top of each bar on the cumulative line
@@ -95,7 +104,7 @@ g.selectAll(".dot").data(data).join("circle")
   .attr("class", "dot")
   .attr("cx", d => x(d.category) + x.bandwidth() / 2)
   .attr("cy", d => y2(d.cumPct))
-  .attr("r", 5)
+  .attr("r", 6)
   .attr("fill", t.palette[2])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
@@ -125,7 +134,7 @@ const bottomAx = g.append("g")
 bottomAx.select(".domain").attr("stroke", t.inkSoft);
 bottomAx.selectAll(".tick text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .attr("dy", "1.4em");
 
 // --- Axis labels ---
@@ -176,7 +185,7 @@ g.append("text")
 g.append("line")
   .attr("x1", lx).attr("x2", lx + 16)
   .attr("y1", ly + 32).attr("y2", ly + 32)
-  .attr("stroke", t.palette[2]).attr("stroke-width", 2.5);
+  .attr("stroke", t.palette[2]).attr("stroke-width", 3);
 g.append("circle")
   .attr("cx", lx + 8).attr("cy", ly + 32)
   .attr("r", 4)
