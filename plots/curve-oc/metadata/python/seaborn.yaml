@@ -1,37 +1,54 @@
 library: seaborn
+language: python
 specification_id: curve-oc
 created: '2026-03-19T20:39:18Z'
-updated: '2026-03-19T21:13:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23315608616
+updated: '2026-06-20T11:24:29Z'
+generated_by: claude-sonnet
+workflow_run: 27869008328
 issue: 4553
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-oc/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features (AQL/LTPD lines, risk annotations,
-    multiple plans)
-  - Professional color palette with good colorblind safety
-  - Clean visual design with removed spines, subtle grid, and frameless legend
-  - Deterministic, mathematically correct data using scipy binomial CDF
-  - Good data storytelling through risk annotations that create visual focal points
+  - Monte Carlo simulation approach with seaborn CI bands (errorbar='se', 1.96) is
+    the perfect idiomatic use of seaborn's statistical aggregation — shows the library's
+    distinctive strength
+  - 'Full Imprint palette compliance: first series #009E73, second #C475FD, third
+    #4467A3; amber #DDCC77 for caution markers; correct backgrounds in both themes'
+  - 'Comprehensive spec coverage: AQL/LTPD reference lines, producer''s/consumer''s
+    risk annotations with amber markers and arrows, three sampling plans, x-range
+    0–0.20'
+  - Theme-adaptive chrome done correctly — all text, annotations, legend, grid colours
+    flip properly between light (#FAF8F1) and dark (#1A1A17) without any dark-on-dark
+    failure
+  - 'Clean code structure: no classes/functions, vectorised Monte Carlo loop, seed=42
+    for reproducibility, no bbox_inches=''tight'' on savefig'
   weaknesses:
-  - Axis label font sizes rely on set_context inheritance rather than explicit sizing
-  - Two of three plans share c=2, limiting visual diversity
-  image_description: 'The plot displays three Operating Characteristic (OC) curves
-    on a clean white background with top and right spines removed. The title "curve-oc
-    · seaborn · pyplots.ai" is prominently displayed at the top. The x-axis shows
-    "Fraction Defective (p)" ranging from 0.000 to 0.200, and the y-axis shows "Probability
-    of Acceptance P(a)" from 0.0 to 1.0. Three S-shaped curves are plotted: blue (n=50,
-    c=1), orange (n=80, c=2), and green (n=100, c=2). Two vertical dashed gray reference
-    lines mark AQL=0.02 and LTPD=0.10 with labels at the top. Orange circular markers
-    highlight the producer''s risk (α=0.216) at AQL and consumer''s risk (β=0.011)
-    at LTPD for the n=80 plan, with arrow annotations pointing to each. The legend
-    in the upper right is titled "Sampling Plan" with no frame. A subtle y-axis grid
-    at low opacity provides visual guidance.'
+  - Annotation text (Producer's risk, Consumer's risk) and AQL/LTPD labels are set
+    at fontsize=8 — at the very edge of mobile readability when the 3200×1800 canvas
+    is scaled to 400px width; bumping to fontsize=9 would add safety margin without
+    layout risk
+  - 'DE-01 moderate: design is clean and professional but the annotation-driven approach
+    is the primary sophistication lift; no emphasis technique (e.g. shading the AQL-to-LTPD
+    band, or varying line dash style across plans) that would further differentiate
+    sampling plans at a glance'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-oc · python · seaborn · anyplot.ai" in medium-weight dark ink at fontsize=12 is fully readable. X-axis label "Fraction Defective (p)" and Y-axis label "Probability of Acceptance P(a)" both at fontsize=10, dark ink, clearly legible. Tick labels at fontsize=8 in INK_SOFT (#4A4A44) are readable. AQL=0.02 and LTPD=0.1 labels at fontsize=8 at top of plot area are small but readable at full resolution.
+      Data: Three OC S-curves in Imprint palette order (#009E73 green for n=50,c=1; #C475FD lavender for n=80,c=2; #4467A3 blue for n=100,c=2) with CI bands. Amber (#DDCC77) dot markers at AQL and LTPD risk points. Dashed grey reference lines at AQL=0.02 and LTPD=0.10. Annotation boxes with rounded corners label producer's risk (α=0.216) and consumer's risk (β=0.011) with arrows.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title readable in near-white ink. Axis labels and tick labels adapt correctly to INK (#F0EFE8) / INK_SOFT (#B8B7B0) tokens — no dark-on-dark failure observed. Legend box uses ELEVATED_BG (#242420) with INK_SOFT border, legible.
+      Data: Identical Imprint palette data colors to light render — green, lavender, blue curves; amber risk markers unchanged. CI bands visible against dark background. Reference lines and annotations adapt to dark chrome correctly.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failure
   criteria_checklist:
     visual_quality:
       score: 29
@@ -42,65 +59,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, ticks 16pt, legend 16-17pt, annotations 13-14pt all explicit.
-          Axis labels inherit from set_context rather than explicit fontsize.
+        comment: Title/axis labels/ticks all readable in both themes; annotation and
+          AQL/LTPD labels at fontsize=8 are at the minimum mobile-readable size —
+          small but acceptable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Annotations well-positioned.
+        comment: No text-on-text or text-on-data overlap; annotation boxes positioned
+          clear of curves
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines thick (linewidth=3), markers 10pt with zorder=5. Curves well-differentiated.
+        comment: Lines at linewidth=2.5 clearly visible; CI bands add depth; amber
+          markers prominent at risk points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/green palette is colorblind-safe with good luminance
-          differentiation.
+        comment: Imprint palette CVD-safe; amber anchor correctly used for caution;
+          no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure, tight_layout, plot fills canvas well with balanced margins.
+        comment: Canvas gate passed; figsize=(8,4.5) dpi=400 → 3200x1800; no bbox_inches=tight;
+          legend, annotations, and reference labels all within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Fraction Defective (p) and Probability
-          of Acceptance P(a).'
+        comment: Title format correct; x-axis 'Fraction Defective (p)' and y-axis
+          'Probability of Acceptance P(a)' are descriptive with notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD, third #4467A3 — canonical
+          Imprint order; backgrounds #FAF8F1 light / #1A1A17 dark; data colours identical
+          across themes'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, intentional color harmony, styled frameless legend,
-          professional typography.
+        comment: 'Professional finish above default: clean annotation boxes, amber
+          risk markers, well-styled legend; CI bands add statistical richness; not
+          exceptional but above average'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed via set_theme rc, subtle y-axis grid alpha=0.2, frameless
-          legend, generous whitespace.
+        comment: Top/right spines removed, tick length=0, y-axis-only subtle grid
+          (alpha=0.15), elevated background legend box — good refinement above default
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: AQL/LTPD reference lines and risk annotations create focal points
-          and guide the viewer through quality context.
+        comment: Annotations explicitly name producer's and consumer's risk with values;
+          AQL/LTPD reference lines contextualise sampling thresholds; multiple curves
+          enable direct comparison
     spec_compliance:
       score: 15
       max: 15
@@ -110,52 +141,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curves with smooth S-shaped probability curves.
+        comment: Correct OC curve — probability of acceptance vs fraction defective,
+          S-shaped
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AQL/LTPD lines, risk annotations, multiple plans, smooth lines, proper
-          x-axis range.
+        comment: AQL+LTPD vertical reference lines, producer's risk (alpha) and consumer's
+          risk (beta) annotated, 3 sampling plans (within spec's 2-4 range), x-range
+          0-0.20, binomial CDF used
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective, Y=probability of acceptance. Correct mapping.
+        comment: Fraction defective on x (0-0.20), P(accept) on y (0-1); all curves
+          span full x range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels accurately describe
-          sampling plans.
+        comment: Title 'curve-oc · python · seaborn · anyplot.ai' correct; legend
+          titled 'Sampling Plan' with plan labels n=50/c=1, n=80/c=2, n=100/c=2
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three plans with varying n and c. Two plans share c=2, limiting variation
-          slightly.
+        comment: Full OC curve shown with S-shape, CI bands, risk markers, reference
+          lines, multiple plans for comparison
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world industrial quality inspection context with standard AQL/LTPD
-          values.
+        comment: AQL=2%, LTPD=10% are realistic industry acceptance sampling values;
+          n=50/80/100 c=1/2 are plausible plan parameters; binomial CDF is the correct
+          model
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard sampling plan parameters. Mathematically correct binomial
-          CDF values.
+        comment: X-range 0-0.20 appropriate (spec suggests 0.15-0.20 upper bound);
+          5000 Monte Carlo runs per point gives smooth curves; 50 x-points adequate
     code_quality:
       score: 10
       max: 10
@@ -165,33 +200,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save flow. No functions or classes.
+        comment: No functions or classes; linear structure; loop over plans list is
+          idiomatic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic binomial CDF calculations.
+        comment: np.random.seed(42) ensures deterministic Monte Carlo output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy.stats.binom.'
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          scipy.stats.binom'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No over-engineering.
+        comment: Vectorised binomial sampling, concise long-format DataFrame construction,
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight. Current API.
+        comment: Saves plot-{THEME}.png; no bbox_inches='tight'; facecolor=PAGE_BG
+          on savefig; current seaborn 0.13 API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -199,24 +238,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot with DataFrame+hue, sns.set_theme, sns.set_context,
-          sns.color_palette. Good idiomatic usage.
+        comment: Axes-level sns.lineplot with hue and errorbar — the recommended seaborn
+          pattern; sns.set_theme for global chrome; axes-level API throughout
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Hue-based plotting with long-form DataFrame and automatic legend
-          is seaborn's distinctive pattern.
+        comment: Uses seaborn's built-in statistical aggregation (errorbar='se', 1.96)
+          via Monte Carlo simulation — the rows-as-trials approach makes CI bands
+          emerge naturally from seaborn's aggregation engine, which is the library's
+          core differentiator
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
