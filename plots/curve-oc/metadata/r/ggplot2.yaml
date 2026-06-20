@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: curve-oc
+created: '2026-06-20T11:15:27Z'
+updated: '2026-06-20T11:31:04Z'
+generated_by: claude-sonnet
+workflow_run: 27869386644
+issue: 4553
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Full spec implementation: AQL/LTPD reference lines, risk zone shading, Pa annotations,
+    multiple sampling plans, correct binomial CDF calculations'
+  - Excellent theme-adaptive chrome — all text (title, axis labels, tick labels, annotations)
+    correctly flips between INK and INK_SOFT tokens; risk dots swap from near-black
+    to near-white via INK
+  - 'Thoughtful data storytelling: shaded acceptance/rejection zones plus vertical
+    reference lines plus quantified Pa annotations create a complete quality-control
+    narrative'
+  - 'Clean idiomatic R/ggplot2 code: multi-dataset layering with inherit.aes=FALSE,
+    scales::percent_format for axis labels, lapply pattern for multi-plan data generation'
+  weaknesses:
+  - Annotation text (size=3.0–3.2 mm ≈ 8.5–9pt) is at the lower bound of legibility
+    when the plot is scaled to mobile/thumbnail widths (~400 px); consider size=3.5–4.0
+    for the AQL/LTPD and Pa labels to ensure readability at small sizes
+  - 'DE-01/LM-02: No distinctive ggplot2-specific techniques (stat_*, geom_ribbon,
+    coord_*, faceting) beyond standard layer stacking — the risk zones could use geom_ribbon
+    on the actual curve data for a more data-driven approach'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "curve-oc · r · ggplot2 · anyplot.ai" in near-black #1A1A17 at top, clearly readable. Axis labels "Fraction Defective (p)" and "Probability of Acceptance Pa(p)" in INK (#1A1A17), tick labels in INK_SOFT (#4A4A44) as percentage format (0%–15% x-axis, 0%–100% y-axis). All text readable against light background.
+      Data: Three smooth S-shaped OC curves — green (#009E73, n=50 c=1), lavender (#C475FD, n=100 c=2), blue (#4467A3, n=150 c=3). Green shaded acceptance zone (alpha=0.07) left of AQL dashed line. Pink/red shaded rejection zone (alpha=0.07) right of LTPD dashed line. Two near-black risk dots at AQL (~68% Pa) and LTPD (~1% Pa). "Pa = 68%" and "Pa = 1%" annotations in INK_SOFT. "AQL 2%" and "LTPD 8%" labels in palette colors (green/red). Legend box with elevated background on right.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title in near-white #F0EFE8, axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). Legend box in elevated dark #242420 with subtle border. All text clearly readable against dark background. No dark-on-dark failures.
+      Data: Data colors identical to light render — same green, lavender, blue curves. Risk dots correctly flip to near-white (#F0EFE8 via INK token) making them visible on dark background. Shaded zones retain their colors. Pa annotations in #B8B7B0 (INK_SOFT dark). AQL/LTPD labels in palette green/red. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels fully legible in both themes. Annotation
+          text (size=3.0–3.2mm ≈ 8.5–9pt) is borderline small at thumbnail/mobile
+          scale — slightly below ideal
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. AQL/LTPD annotations, Pa annotations, and tick
+          labels all well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Three OC curves clearly distinguishable; risk dots visible in both
+          themes via INK token; reference lines visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette CVD-safe for 3 series; risk zones use semantic green/red
+          at low alpha — decorative role, not sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas gate passed. Balanced layout, legend on right, generous
+          whitespace, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; 'Fraction Defective (p)' and 'Probability of
+          Acceptance Pa(p)' are descriptive with variable names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for 3 series. Backgrounds
+          #FAF8F1/#1A1A17 correct. Both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): risk zone shading + matching dashed reference
+          lines + Pa annotations show design intentionality. Not exceptional — no
+          visual hierarchy beyond the annotations'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): top/right spines removed via theme_minimal, subtle
+          12% grid, minor grid removed, clean legend box. L-shaped axis lines correctly
+          applied'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): shaded zones + reference lines + Pa quantification
+          guide the viewer through producer/consumer risk trade-offs. Clear focal
+          message'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: OC curves correctly implemented via binomial CDF (pbinom), S-shaped
+          curves, correct axis ranges
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL/LTPD lines annotated; producer risk at AQL (Pa=68%) and consumer
+          risk at LTPD (Pa=1%) marked; 3 sampling plans shown; smooth continuous lines;
+          x-axis 0–15%
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=fraction_defective, Y=probability_acceptance, correct binomial
+          CDF computation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-oc · r · ggplot2 · anyplot.ai' correct. Legend labels
+          'n=50, c=1', 'n=100, c=2', 'n=150, c=3' descriptive and correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: OC curves + AQL/LTPD lines + risk zones + Pa annotations + multiple
+          plans — all core OC curve features present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AQL=2%, LTPD=8% are realistic QC values; sampling plans n=50,100,150
+          with c=1,2,3 are sensible; neutral industrial context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X range 0–15% practical for acceptance sampling; 200 points per curve
+          for smooth S-shape; probability 0–100% correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; lapply for multi-plan data is idiomatic R,
+          not unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is entirely deterministic (pbinom)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales, ragg — all three are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean list-of-lists plan structure, proper use of inherit.aes=FALSE
+          for multi-dataset layers
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) with ragg::agg_png device — correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary ggplot2 idiom: annotate(''rect''/''text''), geom_vline,
+          geom_line, geom_point with inherit.aes=FALSE, scale_color_manual, scales::percent_format,
+          theme_minimal composition'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Multi-dataset layering with inherit.aes=FALSE is a ggplot2 strength
+          — above default (1). But no stat_*, geom_ribbon, coord_*, or faceting —
+          ggplot2's most distinctive capabilities not showcased
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

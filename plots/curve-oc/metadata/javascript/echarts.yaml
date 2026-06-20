@@ -1,0 +1,262 @@
+library: echarts
+language: javascript
+specification_id: curve-oc
+created: '2026-06-20T11:27:06Z'
+updated: '2026-06-20T11:45:33Z'
+generated_by: claude-sonnet
+workflow_run: 27869576320
+issue: 4553
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Full spec compliance: all 4 required features satisfied (multiple OC curves,
+    AQL/LTPD reference lines, producer''s/consumer''s risk annotations, correct binomial
+    CDF computation)'
+  - Correct Imprint palette usage with brand green as first series and canonical order
+    for all 4 series; transparent background correctly adapts to theme surface in
+    both renders
+  - Both light and dark renders are fully readable with proper theme-adaptive chrome
+    tokens throughout — no dark-on-dark or light-on-light failures
+  - Informative subtitle and labeled risk reference lines (AQL, LTPD, 1-alpha=95%,
+    beta=10%) meaningfully guide interpretation of sampling plan trade-offs
+  - Minimal, mathematically correct code; fully deterministic computation with no
+    external dependencies or randomness
+  weaknesses:
+  - AQL (2%) and LTPD (10%) markLine labels rendered alongside vertical reference
+    lines at fontSize=14 appear tight — at mobile scaled width (~400px) these may
+    be difficult to read; increase label fontSize to 16 or adjust position property
+    for better placement
+  - Design Excellence is limited by staying within ECharts default chrome aesthetics;
+    adding subtle shaded risk zones via markArea (producer's risk region near AQL,
+    consumer's risk region near LTPD) would reinforce storytelling and elevate DE-01/DE-03
+  - Subtitle uses t.ink (primary text color) rather than t.inkSoft (secondary text)
+    — a minor hierarchy issue that would establish clearer visual text levels
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (transparent over #FAF8F1) — correct theme surface
+      Chrome: Title "curve-oc · javascript · echarts · anyplot.ai" in dark ink, clearly readable. X-axis label "Fraction Defective (p)" and Y-axis label "Probability of Acceptance" in dark ink, well-proportioned. Tick labels formatted as percentages, readable. Legend with 4 entries (n=50 c=1, n=50 c=2, n=100 c=2, n=100 c=3) in upper-right, readable. AQL (2%) and LTPD (10%) reference line labels alongside vertical dashed lines at small but readable size.
+      Data: Four S-shaped OC curves in Imprint palette: brand green (#009E73) for n=50,c=1; lavender (#C475FD) for n=50,c=2; blue (#4467A3) for n=100,c=2; ochre (#BD8233) for n=100,c=3. Reference lines: dashed vertical at AQL=2% and LTPD=10%, dashed horizontal at 95% and 10%. All curves clearly distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (transparent over #1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light ink tones against the dark background — all clearly readable. No dark-on-dark failures observed. Reference line labels visible. Grid lines subtle.
+      Data: All four OC curves in identical Imprint palette colors as light render (green, lavender, blue, ochre) — only chrome flips, data colors unchanged. Brand green #009E73 clearly visible on near-black surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis labels 18px, ticks
+          14px, legend 16px). Both themes legible. Minor: AQL/LTPD markLine labels
+          at fontSize=14 alongside vertical lines are tight at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Four smooth OC curves at lineWidth=3.5, no markers — optimal for
+          201-point continuous curves. All series clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette hue spread (green/lavender/blue/ochre) is CVD-safe
+          with adequate perceptual distance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Grid margins (left:120, right:200, top:145, bottom:90)
+          give well-proportioned layout. Plot fills ~65% of canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Fraction Defective (p), Y: Probability of Acceptance. Title in
+          mandated format. Tick labels formatted as percentages.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (t.palette[0]). Series 2-4 follow canonical
+          Imprint order. Transparent background resolves to theme pageBg. Chrome tokens
+          correctly applied in both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): subtitle, vertical legend layout, and risk reference
+          lines show intentional design. Not yet publication-ready — stays within
+          ECharts defaults without typographic differentiation.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: transparent background, grid via t.grid token, dashed reference
+          lines at 0.65 opacity. ECharts axis-line styling via t.inkSoft substitutes
+          for spine removal.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Four reference lines annotate key decision boundaries; subtitle names
+          the comparison. Guides viewer beyond raw data display. Risk zones could
+          be further reinforced.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curve implementation with binomial CDF acceptance probabilities.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 sampling plans, AQL+LTPD annotated, producer's risk (1-alpha=95%)
+          and consumer's risk (beta=10%) labeled, smooth lines, x-axis 0-0.20.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: fraction defective (p), Y: probability of acceptance; correct
+          ranges.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: curve-oc · javascript · echarts · anyplot.ai (mandated format).
+          Legend labels match sampling plan identifiers.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All OC curve features demonstrated: S-curve shape, discrimination
+          power, effect of n and c.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Acceptance sampling for quality inspection — neutral professional
+          domain. AQL=2%, LTPD=10%, n=50/100, c=1-3 are industry-standard parameters.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Binomial CDF mathematically correct. p range 0-0.20 is practical
+          inspection range. Risk thresholds (95%/10%) are standard quality engineering
+          values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two minimal helper functions (binomCoeff, ocProb) are mathematically
+          necessary for binomial CDF. No classes; main chart flow is clean linear
+          code.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; data computed from fixed mathematical formulas,
+          no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only pre-loaded window globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant PLANS.map() for series; conditional markLine on idx===0 avoids
+          duplication; concise formatters.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false included; echarts.init without explicit size or
+          devicePixelRatio; harness handles PNG/HTML output.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong idiomatic usage: value-typed axes, markLine for reference
+          lines, color array cycling, custom axis label formatters. Above the correct-but-not-leveraging-best-patterns
+          default.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses ECharts-specific features: markLine with multi-label annotations
+          (both xAxis and yAxis in one definition), subtitle component, custom tooltip
+          formatter with HTML. Above the generic-usage default.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

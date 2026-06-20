@@ -1,0 +1,289 @@
+library: highcharts
+language: javascript
+specification_id: curve-oc
+created: '2026-06-20T11:12:48Z'
+updated: '2026-06-20T11:36:15Z'
+generated_by: claude-sonnet
+workflow_run: 27869293179
+issue: 4553
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Compact single-function Pa() computes binomial CDF in log-space — numerically
+    stable and fully deterministic, replacing the previous three-function chain
+  - 'All four required annotations present: AQL and LTPD vertical dashed reference
+    lines on x-axis, producer''s risk (α=5%) and consumer''s risk (β=10%) horizontal
+    dotted reference lines on y-axis'
+  - Discrimination zone plotBand (AQL→LTPD) with subtle brand-green rgba fill creates
+    a strong visual focal point, addressing the storytelling gap from attempt 1
+  - Crossover scatter markers at AQL and LTPD for each sampling plan provide precise
+    visual anchors; color-matched to their respective curves via t.palette[i], showInLegend:false
+    keeps the legend clean
+  - 'Perfect Imprint palette compliance: first series #009E73, second #C475FD, third
+    #4467A3 via colors:t.palette; backgroundColor:transparent correctly inherits pageBg;
+    all chrome tokens (t.ink, t.inkSoft, t.grid) applied'
+  - 'Idiomatic Highcharts: plotLines with label objects on both axes simultaneously,
+    plotBands for region shading, spline series type, mixed spline+scatter in one
+    chart, legend.title, custom tick formatters — all Highcharts-distinctive patterns'
+  weaknesses:
+  - Discrimination Zone plotBand label uses fontSize:11px — smaller than any other
+    text element; at mobile scale (~400px wide) this would render at ~4px and become
+    invisible. Raise to 13px to match reference line labels.
+  - 'DE-02: legend border not explicitly removed — add legend.borderWidth:0 and legend.backgroundColor:''transparent''
+    for a cleaner, more refined look; the default Highcharts legend box adds subtle
+    visual noise.'
+  - 'DE-01: the plotBand fill uses a hardcoded rgba value rgba(0,158,115,0.08) rather
+    than derived from t.palette[0] — consider computing it as a token-aware color
+    to ensure consistent appearance across potential future theme changes.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct surface (backgroundColor:transparent inherits pageBg token), not pure white.
+      Chrome: Title "curve-oc · javascript · highcharts · anyplot.ai" in dark ink at 22px CSS, centered, occupying ~55% of canvas width — readable and well-proportioned. Y-axis label "Probability of Acceptance" and X-axis label "Fraction Defective (p)" at 16px CSS, clearly readable. Tick labels at 14px in soft-dark t.inkSoft color on both axes (formatted as percentages: 0%, 20%, ..., 100% on y-axis; 0%, 3%, ..., 15% on x-axis). Reference line labels ("AQL (1%)", "LTPD (8%)" above x-axis; "α = 5% (producer's risk)", "β = 10% (consumer's risk)" right-aligned) at 13px — readable. Legend on right with "Sampling Plan" title and three entries (n=50,c=1; n=100,c=2; n=150,c=3) all readable. One note: "Discrimination Zone" plotBand label at 11px is quite small — borderline readable at full size.
+      Data: Three smooth S-shaped OC splines — n=50,c=1 in #009E73 (brand green, first Imprint position), n=100,c=2 in #C475FD (lavender, second), n=150,c=3 in #4467A3 (blue, third). Correct Imprint palette positions 1-3. Discrimination zone band between AQL=1% and LTPD=8% shaded in a very subtle rgba(0,158,115,0.08) — barely visible but effective. Vertical dashed lines at AQL and LTPD. Horizontal dotted lines at 95% and 10%. Six colored crossover markers (two per curve at AQL and LTPD).
+      Legibility verdict: PASS — all text readable against light background; only the 11px band label is slightly small but still legible at full canvas size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title, axis labels, tick labels, reference line labels, and legend items all rendered in light-colored text (t.ink = #F0EFE8 / t.inkSoft = #B8B7B0 for dark theme). No dark-on-dark failures observed — all chrome correctly inverts. Grid lines visible as subtle light lines consistent with t.grid token.
+      Data: All three OC curve colors (brand green, lavender, blue) are visually identical to the light render — correct Imprint palette behavior where data colors stay constant and only chrome flips. Brand green #009E73 is clearly visible against the dark background. The plotBand discrimination zone is visible as a subtle warm-tinted region. Crossover markers maintain their palette colors.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, tick
+          labels 14px, reference line labels 13px). Discrimination Zone plotBand label
+          at 11px is the only undersized element — borderline at mobile scale. All
+          other text correctly proportioned and readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap in either render. Crossover scatter markers at AQL
+          cluster close together vertically (all three curves near 90-99% at AQL=1%)
+          but as colored dots they do not create text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Three smooth splines at lineWidth 2.5 clearly visible. Crossover
+          markers at radius=5 are small but discernible. Reference lines (dashed/dotted)
+          clearly visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1-3 (green/lavender/blue) provide good CVD-safe
+          ΔE spacing. No red-green-only dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Landscape orientation appropriate for multi-curve
+          comparison. Data fills ~70% of horizontal space. Legend well-positioned
+          on right. marginRight:30 provides breathing room. No edge clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Fraction Defective (p)'' — descriptive with variable notation.
+          Y-axis: ''Probability of Acceptance'' — clear. Title in correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'colors:t.palette correctly sets first series to #009E73. backgroundColor:transparent
+          inherits pageBg (#FAF8F1 light / #1A1A17 dark). All chrome tokens correctly
+          applied (t.ink, t.inkSoft, t.grid). Both themes render correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: correct Imprint palette, differentiated dash patterns
+          for two reference-line types (dashed for quality thresholds, dotted for
+          risk levels), discrimination zone band with brand-green tint, and color-matched
+          crossover markers create clear intent. Above ''well-configured default''
+          (4) — reaches ''strong design'' (6) territory. Not quite publication-ready
+          (8) as the overall chart remains functional rather than artistically striking.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: explicit xAxis.gridLineWidth:0, y-axis grid with
+          t.grid token, transparent background, subtle band fill. Missing: legend.borderWidth
+          not set to 0 (default Highcharts legend box is visible), legend.backgroundColor
+          not cleared. Minor refinement gaps prevent full marks.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: discrimination zone band creates a natural
+          focal region between AQL and LTPD; crossover markers provide precise visual
+          anchors showing where each plan crosses the risk thresholds; differentiated
+          reference line styles (dashed vs dotted) reinforce the two threshold types.
+          Viewer eye is guided to the discrimination zone. Could be elevated further
+          with labels at the intersection points or highlighted risk-curve crossings.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curves using spline series — smooth S-shaped probability-of-acceptance
+          vs fraction-defective curves.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: '3 sampling plans (≥2 required: n=50/c=1, n=100/c=2, n=150/c=3),
+          binomial CDF calculation via Pa(), AQL=1% and LTPD=8% vertical reference
+          lines, producer''s risk (α=5%) and consumer''s risk (β=10%) horizontal reference
+          lines, x-axis range 0-15%.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: fraction defective (0-15% practical range). Y: probability of
+          acceptance (0-100%). Correct per spec.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-oc · javascript · highcharts · anyplot.ai' — correct
+          format. Legend shows 'Sampling Plan' header with correct series labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three plans show the discrimination-power trade-off across increasing
+          n and c. Full 0-100% acceptance range demonstrated. AQL/LTPD thresholds
+          and both risk types shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard acceptance sampling plans (n=50/100/150, c=1/2/3), industry-standard
+          AQL=1%, LTPD=8%, and conventional risk levels (α=5%, β=10%) — realistic
+          quality control scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL=1% and LTPD=8% are realistic thresholds. α=5%/β=10% are standard
+          industry values. Binomial CDF correctly computed. x-range 0-15% practical
+          and standard. 120 points gives smooth curves.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Single compact Pa() function (10 lines) replaces the previous three-function
+          chain — justified for log-space binomial CDF computation. Code is linear:
+          data computation → series construction → chart call.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — all data computed from fixed mathematical constants,
+          no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed in JS; window.ANYPLOT_TOKENS and Highcharts globals
+          used correctly.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: plans.map() idiom for OC and crossover series generation is elegant.
+          No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container',...), animation:false in both chart
+          and plotOptions.series, credits:{enabled:false}, no explicit width/height.
+          Harness handles file output.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Highcharts API: plotLines with label objects on both xAxis
+          and yAxis, plotBands with labels, spline series type, mixed spline+scatter
+          in one chart, legend.title, custom formatters for percentage ticks, correct
+          backgroundColor:transparent pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-distinctive: plotLines on both axes simultaneously
+          with different dashStyles (Dash vs ShortDot), plotBands with label for region
+          shading, legend with title property, mixed series types (spline + scatter)
+          in one chart. Not quite 5/5 — no SVG renderer or advanced Highcharts-exclusive
+          capabilities beyond these.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

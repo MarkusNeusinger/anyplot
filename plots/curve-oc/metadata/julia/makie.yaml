@@ -1,0 +1,278 @@
+library: makie
+language: julia
+specification_id: curve-oc
+created: '2026-06-20T11:22:02Z'
+updated: '2026-06-20T11:38:41Z'
+generated_by: claude-sonnet
+workflow_run: 27869433504
+issue: 4553
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Complete spec compliance — all required features (binomial CDF, AQL/LTPD markers,
+    risk zones, 3 OC curves with comparison) implemented correctly
+  - 'Excellent theme-adaptive chrome with correct Imprint palette application (positions
+    1-3: green, lavender, blue) identical across both renders'
+  - Risk zone shading with semantic color coding (brand green tint for producer safety
+    region, matte-red tint for consumer risk zone) adds meaningful visual context
+    beyond basic line plot
+  - 'Data storytelling: three sampling plans clearly illustrate discrimination power
+    tradeoff as n/c increase'
+  weaknesses:
+  - The β label is anchored at position (0.190, 0.065) — the far right edge of the
+    x-axis range — making it easy to miss; it would be more discoverable near the
+    horizontal center of the consumer risk zone (e.g. x=0.10, y=0.025)
+  - Annotation text (AQL=2%, LTPD=8%, 1-α, β) at fontsize=11 is noticeably smaller
+    than tick labels (12pt) and axis labels (14pt), reducing typographic cohesion
+    — raise to 12pt for consistency
+  - DE-01 and DE-02 are above defaults but not at publication quality — no descriptive
+    title prefix was added, and the plot could benefit from slightly more generous
+    top padding so the 1-α label has more breathing room inside the producer risk
+    zone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "curve-oc · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis label "Probability of Acceptance" and X-axis label "Fraction Defective (p)" in dark ink, readable. Tick labels in INK_SOFT (#4A4A44), clearly visible. Top and right spines removed (L-frame). Subtle y-only grid at ~15% opacity.
+      Data: Three OC curves in Imprint palette positions 1-3 (brand green #009E73, lavender #C475FD, blue #4467A3) — all clearly distinguishable. Vertical dashed reference lines at AQL=2% and LTPD=8%. Subtle green tint hspan for producer risk zone (y=0.95-1.05) and very subtle red tint hspan for consumer risk zone (y=0-0.05). Horizontal dotted lines at y=0.95 and y=0.05. Text annotations "AQL = 2%", "LTPD = 8%" at y=0.87, "1-α" in upper-left of producer zone, "β" at bottom-right edge of x-axis range. Legend (top-right) shows n=50 c=1, n=100 c=2, n=200 c=4.
+      Legibility verdict: PASS — all text readable; annotation fontsize=11 is slightly smaller than ticks but not a legibility failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. Y-axis and X-axis labels in light text, clearly visible. Tick labels in #B8B7B0 (light gray), clearly visible against dark background. Legend box uses elevated dark background (#242420) with light-colored labels — no dark-on-dark text failure.
+      Data: Three OC curves in identical colors to light render (green #009E73, lavender #C475FD, blue #4467A3) — data palette is theme-invariant as required. Green producer risk tint visible at top. Consumer risk tint very faint (near-invisible at 7% red alpha on dark surface) but not a failure. Reference lines and dotted threshold lines visible. "β" label appears light-colored in bottom-right corner, readable.
+      Legibility verdict: PASS — all text is light-colored on dark background; no dark-on-dark failures found. Brand green #009E73 remains clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes. Annotation
+          text (fontsize=11) slightly smaller than tick labels (12pt) reduces typographic
+          cohesion — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, data elements, or legend. AQL/LTPD labels
+          at y=0.87 are positioned between OC curves without collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Three OC curves with linewidth=2.5 are clearly visible. Risk zone
+          shading is subtle but intentional at 7% alpha. Reference lines clearly distinguishable
+          (dashed vs dotted).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-3 used; CVD-safe per palette design.
+          Line colors differ in hue across green/purple/blue families — distinguishable
+          without relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 confirmed). Plot fills canvas well.
+          Balanced margins. Legend in top-right within bounds. No clipping or edge
+          overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Fraction Defective (p)'' — descriptive with variable notation.
+          Y: ''Probability of Acceptance'' — descriptive. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Multi-series uses Imprint positions
+          1-3 in canonical order. Data colors identical across light and dark renders.
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Chrome fully theme-adaptive.
+          Risk zone tints use semantic brand green and slot-5 red — appropriate semantic
+          use.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional semantic color coding for risk zones
+          (green=producer safety, red=consumer risk), layered reference elements (vlines,
+          hlines, hspan, text annotations). Not FiveThirtyEight-level but clearly
+          thoughtful design above configured defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid at 15% opacity, top/right spines removed, semi-transparent
+          risk zones (7% alpha), semi-transparent reference lines (30-45% alpha),
+          styled legend frame. Good refinement, not perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three OC curves directly illustrate how n/c affects discrimination
+          power. Risk zones contextualize the practical stakes. AQL/LTPD markers anchor
+          the business-relevant thresholds. Visual hierarchy guides the reader to
+          the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curve chart type — S-shaped probability curves showing
+          lot acceptance probability vs fraction defective.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Binomial CDF computation implemented. AQL/LTPD annotated with vertical
+          reference lines. Producer risk (1-α) and consumer risk (β) marked. Three
+          OC curves with different plans. X-axis range 0-0.20. All spec features present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: fraction_defective (0-0.20). Y: probability_acceptance (0-1.0).
+          Correct assignment, full data range shown.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-oc · julia · makie · anyplot.ai' matches required format.
+          Legend labels 'n=50, c=1', 'n=100, c=2', 'n=200, c=4' match the sampling
+          plan data correctly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all OC curve aspects: S-shaped curves, comparison across 3
+          plans, producer/consumer risk zones, AQL/LTPD reference points, discrimination
+          power difference.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AQL=2%, LTPD=8%, sample plans n=50/100/200 with c=1/2/4 are standard
+          acceptance sampling parameters. Binomial CDF computation is the mathematically
+          correct method. Real-world quality control scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X-range 0-0.20 is the practical range for acceptance sampling (most
+          real lots have <20% defective). Y-range 0-1.0 (probability). Sample sizes
+          and acceptance numbers are realistic for industrial inspection.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: One-liner helper functions oc_prob and oc_curve are idiomatic Julia
+          for mathematical formulas — KISS intent maintained. Follows imports → data
+          → plot → save structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Data is deterministic (binomial CDF computation)
+          so seed is convention-correct.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant macro, RGBAf), Random (seed)
+          — all three imports are actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic Julia. No fake UI elements. Mathematical formula
+          expressed concisely. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as 'plot-$(THEME).png' with px_per_unit=2. Uses size= parameter
+          (current Makie 0.22.x API, where resolution was renamed to size). No HTML
+          output (correct for CairoMakie static backend).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Makie''s high-level API: Figure/Axis pattern, plot primitives
+          (lines!, hspan!, vlines!, hlines!, text!), axislegend for legend. colorant
+          string macro and RGBAf for color construction. Correct theme-adaptive property
+          setting on Axis.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: hspan! and hlines!/vlines! for reference zone visualization are Makie-specific
+          primitives. axislegend with custom framecolor, backgroundcolor, labelcolor
+          styling leverages Makie's attribute system. colorant"#RRGGBB" string macro
+          is Julia/Colors-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
