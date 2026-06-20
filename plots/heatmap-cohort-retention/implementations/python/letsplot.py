@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-16
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,7 +13,16 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data - Monthly cohort retention over 10 months
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"  # caution/attention accent (outside categorical pool)
+
+# Data — monthly SaaS cohort retention over 10 months
 np.random.seed(42)
 cohort_labels = [
     "Jan 2024",
@@ -29,11 +40,11 @@ n_cohorts = len(cohort_labels)
 n_periods = 10
 cohort_sizes = np.random.randint(800, 2500, n_cohorts)
 
-# Distinct per-cohort base curves for more visible variation
+# Distinct per-cohort profiles for visible variation across rows
 cohort_profiles = [
-    np.array([100.0, 68, 55, 48, 43, 39, 36, 34, 32, 31]),  # Jan - strong retention
+    np.array([100.0, 68, 55, 48, 43, 39, 36, 34, 32, 31]),  # Jan - strong
     np.array([100.0, 58, 42, 34, 29, 25, 22, 20, 19, 18]),  # Feb - weak
-    np.array([100.0, 72, 60, 52, 46, 42, 39, 37, 35, 34]),  # Mar - best cohort
+    np.array([100.0, 72, 60, 52, 46, 42, 39, 37, 35, 34]),  # Mar - best
     np.array([100.0, 55, 38, 30, 25, 22, 20, 18, 17, 16]),  # Apr - poor
     np.array([100.0, 65, 50, 42, 37, 33, 30, 28, 26, 25]),  # May - average
     np.array([100.0, 60, 45, 36, 31, 27, 24, 22, 21, 20]),  # Jun - below avg
@@ -43,7 +54,7 @@ cohort_profiles = [
     np.array([100.0, 63, 48, 40, 35, 31, 28, 26, 24, 23]),  # Oct - steady
 ]
 
-# Generate retention data with triangular shape and per-cohort variation
+# Triangular retention matrix — earlier cohorts have more observed periods
 rows = []
 for i in range(n_cohorts):
     available_periods = n_periods - i
@@ -67,90 +78,88 @@ for i in range(n_cohorts):
 
 df = pd.DataFrame(rows)
 
-# Set category ordering for proper display
-cohort_order = [f"{c} (n={s:,})" for c, s in zip(cohort_labels, cohort_sizes)]
+# Categorical ordering for correct axis display (newest cohort at top)
+cohort_order = [f"{c} (n={s:,})" for c, s in zip(cohort_labels, cohort_sizes, strict=False)]
 period_order = [f"Month {j}" for j in range(n_periods)]
 df["cohort"] = pd.Categorical(df["cohort"], categories=cohort_order[::-1], ordered=True)
 df["period"] = pd.Categorical(df["period"], categories=period_order, ordered=True)
 
-# Text labels and contrast colors
+# Cell labels with adaptive text contrast
+# imprint_seq: low=#009E73 (green) → high=#4467A3 (blue)
+# Both are mid-dark; near-white text suits high-retention cells, INK suits low-retention
 df["label"] = df["retention"].apply(lambda v: f"{v:.0f}%")
-df["text_color"] = df["retention"].apply(lambda v: "white" if v > 50 else "#1a1a1a")
+df["use_dark_text"] = df["retention"] < 50
+df_dark_text = df[df["use_dark_text"]].copy()
+df_light_text = df[~df["use_dark_text"]].copy()
 
-df_light = df[df["text_color"] == "white"].copy()
-df_dark = df[df["text_color"] != "white"].copy()
-
-# Identify critical drop zone (Month 0->1) for storytelling emphasis
+# Month 1 subset — highlight critical first-month churn across all cohorts
 df_drop = df[df["period_num"] == 1].copy()
 
-# Rich tooltips with formatted retention and cohort context
+# Tooltips
 tile_tooltips = (
     layer_tooltips().format("retention", ".1f").line("@cohort").line("@period | Retention: @retention%").min_width(220)
 )
 
-# Plot with storytelling: highlight the critical first-month churn
+# Title: 57 chars; square canvas (600px base) is narrower than landscape (800px),
+# so scale the 16px baseline by 600/800 to avoid overflow on the right edge
+title = "heatmap-cohort-retention · python · letsplot · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(round(16 * ratio * (600 / 800)), 11)
+
+# Theme-adaptive chrome — standard scale-based sizes per default-style-guide.md
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid=element_blank(),
+    plot_title=element_text(size=title_fontsize, color=INK, face="bold"),
+    plot_subtitle=element_text(size=10, color=INK_MUTED, face="italic"),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=12, color=INK, face="bold"),
+)
+
+# Plot
 plot = (
     ggplot(df, aes(x="period", y="cohort", fill="retention"))
-    + geom_tile(tooltips=tile_tooltips, color="#f0f0f0", size=0.5, width=0.98, height=0.98)
-    # Highlight critical Month 1 drop with border emphasis
+    + geom_tile(tooltips=tile_tooltips, color=PAGE_BG, size=0.3, width=0.98, height=0.98)
+    # Orange borders highlight the critical Month 1 churn drop across all cohorts
     + geom_tile(
         aes(x="period", y="cohort"),
         data=df_drop,
         fill="rgba(0,0,0,0)",
-        color="#FF6F00",
+        color=ANYPLOT_AMBER,
         size=2.8,
         width=0.98,
         height=0.98,
         tooltips="none",
     )
     + geom_text(
-        aes(x="period", y="cohort", label="label"),
-        data=df_light,
-        color="white",
-        size=11,
-        fontface="bold",
-        label_format="{.0f}",
+        aes(x="period", y="cohort", label="label"), data=df_light_text, color="#F0EFE8", size=4, fontface="bold"
     )
-    + geom_text(
-        aes(x="period", y="cohort", label="label"),
-        data=df_dark,
-        color="#2a2a2a",
-        size=11,
-        fontface="bold",
-        label_format="{.0f}",
-    )
-    + scale_fill_viridis(
-        option="viridis",
+    + geom_text(aes(x="period", y="cohort", label="label"), data=df_dark_text, color=INK, size=4, fontface="bold")
+    # Imprint sequential colormap: green→blue (single-polarity retention scale)
+    + scale_fill_gradient(
+        low="#009E73",
+        high="#4467A3",
         limits=[0, 100],
         name="Retention %",
-        direction=-1,
-        breaks=[0, 20, 40, 60, 80, 100],
-        labels=["0%", "20%", "40%", "60%", "80%", "100%"],
+        breaks=[0, 25, 50, 75, 100],
+        labels=["0%", "25%", "50%", "75%", "100%"],
     )
-    + coord_fixed(ratio=0.85)
     + labs(
         x="Months Since Signup",
         y="Signup Cohort",
-        title="heatmap-cohort-retention · letsplot · pyplots.ai",
-        subtitle="Orange borders highlight critical Month 1 churn — the largest retention drop across all cohorts",
+        title=title,
+        subtitle="Month 1 critical churn highlighted — largest retention drop across all cohorts",
     )
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24, face="bold", color="#1a1a1a"),
-        plot_subtitle=element_text(size=15, color="#666666", face="italic"),
-        axis_title_x=element_text(size=20, color="#333333"),
-        axis_title_y=element_text(size=20, color="#333333"),
-        axis_text_x=element_text(size=15, angle=0),
-        axis_text_y=element_text(size=14),
-        legend_title=element_text(size=16, face="bold"),
-        legend_text=element_text(size=13),
-        panel_grid=element_blank(),
-        plot_background=element_rect(fill="white", color="white"),
-        legend_background=element_rect(fill="white", color="white"),
-    )
-    + ggsize(1600, 900)
+    + anyplot_theme
+    + ggsize(600, 600)
 )
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save — square canvas: ggsize(600, 600) × scale=4 → 2400×2400 px
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
