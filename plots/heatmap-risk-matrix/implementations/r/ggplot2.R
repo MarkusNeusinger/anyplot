@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -56,8 +55,8 @@ risks <- data.frame(
 )
 
 # Small reproducible jitter so markers sit slightly off cell centres
-risks$jx <- risks$likelihood + runif(nrow(risks), -0.15, 0.15)
-risks$jy <- risks$impact     + runif(nrow(risks), -0.15, 0.15)
+risks$jx <- risks$likelihood + runif(nrow(risks), -0.22, 0.22)
+risks$jy <- risks$impact     + runif(nrow(risks), -0.22, 0.22)
 
 plot_title <- "heatmap-risk-matrix · r · ggplot2 · anyplot.ai"
 
@@ -85,7 +84,13 @@ p <- ggplot() +
   geom_text(
     data = risks,
     aes(x = jx, y = jy, label = risk_name),
-    color = INK, size = 2.4, vjust = -0.55, hjust = 0.5, lineheight = 0.88
+    color = INK, size = 2.8, vjust = -0.55, hjust = 0.5, lineheight = 0.88
+  ) +
+  # Bold border around the Critical zone cells (score ≥ 20)
+  annotate(
+    "rect",
+    xmin = 3.5, xmax = 5.5, ymin = 3.5, ymax = 5.5,
+    fill = NA, color = "#AE3030", linewidth = 1.5
   ) +
   # Axis scales
   scale_x_continuous(
