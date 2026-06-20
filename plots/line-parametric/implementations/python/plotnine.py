@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-20
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-06-20
 """
 
 import os
