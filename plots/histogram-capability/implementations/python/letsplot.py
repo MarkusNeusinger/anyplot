@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -17,6 +17,7 @@ from lets_plot import (
     element_text,
     geom_area,
     geom_histogram,
+    geom_rect,
     geom_text,
     geom_vline,
     ggplot,
@@ -41,6 +42,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 # Pre-blended grid color: 15% INK over PAGE_BG (rgba() avoids dependency on CSS parser)
 GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A37"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 BRAND = IMPRINT_PALETTE[0]  # #009E73 — always first series (histogram bars + curve)
@@ -51,6 +53,7 @@ np.random.seed(42)
 lsl = 9.95
 usl = 10.05
 target = 10.00
+margin = 0.015
 
 measurements = np.random.normal(loc=10.002, scale=0.012, size=200)
 sample_mean = float(np.mean(measurements))
@@ -62,16 +65,18 @@ cpk = min((usl - sample_mean) / (3 * sample_std), (sample_mean - lsl) / (3 * sam
 
 df = pd.DataFrame({"measurement": measurements})
 
+# Compute bins matching lets-plot's geom_histogram(bins=30) behavior:
+# lets-plot bins the data over the visible x range (limits from scale_x_continuous)
+lp_bins = np.linspace(lsl - margin, usl + margin, 31)
+hist_counts, _ = np.histogram(measurements, bins=lp_bins)
+y_max = float(hist_counts.max())
+lp_bin_width = float(lp_bins[1] - lp_bins[0])
+
 # Normal distribution curve fitted to sample mean and std
 x_curve = np.linspace(sample_mean - 4 * sample_std, sample_mean + 4 * sample_std, 300)
 y_curve = stats.norm.pdf(x_curve, sample_mean, sample_std)
-bin_width = (measurements.max() - measurements.min()) / 30
-y_curve_scaled = y_curve * bin_width * len(measurements)
+y_curve_scaled = y_curve * lp_bin_width * len(measurements)
 df_curve = pd.DataFrame({"x": x_curve, "y": y_curve_scaled})
-
-# Annotation y positions
-hist_counts, _ = np.histogram(measurements, bins=30)
-y_max = float(hist_counts.max())
 
 cap_text = f"Cp = {cp:.2f}  |  Cpk = {cpk:.2f}"
 stats_text = f"Mean = {sample_mean:.4f} mm  |  Std = {sample_std:.4f} mm"
@@ -82,11 +87,10 @@ ann_df = pd.DataFrame({"x": [ann_x], "y": [y_max * 0.92], "label": [cap_text]})
 stats_ann_df = pd.DataFrame({"x": [ann_x], "y": [y_max * 0.78], "label": [stats_text]})
 
 # Spec limit labels — symmetric margins, labels outside bars
-margin = 0.015
 lsl_label_df = pd.DataFrame({"x": [lsl - 0.004], "y": [y_max * 0.70], "label": ["LSL\n9.950"]})
 usl_label_df = pd.DataFrame({"x": [usl + 0.004], "y": [y_max * 0.70], "label": ["USL\n10.050"]})
-# Target label below curve peak to avoid visual clutter
-target_label_df = pd.DataFrame({"x": [target + 0.005], "y": [y_max * 0.42], "label": ["Target\n10.000"]})
+# Target label above histogram top (clear of bars and curve)
+target_label_df = pd.DataFrame({"x": [target], "y": [y_max * 1.05], "label": ["Target\n10.000"]})
 
 # Title (53 chars < 67 baseline, no scaling needed)
 title = "histogram-capability · python · letsplot · anyplot.ai"
@@ -134,7 +138,19 @@ plot = (
         size=4,
         color=INK_SOFT,
         fontface="bold",
-        hjust=0,
+        hjust=0.5,
+        inherit_aes=False,
+    )
+    # Subtle callout box behind capability indices for visual anchoring
+    + geom_rect(
+        xmin=ann_x - 0.003,
+        xmax=ann_x + 0.030,
+        ymin=y_max * 0.72,
+        ymax=y_max * 0.98,
+        fill=ELEVATED_BG,
+        color=INK_SOFT,
+        alpha=0.90,
+        size=0.3,
         inherit_aes=False,
     )
     # Capability indices — most prominent annotation
@@ -148,7 +164,12 @@ plot = (
         inherit_aes=False,
     )
     + geom_text(
-        data=stats_ann_df, mapping=aes(x="x", y="y", label="label"), size=4, color=INK_SOFT, hjust=0, inherit_aes=False
+        data=stats_ann_df,
+        mapping=aes(x="x", y="y", label="label"),
+        size=4.5,
+        color=INK_SOFT,
+        hjust=0,
+        inherit_aes=False,
     )
     + scale_x_continuous(name="Shaft Diameter (mm)", format=".3f", limits=[lsl - margin, usl + margin])
     + scale_y_continuous(name="Frequency", format="d", expand=[0, 0, 0.15, 0])
