@@ -1,44 +1,63 @@
 library: altair
+language: python
 specification_id: line-growth-percentile
 created: '2026-03-19T19:54:02Z'
-updated: '2026-03-19T20:13:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23313901673
+updated: '2026-06-20T09:45:25Z'
+generated_by: claude-sonnet
+workflow_run: 27866706162
 issue: 4555
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/altair/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — all 7 percentile bands, P50 emphasis, right-margin
-    labels, patient overlay, blue tones for boys
-  - Strong design with graduated opacity bands creating natural visual depth and hierarchy
-  - Idiomatic Altair code using transform_fold, transform_filter, and layer composition
-  - Interactive hover feature (selection_point) leverages Altair distinctive capabilities
-  - Clean, realistic data that approximates WHO growth standards
+  - 'Idiomatic Altair: transform_fold + transform_filter for multi-percentile lines,
+    alt.layer() composition, and alt.selection_point for interactive hover — all distinctive
+    Altair patterns used correctly'
+  - 'Graduated band opacity (0.14–0.36) creates effective visual hierarchy: darker
+    near extremes, lighter near median — exactly as specified'
+  - P50 median emphasized with strokeWidth=2.5 vs 0.8 for others — clear clinical
+    anchor
+  - Patient trajectory in brand green (#009E73) against blue reference bands provides
+    immediate perceptual contrast
+  - Right-margin percentile labels (P3–P97) with nudging are a more elegant solution
+    than a separate legend
+  - Subtitle adds clinical context ('Boys Weight-for-Age (0–36 months) · WHO Reference
+    Standard')
+  - Interactive hover with size=condition (80→160) and tooltips for the HTML output
+    is a legitimate Altair-native feature
+  - 'Theme-adaptive chrome is complete: INK/INK_SOFT/INK_MUTED applied to all text,
+    grid, and domain elements'
+  - Canvas padding guard (PIL pad-to-3200×1800) is correctly implemented without cropping
   weaknesses:
-  - Right-margin percentile labels are slightly crowded despite nudging (P10/P25 and
-    P50/P75 spacing)
-  - Color accessibility could be improved — red/coral vs blue is generally safe but
-    not optimal for all CVD types
-  image_description: The plot displays a pediatric growth chart for boys' weight-for-age
-    (0–36 months) in WHO reference style. Blue-toned percentile bands span from P3
-    to P97 with graduated opacity — darker/more saturated near the center (P25–P75
-    band) and lighter at the extremes (P3–P10, P90–P97). A thick dark navy P50 (median)
-    line is prominently emphasized through the center of the bands. Thinner semi-transparent
-    blue lines mark each individual percentile curve. Percentile labels (P3, P10,
-    P25, P50, P75, P90, P97) appear on the right margin with vertical nudging to reduce
-    crowding. A red/coral patient trajectory ("Patient A") with connected circular
-    markers overlays the bands, tracking from birth (~3.5 kg) to 36 months (~15.6
-    kg), sitting consistently between P50 and P75. The background is a subtle light
-    blue-gray (#f7f9fb), Y-axis has dashed grid lines, X-axis has no grid. Title reads
-    "line-growth-percentile · altair · pyplots.ai" with two subtitle lines. Axes are
-    labeled "Age (months)" and "Weight (kg)".
+  - Right-margin percentile labels (P25/P10 and P90/P75 pairs) are slightly crowded
+    where the reference curves converge at 36 months — the current nudge values (0.15–0.25
+    kg) partially help but the labels in those pairs read as tight
+  - Patient label 'Patient A' (fontSize=9) and callout '≈ P75' (fontSize=9) are somewhat
+    small at the rendered scale; consider increasing to 10–11 to match the percentile
+    label size and ensure mobile readability
+  - 'DE-01/DE-02: While clearly above library defaults, the design stops short of
+    FiveThirtyEight-level polish — primarily the right-margin label crowding and small
+    callout text pull the aesthetic down slightly'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "line-growth-percentile · python · altair · anyplot.ai" in dark ink at fontSize=16 is clearly readable, left-aligned. Subtitle "Boys Weight-for-Age (0–36 months) · WHO Reference Standard" in muted dark text is visible. Y-axis label "Weight (kg)" and X-axis label "Age (months)" both at fontSize=12 are clear and descriptive. Tick labels (0–18 on Y, 0–40 on X) at fontSize=10 are readable. Right-margin percentile labels (P3–P97) at fontSize=10 in INK_SOFT (#4A4A44) are readable though slightly crowded in the P25/P10 pair.
+      Data: Five graduated blue (#4467A3) band fills with opacity 0.14–0.36 — lighter near median, darker near extremes. P50 line drawn thicker (strokeWidth=2.5) for emphasis. Other percentile lines at strokeWidth=0.8. Patient trajectory in brand green #009E73 as a smooth line with circular markers (size=80). "Patient A" green label and "≈ P75" callout visible but small (fontSize=9).
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light-colored text (INK = #F0EFE8, INK_SOFT = #B8B7B0) and clearly readable against the dark background. Right-margin percentile labels (P3–P97) in INK_SOFT (#B8B7B0) are visible. No dark-on-dark failure observed — all text elements use light ink tokens.
+      Data: Data colors are identical to the light render — same green #009E73 patient line and blue #4467A3 reference bands. The blue bands appear more vivid/saturated against the dark background but the palette positions are unchanged. Patient markers and trajectory maintain their green identity. Brand green #009E73 is clearly visible on the dark surface.
+      Legibility verdict: PASS — no "dark-on-dark" failure, all text elements use light-mode INK tokens correctly, data colors unchanged from light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,44 +65,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axes 22/18pt, labels 15pt
-          bold). Subtitle at 16pt slightly small but readable.
+        comment: All font sizes explicitly set; title/axis/tick labels readable in
+          both themes. Patient label and callout text at fontSize=9 are slightly small
+          but readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Percentile labels on right margin have manual nudging; P10/P25 and
-          P50/P75 are close but distinguishable.
+        comment: No actual overlapping text, but right-margin percentile labels (P25/P10
+          and P90/P75 pairs) are slightly crowded where curves converge at month 36.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Graduated band opacity creates clear visual layering. Patient markers
-          well-sized.
+        comment: Patient markers (size=80/160) clearly visible for 12 data points.
+          Graduated band opacity distinguishes zones well. P50 line emphasis effective.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue bands vs red patient line provides good luminance contrast.
-          Not optimal for all CVD types.
+        comment: Green vs blue is CVD-safe combination. Shape redundancy (line+markers
+          for patient vs area fills for bands) provides non-color encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well. Right margin reserved for labels is good
-          use of space.
+        comment: Canvas gate passed. Chart fills canvas well. Balanced margins. Right-margin
+          extension for percentile labels is intentional and appropriate.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age (months) and Weight (kg) — descriptive with units.
+        comment: 'X: ''Age (months)'' and Y: ''Weight (kg)'' — both descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient trajectory uses #009E73 (brand green, first active series).
+          Reference bands use #4467A3 (blue, position 3) — appropriate semantic choice
+          for boys'' chart by clinical convention. Backgrounds correct (#FAF8F1 light,
+          #1A1A17 dark). Chrome fully theme-adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -91,22 +121,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue palette with graduated opacity, Helvetica Neue typography,
-          dark navy accent, coral patient line, custom background. Clearly above defaults.
+        comment: 'Strong design: graduated band opacities, median emphasis, right-margin
+          labels, clinical subtitle. Clearly above configured defaults. Not quite
+          FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: View stroke removed, subtle dashed Y-grid only, X-grid disabled,
-          muted domain/tick colors, custom background fill.
+        comment: Y-axis-only grid at 15% opacity, no X grid, no spines, strokeWidth=0
+          on view frame, generous whitespace. Very clean.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Patient trajectory creates clear narrative against percentile bands.
-          Graduated opacity draws eye to median zone.
+        comment: Green patient line immediately draws the eye against blue bands.
+          '≈ P75' callout and 'Patient A' label guide the viewer to the clinical story.
+          P50 median anchor aids orientation.
     spec_compliance:
       score: 15
       max: 15
@@ -116,28 +148,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: growth chart with smooth percentile curves and individual
-          patient overlay.'
+        comment: 'Correct: line/area growth chart with percentile bands and individual
+          patient trajectory overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 percentiles as filled bands, P50 emphasized, blue tones, right-margin
-          labels, patient overlay with contrasting color.
+        comment: Graduated band fills, P50 emphasis, blue clinical convention for
+          boys, P3-P97 right-margin labels, patient connected markers, age-in-months
+          X-axis — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = age_months, Y = weight (kg). All data visible.
+        comment: age_months on X (0–36 range shown, scale to 40), weight on Y (0–19
+          kg), patient data overlaid on reference bands.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Percentile labels serve as legend; Patient
-          A label identifies overlay.
+        comment: 'Title: ''line-growth-percentile · python · altair · anyplot.ai''
+          — correct format. Percentile labels on right margin serve as legend. Patient
+          A label in chart.'
     data_quality:
       score: 15
       max: 15
@@ -147,21 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 percentile curves, bands between each pair, patient trajectory
-          crossing multiple zones.
+        comment: All 7 percentile curves shown, graduated band fills, individual patient
+          trajectory at 12 well-child visit ages, full 0–36 month range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO-style weight-for-age reference for boys. Pediatric healthcare
-          is neutral, real-world context.
+        comment: WHO weight-for-age reference for boys is a real clinical tool. Well-child
+          visit ages are realistic. Neutral medical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Birth weight ~3.3 kg, 36-month weight ~14-16 kg. Realistic values.
+        comment: Birth weight 3.5 kg (WHO median ~3.3 kg), 36-month weight 15.6 kg
+          (~P75 per WHO). Reference curve shape approximates real WHO growth trajectory.
     code_quality:
       score: 10
       max: 10
@@ -171,33 +207,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, bands, lines, labels, patient, compose,
-          save. No functions or classes.'
+        comment: 'Flat script: tokens → data → band layers → lines → labels → patient
+          layers → compose → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; data arrays are hardcoded so deterministic
+          regardless.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: os, altair, numpy, pandas, PIL.Image — all actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration for bands, transform_fold for lines, well-organized
-          composition.
+        comment: transform_fold + transform_filter is idiomatic. nudge dict is clean.
+          band_defs loop avoids repetition. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Altair
+          6.2.1 API.
     library_mastery:
       score: 9
       max: 10
@@ -207,27 +245,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of transform_fold, transform_filter, alt.layer, mark_area
-          with y/y2, alt.Title, configure_axis/view.
+        comment: transform_fold, transform_filter, alt.layer(), alt.selection_point,
+          alt.condition, configure_axis/view — all high-level idiomatic Altair patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point with nearest for interactive hover, tooltips, .interactive()
-          HTML export — distinctive Altair features.
+        comment: selection_point(nearest=True, on='pointerover') for interactive hover
+          + alt.condition for size encoding on selection is distinctively Altair.
+          transform_fold for multi-column fold is also a distinctive grammar feature.
+          HTML export alongside PNG. Not a full 5 as the static PNG render loses the
+          interactivity advantage.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
