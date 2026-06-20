@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: lightcurve-transit
 created: '2026-06-20T07:48:15Z'
-updated: '2026-06-20T07:56:44Z'
+updated: '2026-06-20T08:07:31Z'
 generated_by: claude-sonnet
 workflow_run: 27864484542
 issue: 4559
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Custom SVG error bars drawn via Highcharts renderer API (chart.renderer) — genuinely
-    distinctive Highcharts usage for per-point uncertainty visualization
-  - Deterministic LCG seeded at 42 ensures fully reproducible output in a browserless/headless
-    environment where Math.random() cannot be seeded
-  - 'Accurate transit physics: simplified Mandel-Agol model with quadratic limb-darkening,
-    realistic 1.1% depth and T14=0.085 phase units matching real hot-Jupiter parameters'
-  - 'Full spec compliance: scatter observations + spline model overlay + error bars
-    + phase-folded axis — all four required features present and working'
-  - Proper theme-adaptive chrome via ANYPLOT_TOKENS throughout (t.ink, t.inkSoft,
-    t.grid, t.elevatedBg) — both light and dark renders are fully readable with no
-    dark-on-dark failures
-  - Baseline plotLine at 1.000 with label adds scientific context as a reference line
-    for out-of-transit flux
-  - 'Title fontsize correctly scaled to 19px for the 77-character title string (formula:
-    round(22 × 67/77) = 19)'
-  - 'animation: false set on both chart-level and plotOptions.series — no mid-frame
-    screenshot risk'
+  - Custom SVG renderer error bars via chart.renderer path drawing — efficient single-path
+    technique with per-point stems and caps at 45% opacity
+  - 'Correct Imprint palette usage: palette[0] (#009E73) for observed flux, palette[1]
+    (#C475FD) for transit model, transparent chart background showing through pageBg
+    token'
+  - 'Full spec compliance: phase-folded scatter with error bars, smooth limb-darkened
+    transit model spline overlay, baseline plotLine at y=1.000 with label'
+  - Deterministic LCG seeded at 42 satisfies reproducibility with no browser RNG dependency
+  - Scientifically faithful transit model (Mandel-Agol with smoothstep ingress and
+    quadratic limb-darkening) produces realistic 1.1% depth dip
+  - Title fontsize correctly scaled to 19px via the 22 × 67/len(title) formula for
+    the 77-char long-form title
+  - 'Theme tokens comprehensively applied: t.ink for title, t.inkSoft for axis labels/ticks/grid/plotline,
+    t.elevatedBg for legend background, t.grid for gridlines'
   weaknesses:
-  - 'Palette skip: second series uses palette[2] (#4467A3, blue) instead of canonical
-    palette[1] (#C475FD, lavender). The category labels ''Observed Flux'' and ''Transit
-    Model'' do not carry a universally recognized color expectation that would justify
-    skipping the canonical order — fix by using t.palette[1] for the Transit Model
-    series'
-  - 'Excessive vertical padding: vPad = 0.42 × flux_range pushes the Y-axis down to
-    0.970 when the actual data minimum is ~0.983, leaving about 20-25% of the plot
-    height as empty whitespace at the bottom — reduce vPad to 0.18-0.22 to keep proportions
-    balanced'
-  - Helper functions (rand, randn, transitModel) technically violate KISS structure
-    criterion. The LCG and transit model computation are justified by the browser
-    environment, but consider inlining the model evaluation or at least consolidating
-    the RNG helpers to reduce function count
+  - Subtitle fontsize at 13px is slightly small — at mobile display width it may be
+    difficult to read; consider raising to 14px to match the label baseline
+  - 'CQ-01 deduction: helper functions (rand, randn, transitModel) add complexity
+    beyond a flat script; for Highcharts, a data-generation IIFE or inline computation
+    would be more KISS-compliant, though the functions are justified by the transit
+    physics'
+  - 'DE-01/DE-02 headroom: the chart is clean but spines are not explicitly removed
+    (Highcharts shows a bounding box by default); removing `chart.plotBorderWidth`
+    or setting it to 0 would add visual refinement'
+  - 'LM-02 headroom: mixed scatter+spline series and SVG renderer paths are good Highcharts
+    features, but a plotBand highlighting the transit window or a secondary annotation
+    band would further distinguish the implementation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white. PASS.
-      Chrome: Title "Exoplanet Transit · lightcurve-transit · javascript · highcharts · anyplot.ai" in dark ink at 19px spans ~70-75% of plot width — readable. Subtitle in softer ink is readable at 13px. Y-axis label "Relative Flux" and X-axis label "Orbital Phase" in dark inkSoft at 16px — both clearly readable. Y-axis tick labels (0.970–1.015, 10 ticks at 14px) readable. X-axis tick labels (-0.25 to 0.25) readable. Legend top-right with elevated background showing "Observed Flux" (green circle) and "Transit Model" (blue line). "Baseline 1.000" reference label visible near 1.000 line.
-      Data: Scatter points in brand green (#009E73 = palette[0]), error bars in same green at opacity 0.45. Spline transit model in blue (#4467A3 = palette[2]). Baseline dashed line in inkSoft. Transit dip clearly visible centered at phase=0, reaching ~0.989 minimum. Data spans roughly 0.983–1.010 but Y-axis extends to 0.970 (excessive lower padding).
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Exoplanet Transit · lightcurve-transit · javascript · highcharts · anyplot.ai" in bold dark ink at 19px, fully readable. Subtitle with scientific parameters in muted soft ink at 13px, readable at full size. X-axis "Orbital Phase" and Y-axis "Relative Flux" labels in inkSoft at 16px, clearly visible. Tick labels in inkSoft at 14px with 3-decimal formatting. Baseline "Baseline 1.000" label at right edge of dashed plotLine, readable. Legend in upper right with elevated background, "Observed Flux" and "Transit Model" entries both readable.
+      Data: Brand green (#009E73) scatter markers with semi-transparent error bars (45% opacity) showing 220 phase-folded photometric observations. Lavender (#C475FD) spline line for transit model overlay. Transit dip clearly visible from phase ~-0.05 to ~0.05, with ~1.1% flux decrease at minimum. Dashed gray baseline at y=1.000. Subtle grid lines on both axes.
+      Legibility verdict: PASS — all text elements readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface. PASS.
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light text (F0EFE8 / B8B7B0 range) — clearly readable against the dark background. No dark-on-dark failures. Legend background uses elevated dark (#242420) with light text. "Baseline 1.000" label light and readable.
-      Data: Scatter points remain #009E73 — identical to light render. Transit model spline remains #4467A3 — identical to light render. Only chrome elements (background, text, grid, legend box) flipped to dark theme. Error bars at same green with opacity 0.45. Transit dip equally prominent.
-      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark issues detected.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title visible in light ink against dark background — no dark-on-dark failure. Axis labels and tick labels in lighter inkSoft tokens, clearly readable. Baseline label "Baseline 1.000" visible at right edge. Legend background adapts to elevated dark token (#242420-range), entries readable.
+      Data: Data colors identical to light render — brand green (#009E73) scatter with error bars, lavender (#C475FD) model spline. Transit dip equally prominent. Grid lines subtle but visible. Color identity preserved across themes.
+      Legibility verdict: PASS — all text elements readable against dark background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,92 +64,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 19px, subtitle 13px, axis titles
-          16px, tick/legend labels 14px). Title scaled correctly for 77-char string.
-          Both renders fully readable. Minor deduction for slightly dense Y-axis tick
-          labels (10 ticks in narrow flux range).
+        comment: All text readable in both themes; subtitle at 13px is slightly small
+          for mobile scale but passes at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Some overlap of error bar caps in the dense transit region around
-          phase=0, but opacity 0.45 mitigates this. Legend clear of data. No text-on-text
-          overlap.
+        comment: No text-on-text or text-on-data overlaps; data clustering in transit
+          dip is physically appropriate
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers at radius=3.5 appropriate for 220-point scatter. Error bars
-          visible at opacity 0.45. Spline at lineWidth=2.5 clearly distinguishable
-          over scatter. Transit dip immediately visible.
+        comment: Scatter markers at radius 3.5 appropriate for 220 points; error bars
+          at 0.45 opacity visible without overwhelming; model spline clearly stands
+          out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are well-separated in luminance
-          and hue, CVD-safe combination. Error bar opacity reduces contrast slightly
-          but elements remain distinguishable.
+        comment: 'Imprint palette with #009E73 and #C475FD — colorblind-safe pair
+          from hybrid-v3 sort'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Margins generous (marginTop 92, marginBottom
-          80, marginLeft 96, marginRight 52). Deduction for excessive lower vertical
-          padding (vPad=0.42) that leaves ~20% of Y-axis height empty below the actual
-          data minimum.
+        comment: Landscape orientation, explicit margins (top=92, bottom=80, left=96,
+          right=52), no clipping, balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Orbital Phase'' (phase is conventionally dimensionless in astronomy).
-          Y: ''Relative Flux'' (correct dimensionless unit for normalized photometry).
-          Descriptive and domain-appropriate.'
+        comment: Orbital Phase and Relative Flux are accurate scientific labels; title
+          follows spec-id · lang · lib · anyplot.ai format with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly uses palette[0] (#009E73, brand green). Second
-          series uses palette[2] (#4467A3, blue) skipping palette[1] (#C475FD, lavender)
-          without a universally recognized semantic justification — ''Transit Model''
-          does not strongly imply blue to a general audience. Background transparent
-          (harness pageBg) correct. Both renders have identical data colors, theme-adaptive
-          chrome. Partial compliance: -1 for canonical order skip.'
+        passed: true
+        comment: 'palette[0] #009E73 for first series, palette[1] #C475FD for second;
+          transparent chart.backgroundColor; full token mapping for chrome'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: custom Imprint palette, styled legend
-          with elevated background, subtitle with scientific parameters (depth, T14),
-          baseline reference plotline with label, SVG error bars with calibrated opacity.
-          Not publication-ready but clearly above generic.'
+        comment: 'Above defaults: custom SVG renderer error bars, scaled title fontsize,
+          scientific subtitle, baseline plotLine with label, legend with elevated
+          background'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid using t.grid token, hover states disabled for clean static
-          render, legend with background, transparent chart background. Some refinement
-          above defaults but not exhaustively polished.
+        comment: Consistent token application throughout, hover states disabled for
+          screenshot cleanliness, elevated legend background with padding and border-radius;
+          bounding box still showing (plotBorderWidth not zeroed)
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Baseline at 1.000 provides clear visual anchor for out-of-transit
-          flux. Two-layer composition (scatter + model) guides eye to the transit
-          dip focal point. Subtitle annotates key physical parameters. Transit dip
-          centered at phase=0 draws attention naturally.
+        comment: Transit dip as natural focal point; model spline guides viewer through
+          transit shape; baseline contextualizes out-of-transit flux; error bars communicate
+          measurement precision — genuine scientific storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -163,32 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct plot type: scatter (photometric observations) + spline overlay
-          (fitted model) + SVG error bars. All three required sub-types present.'
+        comment: Phase-folded scatter with error bars + smooth model overlay — correct
+          chart type for light curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars on each data point ✓. Smooth model curve overlay ✓. Phase-folded
-          data (phase -0.28 to 0.28) ✓. Y-axis shows relative flux with transit dip
-          going downward ✓. All spec requirements met.
+        comment: Error bars per data point, smooth model curve overlay, phase-folded
+          time axis, transit dip visible downward
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Orbital Phase, Y=Relative Flux. All 220 data points shown. Model
-          curve from 501 interpolated points. Axis ranges correctly set with full
-          data coverage.
+        comment: X=Orbital Phase (-0.28 to 0.28), Y=Relative Flux (~0.978-1.010),
+          transit dip correctly goes downward
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Exoplanet Transit · lightcurve-transit · javascript · highcharts
-          · anyplot.ai'' — correct format with descriptive prefix. Legend: ''Observed
-          Flux'' and ''Transit Model'' — accurate and informative.'
+          · anyplot.ai'' with correct descriptive prefix; legend: ''Observed Flux''
+          and ''Transit Model'''
     data_quality:
       score: 15
       max: 15
@@ -198,27 +179,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: out-of-transit baseline scatter, ingress/egress
-          transitions, flat-bottom transit minimum, error bars showing measurement
-          uncertainty, smooth model curve showing transit shape including limb-darkening
-          curvature.'
+        comment: Phase-folded scatter + error bars + fitted model curve + baseline
+          reference + limb-darkening physics — full feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exoplanet transit photometry is a real, neutral scientific application.
-          DEPTH=0.011 (1.1%) is realistic for a hot Jupiter. SIGMA=0.0024 matches
-          space-based photometric precision (e.g., Kepler/TESS). Phase range -0.28
-          to 0.28 is appropriate for a ~6-hour transit in a ~2-day orbit.
+        comment: Exoplanet transit photometry — scientifically plausible and neutral
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Transit depth, duration (T14=0.085), ingress time (T_ING=0.011),
-          photometric noise level, and number of observations (N=220) all within realistic
-          ranges for a phase-folded Kepler-like dataset.
+        comment: Phase range -0.28 to 0.28, flux centered on 1.0 with 1.1% depth,
+          SIGMA=0.0024 photometric precision — all realistic
     code_quality:
       score: 9
       max: 10
@@ -228,39 +204,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Three helper functions (rand, randn, transitModel) used. They are
-          justified by the browser environment (no seeded Math.random()) and complex
-          transit physics, but technically violate the no-functions criterion.
+        comment: 'Minor deduction: helper functions (rand, randn, transitModel) add
+          structure beyond a flat script, though they''re justified by the transit
+          physics complexity'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with _rng=42 seed. No non-deterministic calls.
-          Same output on every render.
+        comment: Deterministic LCG seeded at 42 — no browser Math.random() dependency
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (JavaScript with globals). Only accesses window.ANYPLOT_TOKENS
-          and Highcharts, both of which are used.
+        comment: No imports needed; Highcharts global used correctly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Efficient single-pass SVG path construction for error bars. Clean
-          data generation loop. Chart config well-organized. No over-engineering or
-          fake UI elements.
+        comment: SVG renderer error bars as single combined path is an elegant performance-conscious
+          approach; transit model is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Calls Highcharts.chart(''container'', ...) correctly. animation:
-          false set at both levels. Harness handles PNG/HTML output. No file writes
-          in snippet.'
+        comment: Highcharts in INTERACTIVE_LIBRARIES — harness produces both plot-{theme}.png
+          and plot-{theme}.html; no file-system calls in snippet
     library_mastery:
       score: 7
       max: 10
@@ -270,28 +242,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct patterns: chart(''container''), animation:false in chart
-          and plotOptions, credits disabled, backgroundColor transparent, tooltip
-          disabled, hover states disabled. Uses chart.xAxis[0].toPixels() for coordinate
-          mapping — idiomatic Highcharts approach.'
+        comment: Correct Highcharts.chart() call, animation:false on both chart and
+          series, no explicit width/height, credits disabled, transparent backgroundColor,
+          token mapping — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG renderer API (chart.renderer, ren.g(), ren.path()) for custom
-          error bars is a genuinely distinctive Highcharts feature. plotLines for
-          baseline reference is also Highcharts-specific. Above default of 1 but not
-          fully exploiting the renderer's potential.
-  verdict: REJECTED
+        comment: chart.renderer for custom SVG error bar paths (genuinely distinctive
+          Highcharts capability), plotLines with label on yAxis, mixed scatter+spline
+          series types — good use of Highcharts-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
