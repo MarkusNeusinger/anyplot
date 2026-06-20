@@ -55,10 +55,10 @@ chart.setOption({
     color: t.palette,
     backgroundColor: "transparent",
     title: {
-        text: "lightcurve-transit · javascript · echarts · anyplot.ai",
+        text: "Astronomical Light Curve · lightcurve-transit · javascript · echarts · anyplot.ai",
         left: "center",
         top: 20,
-        textStyle: { color: t.ink, fontSize: 22 }
+        textStyle: { color: t.ink, fontSize: 18 }
     },
     legend: {
         right: 80,
@@ -66,12 +66,16 @@ chart.setOption({
         orient: "vertical",
         textStyle: { color: t.inkSoft, fontSize: 14 },
         itemGap: 14,
+        backgroundColor: t.elevatedBg,
+        borderColor: t.grid,
+        borderWidth: 1,
+        padding: [10, 16],
         data: [
             { name: "Photometry", icon: "circle" },
-            { name: "Transit Model" }
+            { name: "Transit Model", icon: "path://M0,8 L30,8" }
         ]
     },
-    grid: { left: 110, right: 200, top: 90, bottom: 80 },
+    grid: { left: 110, right: 215, top: 95, bottom: 80 },
     xAxis: {
         type: "value",
         name: "Orbital Phase",
@@ -141,14 +145,39 @@ chart.setOption({
             symbol: "circle",
             symbolSize: 5,
             itemStyle: { color: t.palette[0], opacity: 0.75 },
-            z: 3
+            z: 3,
+            markArea: {
+                silent: true,
+                z: 1,
+                itemStyle: { color: t.inkSoft, opacity: 0.08 },
+                label: {
+                    show: true,
+                    position: "insideTop",
+                    formatter: "Transit Window",
+                    color: t.inkSoft,
+                    fontSize: 11
+                },
+                data: [[{ xAxis: 0.45 }, { xAxis: 0.55 }]]
+            },
+            markLine: {
+                silent: true,
+                symbol: "none",
+                lineStyle: { color: t.inkSoft, type: "dashed", width: 1, opacity: 0.5 },
+                label: {
+                    position: "insideStartTop",
+                    formatter: "depth ≈ 1.2%",
+                    color: t.inkSoft,
+                    fontSize: 11
+                },
+                data: [{ yAxis: 0.988 }]
+            }
         },
         {
             type: "line",
             name: "Transit Model",
             data: modelCurve,
             symbol: "none",
-            lineStyle: { color: t.palette[2], width: 2.5 },
+            lineStyle: { color: t.palette[1], width: 2.5 },
             z: 4
         }
     ]
