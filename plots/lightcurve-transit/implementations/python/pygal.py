@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 81/100 | Updated: 2026-06-20
 """
 
 import os
@@ -52,9 +51,9 @@ for i in range(n_points):
     else:
         out_transit_points.append(pt)
 
-# Error bar caps — upper and lower bounds as visible dot pairs
+# Error bar caps — sampled every 3rd point to reduce visual clutter (±1σ endpoint dots)
 err_cap_points = []
-for i in range(n_points):
+for i in range(0, n_points, 3):
     x = round(float(phase[i]), 5)
     err_cap_points.append(
         {"value": (x, round(float(flux[i] - flux_err[i]), 6)), "label": f"φ={phase[i]:.3f}  σ={flux_err[i]:.4f}"}
@@ -108,9 +107,9 @@ chart = pygal.XY(
     margin_right=60,
     margin_left=60,
     margin_top=40,
-    margin_bottom=40,
+    margin_bottom=80,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=2,
     tooltip_border_radius=8,
     x_value_formatter=lambda x: f"{x:.2f}",
     y_value_formatter=lambda y: f"{y:.4f}",
@@ -125,8 +124,8 @@ chart.add("In-Transit (dip)", in_transit_points, stroke=False, dots_size=8)
 # Best-fit transit model — Imprint position 3 (#4467A3), smooth line
 chart.add("Transit Model", model_points, stroke=True, show_dots=False, stroke_width=5)
 
-# Measurement error bounds (±1σ) — INK_SOFT secondary; small dots, visible but subordinate
-chart.add("Measurement Error (±1σ)", err_cap_points, stroke=False, dots_size=3)
+# Measurement error bounds (±1σ) — INK_SOFT secondary; small dots, sampled for clarity
+chart.add("Measurement Error (±1σ)", err_cap_points, stroke=False, dots_size=2)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
