@@ -1,0 +1,275 @@
+library: chartjs
+language: javascript
+specification_id: bar-pareto
+created: '2026-06-20T17:03:51Z'
+updated: '2026-06-20T17:21:38Z'
+generated_by: claude-sonnet
+workflow_run: 27877838387
+issue: 4550
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: sorted bars, cumulative line on secondary y-axis, 80%
+    threshold line, and markers at bar centers all implemented correctly'
+  - 'Correct Imprint palette usage: bars use #009E73 (brand green), cumulative line
+    uses palette[1] (#C475FD lavender), 80% threshold uses amber (#DDCC77) as a semantic
+    warning anchor'
+  - Dynamic title font sizing formula (22 * 67 / len(title)) correctly handles the
+    extended descriptive title prefix without overflow
+  - Background fill plugin using beforeDraw is the idiomatic Chart.js pattern and
+    correctly applies pageBg for both light (#FAF8F1) and dark (#1A1A17) themes
+  - 'Point markers on cumulative line use pointBorderColor: t.pageBg creating a professional
+    halo/outline effect that works in both themes'
+  - 'Dual-axis implementation is correct: yAxisID system, drawOnChartArea: false on
+    right axis prevents double-gridding, order property ensures bars render behind
+    line'
+  - Realistic manufacturing defect data with 9 categories exhibiting a genuine Pareto
+    distribution — data is neutral, plausible, and instructive
+  - All chart chrome (title, axis labels, tick labels, legend) uses theme-adaptive
+    tokens (t.ink, t.inkSoft) correctly, passing readability in both light and dark
+    renders
+  weaknesses:
+  - X-axis tick labels use font size 13px (CSS) — slightly smaller than the 14px used
+    for Y-axis ticks, creating a minor imbalance; bumping to 14px would give better
+    balance and improve mobile readability when scaled to ~400px
+  - 'Design Excellence is adequate but not distinguished: no additional visual emphasis
+    highlights the ''vital few'' categories (e.g., the first 2-3 bars that cross the
+    80% threshold could use a subtle opacity boost or stroke to draw the viewer''s
+    eye to the key Pareto insight)'
+  - DE-02 refinements are present (no x-grid, no axis borders) but the overall visual
+    treatment remains close to a well-configured default; more deliberate whitespace
+    and padding choices could push it further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color, not pure white.
+      Chrome: Title "Manufacturing Defects · bar-pareto · javascript · chartjs · anyplot.ai" is bold, dark, and sized at ~21px (dynamically scaled), spanning ~70% of canvas width — well within expected range. Left y-axis label "Defect Count" and x-axis label "Defect Category" are dark and readable. Right y-axis label "Cumulative Percentage" is rotated vertically and clearly legible. Tick labels on all axes use t.inkSoft (dark gray on light background) and are readable. Legend at top shows three items: "Cumulative %" (lavender swatch), "Defect Count" (green swatch), "80% Threshold" (amber dashed swatch).
+      Data: 9 descending green (#009E73) bars from Scratches (320) to Other (18). Lavender (#C475FD) cumulative percentage line rises from ~34% at Scratches to 100% at Other, with 6px dot markers featuring white halos (pointBorderColor: pageBg). Amber dashed (#DDCC77) horizontal reference line at 80% on the right axis is clearly visible. Left y-axis scale 0–350, right y-axis scale 0%–100%.
+      Legibility verdict: PASS — all text is readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light colors (t.ink = #F0EFE8 and t.inkSoft = #B8B7B0 for the dark theme), providing strong contrast against the dark background. No dark-on-dark failure detected. Legend text is light-colored and readable. Grid lines on the primary y-axis are subtle and visible (t.grid).
+      Data: Green bars (#009E73) are identical to light render — brand green remains high-contrast on dark background. Lavender cumulative line (#C475FD) is identical. Amber threshold (#DDCC77) dashed line is identical. Point halo effect (pointBorderColor: pageBg) uses the dark pageBg (#1A1A17) for outlines — this still works as the points are on the line, not on the dark background directly.
+      Legibility verdict: PASS — all text is clearly readable against the warm near-black background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title has dynamic scaling formula;
+          all text readable in both themes. Minor: x-axis ticks at 13px vs 14px for
+          y-axis creates slight imbalance.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap in either render. Category labels at maxRotation
+          30 prevent collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized for bar chart. Cumulative line markers at pointRadius
+          6 are clearly visible. Dashed threshold line visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Three series: green, lavender, amber — all from CVD-safe Imprint
+          palette. Adequate contrast.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good proportions with balanced margins. Nothing
+          cut off or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Defect Category'', ''Defect Count'', ''Cumulative
+          Percentage''. Title uses optional descriptive prefix + required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bars = #009E73 (palette[0]), cumulative line = #C475FD (palette[1]),
+          threshold = #DDCC77 (amber semantic anchor). Backgrounds correct: #FAF8F1
+          light / #1A1A17 dark.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: dynamic title sizing, semantic amber
+          choice for threshold, point halo effect. Not exceptional — no emphasis on
+          the ''vital few'' categories or additional visual hierarchy beyond spec
+          requirements.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'x-grid removed (appropriate for bar chart), axis borders removed,
+          drawOnChartArea: false prevents double-gridding on right axis, layout padding
+          applied. Refinements present but not extensive.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Pareto structure with 80% reference line communicates the principle
+          clearly. Descending bars guide the eye. However, no visual emphasis singles
+          out the 'vital few' (first 3 categories that cross 80%) to reinforce the
+          key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Pareto chart: descending bars + cumulative line + 80% threshold.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: sorted bars, cumulative line on secondary y-axis,
+          80% horizontal reference line, primary y-axis for counts, secondary for
+          percentages, markers at bar centers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: defect categories; Y left: counts (0-350); Y right: cumulative
+          % (0-100%). All data fully visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Manufacturing Defects · bar-pareto · javascript · chartjs
+          · anyplot.ai'' — correct optional prefix + required format. Legend labels
+          match data series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Pareto chart aspects: 9 categories with clear Pareto distribution
+          (Scratches 33.9% → Other 1.9%), cumulative progression to 100%, 80% threshold
+          crossing visible.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect analysis is the canonical Pareto chart use case.
+          Neutral, realistic scenario. Category names and counts are plausible for
+          a manufacturing facility.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts (18–320) are realistic for manufacturing quality control.
+          Distribution follows Pareto principle with ~3 categories accounting for
+          ~68% of defects. Factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat inline code: data → mount → chart. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data arrays, fully deterministic. No randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (Chart.js is a global). Clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately concise. Cumulative calculation loop is clear.
+          Title scaling formula is a nice practical touch.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'No file saving (harness handles it). animation: false, responsive:
+          true, maintainAspectRatio: false all correctly set. Current Chart.js 4.4.7
+          API.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed chart type (bar + line in single Chart instance), dual yAxisID
+          system, order property for render layering, beforeDraw plugin for background
+          — all idiomatic Chart.js patterns. Above default 3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js plugin API (beforeDraw background fill), mixed chart
+          configuration, yAxisID dual-axis, order layering, tick callback formatter
+          for % labels. Several Chart.js-distinctive features combined.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
