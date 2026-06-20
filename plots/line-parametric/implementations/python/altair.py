@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-parametric: Parametric Curve Plot
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -36,10 +36,11 @@ df_spir = pd.DataFrame(
     {"x": t_spir * np.cos(t_spir) / (6 * np.pi), "y": t_spir * np.sin(t_spir) / (6 * np.pi), "t": t_spir}
 )
 
-# Discrete gradient: 30 colors interpolated from Imprint sequential (#009E73 → #4467A3)
+# Discrete gradient: 100 colors interpolated from Imprint sequential (#009E73 → #4467A3)
 # mark_trail/mark_line with quantitative color encoding don't render path geometry in
 # Vega-Lite v6.4 — workaround: N layered mark_line segments with constant colors each.
-N_SEG = 30
+# 100 segments closes the visible gap artifacts that 30 segments produced.
+N_SEG = 100
 _c0 = np.array([0, 158, 115])  # #009E73
 _c1 = np.array([68, 103, 163])  # #4467A3
 seg_colors = ["#{:02x}{:02x}{:02x}".format(*(_c0 + (_c1 - _c0) * i / (N_SEG - 1)).astype(int)) for i in range(N_SEG)]
@@ -84,28 +85,32 @@ panel_configs = [
     },
 ]
 
-panels = []
-for c in panel_configs:
-    df = c["df"]
-    t_vals = df["t"].values
-    t_breaks = np.linspace(t_vals[0], t_vals[-1], N_SEG + 1)
 
-    # N_SEG line segments, each colored by one step of the Imprint sequential gradient
-    seg_layers = []
-    for i in range(N_SEG):
+def build_gradient_segments(df, n_seg, colors, scale_xy, axis_cfg):
+    t_vals = df["t"].values
+    t_breaks = np.linspace(t_vals[0], t_vals[-1], n_seg + 1)
+    layers = []
+    for i in range(n_seg):
         mask = (t_vals >= t_breaks[i]) & (t_vals <= t_breaks[i + 1])
         df_seg = df[mask]
         if len(df_seg) < 2:
             continue
-        seg_layers.append(
+        layers.append(
             alt.Chart(df_seg)
-            .mark_line(strokeWidth=3, color=seg_colors[i], clip=True)
+            .mark_line(strokeWidth=3, color=colors[i], clip=True, strokeCap="square")
             .encode(
                 x=alt.X("x:Q", title="x(t)", scale=scale_xy, axis=axis_cfg),
                 y=alt.Y("y:Q", title="y(t)", scale=scale_xy, axis=axis_cfg),
                 order=alt.Order("t:Q"),
             )
         )
+    return layers
+
+
+panels = []
+for c in panel_configs:
+    df = c["df"]
+    seg_layers = build_gradient_segments(df, N_SEG, seg_colors, scale_xy, axis_cfg)
 
     # Invisible dummy to carry the gradient legend and set the color scale domain
     df_ends = df.iloc[[0, -1]][["x", "y", "t"]].copy()
@@ -169,13 +174,7 @@ chart = (
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(
-        gridColor=INK,
-        gridOpacity=0.12,
-        gridDash=[3, 3],
-        domainColor=INK_SOFT,
-        tickColor=INK_SOFT,
-        labelColor=INK_SOFT,
-        titleColor=INK,
+        gridColor=INK, gridOpacity=0.10, domainColor=INK_SOFT, tickColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
     )
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
