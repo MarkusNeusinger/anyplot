@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: heatmap-cohort-retention
 created: '2026-06-20T01:17:13Z'
-updated: '2026-06-20T01:25:50Z'
+updated: '2026-06-20T01:44:21Z'
 generated_by: claude-sonnet
 workflow_run: 27855575945
 issue: 4570
@@ -12,126 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Correct triangular cohort heatmap shape with 10 monthly cohorts and decreasing
-    period counts
-  - Imprint sequential colormap correctly used via d3.interpolateRgbBasis(t.seq)
-  - 'All spec features present: retention % text in cells, cohort sizes in y-axis
-    labels, Week 0–9 x-axis labels, colorbar legend'
-  - Realistic SaaS analytics data with plausible cohort sizes and retention curves
-  - Theme-adaptive chrome (t.ink, t.inkSoft) correctly applied; both renders pass
-    readability
-  - Cell text color adapts to cell luminance (white on dark cells, dark on light cells)
-  - Clean D3 code using modern .join() pattern, d3.scaleSequential, and defs/linearGradient
-    for colorbar
-  - Square orientation (2400×2400) appropriately chosen for symmetric heatmap
-  - Deterministic hard-coded data — no randomness
-  - Period 0 = 100% for all cohorts as required
+  - 'Complete spec compliance: all required features (triangular shape, retention
+    % labels, cohort sizes, Week N labels, colorbar) fully implemented'
+  - 'Strong data storytelling: best/worst cohort highlights with semantic colors and
+    explanatory annotations create genuine visual hierarchy and guide viewers to key
+    insights'
+  - Imprint sequential colorscale correctly applied for continuous retention data;
+    theme-adaptive chrome throughout both renders via t.ink / t.inkSoft tokens
+  - Realistic, plausible SaaS retention data with meaningful variation across cohorts
+    and periods — week-1 retention 58-68%, declining realistically to 14-18% by week
+    9
+  - 'Clean, idiomatic D3 code: SVG linearGradient in defs for colorbar, scaleSequential
+    with interpolateRgbBasis, proper data join pattern throughout'
   weaknesses:
-  - Y-axis 'Signup Cohort' label (attr('y', 50) = 50 CSS px from SVG left) overlaps
-    with cohort row labels that extend leftward past x=50 — move the y-axis label
-    to attr('y', 18) or increase left margin to 190px to eliminate overlap
-  - 'Design Excellence is below threshold: no visual emphasis on high/low-performing
-    cohorts (e.g. no highlight stroke on the best/worst row), no subtle background
-    fill for the empty triangular area, no cell border styling to distinguish the
-    filled from empty half-triangle'
-  - 'DE-03 (Data Storytelling): data is displayed correctly but viewer must find the
-    retention story themselves — consider adding a subtle annotation pointing to the
-    strongest vs weakest cohort, or shading the empty upper-right area with a muted
-    fill to emphasize the triangular shape'
+  - Annotation sub-labels ('68% retention', '58% retention') at 10px CSS / 20px source
+    pixels are borderline small for a 2400x2400 canvas — increase to 12-13px for better
+    thumbnail readability
+  - DE-01 sits between 'well-configured default' and 'strong design' tiers; additional
+    visual polish (e.g., more refined typography contrast between annotation header
+    vs. sub-text, or subtle colorbar chrome refinement) would push design excellence
+    higher
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "heatmap-cohort-retention · javascript · d3 · anyplot.ai" at 22px — clearly readable in dark ink. X-axis title "Weeks since signup" and Y-axis title "Signup Cohort" at 15px — readable. Cohort row labels (e.g. "Jan 2024 (n=2,450)") at 14px — readable. X-axis tick labels "Week 0"–"Week 9" at 14px — readable. Colorbar "Retention" label and percentage ticks at 13px — readable. ISSUE: The rotated "Signup Cohort" Y-axis label (positioned at y=50 CSS px from SVG left) visibly overlaps with the middle cohort row labels (May/Jun 2024 area), as those long labels extend leftward to approximately x=6 CSS px.
-      Data: 10 cohorts × triangular cell matrix with Imprint sequential colormap (green #009E73 at 0% → blue #4467A3 at 100%). Retention percentages as bold text inside each cell with adaptive contrast. Colorbar on right shows gradient from green (0%) to blue (100%).
-      Legibility verdict: PASS (all text readable; overlap in margin area is a layout issue but individual elements remain legible)
+      Background: Warm off-white (#FAF8F1) — correct pageBg token for light theme.
+      Chrome: Title "heatmap-cohort-retention · javascript · d3 · anyplot.ai" at 22px bold in dark ink — clearly readable. Cohort labels ("Jan 2024 (n=2,450)") at 14px readable. Week labels ("Week 0"–"Week 9") at 14px readable. Axis titles "Signup Cohort" (rotated, 15px) and "Weeks since signup" (15px) readable. Colorbar label "Retention" and ticks (0%–100%) at 13px readable.
+      Data: Cells colored via Imprint sequential palette — brand green #009E73 for low retention (0%) to blue #4467A3 for high retention (100%). Cell percentage labels in light (#FAF8F1) on high-retention (darker) cells and dark (#1A1A17) on low-retention (lighter) cells — all readable. Green border (#009E73) highlights Jul 2024 best cohort; red border (#AE3030) highlights Jun 2024 worst cohort. Annotation sub-text at 10px CSS is small but visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, cohort row labels, and colorbar labels all rendered in light-colored text (t.ink / t.inkSoft tokens) against the dark background — clearly readable. No dark-on-dark failures. Same Y-axis label overlap issue with May/Jun 2024 cohort rows persists.
-      Data: Colors are identical to the light render — same Imprint sequential colormap (green→blue). Cell text contrast maintained (#FAF8F1 on dark cells, #1A1A17 on lighter cells). Data colors correctly unchanged between themes.
-      Legibility verdict: PASS (all text readable in dark theme; overlap in margin area same as light render)
+      Background: Warm near-black (#1A1A17) — correct pageBg token for dark theme.
+      Chrome: Title and all axis labels/ticks render in light tones via t.ink (#F0EFE8) and t.inkSoft (#B8B7B0) tokens — no dark-on-dark failures. Colorbar ticks visible in light ink.
+      Data: Cell fill colors visually identical to light render (Imprint sequential green→blue, unchanged across themes). Cell labels readable — high-retention cells (dark blue fill) show light cream text; low-retention cells (medium green fill) show near-black text at ~3.5:1 contrast (borderline but legible at 13px/600 weight). Best/worst cohort border highlights and annotation text visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 15px, row/col
-          labels 14px, cell values 13px). Readable in both themes.
+        comment: 'All fonts explicitly set (22px title, 15px axis labels, 14px cohort/tick
+          labels, 13px cell values). Minor: annotation sub-labels at 10px CSS / 20px
+          source are borderline small at thumbnail sizes.'
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Y-axis 'Signup Cohort' label at y=50 CSS px overlaps with cohort
-          row labels that extend leftward past that position (May/Jun 2024 area visible
-          in both renders).
+        passed: true
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible, percentages readable, colorbar
-          well-rendered.
+        comment: Heatmap cells clearly visible in both renders; color gradient clearly
+          communicates retention intensity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is CVD-safe. Adaptive cell text contrast.
+        comment: Best/worst borders use semantic green vs red with text + arrow redundant
+          encoding satisfying CVD requirements.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas used appropriately. Plot fills ~64% of canvas within
-          50-80% target. Minor deduction for y-axis label overlapping margin area.
+        comment: Square canvas appropriate for symmetric grid. Canvas gate passed.
+          Good margins; heatmap fills canvas well with colorbar in right margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Weeks since signup'', Y: ''Signup Cohort''. Title correct format.'
+        comment: '''Signup Cohort'', ''Weeks since signup'', ''Week N'' labels are
+          descriptive and contextually correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint sequential used via d3.interpolateRgbBasis(t.seq). Backgrounds
-          #FAF8F1/#1A1A17. Chrome uses t.ink/t.inkSoft tokens.'
+        comment: Imprint sequential (t.seq, green→blue) correctly applied for continuous
+          retention data. pageBg tokens used for backgrounds. Chrome theme-adaptive
+          via t.ink/t.inkSoft. Data colors identical across both renders.
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Professional and functional. Rounded cells, gap spacing, adaptive
-          text color — above defaults but no striking design choices.
+        comment: 'Above defaults: empty triangle shading, rounded cell corners (rx=3),
+          2px cell gaps, gradient colorbar, semantic-color cohort highlight borders,
+          inline annotations. Solid result but falls short of ''strong design'' tier.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/traditional axes, gap between cells, custom gradient colorbar.
-          Good refinement but not every detail polished (y-axis label overlap, no
-          empty-area treatment).
+        comment: No unnecessary spines, subtle empty-cell shading, rounded cells,
+          clean axes. Some refinement above defaults but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly. The triangular shape conveys the format's
-          inherent story but no visual emphasis on specific insights.
+        passed: true
+        comment: Best/worst cohort highlighting with semantic colors and explanatory
+          annotations creates clear focal points and guides viewer to key insights.
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort heatmap.
+        comment: Correct triangular cohort retention heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Retention % in cells, cohort sizes in y-axis labels, Week N x-axis
-          labels, colorbar, triangular shape, Period 0=100%.
+        comment: Triangular shape, retention % in cells, cohort sizes on Y-axis, Week
+          N X-axis labels, colorbar legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows=cohorts, columns=periods, color=retention rate. Correct.
+        comment: Cohorts on Y, periods on X, color encodes retention rate correctly
+          (lighter green = low, darker blue = high).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-cohort-retention · javascript · d3 · anyplot.ai''.
-          Colorbar labeled ''Retention'' with 0-100%.'
+        comment: Title format matches {spec-id} · javascript · d3 · anyplot.ai. Colorbar
+          labeled 'Retention' with 0-100% ticks.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 cohorts with varying retention curves, full triangular shape,
-          values ranging 14%-100%.
+        comment: Shows full triangular shape, period-0 always at 100%, realistic gradual
+          retention decay, variation across cohorts (Jun worst 58%, Jul best 68% wk-1).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS product analytics scenario, monthly cohorts Jan-Oct 2024, realistic
-          cohort sizes 2,450-3,480.
+        comment: SaaS product analytics with monthly signup cohorts Jan-Oct 2024,
+          plausible cohort sizes 2450-3480 users, neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Week 0=100% always. Realistic retention decay (60-68% at week 1 dropping
-          to 14-19% at week 9).
+        comment: Week-1 retention 58-68% and week-9 retention 14-18% are realistic
+          SaaS metrics. All values internally consistent.
     code_quality:
       score: 10
       max: 10
@@ -196,62 +193,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Data → SVG → cells → axes → colorbar → title.
+        comment: 'Linear flow: data → SVG → cells → highlights → annotations → axes
+          → colorbar → title. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data.
+        comment: Fully hardcoded deterministic data; no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only d3 global used (no extra imports).
+        comment: No imports needed; d3 is a global per the harness contract.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean D3 idioms, modern .join() pattern, SVG defs/linearGradient
-          for colorbar.
+        comment: Idiomatic D3 throughout; concise data join for cells and labels;
+          no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 interactive library — harness generates plot-{theme}.html and
-          plot-{theme}.png.
+        comment: '//# anyplot-orientation: square directive present; SVG sized from
+          window.ANYPLOT_SIZE; harness emits HTML files for D3.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Modern .join() pattern, d3.scaleSequential, d3.axisRight for colorbar
-          axis, SVG defs via D3 selection.
+        comment: Correct D3 data join (selectAll → data → join), d3.scaleSequential
+          with d3.interpolateRgbBasis, d3.axisRight for colorbar, d3.range for week
+          labels. Fully idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG linearGradient with D3 stops, d3.interpolateRgbBasis for smooth
-          color interpolation, d3.scaleSequential for continuous mapping — distinctly
-          D3.
-  verdict: REJECTED
+        comment: Uses SVG linearGradient in defs for colorbar (distinctly D3/SVG-native),
+          scaleSequential with interpolateRgbBasis, axisRight. Good D3 features but
+          heatmap is fundamentally manual rect-drawing without more distinctive D3
+          capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
