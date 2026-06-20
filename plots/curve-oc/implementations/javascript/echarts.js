@@ -1,7 +1,3 @@
-// anyplot.ai
-// curve-oc: Operating Characteristic (OC) Curve
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // curve-oc: Operating Characteristic (OC) Curve
@@ -44,6 +40,20 @@ const PLANS = [
   { n: 100, c: 3, label: "n=100, c=3" },
 ];
 
+const refLineStyle = {
+  silent: true,
+  symbol: "none",
+  animation: false,
+  lineStyle: { type: "dashed", color: t.inkSoft, width: 1.5, opacity: 0.65 },
+  label: { show: true, fontSize: 14, color: t.inkSoft, formatter: "{b}" },
+  data: [
+    { name: "AQL (2%)",  xAxis: AQL,  label: { position: "insideStartTop" } },
+    { name: "LTPD (10%)", xAxis: LTPD, label: { position: "insideStartTop" } },
+    { name: "1−α = 95%", yAxis: 0.95, label: { position: "insideEndTop" } },
+    { name: "β = 10%",   yAxis: 0.10, label: { position: "insideEndTop" } },
+  ],
+};
+
 const curveSeries = PLANS.map((plan, idx) => ({
   name: plan.label,
   type: "line",
@@ -52,27 +62,8 @@ const curveSeries = PLANS.map((plan, idx) => ({
   itemStyle: { color: t.palette[idx] },
   symbol: "none",
   z: 3,
+  ...(idx === 0 ? { markLine: refLineStyle } : {}),
 }));
-
-// Reference lines on the first series: AQL/LTPD vertical, risk thresholds horizontal
-curveSeries[0].markLine = {
-  silent: true,
-  symbol: "none",
-  animation: false,
-  lineStyle: { type: "dashed", color: t.inkSoft, width: 1.5, opacity: 0.65 },
-  label: {
-    show: true,
-    fontSize: 13,
-    color: t.inkSoft,
-    formatter: "{b}",
-  },
-  data: [
-    { name: "AQL (2%)",   xAxis: AQL,  label: { position: "insideEndTop" } },
-    { name: "LTPD (10%)", xAxis: LTPD, label: { position: "insideEndTop" } },
-    { name: "1−α = 95%", yAxis: 0.95, label: { position: "insideEndTop" } },
-    { name: "β = 10%",        yAxis: 0.10, label: { position: "insideEndTop" } },
-  ],
-};
 
 // --- Chart ------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -90,7 +81,7 @@ chart.setOption({
     text: "Acceptance Sampling Plans — Probability of Acceptance vs Fraction Defective",
     left: "center",
     top: 58,
-    textStyle: { color: t.inkSoft, fontSize: 15 },
+    textStyle: { color: t.ink, fontSize: 17 },
   },
   legend: {
     top: 100,
