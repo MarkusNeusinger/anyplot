@@ -1,7 +1,3 @@
-// anyplot.ai
-// histogram-capability: Process Capability Plot with Specification Limits
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // histogram-capability: Process Capability Plot with Specification Limits
@@ -55,12 +51,12 @@ const Cpk = Math.min(
   (sampleMean - LSL) / (3 * sampleSigma)
 );
 
-// 20 histogram bins from 9.925 to 10.125 (width=0.010)
-// Bin centers at 9.930, 9.940, 9.950 (LSL), …, 10.000 (target), …, 10.050 (USL), …
+// 15 histogram bins from 9.925 to 10.075 (width=0.010)
+// Tightened X_MAX to 10.075 to eliminate ~30% empty space beyond USL
 const X_MIN = 9.925;
-const X_MAX = 10.125;
+const X_MAX = 10.075;
 const BIN_WIDTH = 0.01;
-const N_BINS = 20;
+const N_BINS = 15;
 const binCenters = Array.from(
   { length: N_BINS },
   (_, i) => parseFloat((X_MIN + (i + 0.5) * BIN_WIDTH).toFixed(3))
@@ -132,52 +128,62 @@ function AnnotationPanel() {
   const { left, top, width } = useDrawingArea();
   const px = left + width + 24;
   const py = top + 20;
-  const lh = 24; // line height
+  const lh = 24;
 
   return (
     <g fontFamily={FONT}>
-      {/* Section header */}
-      <text x={px} y={py} fontSize={12} fontWeight="700" fill={t.inkSoft} letterSpacing={0.8}>
+      {/* Elevated background separates the panel from the chart area */}
+      <rect
+        x={px - 12}
+        y={py - 12}
+        width={176}
+        height={232}
+        fill={t.elevatedBg}
+        rx={5}
+        ry={5}
+      />
+      {/* Section header — small-caps label above the metric values */}
+      <text x={px} y={py + 4} fontSize={11} fontWeight="800" fill={t.inkSoft} letterSpacing={2}>
         CAPABILITY
       </text>
-      {/* Cp and Cpk values */}
-      <text x={px} y={py + lh} fontSize={15} fill={t.ink} fontFamily="monospace">
+      {/* Cp and Cpk values — larger, monospace, prominently readable */}
+      <text x={px} y={py + lh + 2} fontSize={16} fill={t.ink} fontFamily="monospace" fontWeight="500">
         {`Cp  = ${Cp.toFixed(3)}`}
       </text>
-      <text x={px} y={py + 2 * lh} fontSize={15} fill={t.ink} fontFamily="monospace">
+      <text x={px} y={py + 2 * lh + 2} fontSize={16} fill={t.ink} fontFamily="monospace" fontWeight="500">
         {`Cpk = ${Cpk.toFixed(3)}`}
       </text>
       {/* Divider */}
       <line
-        x1={px} y1={py + 2 * lh + 10}
-        x2={px + 152} y2={py + 2 * lh + 10}
+        x1={px} y1={py + 2 * lh + 14}
+        x2={px + 152} y2={py + 2 * lh + 14}
         stroke={t.inkSoft} strokeWidth={0.8} strokeOpacity={0.4}
       />
       {/* Status */}
-      <text x={px} y={py + 3 * lh + 10} fontSize={13} fontWeight="600" fill={statusColor}>
+      <text x={px} y={py + 3 * lh + 14} fontSize={13} fontWeight="600" fill={statusColor}>
         {capStatus}
       </text>
       {/* Legend — histogram bars */}
-      <rect x={px} y={py + 4 * lh + 20} width={20} height={13} fill={BRAND} fillOpacity={0.82} />
-      <text x={px + 27} y={py + 4 * lh + 31} fontSize={13} fill={t.ink}>Measurements</text>
+      <rect x={px} y={py + 4 * lh + 24} width={20} height={13} fill={BRAND} fillOpacity={0.82} />
+      <text x={px + 27} y={py + 4 * lh + 35} fontSize={13} fill={t.ink}>Measurements</text>
       {/* Legend — normal fit line */}
       <line
-        x1={px} y1={py + 5 * lh + 22} x2={px + 20} y2={py + 5 * lh + 22}
+        x1={px} y1={py + 5 * lh + 26} x2={px + 20} y2={py + 5 * lh + 26}
         stroke={BLUE} strokeWidth={2.5}
       />
-      <text x={px + 27} y={py + 5 * lh + 27} fontSize={13} fill={t.ink}>Normal fit</text>
+      <text x={px + 27} y={py + 5 * lh + 31} fontSize={13} fill={t.ink}>Normal fit</text>
       {/* Legend — LSL/USL lines */}
       <line
-        x1={px} y1={py + 6 * lh + 24} x2={px + 20} y2={py + 6 * lh + 24}
+        x1={px} y1={py + 6 * lh + 28} x2={px + 20} y2={py + 6 * lh + 28}
         stroke={RED} strokeWidth={2} strokeDasharray="5 3"
       />
-      <text x={px + 27} y={py + 6 * lh + 29} fontSize={13} fill={t.ink}>LSL / USL</text>
+      <text x={px + 27} y={py + 6 * lh + 33} fontSize={13} fill={t.ink}>LSL / USL</text>
       {/* Legend — Target line */}
       <line
-        x1={px} y1={py + 7 * lh + 26} x2={px + 20} y2={py + 7 * lh + 26}
+        x1={px} y1={py + 7 * lh + 30} x2={px + 20} y2={py + 7 * lh + 30}
         stroke={BRAND} strokeWidth={2} strokeDasharray="8 4"
       />
-      <text x={px + 27} y={py + 7 * lh + 31} fontSize={13} fill={t.ink}>Target</text>
+      <text x={px + 27} y={py + 7 * lh + 35} fontSize={13} fill={t.ink}>Target</text>
     </g>
   );
 }
@@ -235,7 +241,8 @@ export default function Chart() {
             scaleType: "linear",
             min: X_MIN,
             max: X_MAX,
-            tickInterval: binCenters.filter((_, i) => i % 2 === 0),
+            // Every 4th bin tick: 9.930, 9.970, 10.010, 10.050 — better readability
+            tickInterval: binCenters.filter((_, i) => i % 4 === 0),
             valueFormatter: (v) => v.toFixed(3),
           },
         ]}
@@ -280,7 +287,7 @@ export default function Chart() {
         {/* Axes */}
         <ChartsXAxis
           label="Shaft Diameter (mm)"
-          tickLabelStyle={{ fontSize: 13, fill: t.inkSoft, fontFamily: FONT }}
+          tickLabelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: FONT }}
           labelStyle={{ fontSize: 15, fill: t.ink, fontFamily: FONT }}
         />
         <ChartsYAxis
