@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-06-20
@@ -75,14 +75,18 @@ cell_idx = cell_key.groupby(cell_key).cumcount()
 
 risk_df["x"] = (
     risk_df["im"]
-    + np.where(cell_counts > 1, (cell_idx - (cell_counts - 1) / 2) * 0.28, 0)
+    + np.where(cell_counts > 1, (cell_idx - (cell_counts - 1) / 2) * 0.30, 0)
     + np.random.uniform(-0.04, 0.04, len(risk_df))
 )
 risk_df["y"] = (
     risk_df["li"]
-    + np.where(cell_counts > 1, (cell_idx - (cell_counts - 1) / 2) * 0.15, 0)
+    + np.where(cell_counts > 1, (cell_idx - (cell_counts - 1) / 2) * 0.20, 0)
     + np.random.uniform(-0.04, 0.04, len(risk_df))
 )
+
+# Label y-positions: alternate above/below for same-cell items to prevent overlap
+# Chart height 460px for 5 data units → 0.16 units ≈ 15px above, -0.22 ≈ 20px below
+risk_df["label_y"] = risk_df["y"] + np.where(cell_counts == 1, 0.16, np.where(cell_idx % 2 == 0, 0.16, -0.22))
 
 # Color scales
 # Heatmap background: spec-mandated green→yellow→orange→red risk gradient
@@ -128,7 +132,7 @@ y_axis = alt.Axis(
 )
 
 x_scale = alt.Scale(domain=[0.5, 5.5])
-y_scale = alt.Scale(domain=[0.5, 5.5], reverse=True)
+y_scale = alt.Scale(domain=[0.5, 5.5])
 
 # Layer 1: Heatmap background cells
 heatmap = (
@@ -174,13 +178,13 @@ markers = (
     )
 )
 
-# Layer 4: Risk item labels (15px for clear readability)
+# Layer 4: Risk item labels — 11px normal weight, positioned above/below per item
 labels = (
     alt.Chart(risk_df)
-    .mark_text(fontSize=15, fontWeight="bold", dy=-16)
+    .mark_text(fontSize=11, align="center", baseline="middle")
     .encode(
         x=alt.X("x:Q", scale=x_scale, axis=None),
-        y=alt.Y("y:Q", scale=y_scale, axis=None),
+        y=alt.Y("label_y:Q", scale=y_scale, axis=None),
         text=alt.Text("risk_name:N"),
         color=alt.value(INK),
     )
@@ -199,16 +203,18 @@ legend_layer = (
             scale=category_scale,
             legend=alt.Legend(
                 title="Risk Category",
-                titleFontSize=14,
+                titleFontSize=13,
                 titleFontWeight="bold",
-                labelFontSize=12,
-                symbolSize=250,
-                orient="bottom-right",
+                labelFontSize=11,
+                symbolSize=180,
+                orient="none",
+                legendX=5,
+                legendY=372,
                 direction="vertical",
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
-                padding=10,
-                cornerRadius=6,
+                padding=7,
+                cornerRadius=5,
                 titleColor=INK,
                 labelColor=INK_SOFT,
             ),
