@@ -1,12 +1,8 @@
 // anyplot.ai
 // heatmap-cohort-retention: Cohort Retention Heatmap
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-20
-//# anyplot-orientation: square
-// anyplot.ai
-// heatmap-cohort-retention: Cohort Retention Heatmap
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-20
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -60,9 +56,11 @@ chart.setOption({
 
   title: {
     text: titleText,
+    subtext: "Monthly SaaS cohorts — later cohorts show improved Week-1 retention",
     left: "center",
     top: 22,
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: "600" }
+    textStyle: { color: t.ink, fontSize: 22, fontWeight: "600" },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 }
   },
 
   tooltip: {
@@ -77,8 +75,8 @@ chart.setOption({
   grid: {
     left: 210,
     right: 110,
-    top: 110,
-    bottom: 60
+    top: 130,
+    bottom: 80
   },
 
   xAxis: {
@@ -86,7 +84,7 @@ chart.setOption({
     data: weekLabels,
     position: "top",
     axisLabel: { color: t.inkSoft, fontSize: 14, margin: 10 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false }
   },
@@ -96,7 +94,7 @@ chart.setOption({
     data: cohortLabels,
     inverse: true,
     axisLabel: { color: t.inkSoft, fontSize: 13, margin: 12 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false }
   },
@@ -126,7 +124,7 @@ chart.setOption({
       color: "#FFFFFF",
       textBorderColor: "rgba(0,0,0,0.25)",
       textBorderWidth: 2,
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: "500"
     },
     itemStyle: {
