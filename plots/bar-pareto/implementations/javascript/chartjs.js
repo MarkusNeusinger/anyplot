@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-pareto: Pareto Chart with Cumulative Line
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-20
+// Quality: 87/100 | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 
