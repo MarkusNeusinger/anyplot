@@ -1,3 +1,7 @@
+// anyplot.ai
+// heatmap-cohort-retention: Cohort Retention Heatmap
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 81/100 | Created: 2026-06-20
 //# anyplot-orientation: square
 // anyplot.ai
 // heatmap-cohort-retention: Cohort Retention Heatmap
