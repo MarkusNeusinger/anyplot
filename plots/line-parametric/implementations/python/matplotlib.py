@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: matplotlib | Python
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-20
 """
 
 import os as _os
