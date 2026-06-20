@@ -1,8 +1,16 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-17
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-06-20
 """
+
+import os
+import sys
+
+
+# Remove script's own directory from sys.path so 'plotnine' resolves to the library, not this file
+_here = os.path.dirname(os.path.realpath(__file__))
+sys.path = [p for p in sys.path if p and os.path.realpath(p) != _here]
 
 import numpy as np
 import pandas as pd
@@ -25,7 +33,18 @@ from plotnine import (
 )
 
 
-# Data: Background grid with risk scores and zone classification
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint-derived risk gradient: brand green → ochre → matte red (colorblind-safe)
+RISK_COLORS = ["#009E73", "#BD8233", "#AE3030"]
+
+# Data: 5×5 background grid
 likelihood_levels = [1, 2, 3, 4, 5]
 impact_levels = [1, 2, 3, 4, 5]
 
@@ -45,7 +64,7 @@ for li in likelihood_levels:
 
 grid_df = pd.DataFrame(grid_rows)
 
-# Position score numbers in top-left corner of each cell to avoid label overlap
+# Score number position: top-left corner of each cell
 grid_df["score_x"] = grid_df["impact"] - 0.38
 grid_df["score_y"] = grid_df["likelihood"] + 0.35
 
@@ -69,28 +88,13 @@ risks = pd.DataFrame(
         ],
         "likelihood": [3, 4, 2, 5, 2, 3, 1, 4, 3, 4, 1, 3],
         "impact": [3, 4, 5, 3, 4, 2, 5, 2, 4, 3, 4, 4],
-        "category": [
-            "Operational",
-            "Financial",
-            "Operational",
-            "Technical",
-            "Operational",
-            "Financial",
-            "Technical",
-            "Technical",
-            "Financial",
-            "Technical",
-            "Operational",
-            "Financial",
-        ],
     }
 )
 
-# Smart label positioning: detect same-cell risks and offset them
+# Smart label positioning: offset risks sharing the same cell
 cell_counts = risks.groupby(["likelihood", "impact"]).cumcount()
 cell_totals = risks.groupby(["likelihood", "impact"])["risk_name"].transform("count")
 
-# Offset labels vertically within shared cells
 label_offsets = []
 for idx in range(len(risks)):
     count = cell_counts.iloc[idx]
@@ -101,80 +105,78 @@ for idx in range(len(risks)):
         offset = -0.05
     label_offsets.append(offset)
 
-risks["y_offset"] = label_offsets
-risks["label_y"] = risks["likelihood"] + risks["y_offset"]
+risks["label_y"] = risks["likelihood"] + label_offsets
 risks["label_x"] = risks["impact"].astype(float)
 
 # Axis labels
 likelihood_labels = {1: "Rare", 2: "Unlikely", 3: "Possible", 4: "Likely", 5: "Almost\nCertain"}
 impact_labels = {1: "Negligible", 2: "Minor", 3: "Moderate", 4: "Major", 5: "Catastrophic"}
 
-# Spec palette: green-yellow-orange-red with colorblind-safe tones
-risk_colors = ["#1a9641", "#a6d96a", "#ffffbf", "#fdae61", "#f46d43", "#d73027", "#a50026"]
-
+title = "heatmap-risk-matrix · python · plotnine · anyplot.ai"
 
 # Plot
 plot = (
     ggplot()
-    # Background heatmap tiles
-    + geom_tile(data=grid_df, mapping=aes(x="impact", y="likelihood", fill="risk_score"), color="#2c2c3a", size=1.2)
-    + scale_fill_gradientn(colors=risk_colors, limits=(1, 25), name="Risk\nScore", breaks=[1, 5, 10, 15, 20, 25])
-    # Risk score numbers in top-left corner of each cell (avoids overlap with labels)
+    # Background heatmap tiles with Imprint-derived green→ochre→red gradient
+    + geom_tile(data=grid_df, mapping=aes(x="impact", y="likelihood", fill="risk_score"), color=INK_SOFT, size=0.8)
+    + scale_fill_gradientn(colors=RISK_COLORS, limits=(1, 25), name="Risk\nScore", breaks=[1, 5, 10, 15, 20, 25])
+    # Risk score numbers in top-left corners (semi-transparent to stay secondary)
     + geom_text(
         data=grid_df,
         mapping=aes(x="score_x", y="score_y", label="risk_score"),
-        color="#00000055",
-        size=11,
+        color=INK,
+        alpha=0.38,
+        size=3.2,
         fontweight="bold",
         ha="left",
         va="top",
     )
-    # Risk item labels
+    # Risk item labels — theme-adaptive fill and text
     + geom_label(
         data=risks,
         mapping=aes(x="label_x", y="label_y", label="risk_name"),
-        color="white",
-        fill="#1a1a2e",
-        size=9,
-        alpha=0.9,
-        label_padding=0.2,
+        color=INK,
+        fill=ELEVATED_BG,
+        size=3.8,
+        alpha=0.92,
+        label_padding=0.22,
         label_size=0.3,
         label_r=0.08,
     )
-    # Zone annotation above the grid
+    # Zone annotation above the matrix
     + annotate(
         "text",
         x=3,
-        y=5.55,
-        label="Zones:  Low (1\u20134)  \u00b7  Medium (5\u20139)  \u00b7  High (10\u201316)  \u00b7  Critical (20\u201325)",
-        size=9,
-        color="#555555",
+        y=5.58,
+        label="Zones:  Low (1–4)  ·  Medium (5–9)  ·  High (10–16)  ·  Critical (20–25)",
+        size=2.8,
+        color=INK_MUTED,
         fontstyle="italic",
     )
-    # Axes
     + scale_x_continuous(breaks=impact_levels, labels=[impact_labels[i] for i in impact_levels], expand=(0, 0.55))
     + scale_y_continuous(
         breaks=likelihood_levels, labels=[likelihood_labels[i] for i in likelihood_levels], expand=(0, 0.65)
     )
-    + labs(x="Impact \u2192", y="Likelihood \u2192", title="heatmap-risk-matrix \u00b7 plotnine \u00b7 pyplots.ai")
-    # Theme
+    + labs(x="Impact →", y="Likelihood →", title=title)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold", margin={"b": 15}),
-        axis_title_x=element_text(size=20, weight="bold", margin={"t": 10}),
-        axis_title_y=element_text(size=20, weight="bold", margin={"r": 10}),
-        axis_text_x=element_text(size=15),
-        axis_text_y=element_text(size=15),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
-        legend_key_height=60,
+        figure_size=(6, 6),
+        plot_title=element_text(size=12, ha="center", weight="bold", margin={"b": 8}, color=INK),
+        axis_title_x=element_text(size=10, weight="bold", margin={"t": 8}, color=INK),
+        axis_title_y=element_text(size=10, weight="bold", margin={"r": 8}, color=INK),
+        axis_text_x=element_text(size=8, color=INK_SOFT),
+        axis_text_y=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_key_height=40,
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#fafafa", color="#fafafa"),
-        panel_background=element_rect(fill="#fafafa"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")
