@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: lightcurve-transit
 created: '2026-06-20T07:58:32Z'
-updated: '2026-06-20T08:06:35Z'
+updated: '2026-06-20T08:24:23Z'
 generated_by: claude-sonnet
 workflow_run: 27864758493
 issue: 4559
@@ -12,99 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: error bars, model overlay, phase-folded axis, flux dip
-    all implemented correctly'
-  - Deterministic LCG (seed=42) guarantees reproducibility without browser RNG
-  - Custom ECharts renderItem for error bars is idiomatic and sophisticated — the
-    canonical ECharts approach for custom chart elements
-  - 'Clean theme adaptation: both renders readable with correct tokens (t.ink, t.inkSoft,
-    t.grid) on all chrome elements'
-  - Realistic neutral scientific data with appropriate flux values and photometric
-    precision
-  - Semi-transparent error bars (opacity 0.4) add depth without cluttering the scatter
-    cloud
+  - Custom ECharts renderItem for error bars provides professional-quality scientific
+    visualization matching real astronomy papers
+  - Transit window markArea and depth markLine annotations guide the viewer directly
+    to the key scientific event
+  - 'Perfect palette compliance: photometry in brand green (#009E73), transit model
+    in Imprint lavender (#C475FD)'
+  - Fully deterministic data via fixed-seed LCG — no Math.random() drift between renders
+  - 'Perfect spec compliance: all required features present (error bars, smooth model
+    overlay, phase-folded 0-1 data, downward flux dip)'
   weaknesses:
-  - 'Design excellence is functional but minimal: no highlighted transit region, no
-    depth annotation, no descriptive title prefix (e.g. Astronomical Light Curve ·
-    lightcurve-transit · ...)'
-  - Transit Model line uses palette[2] (blue) while skipping palette[1] (lavender)
-    — the two named series should prefer palette[0] + palette[1] in canonical order
-  - 'Legend icon for Transit Model uses ECharts default line-with-circle; with symbol:
-    none on the series, icon: line would more accurately represent the series'
+  - 'Annotation text fontSize=11 (CSS px) for Transit Window and depth ≈ 1.2% labels
+    maps to ~22 source pixels — at 400px mobile viewport these are invisible; increase
+    to at least fontSize: 13'
+  - 'Legend itemGap: 14 with fontSize: 14 creates visually tight spacing between Photometry
+    and Transit Model entries — increase itemGap to 18-20 for clearer separation'
+  - 'Y-axis grid right: 215 CSS px allocates significant canvas space for the legend;
+    reducing to ~170 would give more breathing room to the data area'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct cream surface, not pure white
-      Chrome: Title "lightcurve-transit · javascript · echarts · anyplot.ai" bold, centered, readable (~65% width). Y-axis label "Relative Flux" and X-axis label "Orbital Phase" in t.inkSoft (dark gray), clearly readable. Tick labels 0.980–1.010 on Y, 0–1.0 on X, all legible at 13px CSS.
-      Data: 400 scatter points in brand green #009E73 with matching semi-transparent error bars (opacity 0.4). Smooth transit model line in blue #4467A3. Classic V-shaped transit dip centered ~phase 0.5, depth ~1.2%. Vertical legend upper-right shows Photometry (green circle) and Transit Model (blue line).
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white (#FAF8F1 style) — NOT pure white; the off-cream surface is clearly visible.
+      Chrome: Title "Astronomical Light Curve · lightcurve-transit · javascript · echarts · anyplot.ai" renders in dark ink at fontSize=18 and is clearly readable. Axis labels ("Orbital Phase", "Relative Flux") and tick labels (0-1 on x-axis, 0.980-1.010 on y-axis) use t.inkSoft and are all fully legible. Small annotation labels "Transit Window" and "depth ≈ 1.2%" use fontSize=11 and are readable at full resolution but will not survive mobile scaling to ~400px.
+      Data: 400 green (#009E73) scatter points with matching green error bars at 0.4 opacity. Lavender (#C475FD) smooth transit model line overlaid. Gray shaded transit window around phase 0.45-0.55. Dashed horizontal depth annotation at flux≈0.988. Legend box (top-right, styled with border and elevated background) showing "Photometry" and "Transit Model" entries.
+      Legibility verdict: PASS — all major text readable; annotation text at fontSize=11 is a minor concern for mobile.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: Title in near-white t.ink (#F0EFE8), clearly readable. Axis labels and tick labels in light gray t.inkSoft (#B8B7B0), legible against dark background. No dark-on-dark failures — tick labels and axis labels both appear appropriately light. Grid lines barely perceptible but serve as subtle guides.
-      Data: Colors identical to light render — green scatter (#009E73) and blue model line (#4467A3) unchanged. Transit dip equally prominent.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17 style) — NOT pure black; warm-dark surface visible.
+      Chrome: Title, axis labels, and tick labels all render in light-colored text (t.ink / t.inkSoft) against the dark background — no dark-on-dark failure observed. The legend box uses t.elevatedBg (#242420) and t.grid border, which is correctly adapted for dark mode.
+      Data: Green scatter (#009E73) and lavender model line (#C475FD) are IDENTICAL to the light render — only chrome (background, text, grid, legend box fill) flipped. Transit window shading appears as a darker band against the near-black background. Depth annotation visible but small.
+      Legibility verdict: PASS — light text on dark background throughout; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All text readable in both themes; title at 22px CSS fills ~65% width
-          (expected). Minor: tick labels at 13px vs axis labels at 14px slight imbalance
-          but both legible.'
+        comment: Title, axis labels, ticks all explicitly sized and readable; annotation
+          fontSize=11 too small for mobile
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Clean layout; scatter cloud, legend, and axes have no collisions.
+        comment: No data element overlaps; legend items tight but separable at full
+          resolution
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 400 data points at symbolSize=5px (10px source) with alpha=0.75 well-matched
-          to density. Error bars at opacity=0.4 visible without dominating. Transit
-          model line at width=2.5 prominent.
+        comment: 400 medium-density points, symbolSize=5 appropriate; error bars at
+          opacity=0.4 slightly faint
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) distinct under all CVD simulations;
-          no red-green sole signal.
+        comment: Green + lavender well-distinguished; CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Generous margins (left:110, right:200, top:90,
-          bottom:80). No clipping or overflow.
+        comment: Correct 3200x1800 landscape; balanced layout; right=215 slightly
+          generous for legend space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive. Y-axis formatter
-          to 3 decimal places appropriate for flux near 1.0.
+        comment: Orbital Phase and Relative Flux are clear descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Photometry scatter) = palette[0] = #009E73. Transit
-          Model = palette[2] = #4467A3 (error bar series consumes slot 0, justifying
-          skip). Backgrounds transparent inheriting pageBg correctly. Data colors
-          identical between light and dark.'
+        comment: palette[0]=#009E73 for photometry, palette[1]=#C475FD for model;
+          transparent bg; full token usage
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -112,24 +105,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: semi-transparent error bars give visual
-          depth; scientific publication aesthetic is intentional. Not exceptional
-          — no highlighted transit region, no annotation callouts, no descriptive
-          title prefix.'
+        comment: Custom error bar renderer, transit window shading, depth annotation,
+          styled legend — above default but not Nature-publication level
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid appropriate for time series; generous whitespace;
-          L-shaped axis frame. No legend background/border customization.
+        comment: X-axis grid suppressed, subtle Y-axis grid, transparent background;
+          all-four-spines kept (ECharts default, acceptable)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Transit dip is clearly the visual focal point; model overlay guides
-          the eye. No transit region shading, depth annotation, or phase markers.
+        comment: Transit dip is clear focal point; window shading + depth annotation
+          guide viewer to the key scientific event
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter photometry + error bars + transit model line overlay.'
+        comment: 'Correct: scatter + error bars + model overlay light curve'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars on every data point, smooth model curve overlaid, phase-folded
-          data (0-1), flux dip going downward.
+        comment: Error bars on each point, smooth model overlay, phase-folded 0-1,
+          flux dip going downward — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Orbital Phase 0-1.0; Y: Relative Flux 0.980-1.010; transit depth
-          ~1.2% at phase 0.45-0.55. N=400 within 200-1000 spec range.'
+        comment: X=Orbital Phase 0-1, Y=Relative Flux 0.980-1.010, full data range
+          displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: lightcurve-transit · javascript · echarts · anyplot.ai (exact
-          required format). Legend: Photometry and Transit Model — appropriate and
-          unambiguous.'
+        comment: Title follows Descriptive · spec-id · javascript · echarts · anyplot.ai
+          format; legend labels Photometry and Transit Model correct
     data_quality:
       score: 15
       max: 15
@@ -171,87 +161,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Phase-folded scatter data, per-point error bars, fitted transit model
-          — all three key aspects of a light curve visualization.
+        comment: 'Shows all aspects: scatter photometry, error bars, transit model,
+          transit window region, depth marking'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ~1.2% transit depth (realistic hot Jupiter), photometric error ~0.2%
-          (typical Kepler/TESS precision), 400 phase-folded points, neutral astronomical
-          subject.
+        comment: ~1.2% transit depth realistic for hot Jupiter; photometric errors
+          0.0018-0.0026 consistent with space-based photometry
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Relative flux centered on 1.000, depth to ~0.988, phase 0 to 1. All
-          scales scientifically plausible.
+        comment: Y-axis 0.980-1.010 captures the transit depth; X-axis 0-1 standard
+          for phase-folded light curves
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat structure; small utility functions (lcg, randn, transitModel)
-          are necessary and minimal.
+        comment: Helper functions lcg/randn/transitModel present; necessary for deterministic
+          data gen in browser JS; slight KISS tension
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed=42; no Date.now() or Math.random().
+        comment: LCG with seed=42, fully deterministic across all runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only window.ANYPLOT_TOKENS and window.echarts globals
-          as required.
+        comment: No imports — echarts and window.ANYPLOT_TOKENS are globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized data generation → init → option structure. No fake
-          UI or simulated interaction.
+        comment: Clean, idiomatic ECharts code; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Harness handles output; animation: false set; landscape orientation
-          correct; echarts.init(el) without explicit dimensions.'
+        comment: 'Harness generates plot-{THEME}.png and .html; animation: false set;
+          no explicit size/devicePixelRatio'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Perfectly follows echarts.md: no explicit init size, no devicePixelRatio,
+          animation:false, transparent bg, color:t.palette, all token mappings correct'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct echarts.init(el) without explicit size; animation: false;
-          top-level color: t.palette; custom series for non-standard rendering is
-          the canonical ECharts approach.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ECharts custom series type with renderItem callback and api.coord()
-          coordinate transform — genuinely distinctive ECharts features. Z-index layering
-          (z:2/3/4) for correct draw order. Could go further with tooltip config or
-          dataZoom.
+        comment: Custom series renderItem for error bars, markArea for transit window,
+          markLine for depth, SVG path icon in legend — all ECharts-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - error-bars
+  - custom-renderer
+  - annotations
   - html-export
   patterns:
   - data-generation
