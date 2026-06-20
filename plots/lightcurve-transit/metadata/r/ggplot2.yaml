@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: lightcurve-transit
 created: '2026-06-20T07:49:23Z'
-updated: '2026-06-20T07:57:01Z'
+updated: '2026-06-20T08:07:26Z'
 generated_by: claude-sonnet
 workflow_run: 27864576883
 issue: 4559
@@ -12,42 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: scatter, error bars, model overlay, and phase-fold all
-    implemented correctly'
-  - Correct Imprint palette (green observed, blue model) with fully theme-adaptive
-    chrome in both renders
-  - Density-aware alpha blending (alpha=0.55 points, alpha=0.3 error bars) keeps the
-    plot legible at 600 data points
-  - guide_legend(override.aes) correctly differentiates point vs. line legend icons
-    — idiomatic ggplot2
-  - Realistic astronomical scenario (Hot Jupiter, ~350 ppm photometric noise) with
-    appropriate scale
-  - All code clean, reproducible (seed 42), and uses modern ggplot2 API
+  - 'Imprint palette perfectly applied: #009E73 observed data (first series), #4467A3
+    transit model (position 3); data colors identical across both renders.'
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all correctly
+    branched for light/dark; both renders pass legibility check with no dark-on-dark
+    failures.'
+  - Ingress/egress contact-region shading (vectorized annotate rect) adds genuine
+    scientific context and is excellent ggplot2 idiomatic usage.
+  - Y-axis tick labels formatted to 3 decimal places — scientifically appropriate
+    for 1% transit depth.
+  - guide_legend(override.aes) correctly distinguishes point symbol from line for
+    the two series — shows ggplot2 mastery.
   weaknesses:
-  - Data point size=0.9 is at the lower limit for 600 points; increase to size=1.3-1.6
-    to improve visibility when scaled to mobile (~400px width)
-  - Error bars at alpha=0.3 are very faint — increase to alpha=0.45 and linewidth=0.3
-    so they remain meaningful at reduced display sizes
-  - Minor grid lines (panel.grid.minor) add visual noise without aiding data reading
-    for this plot type — remove with panel.grid.minor = element_blank()
-  - DE could be elevated by adding a horizontal reference line at flux=1.000 (baseline)
-    using geom_hline(yintercept=1, color=INK_SOFT, linetype='dashed', linewidth=0.35,
-    alpha=0.7) to anchor the out-of-transit baseline
+  - Marker size=1.4 with 600 points is appropriate for density but slightly small;
+    size=1.8-2.0 would improve individual point legibility without losing the dense-scatter
+    aesthetic.
+  - Panel grid uses solid INK tokens at linewidth=0.15 — correct per ggplot2 alpha
+    limitation, but a lighter intermediate hex could provide more subtle grid lines.
+  - T1-T4 contact point labels (short text annotations at the vertical shaded boundaries)
+    are absent — adding them would complete the ingress/egress storytelling and raise
+    DE-01 and DE-03.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "lightcurve-transit · r · ggplot2 · anyplot.ai" in dark ink, left-aligned. Axis titles "Orbital Phase" and "Relative Flux" in dark ink (size 10pt). Tick labels in INK_SOFT (#4A4A44, size 8pt). All chrome elements readable.
-      Data: 600 green (#009E73) scatter points at size=0.9, alpha=0.55. Error bars in green at alpha=0.3 (very faint but present). Transit model as blue (#4467A3) line at linewidth=1.0. Transit dip clearly visible at phase ~0.50, reaching flux ~0.990 (~1% depth). Legend inside plot at lower-right: "Observed" (green dot) and "Transit model" (blue line).
-      Legibility verdict: PASS — all text elements clearly readable against light background
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "lightcurve-transit · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), clearly readable. Axis labels "Orbital Phase" and "Relative Flux" in INK. Tick labels in INK_SOFT (#4A4A44). All text dark-on-light — fully readable.
+      Data: ~600 brand green (#009E73) scatter points with vertical error bars spanning phase 0–1 at near-unity flux; transit dip to ~0.989 at phase 0.5. Blue (#4467A3) transit model line overlaid. Dual gray-shaded ingress/egress rectangles. Dashed baseline at 1.0.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels flip to near-white (#F0EFE8 INK), tick labels to #B8B7B0 INK_SOFT. All text clearly readable against dark background. No dark-on-dark failures. Legend background uses elevated dark surface (#242420) with soft border.
-      Data: Identical colors to light render — green (#009E73) scatter, blue (#4467A3) model line. Data colors unchanged across themes as required.
-      Legibility verdict: PASS — all text elements readable; grid lines slightly more prominent in dark mode (full INK color at linewidth=0.15) but acceptable given ggplot2's lack of alpha support on grid lines
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, axis labels in INK (#F0EFE8, near-white). Tick labels in INK_SOFT (#B8B7B0, medium-light gray). Legend text in INK_SOFT. All light-on-dark — fully readable. No dark-on-dark failure detected.
+      Data: Data colors identical to light render — #009E73 (green) observed points, #4467A3 (blue) transit model. Colors confirmed unchanged between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,76 +57,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set (title 12pt, axis titles 10pt, tick labels
-          8pt). Both themes readable. Minor: marker size 0.9 and alpha 0.3 error bars
-          may be hard to distinguish at mobile width ~400px.'
+        comment: All fonts explicitly set (title=12pt, axis.title=10pt, axis.text=8pt);
+          both themes readable; minor mobile scale concern at 8pt tick labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions in either render
+        comment: No text/data collisions; legend positioned in empty bottom-right;
+          error bars use alpha to reduce noise
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 600 points at size=0.9 alpha=0.55 is density-appropriate but slightly
-          small. Error bars at alpha=0.3 are very faint — present but barely distinguishable
-          at reduced viewing sizes.
+        comment: 600 points correctly use size=1.4 + alpha=0.55; transit model clearly
+          visible; point size slightly borderline small
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and blue are distinct hue families, CVD-safe from Imprint palette
+        comment: Green/blue have good CVD separation; legend provides redundant shape/linetype
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, legend well-placed
-          in empty lower-right zone
+        comment: Canvas 3200x1800 correct; title ~60% width; generous margins; nothing
+          overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux — descriptive, units not needed for
-          dimensionless quantities
+        comment: Orbital Phase and Relative Flux are descriptive; 3 decimal Y tick
+          format scientifically appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, model #4467A3. Backgrounds #FAF8F1/#1A1A17.
-          All chrome theme-adaptive.'
+        comment: 'First series #009E73, second #4467A3 (position 3); PAGE_BG and INK
+          tokens correct for both themes; data colors identical across light/dark'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean scientific style. Density-aware alpha, well-positioned legend,
-          explicit font hierarchy show design thought. Not yet at strong design level.
+        comment: Imprint palette correct; ingress/egress shading sophisticated; baseline
+          dashed reference thoughtful; legend override.aes shows finesse. Missing
+          T1-T4 labels to reach exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Panel border removed with L-shaped axis lines, grid at reduced linewidth
-          (0.15/0.10), elevated legend background. Minor grid still shown adds some
-          noise.
+        comment: panel.border removed; grid.minor blank; axis.line L-frame; subtle
+          legend border. Grid uses solid INK at linewidth=0.15 rather than midpoint
+          hex.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Transit dip at phase 0.5 is a clear focal point. Model overlay provides
-          scientific context. Natural visual hierarchy between baseline and dip.
+        comment: Ingress/egress shaded rectangles excellent; baseline dashed reference
+          clear; error bars convey precision; transit model canonical. Missing T1-T4
+          contact point labels.
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: phase-folded photometric scatter with error bars and smooth
-          transit model overlay'
+        comment: Correct scatter+errorbar+line lightcurve showing transit dip
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, model curve, phase-folded 0-1, transit dip downward,
-          clean minimal style — all present
+        comment: Error bars, smooth model curve, phase-folded data, transit dip downward
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Orbital Phase (0.0-1.0), Y=Relative Flux. All 600 data points shown.
+        comment: X=Orbital Phase (0-1), Y=Relative Flux (~0.988-1.001); all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'lightcurve-transit · r · ggplot2 · anyplot.ai'. Legend
-          labels 'Observed' and 'Transit model'.
+        comment: Title matches required format; legend labels Observed/Transit model
+          appropriate
     data_quality:
       score: 15
       max: 15
@@ -168,22 +168,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter, error bars, flat-bottomed transit with smooth ingress/egress,
-          model curve — all key aspects
+        comment: Phase-folded scatter with error bars, smooth model overlay, ingress/egress
+          shading, baseline reference — all key features
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Hot Jupiter analog, 1% transit depth, 600 observations, realistic
-          photometric noise ~350 ppm — faithful to Kepler/TESS data
+        comment: Hot Jupiter analog (~1% depth, 3.5-day period); flux error ~0.00035
+          realistic for Kepler/TESS precision
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Phase 0-1, flux 0.988-1.002, noise ~350 ppm — all physically correct
-          for hot Jupiter transit
+        comment: Flux 0.988-1.001 correct for 1% transit; 600 observations appropriate
     code_quality:
       score: 10
       max: 10
@@ -193,32 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single transit_flux() helper avoids duplication; overall structure
-          is Imports-Data-Plot-Save
+        comment: transit_flux() is justified shared utility; no classes; flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42)
+        comment: set.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg, both used
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake interactivity
+        comment: Clear variable names; vectorized annotate rect idiomatic; no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME), modern linewidth= API, ragg::agg_png
+        comment: ggsave with sprintf plot-%s.png, device=ragg::agg_png, width=8, height=4.5,
+          dpi=400 correct
     library_mastery:
       score: 7
       max: 10
@@ -228,23 +228,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper layered grammar-of-graphics, scale_color_manual with named
-          values, guide_legend(override.aes), legend.position.inside (ggplot2 3.5+)
+        comment: Grammar of graphics layering clean; scale_color_manual with named
+          values; theme_minimal base; correct linewidth= not deprecated size=; legend.position.inside
+          modern ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: guide_legend(override.aes=list(shape,linetype)) is distinctly ggplot2.
-          Could push higher with annotate() for transit depth labels or geom_rect()
-          for ingress/egress shading.
-  verdict: REJECTED
+        comment: Vectorized annotate rect for dual ingress/egress is distinctly idiomatic;
+          guide_legend override.aes genuine ggplot2 strength. Does not use geom_ribbon
+          for model uncertainty.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - ragg
+  dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
