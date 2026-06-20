@@ -1,0 +1,261 @@
+library: d3
+language: javascript
+specification_id: line-growth-percentile
+created: '2026-06-20T09:41:14Z'
+updated: '2026-06-20T09:47:46Z'
+generated_by: claude-sonnet
+workflow_run: 27867090551
+issue: 4555
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Graduated opacity bands (0.10→0.18→0.28 from median outward) correctly implement
+    'darker near extremes, lighter near median' per spec
+  - Imprint blue (#4467A3, position 3) is a valid semantic exception for boys' growth
+    chart — domain convention explicitly required by spec
+  - Patient trajectory in Imprint green (#009E73) provides maximum contrast against
+    the blue reference bands
+  - P50 median line is visually emphasized with thicker stroke (2.5px vs 1px) and
+    higher opacity (0.9)
+  - Percentile labels (P3–P97) positioned cleanly on right margin with P50 bold-weighted
+    for extra hierarchy
+  - CatmullRom curve interpolation produces clinically realistic smooth curves for
+    the growth reference data
+  - 'Chrome tokens correctly applied: inkSoft for tick/label text, ink for title,
+    pageBg for dot stroke, grid token for gridlines — both themes pass'
+  - Title font size computed proportionally (Math.round(22 × 67 / titleLen)) to handle
+    the descriptive prefix cleanly
+  - 'Dark render: no dark-on-dark failures — all text switches correctly to light
+    tokens'
+  weaknesses:
+  - Non-median percentile labels (12px CSS) are slightly small relative to the rest
+    of the typography — could be bumped to 13px to match tick label size
+  - Legend is positioned inside the plot area (top-right quadrant) which is fine,
+    but could risk overlap if data extended to higher values in that region
+  - No explicit spine removal code for top/right axes — they are absent only because
+    axisBottom/axisLeft were the only axes called (implicit rather than explicit)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
+      Chrome: Title "Boys Weight-for-Age · line-growth-percentile · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable. Subtitle "WHO Growth Standards · Boys 0–36 months" in secondary ink. Axis labels "Age (months)" and "Weight (kg)" in muted ink at 15px. Tick labels at 13px on both axes — readable. All chrome is dark-on-light.
+      Data: Seven graduated blue (#4467A3) filled bands between percentile curves, with outer bands (P3–P10, P90–P97) visibly darker than inner bands (P25–P50) as specified. P50 median line thicker and more opaque. Green (#009E73) patient trajectory line with circular markers (white stroke for definition). Percentile labels P3/P10/P25/P50/P75/P90/P97 on right margin in blue, P50 bold.
+      Legibility verdict: PASS — all text readable, good contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and subtitle in light/cream-colored ink — clearly readable against dark background. Axis labels and tick labels in light secondary ink — no dark-on-dark failures. Grid lines are appropriately subtle.
+      Data: Blue bands appear as deeper navy on dark background (correct — fixed BAND_COL at various opacities over dark surface), still showing graduation pattern. Green patient trajectory (#009E73) remains clearly visible and contrasting. Percentile labels in blue visible on right margin. Colors are identical to light render (only chrome flips).
+      Legibility verdict: PASS — no dark-on-dark issues detected, all elements readable in dark mode
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, axis labels, ticks all readable in both themes.
+          Non-median percentile labels at 12px are acceptable but slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data collisions. Sparse patient markers well-separated.
+          Percentile labels spaced cleanly on right margin.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Graduated opacity bands clearly visible. Green patient line highly
+          prominent. P50 emphasis effective.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue (#4467A3) and green (#009E73) are CVD-safe. No red-green sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Right margin (112px) accommodates percentile
+          labels. No clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Age (months) and Weight (kg) with units. Title includes descriptive
+          prefix + spec-id + library chain.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient series uses t.palette[0] = #009E73. Blue (#4467A3 = palette[2])
+          is valid semantic exception for boys growth chart as spec requires. Backgrounds
+          correct (#FAF8F1/#1A1A17). Chrome adapts correctly.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Graduated opacity bands show intentional design hierarchy. Domain-appropriate
+          blue for boys. Custom legend. P50 emphasis. Above-default design thinking.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Only Y-axis gridlines, subtle grid. L-shaped axis frame. White stroke
+          on patient dots. Clean overall. Minor: no explicit spine removal.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: green patient trajectory as focal point,
+          thicker P50 as secondary guide, outer bands darker for emphasis. Chart tells
+          a coherent clinical story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct WHO/CDC-style growth chart with filled percentile bands and
+          individual patient trajectory.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Graduated opacity bands ✓, P50 emphasized ✓, right-margin percentile
+          labels ✓, patient data as connected markers ✓, blue for boys ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: age in months (0-36) ✓. Y: weight in kg ✓. All percentile curves
+          present.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Boys Weight-for-Age · line-growth-percentile · javascript
+          · d3 · anyplot.ai'' (descriptive prefix + required chain). Legend labels:
+          Patient trajectory / WHO reference bands.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile curves (P3/P10/P25/P50/P75/P90/P97), all 6 inter-percentile
+          bands, median emphasis, patient trajectory.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age for boys 0-36 months — clinically plausible reference
+          values. Patient trajectory realistic (~65th percentile).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-36 month range appropriate. Weight 2.5-17.2 kg matches real WHO
+          standards.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes. Clean sequential structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded. No random numbers. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: D3 is a global; no import statements needed or present.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean for...of loops over bands/labels. D3 area/line generators used
+          appropriately. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles PNG/HTML output. window.ANYPLOT_TOKENS and window.ANYPLOT_SIZE
+          correctly read.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.area() with y0/y1 for bands, d3.line() with curve interpolation,
+          .datum()/.join() pattern, proper axis setup — all idiomatic D3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: CatmullRom curve for clinical smoothness, d3.area() filled bands,
+          custom tickValues() for monthly grid. Solid D3 feature usage for static
+          chart context.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
