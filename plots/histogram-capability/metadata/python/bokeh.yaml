@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:44:22Z'
-updated: '2026-06-20T15:11:47Z'
+updated: '2026-06-20T15:20:39Z'
 generated_by: claude-sonnet
 workflow_run: 27874705896
 issue: 4552
@@ -12,44 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Semantic color coding is intentional and correct: red for spec limit boundaries
-    (#AE3030), amber for the target/nominal line (#DDCC77), ink-soft for the mean
-    — creates a clear visual priority hierarchy'
-  - 'Full feature coverage per spec: histogram + normal fit + LSL/USL + target + mean
-    + Cp/Cpk annotation, all present'
-  - Bokeh hover tooltips show bin range and count — makes the interactive HTML artifact
-    genuinely useful
-  - Theme adaptation is thorough — all chrome tokens (background, text, axis lines,
-    ticks, legend box, grid) are correctly wired to ANYPLOT_THEME
-  - Realistic manufacturing QC scenario with industry-standard capability indices
-    (Cp ~1.18 is a textbook barely-capable process)
-  - CDP captureBeyondViewport=True ensures the full 3200x1800 canvas is captured even
-    when Chrome viewport is smaller
+  - 'Excellent semantic color mapping: histogram bars in brand green (#009E73), LSL/USL
+    in matte red (#AE3030 — out-of-spec semantic), target in amber (#DDCC77 — caution/nominal
+    semantic), mean in theme-adaptive INK_SOFT — all by-the-book Imprint palette rule
+    applications'
+  - 'Canonical Bokeh patterns throughout: ColumnDataSource with custom tooltip fields,
+    HoverTool, Span for reference lines, manually constructed Legend with LegendItems,
+    off-screen renderers to surface Span objects in the legend — idiomatic and correct'
+  - 'Full spec compliance: histogram + fitted normal curve + LSL/USL dashed lines
+    + target line + Cp/Cpk annotation + sample size (N=200) all present and correct'
+  - Theme-adaptive chrome properly threaded through all non-data elements (title,
+    axis labels, tick labels, grid, legend frame, legend text, annotation) — dark
+    render is clean with no dark-on-dark failures
+  - 'Realistic manufacturing context: shaft diameter (mm), LSL=9.950/USL=10.050/target=10.000,
+    Cp≈1.18/Cpk≈1.15 — a plausible barely-capable production process'
+  - CDP captureScreenshot with captureBeyondViewport=True ensures the full 3200×1800
+    canvas is captured correctly — advanced Bokeh-specific screenshot technique avoiding
+    the toolbar-shrinkage bug
   weaknesses:
-  - 'Title is missing the python language token: current value is histogram-capability
-    · bokeh · anyplot.ai, required value is histogram-capability · python · bokeh
-    · anyplot.ai — fix: add · python · between spec-id and library in the figure(title=...)
-    call'
-  - Axis labels render in Bokeh default italic style — add p.xaxis.axis_label_text_font_style
-    = normal and p.yaxis.axis_label_text_font_style = normal for a crisper typographic
-    hierarchy
-  - Normal fit curve uses the same green (#009E73) as the histogram bars — while visually
-    distinguishable as line vs filled bars, this is a minor distinctiveness concern
+  - 'DE-02: Full 4-sided box outline is kept (outline_line_color=INK_SOFT) — the style
+    guide default is to remove top and right spines for a cleaner L-shaped frame.
+    In Bokeh this requires setting p.outline_line_alpha=0 or p.outline_line_color=None
+    and then manually adding bottom/left axis lines, or using a theme that suppresses
+    the outline'
+  - 'DE-01/DE-02: No spine suppression on the plot area means the chart looks slightly
+    boxy compared to the preferred minimal-chrome aesthetic'
+  - 'LM-02: The implementation does not exploit any Bokeh-specific interactive capabilities
+    beyond HoverTool (e.g. Slider widgets, Select callbacks, or TapTool for bar selection)
+    — these are optional for a static catalog render but would demonstrate deeper
+    library mastery'
+  - 'VQ-01 minor: The capability annotation font size (30pt) is slightly smaller than
+    the tick labels (34pt) for what is arguably the most important data element on
+    the plot — bumping it to 34-36pt bold would give it more visual weight appropriate
+    to its role'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "histogram-capability · bokeh · anyplot.ai" in bold dark ink — readable. Axis labels "Shaft Diameter (mm)" and "Frequency" in dark ink — readable. Tick labels in ink-soft (#4A4A44) — readable.
-      Data: Histogram bars in Imprint brand green (#009E73) at 75% alpha with cream bar outlines. Green normal fit curve overlaid as a 4pt line. Red dashed LSL/USL lines (#AE3030). Amber dashed target line (#DDCC77). Gray dashed mean line (INK_SOFT). Bold Cp/Cpk annotation in upper left.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "histogram-capability · python · bokeh · anyplot.ai" in bold dark ink, spans ~65% of canvas width — expected for the mandated 67-char title at 50pt. X-axis label "Shaft Diameter (mm)" and Y-axis label "Frequency" both in dark ink at 42pt. Tick labels (9.96, 9.98, 10, 10.02, 10.04 on x; 0-35 on y) in INK_SOFT at 34pt. Capability annotation "Cp = 1.18 | Cpk = 1.15 | N = 200" bold in the upper-left area of the plot. All text clearly readable against the light background.
+      Data: Histogram bars in #009E73 (brand green) with fill_alpha=0.75, white-ish bar edges for subtle separation. Normal fit curve in #009E73 (line_width=4). LSL/USL vertical dashed lines in matte red (#AE3030). Target vertical dashed line in amber (#DDCC77). Mean vertical dashed line in INK_SOFT. Legend in top-right with elevated background #FFFDF6 showing all 5 elements with numeric values. Y-grid subtle (alpha=0.15), no x-grid.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title in off-white/light text — readable. Axis labels in light text — readable. Tick labels in #B8B7B0 — readable. NO dark-on-dark failures observed.
-      Data: Histogram bars identical green (#009E73), normal curve identical green, LSL/USL identical red, target identical amber, mean identical gray. Legend has elevated dark box (#242420). Data colors identical to light render.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream text (#F0EFE8), axis labels and tick labels in INK_SOFT (#B8B7B0) — all clearly readable against the dark surface. Capability annotation in INK (light cream). Legend frame has elevated dark background #242420 with INK_SOFT border. No dark-on-dark failures detected.
+      Data: Histogram bars in #009E73 — identical green to light render (data colors unchanged). Normal fit curve same green. LSL/USL red dashed lines unchanged. Target amber dashed line unchanged. Mean neutral dashed line in dark-theme INK_SOFT (#B8B7B0). Brand green is clearly visible on dark background.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. Data colors are identical between light and dark renders; only chrome (background, text, legend frame) flips as expected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,54 +70,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes follow style guide (50pt title, 42pt axis labels, 34pt
-          tick labels). All text readable in both themes. Minor deduction: axis labels
-          in default Bokeh italic style.'
+        comment: 'All text readable in both themes; canonical bokeh font sizes (50pt
+          title, 42pt axis labels, 34pt ticks, 34pt legend). Minor: capability annotation
+          at 30pt is slightly smaller than tick labels for the most prominent statistic
+          — could be 34-36pt'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Cp/Cpk annotation clear of histogram bars and
-          legend.
+        comment: No overlapping text or data elements. Capability annotation placed
+          just right of LSL line at y=max_count*1.13, well within visible range and
+          not colliding with other elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 data points in 25 bins. Bars prominent at fill_alpha=0.75. All
-          reference lines clearly visible.
+        comment: 'All elements clearly visible: green histogram bars, green fit curve
+          (line_width=4), red dashed LSL/USL (line_width=4), amber dashed target,
+          neutral dashed mean. Good alpha=0.75 on bars with alpha=0.9 on lines'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green used for semantically distinct elements (lines vs bars),
-          not as sole discriminating cues between data series. CVD-safe within Imprint
-          palette rules.
+        comment: Imprint palette used with CVD-safe colors. Semantic color assignments
+          (red for out-of-spec, amber for caution) follow expected conventions
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas with correct min_border reservations. No overflow
-          or clipping in either render.
+        comment: Canvas gate passed (3200×1800). No text overflow or clipping. Good
+          whitespace. Title proportion expected for mandated 67-char title at 50pt
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) and Frequency are descriptive with units.
+        comment: Title format correct. X-axis 'Shaft Diameter (mm)' with units, Y-axis
+          'Frequency' — descriptive and appropriate
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (histogram bars) uses #009E73. LSL/USL use #AE3030
-          (semantic). Target uses amber #DDCC77 (semantic anchor). Mean uses INK_SOFT
-          (adaptive). Backgrounds correct. Data colors identical between renders.'
+        comment: 'First series #009E73, semantic red for spec limits, amber for target,
+          INK_SOFT for mean. PAGE_BG correct for both themes. All Imprint palette
+          rules followed'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,26 +128,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): intentional semantic color coding, hover interactivity
-          adds value, professional composition with clear visual layer separation.'
+        comment: 'Above default (4): intentional semantic color hierarchy (green data,
+          red limits, amber target, neutral mean) creates clear visual layers. Legend
+          styled with elevated background. Standard implementation of a known plot
+          type prevents higher score'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): y-axis-only grid at alpha=0.15, no x-grid, minor
-          ticks removed, axis line colors adaptive, bar outlines set to PAGE_BG for
-          clean bin separation.'
+        comment: 'Above default (2): x-grid removed, y-grid subtle (alpha=0.15), minor
+          ticks removed. Docked by: full 4-sided outline box kept (outline_line_color=INK_SOFT)
+          instead of preferred L-shaped frame'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): clear visual hierarchy — green histogram as primary
-          element, normal curve as analytical overlay, red spec limits as boundaries,
-          amber target as reference, Cp/Cpk quantitative annotation.'
+        comment: 'Above default (2): Cp/Cpk annotation immediately communicates process
+          capability. Legend labels include numeric values (LSL=9.950, etc.) adding
+          direct readability. Color hierarchy guides viewer from data (green) to limits
+          (red) to target (amber)'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,30 +158,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with fitted normal distribution overlay and specification
-          limit lines.'
+        comment: 'Correct: histogram with fitted normal distribution curve and specification
+          limit lines'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: histogram, normal curve, LSL/USL
-          lines (red dashed), target line (amber dashed), Cp/Cpk annotation.'
+        comment: 'All spec features present: histogram, normal fit curve, LSL/USL
+          lines, target line, Cp/Cpk annotation. Bonus mean line adds value'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: shaft diameter in mm. Y-axis: frequency. Range encompasses
-          spec limits and data extent.'
+        comment: 'X: shaft diameter measurements. Y: frequency counts. 200 measurements
+          across 25 bins, all data shown'
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing python language token. Current: ''histogram-capability
-          · bokeh · anyplot.ai''. Required: ''histogram-capability · python · bokeh
-          · anyplot.ai''. Legend labels are correct.'
+        passed: true
+        comment: Title 'histogram-capability · python · bokeh · anyplot.ai' correct
+          format. Legend shows all 5 elements with values
     data_quality:
       score: 15
       max: 15
@@ -175,22 +190,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: distribution shape, normal fit, spec limits,
-          target, mean, and capability indices.'
+        comment: 'Full feature coverage: histogram, fitted curve, LSL, USL, target,
+          mean, Cp, Cpk, N shown'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Machined shaft diameters (10 mm nominal, +/-0.05 mm tolerance) in
-          manufacturing quality-control. Realistic, neutral, domain-appropriate.
+        comment: Realistic machined shaft diameter context. LSL=9.950, USL=10.050,
+          target=10.000 are plausible tolerances. Cp~1.18, Cpk~1.15 represent a realistic
+          barely-capable process
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 measurements, sigma ~0.015 mm, Cp ~1.18, Cpk ~1.15 — plausible
-          barely-capable process consistent with Six Sigma QC.
+        comment: Values in engineering-appropriate range, axis ranges tight around
+          data without excessive whitespace
     code_quality:
       score: 10
       max: 10
@@ -200,52 +216,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat, sequential code with no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports used. Note: import base64 appears late in the file but
+          is used for CDP screenshot decoding — acceptable'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Off-screen renderer trick for Span-in-Legend is correct Bokeh approach.
-          CDP captureBeyondViewport=True is the right technique for full-canvas capture.
+        comment: No fake UI. Off-screen renderer pattern for Span legend items is
+          clever and appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses CDP captureScreenshot
+          with captureBeyondViewport=True
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses ColumnDataSource, Span, Label, Legend, LegendItem, HoverTool
-          — all idiomatic Bokeh. CDP screenshot pattern correct. Slight deduction:
-          off-screen renderer is a workaround for Bokeh Span-legend limitation.'
+        comment: 'Excellent idiomatic Bokeh: ColumnDataSource, HoverTool, Span, Label,
+          Legend with LegendItems, output_file+save, Selenium CDP screenshot. Off-screen
+          renderer pattern for Span legend objects is an advanced Bokeh technique'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Span for reference lines (Bokeh-specific), HoverTool with custom
-          per-bin tooltips, LegendItem for fine-grained legend control. Good use of
-          Bokeh interactive model.
+        comment: 'Above default (1): HoverTool with custom tooltip fields, Span model
+          for reference lines, manual Legend composition, HTML+PNG dual output, CDP
+          captureBeyondViewport. No widget/callback interactivity used beyond hover'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -253,9 +271,9 @@ impl_tags:
   - selenium
   techniques:
   - hover-tooltips
-  - html-export
-  - custom-legend
   - annotations
+  - custom-legend
+  - html-export
   patterns:
   - data-generation
   - columndatasource
@@ -263,4 +281,5 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling

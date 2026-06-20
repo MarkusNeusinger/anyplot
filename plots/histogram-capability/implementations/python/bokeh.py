@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-20
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import os
