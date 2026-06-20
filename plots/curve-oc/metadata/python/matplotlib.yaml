@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: curve-oc
 created: '2026-03-19T20:39:38Z'
-updated: '2026-06-20T11:04:00Z'
+updated: '2026-06-20T11:12:40Z'
 generated_by: claude-sonnet
 workflow_run: 27868961730
 issue: 4553
@@ -12,39 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Correct binomial CDF computation for all three sampling plans — no formula errors
-  - 'Strong spec compliance: AQL, LTPD, producer''s risk (alpha), consumer''s risk
-    (beta) all implemented as required'
-  - Full theme-adaptive chrome — every text element, spine, grid, and legend frame
-    correctly adapts between light and dark
-  - 'Semantic color reasoning: first series #009E73 (brand green), consumer''s risk
-    using #AE3030 (semantic red anchor) — appropriate with clear justification'
-  - Code is deterministic, readable, and uses idiomatic matplotlib patterns throughout
+  - 'Semantically appropriate color assignment: #AE3030 (matte red, semantic anchor
+    for bad/error) used for consumer''s risk, exactly the right semantic role'
+  - 'Excellent spec coverage: all required features present — multiple OC curves,
+    risk shading, AQL/LTPD reference lines, annotated alpha/beta values'
+  - Correct canvas (3200x1800 px via figsize=(8,4.5) dpi=400, no bbox_inches=tight)
+    and no canvas drift
+  - 'Theme adaptation is complete and correct: all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG) properly threaded through title, labels, ticks, spines, legend, and grid'
+  - Code uses stdlib math.comb avoiding a scipy dependency — elegant and self-contained
   weaknesses:
-  - Title is missing the 'python' language token — must be 'curve-oc · python · matplotlib
-    · anyplot.ai' (SC-04)
-  - AQL/LTPD text annotations at fontsize=7 are very small; increase to 8pt to match
-    tick label size
-  - Consumer's risk (beta) shaded region is nearly invisible due to its small area
-    (~3% probability) — consider increasing alpha from 0.25 to 0.40
+  - Tick labels at fontsize=8pt are at the minimum readable threshold; slightly larger
+    (9pt) would improve legibility at mobile-scaled widths without crowding the axis
+  - DE-01 and DE-02 are solid but not exceptional — no custom typography weight variation
+    or particularly artistic hierarchy beyond the functional minimum
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, not pure white
-      Chrome: Title "curve-oc · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Fraction Defective (p)" and "Probability of Acceptance P(accept)" at 10pt readable. Tick labels 0%-14% (x) and 0%-100% (y) at 8pt readable. AQL/LTPD annotation text at 7pt small but legible. Legend text readable.
-      Data: Three OC curves — brand green #009E73 (n=50,c=1), lavender #C475FD (n=80,c=2), blue #4467A3 (n=100,c=2). Producer's risk shaded region (teal-green alpha=0.25) visible above first curve near AQL. Consumer's risk region (rose alpha=0.25) very thin (~3% probability) but faintly visible near LTPD bottom. Alpha=0.26 annotation with green arrow; beta=0.03 annotation with red arrow. Both clearly readable.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "curve-oc · python · matplotlib · anyplot.ai" in dark ink at 12pt (readable); X-axis label "Fraction Defective (p)" and Y-axis label "Probability of Acceptance P(accept)" at 10pt (clear); tick labels at 8pt (readable, at minimum threshold); dashed reference line labels "AQL" and "LTPD" at 8pt (visible)
+      Data: Three S-shaped OC curves — n=50 c=1 in #009E73 (brand green, first series correct), n=80 c=2 in #C475FD (lavender, position 2), n=100 c=2 in #4467A3 (blue, position 3); green shaded region for producer's risk (alpha) at upper-left; red shaded region for consumer's risk (beta) at lower-right; vertical dashed reference lines at AQL=2% and LTPD=10%; arrow annotations for alpha=0.26 and beta=0.03
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, not pure black
-      Chrome: Title, axis labels, tick labels, AQL/LTPD text, legend entries all rendered in light off-white ink (~#F0EFE8/#B8B7B0). All text clearly readable against dark background. No dark-on-dark failures. Legend frame uses elevated dark background #242420 with lighter edge.
-      Data: Data colors identical to light render — brand green, lavender, blue OC curves all confirmed same hues. Producer's risk region shows as darker green shading (visible). Consumer's risk region remains extremely faint given tiny area. Grid lines subtle but visible.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all render in light-colored text (INK = #F0EFE8, INK_SOFT = #B8B7B0) — fully readable against dark background; legend frame adapts to #242420 with light text; annotation text for alpha and beta values clearly visible; no dark-on-dark failures observed
+      Data: Identical data colors to light render — #009E73 green, #C475FD lavender, #4467A3 blue curves; #AE3030 red risk region; green producer's risk shading — all constant across themes as required
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,73 +51,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; AQL/LTPD labels at fontsize=7 are
-          slightly small
+        comment: 'Title 12pt (44 chars, well within bounds), axis labels 10pt, tick
+          labels 8pt; all readable in both themes. Minor: tick labels at minimum size
+          but functional.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: All annotations, legend, axis labels, and tick labels are clear with
+          no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three OC curves prominent; consumer's risk beta shaded region barely
-          perceptible given ~3% area
+        comment: 300-point smooth curves are crisp and well-separated; shaded risk
+          regions are visually distinct with appropriate alpha.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette; semantic red for consumer risk
+        comment: 'Imprint palette used; #AE3030 for consumer''s risk is the semantic
+          anchor for bad/error roles, appropriate here.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 16:9 passes dimension gate; good proportions; no overflow
+        comment: Correct 3200x1800 px canvas (figsize=(8,4.5) dpi=400); generous margins
+          via subplots_adjust; title proportion ~55% of width.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with variable notation
+        comment: 'X: Fraction Defective (p), Y: Probability of Acceptance P(accept)
+          — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, positions 1-3 in order, semantic red for beta,
-          correct theme backgrounds'
+        comment: 'First series #009E73; positions 1-3 in canonical order; #AE3030
+          as semantic anchor for consumer''s risk; backgrounds #FAF8F1 light / #1A1A17
+          dark.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default; semantic risk regions and annotated risk values add
-          professional polish
+        comment: Intentional semantic color for risk regions; shaded areas add visual
+          depth; Imprint palette applied correctly; clean annotation arrows. Above
+          generic defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle y-axis grid; theme-adaptive legend
-          frame; clean arrow annotations
+        comment: Top and right spines removed; subtle y-axis-only grid at alpha=0.15;
+          themed legend frame; generous margins via subplots_adjust.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Risk regions and quantified alpha/beta values contextualize curves;
-          could do more to highlight discrimination power comparison
+        comment: Multiple OC curves illustrate discrimination power; shaded risk regions
+          guide viewer to key concepts; AQL/LTPD waypoints with labeled alpha/beta
+          values create clear narrative.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -126,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped OC curves computed via binomial CDF
+        comment: Correct OC curve chart type with smooth continuous S-shaped lines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AQL and LTPD reference lines; producer's and consumer's risk regions;
-          3 curves; correct x-axis range
+        comment: AQL and LTPD annotated with vertical reference lines; producer's
+          risk (alpha) and consumer's risk (beta) labeled with shaded regions and
+          annotated values; 3 sampling plans; x-axis 0-0.15 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Fraction defective on x, probability of acceptance on y; 300-point
-          smooth curves
+        comment: X = fraction defective (0-15%), Y = P(accept) (0-100%); binomial
+          CDF used correctly.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing 'python' language token — reads 'curve-oc · matplotlib
-          · anyplot.ai' instead of 'curve-oc · python · matplotlib · anyplot.ai'
+        passed: true
+        comment: Exact title 'curve-oc · python · matplotlib · anyplot.ai'; legend
+          labels match sampling plan identifiers.
     data_quality:
       score: 15
       max: 15
@@ -157,20 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three sampling plans, risk regions, AQL/LTPD lines, and annotated
-          risk values all present
+        comment: 'Comprehensive: 3 curves comparing sampling plans, risk regions,
+          reference lines, annotated risk values, percentage axes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Industry-standard values: AQL=2%, LTPD=10%; realistic sampling plans'
+        comment: AQL=2%, LTPD=10% are industry-standard values; n=50,80,100 c=1,2
+          are typical acceptance-sampling plan parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: x-axis 0-15% practical range; 300 points per curve for smooth lines
+        comment: 'X: 0-15% (practical defect-rate range for acceptance sampling);
+          Y: 0-100% probability; 300 points for smooth curves.'
     code_quality:
       score: 10
       max: 10
@@ -180,34 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, loop over plans, no unnecessary abstractions
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — binomial CDF and linspace
+        comment: Fully deterministic (mathematical computation, no random).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, math.comb, matplotlib.pyplot, matplotlib.ticker,
-          numpy'
+        comment: os, math.comb, matplotlib.pyplot, matplotlib.ticker, numpy — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic fill_between, axvline, annotate with arrowprops; no fake
-          interactivity
+        comment: math.comb over scipy is a clean stdlib choice; semantically clear
+          variable names; generator expression for binomial sum is appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, current matplotlib
-          API
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current matplotlib
+          3.11 API.
     library_mastery:
       score: 7
       max: 10
@@ -217,15 +227,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: All Axes methods; FuncFormatter and MultipleLocator for ticks; subplots_adjust
-          for padding
+        comment: Axes methods throughout; FuncFormatter for percentage ticks; MultipleLocator
+          for regular spacing; subplots_adjust for layout; plt.setp for batch legend
+          text.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fill_between for risk shading; axvline for threshold lines; annotate
-          with arrowprops; FuncFormatter for percentage display
+        comment: fill_between for risk shading; annotate with arrowprops for linked
+          text annotations; FuncFormatter + MultipleLocator for custom tick formatting
+          — good use of intermediate matplotlib features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,8 +245,8 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
