@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:44:15Z'
-updated: '2026-06-20T15:04:48Z'
+updated: '2026-06-20T15:14:47Z'
 generated_by: claude-sonnet
 workflow_run: 27874605753
 issue: 4552
@@ -12,131 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Full spec compliance: all required capability plot elements present and correctly
-    calculated (histogram, parametric normal fit, LSL/USL lines, target line, Cp/Cpk
-    annotation)'
-  - 'Excellent Imprint palette usage: semantic color assignments for spec limits (red
-    #AE3030), target (amber #DDCC77), and bars (brand green #009E73) are perfectly
-    motivated'
-  - Color-coded Cpk status (annotation box border + status label in matching color)
-    adds genuine data storytelling above default
-  - Shaded capability zones provide instant visual communication of in-spec vs. out-of-spec
-    regions
-  - 'Both themes fully correct: no dark-on-dark failures, backgrounds correct (#FAF8F1
-    light / #1A1A17 dark), data colors identical across themes'
-  - Clean code with proper seed (42), no bbox_inches='tight', correct canvas size
-    (3200x1800)
+  - 'Excellent spec coverage: every required element (histogram, parametric curve,
+    KDE, spec lines, target, Cp/Cpk annotation) is present and visually distinct'
+  - 'Smart semantic color use: red for out-of-spec regions, amber for the adequate
+    caution status — communicates process state without an extra legend entry'
+  - 'Status-reactive annotation border (color changes with capability tier: green/amber/red)
+    is a sophisticated storytelling touch'
+  - Perfect palette compliance across both themes; no dark-on-dark failures in either
+    render
+  - Clean, flat code structure; correct canvas sizing (3200x1800); reproducible seed
+    (np.random.seed(42))
   weaknesses:
-  - 'LM-02 limited (2/5): The visualization is ~80% matplotlib with seaborn contributing
-    mainly histplot and theming. Add sns.kdeplot alongside the scipy parametric normal
-    fit to showcase seaborn''s statistical estimation capability distinctively and
-    raise LM-02 from 2 to 3+'
-  - 'DE-01 polish gap (5/8): Status label ''Adequate'' is placed in the out-of-spec
-    zone to the right of USL (in the red-shaded region), which is spatially incongruous.
-    Relocate below the metrics annotation box or integrate as a 5th line in the metrics
-    box'
-  - 'DE-01 typography: Metrics annotation uses monospace font (functional but clinical);
-    consider reducing visual weight contrast between the annotation box and status
-    label for a more cohesive upper-right design region'
+  - Annotation monospace text at fontsize=8 is on the small side for a 3200x1800 canvas
+    — consider raising to fontsize=9 for better thumbnail readability
+  - 'LM-02: seaborn distinctive API is used but not fully exploited — the implementation
+    is mostly matplotlib with seaborn histplot/kdeplot on top; deeper library mastery
+    would use a seaborn figure-level approach'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface
-      Chrome: Title "histogram-capability · python · seaborn · anyplot.ai" fully visible at ~75% of plot width, dark ink. Axis labels "Tablet Weight (mg)" and "Density" with units, dark ink. Tick labels (485-515 x-axis, 0.00-0.25 y-axis) readable in INK_SOFT color. Legend upper-left with white/cream background. Metrics annotation box upper-right with amber border.
-      Data: Green (#009E73) histogram bars (25 bins, alpha=0.70). Blue (#4467A3) normal fit curve. Red (#AE3030) dashed LSL=490 and USL=510 lines. Amber (#DDCC77) dash-dot target=500 line. Subtle green shading inside spec zone, light red outside. "Adequate" amber text label below metrics box.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "histogram-capability · python · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Tablet Weight (mg)" and Y-axis label "Density" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt. Subtle y-axis grid lines at 15% alpha. Legend with ELEVATED_BG frame (#FFFDF6) upper left. Annotation box with ELEVATED_BG background and amber border upper right — all chrome readable.
+      Data: Green histogram bars (#009E73, Imprint pos 1) at alpha=0.70 with PAGE_BG edge. Blue parametric fit curve (#4467A3, linewidth=2.5). Cyan dotted empirical KDE (#2ABCCD, linewidth=2.0). Red dashed LSL/USL lines (#AE3030, linewidth=2.0). Amber dash-dot target line (#DDCC77, linewidth=2.0). Light red out-of-spec zones and light green in-spec zone shaded via axvspan. Annotation: Cp=1.28, Cpk=1.27, mu=500.09 mg, sigma=2.61 mg, Status: Adequate.
       Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8), fully readable. Axis labels and tick labels in light soft ink (#B8B7B0), all readable. Legend with dark elevated background (#242420) and light text. Metrics annotation box with dark elevated background and amber border, light text for values.
-      Data: Identical colors to light render — green bars, blue curve, red dashed lines, amber target. Out-of-spec shading visible but dimmer on dark surface. "Adequate" amber text visible and readable.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text light-colored against dark background
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light cream text (#F0EFE8), clearly readable. Axis labels and tick labels in appropriate light tones (#B8B7B0 for secondary). Legend box uses ELEVATED_BG (#242420). Annotation box uses ELEVATED_BG (#242420) with amber border. Grid lines in light ink at 15% alpha — subtle and appropriate. No dark-on-dark failures observed.
+      Data: All data colours identical to light render — green bars, blue parametric curve, cyan KDE, red spec limit lines, amber target line unchanged. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, labels 10pt, ticks 8pt,
-          legend/annotations 8pt). Readable in both themes. Title fits ~75% width
-          as expected.
+        comment: All text readable in both themes; annotation monospace at 8pt is
+          slightly small but legible at canvas scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend upper-left and metrics annotation box upper-right are well-separated.
-          No collision with data.
+        comment: Legend upper left and annotation box upper right well separated;
+          no text-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars with alpha=0.70 appropriate for 200 points. Normal
-          fit curve prominent at linewidth=2.5. All spec/target lines clearly visible.
+        comment: All five overlaid elements (histogram, parametric curve, KDE, spec
+          lines, target) clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimised. Line styles (dashed vs dash-dot)
-          provide redundant encoding.
+        comment: Imprint palette; semantic red for out-of-spec only; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good margins, balanced layout, nothing
-          clipped. No canvas-gate file present.
+        comment: Correct 3200x1800; good whitespace; title ~70% width; balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Tablet Weight (mg)'' and ''Density'' both descriptive with units.'
+        comment: Tablet Weight (mg) and Density with units; correct mandated title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bars #009E73 (first series correct). Normal fit #4467A3 (Imprint
-          pos 3). Spec limits #AE3030 (semantic red). Target #DDCC77 (amber anchor).
-          Backgrounds correct. Data colors identical across themes.'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; semantic colors
+          used correctly; both themes correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above well-configured default. Semantic color-coding of annotation
-          box border and status label shows design intent. Shaded capability zones
-          add depth. Not yet at publication-ready level — status label placement spatially
-          incongruous in out-of-spec zone.
+        comment: Semantic color use, shaded capability zones, dual-curve overlay,
+          status-reactive annotation border show clear design thinking
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Subtle y-grid (alpha=0.15). Elevated backgrounds
-          for legend and annotation box. Edge colors on bars. Clearly above minimal
-          defaults.
+        comment: Top/right spines removed; subtle y-axis grid at 15% alpha; elevated-background
+          legend and annotation properly styled
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shaded zones and color-coded status create visual hierarchy. Viewer
-          immediately understands process is in-spec but 'Adequate' not 'Capable'.
-          Color-coded annotation box border ties Cpk value to status.
+        comment: Shaded zones create visual narrative; amber annotation border communicates
+          adequate status; clear focal point on data vs spec limits
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct process capability plot: histogram + fitted normal + spec
-          limit lines + target line.'
+        comment: 'Correct: histogram with overlaid normal distribution, spec limits,
+          target, and capability annotations'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Histogram, normal distribution curve (scipy parametric), LSL/USL
-          lines, target line, Cp/Cpk/mean/sigma annotation all present.
+        comment: 'All features present: histogram, parametric normal fit (scipy),
+          empirical KDE (seaborn), LSL/USL lines, target line, Cp/Cpk'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: tablet weight (mg). Y: density. All 200 measurements visible
-          via histogram.'
+        comment: 'X: tablet weight (mg); Y: density; all 200 measurements represented'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-capability · python · seaborn · anyplot.ai' correct.
-          Legend shows Normal Fit, LSL=490 mg, USL=510 mg, Target=500 mg.
+        comment: Title matches mandated format exactly; legend labels all five overlaid
+          elements with values
     data_quality:
       score: 15
       max: 15
@@ -178,23 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: histogram, parametric fit, bilateral spec limits,
-          target, Cp/Cpk, mu/sigma, capability zones, status classification.'
+        comment: 'Comprehensive: histogram + parametric distribution + empirical KDE
+          + spec limits + target + shaded zones + full metrics annotation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pharmaceutical tablet weight QC is a real-world neutral engineering
-          scenario. 500 mg tablets with ±10 mg tolerance are realistic.
+        comment: Pharmaceutical tablet weight QC (target 500 mg, sigma~2.6 mg, n=200)
+          is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cp=1.28, Cpk=1.27, mean=500.09 mg, sigma=2.61 mg consistent with
-          seed(42) and stated parameters. 'Adequate' classification mathematically
-          correct for Cpk in [1.0, 1.33).
+        comment: 200 data points in recommended range; sigma=2.61 mg plausible; Cp=1.28/Cpk=1.27
+          yields realistic Adequate status
     code_quality:
       score: 10
       max: 10
@@ -204,36 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data → calculations
-          → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 6 imports used: os, matplotlib.pyplot, numpy, seaborn, matplotlib.lines.Line2D,
-          scipy.stats.norm.'
+        comment: All imports used (os, matplotlib, numpy, seaborn, Line2D, scipy.stats.norm)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for multi-layered capability plot. No over-engineering.
+        comment: Appropriate complexity; no fake UI; axvspan for shaded zones is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
-          APIs.
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -241,19 +218,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.histplot with stat='density' and ax parameter is correct seaborn
-          idiom. sns.set_theme with rc dict is idiomatic theming. Matplotlib supplementation
-          appropriate for features seaborn doesn't expose natively.
+        comment: sns.histplot with stat=density, sns.kdeplot, sns.set_theme with rc
+          dict, axes-level API — all idiomatic seaborn
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: histplot with stat='density' is seaborn-specific. However ~80% of
-          visualization is pure matplotlib. Adding sns.kdeplot for empirical vs. theoretical
-          distribution comparison would leverage seaborn's distinctive statistical
-          estimation strengths.
-  verdict: REJECTED
+        comment: Labels KDE as Empirical KDE (seaborn) to showcase density estimation;
+          could further leverage seaborn figure-level API
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -262,8 +236,9 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - kde
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
