@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-06-20
@@ -125,9 +125,9 @@ cl_lines = all_lines[all_lines["ltype"] == "CL"]
 ucl_lcl_lines = all_lines[all_lines["ltype"].isin(["UCL", "LCL"])]
 warn_lines = all_lines[all_lines["ltype"].isin(["UWL", "LWL"])]
 
-# Left-edge labels with de-overlap logic to reduce crowding
+# Right-edge labels with de-overlap logic to reduce crowding
 label_df = limit_lines.copy()
-label_df["sample"] = 0.0
+label_df["sample"] = n_samples + 0.5
 
 for chart_name in chart_order:
     mask = label_df["chart"] == chart_name
@@ -137,7 +137,7 @@ for chart_name in chart_order:
         label_df.loc[chart_labels.index, "y_label"] = vals
         continue
     chart_range = vals[-1] - vals[0]
-    min_gap = chart_range * 0.22
+    min_gap = chart_range * 0.30
 
     adjusted = vals.copy().astype(float)
     for i in range(1, len(adjusted)):
@@ -175,7 +175,7 @@ plot = (
     + labs(
         x="Sample Number",
         y="Measurement (mm)",
-        title="CNC Shaft Diameter Monitoring · spc-xbar-r · plotnine · pyplots.ai",
+        title="CNC Shaft Diameter Monitoring · spc-xbar-r · python · plotnine · anyplot.ai",
     )
     + theme_minimal()
     + theme(
@@ -188,7 +188,7 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
-        panel_spacing_y=0.3,
+        panel_spacing_y=0.05,
         axis_line=element_line(color=INK_SOFT, size=0.6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
