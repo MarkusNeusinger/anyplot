@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-parametric
 created: '2026-06-20T22:52:29Z'
-updated: '2026-06-20T23:00:26Z'
+updated: '2026-06-20T23:10:55Z'
 generated_by: claude-sonnet
 workflow_run: 27886180618
 issue: 4424
@@ -12,48 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-para
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Creative gradient direction encoding using paired Imprint palette hues (green→blue
-    for Lissajous, lavender→ochre for spiral) — per-point scatter color is the idiomatic
-    Highcharts approach for this technique
-  - Informative subtitle explicitly explains the color-direction encoding, and start/end
-    markers with dataLabel annotations (t=0 circle, t=4π diamond) provide strong directional
-    anchors
-  - 'Perfect spec compliance: both required curves (Lissajous 3:2 and Archimedean
-    spiral), equal-aspect square canvas, color-gradient direction cue, and labeled
-    traversal endpoints all present'
-  - Deterministic trigonometric data generation with 900 points per curve ensures
-    smooth rendering; turboThreshold:0 correctly enables per-point color at high density
-  - 'Theme-adaptive chrome fully wired: tok.ink, tok.inkSoft, tok.grid used throughout;
-    transparent background renders correctly on both #FAF8F1 and #1A1A17 surfaces'
+  - Creative per-point color gradient encoding traversal direction using Imprint palette
+    colors (green to blue for Lissajous, lavender to ochre for spiral)
+  - 'Both required curve types implemented: Lissajous 3:2 and Archimedean spiral'
+  - Proper square canvas orientation for equal-aspect parametric curves
+  - Full theme-adaptive chrome — background transparent, all labels use tok.ink/inkSoft
+    tokens, identical data colors in light and dark
+  - 'turboThreshold: 0 and enableMouseTracking: false show good Highcharts idiomatic
+    awareness for dense data'
+  - Descriptive subtitle explains gradient encoding; start and end markers annotate
+    traversal direction
+  - Clean deterministic code — pure trigonometric math, no randomness
   weaknesses:
-  - 'Highcharts default plot-area frame is visible in both renders — the rectangular
-    border around the scatter area is boxy and adds visual noise; add `chart.plotBorderWidth:
-    0` to remove it and give a cleaner open-axis look'
-  - Scatter markers at radius:2 produce a slightly dotted rather than fully continuous
-    curve appearance — increasing to radius:3 (or 2.5) would close visible gaps between
-    dots, especially on the outer spiral arm
-  - The t=0 origin marker sits at the exact convergence point of both curves (the
-    Lissajous passes through (0,0) multiple times, the spiral begins there), creating
-    a visually crowded cluster that reduces legibility of the 't = 0' label; a larger
-    offset or a subtle opaque label background would improve readability
+  - Scatter dots (radius 3) with 900 points create a dotted/grainy curve appearance
+    instead of smooth lines; the spec calls for smooth curves — consider increasing
+    point density to 2000+ or reducing marker radius to 2 so dots pack more tightly
+    and the visual reads as a continuous curve
+  - 'The ''t = 4pi'' end-label at (1.0, 0) with x offset +5 sits very close to the
+    right chart edge given the 40px CSS right margin; nudge the label left (x: -5,
+    y: -18) or increase right margin to 60px to eliminate clipping risk'
+  - Legend item names are very long ('Lissajous 3:2   x = sin(3t),  y = sin(2t)')
+    and may wrap at small display widths — consider shortening to 'Lissajous (3:2)'
+    and 'Archimedean Spiral'
+  - Lissajous is a closed curve that ends at the same origin as t=0; adding a distinct
+    end marker at t=2pi on the Lissajous (offset slightly) would fully satisfy the
+    spec's 'label start and end points' for both curves
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Bold title "line-parametric · javascript · highcharts · anyplot.ai" fully readable in dark ink at top. Subtitle "Color gradient encodes direction of traversal — bright = t start, deep = t end" visible in muted secondary text. Axis labels x(t) / y(t) in secondary ink, tick labels (-1.5 through 1.5 on both axes) all clear. Legend at bottom shows two entries with formula text — readable at this size.
-      Data: Lissajous 3:2 figure rendered as teal-to-blue gradient dotted curve (green #009E73 → blue #4467A3), clearly forming the characteristic figure-eight. Archimedean spiral rendered as lavender-to-ochre gradient curve (#C475FD → #BD8233), visibly expanding outward from origin. Start marker (dark circle) at (0,0) with 't = 0' label offset up-right. Spiral end marker (ochre diamond) at (1,0) with 't = 4π' label. Both markers prominent. Dotted zero-crossing axes add mathematical context.
-      Legibility verdict: PASS — all text readable against warm off-white background. Minor visual crowding at origin where both curves converge.
+      Background: Warm off-white consistent with #FAF8F1 — NOT pure white, correct.
+      Chrome: Title "line-parametric · javascript · highcharts · anyplot.ai" in dark ink, clearly readable. Subtitle in softer dark tone, readable. Axis titles "x(t)" and "y(t)" in tok.inkSoft, readable. Tick labels at 14px, readable. Legend at bottom with two long series names, readable though tight. Data labels "t = 0" and "t = 4pi" visible.
+      Data: Lissajous 3:2 rendered as scatter dots with a smooth green-to-blue gradient (brand green #009E73 at t=0 transitioning to blue #4467A3 at t=2pi). Archimedean spiral rendered similarly with lavender-to-ochre gradient. Both curves form recognizable shapes. Dotted reference lines at x=0 and y=0 (Dot dashStyle). Start marker (gray circle) at origin labeled "t = 0"; diamond end marker at (1.0, 0) labeled "t = 4pi".
+      Legibility verdict: PASS — all text is readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title rendered in light ink (#F0EFE8 equivalent), fully visible and bold against dark background. Subtitle in lighter secondary tone — readable. Axis labels and tick labels in tok.inkSoft (adapts to ~#B8B7B0 in dark) — all clearly legible. Legend text at bottom is light-colored and readable. No dark-on-dark text failures detected.
-      Data: Gradient colors are identical to light render — Lissajous shows same green-to-blue gradient, spiral shows same lavender-to-ochre gradient. Both curves distinguishable. Start marker (circle with light border from tok.ink) visible. Spiral end marker (ochre diamond) visible. Brand green #009E73 clearly visible at Lissajous curve start region.
-      Legibility verdict: PASS — all text readable against warm near-black background. Data colors identical between themes. No dark-on-dark failures.
+      Background: Warm near-black consistent with #1A1A17 — NOT pure black, correct.
+      Chrome: Title in light ink (#F0EFE8 equivalent), clearly readable against dark background. Subtitle in lighter secondary color, readable. Axis titles and tick labels adapted to light-on-dark tokens — no dark-on-dark failures detected. Legend text readable.
+      Data: Colors are IDENTICAL to the light render — same green-to-blue gradient on Lissajous, same lavender-to-ochre gradient on spiral. Brand green #009E73 clearly visible as start of Lissajous gradient. Markers and labels adapted correctly.
+      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -61,91 +62,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout (title 22px, subtitle 13px,
-          axis titles 16px, tick labels 14px, legend 13px, data labels 13px). All
-          text readable in both themes. Minor: data label ''z = 0'' in crowded origin
-          region is slightly tight but still legible.'
+        comment: Title, axis labels, tick labels all readable in both themes. Legend
+          text at 13px and data labels at 13px are slightly small but still legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean. Minor visual crowding at origin (0,0) where both curves
-          converge multiple times and the start marker sits — 't = 0' label offset
-          helps but the area is visually busy.
+        comment: No critical overlaps. Long legend names are potentially tight side-by-side
+          but fit. Curves overlap by design (parametric math). Start label 't = 0'
+          at origin is slightly crowded by the two overlapping curves.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: 900-point scatter per curve with radius:2 forms visibly continuous-looking
-          gradient curves. Start/end markers at radius:7 are prominent. Gradient direction
-          clearly perceptible.
+        comment: Curves are visible but appear dotted/grainy due to scatter dots with
+          radius 3. 900 points create visible gaps especially in faster-changing portions
+          near cusps. Smooth curve appearance would require higher density or smaller
+          dots.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette pairs (green/blue and lavender/ochre) are CVD-safe
-          distinct hue families. Start/end markers use shape redundancy (circle vs
-          diamond) in addition to color.
+        comment: Gradient colors from Imprint palette are CVD-safe. Green-to-blue
+          and lavender-to-ochre transitions are distinguishable. No red-green sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) correct for symmetric mathematical plot.
-          Explicit margin [90,40,90,75] gives balanced space. Chart fills canvas well.
-          No overflow or clipping.
+        comment: 'Square orientation correct for equal-aspect parametric curves. Canvas
+          size uses anyplot-orientation: square. The ''t = 4pi'' label at (1.0, 0)
+          with +5px offset is very close to right edge with only 40px CSS margin.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x(t) and y(t) are the canonical axis labels for parametric plots
-          — correct mathematical notation, no units needed (dimensionless). Title
-          in correct format.
+        comment: Title uses correct format. Axis labels x(t) and y(t) are appropriate
+          for parametric coordinates.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Gradient starts at #009E73 (brand green, slot 1) for Lissajous;
-          uses Imprint palette members for all gradient endpoints (#009E73→#4467A3,
-          #C475FD→#BD8233). Backgrounds #FAF8F1/#1A1A17 correct. All chrome tokens
-          theme-adaptive.'
+        comment: 'First series (Lissajous) starts at brand green #009E73. All gradient
+          colors use Imprint palette hex values. Backgrounds #FAF8F1 light / #1A1A17
+          dark. Data colors identical across themes. Chrome uses tok tokens.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: the gradient direction encoding is
-          a genuinely creative and informative design choice. Two distinct Imprint
-          palette gradient pairs for the two curve types add visual richness. The
-          Highcharts plot-area frame remains visible (default behavior not overridden),
-          limiting polish.'
+        comment: Creative per-point gradient coloring conveys direction elegantly.
+          Two mathematically distinct curve types chosen. Subtitle explains the encoding.
+          Raises above default 4.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Zero-crossing dotted plotLines are a refined mathematical touch.
-          Explicit margins set. However, the default Highcharts plot border frame
-          is present (chart.plotBorderWidth not set to 0), giving a slightly boxy
-          appearance compared to a borderless open layout.
+        comment: Background transparent (uses page bg), credits disabled, dotted reference
+          lines at x=0 y=0 add subtle mathematical context, grid not dominant. Raises
+          above default 2.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: The gradient-as-direction-cue is clear visual storytelling, reinforced
-          by the subtitle. Start/end markers provide narrative anchors. Two contrasting
-          curve types (closed Lissajous vs expanding spiral) showcase the space of
-          parametric curves.
+        comment: Gradient direction encoding tells the story of parametric motion.
+          Start/end markers anchor the narrative. Subtitle provides interpretation.
+          Raises above default 2.
     spec_compliance:
       score: 15
       max: 15
@@ -155,58 +149,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot using Highcharts scatter with per-point
-          color — idiomatic Highcharts approach for gradient-colored curves.
+        comment: Parametric curve plot correctly implemented using scatter series
+          with per-point colors.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: equal aspect ratio (square canvas, equal
-          axes), color gradient encoding direction, both Lissajous (3:2) and Archimedean
-          spiral curves, start/end point labeling.'
+        comment: Two curves (Lissajous + spiral), color gradient along curve, start/end
+          point labels, equal aspect ratio (square canvas), sufficient point density.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) on x-axis, y(t) on y-axis. Equal ranges -1.25 to 1.25. All data
-          visible within bounds.
+        comment: x=sin(3t)/y=sin(2t) Lissajous and x=(t/4pi)cos(t)/y=(t/4pi)sin(t)
+          spiral correctly mapped. Axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-parametric · javascript · highcharts · anyplot.ai' matches
-          required format exactly. Legend labels include curve type and formula.
+        comment: Title 'line-parametric · javascript · highcharts · anyplot.ai' correct.
+          Legend labels include mathematical formulas.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Two curve types covering the spec: closed Lissajous figure (demonstrates
-          self-intersection, loops) and Archimedean spiral (demonstrates expansion,
-          continuous growth). Direction encoded by gradient.'
+        comment: 'Shows Lissajous (self-intersecting) and Archimedean spiral (outward
+          growth). Direction gradient, start/end annotation. Minor: Lissajous closed
+          curve not given its own end marker.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Classical mathematical curves used in physics (Lissajous: frequency
-          ratio analysis) and engineering (Archimedean spiral: antenna design, natural
-          growth). Scientifically accurate and neutral context.'
+        comment: Classical mathematical curves, neutral educational context, no controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous bounded in [-1,1]×[-1,1] correct. Spiral radius normalized
-          to [0,1]. 900 points per curve ensures smooth rendering. Axis range -1.25
-          to 1.25 gives appropriate padding.
+        comment: '[-1.25, 1.25] range appropriate for normalized parametric curves.
+          900 points per curve adequate. Curves fill the plot area well.'
     code_quality:
       score: 10
       max: 10
@@ -216,38 +207,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: helper functions → data generation → chart config.
-          Helper functions (hexToRgb, lerpHex) are minimal and necessary for the gradient
-          encoding feature.'
+        comment: Small helper functions (hexToRgb, lerpHex) are necessary for the
+          gradient approach. Mostly flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — data generated from trigonometric functions
-          with no randomness.
+        comment: Pure trigonometric math, fully deterministic, no random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses only window globals (ANYPLOT_TOKENS, Highcharts).
-          All code is self-contained.
+        comment: No imports; uses only window.ANYPLOT_TOKENS and Highcharts globals
+          as expected.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the gradient technique. No fake UI or
-          over-engineering. The per-point color loop is the correct approach.
+        comment: Color interpolation logic is clean. Code organized into clear data
+          and chart sections.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Highcharts.chart('container', ...) correctly. animation:false
-          in both required places. credits:{ enabled:false }. Square orientation directive
-          present.
+        comment: 'Highcharts.chart(''container'', ...) correct. animation: false set.
+          credits disabled. Harness handles file output.'
     library_mastery:
       score: 7
       max: 10
@@ -257,26 +245,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct Highcharts patterns: chart.animation:false, plotOptions.series.animation:false,
-          turboThreshold:0 for per-point color at 900 pts, enableMouseTracking:false
-          for static renders. plotLines for zero-crossing axes is proper API usage.'
+        comment: 'Uses scatter for per-point coloring (best available gradient approach
+          in Highcharts core), plotLines for reference axes, dataLabels for annotations,
+          turboThreshold: 0, enableMouseTracking: false.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point color property in Highcharts scatter (each data point has
-          its own color) is a Highcharts-specific capability. plotLines for dotted
-          zero axes and marker symbol variety (circle/diamond) are also library-specific
-          features used meaningfully.
-  verdict: REJECTED
+        comment: Per-point color objects in scatter data array create the gradient
+          effect. plotLines with Dot dashStyle as mathematical reference axes. Custom
+          start/end markers with dataLabels styling.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - annotations
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap

@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-parametric: Parametric Curve Plot
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-20
+// Quality: 85/100 | Created: 2026-06-20
 
 //# anyplot-orientation: square
 
