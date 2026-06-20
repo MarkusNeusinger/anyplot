@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 80, right: 260, bottom: 80, left: 90 };
+const margin = { top: 80, right: 310, bottom: 80, left: 90 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -48,8 +48,8 @@ const g = svg.append("g")
 const x = d3.scaleLinear().domain([0, 12]).range([0, iw]);
 const y = d3.scaleLinear().domain([0, 100]).range([ih, 0]);
 
-// Y-axis gridlines at 20-point intervals
-[20, 40, 60, 80, 100].forEach(val => {
+// Y-axis gridlines (40–100 only; 20% is reserved for the reference line to stand alone)
+[40, 60, 80, 100].forEach(val => {
   g.append("line")
     .attr("x1", 0).attr("x2", iw)
     .attr("y1", y(val)).attr("y2", y(val))
@@ -57,7 +57,7 @@ const y = d3.scaleLinear().domain([0, 100]).range([ih, 0]);
     .attr("stroke-width", 1);
 });
 
-// Reference line at 20% retention threshold
+// Dashed reference line at 20% retention threshold
 g.append("line")
   .attr("x1", 0).attr("x2", iw)
   .attr("y1", y(20)).attr("y2", y(20))
@@ -66,7 +66,6 @@ g.append("line")
   .attr("stroke-dasharray", "8,6")
   .attr("opacity", 0.65);
 
-// Label placed at left edge where all lines are near 100%, leaving room below the dashes
 g.append("text")
   .attr("x", 6)
   .attr("y", y(20) - 10)
@@ -81,7 +80,7 @@ const lineGen = d3.line()
   .y(d => y(d.retention))
   .curve(d3.curveMonotoneX);
 
-// Draw oldest cohort first so newest (May 2025, brand green) sits on top
+// Draw lines oldest-first so newest (May 2025, brand green) renders on top
 [...cohorts].reverse().forEach(c => {
   g.append("path")
     .datum(c.values)
@@ -92,6 +91,32 @@ const lineGen = d3.line()
     .attr("stroke-linecap", "round")
     .attr("opacity", c.opacity)
     .attr("d", lineGen);
+});
+
+// Circle markers at every data point via D3 join pattern (newest cohort on top)
+[...cohorts].reverse().forEach(c => {
+  g.selectAll(null)
+    .data(c.values)
+    .join("circle")
+    .attr("cx", d => x(d.week))
+    .attr("cy", d => y(d.retention))
+    .attr("r", 3)
+    .attr("fill", c.color)
+    .attr("opacity", c.opacity);
+});
+
+// Inline end-of-line labels at week 12 — direct D3 SVG text placement
+cohorts.forEach(c => {
+  const last = c.values[c.values.length - 1];
+  g.append("text")
+    .attr("x", x(12) + 9)
+    .attr("y", y(last.retention))
+    .attr("dominant-baseline", "middle")
+    .attr("fill", c.color)
+    .attr("opacity", Math.min(c.opacity + 0.2, 1.0))
+    .style("font-size", "11px")
+    .style("font-weight", "700")
+    .text(c.label.replace(" 20", " '"));
 });
 
 // Axes
@@ -106,10 +131,11 @@ const yAxis = g.append("g")
     .tickValues([0, 20, 40, 60, 80, 100])
     .tickFormat(d => `${d}%`));
 
+// Remove domain lines and tick marks for clean axis aesthetic
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
-  ax.selectAll("line").attr("stroke", t.grid);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.selectAll(".tick line").remove();
+  ax.select(".domain").remove();
 }
 
 // Axis labels
@@ -131,7 +157,7 @@ g.append("text")
   .text("Retention Rate (%)");
 
 // Legend centered vertically within the chart area
-const legendX = iw + 24;
+const legendX = iw + 80;
 const legendStartY = Math.round((ih - cohorts.length * 46) / 2);
 
 cohorts.forEach((c, i) => {
