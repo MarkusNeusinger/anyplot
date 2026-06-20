@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-growth-percentile
 created: '2026-06-20T09:48:38Z'
-updated: '2026-06-20T09:59:19Z'
+updated: '2026-06-20T10:14:09Z'
 generated_by: claude-sonnet
 workflow_run: 27866849084
 issue: 4555
@@ -12,59 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-grow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Complete implementation: all 7 percentile curves (P3, P10, P25, P50, P75, P90,
-    P97) present with right-margin labels'
-  - Patient trajectory correctly overlaid in brand green (#009E73) with markers —
-    clear visual contrast against the blue reference curves
-  - P50 median curve correctly emphasized (thicker lineWidth=2.5, bold data label)
-  - 'Excellent data quality: WHO-approximate boys weight-for-age values are realistic
-    and factually accurate'
-  - Stacked areaspline approach correctly fills the area between P3 and P97 using
-    Highcharts core (no add-on modules needed)
-  - 'Theme-adaptive chrome properly applied: t.ink / t.inkSoft / t.grid tokens used
-    throughout; backgroundColor: transparent'
-  - Title correctly formatted with descriptive prefix and scaled font size (18px for
-    84-char title)
-  - 'Clean, idiomatic Highcharts code: stacking, spline smoothing, dataLabel formatters
-    for right-margin labeling'
-  - 'Perfect data quality score: realistic WHO pediatric scenario with no abstract
-    labels'
+  - 'Precise clinical design: blue Imprint tones for reference bands with graduated
+    alpha (darker at extremes, lighter near median) — matches spec intent perfectly'
+  - 'Thoughtful stacked areaspline + overlaid spline combination: bands fill inter-percentile
+    regions accurately while spline curves draw at exact percentile y-values'
+  - Right-margin P-labels (P3–P97) via dataLabels.formatter eliminate the need for
+    a separate legend — direct labeling on the curves is best practice for a growth
+    chart
+  - P50 visually emphasized with thicker lineWidth (2.5) and bold label, creating
+    a clear focal point / clinical reference anchor
+  - Patient trajectory in brand green (#009E73) provides high-contrast separation
+    from the blue reference data — immediately communicates the individual-vs-population
+    story
+  - 'Complete spec compliance: all 7 percentile bands, direct labeling, gender-specific
+    coloring, patient data with markers, realistic WHO weight-for-age reference values,
+    correct title format'
   weaknesses:
-  - 'Gradient fill intensity is REVERSED versus the spec. Spec says ''darker near
-    extremes, lighter near median'' but the implementation does the opposite: P25-P50
-    gets alpha=0.26 (darkest) and P90-P97 gets alpha=0.09 (lightest). Fix: swap the
-    alpha gradient — extremes (P3-P10, P90-P97) should use highest alpha (~0.35-0.40),
-    and the bands closest to P50 should use lowest alpha (~0.10-0.14).'
-  - 'Band fills are too subtle overall — alpha values range from only 0.09 to 0.26.
-    On the warm off-white light background these are barely distinguishable from the
-    background, especially the outer bands. Increase the overall alpha range: extremes
-    at ~0.35-0.40, near-median at ~0.12-0.15.'
-  - Design excellence is limited by the barely-visible band fills — the key visual
-    feature (graduated percentile bands) is not delivering its intended clinical readability.
-    A reader at small sizes or with reduced contrast cannot easily see the percentile
-    regions.
-  - 'DE-01 could be improved: consider adding a subtle annotation (e.g., ''Patient
-    tracking 75th-90th percentile'') to create stronger data storytelling and guide
-    the viewer to the clinical insight immediately.'
+  - 'Missing `colors: t.palette` at the Highcharts top-level config — explicitly required
+    by the highcharts library rules; add `colors: t.palette` alongside the chart options
+    so the palette cycles correctly if any future series omit explicit colors'
+  - 'P3 and P10 right-margin labels are close together (0.9 kg gap in a 17 kg range
+    chart), appearing slightly crowded at the lower right of the chart — consider
+    applying a small `y` offset on the P3 label (e.g., `y: 14`) to push it slightly
+    below the P10 label and prevent visual crowding'
+  - Inner percentile bands (P25–P50 and P50–P75) use alpha=0.13 of rgba(68,103,163),
+    which blends very close to the dark background (#1A1A17) and becomes nearly invisible
+    in the dark render — consider raising the minimum alpha to 0.18–0.20 for the inner
+    bands to maintain graduated visibility in both themes
+  - 'Design Excellence is good but not refined: the chart retains Highcharts'' default
+    outer plot border; adding `chart.plotBorderWidth: 0` and cleaning up the axis
+    line color for a fully L-shaped frame would push DE-02 higher'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "Boys Weight 0–36 mo · line-growth-percentile · javascript · highcharts · anyplot.ai" displayed in dark ink at scaled ~18px, fully readable. Y-axis "Weight (kg)" and X-axis "Age (months)" labels visible in inkSoft at 16px. Tick labels at 14px, clear. Right-margin labels P3 through P97 (P50 in bold) fully visible within the marginRight=58 gutter. No text is "light on light."
-      Data: Seven ascending spline curves in Imprint blue (#4467A3) at varying alpha (subtle but distinguishable). P50 thicker (lineWidth=2.5) and bold-labeled. Graduated fill bands visible between P3 and P97 but with very low alpha (0.09–0.26) making them barely distinguishable from the background — lighter blue-grey wedge visible. Patient trajectory plotted in brand green (#009E73) with triangle markers (radius=6), tracking between P75 and P90, clearly contrasting with the blue reference curves.
-      Band gradient: Fill is DARKEST near median (P25–P50 at alpha=0.26) and LIGHTEST at extremes (P90–P97 at alpha=0.09) — OPPOSITE of the spec requirement (darker near extremes).
-      Legibility verdict: PASS — all text readable at full size and scaled down.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Boys Weight 0–36 mo · line-growth-percentile · javascript · highcharts · anyplot.ai" in dark ink at top; Y-axis label "Weight (kg)" and X-axis label "Age (months)" in dark-secondary ink; tick labels for months (0–36) and weights (2–19) clearly visible; P-labels P3, P10, P25, P50 (bold), P75, P90, P97 shown at the right margin aligned to each curve at age 36 — all readable
+      Data: Seven percentile bands filled with rgba(68,103,163,alpha) — alpha 0.38 on outermost bands (P3–P10, P90–P97) grading to 0.13 on inner bands (P25–P50, P50–P75); thin blue spline curves drawn at exact percentile y-values; P50 emphasized with thicker 2.5px line; patient trajectory in brand green (#009E73) with circular markers at well-child visit ages; graduated fan shape expands from narrow at birth to wide at 36 months
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and percentile data labels all render in light/white text — no dark-on-dark failure detected. All text clearly readable against the dark background. No "black text on near-black" issue.
-      Data: Patient line remains the same brand green (#009E73) — identical to light render. Blue reference curves and fills appear as slightly brighter blue against the dark background, more visible than in the light render. Data colors confirmed identical between light and dark themes; only the chrome (background, text, grid) flips.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, and P-labels all rendered in light-colored text (t.ink / t.inkSoft tokens); P50 label bold and visible; all labels clearly readable against the dark surface; no dark-on-dark text issues
+      Data: Band fills appear as subtle dark-blue tones against the near-black background — outer bands (alpha 0.38) are more visible, inner bands (alpha 0.13) are very subtle but present; spline curves visible as slightly lighter blue-gray lines; patient trajectory green (#009E73) remains bright and clearly identifiable; data colors are identical to light render — only chrome flips
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures; inner bands are very subtle in dark mode (a minor visual weakness but not a legibility failure)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -72,61 +67,62 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 18px, axis titles 16px, tick
-          labels 14px, data labels 12-13px). Readable in both themes. Title proportions
-          good (~75% width). Minor deduction: rightLabel data labels at 12px are at
-          the lower end of readability when scaled down.'
+        comment: 'All font sizes explicitly set via t.ink/t.inkSoft tokens; title
+          scaled to 18px for long 83-char string (correct formula); all text readable
+          in both themes. Slight deduction: title at 18px is marginally smaller than
+          the ideal 22px default, though proportionally correct for the title length.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Right-margin labels (P3-P97) are vertically stacked without overlap.
-          No text collides with data elements. marginRight=58 provides adequate space.
+        comment: 'No significant overlaps. Minor: P3 and P10 right-margin labels are
+          0.9 kg apart in a 17 kg range, appearing slightly crowded at the lower right.
+          allowOverlap:true prevents hard collision but labels are visually tight.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Patient line and markers clearly visible. Percentile curves visible
-          though thin. Band fills are very subtle (alpha 0.09-0.26 on off-white) —
-          barely distinguishable from background. Main data elements readable but
-          graduated bands could be more prominent.
+        comment: Band fills visible in light render with clear graduation; patient
+          markers (radius:6) well-sized for 8 data points; spline curves appropriately
+          thin. Inner bands (alpha=0.13) become very subtle in dark mode — not invisible
+          but reduced contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) patient line contrasts well against blue (#4467A3)
-          reference curves. Both Imprint palette colors are CVD-safe. No red-green
-          conflict.
+        comment: Brand green (#009E73) vs Imprint blue (#4467A3) provides CVD-safe
+          contrast. Patient trajectory distinguishable from reference bands in both
+          themes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Landscape orientation fits the time-series growth chart well. Chart
-          fills the canvas appropriately. marginRight=58 reserves space for right-margin
-          labels. No content cut off.
+        comment: Landscape canvas, good proportions, marginRight:58 provides space
+          for P-labels. P-labels appear close to the right canvas edge with limited
+          breathing room.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Weight (kg)'' — descriptive with units. X-axis: ''Age
-          (months)'' — descriptive with units.'
+        comment: 'X-axis: ''Age (months)'' with units; Y-axis: ''Weight (kg)'' with
+          units; descriptive title with spec-id, language, library, anyplot.ai.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Patient (primary series) uses #009E73 (Imprint brand green) as first
-          categorical color. Band fills use Imprint blue (#4467A3) at varying alpha
-          — appropriate for graduated continuous fill. Light render background is
-          warm off-white, dark render is near-black. Chrome (text, grid) correctly
-          theme-adaptive via ANYPLOT_TOKENS. Data colors identical between themes.'
+        comment: 'Patient trajectory correctly uses #009E73 (Imprint brand green).
+          Reference bands use #4467A3 (Imprint blue, position 3) at varying alpha
+          — semantically appropriate for ''blue tones for boys'' spec requirement.
+          Backgrounds: #FAF8F1 (light) via transparent + pageBg; #1A1A17 (dark). Chrome
+          tokens t.ink/t.inkSoft correctly applied in both themes.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -134,32 +130,30 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default clinical chart aesthetic: blue-tone palette for boys,
-          right-margin labels instead of legend, graduated fills, emphasized median.
-          However, gradient direction is wrong (darker near median, not extremes as
-          spec requires), reducing the clinical readability. Thoughtful design but
-          not publication-ready.'
+        comment: Above the default (4). Clinical design with blue tones for boys,
+          graduated alpha for band intensity, P50 emphasis, contrasting green patient
+          trajectory. Thoughtful and appropriate for the medical context. Not quite
+          at 6 ('strong design') as the overall aesthetic remains somewhat library-standard.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No legend (replaced by right-margin data labels). No x-axis grid
-          lines (gridLineWidth:0). Subtle y-axis grid. Spline smoothing for natural
-          growth curves. Right-margin label styling differentiates P50 (bold ink)
-          from others (inkSoft). Good refinement above defaults.
+        comment: X-axis gridlines removed (gridLineWidth:0); Y-axis grid subtle (t.grid
+          token); legend replaced with direct P-labels on curves; tooltip disabled.
+          Above default (2) refinement, but Highcharts' default outer plot frame remains
+          and could be cleaned up with chart.plotBorderWidth:0.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear patient tracking story: a boy growing between P75-P90 (healthy,
-          above-average trajectory). Green patient line vs. blue reference creates
-          strong visual hierarchy. P50 emphasis guides reader. Visual hierarchy present
-          and effective, though an explicit annotation about the patient''s percentile
-          range could strengthen the storytelling.'
+        comment: 'Clear visual hierarchy: P50 (thicker, bold label) serves as the
+          clinical median anchor; patient trajectory in high-contrast green immediately
+          draws the eye; graduated band fills communicate risk zones without clutter.
+          Story of individual-vs-population is immediately apparent.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -167,35 +161,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct WHO/CDC-style pediatric growth chart: smooth percentile
-          curves overlaid with individual patient trajectory.'
+        comment: WHO/CDC-style growth chart with 7 percentile bands and individual
+          patient overlay — correct chart type, all subtypes present.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Present: all 7 percentile curves, filled bands between curves, emphasized
-          P50 median, blue tones for boys, right-margin percentile labels, patient
-          overlay in contrasting color. Missing/wrong: gradient direction REVERSED
-          — spec says ''darker near extremes, lighter near median'' but implementation
-          has darkest fill near P25-P50 (alpha=0.26) and lightest at P90-P97 (alpha=0.09).'
+        comment: 'All required features: 7 percentile bands (P3/P10/P25/P50/P75/P90/P97),
+          graduated color intensity (darker extremes, lighter median), P50 emphasized,
+          blue tones for boys, right-margin P-labels, patient trajectory with markers
+          in contrasting color, realistic WHO data.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Age (months) correctly on x-axis. Weight (kg) correctly on y-axis.
-          Patient data correctly mapped via category index.
+        comment: 'X-axis: age in months (0–36); Y-axis: weight in kg (2–19 range);
+          realistic WHO weight-for-age reference values for boys with clinically plausible
+          patient trajectory between P75 and P90.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title follows ''{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'' format: ''Boys Weight 0–36 mo · line-growth-percentile ·
-          javascript · highcharts · anyplot.ai''. Font scaled to 18px for 84-char
-          title (min 16px enforced). No separate legend needed — right-margin labels
-          serve this role.'
+        comment: 'Title: ''Boys Weight 0–36 mo · line-growth-percentile · javascript
+          · highcharts · anyplot.ai'' — correct {Descriptive Title} · {spec-id} ·
+          {language} · {library} · anyplot.ai format. Legend disabled; P-labels shown
+          directly on curves.'
     data_quality:
       score: 15
       max: 15
@@ -205,26 +198,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 7 percentile curves spanning P3-P97, graduated
-          fills between them, individual patient trajectory with well-child visit
-          measurements, right-margin percentile labels, emphasized P50 median.'
+        comment: 'Shows all aspects: 7 percentile reference curves with filled bands,
+          individual patient data at 8 well-child visits, time progression from birth
+          to 36 months, clear visualization of patient trajectory relative to population
+          reference.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Clear, neutral pediatric scenario: WHO boys weight-for-age reference
-          data 0-36 months. Clinically appropriate context with realistic well-child
-          visit measurements.'
+        comment: WHO weight-for-age reference data for boys is clinically neutral
+          and widely recognized. Well-child visit schedule (0, 3, 6, 9, 12, 18, 24,
+          36 months) is standard pediatric practice. Patient trajectory between P75
+          and P90 is realistic and healthy. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Birth weights 2.5-4.5 kg (P3-P97) and 36-month weights 10.7-17.7
-          kg align with actual WHO growth standards. Patient values (3.6 kg at birth
-          → 15.4 kg at 36 months) correctly fall between P75-P90, representing a healthy
-          above-average boy.
+        comment: Weight range 2–19 kg for boys aged 0–36 months aligns with WHO standards.
+          Patient values (3.6 kg at birth to 15.4 kg at 36 months) are medically plausible.
+          Y-axis minimum of 2 kg provides appropriate buffer below P3 at birth.
     code_quality:
       score: 10
       max: 10
@@ -234,66 +228,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: orientation directive → tokens → data → helpers
-          → band series → curve series → chart call. rightLabel helper is compact
+        comment: 'Linear structure: data definition → delta helpers → series builders
+          → chart call. Two small utility closures (delta, rightLabel) are minimal
           and appropriate.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded as literal arrays. No random generation. Fully
-          deterministic.
+        comment: All data hardcoded — fully deterministic, no random data generation
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only ANYPLOT_TOKENS and ANYPLOT_THEME globals. No unused references.
+        comment: No imports in browser JS; uses only window.ANYPLOT_TOKENS, window.ANYPLOT_THEME,
+          and Highcharts globals — all correctly used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized JS. Uses .map() to build series arrays elegantly.
-          No fake UI or over-engineering.
+        comment: Band and curve series built elegantly with .map(). Title font scaling
+          computed inline. No fake interactive elements. Well-commented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Calls Highcharts.chart(''container'', {...}). Harness handles plot-light/dark.png
-          and .html output. No explicit width/height on chart. animation: false set
-          on both chart and series level.'
+        comment: Renders via Highcharts harness to plot-light.png/dark.png and plot-light.html/dark.html.
+          Current Highcharts 12.6.0 API. No deprecated methods.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent idiomatic Highcharts: correct stacking with ''normal''
-          mode, spline type for smooth curves, areaspline for fills, dataLabels with
-          formatter function for right-margin labels, marginRight for label space,
-          transparent backgroundColor, credits disabled. All Highcharts patterns correct.'
+        comment: 'Correctly uses animation:false, credits disabled, transparent backgroundColor,
+          theme tokens, marginRight for right-margin labels, categorical xAxis with
+          string categories. Deduction: missing `colors: t.palette` at top level —
+          explicitly required by library rules.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts-specific stacked areaspline (no external math lib
-          needed for band fills), dataLabel formatter function for conditional right-margin
-          labeling, dual series types (areaspline + spline) layered in the same chart,
-          enableMouseTracking:false for pure static rendering. Good use of Highcharts
-          features, but not exceptional.
-  verdict: REJECTED
+        comment: 'Distinctively Highcharts: stacked areaspline for inter-percentile
+          band fills + overlaid non-stacked splines at exact y-values is a clever
+          native Highcharts technique. dataLabels.formatter with conditional index
+          check for right-margin P-labels is idiomatic Highcharts. Mixed series types
+          (areaspline + spline) in one chart instance.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
