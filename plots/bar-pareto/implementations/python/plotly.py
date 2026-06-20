@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -77,7 +77,7 @@ fig.add_trace(
         y=cumulative_pct,
         mode="lines+markers+text",
         marker={"size": 14, "color": BLUE, "line": {"width": 2.5, "color": PAGE_BG}},
-        line={"width": 3.5, "color": BLUE, "shape": "spline"},
+        line={"width": 3.5, "color": BLUE, "shape": "linear"},
         text=[f"{v:.0f}%" if i == threshold_idx - 1 else "" for i, v in enumerate(cumulative_pct)],
         textposition="top center",
         textfont={"size": 12, "color": BLUE},
@@ -124,9 +124,7 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Defect Type", "font": {"size": 12, "color": INK}, "standoff": 15},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "showline": True,
-        "linecolor": INK_SOFT,
-        "linewidth": 1,
+        "showline": False,
         "showgrid": False,
     },
     yaxis={
@@ -136,7 +134,7 @@ fig.update_layout(
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
-        "linecolor": INK_SOFT,
+        "showline": False,
     },
     yaxis2={
         "title": {"text": "Cumulative Percentage (%)", "font": {"size": 12, "color": INK}, "standoff": 10},
@@ -162,7 +160,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     margin={"t": 80, "b": 60, "l": 80, "r": 90},
-    barmode="relative",
+    barmode="overlay",
 )
 
 # Save
