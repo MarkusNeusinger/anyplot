@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:47:33Z'
-updated: '2026-06-20T01:01:10Z'
+updated: '2026-06-20T01:18:00Z'
 generated_by: claude-sonnet
 workflow_run: 27855084436
 issue: 4570
@@ -12,40 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: triangular shape, period-0 anchoring, in-cell annotations,
-    cohort size labels, colorbar, and Month N x-axis labels all present'
-  - Correct Imprint sequential colormap (imprint_seq) applied to continuous retention
-    data — no forbidden colormaps used
-  - Both light and dark themes fully functional with no dark-on-dark or light-on-light
-    failures; all chrome tokens properly thread through to every element
-  - Rich interactive hover tooltips with cohort size and bold retention value — good
-    use of Plotly's native interactivity
-  - Realistic synthetic data with exponential decay, per-cohort trend bonus, and noise
-    that produces a visually interesting triangular pattern
+  - WCAG luminance-based adaptive text color in cells (crossover at 88%) ensures readability
+    across the full retention range in both themes
+  - Perfect triangular NaN mask correctly emerges from the data structure (np.full
+    with NaN fill, then per-cohort fill up to max_period)
+  - Cohort sizes embedded in y-axis labels (f"{label}  (n={size:,})") is exactly what
+    the spec requires without a separate annotation column
+  - imprint_seq colormap correctly applied for single-polarity continuous data with
+    zmin=0/zmax=100 anchoring the retention scale
+  - Storytelling annotation in the empty triangle area is clever use of dead space
+    — creates a concrete focal point (Best Month-3 cohort)
+  - Both HTML and PNG outputs created for interactive + static use
   weaknesses:
-  - Cell annotation font size (8px x scale=4 = 32 source-px) is somewhat small; 9-10px
-    would improve mobile readability without crowding cells
-  - 'No data storytelling layer: no annotation calling out the best-performing cohort,
-    no average retention annotation, no reference highlighting notable patterns —
-    the chart communicates the data but does not guide the viewer'
-  - The text color threshold (dark below 50%, light at/above 50%) may produce borderline
-    readability at the midpoint of the gradient; a luminance-based threshold would
-    be more robust
+  - Cell annotation font size 9pt (36 source-px at scale=4) may be too small for mobile-width
+    rendering (~400px); consider increasing to 10-11pt
+  - 'Annotation box uses bgcolor=PAGE_BG instead of ELEVATED_BG (#FFFDF6 light / #242420
+    dark) — on dark theme the box relies only on the border for distinction; switch
+    to ELEVATED_BG for proper callout contrast'
+  - Axis line spines (linecolor=INK_SOFT) slightly clutter the heatmap appearance;
+    consider showline=False on both xaxis and yaxis for a cleaner floating heatmap
+    aesthetic
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "heatmap-cohort-retention · python · plotly · anyplot.ai" in dark ink, centered at top — clearly readable. Y-axis label "Signup Cohort" and X-axis label "Months Since Signup" in dark ink. Tick labels (cohort names with cohort sizes on Y; "Month 0"–"Month 9" rotated on X) in INK_SOFT (#4A4A44). Colorbar right-aligned with "Retention Rate" label and % tick suffixes — all text readable.
-      Data: Imprint sequential colormap (imprint_seq: #009E73 green at low retention → #4467A3 blue at high retention). First column (100%) is deep blue; lower-retention later columns trend toward teal-green. Bold percentage annotations in cells: dark text for val<50%, light text for val>=50%. Cell gaps (xgap/ygap=3) add visual separation.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-cohort-retention · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), size=16. Axis labels "Months Since Signup" (x) and "Signup Cohort" (y) in dark ink, size=12. Tick labels in INK_SOFT (#4A4A44), size=10. All clearly readable.
+      Data: Triangular heatmap with imprint_seq colormap (green #009E73 at 0% → blue #4467A3 at 100%). 10 cohorts × 10 periods with NaN for unavailable future periods. Cell annotations show retention percentages (white on dark cells, dark on light cells). Colorbar on right with "Retention Rate" title and % ticks. Storytelling annotation in lower-right empty triangle: "★ Best Month-3 cohort / Jul 2024: 53%".
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels all render in light ink (#F0EFE8 / #B8B7B0) against the dark surface — clearly readable. Colorbar labels in light tone. No dark-on-dark failures detected anywhere.
-      Data: Imprint sequential colormap colors are identical to the light render — only the background and chrome flip. Cell fills (blue at high retention, teal-green at low retention) provide sufficient contrast for the cell annotation text within each cell. Brand green (#009E73) clearly visible at the low-retention end of the colorscale.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels all switch to light-colored ink (F0EFE8/B8B7B0). Colorbar text is light. Annotation box has PAGE_BG fill (#1A1A17) with INK_SOFT border (#B8B7B0) making it visible. All chrome elements are theme-adaptive.
+      Data: Data colors are identical to light render — same imprint_seq green-to-blue gradient, same percentage values in cells, same luminance-based cell text contrast. Only chrome flips.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,53 +57,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (64 source-px), axis labels (48 source-px), tick labels (40
-          source-px) all readable in both themes. Cell annotations at 8px (32 source-px)
-          are slightly small for mobile scaling.
+        comment: 'All sizes explicitly set (title=16, axes=12, ticks=10, annotations=9);
+          readable in both themes at desktop. Minor deduction: cell annotations at
+          9pt x scale=4 = 36 source-px borderline at 400px mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Generous left margin (155px) prevents Y-axis label
-          collision. Cell gaps prevent crowding.
+        comment: No overlapping text or data elements; cell annotations stay within
+          cells; rotated x-axis tick labels clear; y-axis cohort labels don't collide.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells, color gradient, and percentage annotations clearly
-          visible in both themes.
+        comment: Heatmap cells clearly visible with well-differentiated imprint_seq
+          gradient; xgap=3/ygap=3 add definition; all percentages legible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is perceptually uniform and CVD-safe.
-          No red-green sole encoding.
+        comment: 'imprint_seq (#009E73 to #4467A3) is CVD-safe. Luminance-based WCAG
+          threshold (88%) for cell text contrast is excellent accessibility design.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas (width=600, height=600, scale=4).
-          Margins generous. No overflow or clipping.
+        comment: 2400x2400 square canvas appropriate for symmetric heatmap. Canvas
+          gate passed. Plot fills canvas well with generous balanced margins (l=155,
+          r=90, t=80, b=70).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Months Since Signup'', Y: ''Signup Cohort''. Title follows
-          required format.'
+        comment: 'X: ''Months Since Signup'', Y: ''Signup Cohort'' — descriptive.
+          Title follows required format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq ([[0.0, ''#009E73''], [1.0, ''#4467A3'']]) for
-          continuous data. Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
+        comment: 'imprint_seq used for continuous retention data. Light bg: #FAF8F1,
+          Dark bg: #1A1A17. Theme-adaptive chrome in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +112,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional appearance with Imprint palette. Cell gaps add visual
-          separation. Styled colorbar (no outline, custom tick suffix). Above defaults
-          but no standout design.
+        comment: 'Above well-configured default: custom imprint_seq, cell gaps, WCAG
+          luminance text contrast, styled colorbar, storytelling annotation. Not FiveThirtyEight-level
+          but clearly thoughtful.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid disabled (correct for heatmap). Clean axis lines. Cell gaps
-          add refinement. Polished but not exceptional.
+        comment: Grid off, cell gaps, styled colorbar (no outline), clean annotation
+          box. Annotation uses PAGE_BG instead of ELEVATED_BG — minor polish miss.
+          Could hide axis spines for cleaner look.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Triangular shape inherent to chart type. In-cell annotations make
-          values readable. No additional narrative layer (trend annotation, best-cohort
-          callout, etc.).
+        passed: true
+        comment: '''Best Month-3 cohort'' annotation creates focal point in empty
+          triangle. Trend_bonus makes newer cohorts genuinely better. Triangular shape
+          communicates cohort time depth.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Correct cohort retention heatmap with proper triangular shape using
+          NaN for unavailable future periods.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangular shape, period 0=100%, in-cell retention %, cohort sizes
-          in Y labels, Month N x-axis, colorbar — all present.
+        comment: Triangular shape, retention % in cells, cohort size in y-labels,
+          'Month N' x-axis labels, colorbar with % ticks, period 0 always 100% — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months since signup, Y=cohort, color=retention rate (0-100%).
+        comment: X=periods since signup, Y=signup cohort (reversed), color=retention
+          rate. All data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-cohort-retention · python · plotly · anyplot.ai''.
-          Colorbar: ''Retention Rate'' with % tick suffix.'
+        comment: Title 'heatmap-cohort-retention · python · plotly · anyplot.ai' matches
+          required format exactly. Colorbar serves as scale legend.
     data_quality:
       score: 15
       max: 15
@@ -167,22 +173,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 cohorts x up to 10 periods. Exponential decay + noise + cohort
-          trend bonus shows realistic patterns.
+        comment: 'Shows all aspects: 10 cohorts x 10 periods triangular matrix, exponential
+          decay model, period 0=100%, realistic noise, trend improvement in newer
+          cohorts.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS cohorts Jan-Oct 2024, cohort sizes 900-1450, exponential
-          decay rates appropriate for monthly retention.
+        comment: Monthly signup cohorts Jan-Oct 2024 in SaaS/product analytics context;
+          cohort sizes 900-1,450 users; neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Period 0 anchored at 100%, values clipped to [5,100], decay rate
-          appropriate.
+        comment: Exponential decay (exp(-0.25j) x 100) gives realistic retention pattern;
+          month-9 as low as 9% is realistic; cohort sizes plausible for mid-sized
+          product.
     code_quality:
       score: 10
       max: 10
@@ -192,32 +200,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes.
+        comment: 'Linear: imports -> tokens -> data -> annotations -> plot -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects imported — all used.
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable naming, readable loop structure, no fake functionality.
+        comment: Clean, Pythonic. Luminance-based text contrast is elegant. No over-engineering,
+          no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (2400x2400) and plot-{THEME}.html with CDN
-          plotlyjs. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Plotly
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -227,22 +237,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic go.Figure + go.Heatmap with hovertext/hoverinfo, colorscale,
-          zmin/zmax. fig.add_annotation for cell labels. fig.update_layout for all
-          chrome.
+        comment: Idiomatic go.Heatmap with proper hovertext/hoverinfo, xgap/ygap,
+          colorscale, zmin/zmax, colorbar dict; update_layout with nested dicts; explicit
+          width/height/scale.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Rich hover tooltips with cohort context. HTML export. xgap/ygap cell
-          separation is a Plotly-heatmap-specific feature used effectively.
+        comment: 'Uses Plotly-specific: rich HTML hover templates, paper-space annotations
+          (xref=''paper'', yref=''paper'') for storytelling note in triangle area,
+          HTML export, dynamic font color via annotation font dict.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
+  - colorbar
   - hover-tooltips
   - html-export
   patterns:
@@ -252,3 +263,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
