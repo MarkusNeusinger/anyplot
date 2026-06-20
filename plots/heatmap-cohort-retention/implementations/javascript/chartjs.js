@@ -16,7 +16,7 @@ const COHORT_SIZES = [4821, 5234, 4987, 5612, 6103, 5847, 5290, 5671, 6234, 5988
 const NUM_COHORTS = COHORTS.length;
 const NUM_PERIODS = 10;
 
-// Retention decay — later cohorts show slight product improvement
+// Retention decay — later cohorts show measurable product improvement (+2% per cohort)
 const BASE_DECAY = [100, 62, 45, 38, 32, 28, 24, 21, 19, 17];
 
 const cells = [];
@@ -24,7 +24,7 @@ for (let c = 0; c < NUM_COHORTS; c++) {
   // Triangular shape: Jan cohort (c=0) has all 10 periods, Oct (c=9) only has period 0
   const maxPeriod = NUM_COHORTS - 1 - c;
   for (let p = 0; p <= maxPeriod; p++) {
-    const value = p === 0 ? 100 : Math.round(Math.min(99, BASE_DECAY[p] + c * 0.9));
+    const value = p === 0 ? 100 : Math.round(Math.min(99, BASE_DECAY[p] + c * 2.0));
     cells.push({ cohort: c, period: p, value });
   }
 }
@@ -141,7 +141,7 @@ const heatmapPlugin = {
     ctx.strokeRect(barX, top, barW, barH);
 
     const lx = barX + barW + 6;
-    ctx.font = '12px sans-serif';
+    ctx.font = '14px sans-serif';
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -169,7 +169,14 @@ new Chart(canvas, {
         text: 'heatmap-cohort-retention · javascript · chartjs · anyplot.ai',
         color: t.ink,
         font: { size: 22, weight: 'bold' },
-        padding: { bottom: 20 }
+        padding: { bottom: 4 }
+      },
+      subtitle: {
+        display: true,
+        text: 'Monthly SaaS cohorts Jan–Oct 2024 · later cohorts retain measurably more users',
+        color: t.inkSoft,
+        font: { size: 14 },
+        padding: { bottom: 16 }
       },
       legend: { display: false },
       tooltip: { enabled: false }
