@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: curve-oc
 created: '2026-03-19T20:35:59Z'
-updated: '2026-06-20T11:19:26Z'
+updated: '2026-06-20T11:29:07Z'
 generated_by: claude-sonnet
 workflow_run: 27869153026
 issue: 4553
@@ -12,91 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Semantic color mapping: amber for AQL (caution/warning) and matte red for LTPD
-    (rejection/consumer risk) are principled, not arbitrary palette choices'
-  - Dash-pattern redundancy (solid/dashed/dotted) layered on top of color separation
-    provides genuine CVD accessibility without visual noise
-  - Binomial CDF computed from first principles using math.comb — no scipy dependency,
-    clean and reproducible
-  - Theme-adaptive INK token correctly threads through annotation dots and risk labels
-    — dark render has no dark-on-dark failures
-  - Interactive hover (selection_point nearest, transform_filter) is genuine Altair
-    native interactivity with correct tooltip encoding
-  - Risk zone rectangle fills at 5% opacity add spatial storytelling without competing
-    with the data
+  - Semantic color choices — amber (#DDCC77) for AQL caution threshold and matte red
+    (#AE3030) for LTPD rejection boundary perfectly match the Imprint palette semantic
+    guidance, showing genuine domain understanding
+  - Color AND strokeDash redundant encoding across all three OC curves ensures CVD-safe
+    discrimination even without color
+  - Interactive hover with alt.selection_point(nearest=True) and transform_filter()
+    is exemplary use of Altair's Vega-Lite selection system
+  - Subtle risk zone shading (opacity=0.05) provides visual interpretive context —
+    quality regions (acceptable / rejection) are immediately apparent without overwhelming
+    the S-curves
+  - Correct binomial CDF implementation from scratch (math.comb) with 200 smooth points
+    per curve produces proper S-shaped OC curves
+  - 'Full spec compliance: AQL/LTPD vertical reference lines, producer/consumer risk
+    points with labeled percentages, three sampling plans with descriptive legend'
+  - 'Theme-adaptive chrome is properly implemented — all text, legend box, grid, and
+    backgrounds correctly flip between #FAF8F1 and #1A1A17 surfaces'
   weaknesses:
-  - Risk annotation labels use fontSize=9, one point below the recommended 10pt minimum;
-    may be marginal at ~400px mobile widths — raise alpha_label and beta_label mark_text
-    fontSize from 9 to 10 or 11
+  - Risk annotation labels (alpha, beta) use fontSize=10 — at scale_factor=4 this
+    is 40px source text, which is near the readability floor for the 3200×1800 canvas;
+    increasing to fontSize=11 or 12 would improve legibility at mobile viewports
+  - 'Risk annotation dots use color=INK (theme-adaptive near-black / near-white) rather
+    than the color of the plan they annotate (n=100, c=3 moderate = #C475FD lavender)
+    — coloring them to match the plan would strengthen the visual connection between
+    marker and curve'
+  - Design Excellence limited by Altair's inherent visual defaults — the chart reads
+    as 'Altair' despite good semantic choices; bolder typographic hierarchy (heavier
+    title weight, slightly larger axis label fontSize=13) would push toward publication-ready
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "curve-oc · python · altair · anyplot.ai" at fontSize=16, bold, dark ink — clearly readable. Subtitle "Acceptance Sampling Plans — Producer's & Consumer's Risk" in INK_SOFT. Axis labels "Fraction Defective (p)" and "Probability of Acceptance P(a)" at fontSize=12, readable. Tick labels at fontSize=10, readable. Risk annotation labels at fontSize=9 (slightly small but readable at full resolution).
-      Data: Three S-shaped OC curves — solid #009E73 (first series, lenient plan), dashed #C475FD (moderate), dotted #4467A3 (strict). Amber (#DDCC77) dashed AQL reference line. Matte red (#AE3030) dashed LTPD reference line. Subtle 5% opacity zone rectangles. Dark gray annotation dots (INK) at α=14.1% and β=0.8% on the moderate curve.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "curve-oc · python · altair · anyplot.ai" at fontSize=16 in near-black (#1A1A17), clearly readable. Subtitle "Acceptance Sampling Plans — Producer's & Consumer's Risk" in INK_SOFT (#4A4A44), readable. Y-axis label "Probability of Acceptance P(a)" and X-axis label "Fraction Defective (p)" in dark ink at fontSize=12, both descriptive and visible. Tick labels at fontSize=10 in INK_SOFT, all readable (0% through 14% on x-axis, 0.0 through 1.0 on y-axis).
+      Data: Three S-shaped OC curves — green (#009E73, solid) for n=50 c=1, lavender (#C475FD, long-dashed) for n=100 c=3, blue (#4467A3, dotted) for n=200 c=2. Amber dashed vertical AQL line with "AQL" label. Matte red dashed LTPD line with "LTPD" label. Subtle amber and red zone shading (opacity=0.05). Dark risk annotation dots with "α=14.1% Producer risk" and "β=0.8% Consumer risk" text labels. Legend in top-right with elevated background and rounded corner frame.
+      Legibility verdict: PASS — all text readable; no light-on-light issues; no edge clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title and all labels flip to cream/light text (INK=#F0EFE8 in dark mode). Axis labels, tick labels all readable in light text on dark background. No dark-on-dark failures — INK token correctly applied to annotation labels and dots. Legend uses elevated dark fill (#242420).
-      Data: Data colors are IDENTICAL to light render — #009E73 green, #C475FD lavender, #4467A3 blue, amber AQL line, red LTPD line all unchanged. Risk annotation dots correctly use light cream INK token in dark mode.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title in near-white (#F0EFE8), clearly readable against dark background. Subtitle in INK_SOFT (#B8B7B0), visible. Both axis labels and all tick labels rendered in light INK_SOFT color — no dark-on-dark failures. Legend box uses elevated dark background (#242420) with lighter legend text.
+      Data: OC curve colors are IDENTICAL to light render — green, lavender, blue curves unchanged. Amber and matte red reference lines same. Risk annotation markers appear as near-white dots on dark background (color=INK, dark variant #F0EFE8). Risk annotation text "α=14.1% Producer risk" and "β=0.8% Consumer risk" visible in near-white. Zone shading very subtle but still present.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected; data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Main text (title=16pt, axis=12pt, ticks=10pt) readable in both themes.
-          Risk annotation labels at fontSize=9 are slightly below 10pt minimum — marginal
-          at mobile width.
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: risk annotation labels at fontSize=10 are near readability floor
+          for mobile viewports.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions detected in either render.
+        comment: No overlapping elements in either render. Legend, annotation labels,
+          and AQL/LTPD labels all well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three curves distinguishable via color + dash redundancy. Risk
-          dots and reference lines clearly visible.
+        comment: Three OC curves clearly visible with color + dash redundancy. strokeWidth=2.5
+          appropriate for smooth line plots. Risk annotation dots (size=200) visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette with redundant dash encoding.
+        comment: Color AND strokeDash redundant encoding across all plans; no red-green
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions, nothing cut off, legend does
-          not obscure data.
+        comment: Canvas gate passed. Good layout proportions. All content within canvas.
+          Title ~60% of width — expected for this title length.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptively labelled with variable notation.
+        comment: 'Descriptive axis labels with context: ''Fraction Defective (p)''
+          and ''Probability of Acceptance P(a)''. Title matches mandated format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, amber for AQL, red
-          for LTPD, correct backgrounds in both themes.'
+        comment: 'First series #009E73 (brand green). Multi-series uses canonical
+          Imprint order (lavender, blue). Amber and matte red used as semantic anchors
+          correctly. Both theme backgrounds correct (#FAF8F1 / #1A1A17). Data colors
+          identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -104,23 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Semantic color mapping (amber/AQL, red/LTPD), risk
-          zone shading at 5% opacity, custom legend frame with rounded corners and
-          elevated fill.
+        comment: 'Above default 4: semantic color choices show domain understanding
+          (amber=caution, red=rejection), subtle zone shading adds depth, custom legend
+          styling (cornerRadius, fillColor, symbolStrokeWidth). Not yet 6 (strong
+          design) — typography remains mostly Altair default.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: domainWidth=0, gridOpacity=0.15, custom legend frame. Tick marks
-          still visible; minor further suppression possible.
+        comment: 'Real refinements beyond defaults: gridOpacity=0.15, tickSize=0,
+          strokeWidth=0 (no view border), domainWidth=0 (axis spine removed), zero
+          padding. Clearly above default 2.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three-curve comparison with AQL/LTPD markers and alpha/beta annotations
-          creates a clear narrative about sampling plan discrimination power.
+        comment: AQL/LTPD zone shading divides the plot into meaningful quality regions.
+          Risk annotations with percentages quantify producer/consumer risk. Three
+          curves explicitly show how stricter plans tighten discrimination. Above
+          default 2.
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped OC curve.
+        comment: Correct OC curve implementation with proper S-shaped probability-of-acceptance
+          vs fraction-defective curves.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AQL/LTPD lines, alpha/beta annotations, 3 sampling plans, smooth
-          lines, x-axis 0-15%.
+        comment: AQL and LTPD reference lines, producer's risk (alpha) and consumer's
+          risk (beta) marked with labeled points, 3 sampling plans for comparison,
+          smooth continuous lines, x-axis 0–0.15.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes, binomial CDF computed via math.comb.
+        comment: fraction_defective on x-axis (0–15%), probability_acceptance on y-axis
+          (0–1.05). Correct binomial CDF using math.comb.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match plan names.
+        comment: Title is 'curve-oc · python · altair · anyplot.ai' — exact mandated
+          format. Legend labels match plan names with descriptive suffixes.
     data_quality:
       score: 15
       max: 15
@@ -159,21 +183,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All OC curve aspects covered: S-shape, multi-plan, AQL/LTPD, producer/consumer
-          risk, zone shading.'
+        comment: 'Shows all OC curve aspects: S-shaped curves, AQL/LTPD boundaries,
+          producer''s and consumer''s risk, comparison of three distinct sampling
+          plans (lenient/moderate/strict), shaded risk zones.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible sampling plans, standard AQL=2%/LTPD=10% industry benchmarks,
-          neutral content.
+        comment: 'Real acceptance sampling scenario with industry-standard parameters:
+          AQL=2%, LTPD=10%, sample sizes n=50/100/200, acceptance numbers c=1/2/3.
+          Neutral quality-engineering context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-15% fraction defective range is practical, alpha/beta values realistic.
+        comment: X-axis 0–15% matches typical AQL inspection range. Y-axis 0–1.05
+          (probability). Computed alpha=14.1% and beta=0.8% are mathematically correct
+          for the chosen parameters.
     code_quality:
       score: 10
       max: 10
@@ -183,63 +211,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level script, no functions or classes.
+        comment: 'Linear script: imports → tokens → data → encodings → layers → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic binomial computation, no random seed needed.
+        comment: 'Fully deterministic: np.linspace + math.comb binomial calculation.
+          No random state needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, math.comb, altair, numpy, pandas, PIL.Image.
+          No unused imports.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Twelve-layer Altair composition warranted by feature set. No fake
-          UI.
+        comment: Appropriate complexity. No fake UI. The sys.path cleanup block is
+          necessary for the deployment context (altair.py shadows the package).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas pad-to-exact-3200x1800
+          block present. Current Altair 6.x API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct encoding types, proper Scale usage, configure_axis/legend/title
-          pattern followed correctly.
+        comment: 'Strong idiomatic Altair: layer composition (+), alt.selection_point(nearest=True),
+          transform_filter, alt.condition for size, multiple configure_* chaining,
+          StrokeDash scale. Clearly above default 3.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point(nearest=True) with transform_filter for hover rule,
-          alt.condition for conditional sizing, HTML export, 12-layer composition.
-          Missing faceting or custom transform for full 5/5.
+        comment: Interactive nearest-point hover with cross-filter (transform_filter),
+          HTML output alongside PNG, declarative layer composition. These are distinctly
+          Altair/Vega-Lite features.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - hover-tooltips
-  - annotations
   - layer-composition
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep:
-  - binomial-cdf
+  dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
