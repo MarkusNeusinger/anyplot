@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-Library: pygal 3.1.0 | Python 3.13
-Quality: pending | Created: 2026-06-20
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 79/100 | Updated: 2026-06-20
 """
 
 import importlib
