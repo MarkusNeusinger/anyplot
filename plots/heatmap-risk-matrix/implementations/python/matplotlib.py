@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 81/100 | Updated: 2026-06-20
@@ -59,9 +59,7 @@ risks = [
 ]
 
 # Risk colormap: Imprint green (low) → amber → ochre → matte red (critical)
-cmap = LinearSegmentedColormap.from_list(
-    "risk_matrix", ["#009E73", ANYPLOT_AMBER, "#BD8233", "#AE3030", "#7b1f1f"], N=256
-)
+cmap = LinearSegmentedColormap.from_list("risk_matrix", ["#009E73", ANYPLOT_AMBER, "#BD8233", "#AE3030"], N=256)
 
 # Category colors — Imprint palette positions 1→3 in first-appearance order
 category_order = ["Operational", "Technical", "Financial"]
@@ -95,7 +93,7 @@ for i in range(5):
             fontsize=10,
             fontweight="bold",
             color=score_color,
-            alpha=0.45,
+            alpha=0.58,
             zorder=3,
         )
 
@@ -112,11 +110,20 @@ for xs, ys in zone_boundaries:
 jitter_offsets = np.random.uniform(-0.15, 0.15, (len(risks), 2))
 
 label_offsets = {
-    "Key Staff\nTurnover": (0.0, -0.26, "top"),
-    "Market\nShift": (0.0, 0.26, "bottom"),
-    "Supply Chain\nDisruption": (0.18, -0.26, "top"),
-    "Server\nOutage": (0.16, -0.26, "top"),
-    "Regulatory\nChange": (-0.10, -0.26, "top"),
+    # Likely row × Minor col: above (no one else above here)
+    "Scope\nCreep": (0.0, 0.28, "bottom"),
+    # Likely row × Moderate col: below (avoids Supply Chain above at right)
+    "Budget\nOverrun": (0.0, -0.28, "top"),
+    # Likely row × Major col: above-left, stays within Major column
+    "Supply Chain\nDisruption": (-0.25, 0.28, "bottom"),
+    # Possible row × Minor col: below (avoids Scope Creep above in same column)
+    "Market\nShift": (0.0, -0.28, "top"),
+    # Possible row × Moderate col: below-left (away from Market Shift at x=1.5)
+    "Key Staff\nTurnover": (-0.18, -0.28, "top"),
+    # Possible row × Major col: below-right
+    "Server\nOutage": (0.16, -0.28, "top"),
+    # Unlikely row × Major col: below-left
+    "Regulatory\nChange": (-0.10, -0.28, "top"),
     "Equipment\nWear": (0.0, 0.26, "bottom"),
     "Minor\nDelay": (0.0, 0.26, "bottom"),
 }
@@ -143,10 +150,10 @@ for idx, (name, lik, imp, cat) in enumerate(risks):
         dx, dy, va = label_offsets[name]
         lx, ly = x + dx, y + dy
     else:
-        lx, ly, va = x, y + 0.26, "bottom"
+        lx, ly, va = x, y + 0.28, "bottom"
 
     label = ax.text(
-        lx, ly, name, ha="center", va=va, fontsize=9, fontweight="bold", color=INK, zorder=6, linespacing=0.85
+        lx, ly, name, ha="center", va=va, fontsize=7, fontweight="bold", color=INK, zorder=6, linespacing=0.85
     )
     label.set_path_effects([pe.withStroke(linewidth=4.0, foreground=PAGE_BG)])
 
