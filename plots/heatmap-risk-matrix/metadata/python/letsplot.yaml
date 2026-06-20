@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:56:02Z'
-updated: '2026-06-20T06:18:55Z'
+updated: '2026-06-20T06:29:22Z'
 generated_by: claude-sonnet
 workflow_run: 27862039334
 issue: 4567
@@ -12,106 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/letsplot/plot-dark.html
-quality_score: 77
+quality_score: 86
 review:
   strengths:
-  - Semantic Imprint color mapping for zones (green/amber/ochre/red) is correct and
-    immediately communicates risk severity
-  - Dual encoding (zone fill color + marker size for risk score + marker color for
-    category) maximizes information density
-  - Semi-transparent score watermarks in cells are a polished design touch that adds
-    information without clutter
-  - Interactive layer_tooltips() with risk name, category, and computed score is well-crafted
-    for the HTML output
-  - Theme-adaptive chrome is fully implemented — background, ink colors, legend background
-    all flip correctly
-  - Correct square canvas (2400x2400) is the right choice for a symmetric 5x5 grid
+  - 'Full spec compliance: all 5 required features implemented (zone gradient, descriptive
+    axis labels, per-cell jitter, zone legend, grid lines)'
+  - Semantic color mapping for risk zones uses Imprint palette members correctly (green=safe,
+    amber=caution, ochre=elevated, red=critical)
+  - Categorical series correctly follows Imprint order (Technical=#009E73 first, Financial=#C475FD,
+    Operational=#4467A3)
+  - Realistic IT project management scenario with 15 well-distributed risk items across
+    all four risk zones
+  - layer_tooltips() with structured .line() chains adds genuine interactive value
+    to the HTML export
+  - Theme-adaptive chrome correctly implemented in both light and dark renders — no
+    dark-on-dark failures
   weaknesses:
-  - 'Heavy label overlap in the high-risk quadrant (impact >= 3, likelihood >= 3):
-    alternating label_y stagger is insufficient when 9+ risks cluster in adjacent
-    cells — reduce label size from size=9 to size=7 and tighten jitter offsets'
-  - 'Top-row labels overflow above axis boundary: risks with label_y near 5.59 push
-    labels into the subtitle margin — clamp label_y to max 5.35 or reduce y-nudge
-    to ±0.28'
-  - 'Zone legend missing numeric ranges per spec: add labels=["Low (1–4)", "Medium
-    (5–9)", "High (10–16)", "Critical (20–25)"] to scale_fill_manual()'
-  - 'Category color order violates first-series rule: scale_color_manual starts with
-    #4467A3 (blue) for Technical; first categorical series must be #009E73 (green)'
+  - 'Label crowding in the top-right Critical zone: Data Breach, Server Outage, and
+    Cyber Attack labels are tightly packed near x=3-5, y=5 — increase label y-buffer
+    or reduce label font size to size=6 for cells with 2+ items or extend y-limit
+    to [0.3, 5.7]'
+  - DE-01 could reach 6/8 by adding thin ink-colored stroke outline to category markers
+    (stroke=0.8) for better definition of ochre/lavender markers against mid-tone
+    zone backgrounds at smaller display sizes
+  - DE-02 could reach 6/6 by increasing legend and plot margin padding slightly to
+    give more breathing room around the chart frame
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface.
-      Chrome: Title "heatmap-risk-matrix · python · letsplot · anyplot.ai" in bold dark INK (#1A1A17), readable. Subtitle in muted INK_MUTED. Axis labels "Likelihood" (x) and "Impact" (y) in bold dark ink. Tick labels (Rare/Unlikely/Possible/Likely/Almost Certain; Negligible/Minor/Moderate/Major/Catastrophic) in INK_SOFT, all readable. Legend boxes use elevated background #FFFDF6 with INK_SOFT borders.
-      Data: 5x5 heatmap with four zone colors: #009E73 green (Low), #DDCC77 amber (Medium), #BD8233 ochre (High), #AE3030 red (Critical). Cell score watermarks are semi-transparent dark rgba(0,0,0,0.20). Risk items plotted as colored circles (Technical=#4467A3 blue, Financial=#C475FD lavender, Operational=#2ABCCD cyan) scaled by risk score. Risk labels in bold #1A1A17 INK.
-      Legibility verdict: PASS (chrome fully readable) — but significant label-on-label overlap in the upper-right risk quadrant degrades readability there. "Data Breach" and "Cyber Attack" labels extend above the top axis boundary into the subtitle margin.
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "heatmap-risk-matrix · python · letsplot · anyplot.ai" in bold dark ink, fully readable. Subtitle in muted ink, readable. Axis labels "Likelihood" (x) and "Impact" (y) in bold dark text, readable. Y-axis ticks (Negligible, Minor, Moderate, Major, Catastrophic) and X-axis ticks (Rare, Unlikely, Possible, Likely, Almost Certain) in secondary ink color, readable. Legend text in secondary ink, readable.
+      Data: Zone tiles in green (#009E73 Low), amber-yellow (#DDCC77 Medium), ochre-brown (#BD8233 High), matte-red (#AE3030 Critical). Category markers in #009E73 (Technical, first series), #C475FD (Financial), #4467A3 (Operational). Semi-transparent score numbers in each cell. Marker sizes scale with risk score (range 4-12).
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title and subtitle in light cream #F0EFE8 (INK token flipped), clearly visible. Axis labels and tick labels in #B8B7B0 (INK_SOFT flipped), readable. No dark-on-dark failure — all text uses light tokens against the dark background. Legend boxes use elevated dark background #242420 with INK_SOFT border and light legend text.
-      Data: Zone fill colors (#009E73, #DDCC77, #BD8233, #AE3030) are identical to light render — only chrome flips as required. Risk item labels are in light #F0EFE8, visible against the dark surface. Cell watermarks are rgba(255,255,255,0.28) — correct for dark theme. "Cyber Attack" label bleeds into the right legend box area.
-      Legibility verdict: PASS — no dark-on-dark failures. Same label overlap issues persist from light render.
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title, subtitle, axis labels, axis ticks all render in light cream tones (#F0EFE8 / #B8B7B0). All text clearly readable against the dark background. Legend text is light-colored. No dark-on-dark failures detected.
+      Data: Zone fill colors identical to light render (green/amber/ochre/red unchanged). Category marker colors identical (green/lavender/blue). Score numbers in cells render as faint semi-transparent white, discernible. Risk labels render in cream/light text (INK token adapts to #F0EFE8 on dark).
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Risk
-          item labels individually readable but crowded overlap area around impact=4-5
-          degrades legibility.
+        comment: All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16,
+          geom_text sizes per layer). Readable in both themes. Minor deduction for
+          label density in crowded cells.
       - id: VQ-02
         name: No Overlap
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 'Significant label-on-label collisions: Data Breach/Cyber Attack/Server
-          Outage cluster at top; PR Crisis/Staff Loss overlap; Vendor Fail/Budget
-          Overrun nearly merged; Patent Issue/Integ. Bug substantially overlap. Jitter
-          insufficient for the cluster density.'
+        passed: true
+        comment: Alternating y-nudge reduces collisions meaningfully but top-right
+          Critical zone (Data Breach/Server Outage/Cyber Attack near x=3-5, y=5) remains
+          visually tight. Main content readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Zone cells clearly visible. Category markers visible and size-scaled.
-          Cell watermark scores appropriately faint.
+        comment: Markers sized by risk score (range=[4,12]) clearly visible. Semi-transparent
+          score text in cells adds context. Minor deduction for smallest markers (size~4)
+          being subtly small in low-risk cells.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; zone colors (green/amber/ochre/red) and category
-          colors (blue/lavender/cyan) are CVD-safe.
+        comment: Technical/Financial/Operational use three perceptually distinct Imprint
+          hues. No red-green as sole signal for categorical layer. Zone gradient distinguishable
+          under CVD.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct square canvas 2400x2400. Canvas gate passed. Top-row labels
-          (Data Breach, Cyber Attack) overflow above y-axis boundary into subtitle
-          margin. Scope Creep and Cyber Attack extend near right axis boundary but
-          not canvas-clipped.
+        comment: Square 2400x2400 canvas correctly chosen for 5x5 symmetric grid.
+          Plot fills ~75% of canvas with balanced margins. Legend positioned clearly
+          to the right. No waste or cramping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with correct categorical tick labels per
-          spec. Title in correct format.
+        comment: Both axes use descriptive labels with full tick text (Rare to Almost
+          Certain; Negligible to Catastrophic). Title and subtitle informative.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Zone fill colors use Imprint semantic anchors correctly. Backgrounds
-          correct (#FAF8F1 light / #1A1A17 dark). Minor: scale_color_manual for categories
-          starts with #4467A3 (blue) for Technical instead of the mandatory first-series
-          #009E73 (green).'
+        passed: true
+        comment: 'Zone fills use Imprint semantic mapping (green=Low, amber=Medium,
+          ochre=High, red=Critical). Categorical series correctly uses #009E73 first
+          (Technical), then #C475FD (Financial), #4467A3 (Operational). Backgrounds
+          are #FAF8F1/#1A1A17. Chrome is theme-adaptive in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,26 +119,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color mapping (safe=green, caution=amber, elevated=ochre,
-          critical=red) is intentional. Triple encoding (zone fill + category color
-          + risk-score size) adds depth. Watermark scores are polished.
+        comment: 'Intentional hierarchy: green-to-red zone gradient communicates risk
+          severity immediately. Semi-transparent score numbers overlay is a thoughtful
+          detail. Marker size encoding by risk score adds third dimension. Above configured-default
+          level but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed for heatmap. Tick marks removed. White cell borders
-          create clean delineation. Legend has elevated background. Above default.
+        comment: Grid blanked (appropriate for heatmap). White cell borders provide
+          clean delineation. Custom legend with zone ranges well-formatted. Some refinement
+          visible above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Green-to-red zone gradient creates risk severity narrative. Marker
-          size variation reinforces risk score. Label overlap undermines readability
-          in the high-risk area where viewer focus is needed most.
+        comment: Green-to-red zone gradient creates immediate risk narrative. Large
+          markers in Critical zone draw eye to highest-priority risks (Cyber Attack
+          score=25, Server Outage score=20). Marker size scaling reinforces story.
+          Above default display level.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,28 +149,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 risk matrix heatmap with color-coded zones.
+        comment: 5x5 grid heatmap with zone-colored tiles and overlaid labeled markers.
+          Exactly matches spec.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 5x5 grid, zone labels, labeled markers, jitter, size encoding, categories
-          all present. Zone legend missing numeric ranges (1-4, 5-9, 10-16, 20-25)
-          specified in spec.
+        comment: 'All features present: green-yellow-orange-red gradient, Likelihood
+          axis with Rare-Almost Certain labels, Impact axis with Negligible-Catastrophic
+          labels, labeled markers with per-cell jitter, zone legend with score ranges,
+          white grid borders delineating cells.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Likelihood on X, Impact on Y, all 15 risk items plotted correctly.
+        comment: X=Likelihood, Y=Impact correctly mapped. All 15 risk items visible
+          across full range of both axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is heatmap-risk-matrix · python · letsplot · anyplot.ai. Risk
-          Level and Category legends present.
+        comment: 'Title: ''heatmap-risk-matrix · python · letsplot · anyplot.ai''
+          correct. Legend shows Risk Level (zone fills with score ranges) and Category
+          (marker colors). Labels correct.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +184,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: zone fill, numeric score labels, risk items,
-          categories, size encoding, descriptive axis ticks.'
+        comment: All four risk zones populated. Multiple items per cell demonstrates
+          jitter. All five likelihood and impact levels represented. Full 5x5 space
+          explored.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: IT project risk register is professional and plausible. 15 risks
-          are realistic and neutral.
+        comment: IT project management scenario with 15 real risk items (Server Outage,
+          Data Breach, Budget Overrun, Cyber Attack, etc.) across Technical, Financial,
+          Operational categories. Standard enterprise risk management context, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-5 likelihood/impact scale is standard. 15 items within spec range
-          of 5-20.
+        comment: Risk scores are correct products of likelihood x impact. Zone boundaries
+          (1-4, 5-9, 10-16, 20-25) align with ISO 31000-style standard thresholds.
+          Individual risk assignments realistic (e.g., Cyber Attack L=5, I=5, score=25
+          Critical).
     code_quality:
       score: 10
       max: 10
@@ -202,34 +213,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural script.
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) used.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, numpy, pandas, lets_plot) are used.
+        comment: os, numpy, pandas, lets_plot — all used, none extra.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean DataFrame construction, thoughtful jitter and label-stagger
-          logic.
+        comment: Clean, readable code. Jitter mechanism via cell-count dictionary
+          is concise and correct. Label-nudge logic serves clear visual purpose. No
+          fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current letsplot
+          API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,28 +250,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering with geom_tile + geom_point
-          + geom_text. scale_fill_manual, scale_color_manual, scale_size used correctly.
-          ggsize(600,600) with scale=4 gives correct 2400x2400 canvas.
+        comment: Uses ggplot grammar correctly with layered geoms, scale_*_manual(),
+          labs(), custom theme() with element_* functions, ggsize(), ggsave(scale=4).
+          Uses layer_tooltips().line() — letsplot-idiomatic tooltip builder pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: layer_tooltips() with rich multi-field configuration is a distinctive
-          lets-plot feature. HTML export demonstrates interactivity. No advanced lets-plot-specific
-          features beyond these.
+        passed: true
+        comment: layer_tooltips() with structured .line() chains is distinctly lets-plot.
+          Dual PNG+HTML output leverages library's interactive nature. scale_size(range=[4,12],
+          guide='none') is idiomatic. Not fully exploiting interactive capabilities
+          beyond tooltips.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
   - html-export
-  - annotations
+  - manual-ticks
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
