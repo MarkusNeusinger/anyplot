@@ -1,42 +1,51 @@
 library: altair
+language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:21:24Z'
-updated: '2026-03-20T07:31:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23332978723
+updated: '2026-06-20T17:01:36Z'
+generated_by: claude-sonnet
+workflow_run: 27877481578
 issue: 4550
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/altair/plot.html
-quality_score: 92
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling through vital-few/trivial-many color distinction with
-    80% threshold
-  - Clean dual-axis implementation using Altair resolve_scale pattern
-  - 'Professional polish: rounded corners, colored secondary axis, informative subtitle'
-  - Perfect spec compliance with all required features
-  - Tooltips provide additional interactivity in HTML version
+  - Dual-color bar encoding (green for vital few, muted for trivial many) creates
+    immediate visual hierarchy with no legend needed
+  - Secondary y-axis title and tick labels colored in ochre (#BD8233) to match the
+    cumulative line — elegant design detail
+  - resolve_scale(y="independent") correctly decouples the two y-axes for the Pareto
+    overlay pattern
+  - alt.condition(alt.datum.vital_few, ...) for computed-field conditional color encoding
+    is distinctly Altair and demonstrates real library mastery
+  - Both renders theme-adapt correctly; all chrome tokens properly wired through configure_*
+    directives
+  - PAD-only canvas logic is correctly implemented (fail-loud on overshoot, pad on
+    undershoot)
   weaknesses:
-  - 'Minor: tick font sizes could be slightly larger for the 4800x2700 canvas'
-  image_description: The plot displays a Pareto chart analyzing 10 manufacturing defect
-    categories. Bars are sorted in descending order from "Scratches" (187) to "Wrong
-    Dimensions" (8). The first 5 categories (Scratches, Dents, Misalignment, Cracks,
-    Discoloration) are rendered in dark blue (#306998) representing the "vital few,"
-    while the remaining 5 (Burrs, Warping, Contamination, Missing Parts, Wrong Dimensions)
-    are in light gray-blue (#A8C4D9) representing the "trivial many." An orange (#D4770B)
-    cumulative percentage line with filled circle markers overlays the bars, using
-    a secondary y-axis (0-105%) on the right side, with the axis labels and title
-    colored orange to match. A dashed gray 80% reference line crosses horizontally,
-    with an "80%" label at the top-left. The title reads "Manufacturing Defect Analysis
-    · bar-pareto · altair · pyplots.ai" with a subtitle "Vital few defects (dark)
-    account for 80% of all occurrences." X-axis labels are angled at -45°. Subtle
-    dashed y-axis gridlines are present. Bars have rounded top corners. View border
-    is removed.
+  - '"80%" reference line label (positioned at x=alt.value(10)) overlaps with the
+    top portion of the Scratches bar in both renders — should be repositioned to the
+    right side or a non-overlapping offset for clearer readability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Manufacturing Defect Analysis · bar-pareto · python · altair · anyplot.ai" bold, clearly readable. Subtitle in muted gray. Primary Y label "Frequency", secondary Y label "Cumulative Percentage (%)" in ochre, X label "Defect Type" — all readable. Tick labels at -45 degrees on x-axis, readable. Subtle dashed y-axis grid lines.
+      Data: 10 bars sorted descending; vital-few bars (first 5) in Imprint green #009E73; trivial-many bars in muted dark gray. Ochre cumulative line (#BD8233, Imprint pos 4) with circular markers. Dashed 80% reference line with "80%" label overlapping slightly with the first bar.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle render in light cream/off-white, clearly readable. Axis labels and tick labels in light theme-adaptive colors. Secondary y-axis in ochre (matches light render). "80%" label in muted light tone visible against dark surface.
+      Data: Green (#009E73) vital-few bars identical to light render. Trivial-many bars in sandy beige (#A8A79F — INK_MUTED dark theme, semantic muted anchor, intentionally theme-adaptive). Ochre cumulative line identical to light render — data colors unchanged between themes.
+      Legibility verdict: PASS — no dark-on-dark issues; all text uses correct theme-adaptive tokens
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -44,41 +53,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, axis titles 22pt, ticks
-          18pt). Clearly readable.
+        comment: All font sizes explicitly set; 80% label slightly overlaps first
+          bar reducing from 8
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: X-axis labels angled at -45° prevent overlap. All text fully readable.
+        comment: 80% label at x=alt.value(10) overlaps top of Scratches bar in both
+          renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible. Line has strokeWidth=3 with size=120 markers.
+        comment: Bars, cumulative line and markers all clearly visible; strokeWidth=3
+          for line
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/light-blue bars with orange line is colorblind-safe.
+        comment: Green vs muted gray bars plus ochre line; CVD-safe; no red-green
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 chart fills canvas well with balanced margins.
+        comment: Canvas gate passed; well-balanced layout with secondary y-axis
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Defect Type, Frequency, Cumulative
-          Percentage (%).'
+        comment: 'Primary Y: Frequency, Secondary Y: Cumulative Percentage (%), X:
+          Defect Type'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Vital-few bars #009E73 (Imprint pos 1), cumulative line #BD8233
+          (Imprint pos 4), backgrounds correct, chrome theme-adaptive'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -86,21 +105,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful vital-few/trivial-many color coding, orange secondary
-          axis, rounded corners, subtitle.
+        comment: 'Strong intentional design: dual-color bar storytelling, ochre-colored
+          secondary axis, rounded bar corners, subtitle — clearly above defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, subtle dashed gridlines at 15% opacity.
+        comment: Subtle dashed y-grid, no outer chart border, no top/right spine,
+          clean layout
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color distinction and 80% threshold tell clear Pareto story. Subtitle
-          guides viewer.
+        comment: Clear visual hierarchy through color; 80% threshold anchors Pareto
+          principle; subtitle explains encoding; viewer immediately identifies priority
+          defects
     spec_compliance:
       score: 15
       max: 15
@@ -110,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative line.
+        comment: 'Correct Pareto chart: descending bars + cumulative % line on independent
+          secondary y-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: descending sort, cumulative line, secondary y-axis,
-          80% reference line, markers.'
+        comment: 'All features present: sorted bars, cumulative line, secondary y-axis,
+          80% reference line, markers at bar centers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on left y, cumulative % on right y.
+        comment: 'X: category, Y1: frequency count, Y2: cumulative %; all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes bar-pareto · altair · pyplots.ai. Subtitle explains
-          color coding.
+        comment: Title matches Descriptive · spec-id · language · library · anyplot.ai
+          format; subtitle explains color encoding
     data_quality:
       score: 15
       max: 15
@@ -140,19 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 categories with clear Pareto distribution and good variation.
+        comment: 10 categories with clear Pareto distribution (~84% of defects in
+          first 5); vital-few/trivial-many split prominent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect data matching spec context. Neutral scenario.
+        comment: Manufacturing defect analysis — classic, neutral, real-world Six
+          Sigma scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Defect counts 8-187 are realistic for manufacturing QC.
+        comment: Counts 187-8 in realistic Pareto curve; ~640 total defects is a plausible
+          production sample
     code_quality:
       score: 10
       max: 10
@@ -162,33 +187,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure. No functions or classes.
+        comment: 'Flat: imports -> tokens -> data -> layers -> compose -> save/pad;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used.
+        comment: os, altair, pandas, PIL.Image — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Appropriate complexity.
+        comment: Clean idiomatic Altair; title fontsize scaling formula appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0 and plot.html.
+        comment: Saves plot-THEME.png and plot-THEME.html; PIL pad block correct;
+          current API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -196,26 +223,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of declarative grammar: layered composition, resolve_scale,
-          conditional encoding, tooltips.'
+        comment: 'Expert: alt.layer(), resolve_scale(y=independent), alt.condition(),
+          alt.OverlayMarkDef, configure_* — full grammar-of-graphics'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses alt.condition, resolve_scale(y=independent), alt.OverlayMarkDef.
-          Good but common patterns.
+        comment: resolve_scale(y=independent) for dual-axis, alt.condition(alt.datum.field)
+          for conditional color encoding, alt.OverlayMarkDef — all distinctly Altair
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  - twin-axes
+  patterns: []
   dataprep:
   - cumulative-sum
-  styling:
-  - grid-styling
-  - edge-highlighting
+  styling: []
