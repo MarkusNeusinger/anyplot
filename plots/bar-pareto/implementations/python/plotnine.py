@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
