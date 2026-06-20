@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -15,7 +15,9 @@ while _d in sys.path:
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import patheffects
 from matplotlib.patches import FancyArrowPatch
+from matplotlib.ticker import FormatStrFormatter
 
 
 # Theme tokens
@@ -64,7 +66,7 @@ model_smooth[in_transit_s] = 1.0 - transit_depth * limb_s
 
 # Two-panel layout: full light curve + transit zoom (landscape 3200×1800)
 fig, (ax, ax_zoom) = plt.subplots(
-    1, 2, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, gridspec_kw={"width_ratios": [3, 1.2], "wspace": 0.05}
+    1, 2, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, gridspec_kw={"width_ratios": [3, 1.2], "wspace": 0.15}
 )
 ax.set_facecolor(PAGE_BG)
 ax_zoom.set_facecolor(PAGE_BG)
@@ -80,7 +82,7 @@ ax.errorbar(
     markersize=2.5,
     color=BRAND,
     ecolor=BRAND,
-    elinewidth=0.5,
+    elinewidth=0.7,
     alpha=0.55,
     markeredgecolor=PAGE_BG,
     markeredgewidth=0.3,
@@ -116,19 +118,21 @@ t1 = transit_center - half_dur
 t4 = transit_center + half_dur
 for t_val, label in [(t1, "$t_1$"), (t4, "$t_4$")]:
     ax.axvline(x=t_val, color=INK_MUTED, linewidth=0.6, linestyle=":", alpha=0.6, zorder=1)
-    ax.text(t_val, 1.0055, label, fontsize=8, color=INK_MUTED, ha="center", va="bottom")
+    ax.text(t_val, 1.0055, label, fontsize=9, color=INK_MUTED, ha="center", va="bottom")
 
 ax.axvspan(transit_center - half_dur * 1.8, transit_center + half_dur * 1.8, color=BRAND, alpha=0.04, zorder=0)
 
 ax.set_xlabel("Orbital Phase", fontsize=10, color=INK)
 ax.set_ylabel("Relative Flux", fontsize=10, color=INK)
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 ax.set_xlim(0.0, 1.0)
+
+ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 
 leg = ax.legend(fontsize=8, frameon=True, loc="upper right")
 if leg:
@@ -162,7 +166,7 @@ ax_zoom.errorbar(
     markersize=2.5,
     color=BRAND,
     ecolor=BRAND,
-    elinewidth=0.5,
+    elinewidth=0.7,
     alpha=0.55,
     markeredgecolor=PAGE_BG,
     markeredgewidth=0.3,
@@ -188,28 +192,30 @@ arrow = FancyArrowPatch(
     zorder=6,
 )
 ax_zoom.add_patch(arrow)
-ax_zoom.text(
+df_text = ax_zoom.text(
     transit_center - half_dur * 1.5,
     (1.0 + min_model) / 2,
     f"$\\Delta F = {transit_depth * 100:.1f}\\%$",
-    fontsize=8,
+    fontsize=10,
     color=MODEL_COLOR,
     va="center",
     ha="left",
-    fontweight="medium",
+    fontweight="bold",
     zorder=6,
 )
+df_text.set_path_effects([patheffects.withStroke(linewidth=3, foreground=PAGE_BG), patheffects.Normal()])
 
 for t_val, label in [(t1, "$t_1$"), (t4, "$t_4$")]:
     ax_zoom.axvline(x=t_val, color=INK_MUTED, linewidth=0.6, linestyle=":", alpha=0.6, zorder=1)
-    ax_zoom.text(t_val, 1.004, label, fontsize=8, color=INK_MUTED, ha="center", va="bottom")
+    ax_zoom.text(t_val, 1.004, label, fontsize=9, color=INK_MUTED, ha="center", va="bottom")
 
 zoom_margin = half_dur * 2.0
 ax_zoom.set_xlim(transit_center - zoom_margin, transit_center + zoom_margin)
 ax_zoom.set_ylim(min_model - 0.002, 1.006)
 ax_zoom.set_xlabel("Orbital Phase", fontsize=10, color=INK)
-ax_zoom.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax_zoom.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax_zoom.tick_params(axis="y", labelleft=False)
+ax_zoom.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
 ax_zoom.spines["top"].set_visible(False)
 ax_zoom.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
@@ -222,5 +228,5 @@ fig.suptitle(
     "lightcurve-transit · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", y=0.98, color=INK
 )
 
-fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.12, wspace=0.08)
+fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.12, wspace=0.15)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
