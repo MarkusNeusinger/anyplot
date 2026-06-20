@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-20
+Quality: 90/100 | Updated: 2026-06-20
 """
 
 import os
