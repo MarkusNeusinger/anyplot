@@ -1,41 +1,66 @@
 library: pygal
+language: python
 specification_id: line-parametric
 created: '2026-03-20T10:39:29Z'
-updated: '2026-03-20T11:11:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339035335
+updated: '2026-06-20T23:11:24Z'
+generated_by: claude-sonnet
+workflow_run: 27886135547
 issue: 4424
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-parametric/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-parametric/pygal/plot.html
-quality_score: 80
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Full spec compliance with both required curves and all specified features
-  - Effective 4-segment color gradient technique to convey parameter direction
-  - Custom dual color palette (blue-orange + purple-green) cleanly distinguishes curves
-  - Good use of pygal-specific features (dict data points, stroke_style, HTML export)
-  - Deterministic output with 1000-point resolution for smooth rendering
+  - 'Imprint palette applied correctly in canonical order across all 8 series with
+    #009E73 as first series'
+  - Clever traversal-direction encoding via color-coded segments (4 colours per curve,
+    cool-to-warm progression)
+  - Solid vs. dashed line styles provide redundant encoding to disambiguate the two
+    curve families
+  - Both light (#FAF8F1) and dark (#1A1A17) backgrounds are theme-correct and all
+    chrome is fully theme-adaptive
+  - All font sizes are explicitly set to style-guide values (title=66, labels=56,
+    ticks=44, legend=44)
+  - Code is clean KISS structure with idiomatic pygal XY usage and proper themed output
+    files
+  - Start/end traversal markers add directional context beyond colour alone
+  - Deterministic mathematical data requires no random seed
   weaknesses:
-  - Legend crowded with 12 entries making it dense to parse
-  - fmt_tooltip function adds complexity unnecessary for static PNG output
-  - Design excellence limited by pygal SVG rendering constraints
-  - Start markers near origin overlap since both curves begin at (0,0)
-  image_description: 'The plot displays two parametric curves on a square 3600x3600
-    canvas with a light gray (#f7f7f7) plot background and white outer background.
-    The title "line-parametric · pygal · pyplots.ai" appears at the top in dark text.
-    The x-axis is labeled "Horizontal Position x(t)" and y-axis "Vertical Position
-    y(t)", both ranging from approximately -1.2 to 1.2. The Lissajous figure (x=sin(3t),
-    y=sin(2t)) is drawn in 4 color-gradient segments: deep navy blue, steel blue,
-    burnt orange, and warm amber, forming the characteristic self-intersecting figure-eight-like
-    pattern spanning the full plot area. The spiral curve is drawn in 4 segments:
-    deep purple (small inner loop), orchid purple, teal, and forest green, expanding
-    outward from the center. Red dots mark the start points near the origin (spiral
-    start slightly offset), and dark/black dots mark the endpoints of both curves.
-    The legend at the bottom contains 12 entries arranged in 4 columns showing all
-    curve segments, start markers, and end markers. Subtle gray grid lines are visible
-    on the light plot background.'
+  - Asymmetric margins (margin_top=60, margin_bottom=440, margin_left=80, margin_right=60)
+    on a square canvas cause the plot area to be non-square (~2260×1900 px), distorting
+    the parametric curves — the Lissajous and spiral both appear slightly squished
+    vertically. Equal aspect ratio requires equal pixel extent in x and y; fix by
+    either (a) reducing margin_bottom closer to the space actually needed by the legend,
+    (b) computing legend height and adjusting top margin to compensate, or (c) accepting
+    a landscape canvas (3200×1800) and using more of the horizontal space
+  - Start/end traversal markers (the ● and ◆ series) render as the default pygal dot
+    size which is quite small relative to the thick curve lines (stroke_width=10).
+    They are technically visible but lack emphasis — consider using a larger explicit
+    dot size or separate annotation to make them stand out as directional anchors
+  - 'DE-02 visual refinement is limited by pygal defaults: the box frame (4 spines)
+    and dot-grid pattern are stock pygal chrome. Consider reducing the grid to horizontal
+    lines only (show_x_guides=False, show_y_guides=True) or tweaking foreground_subtle
+    opacity to make the grid more subtle'
+  - 'VQ-04 concern: with 8 categorical colours all visible simultaneously on one chart,
+    CVD discrimination is near its floor (ΔE_CVD ≈ 8.81 at n=8). The solid/dashed
+    family distinction helps, but within each 4-segment family colour is the only
+    discriminator. A legend note or direct label would reduce CVD reliance'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-parametric · python · pygal · anyplot.ai" in dark ink at top — readable, occupies ~55% of width at the correct fontsize=66. Y-axis label "Vertical Position y(t)" and X-axis label "Horizontal Position x(t)" are clearly visible in dark ink. Tick labels (-1.2 to 1.2 on both axes) are legible at major_label_font_size=44. Grid is a subtle dot-grid pattern on warm-off-white.
+      Data: Two parametric curves plotted. First Lissajous segment is brand green (#009E73) — correct. Remaining Lissajous segments progress through lavender (#C475FD), blue (#4467A3), ochre (#BD8233). Spiral segments use red (#AE3030), cyan (#2ABCCD), rose (#954477), lime (#99B314). Lissajous uses solid lines; spiral uses dashed lines — good redundant encoding. Small dot markers visible near origin (Start) and at ~(1,0) (Spiral end). Legend at bottom in 2-column layout, all labels readable.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8) — clearly visible on dark background. Tick labels are light-coloured and readable. Grid lines are subtly visible. Legend text is light on dark — readable.
+      Data: All 8 data colours are identical to the light render — green, lavender, blue, ochre (Lissajous), red, cyan, rose, lime (spiral). Solid vs dashed distinction is maintained. No dark-on-dark text issues observed; all labels flip correctly to light chrome.
+      Legibility verdict: PASS — all text is readable against the dark background; brand green #009E73 remains clearly visible; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -46,45 +71,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=52, label=36, major_label=32,
-          legend=30). Legend text slightly dense with 12 entries.
+        comment: 'All font sizes explicitly set matching style-guide values; all text
+          readable in both themes. Minor deduction: bottom empty-space margin slightly
+          disproportionate.'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Legend with 12 entries in 4 columns is tight but readable. Start
-          markers near origin overlap slightly.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick stroke widths (8-10px) make curves highly visible. Start/end
-          dots large and distinct.
+        comment: No text or element overlap; 2-column legend is well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Curve lines are well-visible at stroke_width=10. Start/end marker
+          dots are quite small relative to the thick lines, reducing emphasis.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Blue-orange and purple-green gradients provide good contrast. Minor
-          tritanopia concern with navy-purple proximity.
+        comment: Solid/dashed redundant encoding helps distinguish curve families,
+          but 8 simultaneous categorical colours is at CVD discrimination floor.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas appropriate for geometric curves. Good axis range.
-          Bottom legend area dense with 12 items.
+        comment: Good overall layout. Asymmetric margins (bottom=440 for legend) make
+          the actual plot area non-square on a 2400×2400 canvas, introducing mild
+          curve distortion.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with mathematical notation. Units N/A for dimensionless
-          curves.
+        comment: 'Descriptive labels with parameter notation: ''Horizontal Position
+          x(t)'' and ''Vertical Position y(t)''. Correct title format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette in canonical order; first series #009E73; backgrounds
+          #FAF8F1 / #1A1A17; theme-adaptive chrome; data colours identical across
+          themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -92,24 +126,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom dual color palette with intentional gradients. Curated style
-          above defaults but not publication-level.
+        comment: 'Above a plain library default: colour-coded traversal segments are
+          an intentional and visually interesting design choice. Overall look is still
+          standard pygal rather than publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid styling, light background, generous margins, rounded
-          linecaps. Pygal limits spine control.
+        comment: Explicit margins and font sizes, thoughtful legend placement, but
+          stock pygal box frame (4 spines) and dot-grid pattern remain.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color gradients convey parameter direction. Start/end markers create
-          traversal narrative. Lacks stronger focal point.
+        comment: Colour gradient effectively communicates traversal direction; solid
+          vs dashed encodes curve family. Viewer can trace the journey of each curve
+          from start to end.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,28 +153,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric XY plot showing curves traced by x(t) and y(t).
+        comment: Correct parametric XY plot with two distinct curve types.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: equal aspect ratio, color gradient, two curves,
-          start/end markers, 1000 points.'
+        comment: Colour gradient for direction, two curves, start/end markers all
+          present. Equal aspect ratio not enforced — asymmetric margins distort the
+          equal-range axes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed from parametric equations with appropriate
-          axis padding.
+        comment: x(t) and y(t) correctly mapped; both curves visible within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels describe curve segments
-          with parameter ranges.
+        comment: Title matches required format. Legend labels are descriptive and
+          accurately represent each curve segment.
     data_quality:
       score: 13
       max: 15
@@ -148,58 +184,60 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows self-intersecting closed curve (Lissajous) and open expanding
-          curve (spiral). Could include cusps.
+        comment: Shows closed curve (Lissajous), open spiral, traversal direction,
+          and start/end markers. Could show self-intersection behaviour more explicitly.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Scientific/mathematical context using exact spec equations. Neutral
-          and domain-appropriate.
+        comment: Well-known mathematical curves used in real-world physics (signal
+          analysis, antenna design). Educational/scientific context is neutral and
+          appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spiral normalized to [-1,1] for visual comparison. Axis range ±1.3
-          provides balanced padding.
+        comment: Both curves normalised to [-1, 1] range with appropriate padding
+          to [-1.2, 1.2]; spiral radius correctly reaches 1.0 at t=2pi.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear flow but includes fmt_tooltip helper function breaking
-          pure KISS.
+        comment: 'Clean linear structure: imports, constants, data, chart, series
+          addition, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with pure mathematical functions.
+        comment: Fully deterministic from mathematical formulas; no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pygal, Style.'
+        comment: Only os, numpy, pygal, and Style imported — all used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Verbose segmentation loops. Tooltip formatter unnecessary for PNG.
-          Spiral start offset is a hack.
+        comment: Loop-based segment addition is clean; list comprehensions for data
+          are appropriate; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png; current
+          API used.
     library_mastery:
       score: 7
       max: 10
@@ -209,26 +247,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good pygal XY chart usage, Style class, per-series stroke_style,
-          dict data points, legend configuration.
+        comment: 'Correct XY chart with dict-style {value: (x,y)} data format, Style
+          object, stroke_style dict, js=[], xrange/range bounds, legend column control.
+          Slightly below perfect idiomatic due to minor non-standard options.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Pygal-specific: dict data format, per-series stroke_style, HTML
-          export, truncate_legend, legend_at_bottom_columns.'
-  verdict: REJECTED
+        comment: Uses SVG stroke_style with dasharray/linecap/linejoin directly in
+          pygal's XY API, js=[] for headless PNG rendering, truncate_legend=-1 — pygal-specific
+          features not easily replicated in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - grid-styling
-  - edge-highlighting
+  dataprep: []
+  styling: []
