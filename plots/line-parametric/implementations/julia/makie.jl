@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-parametric: Parametric Curve Plot
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-06-20
+# Quality: 90/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors

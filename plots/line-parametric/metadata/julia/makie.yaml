@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-parametric
 created: '2026-06-20T23:06:36Z'
-updated: '2026-06-20T23:13:17Z'
+updated: '2026-06-20T23:32:05Z'
 generated_by: claude-sonnet
 workflow_run: 27886320031
 issue: 4424
@@ -12,43 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-para
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: both required curve types present (Lissajous + Archimedean
-    spiral), correct formulas, equal aspect ratio via DataAspect(), direction gradient,
-    start/end markers — nothing missing'
-  - 'Sequential colormap (imprint_seq: #009E73→#4467A3) correctly chosen for the continuous
-    traversal parameter; Imprint palette compliant with no unauthorized colormaps'
-  - 'Both themes render correctly with full chrome adaptation; dark render has no
-    dark-on-dark failures — all text readable against #1A1A17 background'
-  - Clean flat code structure with deterministic data generation (LinRange only, no
-    seed needed); current Makie 0.22 API (size= not deprecated resolution=) used throughout
-  - Column-spanning title label at fig[0,1:3] and shared Colorbar with named tick
-    strings are idiomatic Makie multi-panel composition
+  - 'Complete spec compliance: both required curves (Lissajous figure and Archimedean
+    spiral) implemented correctly with DataAspect() for geometric accuracy'
+  - ANYPLOT_SEQ gradient (green→blue) correctly encodes direction of parameter t,
+    satisfying the spec's color-gradient requirement idiomatically
+  - Start and end markers with distinct shapes (circle vs. diamond) plus the 't =
+    2π →' annotation create clear directional context on the spiral
+  - Fully theme-adaptive chrome in both renders — INK/INK_SOFT tokens applied to every
+    text, spine, and grid element; no dark-on-dark or light-on-light failures
+  - 1000-point curve density with linewidth=2.5 produces perfectly smooth rendering
+    near self-intersections (Lissajous) and near the origin (spiral)
+  - Clean, idiomatic CairoMakie code — Colorbar in the figure grid, DataAspect(),
+    cgrad(), RGBAf() all used correctly; deterministic data requires no seed
+  - All font sizes explicitly set throughout the Axis definitions; tick and label
+    colors correctly derived from INK/INK_SOFT tokens
   weaknesses:
-  - Panel sub-titles use titlesize=16; style guide default for Axis titles is 20pt
-    — bump to 18–20 for better proportional sizing
-  - No directional annotation along the curves beyond the colorbar — a small mid-curve
-    text label (e.g., 't = 2π →' near spiral midpoint) would strengthen data storytelling
-    without cluttering the plot
-  - Spine colors could be softened further (opacity ~0.3–0.4) to match grid subtlety
-    and elevate visual refinement
+  - Colorbar label and tick sizes not explicitly set — the Colorbar object inherits
+    the figure base fontsize=14 (28px effective) which renders the 'direction of t
+    →' label and 'start'/'end' ticks noticeably smaller than the axis labels; add
+    labelsize=13, ticklabelsize=11 to the Colorbar constructor to match the rest of
+    the typography
+  - Panel sizes are asymmetric due to DataAspect() applied to columns with very different
+    data ranges (Lissajous [-1,1]×[-1,1] vs spiral [-12,12]×[-12,5]); the left panel
+    dominates the layout slightly — consider using colsize!(fig.layout, 1, Relative(0.45))
+    and colsize!(fig.layout, 2, Relative(0.45)) to balance the panels
+  - Design Excellence is in the 'good but not exceptional' range — the gradient colormap
+    is the correct and obvious choice for parametric curves; a higher tier would require
+    more typographic hierarchy (e.g., bolder main title weight, size contrast between
+    main title and panel sub-titles)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Bold centered title "line-parametric · julia · makie · anyplot.ai" in dark #1A1A17. Panel sub-titles "Lissajous Figure · sin(3t), sin(2t)" and "Archimedean Spiral · t·cos(t), t·sin(t)" in bold dark text. Axis labels (x = sin(3t), y = sin(2t), x = t·cos(t), y = t·sin(t)) in dark INK. Tick labels in muted #4A4A44. Colorbar label "direction of t →" and tick labels "start"/"end" readable.
-      Data: Left panel — Lissajous figure drawn with green→blue sequential gradient (imprint_seq). Right panel — Archimedean spiral with same gradient. Start circle (teal #009E73) marks origin on both panels; blue diamond marks spiral end at ~(12.5, 0). L-spine frame, subtle grid.
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+      Background: Warm off-white surface consistent with #FAF8F1 — correctly not pure white.
+      Chrome: Main title "line-parametric · julia · makie · anyplot.ai" in dark ink, centered above both panels, clearly readable. Panel sub-titles "Lissajous Figure · sin(3t), sin(2t)" and "Archimedean Spiral · t·cos(t), t·sin(t)" in dark ink, legible. Axis labels "x = sin(3t)", "y = sin(2t)", "x = t·cos(t)", "y = t·sin(t)" in dark ink, readable. Tick labels in INK_SOFT (dark secondary) visible. Colorbar label "direction of t →" (rotated) and ticks "start"/"end" are small but readable. Subtle grid at ~12% alpha. Left+bottom spines only (top/right removed).
+      Data: Left panel — Lissajous figure (closed, self-intersecting curve with 4 loops) colored with green-to-blue gradient starting at #009E73 and ending near #4467A3, with a green circle marker at the origin (start). Right panel — Archimedean spiral colored with the same green-to-blue gradient, green circle at origin (start), blue diamond at outer end, and "t = 2π →" annotation near the spiral midpoint. Colorbar on right shows green→blue scale labeled "start" to "end".
+      Legibility verdict: PASS — all text readable in the light theme; first data series is #009E73 per Imprint rules.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title and panel sub-titles flip to light #F0EFE8. Axis labels in #F0EFE8. Tick labels in secondary #B8B7B0. Colorbar label and tick text in light colors. Grid lines remain subtle (same opacity).
-      Data: Curve colors (green→blue gradient) are identical to light render — only chrome flipped. Start/end markers retain same teal/blue hues. Colorbar gradient unchanged.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
+      Background: Warm near-black surface consistent with #1A1A17 — correctly not pure black.
+      Chrome: Main title in light off-white (#F0EFE8), clearly readable against dark background. Panel sub-titles in light ink, legible. Axis labels in light ink, readable. Tick labels in INK_SOFT (light secondary #B8B7B0), visible. Colorbar label and ticks readable. Subtle grid at ~12% alpha of the light ink token. No dark-on-dark text failures observed.
+      Data: Colors are identical to the light render — same green-to-blue gradient on both curves, same marker colors. Only the chrome (background, text, grid, spine colors) flipped.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -56,49 +65,58 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes. Panel sub-titles use titlesize=16
-          vs style guide's suggested 20pt for axis titles — minor downgrade.
+        comment: 'All Axis font sizes explicitly set; both themes fully readable.
+          Minor deduction: Colorbar label/tick sizes not explicitly set (uses figure
+          base fontsize=14 by default), rendering colorbar text smaller than axis
+          labels.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; clean separation throughout.
+        comment: No overlapping text or data elements in either render. Annotation
+          't = 2π →' well-placed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 1000-point curves are smooth; linewidth=2.5 appropriate; markersize=14
-          start/end markers are prominent.
+        comment: 1000-point smooth curves at linewidth=2.5 (5px effective) are perfectly
+          visible. Start/end markers at markersize=14 are prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe; start/end redundantly encoded by color +
-          shape (circle vs diamond).
+        comment: Green-to-blue gradient is CVD-safe (distinguishable via luminance
+          contrast, not hue alone). Ink strokes on markers aid definition.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Two panels + colorbar layout well-proportioned.
+        comment: 'Canvas is exactly 3200x1800 px. Good use of space overall. Minor
+          deduction: DataAspect() on columns with very different data ranges (Lissajous
+          [-1,1] vs spiral [-12,12]) creates slight panel size asymmetry, with the
+          left panel noticeably larger.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include mathematical formulas; informative and precise.
+        comment: Axis labels use mathematical expressions (x = sin(3t), y = t·cos(t)
+          etc.) that are descriptive and contextually appropriate. Panel sub-titles
+          informative. Main title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73→#4467A3) correctly used for continuous direction
-          encoding. Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'ANYPLOT_SEQ = cgrad([#009E73, #4467A3]) is the correct imprint_seq
+          equivalent. Background #FAF8F1 light / #1A1A17 dark. Data colors identical
+          across both themes. All chrome is theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,24 +124,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): sequential colormap encodes traversal direction,
-          differentiated markers (circle=start, diamond=end), shared colorbar unifies
-          both panels.'
+        comment: Above a well-configured library default — gradient colormap encoding
+          is an intentional design decision. Dual-panel layout with shared colorbar
+          is sophisticated. Not quite 'strong design' tier because the gradient approach
+          is the obvious/standard choice for parametric curves rather than a surprising
+          insight.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): spines removed, grid at 0.12 opacity, colgap/rowgap
-          tuned. Could go further with softer spine colors or panel fills.'
+        comment: Top/right spines removed, subtle grid at 12% alpha, gap spacing via
+          colgap!/rowgap!, theme-adaptive spine and grid colors. Good refinement above
+          defaults but not 'every detail polished' (e.g., colorbar sizing inconsistency).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): green→blue gradient communicates traversal direction;
-          two complementary curve types demonstrate parametric behavior range. Missing:
-          mid-curve directional annotation.'
+        comment: Gradient color creates clear visual hierarchy showing t-direction.
+          Start circle + end diamond with different marker shapes + midpoint annotation
+          combine to tell the traversal story. Viewer immediately understands how
+          the parameter progresses. Good but not exceptional.
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +155,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Parametric curve plot with two distinct curve types.
+        comment: 'Correct parametric curve plot with two required examples: Lissajous
+          figure and Archimedean spiral.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equal aspect ratio (DataAspect), color gradient for direction, Lissajous
-          + spiral, start/end markers, 1000-point density — all present.
+        comment: Equal aspect ratio (DataAspect()), gradient encoding of t direction
+          (ANYPLOT_SEQ), both curves (Lissajous + spiral), start/end markers and directional
+          annotation, 1000 points for smooth rendering.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) and y(t) correctly computed; t ranges appropriate for each curve
-          type.
+        comment: x(t) and y(t) correctly mapped to X and Y axes for both curves. All
+          data visible within axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec-id · julia · makie · anyplot.ai format. Colorbar
-          with start/end ticks serves as direction legend.
+        comment: Title 'line-parametric · julia · makie · anyplot.ai' matches required
+          format exactly. Colorbar with 'start'/'end' ticks serves as the direction
+          legend correctly.
     data_quality:
       score: 15
       max: 15
@@ -164,21 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Closed self-intersecting curve (Lissajous) + open unbounded curve
-          (spiral) together cover the full range of parametric behavior.
+        comment: Lissajous demonstrates closed curves, self-intersections, and looping
+          behavior. Spiral demonstrates non-closed, continuously expanding parametric
+          curves. Together they cover the full range of parametric curve features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic mathematical parametric curves; neutral educational context.
+        comment: Lissajous figures and Archimedean spirals are classical mathematical
+          curves from physics/signal-analysis contexts — real, neutral, comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous in [-1,1]^2 correct for unit sinusoids; spiral extent ~±12
-          matches t in [0,4pi]; DataAspect preserves geometry.
+        comment: 'Lissajous: t∈[0,2π], x/y∈[-1,1] — mathematically correct. Spiral:
+          t∈[0,4π] showing 2 full revolutions — appropriate scale with visible expansion.'
     code_quality:
       score: 10
       max: 10
@@ -188,58 +215,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential script; no functions, classes, or abstractions.
+        comment: Theme tokens → Data → Plot → Save structure, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (LinRange only); no random seed needed.
+        comment: Fully deterministic — parametric curves from LinRange + trigonometric
+          functions, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported; both are used.
+        comment: Only CairoMakie and Colors imported; both are used (colorant"", RGBAf,
+          cgrad).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented; no fake interactivity (AR-08 clear).
+        comment: Clean, idiomatic Julia. No over-engineering, no fake functionality,
+          appropriate complexity for a dual-panel parametric curve plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png; uses current size= API (not deprecated
-          resolution=).
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses current CairoMakie
+          API (size= not deprecated resolution=).
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Figure grid layout (fig[row,col]), Axis with attribute API, lines!/scatter!
+          with color-mapping, Colorbar as a grid object, Label at fig[0,:], colgap!/rowgap!
+          — all idiomatic CairoMakie patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper Makie layout grid, column-spanning Label, DataAspect(), colgap!/rowgap!,
-          Colorbar with named tick strings — all idiomatic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Gradient line coloring via color=t_norm + colormap parameter is distinctively
-          Makie; Colorbar with custom string ticks; multi-panel grid layout.
+        comment: 'Color-mapped lines via color=t_norm+colormap= (clean Makie feature),
+          DataAspect() axis constraint, Colorbar placed in figure grid (layout-aware
+          colorbar is distinctively Makie), cgrad() for colormap construction. Minor
+          deduction: could leverage additional Makie-specific capabilities.'
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - Colors
+  - colors
   techniques:
   - colorbar
   - subplots
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep: []
