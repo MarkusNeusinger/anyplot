@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
-Library: letsplot | Python 3.13
-Quality: 93/100 | Updated: 2026-06-20
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import os
