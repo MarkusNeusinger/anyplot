@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: altair | Python 3.13
-Quality: 81/100 | Created: 2026-03-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-20
 """
 
 import sys
