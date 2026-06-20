@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: heatmap-risk-matrix
 created: '2026-06-20T06:13:30Z'
-updated: '2026-06-20T06:25:09Z'
+updated: '2026-06-20T06:43:53Z'
 generated_by: claude-sonnet
 workflow_run: 27862220334
 issue: 4567
@@ -12,54 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: correct 5x5 risk heatmap with all required zone colors,
-    risk markers, axis labels, and zone legend'
-  - 'Excellent semantic color choices: traffic-light risk convention using Imprint
-    palette/anchors (#009E73 Low, #DDCC77 Medium, #BD8233 High, #AE3030 Critical)
-    with justified semantic exception ordering'
-  - All 12 risk items placed in distinct cells with numbered circle markers and a
-    clearly organized risk items index — avoids label clutter elegantly
-  - Score watermarks in each cell add a subtle informational layer without visual
-    noise
-  - 'Both themes correctly adapted: t.ink/t.inkSoft/t.pageBg tokens used throughout
-    for all chrome elements'
-  - Clean, deterministic hard-coded data representing a realistic project management
-    risk register
-  - Correct square orientation for the symmetric grid layout
-  - 'Perfect code quality: flat KISS structure, no fake UI, reproducible data'
+  - Semantic traffic-light color zones (green/amber/ochre/red) drawn correctly from
+    Imprint palette with semantic exceptions
+  - Idiomatic d3.cross() for Cartesian product of 25 grid cells — elegant and D3-native
+  - Theme-adaptive chrome throughout (ink/inkSoft for text, pageBg for marker rings)
+  - Critical-zone markers (score≥20) rendered at r=17 vs r=14 for intentional visual
+    hierarchy
+  - Realistic project-management risk data covering all four risk severity zones
+  - Numbered marker convention with separate risk-item index — clean and readable
+    at scale
   weaknesses:
-  - 'LM: Implementation avoids D3''s core idiomatic patterns — grid cells drawn with
-    for-loops instead of d3.cross + .data().join(), and axis labels are manual SVG
-    text elements instead of d3.scaleBand() + d3.axisBottom()/d3.axisLeft(). Replace
-    nested for-loops with: const cells = d3.cross(d3.range(1,6), d3.range(1,6), (l,i)
-    => ({l,i,score:l*i})); g.selectAll(''rect.cell'').data(cells).join(''rect'')...
-    and add d3.scaleBand() scales for positioning.'
-  - 'DE: Low-risk zone cells (#009E73 at 0.32 opacity) are barely distinguishable
-    from the dark background (#1A1A17) in the dark render — the dark teal blends with
-    the near-black surface. Consider raising low-zone opacity to 0.50-0.55 in dark
-    mode to maintain zone readability.'
-  - 'DE: Cell borders use t.pageBg as stroke color, which becomes invisible in dark
-    mode (dark stroke on dark cell fill). Switch cell stroke to t.inkSoft or a semi-transparent
-    ink color so borders are visible in both themes.'
-  - 'DE: No visual emphasis or storytelling beyond the mandatory color zones — no
-    highlighting of the highest-priority risks or annotation pointing the viewer to
-    key insights. Consider slightly enlarging markers in the Critical zone or adding
-    a subtle annotation for the most critical risk.'
+  - Marker labels are index numbers (1-12) rather than direct risk-name labels on
+    the chart — spec says labeled markers; numbering is valid but a small deviation
+  - Bottom section margin is tight (~17-21 px before canvas edge) — risk items row
+    4 clears the canvas but barely; a slightly larger bottom margin would be safer
+  - zoneIdx() helper function deviates from KISS no-functions rule (minor)
+  - Risk item and zone-label text at 12px is slightly small for mobile readability
+    at 400px width — 13-14px would be safer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "heatmap-risk-matrix · javascript · d3 · anyplot.ai" in bold dark ink at top, clearly readable. Y-axis labels (Catastrophic, Major, Moderate, Minor, Negligible) in dark secondary ink on the left. X-axis labels (Rare, Unlikely, Possible, Likely, Almost Certain — "Almost Certain" split across two lines) at bottom. "Impact →" rotated Y-axis label and "Likelihood →" X-axis label both readable. Score watermarks (faint numbers) in top-right of each cell at 28% opacity — subtle and intentional.
-      Data: 5×5 grid with four color zones: low-risk cells in pale green/teal (#009E73 at 0.32 opacity), medium in muted yellow (#DDCC77 at 0.62), high in golden-ochre (#BD8233 at 0.80), critical in dark red (#AE3030 at 0.90). 12 numbered dark circles (dark fill, white numbers) mark risk items across the grid. Zone legend strip (4 colored boxes with labels) and 3-column risk items index below the grid.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no dark-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title "heatmap-risk-matrix · javascript · d3 · anyplot.ai" dark text, centered at top — clearly readable. Y-axis label "Impact →" (rotated, bold) and X-axis label "Likelihood →" both in dark ink, clearly visible. Tick labels "Rare/Unlikely/Possible/Likely/Almost Certain" and "Negligible/Minor/Moderate/Major/Catastrophic" at 14px in inkSoft — readable. "Almost Certain" correctly split into two tspan lines.
+      Data: 5×5 grid with color-coded cells — Low zone green (#009E73 with 0.32 opacity), Medium zone amber (#DDCC77 at 0.62 opacity), High zone ochre (#BD8233 at 0.80 opacity), Critical zone red (#AE3030 at 0.90 opacity). Score watermarks in each cell at 0.28 opacity (intentionally subtle). Numbered circles (r=14, r=17 for critical) in dark ink fill with pageBg stroke — clearly visible against all zone backgrounds. Below grid: zone color swatches with labels and 3-column risk item index listing all 12 risks.
+      Legibility verdict: PASS — all text elements readable; bottom section tight but no clipping
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light off-white (#F0EFE8), clearly readable. Y-axis and X-axis labels in lighter secondary ink (#B8B7B0), readable. "Impact →" and "Likelihood →" axis titles in primary light ink, visible. Risk zone legend labels and risk item index text in secondary ink — readable though small (12px).
-      Data: Same four color zones — however low-risk cells (#009E73 at 0.32 opacity on #1A1A17) appear as very dark teal, only subtly distinguishable from the background. Medium, high, and critical zones remain clearly visible. Risk markers appear as WHITE circles (t.ink = #F0EFE8) with dark numbers (t.pageBg = #1A1A17) — color correctly inverted from light render. Zone legend boxes maintain their zone colors. Critically: the data colors (zone fills) are identical between themes — only chrome (text, backgrounds) has flipped.
-      Legibility verdict: PASS overall, with one minor concern — the low-risk zone cells are very dark and barely distinguishable from the page background in dark mode. Cell borders using t.pageBg stroke become invisible (dark-on-dark) in the low-risk zone, making cell boundaries in that region less crisp. No text legibility failures.
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: Title and all axis labels render in light-colored text (t.ink / t.inkSoft tokens, approximately #F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected. Grid cell borders at reduced opacity. Tick labels fully readable.
+      Data: Zone cell colors remain identical to light render (same hex values, slightly higher opacity for Low zone: 0.50 vs 0.32). Risk markers appear as cream/off-white circles (#F0EFE8 fill = t.ink in dark) with near-black strokes and dark numbers inside — strong contrast and fully readable. Zone swatches and risk item list text readable in muted light tones.
+      Legibility verdict: PASS — data colors identical to light render; only chrome flips; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 27
@@ -70,59 +54,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 15px axis labels, 14px
-          tick labels, 12px legend/index). Both themes legible. Minor deduction for
-          very small 12px legend/index text at the bottom.
+        comment: All sizes explicitly set; title 22px, axis labels 15px, tick labels
+          14px, zone/item labels 12px. 12px items slightly small for mobile but readable
+          at canvas size. Both themes readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: All 12 risk items placed in distinct cells — no marker overlap. Axis
-          labels and legend elements well-separated.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Risk markers (r=14 circles) clearly visible. Zone colors work well
-          in light mode. In dark mode, low-risk zone cells (#009E73 at 0.32 opacity
-          on dark bg) are barely distinguishable from background — minor visibility
-          concern.
+        comment: No actual overlap detected; bottom section (zone legend + risk items)
+          is tight with ~8-21px gaps between elements but no text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers at r=14/17 clearly visible against all zone backgrounds.
+          Score watermarks intentionally subtle at 0.28 opacity. Zone swatches and
+          risk items all visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors used with CVD-safe traffic-light progression.
-          Zone distinguishability relies on both hue and opacity, providing redundant
-          encoding.
+        comment: Traffic-light semantic domain; red-green not sole signal — zone text
+          labels, score numbers, and marker numbering all provide redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square orientation correct for symmetric heatmap. Canvas correctly
-          2400x2400. Bottom margin (260px) is tight — 12 risk items fit but with minimal
-          breathing room (~21px below last row).
+        comment: Square canvas appropriate for 5x5 matrix. Good grid utilization.
+          Bottom margin (~17-21px clearance for last risk items row) is tight but
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis labels: ''Likelihood →'' and ''Impact →''. All
-          5 tick labels per axis use domain-specific terms per spec.'
+        comment: Descriptive axis labels with directional arrows. Tick labels use
+          full English terms per spec.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Zone colors use Imprint palette/anchors with correct semantic exception
-          (traffic-light domain convention): #009E73 Low, #DDCC77 Medium, #BD8233
-          High, #AE3030 Critical. Chrome correctly flips between themes. Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) as required.'
+        comment: 'Green #009E73 for Low (correct first/brand color), amber #DDCC77
+          for Medium (semantic anchor), ochre #BD8233 for High, red #AE3030 for Critical.
+          All from Imprint palette with semantic exception for traffic-light domain.
+          Theme-adaptive chrome throughout.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -130,28 +112,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: intentional opacity graduation across zones, numbered
-          circle markers with clean index system, subtle score watermarks. Not publication-ready
-          but clearly above ''well-configured library default''.'
+        comment: Professional risk matrix appearance. Semantic color progression intuitive.
+          Custom opacity per theme for cells, subtle score watermarks, size-varied
+          markers for critical risks. Above default but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No traditional axis spines (uses border rect + manual labels). Grid
-          lines at 35% opacity — subtle. However, cell borders use t.pageBg which
-          becomes invisible in dark mode, reducing grid crispness there.
+        comment: Axis domains removed, tick sizes 0, cell border opacity at 0.45,
+          zone swatch border-radius 3px. Clean and refined; not full 6 but clearly
+          above minimal.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color progression from pale-green to dark-red creates visual hierarchy
-          guiding the eye to critical zones. Risk items positioned in their risk zones.
-          No additional emphasis or annotation pointing to key insights beyond the
-          zone structure.
+        comment: Larger markers (r=17) for critical-zone risks create immediate visual
+          emphasis. Color progression from green to red guides viewer's eye to priority
+          risks. Risk items index allows cross-reference.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -159,32 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 risk heatmap grid with color-coded cells.
+        comment: Correct 5x5 heatmap risk matrix with color-coded cells and labeled
+          markers.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All required features present: color gradient cells, descriptive
-          axis labels (all 5 terms per axis), labeled markers (numbered circles with
-          index), zone labels/legend, grid lines delineating cells. Jitter not needed
-          since all 12 risks are in distinct cells.'
+        comment: Green-red color gradient present, descriptive axis labels present,
+          zone legend present, grid lines present, jitter not needed (all risks in
+          distinct cells). Markers use index numbers rather than direct risk-name
+          labels — minor deviation from 'labeled markers'.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Likelihood on X-axis (1=Rare to 5=Almost Certain), Impact on Y-axis
-          (1=Negligible at bottom to 5=Catastrophic at top). Risk score = l*i correctly
-          computed for all 25 cells.
+        comment: X=Likelihood (1-5, Rare to Almost Certain), Y=Impact (1-5, Negligible
+          to Catastrophic ascending). Correct orientation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-risk-matrix · javascript · d3 · anyplot.ai' — correct
-          format. Zone legend with Low/Medium/High/Critical labels and numeric ranges
-          matches spec.
+        comment: Title 'heatmap-risk-matrix · javascript · d3 · anyplot.ai' correct.
+          Zone legend with Low/Medium/High/Critical labels present.
     data_quality:
       score: 15
       max: 15
@@ -194,97 +174,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 risk zones represented. 12 items spanning various likelihood/impact
-          combinations. All 5 likelihood levels and all 5 impact levels covered by
-          at least one risk item.
+        comment: 12 risks spanning all 4 zones (Low, Medium, High, Critical). Good
+          distribution across the matrix.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Project management risk register with plausible, neutral risk items
-          (Budget Overrun, Scope Creep, Tech Failure, Data Breach, etc.). ISO 31000
-          enterprise risk management context matches spec application examples.
+        comment: Project management risk register with realistic business risks (Budget
+          Overrun, Data Breach, Vendor Delay, etc.). Neutral business domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-5 scale for both axes, 12 items within the 5-20 range, risk scores
-          correctly computed (1*1=1 through 5*5=25). Likelihood/impact assignments
-          are plausible for the named risks.
+        comment: 'Likelihood and impact scores 1-5 per spec. Risk positions plausible
+          (Data Breach: low likelihood, catastrophic impact; Budget Overrun: high
+          likelihood, major impact).'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat structure with one minimal helper function (zoneIdx). Constants
-          → Data → SVG → Cells → Axes → Markers → Legend → Index → Title.
+        comment: Clean top-level script with one small helper function zoneIdx() —
+          minor deviation from no-functions rule.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is entirely hard-coded — fully deterministic, no random elements.
+        comment: All data hardcoded deterministically. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — d3 is a global per the harness contract. No unused globals.
+        comment: D3 is a global; only uses window.ANYPLOT_TOKENS, ANYPLOT_SIZE, ANYPLOT_THEME.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code with appropriate complexity. No fake interactivity. Good
-          separation of concerns.
+        comment: d3.cross() for Cartesian product, .data().join() pattern, tspan for
+          multi-line labels. Clean and idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly uses window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS. Square
-          orientation directive on its own line. Harness generates both PNG and HTML
-          outputs.
+        comment: Harness saves plot-{theme}.png automatically. Uses current D3 7.9.0
+          API.
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 'Correctly uses d3.select(''#container'').append(''svg''), .attr(),
-          .style() chaining. However, avoids D3''s core idiomatic patterns: no d3.scaleBand()
-          for positioning, no d3.axisBottom()/d3.axisLeft() for axes, no .data().join()
-          for data-driven cell rendering. Grid drawn with nested for-loops; axis labels
-          with forEach.'
+        comment: d3.scaleBand() for grid positions, d3.cross() for cell generation,
+          .data().join() pattern, d3.range() for domains. Fully idiomatic D3.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: 'Uses D3 selection API for SVG mounting and attribute chaining, but
-          does not leverage D3''s most distinctive features: no scales, no axes, no
-          data binding, no color interpolators (d3.interpolateRgb), no d3.cross()
-          for grid generation. The code could be rewritten in vanilla DOM APIs with
-          minimal changes.'
-  verdict: REJECTED
+        passed: true
+        comment: d3.cross() for Cartesian product is D3-distinctive. scaleBand-based
+          grid layout, tspan manipulation for multi-line tick labels are D3-native
+          techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
