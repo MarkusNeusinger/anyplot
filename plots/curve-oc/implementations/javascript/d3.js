@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-oc: Operating Characteristic (OC) Curve
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 91/100 | Created: 2026-06-20
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
