@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -82,7 +82,12 @@ title = "bar-pareto · python · plotnine · anyplot.ai"
 plot = (
     ggplot(df, aes(x="category"))
     + geom_bar(aes(y="count", fill="bar_fill"), stat="identity", width=0.7)
-    + scale_fill_manual(values={"vital": VITAL_COLOR, "useful": INK_MUTED})
+    + scale_fill_manual(
+        values={"vital": VITAL_COLOR, "useful": INK_MUTED},
+        breaks=["vital", "useful"],
+        labels=["Vital Few", "Useful Many"],
+        name="",
+    )
     + geom_line(aes(y="cum_scaled", group=1), color=CUMLINE_COLOR, size=1.2)
     + geom_point(aes(y="cum_scaled"), color=CUMLINE_COLOR, fill=PAGE_BG, size=3, stroke=1.2)
     + geom_text(
@@ -112,7 +117,12 @@ plot = (
         axis_ticks=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        legend_position="none",
+        legend_position=(0.87, 0.72),
+        legend_direction="vertical",
+        legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT, size=0.3),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_blank(),
+        legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=0.02,
     )
 )
@@ -130,7 +140,7 @@ for spine in ax2.spines.values():
     spine.set_visible(False)
 
 # Adjust layout so secondary y-axis fits within canvas without bbox_inches='tight'
-fig.subplots_adjust(right=0.90)
+fig.subplots_adjust(right=0.87)
 
 # Save — figure_size=(8, 4.5) dpi=400 → 3200×1800 px; no bbox_inches='tight'
 fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
