@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -20,6 +20,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"  # caution/attention accent (outside categorical pool)
 
 # Data — monthly SaaS cohort retention over 10 months
 np.random.seed(42)
@@ -129,7 +130,7 @@ plot = (
         aes(x="period", y="cohort"),
         data=df_drop,
         fill="rgba(0,0,0,0)",
-        color="#FF6F00",
+        color=ANYPLOT_AMBER,
         size=2.8,
         width=0.98,
         height=0.98,
