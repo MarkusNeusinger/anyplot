@@ -9,11 +9,12 @@ library(ragg)
 set.seed(42)
 
 # --- Theme tokens ---
-THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
-INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
-INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+THEME         <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG       <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+ELEVATED_BG   <- if (THEME == "light") "#FFFDF6" else "#242420"
+INK           <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT      <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+ANYPLOT_AMBER <- "#DDCC77"
 
 # --- Data ---
 cohort_names <- c("Jan '24", "Feb '24", "Mar '24", "Apr '24", "May '24",
@@ -48,7 +49,11 @@ for (i in seq_along(cohort_names)) {
 }
 df <- do.call(rbind, rows)
 
-# Y-axis labels: "Jan '24 / 1,240 users" (two lines)
+# Week 1 cliff: the key insight in this chart
+wk1_avg    <- round(mean(df$ret_rate[df$period == 1L]))
+cliff_drop <- 100L - wk1_avg
+
+# Y-axis labels: "Jan '24\n1,240 users" (two lines)
 size_fmt <- formatC(cohort_sizes, format = "d", big.mark = ",")
 y_labels_full <- paste0(cohort_names, "\n", size_fmt, " users")
 
@@ -67,7 +72,11 @@ df$week_label <- factor(
 )
 
 # --- Plot ---
-TITLE <- "heatmap-cohort-retention · r · ggplot2 · anyplot.ai"
+TITLE    <- "heatmap-cohort-retention · r · ggplot2 · anyplot.ai"
+SUBTITLE <- sprintf(
+  "Week 1 cliff: ~%d pp drop from signup — subsequent weeks show gradual plateau",
+  cliff_drop
+)
 
 p <- ggplot(df, aes(x = week_label, y = cohort_label, fill = ret_rate)) +
   geom_tile(color = PAGE_BG, linewidth = 0.6) +
@@ -76,6 +85,14 @@ p <- ggplot(df, aes(x = week_label, y = cohort_label, fill = ret_rate)) +
     color    = "#FFFDF6",
     size     = 3.0,
     fontface = "bold"
+  ) +
+  # Amber dashed separator marks the "cliff" between Wk 0 and Wk 1
+  geom_vline(
+    xintercept = 1.5,
+    color      = ANYPLOT_AMBER,
+    linewidth  = 0.8,
+    linetype   = "dashed",
+    alpha      = 0.9
   ) +
   scale_fill_gradient(
     low    = "#4467A3",  # Imprint blue  → low retention
@@ -87,10 +104,18 @@ p <- ggplot(df, aes(x = week_label, y = cohort_label, fill = ret_rate)) +
   ) +
   scale_x_discrete(expand = expansion(add = 0.5)) +
   scale_y_discrete(expand = expansion(add = 0.5)) +
+  guides(fill = guide_colorbar(
+    barheight    = unit(6, "cm"),
+    barwidth     = unit(0.5, "cm"),
+    title.hjust  = 0.5,
+    ticks.colour = INK_SOFT,
+    frame.colour = INK_SOFT
+  )) +
   labs(
-    title = TITLE,
-    x     = "Weeks Since Signup",
-    y     = NULL
+    title    = TITLE,
+    subtitle = SUBTITLE,
+    x        = "Weeks Since Signup",
+    y        = NULL
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -100,11 +125,14 @@ p <- ggplot(df, aes(x = week_label, y = cohort_label, fill = ret_rate)) +
     axis.title.x        = element_text(color = INK, size = 10,
                                        margin = margin(t = 8)),
     axis.text.x         = element_text(color = INK_SOFT, size = 8),
-    axis.text.y         = element_text(color = INK_SOFT, size = 7.5,
+    axis.text.y         = element_text(color = INK_SOFT, size = 8.5,
                                        lineheight = 1.2, hjust = 1),
     plot.title          = element_text(color = INK, size = 12,
                                        hjust = 0.5,
-                                       margin = margin(b = 12)),
+                                       margin = margin(b = 4)),
+    plot.subtitle       = element_text(color = INK_SOFT, size = 8.5,
+                                       hjust = 0.5,
+                                       margin = margin(b = 10)),
     plot.title.position = "plot",
     legend.position     = "right",
     legend.background   = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
