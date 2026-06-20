@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -25,7 +25,7 @@ from plotnine import (
     geom_tile,
     ggplot,
     labs,
-    scale_fill_gradientn,
+    scale_fill_gradient2,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -40,9 +40,6 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-
-# Imprint-derived risk gradient: brand green → ochre → matte red (colorblind-safe)
-RISK_COLORS = ["#009E73", "#BD8233", "#AE3030"]
 
 # Data: 5×5 background grid
 likelihood_levels = [1, 2, 3, 4, 5]
@@ -63,6 +60,9 @@ for li in likelihood_levels:
         grid_rows.append({"likelihood": li, "impact": imp, "risk_score": score, "zone": zone})
 
 grid_df = pd.DataFrame(grid_rows)
+
+# Critical-zone cells for emphasis overlay (risk_score > 16)
+critical_df = grid_df[grid_df["risk_score"] > 16].copy()
 
 # Score number position: top-left corner of each cell
 grid_df["score_x"] = grid_df["impact"] - 0.38
@@ -119,13 +119,23 @@ plot = (
     ggplot()
     # Background heatmap tiles with Imprint-derived green→ochre→red gradient
     + geom_tile(data=grid_df, mapping=aes(x="impact", y="likelihood", fill="risk_score"), color=INK_SOFT, size=0.8)
-    + scale_fill_gradientn(colors=RISK_COLORS, limits=(1, 25), name="Risk\nScore", breaks=[1, 5, 10, 15, 20, 25])
+    + scale_fill_gradient2(
+        low="#009E73",
+        mid="#BD8233",
+        high="#AE3030",
+        midpoint=12,
+        limits=(1, 25),
+        name="Risk\nScore",
+        breaks=[1, 5, 10, 15, 20, 25],
+    )
+    # Critical-zone emphasis: thicker matte-red border on highest-risk cells
+    + geom_tile(data=critical_df, mapping=aes(x="impact", y="likelihood"), fill="none", color="#AE3030", size=1.8)
     # Risk score numbers in top-left corners (semi-transparent to stay secondary)
     + geom_text(
         data=grid_df,
         mapping=aes(x="score_x", y="score_y", label="risk_score"),
         color=INK,
-        alpha=0.38,
+        alpha=0.45,
         size=3.2,
         fontweight="bold",
         ha="left",
@@ -149,7 +159,7 @@ plot = (
         x=3,
         y=5.58,
         label="Zones:  Low (1–4)  ·  Medium (5–9)  ·  High (10–16)  ·  Critical (20–25)",
-        size=2.8,
+        size=3.5,
         color=INK_MUTED,
         fontstyle="italic",
     )
