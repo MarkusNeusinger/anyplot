@@ -1,12 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-17
+Library: plotly | Python 3.14
+Quality: 91/100 | Updated: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data
 np.random.seed(42)
@@ -14,20 +24,34 @@ np.random.seed(42)
 likelihood_labels = ["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"]
 impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
 
-# Risk score matrix (likelihood x impact)
 risk_scores = np.array([[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15], [4, 8, 12, 16, 20], [5, 10, 15, 20, 25]])
 
-# Zone thresholds and colorblind-safe palette (blue → amber → burnt orange → crimson)
+# Semantic risk-zone colors: green → amber → orange → red (domain convention)
 zone_thresholds = [(4, "Low"), (9, "Medium"), (16, "High"), (25, "Critical")]
-zone_colors = {"Low": "#5C9BD5", "Medium": "#F4B942", "High": "#E8713A", "Critical": "#C0392B"}
-zone_bg = {
-    "Low": "rgba(92,155,213,0.22)",
-    "Medium": "rgba(244,185,66,0.25)",
-    "High": "rgba(232,113,58,0.22)",
-    "Critical": "rgba(192,57,43,0.20)",
+zone_colors = {
+    "Low": "#4CAF82",
+    "Medium": "#DDCC77",  # Imprint amber anchor
+    "High": "#E8713A",
+    "Critical": "#AE3030",  # Imprint matte red
 }
+zone_bg = {
+    "Low": "rgba(76,175,130,0.22)" if THEME == "light" else "rgba(76,175,130,0.20)",
+    "Medium": "rgba(221,204,119,0.25)" if THEME == "light" else "rgba(221,204,119,0.22)",
+    "High": "rgba(232,113,58,0.22)" if THEME == "light" else "rgba(232,113,58,0.20)",
+    "Critical": "rgba(174,48,48,0.22)" if THEME == "light" else "rgba(174,48,48,0.20)",
+}
+# Zone severity → marker border width (consistent marker size per change request)
+zone_border = {"Critical": 3.0, "High": 2.0, "Medium": 1.5, "Low": 1.0}
 
-# Risk items with categories
+# Imprint categorical palette for risk categories (canonical order)
+category_colors = {
+    "Operational": "#009E73",  # Imprint position 1 — brand green
+    "Technical": "#C475FD",  # Imprint position 2 — lavender
+    "Financial": "#4467A3",  # Imprint position 3 — blue
+}
+category_symbols = {"Operational": "square", "Technical": "circle", "Financial": "diamond"}
+
+# Risk items
 risks = [
     {"name": "Supply Chain", "likelihood": 3, "impact": 4, "category": "Operational"},
     {"name": "Data Breach", "likelihood": 2, "impact": 5, "category": "Technical"},
@@ -43,10 +67,6 @@ risks = [
     {"name": "Compliance Gap", "likelihood": 2, "impact": 4, "category": "Operational"},
 ]
 
-# Category styling — distinct shapes per category for additional encoding
-category_colors = {"Technical": "#1565C0", "Financial": "#7B1FA2", "Operational": "#E65100"}
-category_symbols = {"Technical": "circle", "Financial": "diamond", "Operational": "square"}
-
 # Pre-compute cell occupancy for jitter
 cell_items = {}
 for risk in risks:
@@ -55,15 +75,15 @@ for risk in risks:
 
 jitter_offsets = {
     1: [(0, 0)],
-    2: [(-0.18, 0.12), (0.18, -0.12)],
-    3: [(-0.22, 0.14), (0.22, 0.14), (0, -0.16)],
-    4: [(-0.22, 0.14), (0.22, 0.14), (-0.22, -0.14), (0.22, -0.14)],
+    2: [(-0.20, 0.16), (0.20, -0.16)],
+    3: [(-0.22, 0.16), (0.22, 0.16), (0, -0.18)],
+    4: [(-0.20, 0.16), (0.20, 0.16), (-0.20, -0.16), (0.20, -0.16)],
 }
 
 # Plot
 fig = go.Figure()
 
-# Colored cell backgrounds with refined borders
+# Colored cell backgrounds with theme-adaptive borders
 for i in range(5):
     for j in range(5):
         score = risk_scores[i][j]
@@ -75,21 +95,21 @@ for i in range(5):
             y0=i + 0.5,
             y1=i + 1.5,
             fillcolor=zone_bg[zone],
-            line={"color": "white", "width": 3},
+            line={"color": PAGE_BG, "width": 3},
             layer="below",
         )
         # Score label at bottom-right of each cell
         fig.add_annotation(
-            x=j + 1.38,
-            y=i + 0.58,
+            x=j + 1.40,
+            y=i + 0.62,
             text=f"<b>{score}</b>",
             showarrow=False,
-            font={"size": 14, "color": "rgba(100,100,100,0.45)", "family": "Arial"},
+            font={"size": 9, "color": INK_MUTED, "family": "Arial"},
             xanchor="right",
             yanchor="bottom",
         )
 
-# Risk markers with visual hierarchy by zone severity
+# Risk markers — consistent size (22px), border width encodes zone severity
 seen_categories = set()
 for risk in risks:
     key = (risk["likelihood"], risk["impact"])
@@ -102,14 +122,15 @@ for risk in risks:
     score = risk["likelihood"] * risk["impact"]
     zone = next(name for threshold, name in zone_thresholds if score <= threshold)
 
-    # Visual hierarchy: critical risks are larger and bolder
-    sizes = {
-        "Critical": (30, 4, 800, 15),
-        "High": (25, 3, 600, 14),
-        "Medium": (20, 2.5, 400, 13),
-        "Low": (18, 2, 400, 13),
-    }
-    marker_size, outline_width, font_weight, font_size = sizes[zone]
+    # Text position based on jitter direction to reduce label overlap in shared cells
+    if n == 1:
+        tpos = "top center"
+    elif n == 2:
+        tpos = "top center" if jy > 0 else "bottom center"
+    elif n == 3:
+        tpos = "bottom center" if idx == 2 else ("top right" if jx < 0 else "top left")
+    else:
+        tpos = "top center" if jy > 0 else "bottom center"
 
     show_legend = cat not in seen_categories
     seen_categories.add(cat)
@@ -120,15 +141,15 @@ for risk in risks:
             y=[risk["likelihood"] + jy],
             mode="markers+text",
             marker={
-                "size": marker_size,
+                "size": 22,
                 "color": category_colors[cat],
-                "line": {"color": "white", "width": outline_width},
+                "line": {"color": INK, "width": zone_border[zone]},
                 "symbol": category_symbols[cat],
-                "opacity": 0.92,
+                "opacity": 0.88,
             },
             text=f"<b>{risk['name']}</b>",
-            textposition="top center",
-            textfont={"size": font_size, "color": category_colors[cat], "weight": font_weight, "family": "Arial"},
+            textposition=tpos,
+            textfont={"size": 9, "color": category_colors[cat], "family": "Arial"},
             name=cat,
             legendgroup=cat,
             showlegend=show_legend,
@@ -142,73 +163,77 @@ for risk in risks:
         )
     )
 
-# Zone legend entries with group title
+# Zone legend entries
+zone_ranges = {"Low": "1–4", "Medium": "5–9", "High": "10–16", "Critical": "20–25"}
 for zone_name, color in zone_colors.items():
-    ranges = {"Low": "1–4", "Medium": "5–9", "High": "10–16", "Critical": "20–25"}
     fig.add_trace(
         go.Scatter(
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 20, "color": color, "symbol": "square", "opacity": 0.5},
-            name=f"  {zone_name} ({ranges[zone_name]})",
+            marker={"size": 16, "color": color, "symbol": "square", "opacity": 0.55},
+            name=f"  {zone_name} ({zone_ranges[zone_name]})",
             legendgroup="zones",
-            legendgrouptitle={"text": "Risk Zones", "font": {"size": 14, "color": "#555"}},
+            legendgrouptitle={"text": "Risk Zones", "font": {"size": 10, "color": INK_SOFT}},
         )
     )
 
-# Layout with refined typography and subtitle
+# Layout — square canvas (2400×2400): 600×600 logical × scale 4
+title_text = "heatmap-risk-matrix · python · plotly · anyplot.ai"
 fig.update_layout(
+    autosize=False,
     title={
         "text": (
-            "heatmap-risk-matrix · plotly · pyplots.ai"
-            "<br><sup style='color:#777;font-weight:normal'>"
-            "Enterprise Risk Assessment — Likelihood vs Impact Matrix</sup>"
+            f"{title_text}<br>"
+            f"<sup style='color:{INK_MUTED};font-weight:normal'>"
+            f"Enterprise Risk Assessment — Likelihood vs Impact Matrix</sup>"
         ),
-        "font": {"size": 28, "color": "#2C3E50", "family": "Arial Black, Arial"},
+        "font": {"size": 16, "color": INK, "family": "Arial"},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.97,
+        "y": 0.98,
     },
     xaxis={
-        "title": {"text": "Impact Severity →", "font": {"size": 22, "color": "#444"}, "standoff": 15},
+        "title": {"text": "Impact Severity →", "font": {"size": 12, "color": INK}, "standoff": 12},
         "tickvals": [1, 2, 3, 4, 5],
         "ticktext": impact_labels,
-        "tickfont": {"size": 18, "color": "#444"},
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
         "range": [0.35, 5.65],
         "showgrid": False,
         "zeroline": False,
         "fixedrange": True,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "← Likelihood", "font": {"size": 22, "color": "#444"}, "standoff": 15},
+        "title": {"text": "← Likelihood", "font": {"size": 12, "color": INK}, "standoff": 12},
         "tickvals": [1, 2, 3, 4, 5],
         "ticktext": likelihood_labels,
-        "tickfont": {"size": 18, "color": "#444"},
+        "tickfont": {"size": 10, "color": INK_SOFT, "family": "Arial"},
         "range": [0.35, 5.65],
         "showgrid": False,
         "zeroline": False,
         "fixedrange": True,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK, "family": "Arial"},
     legend={
-        "font": {"size": 15, "color": "#444"},
+        "font": {"size": 10, "color": INK_SOFT},
         "x": 1.01,
         "y": 1,
         "xanchor": "left",
         "yanchor": "top",
-        "bgcolor": "rgba(255,255,255,0.95)",
-        "bordercolor": "#ddd",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "tracegroupgap": 12,
+        "tracegroupgap": 8,
         "itemsizing": "constant",
     },
-    margin={"l": 120, "r": 230, "t": 120, "b": 90},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    hoverlabel={"bgcolor": "white", "bordercolor": "#ccc", "font": {"size": 14, "family": "Arial"}},
+    margin={"l": 105, "r": 185, "t": 88, "b": 88},
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"size": 11, "family": "Arial", "color": INK}},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — square canvas: 2400×2400 (600×600 logical × scale 4)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
