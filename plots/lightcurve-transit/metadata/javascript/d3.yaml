@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: lightcurve-transit
 created: '2026-06-20T07:56:54Z'
-updated: '2026-06-20T08:02:53Z'
+updated: '2026-06-20T08:21:53Z'
 generated_by: claude-sonnet
 workflow_run: 27864714422
 issue: 4559
@@ -12,51 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Correct plot type with all spec-required features: phase-folded scatter, per-point
-    error bars, and smooth transit model curve overlay'
-  - Deterministic LCG (seed 42) ensures full reproducibility in the browser environment
-  - Imprint palette used correctly — palette[0] (#009E73) for observations, palette[1]
-    (#C475FD) for model curve; colors are identical between themes
-  - Both light and dark renders adapt cleanly — no dark-on-dark failures, warm backgrounds
-    correct for each theme
-  - 'KISS code structure: no unnecessary classes or abstractions, well-commented sections'
-  - Scientific transit model with curvature approximating limb-darkening is realistic
-    and visually credible
-  - Y-axis-only grid with subtle opacity is appropriate for this time-series scientific
-    chart type
+  - 'Full spec compliance: phase-folded light curve with error bars, ±1σ confidence
+    band, smooth transit model overlay, and ~1% transit depth all correctly implemented'
+  - 'Expert D3 idiomatic usage: d3.area() for confidence band, d3.line() for model
+    curve, clipPath in <defs>, modern .data().join() binding, .datum() for continuous
+    paths — all hallmarks of expert D3 code'
+  - Deterministic data generation via LCG (seed=42) satisfies the browser-reproducibility
+    requirement with a proper Box-Muller Gaussian for photometric noise
+  - 'Strong data storytelling: transit window background highlight, dashed midpoint
+    vertical, and tight Y-domain all focus the viewer''s attention on the transit
+    event'
+  - 'Correct Imprint palette usage — first series (observations) = #009E73, second
+    series (model) = #C475FD — with all chrome tokens (t.ink, t.inkSoft, t.grid) properly
+    adapted per theme'
+  - 'Realistic astronomical data: 450-point phase-folded light curve with limb-darkened
+    transit model, per-point observational errors (0.0025–0.0035), and ~1.1% transit
+    depth matching Kepler/TESS survey parameters'
   weaknesses:
-  - Y-axis domain extends to 0.975 while transit minimum is ~0.989 — roughly 40% of
-    the Y range is empty below the data. Tighten the domain so the transit dip uses
-    more of the available canvas height (e.g. constrain yMin to transit_bottom - 0.5*depth
-    instead of absolute data extremes after .nice()).
-  - Error bar stroke-width=0.9 is too thin for dense science data; increase to 1.2–1.4
-    px so individual bars remain distinguishable in the transit region.
-  - 'DE-01/DE-03: No visual storytelling emphasis on the transit event itself — a
-    subtle shaded vertical band highlighting the transit window (phase ~0.44–0.56)
-    or a small annotation marking the transit mid-point would elevate the chart from
-    a generic scatter to a compelling scientific narrative.'
-  - 'LM-02: D3 distinctive capabilities underutilized — the implementation is idiomatic
-    but does not exploit any library-unique feature; adding a d3.area() confidence
-    band (±1σ around model) or a clip-path to keep data within axes bounds would demonstrate
-    deeper D3 mastery.'
+  - ±1σ confidence band uses constant σ=0.003 across all phases (including the flat
+    out-of-transit region), creating a wide lavender band spanning ~23% of the total
+    Y-axis height. This makes the band visually dominant in the flat region and somewhat
+    misleading — the transit model has no actual uncertainty in the flat region, only
+    the measurements do. Consider deriving the shaded region from per-point fluxErr
+    values or narrowing it to better reflect photometric precision.
+  - Legend has no background box, so out-of-transit data points appear behind the
+    legend symbols and text in the upper-right corner. This doesn't fully obstruct
+    the legend text, but creates a slightly cluttered appearance. A subtle elevated-background
+    rect (t.elevatedBg) behind the legend would improve readability.
+  - 'Markers are slightly small (r=2.5 CSS px) for 450 data points: in the flat region,
+    individual measurements merge into a smear rather than distinct circles. Increasing
+    to r=3.0 with opacity=0.70 would maintain the density while making individual
+    points clearer in the transit ingress/egress shoulders.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white.
-      Chrome: Title "lightcurve-transit · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Relative Flux" (rotated, dark ink) and X-axis label "Orbital Phase" both readable. Tick labels in secondary ink (#4A4A44-ish), all visible. Y-axis gridlines are subtle horizontal lines in near-transparent ink — appropriate.
-      Data: 450 green (#009E73) scatter points with matching green error bars (opacity 0.45). The transit dip is visible at phase ~0.44–0.56, dropping to ~0.989 flux. Transit model curve in lavender (#C475FD) is smooth and overlaid cleanly. Legend in upper-right shows "Observations" (green dot) and "Transit Model" (purple line).
-      Legibility verdict: PASS — all text readable, no light-on-light issues. Note: Y-axis extends to 0.975 but transit minimum is ~0.989, leaving ~40% empty space at bottom.
+      Background: Warm off-white (#FAF8F1) — correct surface color, clearly not pure white.
+      Chrome: Title "lightcurve-transit · javascript · d3 · anyplot.ai" in dark ink (#1A1A17), readable at 22px. Y-axis label "Relative Flux" and X-axis label "Orbital Phase" in dark ink at 16px, clearly legible. Tick labels in inkSoft at 14px — readable at full resolution; borderline at mobile widths but within D3 guidelines. Axis domain lines in inkSoft; subtle Y-axis grid lines in grid token (rgba 15% opacity). Legend text for "Transit Model (±1σ)" and "Observations" in inkSoft at 14px — readable but positioned without a background box, so scattered data points appear behind it in the upper-right area.
+      Data: First series (observations) = #009E73 green circles (r=2.5, opacity=0.80) with green error bars (opacity=0.45, stroke-width=1.3). Second series (transit model line) = #C475FD lavender (stroke-width=2.5) with a ±1σ confidence band in the same lavender (opacity=0.18). Transit window highlighted with a very subtle lavender fill (palette[1], opacity=0.07); dashed lavender vertical at phase=0.5 marks the transit midpoint. The transit dip at phase≈0.5 is clearly visible (flux drops ~1.1% to ~0.989). Tight Y-domain (0.9835–1.009) ensures the transit depth fills the canvas rather than sitting in a narrow bottom strip.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black.
-      Chrome: Title in light ink, clearly readable against dark background. Axis labels "Relative Flux" and "Orbital Phase" in light secondary ink, readable. Tick labels in lighter tone, all distinguishable. No dark-on-dark failures detected.
-      Data: Same green (#009E73) observations and lavender (#C475FD) model curve — colors identical to light render as required. Error bars same green with alpha. Transit dip visible in same position. Legend readable in upper-right.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Data colors correctly unchanged between themes.
+      Background: Warm near-black (#1A1A17) — correct surface color, clearly not pure black.
+      Chrome: Title uses t.ink (#F0EFE8 in dark mode) — light cream text on dark background, readable. Axis labels and tick labels use t.ink / t.inkSoft (#B8B7B0 in dark mode) — both visible and contrasting well against the dark surface (estimated contrast ratio ~8.8:1 for inkSoft on dark bg). Grid lines use dark-mode grid token (rgba(240,239,232,0.15)) — subtle and appropriate.
+      Data: Observations remain #009E73 (identical to light render — data colors do not flip). Transit model line and confidence band remain #C475FD. The lavender confidence band is visually MORE prominent in the dark render (same opacity=0.18, but higher perceptual contrast on dark background), creating a more visually dominant horizontal band in the flat region than in the light render. Transit dip is clearly visible at the same depth. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures. Data colors are identical to light render (only chrome flips as required).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,52 +68,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, labels 16px, ticks 14px);
-          all text readable in both themes
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, tick
+          labels 14px, legend 14px). Both renders fully legible at desktop. Minor
+          deduction: 14px tick labels borderline at mobile width (~400px display),
+          though within D3 style-guide range.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor overlap of error bars in dense transit region, but alpha=0.45
-          mitigates it; no text overlaps
+        comment: No text-on-text overlap. Legend lacks a background box, so data points
+          appear behind legend symbols/text in the upper-right, creating a slightly
+          cluttered appearance. Legend text still readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Data points r=2.5 alpha=0.8 appropriate for 450 points; error bars
-          stroke-width=0.9 is thin in transit region
+        comment: All visualization layers visible. Markers (r=2.5, opacity=0.80) slightly
+          small for 450 points — merge into a band in flat region. Error bars (opacity=0.45)
+          clearly visible. Model line and confidence band clearly distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Two-series: #009E73 green and #C475FD lavender, both CVD-safe; no
-          red-green sole signaling'
+        comment: 'Two-color scheme (#009E73 green + #C475FD lavender) is CVD-safe.
+          Good luminance separation. No red-green sole-signal issue.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good margins; y-axis extends to 0.975 but transit
-          min is ~0.989, leaving wasted space at bottom
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Landscape orientation,
+          sized from window.ANYPLOT_SIZE. Generous margins (top=80, right=80, bottom=100,
+          left=120). No overflow or clipping. Good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive; title follows mandated
-          format exactly
+        comment: '''Relative Flux'' and ''Orbital Phase'' are domain-appropriate,
+          descriptive labels for astronomical light curves. Units implicit in context
+          (normalized flux, phase 0-1).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD; backgrounds #FAF8F1 light
-          / #1A1A17 dark; data colors identical across themes'
+        comment: 'First series = #009E73 (brand green). Second = #C475FD (Imprint
+          palette[1] lavender). Data colors identical across themes. Backgrounds #FAF8F1
+          / #1A1A17. All chrome via t.ink / t.inkSoft / t.grid tokens.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,22 +128,30 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Correct Imprint palette, clean scientific style; slight raise from
-          default 4 for appropriate palette and clean layout
+        comment: 'Above defaults: transit window background highlight (palette[1]
+          at 0.07 opacity), dashed midpoint vertical, ±1σ confidence band, tight Y-domain
+          for transit focus, careful opacity layering. Clearly above a ''well-configured
+          default'' but not yet at FiveThirtyEight publication level. Constant-width
+          band is a simplification a professional would notice.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only grid, error bar opacity thoughtful; slight raise from default
-          2; no transit-window annotation or spine removal
+        comment: Y-axis grid only (subtle, grid token). Tick marks inherit grid color
+          (nearly invisible). Error bars at 0.45 opacity below data points at 0.80.
+          L-shaped axes. Generous margins. The constant ±1σ band being visually wider/more
+          dominant in the dark render is a mild refinement gap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear dual-layer hierarchy (data + model); transit dip is focal point;
-          raise from 2 for dual-element scientific narrative
+        comment: 'Transit is clearly the focal point: transit window highlight draws
+          the eye, dashed midpoint marks the deepest flux, tight Y-domain makes the
+          1.1% dip visually substantial, model overlay shows the expected signal.
+          Visual hierarchy guides viewer from flat photometry → ingress → transit
+          minimum → egress.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,53 +161,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: phase-folded scatter with error bars and model curve overlay'
+        comment: Phase-folded astronomical light curve with time-series scatter +
+          error bars + model overlay. Correct chart type for transit detection.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, smooth model, phase-folded 0.0-1.0, transit dip downward,
-          flux on Y-axis — all present
+        comment: Error bars on each data point, smooth transit model curve, phase-folded
+          0-1, flux dip going downward, ~1% depth, limb-darkened model shape. All
+          spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase 0-1, Y=relative flux 0.975-1.010, 450 points within
-          spec range
+        comment: X=Orbital Phase (0-1), Y=Relative Flux (normalized, transit dip downward).
+          Correct assignment.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: lightcurve-transit · javascript · d3 · anyplot.ai; legend:
-          Observations + Transit Model'
+        comment: 'Title: ''lightcurve-transit · javascript · d3 · anyplot.ai'' — correct
+          format. Legend: ''Transit Model (±1σ)'' and ''Observations'' — clear and
+          accurate.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows scatter, error bars, and model; good noise variation; slight
-          deduction for uniform error bar sizes
+        comment: 'Shows complete light curve cycle: out-of-transit baseline, ingress
+          shoulder, transit minimum, egress shoulder, return to baseline. Both scatter
+          variability and systematic transit shape visible.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ~1.1% transit depth, realistic Gaussian noise, limb-darkening curvature,
-          neutral astronomical data
+        comment: 'Realistic Kepler/TESS-style photometry: 450 phase-folded observations,
+          ~1.1% transit depth (Jupiter-sized exoplanet), photometric noise 0.0025-0.0035
+          (consistent with space-based survey precision). Neutral scientific scenario.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flux 0.975-1.010, 450 points, error bars 0.0025-0.0035, phase 0-1
-          all realistic
+        comment: Transit depth 0.011 (1.1%), photometric scatter 0.003, phase range
+          0-1, N=450 within spec range 200-1000. All values physically plausible for
+          exoplanet transit photometry.
     code_quality:
       score: 10
       max: 10
@@ -198,59 +223,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only necessary helpers (lcg, randn, transitFlux); no classes; clean
-          linear flow
+        comment: 'Three minimal helper functions (lcg, randn, transitFlux) are all
+          required by the problem: browser has no seeded RNG (mandated by D3 guide),
+          and a transit model function is necessary for generating both data and model
+          curve. Remaining code is flat and sequential.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) gives deterministic output in browser without
-          Math.random
+        comment: LCG with fixed seed=42 provides full determinism in browser environment
+          where Math.random() is not seedable.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 is global as required by harness contract
+        comment: No import statements (d3 is a global). Only window.ANYPLOT_TOKENS,
+          window.ANYPLOT_SIZE, and d3 are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented; no fake interactivity; appropriate complexity
+        comment: Clean, well-structured code with comments explaining WHY (not WHAT).
+          No fake UI elements. No over-engineering. Logical section ordering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles file output; D3 is in INTERACTIVE_LIBRARIES so .html
-          + .png emitted
+        comment: 'D3 library output handled by harness. Implementation correctly uses
+          window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS, and appends one SVG to #container.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3 usage: d3.select/append/attr chain, .call(d3.axisBottom/Left),
+          modern .data().join() binding, .datum() for continuous data paths, d3.line/area
+          generators, clipPath in <defs>, d3.format for tick labels, d3.scaleLinear
+          with .nice().'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic data binding (.data().join()), scale/axis setup, d3.line()
-          for path — competent and correct
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses d3.line() generator and custom SVG error bars; no area generator,
-          clip-path, or other D3-specific capabilities
+        comment: 'd3.area() for confidence band (SVG area path generator), clipPath/defs
+          pattern (SVG-native approach unique to D3), .datum() vs .data() distinction
+          for continuous paths, d3.format() number formatting. These features are
+          meaningfully D3-specific. Deduction: for a 2D line/scatter chart, could
+          push further into unique D3 capabilities.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
