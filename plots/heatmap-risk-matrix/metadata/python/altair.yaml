@@ -1,41 +1,57 @@
 library: altair
+language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T22:03:07Z'
-updated: '2026-03-17T22:21:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23217984762
+updated: '2026-06-20T06:19:20Z'
+generated_by: claude-sonnet
+workflow_run: 27861850290
 issue: 4567
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/altair/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/altair/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - 'Excellent spec compliance: all required features implemented faithfully'
-  - Strong data storytelling through green-to-red gradient and risk zone labels
-  - Smart jitter algorithm that systematically spreads overlapping markers
-  - Idiomatic Altair usage with layered composition and interactive tooltips
-  - Professional polish with rounded cell corners, white borders, and semi-transparent
-    score watermarks
+  - Five-layer Altair composition (heatmap cells, score watermarks, markers, labels,
+    legend carrier) demonstrates deep library mastery of the grammar-of-graphics approach
+  - Smart anti-jitter algorithm with diagonal spread (horizontal shift + alternating
+    above/below labels) elegantly handles same-cell collisions without overlap
+  - Subtle risk score watermarks add a second data layer without cluttering the primary
+    visualization
+  - Full theme-adaptive chrome with all text, backgrounds, legend box, and borders
+    correctly switching between light (#FAF8F1) and dark (#1A1A17) surfaces
+  - labelExpr on axes produces clean descriptive tick labels (Rare/Unlikely/Possible/Likely/Almost
+    Certain) without requiring ordinal encoding, keeping data as clean numeric coordinates
   weaknesses:
-  - Risk item labels at 13pt could be slightly larger for optimal readability
-  - Green-to-red heatmap gradient, while domain-standard, is not ideal for colorblind
-    users
-  image_description: 'The plot displays a 5x5 risk assessment matrix with "Impact"
-    on the x-axis (Negligible, Minor, Moderate, Major, Catastrophic) and "Likelihood"
-    on the y-axis (Rare at top, Almost Certain at bottom). Background cells are colored
-    with a continuous green-yellow-orange-red gradient based on risk score (product
-    of likelihood x impact), with semi-transparent score numbers (1-25) watermarked
-    in each cell. 15 risk items appear as colored circular markers: blue (Technical),
-    gold/orange (Financial), and purple (Operational), each labeled above the marker.
-    White borders with rounded corners separate cells. A "Risk Category" legend sits
-    in the bottom-right corner. The title reads "heatmap-risk-matrix · altair · pyplots.ai"
-    with subtitles describing the 15 risks and risk zone definitions (Low 1-4, Medium
-    5-9, High 10-16, Critical 20-25).'
+  - Heatmap background uses a custom traffic-light gradient (#4caf50→#c6d93e→#ff9800→#f44336→#b71c1c)
+    instead of imprint_seq or imprint_div — technically violates the continuous cmap
+    policy even though the spec mandates it
+  - Green→red heatmap gradient has red-green CVD issues (deuteranopia/protanopia)
+    — standard risk matrix convention but not fully colorblind-safe; risk score watermarks
+    partially mitigate
+  - Risk item label font size (11pt) may be borderline small on mobile at 400px viewport
+    width (~7 source-px effective); consider 12pt to improve mobile legibility
+  - Watermark opacity=0.18 is very subtle, making scores on mid-range yellow-orange
+    cells (where neither white nor black at low alpha has strong contrast) hard to
+    discern; consider 0.22–0.25
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly matches the theme token
+      Chrome: Title "heatmap-risk-matrix · python · altair · anyplot.ai" in dark (#1A1A17) bold text at top center. Two subtitle lines in #4A4A44 (INK_SOFT). Axis labels "Impact" (x) and "Likelihood" (y) in dark bold text (fontsize=14). Tick labels in #4A4A44: Negligible/Minor/Moderate/Major/Catastrophic on x; Rare/Unlikely/Possible/Likely/Almost Certain on y (fontsize=11). All text clearly readable.
+      Data: 5×5 heatmap grid with green (#4caf50) in low-risk bottom-left transitioning through yellow-green (#c6d93e), orange (#ff9800), red (#f44336), dark red (#b71c1c) in high-risk top-right. Semi-transparent watermark risk scores (opacity=0.18) in each cell. 15 risk item markers: Technical=#009E73 green (Imprint pos 1), Financial=#C475FD lavender (pos 2), Operational=#4467A3 blue (pos 3). Text labels next to each marker. Legend box (elevated bg #FFFDF6) in bottom-left.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly matches dark theme token
+      Chrome: Title in light cream (#F0EFE8) against dark background — clearly visible. Subtitles in #B8B7B0 (INK_SOFT dark). Axis labels in light cream. Tick labels in #B8B7B0. Legend box uses elevated dark surface (#242420) with light label text. No dark-on-dark text failures observed anywhere.
+      Data: Heatmap cell colors identical to light render (data colors are theme-independent). Risk item marker colors (#009E73, #C475FD, #4467A3) confirmed identical to light render — only chrome flipped. Risk item labels in #F0EFE8 (INK dark mode) against the colored cell backgrounds.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -43,66 +59,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; risk item labels at 13pt slightly
-          small but readable
+        comment: 'All font sizes explicitly set (title=16, subtitles=13, axis labels=14,
+          tick/item labels=11). Both themes legible. Minor concern: 11pt item labels
+          borderline at mobile 400px scale (~7px effective).'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Smart jitter prevents most overlap; minor crowding in multi-risk
-          cells
+        comment: Smart diagonal jitter (horizontal spread + alternating above/below)
+          prevents overlap. Key Staff Loss / Supply Issue in Possible/Major cell are
+          close but 0.38-unit vertical offset keeps them non-overlapping. Minor proximity.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers well-sized with white stroke, score watermarks subtle but
-          legible
+        comment: Markers size=200 opacity=0.92 well-sized for 15 items. Watermarks
+          at opacity=0.18 intentionally subtle but slightly hard to discern on mid-range
+          yellow-orange cells.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Category colors colorblind-safe; heatmap green-red gradient is domain
-          standard but not ideal
+        comment: Imprint palette for categories is CVD-safe. Heatmap uses spec-mandated
+          green-red gradient with red-green CVD concern (deuteranopia/protanopia).
+          Watermarks and zone text provide partial redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square layout fills canvas well, balanced margins, legend fits neatly
+        comment: Canvas gate passed (2400x2400). Good space utilization. Legend inside
+          chart area without obscuring data. Well-balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive domain terms with ordinal tick labels as scale context
+        comment: Impact and Likelihood axis titles with descriptive categorical tick
+          labels. Title format correct with subtitle providing zone context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Categorical Imprint positions 1-3 correct (#009E73 Technical, #C475FD
+          Financial, #4467A3 Operational). Backgrounds theme-correct. Chrome fully
+          adaptive. Deduction: heatmap uses custom traffic-light gradient, not imprint_seq/imprint_div.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom gradient with LAB interpolation, white borders with corner
-          radius, intentional category colors
+        comment: 'Above well-configured default: 5-layer composition, risk score watermarks
+          as data layer, rounded cell corners, smart jitter, custom legend positioning.
+          Not quite publication-ready polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: View stroke removed, axis domain/tick widths zero, rounded corners,
-          generous padding
+        comment: No tick marks (tickWidth=0, domainWidth=0), no axis grid (gridOpacity=0),
+          cell borders via PAGE_BG stroke gap, cornerRadius=4 on cells. Clean deliberate
+          chrome.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient communicates severity, risk zone labels orient viewer,
-          category coloring adds dimension
+        comment: Green-red progression immediately signals risk severity. Critical
+          zone (top-right) visually obvious. Category colors add grouping dimension.
+          Zone labels in subtitle. Watermarks reinforce score semantics.
     spec_compliance:
       score: 15
       max: 15
@@ -112,48 +145,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 grid heatmap risk matrix
+        comment: Correct 5x5 heatmap grid with overlaid risk item markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: gradient, labels, markers, zones, grid'
+        comment: Green-yellow-orange-red gradient, descriptive axis labels, labeled
+          markers with jitter, zone labels in subtitle, grid delineation via cell
+          stroke — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Impact on X, Likelihood on Y, all 15 risks visible
+        comment: X=impact, Y=likelihood; all 15 risk items plotted; risk_score = likelihood
+          x impact cell coloring.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, Risk Category legend with matching labels
+        comment: Title 'heatmap-risk-matrix · python · altair · anyplot.ai' matches
+          required format. Category legend with Technical/Financial/Operational labels
+          correct.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 15 items across low/medium/high/critical zones, three categories,
-          varied cell occupancy
+        comment: 'Shows background risk grid, multiple items per cell with jitter,
+          category grouping, risk score watermarks. Minor gap: no items in extreme
+          corner cells (5x5 Critical zone empty).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world project risk management scenario, neutral business context
+        comment: 15 genuine project management risks across Technical, Financial,
+          Operational categories with realistic likelihood/impact ratings.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-5 ordinal ratings with realistic risk distributions
+        comment: Standard 5x5 scale; 15 items within spec range (5-20); likelihood/impact
+          ratings reflect realistic enterprise risk management values.
     code_quality:
       score: 10
       max: 10
@@ -163,33 +204,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: 'Clean linear flow: imports → tokens → data → layers → compose →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before jitter calculation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used
+        comment: All four imports (altair, numpy, pandas, PIL.Image) actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, known Altair patterns
+        comment: Elegant Altair layer composition; smart cell_idx/cell_counts jitter
+          logic; labelExpr approach for custom tick labels is idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
+        comment: Saves plot-{THEME}.png (with PIL padding to 2400x2400) and plot-{THEME}.html.
+          Current Altair 6.x API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -197,26 +241,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent declarative grammar: layered composition, encodings, scales,
-          alt.Title'
+        comment: 'Expert Altair: proper Q/N encoding types, alt.layer() composition,
+          alt.Scale, alt.Axis with labelExpr, alt.condition() for conditional color,
+          resolve_axis independent, x2/y2 rect bounds encoding.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Tooltips, labelExpr, alt.condition, alt.layer, HTML export
+        comment: 5-layer composition, x2/y2 rect encoding for exact positioning, independently
+          resolved axes, legendX/legendY manual placement, alt.condition() inline.
+          Solid Altair-specific usage; no selection-based interactivity or advanced
+          transforms.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
