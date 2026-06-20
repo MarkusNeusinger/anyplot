@@ -49,7 +49,7 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    marginRight: 30,
+    marginRight: 60,
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -91,9 +91,9 @@ Highcharts.chart("container", {
         width: 1.5,
         label: {
           text: "20% target",
-          style: { color: t.inkSoft, fontSize: "12px" },
-          align: "right",
-          x: -6,
+          style: { color: t.inkSoft, fontSize: "14px" },
+          align: "left",
+          x: 8,
         },
         zIndex: 3,
       },
@@ -107,12 +107,44 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
+  responsive: {
+    rules: [
+      {
+        condition: { maxWidth: 900 },
+        chartOptions: {
+          legend: {
+            layout: "vertical",
+            align: "right",
+            verticalAlign: "middle",
+          },
+        },
+      },
+    ],
+  },
   plotOptions: {
     series: { animation: false },
     spline: {
       marker: {
         enabled: true,
         symbol: "circle",
+      },
+      dataLabels: {
+        enabled: true,
+        crop: false,
+        overflow: "none",
+        formatter: function () {
+          if (this.point.index === this.series.data.length - 1) {
+            return `${this.y}%`;
+          }
+          return null;
+        },
+        align: "left",
+        x: 8,
+        style: {
+          fontSize: "12px",
+          fontWeight: "600",
+          textOutline: "none",
+        },
       },
     },
   },
@@ -124,7 +156,7 @@ Highcharts.chart("container", {
     lineWidth: c.lineWidth,
     marker: {
       fillColor: c.color,
-      radius: c.lineWidth >= 3.0 ? 4 : 3,
+      radius: c.lineWidth >= 3.0 ? 6 : 5,
     },
   })),
 });
