@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:46:31Z'
-updated: '2026-06-20T12:53:30Z'
+updated: '2026-06-20T13:10:44Z'
 generated_by: claude-sonnet
 workflow_run: 27871499936
 issue: 4551
@@ -12,46 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Correct dual-panel X-bar/R layout with shared x-axis (sharex=True) matching spec
-    exactly
-  - 'Semantic color hierarchy: brand green (#009E73) for data, blue (#4467A3) for
-    CL, matte red (#AE3030) for OOC/limits, amber (#DDCC77) for warnings — all Imprint
-    palette compliant'
-  - All three required OOC signal types demonstrated (samples 9/17/26) with prominent
-    red diamond markers
-  - fill_between warning zone shading adds context without visual clutter (alpha=0.07)
-  - Standard SPC constants (A2=0.577, D3=0.0, D4=2.114) correctly applied for n=5
-    subgroups
-  - Both themes fully readable — chrome tokens properly threaded via sns.set_theme
-    rc params
-  - Realistic industrial context (CNC injection molding at 3.200mm target) with plausible
-    process std
+  - Idiomatic FacetGrid usage with shared x-axis is the ideal seaborn pattern for
+    dual-panel SPC charts
+  - Semantic color scheme (green data, blue CL, red alarms, amber warnings) is both
+    Imprint-compliant and instantly interpretable
+  - Diamond OOC markers use redundant shape+color encoding — excellent accessibility
+    practice
+  - Legend with exact numerical limit values (e.g., UCL = 3.2087) is highly informative
+    for a process-control audience
+  - Theme-adaptive chrome is correctly implemented with full INK/INK_SOFT token threading;
+    no dark-on-dark failures
   weaknesses:
-  - LM-02 — Most visualization elements (axhline, scatter, fill_between, ax.text)
-    are matplotlib primitives rather than seaborn-idiomatic APIs; future implementations
-    could explore sns.pointplot or seaborn's FacetGrid for the dual-panel layout
-  - DE-01 — Visual sophistication is good but not exceptional; the fill_between shading
-    could use slightly higher alpha (0.10-0.12) to be more visible on dark backgrounds
-  - VQ-01 — Legend entries at fontsize=8 are compact; at 400px mobile scaling, legend
-    values like 'UCL = 3.2087' may become borderline-readable
+  - 'Warning-zone fill (fill_between at alpha=0.11 of #009E73) is nearly invisible
+    on the dark (#1A1A17) background — increase alpha to ~0.18-0.22 for dark render,
+    or make it theme-adaptive: alpha=0.11 if THEME == ''light'' else 0.20'
+  - X-axis starts at 0 instead of 1 — for a control chart where samples are numbered
+    1-30, the axis should ideally start at 1 to avoid a visual gap at the left edge;
+    add ax.set_xlim(0.5, n_samples + 0.5) in the panels loop
+  - DE score capped by generic dual-panel layout — adding an in-chart annotation like
+    '3 OOC signals' or a shaded background strip on OOC sample columns would meaningfully
+    improve data storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "spc-xbar-r · python · seaborn · anyplot.ai" in dark ink at 12pt — clearly readable. Y-axis labels "Sample Mean (mm)" and "Sample Range (mm)" in dark ink at 10pt. "Sample Number" x-axis label at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44). Chart labels "X̄ Chart" and "R Chart" in bold dark ink.
-      Data: Green (#009E73) line with circle markers for X-bar, square markers for R chart. Blue (#4467A3) horizontal CL lines. Red dashed (#AE3030) UCL/LCL lines. Amber dotted (#DDCC77) ±2σ warning lines. Red diamond markers for 3 OOC points in X-bar (samples 9/17/26). Subtle green fill_between shading for warning zone.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "spc-xbar-r · python · seaborn · anyplot.ai" at 12pt centered — readable; Y-axis labels "Sample Mean (mm)" / "Sample Range (mm)" at 10pt — readable; X-axis label "Sample Number" at 10pt — readable; tick labels at 8pt — readable; panel labels "X̄ Chart" / "R Chart" bold 10pt — readable
+      Data: Brand green #009E73 data line with circle markers; three OOC points at samples 9, 17, 26 as red #AE3030 diamonds; solid blue #4467A3 center line; dashed red UCL/LCL lines; dotted amber #DDCC77 warning limits; subtle green fill between warning zone
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8), clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT dark variant). "X̄ Chart" and "R Chart" labels in light ink. Legend frames use elevated background (#242420).
-      Data: Colors identical to light render — green (#009E73), blue (#4467A3), red (#AE3030), amber (#DDCC77) all maintained. OOC red diamonds clearly visible. No dark-on-dark failures detected.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures, brand green #009E73 clearly visible
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: All text renders in light cream/off-white tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) — no dark-on-dark issues; title, axis labels, tick labels, panel labels, and legend all clearly readable
+      Data: Data colors identical to light render — green line #009E73, red OOC diamonds #AE3030, blue CL #4467A3, amber warning dotted lines #DDCC77; warning-zone fill (alpha=0.11 of #009E73 on #1A1A17) is nearly invisible in dark mode — functional but very faint
+      Legibility verdict: PASS (fill invisibility noted as weakness, not a legibility failure)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,49 +57,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=12, labels=10, ticks=8), all text
-          readable in both themes. Legend at fontsize=8 with numeric values is compact
-          but readable.
+        comment: All text readable in both themes; 8pt legend entries borderline but
+          readable at full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render — clean two-panel layout
+        comment: No collision between text, control lines, or data markers
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Control lines, data lines, and OOC diamonds all clearly distinguishable
-          in both themes
+        comment: Data and control elements clearly visible; warning-zone fill (alpha=0.11)
+          is nearly invisible in dark render
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint palette with semantic role assignments (no red-green
-          confusion)
+        comment: Imprint palette is CVD-safe; OOC red diamonds use redundant shape
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, good proportions, shared x-axis clean, hspace=0.1
-          appropriate
+        comment: Canvas gate passed; 3200x1800px confirmed; dual-panel proportions
+          good
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include units (mm), x-axis label 'Sample Number' is descriptive
+        comment: Descriptive labels with units (mm); title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for data series, correct warm backgrounds in
-          both themes, Imprint semantic anchors used correctly'
+        comment: 'First series #009E73; CL #4467A3; OOC/limits #AE3030; warning #DDCC77;
+          backgrounds correct'
     design_excellence:
       score: 11
       max: 20
@@ -111,23 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color hierarchy (green data/blue CL/red OOC+limits/amber
-          warnings), fill_between warning zone shading, diamond markers for OOC —
-          above default but not exceptional
+        comment: Thoughtful semantic color assignments; diamond OOC markers add redundant
+          encoding; warning-zone fill is contextual cue
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: sns.despine applied, y-axis-only grid at alpha=0.12, good whitespace
-          — solid refinement above default
+        comment: Top/right spines removed; y-axis-only grid at alpha=0.12; alpha fill
+          adds depth
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Red OOC diamonds stand out from green data line, annotated chart
-          labels provide clear panel context, warning zone shading adds process context
+        comment: OOC red diamonds draw the eye to instability events; bold panel labels
+          orient viewer; dual-panel layout tells the mean-and-range story
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar/R chart with stacked panel layout and shared x-axis
-          per spec
+        comment: Correct X-bar/R dual-panel SPC chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: UCL/LCL dashed and labeled, CL solid, warning limits
-          as dotted lines, OOC points highlighted'
+        comment: UCL/LCL dashed and labeled; CL solid; OOC highlighted; warning limits
+          present; 3 OOC points; standard A2/D3/D4 constants
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sample IDs on shared x-axis, means on top panel, ranges on bottom
-          panel
+        comment: 'X-axis: Sample Number; Y-axes: Sample Mean (mm) / Sample Range (mm);
+          all 30 samples shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly 'spc-xbar-r · python · seaborn · anyplot.ai',
-          legends show numerical values for all control limits
+        comment: Title format correct; legend entries match all annotated control
+          lines with numerical values
     data_quality:
       score: 15
       max: 15
@@ -169,21 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Both charts demonstrated with full SPC feature set: CL, UCL, LCL,
-          warning limits, OOC detection'
+        comment: X-bar and R charts, center lines, UCL/LCL, warning limits, OOC highlighting
+          all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Injection molding thickness (3.200mm target, 0.008mm std) is a realistic,
-          neutral industrial SPC context
+        comment: Injection molding shaft diameter (target 3.200 mm) is an archetypal
+          SPC domain; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Process values and control limits match real CNC machining tolerances
+        comment: 30 samples, subgroup n=5, values within spec range (20-50 samples,
+          4-5 per subgroup)
     code_quality:
       score: 10
       max: 10
@@ -193,62 +189,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Single small helper plot_ooc for FacetGrid map callback; no unnecessary
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(7) ensures deterministic data generation
+        comment: np.random.seed(7) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all four are used
+        comment: os, numpy, pandas, matplotlib.pyplot, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for dual-panel SPC chart, no fake interactivity
+        comment: Idiomatic FacetGrid pattern; clean panels loop for per-panel configuration
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, correct dpi=400 with no bbox_inches='tight'
+        comment: savefig without bbox_inches='tight'; correct theme-named output files
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: sns.set_theme() with extensive rc params, sns.lineplot() for control
-          charts, sns.despine() — proper seaborn patterns throughout
+        comment: FacetGrid with map_dataframe, sns.set_theme, sns.despine — textbook
+          seaborn idioms throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn contributions limited to theme setup, lineplot, and despine;
-          core visualization elements (axhline, scatter, fill_between, ax.text) are
-          matplotlib primitives
+        passed: true
+        comment: FacetGrid row-faceting with shared x-axis and map_dataframe callbacks
+          are genuinely seaborn-distinctive; per-panel overlays show confident seaborn+matplotlib
+          interop
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - annotations
   - custom-legend
   patterns:
   - data-generation
-  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
