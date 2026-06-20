@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -66,7 +66,15 @@ dip_model = np.where(z_model < 1.0, np.sqrt(np.clip(1.0 - z_model**2, 0, None)),
 limb_model = 1.0 - u1 * (1 - dip_model) - u2 * (1 - dip_model) ** 2
 model_smooth = 1.0 - transit_depth * dip_model * limb_model
 
-df = pd.DataFrame({"phase": phase, "flux": flux, "flux_err": flux_err, "residuals": residuals})
+# Phase binning — 40 bins × ~10 pts each for seaborn statistical aggregation
+n_bins = 40
+phase_edges = np.linspace(0.0, 1.0, n_bins + 1)
+phase_centers = 0.5 * (phase_edges[:-1] + phase_edges[1:])
+bin_idx = np.clip(np.digitize(phase, phase_edges) - 1, 0, n_bins - 1)
+
+df = pd.DataFrame(
+    {"phase": phase, "phase_bin": phase_centers[bin_idx], "flux": flux, "flux_err": flux_err, "residuals": residuals}
+)
 df_model = pd.DataFrame({"phase": phase_model, "flux": model_smooth})
 
 # Plot — landscape canvas: figsize=(8, 4.5) × dpi=400 → 3200×1800 px
@@ -74,49 +82,67 @@ fig, (ax_main, ax_resid) = plt.subplots(
     2, 1, figsize=(8, 4.5), dpi=400, height_ratios=[3, 1], sharex=True, gridspec_kw={"hspace": 0.05}, facecolor=PAGE_BG
 )
 
-# Main panel: error bars (reduced alpha to lower clutter in dense out-of-transit regions)
+# Main panel: error bars (visible precision layer behind scatter)
 ax_main.errorbar(
     df["phase"],
     df["flux"],
     yerr=df["flux_err"],
     fmt="none",
     ecolor=DATA_COLOR,
-    elinewidth=0.8,
-    alpha=0.22,
+    elinewidth=0.7,
+    alpha=0.42,
     capsize=0,
     zorder=1,
 )
 
-# Main panel: scatter points
+# Main panel: individual scatter (faint texture showing raw data density)
 sns.scatterplot(
     data=df,
     x="phase",
     y="flux",
     color=DATA_COLOR,
-    s=22,
-    alpha=0.5,
-    edgecolor=PAGE_BG,
-    linewidth=0.3,
+    s=12,
+    alpha=0.22,
+    edgecolor="none",
     ax=ax_main,
     zorder=2,
     legend=False,
 )
 
-# Main panel: transit model curve
+# Main panel: phase-binned mean with 95% CI band — seaborn statistical aggregation
 sns.lineplot(
-    data=df_model, x="phase", y="flux", color=MODEL_COLOR, linewidth=2.5, ax=ax_main, zorder=3, label="Transit model"
+    data=df,
+    x="phase_bin",
+    y="flux",
+    color=DATA_COLOR,
+    estimator="mean",
+    errorbar=("ci", 95),
+    linewidth=1.5,
+    ax=ax_main,
+    zorder=3,
+    label="Observed (binned ± 95% CI)",
 )
 
-# Residuals panel: scatter points (rugplot removed — caused dense artifact at y-axis edge)
+# Main panel: transit model curve
+sns.lineplot(
+    data=df_model, x="phase", y="flux", color=MODEL_COLOR, linewidth=2.5, ax=ax_main, zorder=4, label="Transit model"
+)
+
+# Residuals panel: scatter points
 sns.scatterplot(
+    data=df, x="phase", y="residuals", color=DATA_COLOR, s=20, alpha=0.40, edgecolor="none", ax=ax_resid, legend=False
+)
+
+# Residuals panel: phase-binned mean ± SD band — shows absence of systematic residual structure
+sns.lineplot(
     data=df,
-    x="phase",
+    x="phase_bin",
     y="residuals",
     color=DATA_COLOR,
-    s=15,
-    alpha=0.45,
-    edgecolor=PAGE_BG,
-    linewidth=0.2,
+    estimator="mean",
+    errorbar="sd",
+    linewidth=0.8,
+    alpha=0.70,
     ax=ax_resid,
     legend=False,
 )
@@ -146,7 +172,7 @@ ax_main.set_title(
 ax_main.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax_main.tick_params(axis="x", labelbottom=False)
 ax_main.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
-ax_main.legend(fontsize=8, frameon=True, loc="lower right")
+ax_main.legend(fontsize=8, frameon=True, loc="lower left")
 
 # Style — residuals panel
 ax_resid.set_facecolor(PAGE_BG)
