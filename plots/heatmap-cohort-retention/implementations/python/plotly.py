@@ -1,12 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-16
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap for continuous retention data (green → blue)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
 
 # Data
 np.random.seed(42)
@@ -37,7 +48,10 @@ for i in range(num_cohorts):
         trend_bonus = i * 0.8
         retention[i, j] = np.clip(base_drop + noise + trend_bonus, 5, 100)
 
-# Build hovertext and cell annotations with conditional coloring
+y_labels = [f"{label}  (n={size:,})" for label, size in zip(cohort_labels, cohort_sizes, strict=False)]
+x_labels = [f"Month {i}" for i in range(num_periods)]
+
+# Hover text and cell annotations
 hover_text = []
 cell_annotations = []
 for i in range(num_cohorts):
@@ -52,31 +66,22 @@ for i in range(num_cohorts):
                 f"Cohort size: {cohort_sizes[i]:,} users<br>"
                 f"Retained: <b>{val:.1f}%</b>"
             )
+            # Luminance-based contrast: WCAG crossover on imprint_seq is ~88%
+            text_color = "#F0EFE8" if val >= 88 else "#1A1A17"
             cell_annotations.append(
                 {
-                    "x": f"Month {j}",
-                    "y": f"{cohort_labels[i]}  (n={cohort_sizes[i]:,})",
+                    "x": x_labels[j],
+                    "y": y_labels[i],
                     "text": f"<b>{val:.0f}%</b>",
                     "showarrow": False,
-                    "font": {"size": 15, "color": "#1a2e1a" if val < 45 else "white"},
+                    "font": {"size": 9, "color": text_color},
                 }
             )
     hover_text.append(row_hover)
 
-# Y-axis labels with cohort size
-y_labels = [f"{label}  (n={size:,})" for label, size in zip(cohort_labels, cohort_sizes, strict=False)]
-x_labels = [f"Month {i}" for i in range(num_periods)]
-
-# Custom colorscale — teal-green sequential with good perceptual uniformity
-colorscale = [
-    [0.0, "#f0f9f4"],
-    [0.15, "#c6e7d4"],
-    [0.30, "#7cc5a3"],
-    [0.50, "#3a9d6e"],
-    [0.70, "#1e7a4e"],
-    [0.85, "#135c39"],
-    [1.0, "#0a3d26"],
-]
+# Storytelling: identify the cohort with the best Month-3 retention
+m3_entries = [(retention[i, 3], i) for i in range(num_cohorts) if not np.isnan(retention[i, 3])]
+best_m3_val, best_m3_i = max(m3_entries)
 
 # Plot
 fig = go.Figure(
@@ -87,69 +92,67 @@ fig = go.Figure(
         showscale=True,
         hovertext=hover_text,
         hoverinfo="text",
-        colorscale=colorscale,
+        colorscale=imprint_seq,
         zmin=0,
         zmax=100,
         colorbar={
-            "title": {"text": "Retention Rate", "font": {"size": 18, "color": "#2d2d2d"}},
-            "tickfont": {"size": 16, "color": "#2d2d2d"},
+            "title": {"text": "Retention Rate", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "ticksuffix": "%",
             "tickvals": [0, 20, 40, 60, 80, 100],
             "len": 0.75,
-            "thickness": 18,
+            "thickness": 15,
             "outlinewidth": 0,
-            "x": 1.02,
         },
         xgap=3,
         ygap=3,
     )
 )
 
-# Add cell annotations with conditional text coloring (dark on light, white on dark)
 for ann in cell_annotations:
     fig.add_annotation(**ann)
 
-# Add a subtle annotation highlighting the improving trend
+# Storytelling annotation in the empty lower-right triangle (newer cohorts, later months)
 fig.add_annotation(
-    text="↑ Later cohorts retain better",
     xref="paper",
     yref="paper",
-    x=0.0,
-    y=-0.10,
+    x=0.72,
+    y=0.10,
+    text=f"★ Best Month-3 cohort<br>{cohort_labels[best_m3_i]}: {best_m3_val:.0f}%",
     showarrow=False,
-    font={"size": 15, "color": "#3a9d6e", "family": "Arial"},
-    xanchor="left",
+    font={"size": 9, "color": INK, "family": "Arial, Helvetica, sans-serif"},
+    bgcolor=PAGE_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    xanchor="center",
+    yanchor="middle",
+    opacity=0.9,
 )
 
-# Style
+title = "heatmap-cohort-retention · python · plotly · anyplot.ai"
+
 fig.update_layout(
-    title={
-        "text": "heatmap-cohort-retention · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#1a1a1a", "family": "Arial Black, Arial"},
-        "x": 0.5,
-        "xanchor": "center",
-        "y": 0.96,
-    },
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"family": "Arial, Helvetica, sans-serif", "color": INK},
+    title={"text": title, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Months Since Signup", "font": {"size": 22, "color": "#2d2d2d"}, "standoff": 15},
-        "tickfont": {"size": 17, "color": "#3d3d3d"},
-        "side": "bottom",
-        "dtick": 1,
+        "title": {"text": "Months Since Signup", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "linecolor": INK_SOFT,
+        "showgrid": False,
     },
     yaxis={
-        "title": {"text": "Signup Cohort", "font": {"size": 22, "color": "#2d2d2d"}, "standoff": 20},
-        "tickfont": {"size": 16, "color": "#3d3d3d"},
+        "title": {"text": "Signup Cohort", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "autorange": "reversed",
+        "linecolor": INK_SOFT,
+        "showgrid": False,
     },
-    template="plotly_white",
-    width=1600,
-    height=900,
-    margin={"l": 195, "r": 90, "t": 75, "b": 95},
-    paper_bgcolor="#fafafa",
-    plot_bgcolor="#fafafa",
-    font={"family": "Arial, Helvetica, sans-serif"},
+    margin={"l": 155, "r": 90, "t": 80, "b": 70},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — 2400 × 2400 square canvas (heatmap)
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
