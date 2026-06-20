@@ -1,14 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-19
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-06-20
 """
+
+import os
+import sys
+
+
+# Prevent self-import: this script is named altair.py; drop its directory from
+# sys.path so `import altair` resolves to the installed package, not this file.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.realpath(p or ".") != os.path.realpath(_here)]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 from scipy import stats
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic roles
+BRAND = "#009E73"  # histogram bars (brand green)
+COLOR_LIMIT = "#AE3030"  # LSL/USL lines (semantic: out-of-spec = bad/red)
+COLOR_TARGET = "#4467A3"  # target / nominal line (blue)
 
 # Data
 np.random.seed(42)
@@ -18,140 +39,122 @@ lsl = 9.95
 usl = 10.05
 measurements = np.random.normal(loc=10.002, scale=0.012, size=n_measurements)
 
-mean = measurements.mean()
+mean_val = measurements.mean()
 sigma = measurements.std(ddof=1)
 cp = (usl - lsl) / (6 * sigma)
-cpk = min((usl - mean) / (3 * sigma), (mean - lsl) / (3 * sigma))
+cpk = min((usl - mean_val) / (3 * sigma), (mean_val - lsl) / (3 * sigma))
 
-# Colorblind-safe palette (orange + purple instead of red + green)
-COLOR_BAR = "#306998"
-COLOR_CURVE = "#1F4E79"
-COLOR_SPEC = "#D4760A"  # Orange for LSL/USL
-COLOR_TARGET = "#7B4F9D"  # Purple for target
+df = pd.DataFrame({"diameter": measurements})
 
-# Pre-bin histogram data to avoid scale conflicts with other layers
-bin_width = 0.004
-bin_extent = [lsl - 0.005, usl + 0.005]
-bin_edges = np.arange(bin_extent[0], bin_extent[1] + bin_width, bin_width)
-counts, edges = np.histogram(measurements, bins=bin_edges)
-hist_df = pd.DataFrame({"bin_start": edges[:-1], "bin_end": edges[1:], "count": counts})
+x_lo, x_hi = lsl - 0.012, usl + 0.012
+x_scale = alt.Scale(domain=[x_lo, x_hi])
+bin_step = 0.004
 
-# Normal curve data
-x_curve = np.linspace(bin_extent[0], bin_extent[1], 200)
-y_curve = stats.norm.pdf(x_curve, mean, sigma) * n_measurements * bin_width
-curve_df = pd.DataFrame({"diameter": x_curve, "density": y_curve})
-
-# Shared x-axis scale
-x_scale = alt.Scale(domain=[lsl - 0.012, usl + 0.012])
-
-# Interactive selection for histogram bars (hover highlight in HTML)
-hover = alt.selection_point(on="pointerover", nearest=True, empty=False)
-
-# Background shaded zones (in-spec / out-of-spec)
-zone_df = pd.DataFrame(
-    {"x": [lsl - 0.012, lsl, usl], "x2": [lsl, usl, usl + 0.012], "fill": ["#FDE8E0", "#E6F0E6", "#FDE8E0"]}
-)
+# Background zones (out-of-spec / in-spec)
+zone_df = pd.DataFrame({"x": [x_lo, lsl, usl], "x2": [lsl, usl, x_hi], "zone": ["oos", "spec", "oos"]})
 zones = (
     alt.Chart(zone_df)
-    .mark_rect(opacity=0.35)
-    .encode(x=alt.X("x:Q", scale=x_scale), x2="x2:Q", color=alt.Color("fill:N", scale=None))
-)
-
-# Histogram using pre-binned data (rect marks) with conditional hover highlight
-histogram = (
-    alt.Chart(hist_df)
-    .mark_rect(stroke="white", strokeWidth=0.8, cornerRadiusTopLeft=2, cornerRadiusTopRight=2)
+    .mark_rect(opacity=0.12)
     .encode(
-        x=alt.X("bin_start:Q", title="Shaft Diameter (mm)", scale=x_scale),
-        x2="bin_end:Q",
-        y=alt.Y("count:Q", title="Frequency"),
-        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.82)),
-        color=alt.condition(hover, alt.value("#1F4E79"), alt.value(COLOR_BAR)),
-        tooltip=[
-            alt.Tooltip("bin_start:Q", title="Bin start", format=".3f"),
-            alt.Tooltip("bin_end:Q", title="Bin end", format=".3f"),
-            alt.Tooltip("count:Q", title="Count"),
-        ],
+        x=alt.X("x:Q", scale=x_scale),
+        x2="x2:Q",
+        color=alt.Color("zone:N", scale=alt.Scale(domain=["oos", "spec"], range=[COLOR_LIMIT, BRAND]), legend=None),
     )
-    .add_params(hover)
 )
 
-# Normal curve overlay
+# Idiomatic histogram — mark_bar with built-in bin transform
+hover = alt.selection_point(on="pointerover", empty=False)
+histogram = (
+    alt.Chart(df)
+    .mark_bar(stroke="white", strokeWidth=0.8, cornerRadiusTopLeft=2, cornerRadiusTopRight=2)
+    .add_params(hover)
+    .encode(
+        x=alt.X(
+            "diameter:Q", bin=alt.Bin(step=bin_step, extent=[x_lo, x_hi]), title="Shaft Diameter (mm)", scale=x_scale
+        ),
+        y=alt.Y("count():Q", title="Frequency"),
+        color=alt.value(BRAND),
+        opacity=alt.condition(hover, alt.value(1.0), alt.value(0.80)),
+        tooltip=[alt.Tooltip("diameter:Q", bin=True, title="Range"), alt.Tooltip("count():Q", title="Count")],
+    )
+)
+
+# Fitted normal distribution curve
+x_curve = np.linspace(x_lo, x_hi, 300)
+y_curve = stats.norm.pdf(x_curve, mean_val, sigma) * n_measurements * bin_step
+curve_df = pd.DataFrame({"x": x_curve, "y": y_curve})
 curve = (
     alt.Chart(curve_df)
-    .mark_line(color=COLOR_CURVE, strokeWidth=3, opacity=0.9, interpolate="monotone")
-    .encode(x=alt.X("diameter:Q", scale=x_scale), y="density:Q")
+    .mark_line(color=INK, strokeWidth=2.5, opacity=0.85, interpolate="monotone")
+    .encode(x=alt.X("x:Q", scale=x_scale), y="y:Q")
 )
 
-# LSL and USL lines
-spec_df = pd.DataFrame({"value": [lsl, usl]})
+# Specification limit lines (LSL / USL)
 spec_rules = (
-    alt.Chart(spec_df)
-    .mark_rule(color=COLOR_SPEC, strokeWidth=3, strokeDash=[10, 5])
+    alt.Chart(pd.DataFrame({"value": [lsl, usl]}))
+    .mark_rule(color=COLOR_LIMIT, strokeWidth=2.5, strokeDash=[8, 4])
     .encode(x=alt.X("value:Q", scale=x_scale))
 )
 
 # Target line
-target_df = pd.DataFrame({"value": [target]})
 target_rule = (
-    alt.Chart(target_df)
-    .mark_rule(color=COLOR_TARGET, strokeWidth=2.5, strokeDash=[4, 3])
+    alt.Chart(pd.DataFrame({"value": [target]}))
+    .mark_rule(color=COLOR_TARGET, strokeWidth=2.0, strokeDash=[4, 3])
     .encode(x=alt.X("value:Q", scale=x_scale))
 )
 
-# LSL / USL labels — offset outward to avoid overlap
-lsl_label_df = pd.DataFrame({"value": [lsl], "label": ["LSL 9.950"]})
-usl_label_df = pd.DataFrame({"value": [usl], "label": ["USL 10.050"]})
-
-lsl_labels = (
-    alt.Chart(lsl_label_df)
-    .mark_text(align="right", dx=-8, fontSize=17, fontWeight="bold", color=COLOR_SPEC)
-    .encode(x=alt.X("value:Q", scale=x_scale), y=alt.value(14), text="label:N")
-)
-
-usl_labels = (
-    alt.Chart(usl_label_df)
-    .mark_text(align="left", dx=8, fontSize=17, fontWeight="bold", color=COLOR_SPEC)
-    .encode(x=alt.X("value:Q", scale=x_scale), y=alt.value(14), text="label:N")
-)
-
-target_label = (
-    alt.Chart(pd.DataFrame({"value": [target], "label": ["Target 10.000"]}))
-    .mark_text(align="center", fontSize=17, fontWeight="bold", color=COLOR_TARGET)
-    .encode(x=alt.X("value:Q", scale=x_scale), y=alt.value(14), text="label:N")
-)
-
-# Capability indices annotation
-status = "CAPABLE" if cpk >= 1.33 else "NOT CAPABLE"
-cap_df = pd.DataFrame({"x": [usl + 0.010], "line1": [f"Cp = {cp:.2f}   Cpk = {cpk:.2f}"], "line2": [status]})
-
-cap_annotation = (
-    alt.Chart(cap_df)
-    .mark_text(align="right", fontSize=21, fontWeight="bold", color="#1a1a2e")
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.value(34), text="line1:N")
-)
-
-status_color = "#2E7D32" if cpk >= 1.33 else "#C62828"
-status_annotation = (
-    alt.Chart(cap_df)
-    .mark_text(align="right", fontSize=17, fontWeight="bold", color=status_color)
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.value(56), text="line2:N")
-)
-
-# Mean indicator
-mean_df = pd.DataFrame({"value": [mean], "label": [f"x\u0304={mean:.3f}"]})
+# Mean line
 mean_rule = (
-    alt.Chart(mean_df)
-    .mark_rule(color="#666666", strokeWidth=1.5, strokeDash=[2, 2])
+    alt.Chart(pd.DataFrame({"value": [mean_val]}))
+    .mark_rule(color=INK_MUTED, strokeWidth=1.5, strokeDash=[2, 2])
     .encode(x=alt.X("value:Q", scale=x_scale))
 )
-mean_label = (
-    alt.Chart(mean_df)
-    .mark_text(align="center", baseline="top", dy=5, fontSize=17, fontWeight="bold", color="#444444")
-    .encode(x=alt.X("value:Q", scale=x_scale), y=alt.value(870), text="label:N")
+
+# Spec limit and target labels (near top of plot area)
+lsl_label = (
+    alt.Chart(pd.DataFrame({"v": [lsl], "t": ["LSL 9.950"]}))
+    .mark_text(align="right", dx=-6, fontSize=11, fontWeight="bold", color=COLOR_LIMIT)
+    .encode(x=alt.X("v:Q", scale=x_scale), y=alt.value(12), text="t:N")
+)
+usl_label = (
+    alt.Chart(pd.DataFrame({"v": [usl], "t": ["USL 10.050"]}))
+    .mark_text(align="left", dx=6, fontSize=11, fontWeight="bold", color=COLOR_LIMIT)
+    .encode(x=alt.X("v:Q", scale=x_scale), y=alt.value(12), text="t:N")
+)
+target_label = (
+    alt.Chart(pd.DataFrame({"v": [target], "t": ["Target 10.000"]}))
+    .mark_text(align="center", fontSize=11, fontWeight="bold", color=COLOR_TARGET)
+    .encode(x=alt.X("v:Q", scale=x_scale), y=alt.value(12), text="t:N")
 )
 
-# Combine all layers
+# Capability indices and status annotation (top-right)
+status = "CAPABLE" if cpk >= 1.33 else "NOT CAPABLE"
+status_color = BRAND if cpk >= 1.33 else COLOR_LIMIT
+annot_df = pd.DataFrame({"x": [x_hi - 0.002]})
+cap_text = (
+    alt.Chart(annot_df)
+    .mark_text(align="right", fontSize=12, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.value(28), text=alt.value(f"Cp = {cp:.2f}   Cpk = {cpk:.2f}"))
+)
+status_text = (
+    alt.Chart(annot_df)
+    .mark_text(align="right", fontSize=11, fontWeight="bold", color=status_color)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.value(46), text=alt.value(status))
+)
+
+# Mean value label (near bottom of plot)
+mean_label = (
+    alt.Chart(pd.DataFrame({"v": [mean_val]}))
+    .mark_text(align="center", baseline="top", dy=4, fontSize=11, fontWeight="bold", color=INK_MUTED)
+    .encode(x=alt.X("v:Q", scale=x_scale), y=alt.value(300), text=alt.value(f"x̄={mean_val:.3f}"))
+)
+
+# Compose
+title_str = "histogram-capability · python · altair · anyplot.ai"
+n_chars = len(title_str)
+ratio = 67 / n_chars if n_chars > 67 else 1.0
+title_fontsize = max(11, round(16 * ratio))
+
 chart = (
     alt.layer(
         zones,
@@ -160,40 +163,57 @@ chart = (
         spec_rules,
         target_rule,
         mean_rule,
-        lsl_labels,
-        usl_labels,
+        lsl_label,
+        usl_label,
         target_label,
-        cap_annotation,
-        status_annotation,
+        cap_text,
+        status_text,
         mean_label,
     )
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(
-            "histogram-capability \u00b7 altair \u00b7 pyplots.ai",
-            fontSize=28,
+            title_str,
+            fontSize=title_fontsize,
             fontWeight="bold",
             anchor="start",
-            offset=16,
-            subtitle=f"n={n_measurements}   \u03c3={sigma:.4f} mm   Process centered at {mean:.3f} mm",
-            subtitleFontSize=16,
-            subtitleColor="#666666",
+            color=INK,
+            offset=12,
+            subtitle=f"n={n_measurements}   σ={sigma:.4f} mm   centered at {mean_val:.3f} mm",
+            subtitleFontSize=12,
+            subtitleColor=INK_SOFT,
         ),
     )
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
-        titleColor="#333333",
-        labelColor="#555555",
+        labelFontSize=10,
+        titleFontSize=12,
+        titleColor=INK,
+        labelColor=INK_SOFT,
         grid=False,
-        domainColor="#999999",
-        tickColor="#999999",
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_title(color=INK)
     .configure_legend(disable=True)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save — canonical 3200 × 1800 landscape with PIL padding
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
