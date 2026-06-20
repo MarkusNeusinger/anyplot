@@ -1,8 +1,7 @@
 // anyplot.ai
 // heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 86/100 | Created: 2026-06-20
+// Library: highcharts 12.6.0 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-20
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
