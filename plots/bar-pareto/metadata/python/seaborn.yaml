@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:21:08Z'
-updated: '2026-06-20T16:48:57Z'
+updated: '2026-06-20T17:03:44Z'
 generated_by: claude-sonnet
 workflow_run: 27877329774
 issue: 4550
@@ -12,53 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-paret
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Semantic color coding (green = dominant ≤80%, muted = tail) immediately communicates
-    the Pareto 80/20 split — viewer identifies priority defects at a glance
-  - 'All 5 required spec features implemented correctly: descending bars, cumulative
-    % line, secondary y-axis (0–110%), 80% reference line, and markers at bar centers'
-  - 'Correct Imprint palette usage: brand green #009E73 for dominant bars, matte red
-    #AE3030 as semantic cumulative line, INK_MUTED for tail bars — all semantically
-    justified'
-  - Fully theme-adaptive chrome with explicit rc params in sns.set_theme; both light
-    (#FAF8F1) and dark (#1A1A17) backgrounds render correctly with readable text
-  - 'Correct seaborn 0.14+ barplot idiom: hue=''defect'', legend=False avoids deprecation
-    warnings'
-  - 'Clean KISS structure: no functions, deterministic hardcoded data, all imports
-    used'
-  - Secondary y-axis right spine colored to match the cumulative line — nice design
-    detail
+  - Semantic color coding — brand green (#009E73) for bars with cumulative ≤80%, theme-adaptive
+    muted for the tail — immediately communicates Pareto priority without a legend
+  - Secondary y-axis styled with matching red spine (#AE3030) and red tick labels
+    to reinforce the cumulative line identity across both renders
+  - Narrative annotation 'top 4 → 75% of defects' delivers the Pareto insight directly
+    on the chart surface
+  - 'Full theme-adaptive chrome: all text, spines, and grid correctly use Imprint
+    tokens; both light and dark renders are visually clean with no dark-on-dark failures'
+  - 'Excellent spec compliance: descending bars, cumulative line markers at bar centers,
+    80% reference line, dual y-axes with correct labeling'
   weaknesses:
-  - 'DE-01 (5/8): Design is solid but stops short of publication-ready — no typography
-    hierarchy beyond fontweight=''medium'' on title, no bold annotations calling out
-    the ''4 defects = 75% of issues'' insight that would elevate storytelling to FiveThirtyEight
-    level'
-  - 'DE-02 (4/6): Right-spine color match is a nice touch but whitespace isn''t fully
-    generous — bottom margin (0.20) is tight for rotated 28° tick labels at fontsize=7;
-    consider bottom=0.22–0.24'
-  - 'DE-03 (4/6): The color hierarchy effectively shows which bars matter, but the
-    story could be stronger — e.g., a small text annotation near the 80% crossover
-    line noting ''4 categories → 75% of defects'' would add narrative without cluttering'
-  - 'LM-01 (4/5): Secondary axis (twinx) and its styling necessarily fall back to
-    matplotlib — acceptable for this chart type, but limits seaborn idiom score'
-  - 'LM-02 (2/5): Distinctive seaborn feature use is limited to set_theme, barplot
-    (hue idiom), and despine; most of the dual-axis work is plain matplotlib'
-  - Count annotations fontsize=7 bold — readable at full 3200px but borderline at
-    mobile 400px scale; fontsize=8 would be safer
+  - X-axis tick labels at fontsize=7 with rotation=28° are at the lower bound of mobile
+    readability — at ~400px width the longest labels (Paint blistering, Surface scratches)
+    will be approximately 5px tall; consider increasing to fontsize=8 for safer mobile
+    legibility
+  - Annotation 'top 4 → 75% of defects' at (3.5, 88) sits close to the cumulative
+    line in the 80%-crossover region — adding a small background box or moving it
+    to (2.5, 90) would improve separation and readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white — correct #FAF8F1 surface, not pure white.
-      Chrome: Title "bar-pareto · python · seaborn · anyplot.ai" at fontsize=12 in near-black INK, occupying ~60% of canvas width — fully readable. Left y-axis label "Frequency (Count)" in INK at fontsize=10. X-axis label "Defect Type" at fontsize=10. Right y-axis label "Cumulative %" in matte red (#AE3030) at fontsize=10. Tick labels at fontsize=7–8 in INK_SOFT (#4A4A44) — readable. X-axis ticks rotated 28°, no overlap observed.
-      Data: First 4 bars (Paint blistering 156, Surface scratches 124, Dents 93, Weld flaws 71) in brand green #009E73 — cumulative ≤80%. Remaining 6 bars in dark muted gray (INK_MUTED #6B6A63). Bold count annotations above each bar match bar color. Cumulative line in matte red (#AE3030) with white-edge circle markers (markersize=5) curves smoothly to ~100%. Dashed 80% reference line with "80%" label at right.
-      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "bar-pareto · python · seaborn · anyplot.ai" at top in dark ink (#1A1A17), occupying ~65% of plot width — clearly readable. Primary y-axis label "Frequency (Count)" and x-axis label "Defect Type" in INK. Secondary y-axis label "Cumulative %" in red (#AE3030) matching the cumulative line. X-tick labels at fontsize=7 rotated 28° in INK_SOFT (#4A4A44) — readable at full resolution, borderline at mobile scale. Y-tick labels at fontsize=8 in INK_SOFT.
+      Data: First 4 bars (Paint blistering 156, Surface scratches 124, Dents 93, Weld flaws 71) in brand green #009E73 — correct Imprint position 1. Remaining 6 bars in muted dark gray (#6B6A63, INK_MUTED light mode) for the Pareto tail. Cumulative line in matte red #AE3030 with circular markers with white edges, correctly positioned at bar centers. 80% dashed reference line in #AE3030. Bold count annotations above each bar (green for dominant, muted for tail). Narrative annotation "top 4 → 75% of defects" in italic red near the 80% crossover region.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black — correct #1A1A17 surface, not pure black.
-      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background. Axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). Right y-axis label "Cumulative %" in matte red. All text is light-colored — no dark-on-dark failure observed.
-      Data: Brand green #009E73 bars for dominant categories — identical color to light render. Tail bars now in light gray (#A8A79F, theme-adaptive INK_MUTED for dark theme) — expected theme-adaptive behavior for the semantic muted anchor. Count annotations follow same color logic. Cumulative red line and 80% dashed reference identical to light render.
-      Legibility verdict: PASS — no dark-on-dark failures. All text clearly readable against #1A1A17 background.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels in INK (dark mode: #F0EFE8). X-tick and y-tick labels in INK_SOFT (dark mode: #B8B7B0) — readable. Secondary y-axis label "Cumulative %" in red (#AE3030) — clearly visible on dark. Right spine in red. No dark-on-dark failures observed.
+      Data: Dominant bars (first 4) remain in brand green #009E73 — identical to light render, confirming palette data colors are theme-invariant. Tail bars rendered in INK_MUTED dark (#A8A79F, light gray) — correct theme-adaptive muted anchor behavior. Cumulative line in #AE3030 with white-edge markers — identical to light render. 80% reference line visible. Count annotations readable (green for dominant, light gray for tail).
+      Legibility verdict: PASS — all chrome correctly inverted; data colors identical to light render; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,50 +55,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; proportions well-balanced. Count annotations
-          at fontsize=7 bold are borderline at mobile scale — fontsize=8 would be
-          safer.
+        comment: Title, axis labels, and tick labels all readable in both themes.
+          X-tick fontsize=7 is at the lower bound — mobile readability borderline
+          for longer labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Rotated 28° x-axis tick labels are well-spaced.
+        comment: No overlapping elements; count annotations well-placed above bars;
+          narrative annotation and 80% label do not collide.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, cumulative line, markers, and annotations all clearly visible
-          in both renders.
+        comment: All bars, cumulative line, markers, and reference line are clearly
+          visible in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs muted-gray vs red line are distinguishable; Imprint palette
-          is CVD-safe.
+        comment: Green/muted color split is CVD-safe; red cumulative line has adequate
+          contrast on both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good layout via subplots_adjust;
-          adequate bottom margin for rotated labels.
+        comment: 3200x1800 canvas (figsize=(8,4.5) dpi=400). Title ~65% width. Bottom
+          margin 0.22 accommodates rotated x-labels. Right margin 0.88 leaves room
+          for secondary axis.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Frequency (Count) on left, Cumulative % on right — both descriptive
-          with units. Title format correct.
+        comment: 'Title matches spec format. Primary Y: Frequency (Count), Secondary
+          Y: Cumulative %, X: Defect Type — all descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; semantic muted anchor for tail; matte red
-          (#AE3030) for cumulative line; backgrounds correct; chrome theme-adaptive.'
+        comment: 'First/dominant series uses #009E73 brand green. Tail uses theme-adaptive
+          muted anchor (correct for rest/other role). Cumulative line uses #AE3030
+          semantic red (threshold/alert role). Backgrounds #FAF8F1 / #1A1A17 correct.'
     design_excellence:
       score: 13
       max: 20
@@ -122,25 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color coding elevates above library defaults.
-          Clean professional look. Below FiveThirtyEight level — no callout annotation
-          or typography hierarchy beyond medium weight title.
+        comment: Intentional color semantics (green vs muted at 80% threshold), secondary
+          axis spine styled in red to match cumulative line. Above default but room
+          to raise with more typographic refinement.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right despine, subtle y-axis-only grid (alpha=0.15), secondary
-          spine colored to match cumulative line. Good but bottom margin slightly
-          tight for rotated labels.
+        comment: Top/right spines removed from primary axis; right spine kept and
+          colored for secondary axis; y-only grid at alpha=0.15; font hierarchy explicit.
+          Clean, refined look.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color hierarchy (green vs muted) visually encodes the 80/20 split
-          — viewer sees which categories matter. Missing explicit narrative annotation
-          at 80% crossover.
+        comment: Color split at 80% creates clear focal point. 80% reference line
+          explicitly marks threshold. Narrative annotation 'top 4 → 75% of defects'
+          delivers the Pareto insight directly.
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Pareto chart: descending bars + cumulative % line overlay.'
+        comment: 'Correct Pareto chart: descending-sorted bars + cumulative percentage
+          line on secondary axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: descending sort, cumulative line, secondary y-axis
-          (0–110%), 80% reference line, markers at bar centers.'
+        comment: Descending sort ✓, cumulative % line on secondary y-axis ✓, 80% reference
+          line ✓, primary y = raw counts ✓, secondary y = cumulative % ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on primary y, cumulative % on secondary y
-          — all correct.
+        comment: X = defect categories, Y1 = frequency count, Y2 = cumulative %. All
+          axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'bar-pareto · python · seaborn · anyplot.ai'. No legend
-          needed — axes provide all labeling.
+        comment: Title is 'bar-pareto · python · seaborn · anyplot.ai'. No explicit
+          legend needed — color encoding is self-explanatory via bar colors.
     data_quality:
       score: 15
       max: 15
@@ -181,24 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 categories show meaningful Pareto distribution; 4 dominant + 6
-          tail structure is realistic; 80% threshold correctly falls between bar 4
-          and 5.
+        comment: 'Shows full Pareto chart features: sorted bars, cumulative line,
+          threshold, semantic color split, count annotations, 10 categories with clear
+          distribution.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Surface quality manufacturing defects (paint blistering, scratches,
-          dents, weld flaws) — highly realistic, neutral, domain-appropriate.
+        comment: Manufacturing surface-quality defect data is realistic, plausible,
+          and neutral. Category names are domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts 7–156 plausible for manufacturing defect tracking. Correct
-          Pareto structure with 4 categories reaching 74.5% (below 80%) and 5th pushing
-          to 84.2%.
+        comment: Counts 7-156 are realistic for manufacturing defect tracking. Distribution
+          exhibits clear Pareto curve (first 4 categories = 74.5% of total).
     code_quality:
       score: 10
       max: 10
@@ -208,36 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: theme tokens → data → cumulative calc → canvas
-          → bars → annotations → secondary axis → title → save.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random generation.
+        comment: Deterministic hardcoded data, no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
+        comment: All 5 imports (os, matplotlib, numpy, pandas, seaborn) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. List comprehension for bar_colors is appropriate.
-          No fake interactivity.
+        comment: Clean, readable code. No fake UI. Good use of list comprehension
+          for bar colors.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Uses current seaborn
           API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -245,18 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme with RC overrides, barplot hue idiom (avoids 0.14+
-          warning), sns.despine for both axes, sns.lineplot on secondary axis — all
-          idiomatic. Twin-axis setup necessarily falls back to matplotlib.
+        comment: Uses sns.barplot with hue for per-bar palette, sns.lineplot with
+          sort=False/estimator=None for ordered line, sns.set_theme with RC dict,
+          sns.despine with selective params. Twin-axes is matplotlib-level but necessary.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Distinctive seaborn use limited to set_theme, barplot hue API, despine.
-          Core dual-axis work is matplotlib. Score reflects limited seaborn-specific
-          expressiveness for this chart type.
-  verdict: REJECTED
+        passed: true
+        comment: Uses sns.set_theme, sns.set_context, sns.despine — seaborn-distinctive
+          theming. Could leverage more seaborn statistical features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -264,8 +251,9 @@ impl_tags:
   - annotations
   patterns:
   - explicit-figure
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
