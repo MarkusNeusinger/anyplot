@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-cohort-retention: Cohort Retention Heatmap
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-20
+// Quality: 91/100 | Created: 2026-06-20
 
 //# anyplot-orientation: square
 

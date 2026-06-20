@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-cohort-retention
 created: '2026-06-20T01:17:02Z'
-updated: '2026-06-20T01:23:16Z'
+updated: '2026-06-20T01:37:01Z'
 generated_by: claude-sonnet
 workflow_run: 27855527574
 issue: 4570
@@ -12,116 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct triangular cohort heatmap shape with all 10 cohorts and periods
-  - 'Full spec compliance: cell values, cohort sizes, colorbar, axis labels all present'
-  - Clean imprint_seq color mapping (green=high retention, blue=low retention)
-  - Theme-adaptive chrome via ANYPLOT_TOKENS throughout
-  - Luminance-adaptive cell text (dark/light text based on cell background)
-  - Elegant cell separators using pageBg stroke color
-  - Deterministic and well-structured code with appropriate helper functions
-  - Idiomatic Chart.js plugin (afterDraw) with scale coordinate mapping
+  - 'Correct triangular heatmap with period 0 = 100% for all cohorts; complete imprint_seq
+    (#009E73 → #4467A3) colormap with theme-invariant data colors'
+  - Adaptive cell text color (dark on green, light on blue) ensures legibility at
+    all retention levels in both themes — no contrast failures
+  - Subtitle provides explicit data story and cohort labels include n-sizes per spec;
+    all required spec features implemented
+  - 'All Chart.js chrome tokens (t.ink, t.inkSoft, t.pageBg, t.seq) correctly mapped;
+    animation: false and responsive: true set as required'
+  - Fully deterministic data with realistic SaaS retention decay and measurable cohort
+    quality improvement
   weaknesses:
-  - Colorbar labels (100%, 50%, 0%) rendered at 12px CSS which is slightly small for
-    the 2400x2400 canvas — increase to ~14px for better readability at mobile widths
-  - Cohort improvement trend (+0.9 per cohort) is quite subtle — consider making the
-    improvement signal more visible to strengthen data storytelling
-  - 'LM-02: distinctive Chart.js features are limited since the scatter type is used
-    only as a coordinate scaffold — most rendering is plain canvas API'
+  - Y-axis Signup Cohort title translated to CSS x=14 — only ~6px CSS clearance from
+    left canvas edge; while not visibly clipped, a safer position would be x=24–28px
+  - 'Cell text colors hardcode #F0EFE8 and #1A1A17 rather than t.pageBg / t.ink tokens
+    — functionally correct since cell colors are theme-invariant, but using tokens
+    would be more robust'
+  - 'DE-01/DE-02 have remaining headroom: removing the colorbar border stroke, using
+    a 1px cell gap instead of 2px pageBg stroke, or a more intentional font weight
+    hierarchy between title/subtitle could push toward publication-ready'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Bold title "heatmap-cohort-retention · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Y-axis labels (cohort names + sizes, e.g. "Jan 2024 (n=4,821)") in inkSoft, clearly readable. X-axis labels "Wk 0"–"Wk 9" in inkSoft, readable. Axis titles "Signup Cohort" (rotated) and "Weeks Since Signup" in ink, readable.
-      Data: Triangular heatmap with imprint_seq gradient (green #009E73 at 100% → blue #4467A3 at lower retention). Bold percentage labels inside each cell. Colorbar on right with gradient and 100%/50%/0% labels (slightly small at 12px). Triangular shape clearly visible — Jan 2024 has Wk 0–9, Oct 2024 has only Wk 0.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "heatmap-cohort-retention · javascript · chartjs · anyplot.ai" in dark text; subtitle in gray; cohort labels "Jan 2024 (n=4,821)" etc. in inkSoft; "Signup Cohort" rotated Y-axis label; "Weeks Since Signup" X-axis label; "Wk 0"–"Wk 9" tick labels; colorbar labels 0%/50%/100% — all readable
+      Data: cells colored with imprint_seq gradient #009E73 (100% retention, green) → #4467A3 (low retention, blue); first series / period 0 cells all #009E73; triangular shape correct
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in bright ink (#F0EFE8), clearly readable. Y-axis cohort labels in inkSoft (#B8B7B0), readable against dark background. X-axis labels "Wk 0"–"Wk 9" readable. Axis titles readable. No dark-on-dark issues detected.
-      Data: Cell colors are identical to light render (data colors constant across themes) — imprint_seq green-to-blue gradient unchanged. Cell text: dark text (#1A1A17) on high-retention green cells (readable, ~5.4:1 contrast), light text (#F0EFE8) on lower-retention blue cells. Colorbar gradient and labels present. Empty triangle area shows #1A1A17 background correctly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
+      Background: warm near-black #1A1A17 — correct theme surface
+      Chrome: title, subtitle, cohort labels, axis titles, week labels, colorbar labels all in light text (cream/off-white t.ink); no dark-on-dark failures observed; grid/border elements use theme-appropriate tokens
+      Data: cell colors identical to light render — green-to-blue gradient unchanged as required; adaptive cell text (dark on green, light on blue) remains correct
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, cell text all readable in both themes. Colorbar
-          labels at 12px CSS slightly small for the canvas size.
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
+          16px, cohort labels 14px, week labels 13px, cell values dynamic-proportional).
+          Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements detected in either render.
+        comment: No text collisions; cells properly spaced; colorbar labels clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible with good color differentiation.
-          Bold percentage labels readable inside cells.
+        comment: All cells clearly visible with well-chosen gradient; cell text adaptive
+          for contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used for continuous data, luminance-adaptive text contrast
-          in cells.
+        comment: imprint_seq is CVD-safe; cell text adapts to maintain contrast at
+          all retention levels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 orientation correct for heatmap. Good padding (210px
-          left for labels, 90px right for colorbar, 80px bottom). No overflow.
+        comment: Square 2400x2400 appropriate for symmetric heatmap; padding reserves
+          space for labels and colorbar.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format. Axis titles 'Signup Cohort' and 'Weeks Since
-          Signup' are descriptive. X-axis labels 'Wk 0'–'Wk 9' match spec.
+        comment: Signup Cohort and Weeks Since Signup are descriptive; cells labeled
+          with % units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (t.seq[0]=#009E73 to t.seq[1]=#4467A3) correctly used
-          for sequential retention data. Backgrounds #FAF8F1 light / #1A1A17 dark
-          correct.'
+        comment: 't.seq (#009E73 → #4467A3) = imprint_seq; background #FAF8F1 light
+          / #1A1A17 dark; chrome tokens t.ink / t.inkSoft / t.pageBg used; data colors
+          theme-invariant.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Theme-adaptive tokens throughout, clever plugin approach, cell separators
-          using pageBg, luminance-adaptive text. Professional but not exceptional.
+        comment: 'Above defaults: imprint_seq gradient, adaptive cell text, descriptive
+          subtitle, cohort n-sizes, colorbar with tick marks. Not quite FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'No spines (border: display:false), no grid lines, subtle cell separators,
-          generous padding. Clean and refined.'
+        comment: No grid, axes borders hidden, cell separators use t.pageBg (theme-appropriate).
+          Good but not every detail polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangular shape communicates cohort/period structure immediately,
-          green-to-blue gradient intuitive for retention, in-cell percentages add
-          precision, cohort sizes add context.
+        comment: Subtitle explicitly states later cohorts retain measurably more users;
+          cell data visibly demonstrates this. Clear visual story.
     spec_compliance:
       score: 15
       max: 15
@@ -137,47 +141,47 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Triangular shape, sequential colormap, in-cell percentages, cohort
-          sizes, Week labels, colorbar — all present.
+        comment: Triangular shape, imprint_seq colormap, % text in cells, cohort sizes
+          in labels, Wk N axis labels, colorbar, period 0 = 100% all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods, Y=cohorts, Color=retention rate. Period 0 = 100% for all
-          cohorts.
+        comment: Cohorts on Y (rows), periods on X (columns), retention rate as color
+          intensity. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-cohort-retention · javascript · chartjs · anyplot.ai'
-          correct. Colorbar with 0/50/100% labels present.
+        comment: 'Title: heatmap-cohort-retention · javascript · chartjs · anyplot.ai.
+          Colorbar serves as legend.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows retention decay, triangular shape, cohort comparison, period-0
-          baseline. Gradual improvement trend (+0.9 per cohort) is present but subtle.
+        comment: Period 0 = 100%, decay pattern, triangular shape, measurable cohort
+          improvement (+2% per cohort) all demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS monthly cohorts Jan–Oct 2024, realistic cohort sizes 4800–6200,
-          realistic retention decay 17–100%.
+        comment: Monthly SaaS cohorts Jan-Oct 2024 with realistic sizes (4,821-6,234
+          users) and plausible retention decay.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 cohorts × 10 periods within spec range (8-12). Retention values
-          realistic for SaaS.
+        comment: Retention curve (100%, 62%, 45%, 38%, ..., 17%) realistic for SaaS.
+          +2% cohort improvement modest and believable.
     code_quality:
       score: 10
       max: 10
@@ -187,34 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean flat structure. Helper functions (hexToRgb, interpColor, cellColor,
-          fmtNum) are all necessary and small.
+        comment: Data → helpers → mount → plugin → chart. No classes; helper functions
+          minimal and necessary.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded cohort data and decay formula.'
+        comment: Fully deterministic; no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — Chart is a global, correct per harness contract.
+        comment: No imports; uses only Chart.js global and ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom plugin approach is the correct Chart.js pattern for custom
-          cell rendering. Appropriate complexity.
+        comment: Custom afterDraw plugin is idiomatic Chart.js approach. No fake UI,
+          no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Orientation directive ''//# anyplot-orientation: square'' correct.
-          Chart.js 4.4.7 current API used.'
+        comment: Chart.js harness produces plot-{theme}.png + plot-{theme}.html; no
+          deprecated API.
     library_mastery:
       score: 7
       max: 10
@@ -224,28 +228,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: afterDraw plugin hook is the idiomatic Chart.js approach for custom
-          drawing. Correct use of scale getPixelForValue(), chartArea, chart.ctx,
-          responsive/maintainAspectRatio/animation flags.
+        comment: Uses Chart.js plugin API (afterDraw hook) with scatter base — canonical
+          approach for custom rendering. animation:false, responsive:true, maintainAspectRatio:false
+          correctly set.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Chart.js plugin lifecycle (afterDraw), scale coordinate API,
-          and canvas context. Most rendering is canvas API rather than Chart.js-specific
-          features, but this is the correct approach given no native matrix chart
-          type.
+        comment: Plugin system with canvas 2D context drawing is Chart.js-specific.
+          createLinearGradient for colorbar and getPixelForValue() for coordinate
+          mapping shows Chart.js scale API knowledge.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
