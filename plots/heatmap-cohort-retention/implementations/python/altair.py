@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -23,6 +23,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint sequential colormap: brand green → blue (single-polarity continuous data)
 SEQ_LOW = "#009E73"  # brand green — low retention
 SEQ_HIGH = "#4467A3"  # blue — high retention
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution — callout annotations
 
 # Data
 np.random.seed(42)
@@ -72,6 +73,10 @@ df = pd.DataFrame(rows)
 cohort_order = [f"{c} (n={s:,})" for c, s in zip(cohort_labels, cohort_sizes, strict=True)]
 period_order = [f"Month {p}" for p in range(n_periods)]
 
+# Average Month 0→1 retention drop — used for cliff callout annotation
+avg_month1_retention = df[df["period"] == 1]["retention_rate"].mean()
+avg_drop = round(100 - avg_month1_retention)
+
 # Title — len=55 < 67, no font-size shrink needed; default 16px applies
 title = "heatmap-cohort-retention · python · altair · anyplot.ai"
 title_fontsize = 16
@@ -79,7 +84,7 @@ title_fontsize = 16
 # Heatmap rectangles — Imprint sequential palette
 heatmap = (
     alt.Chart(df)
-    .mark_rect(stroke=INK_SOFT, strokeWidth=0.5, cornerRadius=2)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=0.5, cornerRadius=3)
     .encode(
         x=alt.X(
             "period_label:O",
@@ -156,9 +161,29 @@ pct = (
     )
 )
 
+# Amber border on Jan 2024 row confirms the subtitle insight (earliest = strongest)
+jan_df = df[df["cohort"] == "Jan 2024"].copy()
+jan_highlight = (
+    alt.Chart(jan_df)
+    .mark_rect(fill=None, stroke=ANYPLOT_AMBER, strokeWidth=2, cornerRadius=3)
+    .encode(x=alt.X("period_label:O", sort=period_order), y=alt.Y("cohort_label:O", sort=cohort_order))
+)
+
+# Callout annotation at top of Month 1 column for the ~Month 0→1 retention cliff
+cliff_df = pd.DataFrame(
+    [{"period_label": "Month 1", "cohort_label": cohort_order[0], "annotation": f"avg −{avg_drop}%"}]
+)
+cliff_label = (
+    alt.Chart(cliff_df)
+    .mark_text(fontSize=9, fontWeight="bold", dy=-26, color=ANYPLOT_AMBER, clip=False)
+    .encode(
+        x=alt.X("period_label:O", sort=period_order), y=alt.Y("cohort_label:O", sort=cohort_order), text="annotation:N"
+    )
+)
+
 # Combine layers — square canvas (2400×2400) for symmetric heatmap grid
 chart = (
-    alt.layer(heatmap, text, pct)
+    alt.layer(heatmap, jan_highlight, text, pct, cliff_label)
     .properties(
         width=370,
         height=440,
