@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -28,6 +28,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — 8 hues, theme-independent, hybrid-v3 sort
 IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+BLUE = IMPRINT_PALETTE[2]  # #4467A3 — Imprint blue, position 3; boys-blue semantic exception
 
 # --- Data ---
 # Synthetic WHO-like weight-for-age reference for boys 0–36 months
@@ -48,29 +49,35 @@ patient_weights = np.array([3.7, 4.4, 5.0, 6.4, 7.6, 9.4, 11.0, 12.4, 13.8, 16.2
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# --- Percentile bands: blue gradient (boys convention — semantic exception) ---
-band_pairs = [("P3", "P10"), ("P10", "P25"), ("P25", "P75"), ("P75", "P90"), ("P90", "P97")]
-if THEME == "light":
-    band_fill_colors = ["#1B4F72", "#2471A3", "#AED6F1", "#2471A3", "#1B4F72"]
-    band_alphas = [0.25, 0.20, 0.15, 0.20, 0.25]
-    curve_colors = ["#85C1E9", "#5DADE2", "#2E86C1", "#1A5276", "#2E86C1", "#5DADE2", "#85C1E9"]
-    right_label_color = "#1A5276"
-else:
-    band_fill_colors = ["#5DADE2", "#7FB3D3", "#AED6F1", "#7FB3D3", "#5DADE2"]
-    band_alphas = [0.35, 0.28, 0.20, 0.28, 0.35]
-    curve_colors = ["#7FB3D3", "#85C1E9", "#5DADE2", "#AED6F1", "#5DADE2", "#85C1E9", "#7FB3D3"]
-    right_label_color = "#AED6F1"
+# --- Developmental phase shading (axvspan — distinctive matplotlib feature) ---
+ax.axvspan(0, 12, color=INK, alpha=0.04, linewidth=0, zorder=0)
+ax.text(
+    6,
+    0.025,
+    "Infancy",
+    transform=ax.get_xaxis_transform(),
+    fontsize=7,
+    color=INK_MUTED,
+    ha="center",
+    va="bottom",
+    style="italic",
+)
 
-for (lower, upper), bc, alpha in zip(band_pairs, band_fill_colors, band_alphas, strict=True):
-    ax.fill_between(age_months, percentiles[lower], percentiles[upper], color=bc, alpha=alpha, linewidth=0)
+# --- Percentile bands: Imprint #4467A3 at varied alpha (boys-blue semantic exception) ---
+band_pairs = [("P3", "P10"), ("P10", "P25"), ("P25", "P75"), ("P75", "P90"), ("P90", "P97")]
+band_alphas = [0.30, 0.20, 0.12, 0.20, 0.30]
+
+for (lower, upper), alpha in zip(band_pairs, band_alphas, strict=True):
+    ax.fill_between(age_months, percentiles[lower], percentiles[upper], color=BLUE, alpha=alpha, linewidth=0)
 
 # --- Percentile curves ---
 percentile_labels = ["P3", "P10", "P25", "P50", "P75", "P90", "P97"]
 line_widths = [0.7, 0.7, 1.0, 2.5, 1.0, 0.7, 0.7]
 line_styles = ["--", "--", "-", "-", "-", "--", "--"]
+curve_alphas = [0.55, 0.65, 0.80, 1.0, 0.80, 0.65, 0.55]
 
-for label, lw, ls, lc in zip(percentile_labels, line_widths, line_styles, curve_colors, strict=True):
-    ax.plot(age_months, percentiles[label], linewidth=lw, linestyle=ls, color=lc, alpha=0.85)
+for label, lw, ls, alpha in zip(percentile_labels, line_widths, line_styles, curve_alphas, strict=True):
+    ax.plot(age_months, percentiles[label], linewidth=lw, linestyle=ls, color=BLUE, alpha=alpha)
 
 # --- Percentile labels on right margin with collision avoidance ---
 # Prevents compression when adjacent percentile curves are close at the chart edge.
@@ -96,7 +103,7 @@ for label in percentile_labels:
         xytext=(36.6, pct_y_adj[label]),
         fontsize=fs,
         fontweight=fw,
-        color=right_label_color,
+        color=BLUE,
         va="center",
         ha="left",
         annotation_clip=False,
