@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -125,7 +125,7 @@ lbl = {"text_font_size": "24pt", "text_alpha": 0.9, "text_font_style": "bold"}
 p_xbar = figure(
     width=W,
     height=CH,
-    title="spc-xbar-r · bokeh · anyplot.ai",
+    title="spc-xbar-r · python · bokeh · anyplot.ai",
     x_range=x_range,
     y_axis_label="X̄ (Sample Mean, mm)",
     toolbar_location=None,
@@ -163,8 +163,9 @@ p_xbar.add_layout(
 p_xbar.add_layout(Label(x=label_x, y=ucl_xbar, text=f"UCL={ucl_xbar:.3f}", text_color=CLR_OOC, **lbl))
 p_xbar.add_layout(Label(x=label_x, y=lcl_xbar, text=f"LCL={lcl_xbar:.3f}", text_color=CLR_OOC, **lbl))
 p_xbar.add_layout(Label(x=label_x, y=x_bar_bar, text=f"X̄̄={x_bar_bar:.3f}", text_color=INK, **lbl))
-p_xbar.add_layout(Label(x=label_x, y=uwl_xbar, text="+2σ", text_color=CLR_WARNING, **lbl))
-p_xbar.add_layout(Label(x=label_x, y=lwl_xbar, text="−2σ", text_color=CLR_WARNING, **lbl))
+amber_lbl = {**lbl, "background_fill_color": ELEVATED_BG, "background_fill_alpha": 0.85}
+p_xbar.add_layout(Label(x=label_x, y=uwl_xbar, text="+2σ", text_color=CLR_WARNING, **amber_lbl))
+p_xbar.add_layout(Label(x=label_x, y=lwl_xbar, text="−2σ", text_color=CLR_WARNING, **amber_lbl))
 
 # Legend
 legend_xbar = Legend(
@@ -238,9 +239,9 @@ if lwl_r > 0:
 # Limit annotations for R chart
 p_r.add_layout(Label(x=label_x, y=ucl_r, text=f"UCL={ucl_r:.3f}", text_color=CLR_OOC, **lbl))
 p_r.add_layout(Label(x=label_x, y=r_bar, text=f"R̄={r_bar:.3f}", text_color=INK, **lbl))
-p_r.add_layout(Label(x=label_x, y=uwl_r, text="+2σ", text_color=CLR_WARNING, **lbl))
+p_r.add_layout(Label(x=label_x, y=uwl_r, text="+2σ", text_color=CLR_WARNING, **amber_lbl))
 if lwl_r > 0:
-    p_r.add_layout(Label(x=label_x, y=lwl_r, text="−2σ", text_color=CLR_WARNING, **lbl))
+    p_r.add_layout(Label(x=label_x, y=lwl_r, text="−2σ", text_color=CLR_WARNING, **amber_lbl))
 
 # Legend for R chart
 legend_r = Legend(
