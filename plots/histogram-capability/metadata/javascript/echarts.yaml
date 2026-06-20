@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-capability
 created: '2026-06-20T15:30:14Z'
-updated: '2026-06-20T15:38:35Z'
+updated: '2026-06-20T15:51:45Z'
 generated_by: claude-sonnet
 workflow_run: 27875221952
 issue: 4552
@@ -12,45 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: histogram, normal fit curve, LSL/USL lines, target line,
-    and Cp/Cpk annotation all present and correct'
-  - 'Excellent Imprint palette compliance with semantic color choice for specification
-    limits (matte red #AE3030 for LSL/USL)'
-  - Theme-adaptive chrome throughout — both renders clean and readable with no dark-on-dark
-    failures
-  - Realistic, neutral engineering scenario (shaft diameter in precision manufacturing)
-    with factually plausible Cp/Cpk values
-  - 'Idiomatic ECharts usage: value-type x-axis histogram, markLine for reference
-    lines on series, graphic overlay for Cp/Cpk annotation box'
-  - Annotation box well-positioned in sparse upper-right area, creating a clear focal
-    point and immediate readability of capability indices
+  - 'Fully spec-compliant: histogram + fitted normal curve + LSL/USL/Target lines
+    + Cp/Cpk annotation, all correct'
+  - 'Excellent palette usage: bars in #009E73 (brand green), fit curve in #4467A3
+    (blue), LSL/USL in #AE3030 (semantic red for limit lines) — well-reasoned'
+  - Annotation box for Cp/Cpk uses elevated background, rounded corners, and a brand-green
+    left-accent bar — design detail above defaults
+  - Deterministic LCG (seed 42) ensures fully reproducible output without any Math.random()
+    non-determinism
+  - 'Idiomatic ECharts usage: markLine on bar series for spec limits, graphic component
+    for annotation overlay, animation: false, no explicit size on init'
+  - 'Theme adaptation is correct in both renders: text, grid, and annotation box all
+    use t.ink / t.inkSoft / t.grid / t.elevatedBg tokens'
+  - Title fontsize scaled by formula (67/length) to handle the mandated long title
+    string
+  - 200 synthetic measurements with mean near target and small sigma produce a realistic
+    highly-capable process (Cp~2.10, Cpk~2.00)
   weaknesses:
-  - 'DE-01: Aesthetic sophistication stops short of exceptional — the annotation box
-    is functional but could be more visually refined (e.g., a thin #009E73 left-border
-    accent, or Cp/Cpk label text in brand green while keeping numeric values in t.ink)'
-  - 'VQ-01 minor: markLine labels (LSL, USL, Target) rendered as small rotated text
-    at insideEndTop position — increase fontSize to 14-15 or move label position to
-    end for better mobile readability'
-  - 'DE-02: Y-axis spine is hidden but X-axis spine is shown — unconventional for
-    histograms; standard L-frame (left + bottom) would be more refined — add yAxis.axisLine:
-    { show: true, lineStyle: { color: t.inkSoft } }'
-  - 'CQ-01: Two LCG helper functions (rand, randNorm) are justified in the browser
-    environment but technically break the pure KISS flat structure'
+  - Tick labels at fontSize 12 CSS px are slightly small; bumping to 13px would improve
+    mobile readability without crowding the axis
+  - Top/right spines are present — removing them (by hiding axisLine on the top/right)
+    would further refine the look
+  - 'DE-03 could be elevated: adding a subtle ''within spec'' shading between LSL
+    and USL (low-opacity green band) would make the ''capable process'' story immediate
+    without extra text'
+  - 'LM-02 gap: the bar series uses a fixed BAR_WIDTH of 71px hardcoded from estimated
+    grid dimensions rather than using ECharts barMaxWidth/barCategoryGap which adapts
+    automatically to the canvas size'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "histogram-capability · javascript · echarts · anyplot.ai" centered at top, clearly readable in dark text. X-axis label "Shaft Diameter (mm)" and Y-axis label "Count" clearly visible. Tick labels (9.91 to 10.09 on X, 0 to 114 on Y) clearly readable against the light background. Legend "Measurements" and "Normal Fit" at bottom fully readable.
-      Data: Histogram bars in brand green #009E73 (t.palette[0]) at opacity 0.72 showing distribution centered ~10.00mm. Normal fit curve in blue #4467A3 (t.palette[2]) overlaid at lineWidth 2.5. Red dashed vertical lines (t.palette[4] = #AE3030) at LSL=9.95 and USL=10.05 with rotated labels "LSL" and "USL". Dark dashed line (t.inkSoft) at Target=10.00 labeled "Target". Rounded-corner annotation box in upper right with light elevated background (#FFFDF6) showing "Cp = 2.10" and "Cpk = 2.00" in dark ink.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "histogram-capability · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Count" visible in inkSoft grey. Tick labels (9.91–10.09 on x, 0–114 on y) at 12px — readable though on the smaller side. Legend at bottom shows "Measurements" (green roundRect swatch) and "Normal Fit" (blue line/dot) — fully readable.
+      Data: Histogram bars in #009E73 (brand green) with opacity 0.72, clustered tightly around 10.00. Normal distribution fit curve in #4467A3 (blue), smooth and scaling correctly to the count axis. LSL and USL dashed lines in #AE3030 (matte red) with rotated "LSL"/"Target"/"USL" labels at the top of each line. Target line in inkSoft dashed. Cp/Cpk annotation box (upper-right) with cream elevated background (#FFFDF6), green left-accent bar, and dark-ink text showing "Cp = 2.10" and "Cpk = 2.00" in bold.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels ("Shaft Diameter (mm)", "Count"), tick labels, and legend text all render in light colors (cream/light-gray) clearly visible against the dark background. Annotation box uses dark elevated background (#242420) with light cream text — good contrast. No dark-on-dark failures detected anywhere.
-      Data: Histogram bars remain identical brand green #009E73, normal fit curve identical blue #4467A3, LSL/USL dashed lines identical red #AE3030 — all data colors unchanged from light render as required by Imprint palette rules. Only chrome elements (background, text, grid, legend box) adapted to dark theme.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; data colors identical to light render; chrome correctly theme-adapted.
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title in light #F0EFE8 ink clearly readable on dark background. Axis labels and tick labels in lighter inkSoft (#B8B7B0) — readable. Legend text in inkSoft is legible against the dark background.
+      Data: Histogram bars remain in #009E73 (identical to light render). Normal fit curve remains in #4467A3 (identical). LSL/USL dashed lines remain in #AE3030 (identical). Target line in inkSoft. Data colors are fully preserved across themes — only chrome flipped. Annotation box now has dark elevated background (#242420) with light text (#F0EFE8) for "= 2.10" / "= 2.00" — readable. Green accent bar on left side of box is unchanged.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements use appropriate light token colors against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,56 +64,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title scales with length (~22px),
-          axis labels 14px, tick labels 12px, legend 13px, annotation box 16px bold,
-          markLine labels 13px bold. Proportions balanced. Minor: rotated markLine
-          labels (LSL/USL/Target) at insideEndTop are readable but at small end for
-          mobile.'
+        comment: All font sizes explicitly set (title scaled by length formula, axis
+          labels 14px, ticks 12px, legend 13px, annotation 16px bold). Readable in
+          both themes. Tick labels at 12px CSS are slightly small but readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlaps in either render. Annotation box
-          placed in sparse upper-right region.
+        comment: No overlapping elements; LSL/USL/Target labels are rotated and well-separated
+          at the top of each line; legend is below the plot area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars at opacity 0.72 clearly visible. Normal fit curve
-          at lineWidth 2.5 prominent. Dashed limit lines at width 2.5 clearly distinguishable.
-          All elements well-adapted to data density.
+        comment: Histogram bars well-sized and visible with 0.72 opacity. Normal fit
+          curve at width 2.5 is clear. Dashed specification lines prominent. Annotation
+          box clearly readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green bars, blue fit curve, red limit lines are perceptually distinct.
-          CVD-safe Imprint palette used throughout.
+        comment: 'Imprint palette hues (#009E73, #4467A3, #AE3030) are CVD-safe and
+          perceptually distinct. Labels provide redundant encoding alongside color.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good margins (left=90, right=80, top=100, bottom=110).
-          Plot fills canvas well. No content cut off.
+        comment: Plot fills ~70% of canvas with balanced margins (left:90, right:80,
+          top:100, bottom:110). No clipping. Annotation box placed in the naturally
+          sparse upper-right area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Shaft Diameter (mm)'' with units. Y-axis: ''Count'' descriptive.
-          Title follows required format.'
+        comment: 'X-axis: ''Shaft Diameter (mm)'' with unit. Y-axis: ''Count''. Title
+          in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (bars) = #009E73 (t.palette[0]). Normal fit = t.palette[2]
-          = #4467A3. LSL/USL = t.palette[4] = #AE3030 (semantic red for limits). Background
-          transparent (inherits pageBg). All chrome uses t.ink/t.inkSoft/t.grid tokens.
-          Both renders theme-correct.'
+        comment: 'First series (#009E73 brand green) correct. Fit curve uses palette[2]
+          (#4467A3 blue). LSL/USL use palette[4] (#AE3030 matte red) — semantic exception
+          appropriate for limit/danger lines. Backgrounds are #FAF8F1 / #1A1A17. All
+          chrome tokens theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -120,26 +122,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above configured default. Semantic color for spec limits (red), bar
-          opacity for curve visibility, rounded annotation box with elevated background,
-          title font scaling — all show deliberate design thought. Not yet FiveThirtyEight-level
-          polish.
+        comment: 'Above a library default: annotation box has brand-green left-accent
+          bar, rounded corners, and elevated background. Color choices semantically
+          motivated. Not yet publication-ready polish but noticeably crafted.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Y-axis-only grid (appropriate for histograms). Y-axis spine removed.
-          Bar alpha (0.72) adds refinement. Generous whitespace. Minor: bottom-only
-          spine (Y-axis hidden, X-axis shown) is unconventional vs standard L-frame.'
+        comment: 'No vertical grid (splitLine: show false on x-axis). Y-axis grid
+          uses subtle t.grid color. Y-axis ticks removed (cleaner). Generous margins.
+          Top/right spines still present — removing them would add further refinement.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation box creates clear focal point for Cp/Cpk metrics. Red
-          spec limits vs green data distribution creates visual narrative. Data naturally
-          demonstrates a highly capable process. Color contrast guides the viewer.
+        comment: 'Visual hierarchy guides the reader: bars well within the red specification
+          limits immediately communicates process capability. Cp/Cpk box is prominent
+          and clearly shows the process is highly capable. Barring an optional shaded
+          ''within spec'' band, the story is clear.'
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +151,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram + normal fit overlay + specification limit lines
-          + Cp/Cpk annotation.'
+        comment: 'Correct: histogram of measurements with overlaid fitted normal distribution
+          curve, specification limit lines, and capability indices.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: histogram, fitted normal curve, LSL line,
-          USL line, Target line, Cp annotation, Cpk annotation.'
+        comment: Histogram bars ✓, normal PDF curve ✓, LSL line (red dashed) ✓, USL
+          line (red dashed) ✓, Target line (dashed) ✓, Cp annotation ✓, Cpk annotation
+          ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Measurements on X-axis (Shaft Diameter mm), count on Y-axis. All
-          200 data points correctly binned into 20 bins.
+        comment: 'X-axis: shaft diameter in mm. Y-axis: count. Histogram bins correctly
+          sum to N=200. Normal curve scaled to match count axis (pdf * N * BW). All
+          data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-capability · javascript · echarts · anyplot.ai'
-          matches required format. Legend labels 'Measurements' and 'Normal Fit' are
-          appropriate.
+        comment: 'Title: ''histogram-capability · javascript · echarts · anyplot.ai''
+          — exact required format. Legend: ''Measurements'' and ''Normal Fit'' — appropriate
+          and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -182,90 +186,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of a process capability plot: distribution shape,
-          normal fit, specification limits, target value, and capability indices Cp
-          and Cpk.'
+        comment: 'Shows all aspects: distribution shape, capability relative to limits,
+          both Cp and Cpk, target alignment. 200 measurements within the spec''s recommended
+          50-500 range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter in mm for precision manufacturing — neutral, realistic
-          industrial quality control scenario. LSL=9.95, USL=10.05, Target=10.00 with
-          N=200 measurements.
+        comment: Shaft diameter manufacturing QC — exactly the example domain in the
+          spec. Real-world, neutral, plausible industrial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tolerance band ±0.05mm, sigma ~0.0085mm, Cp~2.10 — realistic for
-          modern CNC precision machining. Factually plausible values for the domain.
+        comment: LSL=9.95, USL=10.05, Target=10.00 match the spec example. Sigma~0.0085mm
+          and Cp/Cpk~2.0-2.1 represent a highly capable process — realistic for precision
+          machining.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two helper functions (rand, randNorm) for LCG are necessary in browser
-          environment (no seeded Math.random). Justified but technically departs from
-          flat KISS structure.
+        comment: 'Two minimal helper functions (rand, randNorm) for browser-compatible
+          seeded RNG — necessary since no seeded Math.random() in browser JS. Rest
+          is linear: data → histogram → curve → chart.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with fixed seed 42. Fully reproducible across runs.
+        comment: Deterministic LCG with fixed seed 42 ensures identical output on
+          every render.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused globals. Only echarts (pre-loaded) and window.ANYPLOT_TOKENS
-          used.
+        comment: No imports needed (pure browser globals). window.ANYPLOT_TOKENS and
+          echarts are used and no unused references.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code. Hardcoded BAR_WIDTH=71 explained in
-          comment. No over-engineering, no fake UI elements.
+        comment: Clean structure, well-commented non-obvious parts (BAR_WIDTH calculation
+          comment, LCG explanation). No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set as required. echarts.init called with no explicit
-          size or devicePixelRatio. No deprecated APIs.'
+        comment: 'animation: false set. echarts.init without explicit size. Harness
+          handles PNG/HTML output. Current ECharts 5 API used throughout.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: markLine on bar series for reference lines is idiomatic ECharts.
+          graphic component for custom overlay is the ECharts-recommended pattern.
+          color array at top level for categorical cycling. z:10 on line series for
+          correct z-order.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ECharts patterns: value-type x-axis for histogram (not category),
-          markLine for reference lines on series, graphic component for overlay annotation,
-          chart.setOption with animation: false. Very good idiomatic usage.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: markLine with per-line styling and label positioning is distinctively
-          ECharts. The graphic canvas overlay for Cp/Cpk box leverages ECharts unique
-          rendering pipeline. These features lack direct equivalents in most other
-          JS charting libraries.
-  verdict: REJECTED
+        comment: 'Uses markLine (ECharts-distinctive) for specification limit lines
+          with per-line label styling. Uses graphic component with nested rect+text
+          children for the custom Cp/Cpk box — not easily replicable in other libraries
+          without raw SVG. Minor gap: BAR_WIDTH hardcoded rather than using ECharts
+          barMaxWidth.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
   patterns:
   - data-generation
   dataprep:
