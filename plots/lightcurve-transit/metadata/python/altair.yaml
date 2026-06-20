@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:20:36Z'
-updated: '2026-06-20T07:45:16Z'
+updated: '2026-06-20T07:54:55Z'
 generated_by: claude-sonnet
 workflow_run: 27864341043
 issue: 4559
@@ -12,87 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Full spec compliance: all required elements (error bars, model curve, phase-folded
-    view, transit dip) correctly implemented'
-  - 'Perfect palette compliance: brand green first series, lavender second, correct
-    bg tokens in both themes'
-  - 'Excellent code quality: KISS structure, reproducible seed, clean imports, correct
-    PAD-only canvas logic'
-  - Idiomatic Altair layer composition with genuine interactivity (hover crosshair
-    via selection_point + transform_filter)
-  - 'Scientific authenticity: limb-darkened transit model, realistic noise, phase-folding
-    — not toy data'
+  - 'Perfect Imprint palette compliance: #009E73 as first series (observed data),
+    #C475FD as second series (transit model), correct theme-adaptive chrome in both
+    renders'
+  - All font sizes explicitly set (title=16px, subtitle=12px, axis labels=12px, ticks=10px)
+    with well-proportioned results in both light and dark themes
+  - 'Full spec compliance: phase-folded light curve with scatter+error bars+smooth
+    model curve overlay, transit dip clearly visible at phase 0.5 with ~1% depth'
+  - 'Excellent Altair-idiomatic layer composition: 7-layer chart (error bars, points,
+    model, legend helper, selectors, hover rule, hover point) is clean and readable'
+  - Interactive hover using alt.selection_point(nearest=True) with transform_filter
+    is a genuine Altair-distinctive feature, complemented by HTML+PNG dual export
+  - 'Realistic astrophysical data: quadratic limb-darkened transit model with physically
+    plausible parameters (depth=1%, tanh ingress/egress, u1=0.4 u2=0.2), realistic
+    Kepler-like flux errors'
+  - Correct PAD-only canvas strategy with error-on-overshoot guard, no cropping
   weaknesses:
-  - Error bar opacity (0.4) is slightly low — they read as secondary at best; increasing
-    to 0.55–0.65 would improve visibility without overpowering data points
-  - Subtitle fontSize=11 at scale_factor=4 produces ~44 source pixels; at mobile-width
-    (~400 px) this may be slightly hard to read — consider 12pt
+  - 'DE-01 (5/8): Design is clean and scientifically appropriate but lacks publication-level
+    aesthetic flourishes — no highlighted transit window, no phase annotations, no
+    emphasized ingress/egress points to elevate beyond a well-configured default'
+  - 'DE-02 (4/6): Grid uses dashed lines (gridDash=[4,4]) which deviates from the
+    style-guide preference for solid thin lines; subtle but worth noting for consistency'
+  - 'LM-02 (4/5): The invisible-points legend trick and nearest-point hover are good
+    Altair patterns, but the chart stops short of VegaLite-spec-level features like
+    composite views, repeat layers, or cross-filter interactions that would push to
+    5/5'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Bold title "lightcurve-transit · python · altair · anyplot.ai" in dark #1A1A17 text; subtitle "Phase-folded Kepler photometry with limb-darkened transit model" in secondary gray. Y-axis label "Relative Flux" and X-axis label "Orbital Phase" are dark and readable. Tick labels (e.g., "0.990", "1.000", "1.005") in INK_SOFT are clear. Legend box (top-right) with elevated warm fill, dark border, rounded corners — labels "Observed Data" and "Transit Model" are legible.
-      Data: First series (#009E73 brand green) for 500 observed scatter points with matching green error bars. Second series (#C475FD lavender) for smooth transit model curve. Transit dip clearly at phase 0.5, depth ~1%. Dashed grid subtle at 15% opacity.
-      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Bold dark title "lightcurve-transit · python · altair · anyplot.ai" clearly visible at top-left. Subtitle "Phase-folded Kepler photometry with limb-darkened transit model" in softer dark text below. Y-axis label "Relative Flux" and X-axis label "Orbital Phase" in dark ink, both readable. Tick labels (Y: 0.986–1.006 in .3f format; X: 0.0–1.0) visible in muted dark.
+      Data: ~500 green (#009E73) scatter points with vertical error bars (same green, opacity 0.6) spanning the full phase range. A smooth lavender/purple (#C475FD) model curve overlaid showing the characteristic transit dip shape. Clear ~1% transit dip at phase 0.5 dipping to ~0.990. Dashed subtle grid on both axes.
+      Legend: Top-right box with rounded corners, elevated-bg fill, showing "Observed Data" (green circle) and "Transit Model" (lavender circle).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8), subtitle in secondary light (#B8B7B0) — both readable. Axis labels and tick labels in light secondary color on dark surface — no dark-on-dark failure. Legend uses elevated dark fill (#242420) with light text labels.
-      Data: Colors identical to light render — #009E73 green observed points and error bars, #C475FD purple transit model curve. Data identity preserved across themes.
-      Legibility verdict: PASS — all text elements clearly readable against warm near-black background. No dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels all rendered in light/cream text — clearly visible against the dark background. No dark-on-dark failures detected anywhere.
+      Data: Green (#009E73) scatter points and error bars are IDENTICAL in color to the light render — the transit dip at phase 0.5 is equally prominent. The lavender (#C475FD) model curve is identical in color. Dashed grid lines are subtly visible in lighter tone.
+      Legend: Same top-right legend box with dark-elevated fill (#242420), light text, correctly adapted to dark theme.
+      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures. Brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, axis labels, tick labels all readable in both themes.
-          Subtitle at fontSize=11 slightly small for mobile.
+        comment: 'All font sizes explicitly set: title=16px, subtitle=12px, axis labels=12px,
+          ticks=10px. Well-proportioned in both themes with no overflow.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element collisions at 500-point density.
+        comment: No text-text overlap. Data point overplotting near transit handled
+          correctly with alpha=0.5.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Data points and model curve clearly visible. Error bars at opacity=0.4
-          slightly faint but appropriate as secondary elements.
+        comment: 500 points at size=30, alpha=0.5 — within recommended range for 300+
+          density. Error bars (opacity=0.6) and model line (strokeWidth=2.5, opacity=0.9)
+          all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette green/purple are CVD-safe. No red-green sole signal.
+        comment: Green vs lavender — CVD-safe Imprint positions 1 and 2, sufficient
+          luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Title ~60% width. Axis labels balanced. No overflow
-          or clipping.
+        comment: Canvas gate passed. Good plot-to-canvas ratio, balanced margins,
+          legend near the data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive. Title format correct.
+        comment: Relative Flux and Orbital Phase are descriptive; dimensionless axes
+          need no units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD. Light bg #FAF8F1, dark bg
-          #1A1A17. All chrome theme-adaptive.'
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1/#1A1A17.
+          Chrome fully theme-adaptive. Data colors identical across renders.'
     design_excellence:
       score: 13
       max: 20
@@ -102,23 +118,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, intentional color hierarchy, styled legend
-          with fill/stroke/cornerRadius, descriptive subtitle. Professional scientific
-          aesthetic.
+        comment: Clean scientific publication look, subtitle adds context, interactive
+          hover is sophisticated, legend has custom styling. Above configured defaults
+          but lacks highlighted transit window or ingress/egress annotations.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Dashed grid appropriate for scientific data. View border removed.
-          L-shaped axis domain. Elevated legend background.
+        comment: Subtle dashed grid at opacity 0.12-0.15, view stroke removed, custom
+          legend frame. Grid uses dashed lines (minor deviation from style-guide solid
+          preference).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transit dip is clear focal point. Error bars convey precision. Model
-          curve creates data-vs-fit narrative. Phase-folding is scientifically correct.
+        comment: 'Clear visual hierarchy: smooth model curve (clean signal) over noisy
+          scatter (observations) guides the reader. Transit dip at phase 0.5 is the
+          natural focal point. Subtitle provides narrative context.'
     spec_compliance:
       score: 15
       max: 15
@@ -128,29 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Phase-folded scatter + error bars + smooth model overlay — exactly
-          correct.
+        comment: 'Correct: phase-folded light curve with scatter+error bars+model
+          overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, model curve, phase-folded view (0.0-1.0), transit dip
-          downward — all present.
+        comment: Error bars, smooth model curve, phase-folded axis (0.0-1.0), flux
+          going downward during transit — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Orbital Phase, Y=Relative Flux. Transit dip downward at ~1% depth.
-          Full phase coverage.
+        comment: X=Orbital Phase (0-1), Y=Relative Flux (~0.986-1.006), transit dip
+          downward as specified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title matches format exactly. Legend: Observed Data (green) and
-          Transit Model (purple).'
+        comment: Title exactly matches required format. Legend labels Observed Data
+          and Transit Model are descriptive.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Error bars, smooth model, phase-folded, realistic transit depth,
-          500 points, full phase coverage.
+        comment: Shows scatter observations, error bars, smooth model curve, transit
+          dip, and baseline at flux=1.0 — all aspects of a phase-folded light curve.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit is realistic and neutral. Phase-folded
-          Kepler photometry is a real use case.
+        comment: Exoplanet transit with physically plausible limb-darkened model,
+          Kepler-scale photometry context, realistic error magnitudes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Phase 0.0-1.0, flux near 1.0, transit depth ~1% (hot Jupiter regime),
-          noise level ~0.001-0.002 (realistic for space photometry).
+        comment: ~1% transit depth, 500 points, phase 0.0-1.0, flux errors 0.0008-0.0018
+          — all physically realistic for space photometry.
     code_quality:
       score: 10
       max: 10
@@ -185,7 +203,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: 'Linear flow: imports → tokens → data → charts → compose → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,40 +216,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, PIL (canvas padding), os,
-          sys (path guard).'
+        comment: os, sys, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: alt.layer() composition idiomatic. Invisible legend-driver points
-          pattern correct. No fake UI.
+        comment: Clean Altair layer composition. Hover interaction is genuine Altair
+          functionality, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html. PAD-only canvas logic
-          correct.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Altair
+          6.x API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: alt.layer() composition, proper Q/N encoding types, alt.Scale/alt.Axis
-          customization, add_params + transform_filter for reactive hover.
+        comment: Expert use of alt.layer(), typed field encodings (:Q/:N), configure_*
+          methods, scale_factor PNG export with PIL padding.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point(nearest=True, on=pointerover) for nearest-point crosshair,
-          transform_filter reactive layers, HTML export for web interactivity.
+        comment: alt.selection_point(nearest=True) + transform_filter for hover crosshair,
+          7-layer composition, invisible-points unified legend trick, dual HTML+PNG
+          output — all distinctly Altair.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -245,4 +264,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
