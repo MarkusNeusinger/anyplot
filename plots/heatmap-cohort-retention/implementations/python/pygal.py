@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-20
@@ -79,7 +79,7 @@ class CohortRetentionHeatmap(Graph):
         y0 = self.view.y(n_rows) + lm_t + (ah - gh - ch * 0.2) / 2
 
         pn = self.nodes["plot"]
-        col_fs = min(40, int(cw * 0.45))
+        col_fs = min(28, int(cw * 0.34))
         row_fs = min(38, int(ch * 0.48))
         size_fs = int(row_fs * 0.92)
         val_fs = min(40, int(min(cw, ch) * 0.44))
@@ -186,7 +186,7 @@ class CohortRetentionHeatmap(Graph):
             tt.set("style", f"font-size:{cb_ls}px;font-family:'Segoe UI',Roboto,sans-serif")
             tt.text = f"{val:.0f}%"
 
-        cbt = self.svg.node(pn, "text", x=cb_x + cb_w / 2, y=cb_y - 20)
+        cbt = self.svg.node(pn, "text", x=cb_x + cb_w / 2, y=cb_y - 55)
         cbt.set("text-anchor", "middle")
         cbt.set("fill", INK_SOFT)
         cbt.set("style", f"font-size:{cb_ls + 2}px;font-weight:600;font-family:'Segoe UI',Roboto,sans-serif")
@@ -237,7 +237,7 @@ for i in range(n_cohorts):
             row.append(round(val, 1))
     matrix.append(row)
 
-period_labels = [str(i) for i in range(n_max_periods)]
+period_labels = [f"Month {i}" for i in range(n_max_periods)]
 
 # Imprint sequential colormap: #4467A3 (blue, low retention) → #009E73 (green, high retention)
 _n_stops = 12
