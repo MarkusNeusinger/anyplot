@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-parametric
 created: '2026-06-20T23:01:20Z'
-updated: '2026-06-20T23:09:31Z'
+updated: '2026-06-20T23:24:23Z'
 generated_by: claude-sonnet
 workflow_run: 27886366522
 issue: 4424
@@ -12,138 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-para
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Per-segment gradient coloring along parametric curves using Chart.js 4's `segment.borderColor`
-    callback elegantly encodes the direction of parameter traversal
-  - 'Perfect spec compliance: two required curves (Lissajous figure + Archimedean
-    spiral), gradient direction encoding, start/end markers, and sufficient point
-    density (600 pts)'
-  - Custom HTML direction legend with gradient bar and color-coded start/end dots
-    clearly communicates what the gradient encodes
-  - Both themes correctly implemented — theme-adaptive chrome via t.ink, t.inkSoft,
-    t.grid, t.pageBg tokens; data colors (imprint_seq green→blue) are identical across
-    themes
-  - Equal axis ranges on both panels enforce equal aspect ratio, preventing geometric
-    distortion of the parametric curves as required by spec
+  - Per-segment color gradient using Chart.js 4.x segment callback — a sophisticated
+    and idiomatic use of the Chart.js API for continuous direction encoding
+  - Custom lShapePlugin removes top/right spines cleanly via canvas overdraw — idiomatic
+    Chart.js plugin extension pattern
+  - Imprint sequential palette (t.seq[0]→t.seq[1]) applied correctly for continuous
+    color encoding; theme-adaptive chrome flips perfectly in both renders
+  - Both Lissajous and Archimedean spiral are implemented with correct math, 600-point
+    density, and proper parameter ranges
+  - Direction encoding is explained clearly in the custom DOM-based legend (gradient
+    swatch + t=0/t=T dot markers)
+  - All font sizes explicitly set across all layers (outer title 22px, panel title
+    16px, axis labels 14px, ticks 13px, legend 14px) with good visual proportions
   weaknesses:
-  - 'Both chart panels have visible rectangular borders on all four sides (Chart.js
-    scatter default). Style guide requires removing top and right spines to produce
-    an L-shaped frame. Fix: set `border: { color: ''transparent'' }` on top/right
-    scale borders or `drawBorder: false` where supported, to remove the rectangular
-    box look from both panels.'
-  - 'Four helper functions defined (hexToRgb, lerpColor, makeCurve, buildPanel) violate
-    KISS structure. The gradient color interpolation and dual-panel construction add
-    code complexity. Fix: inline the curve generation arrays directly; if lerpColor
-    is retained, merge hexToRgb into it as a one-liner.'
-  - Panel subtitle font size (15px CSS) is slightly small relative to the 3200×1800
-    output canvas — increase to 16-17px for better readability at full resolution
-    and when scaled to mobile widths.
-  - Design sophistication is limited by the conventional two-panel layout with visible
-    chart borders; removing the chart area box frames would elevate DE-02 from 3 to
-    4-5.
+  - True equal aspect ratio is not precisely enforced — Chart.js lacks a native aspect-ratio-lock
+    option; using a 700×700px container + equal axis ranges approximates it, but axis
+    label/tick regions consume differing widths/heights causing slight pixel-level
+    distortion of the geometric curves
+  - Design storytelling (DE-03) could be elevated by adding one or two mathematical
+    annotations, e.g., annotating the 3:2 frequency ratio relationship on the Lissajous
+    panel or labelling specific revolutions on the spiral
+  - 'DE-02 visual refinement is good but not fully polished: the Chart.js layout padding
+    (12px) plus the 40px horizontal container padding produce non-symmetric effective
+    whitespace between the two panels and the outer edge'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — matches the required light surface exactly
-      Chrome: title "line-parametric · javascript · chartjs · anyplot.ai" is dark, bold, clearly readable at top center; panel subtitles ("Lissajous — x = sin(3t + π/4), y = sin(2t)" and "Archimedean Spiral — 3 revolutions") are dark, readable; axis labels "x(t)" and "y(t)" in dark ink; tick labels in inkSoft color, readable; direction legend at bottom with gradient bar and color-coded dot markers readable
-      Data: gradient from #009E73 (brand green, t=0 start) to #4467A3 (Imprint blue, t=T end) along both curves; Lissajous left panel shows classic self-intersecting figure-8 shape; spiral right panel shows 3 expanding revolutions; start dot (green) and end dot (blue) mark traversal endpoints; rectangular chart borders visible on all four sides of both panels
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) filling the entire canvas — correct light theme surface.
+      Chrome: Main title "line-parametric · javascript · chartjs · anyplot.ai" rendered in dark ink at 22px bold across ~50% of the canvas width — clearly readable. Each panel has a subtitle title ("Lissajous — x = sin(3t + π/4), y = sin(2t)" and "Archimedean Spiral — 3 revolutions") in dark ink at 16px. Axis labels "x(t)" and "y(t)" in dark ink at 14px. Tick labels at 13px in secondary ink (#4A4A44 equivalent). Grid lines are subtle. Bottom legend shows a teal-to-blue gradient swatch with t=0 (teal dot) and t=T (blue dot) labels in secondary ink.
+      Data: Two panels side by side. Left panel: Lissajous figure with a colour gradient from teal/green (#009E73) at t=0 to blue (#4467A3) at t=T, with a teal dot marking the start and a blue dot marking the end. Right panel: Archimedean spiral with the same directional gradient; 3 concentric revolutions visible with the blue end point at approximately (1, 0). L-shaped axes (top/right spines removed via plugin).
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no "light on light" issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — matches the required dark surface exactly
-      Chrome: title and all labels render in light text, clearly readable against dark background; tick labels use inkSoft light tone; grid lines are subtle; direction legend text is light-colored and readable
-      Data: gradient colors are identical to light render (#009E73 → #4467A3) — only chrome flips; both parametric curves remain clearly visible against dark background; start/end marker dots retain same green/blue colors; no dark-on-dark failures detected
-      Legibility verdict: PASS — all text elements readable in dark theme; no "dark on dark" failures
+      Background: Warm near-black (#1A1A17) filling the entire canvas — correct dark theme surface.
+      Chrome: Main title and panel subtitles rendered in light cream text — clearly readable against the dark background. Tick labels and axis labels in secondary light ink. Bottom legend text in secondary light ink. Grid lines are subtle (lighter semi-transparent strokes). No dark-on-dark failures observed.
+      Data: Identical teal-to-blue gradient on both curves — data colors match the light render exactly (only chrome flipped). The teal (#009E73) start dots and blue (#4467A3) end dots are clearly visible on the dark surface. L-shaped axes maintained. The overall chart is readable and visually consistent with the light render.
+      Legibility verdict: PASS — all text uses theme-adaptive light tokens; no "dark on dark" failures; brand green #009E73 is distinctly visible on the dark background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set via tokens; all text readable in both
-          themes. Minor deduction: panel subtitle at 15px CSS is slightly small for
-          the full 3200×1800 canvas — 16-17px would be better.'
+        comment: All font sizes explicitly set across all layers; outer title 22px,
+          panel titles 16px, axis labels 14px, ticks 13px, legend 14px; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements in either panel
-          or either theme.
+        comment: No overlapping elements in either render; panels well-separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 600-point curves rendered as showLine=true with pointRadius=0 is
-          appropriate for dense parametric data. Start/end markers at size 8 are prominent.
-          Gradient is clearly visible.
+        comment: Lines visible with 2.5px width at 600 points; start/end dots at pointRadius=8
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green→blue gradient is CVD-safe per Imprint palette design.
-          No red-green sole signal.
+        comment: 'Imprint sequential palette (#009E73 to #4467A3) is CVD-safe; high
+          contrast gradient visible in both themes'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Two-panel layout fills the canvas well with appropriate
-          padding and whitespace.
+        comment: Two-panel layout fills landscape canvas well; balanced whitespace;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x(t) and y(t) are the correct parametric notation; panel subtitles
-          include the mathematical equations.
+        comment: Axis labels x(t) and y(t) are descriptive for parametric curves;
+          panel subtitles give mathematical context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses t.seq[0]=#009E73 (brand green) to t.seq[1]=#4467A3 (blue) —
-          correct imprint_seq sequential colormap for continuous gradient encoding.
-          Background pageBg and all chrome tokens are theme-adaptive. Data colors
-          identical across themes.
+        comment: imprint_seq gradient (t.seq[0]=#009E73 to t.seq[1]=#4467A3) used
+          correctly; theme-adaptive chrome; data colors identical between renders
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library defaults: gradient direction encoding shows real design
-          thinking and the dual-panel layout is intentional. But rectangular chart-area
-          borders on both panels and conventional typography prevent reaching ''publication-ready''
-          level.'
+        comment: 'Strong design: custom DOM title/legend structure, gradient direction
+          encoding, above defaults; not quite FiveThirtyEight-level publication-ready'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid is subtle using t.grid token. Good whitespace. BUT both panels
-          have visible rectangular borders on all four sides (Chart.js scatter default),
-          rather than the preferred L-shaped frame with top/right removed. No explicit
-          spine/border removal.
+        passed: true
+        comment: 'Good refinement: spines removed via plugin, subtle grid, custom
+          HTML legend; not fully polished in terms of symmetric panel whitespace'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Gradient from green to blue along the parametric path creates clear
-          visual hierarchy encoding the traversal direction. Start/end markers reinforce
-          the story. Two curves contrast closed (Lissajous) vs. open (spiral) behaviors.
-          Direction legend explains the encoding.
+        comment: 'Good storytelling: gradient direction encoding provides clear visual
+          narrative; start/end markers add meaning; mathematical panel subtitles educate'
     spec_compliance:
       score: 15
       max: 15
@@ -153,31 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot using Chart.js scatter+showLine. Both
-          closed (Lissajous) and open (spiral) curve types present.
+        comment: Correct parametric curve plot using scatter+showLine with gradient
+          color encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: two example curves (Lissajous + Archimedean
-          spiral), color gradient encoding direction of t, start/end point markers,
-          600 points (within 200-2000 range), equal axis ranges for equal aspect ratio.'
+        comment: Color gradient for direction, two curves (Lissajous + Archimedean
+          spiral), start/end point markers, 600-point density
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) → x-axis, y(t) → y-axis correct. Both panels show all data within
-          axis bounds.
+        comment: x(t) on x-axis, y(t) on y-axis; correct curves with symmetric axis
+          ranges
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-parametric · javascript · chartjs · anyplot.ai' matches
-          required format exactly. Direction legend clearly labels start/end markers
-          and gradient meaning.
+        comment: Title 'line-parametric · javascript · chartjs · anyplot.ai' correct;
+          legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -187,94 +170,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: self-intersecting closed curve (Lissajous 3:2
-          ratio with π/4 phase), expanding open curve (Archimedean spiral 3 revolutions),
-          color direction encoding, start/end traversal markers.'
+        comment: Shows closed curve (Lissajous with self-intersections) and open curve
+          (spiral), demonstrating different parametric behaviors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Lissajous figure (physics/signal analysis) and Archimedean spiral
-          (antenna design, natural growth) are real-world mathematical examples. Neutral
-          and educational context.
+        comment: Classical physics/math curves (Lissajous = signal analysis, Archimedean
+          spiral = antenna design); neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Lissajous [-1.25, 1.25]: correct for normalized sin functions. Spiral
-          [-1.1, 1.1]: correct for 3-revolution Archimedean spiral normalized to unit
-          radius. 600 points provides smooth rendering.'
+        comment: Lissajous correctly in [-1,1]; spiral radius normalized to [0,1]
+          for 3 revolutions; 600 points ensures smooth rendering
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Four helper functions defined: hexToRgb, lerpColor, makeCurve, buildPanel.
-          The KISS criterion requires no functions/classes. While these functions
-          are justified by the gradient and dual-panel complexity, they violate the
-          linear Imports→Data→Plot structure.'
+        passed: true
+        comment: 'Linear structure: tokens → data → DOM setup → chart loop; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — pure mathematical functions (sin, cos), no
-          random numbers.
+        comment: Purely deterministic mathematical data; no random numbers
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports in JS context. Only uses Chart (global), window.ANYPLOT_TOKENS,
-          Math built-ins, document — all necessary.
+        comment: Chart.js is a global; no imports needed; all tokens from window.ANYPLOT_TOKENS
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The segment.borderColor callback approach is elegant for gradient
-          lines. No fake UI elements. Clean code with minimal comments.
+        comment: Segment callback, plugin system, and panel loop are all clean Chart.js
+          idioms; hex lerp pre-parsing is a reasonable optimization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles output. Chart.js 4.4.7 API used correctly. No deprecated
-          functions.
+        comment: Output handled by harness; animation:false set; correct API usage
+          throughout
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses scatter+showLine, segment callback, plugin system,
+          scale border options — all idiomatic Chart.js 4.x patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct idiomatic patterns: scatter+showLine for parametric curves,
-          segment callback for per-segment coloring, responsive+maintainAspectRatio+animation
-          settings, separate datasets for markers. Minor deduction: custom HTML layout
-          wrapping Chart.js instances is non-idiomatic.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: The segment.borderColor callback is a Chart.js 4.x distinctive feature
-          enabling per-segment color variation along line paths — not easily replicated
-          in other JS charting libraries without custom canvas drawing code.
-  verdict: REJECTED
+        comment: Per-segment color callback for gradient line is distinctively Chart.js;
+          custom afterDraw plugin for spine removal is Chart.js-specific; both features
+          would require significantly different approaches in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
+  - minimal-chrome
+  - gradient-fill
+  - edge-highlighting
