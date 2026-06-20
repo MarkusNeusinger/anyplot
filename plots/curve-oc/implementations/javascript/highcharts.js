@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-oc: Operating Characteristic (OC) Curve
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-20
+// Quality: 92/100 | Created: 2026-06-20
 
 //# anyplot-orientation: landscape
 
