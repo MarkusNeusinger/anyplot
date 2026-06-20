@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-retention-cohort: User Retention Curve by Cohort
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 
