@@ -1,7 +1,7 @@
 # design-sync notes — anyplot.ai Design System
 
 Target project: **anyplot.ai Design System** (`bdf69a23-f0d2-40d5-b6cb-3ef035579852`) on claude.ai/design.
-This is an **app-shape** sync: the source is the `app/` website (`anyplot-website`), not a published component library. Only `pkg`/`globalName`/`projectId` are conventional; the rest of the config exists to make an app build like a DS.
+This is an **app-shape** sync — the *source* is the `app/` website (`anyplot-website`), not a published component library, although the converter `shape` is the normal `"package"` (see `config.json`). Only `pkg`/`globalName`/`projectId` are conventional; the rest of the config exists to make an app build like a DS.
 
 ## How this sync is wired (gotchas)
 
@@ -16,7 +16,7 @@ This is an **app-shape** sync: the source is the `app/` website (`anyplot-websit
 
 ## MonoLisa fonts (re-fetch on a fresh clone)
 
-MonoLisa is proprietary (© FaceType Foundry, CORS-locked GCS) and is **NOT in this public repo**. The variable ttf are fetched at sync time into the gitignored `app/.designsync-fonts/` and shipped only to the private design project — never committed. `app/.designsync-fonts/monolisa.css` (the `@font-face`, committed) references them. On a fresh clone, re-fetch before building:
+MonoLisa is proprietary (© FaceType Foundry, CORS-locked GCS) and is **NOT in this public repo**. The variable ttf are fetched at sync time into `app/.designsync-fonts/` (the `.ttf`/`.woff2` binaries are gitignored; only the `@font-face` CSS there is committed) and shipped only to the private design project — never committed. `app/.designsync-fonts/monolisa.css` (the `@font-face`, committed) references them. On a fresh clone, re-fetch before building:
 
 ```sh
 mkdir -p app/.designsync-fonts && cd app/.designsync-fonts

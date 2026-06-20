@@ -1,8 +1,9 @@
 /*
  * MonoLisa (variable) — brand typeface for the anyplot design system.
- * Proprietary, © FaceType Foundry. Fetched at sync time from the anyplot GCS
- * bucket into this gitignored directory; shipped only into the private
- * claude.ai/design project, never committed to the (public) repo.
+ * Proprietary, © FaceType Foundry. The .ttf binaries are fetched at sync time
+ * from the anyplot GCS bucket into this directory and gitignored (this CSS is
+ * committed); they are shipped only into the private claude.ai/design project,
+ * never committed to the (public) repo.
  *
  * Re-fetch (see .design-sync/NOTES.md):
  *   curl -sSfo MonoLisaVariableNormal.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableNormal.ttf
