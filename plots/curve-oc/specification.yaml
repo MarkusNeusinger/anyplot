@@ -6,7 +6,7 @@ title: Operating Characteristic (OC) Curve
 
 # Specification tracking
 created: "2026-03-06T19:51:50Z"
-updated: null
+updated: "2026-06-20T10:49:38Z"
 issue: 4553
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - curve
   data_type:
     - numeric
     - continuous
