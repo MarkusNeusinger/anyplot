@@ -1,85 +1,106 @@
 library: plotly
+language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:53:52Z'
-updated: '2026-03-17T22:14:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23217984742
+updated: '2026-06-20T06:10:23Z'
+generated_by: claude-sonnet
+workflow_run: 27861752922
 issue: 4567
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/plotly/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual hierarchy through marker sizing by zone severity — critical risks
-    are immediately prominent
-  - Clean cell design with white borders and subtle score annotations that don't compete
-    with data
-  - Dual encoding through both shape and color for risk categories enhances readability
-  - Rich hover tooltips with full risk details (a distinctive Plotly feature)
-  - Well-designed jitter system prevents marker overlap in shared cells
+  - 'Perfect spec compliance: all required features (zone colors, descriptive tick
+    labels, jitter, zone legend, cell borders) correctly implemented'
+  - 'Semantic Imprint palette use: zone colors (green/amber/ochre/red) match established
+    risk-matrix conventions while staying within palette rules'
+  - Effective dual encoding (shape + color for category) plus zone background creates
+    an immediately legible plot
+  - Jitter logic handles shared cells gracefully with position alternation
+  - Clean, reproducible code with no over-engineering; idiomatic plotly patterns including
+    legendgrouptitle
   weaknesses:
-  - Minor label proximity in cells with multiple risks (e.g., Regulatory/Compliance
-    Gap)
-  - Could benefit from even more visual polish (e.g., rounded corners, gradient fills
-    within cells)
-  image_description: 'The plot displays a 5×5 risk assessment matrix with Likelihood
-    (Rare to Almost Certain) on the Y-axis and Impact Severity (Negligible to Catastrophic)
-    on the X-axis. Cells are color-coded with soft blue (Low, scores 1–4), yellow
-    (Medium, 5–9), light orange (High, 10–16), and light pink/red (Critical, 20–25)
-    backgrounds. Risk score numbers appear subtly in each cell''s bottom-right corner
-    in muted gray. Twelve risk items are plotted as labeled markers with distinct
-    shapes per category: blue circles for Technical (Data Breach, System Outage, Cyber
-    Attack, Tech Debt), purple diamonds for Financial (Budget Overrun, Regulatory,
-    Vendor Failure, Market Shift), and orange squares for Operational (Supply Chain,
-    Staff Turnover, Scope Creep, Compliance Gap). Marker sizes scale with zone severity
-    — critical-zone markers are visibly larger. The title reads "heatmap-risk-matrix
-    · plotly · pyplots.ai" with a subtitle "Enterprise Risk Assessment — Likelihood
-    vs Impact Matrix". A well-organized legend on the right shows both category markers
-    and risk zone colors with score ranges. White borders separate cells cleanly.'
+  - Risk name labels at fontsize=9 are at the lower bound for mobile readability —
+    consider raising to 10
+  - HTML <sup> subtitle renders smaller than expected at the 2400x2400 canvas size
+    — a plain subtitle via title.pad or a secondary annotation at size 11 would be
+    more legible
+  - DE-03 storytelling could be elevated with a brief annotation highlighting the
+    critical-zone risks or noting the highest-risk item explicitly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white
+      Chrome: Title "heatmap-risk-matrix · python · plotly · anyplot.ai" in dark ink, centered; subtitle via HTML superscript is smaller but visible; axis labels "Impact Severity →" and "← Likelihood" in dark ink at size 12; tick labels (Negligible→Catastrophic; Rare→Almost Certain) in INK_SOFT at size 10; legend text in INK_SOFT — all clearly readable against light background
+      Data: 5×5 grid with low-opacity zone tints (green/amber-yellow/ochre-tan/rose-pink); risk markers as green squares (Operational), lavender circles (Technical), blue diamonds (Financial); score labels in muted ink at cell corners; risk name labels in category colors
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, clearly not pure black
+      Chrome: Title and all text flip to light ink (F0EFE8/B8B7B0 tokens); legend box uses #242420 elevated surface; axis lines in INK_SOFT visible; all labels clearly readable against dark background — no dark-on-dark failures observed
+      Data: Zone tint colors appear more vivid on dark surface — green/amber/ochre/red zones immediately distinguishable; data marker colors identical to light render (Operational #009E73, Technical #C475FD, Financial #4467A3); brand green #009E73 clearly visible in both zone indicators and Operational markers
+      Legibility verdict: PASS — all text readable against dark background, chrome flips correctly
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 14pt'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10,
+          score labels=10). Risk name labels at size 9 are borderline small for mobile.
+          Both themes fully readable.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor label proximity in shared cells but all readable
+        comment: Good label placement with alternating top/bottom positioning and
+          jitter. Shared cells cleanly separated. Minor crowding potential in dense
+          rows but no visible collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized with distinct shapes and white outlines
+        comment: Markers at size 22px (88 source-px at scale=4) prominent and well-adapted.
+          Shape + color redundant encoding for 12-item scatter.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette for both categories and zones
+        comment: CVD-optimized Imprint palette. Shape redundancy ensures category
+          distinguishability without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: Square 2400x2400 canvas correct for symmetric 5x5 grid. Margins accommodate
+          y-axis tick labels and right-side legend. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with directional arrows
+        comment: Impact Severity → and ← Likelihood are descriptive and directional.
+          Title follows correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Zone colors use Imprint semantic members (#009E73, #DDCC77, #BD8233,
+          #AE3030). Category markers use Imprint positions 1-3. Backgrounds #FAF8F1/#1A1A17.
+          Chrome flips correctly.'
     design_excellence:
       score: 14
       max: 20
@@ -89,19 +110,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, refined typography with subtitle, marker sizing hierarchy
+        comment: 'Above defaults: dual encoding, semantic zone colors, border width
+          encoding severity, subtle score annotations. Clearly intentional design
+          but not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean canvas, white cell borders, muted score annotations
+        comment: No grid lines (cells create visual structure). Top/right spines absent.
+          Clean cell borders using PAGE_BG. Generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy through marker sizing by zone severity
+        comment: Zone gradient creates immediate visual triage. Critical zone draws
+          eye to Cyber Attack and System Outage. No explicit callout annotation for
+          the key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -111,25 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 grid heatmap risk matrix
+        comment: 5x5 heatmap grid with color-coded risk zones and labeled scatter
+          markers. Correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including jitter, zones, categories
+        comment: Green-red zone gradient, descriptive tick labels, labeled markers
+          with jitter, zone legend with score ranges, cell delineation — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Impact, Y=Likelihood correctly mapped
+        comment: Impact on X, Likelihood on Y, all 12 risk items at correct coordinates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and comprehensive legend
+        comment: Title heatmap-risk-matrix · python · plotly · anyplot.ai. Legend
+          shows categories with symbols and Risk Zones with score ranges.
     data_quality:
       score: 15
       max: 15
@@ -139,19 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 risks across all zones and three categories
+        comment: 12 risks across all four zones and three categories. Demonstrates
+          jitter for shared cells. Full range of likelihood and impact values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Enterprise risk management with realistic risk names
+        comment: Enterprise risk management scenario (Supply Chain, Data Breach, Cyber
+          Attack, etc.) — realistic, professional, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 1-5 ordinal scale for risk matrices
+        comment: Risk score = likelihood x impact (1-25). Achievable products in 5x5
+          grid match zone ranges exactly. Gap between 16 and 20 in legend is correct.
     code_quality:
       score: 10
       max: 10
@@ -161,60 +193,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: 'Clean top-to-bottom: tokens → data → shapes → traces → layout →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with appropriate complexity
+        comment: Well-structured with clear sections. Jitter offset table is appropriate
+          complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API
+          used.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper Plotly Graph Objects patterns throughout
+        comment: Correct use of go.Figure, add_shape, add_trace, add_annotation, update_layout.
+          legendgroup + legendgrouptitle for hierarchical legend is expert-level.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Hover templates, legend groups, add_shape, HTML export
+        comment: Uses add_shape(layer=below) for cell backgrounds, legendgrouptitle
+          for grouped legend, rich hovertemplate per risk item, HTML export. Could
+          further leverage go.Heatmap as base.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - hover-tooltips
   - html-export
+  - custom-legend
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   - matrix-construction
   dataprep: []
   styling:
-  - edge-highlighting
   - alpha-blending
+  - edge-highlighting
