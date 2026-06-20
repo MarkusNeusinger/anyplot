@@ -37,6 +37,12 @@ total   = sum(counts)
 cum_pct = cumsum(counts) ./ total .* 100
 xs      = collect(1:n)
 
+# Interpolated x where cumulative line crosses 80% (for crossing annotation)
+cross_idx = findfirst(cum_pct .>= 80.0)
+cross_x   = xs[cross_idx - 1] +
+            (80.0 - cum_pct[cross_idx - 1]) /
+            (cum_pct[cross_idx] - cum_pct[cross_idx - 1])
+
 # --- Figure ------------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -66,7 +72,7 @@ ax1 = Axis(
     xticks             = (xs, categories),
     xticklabelrotation = π / 4,
     xticklabelalign    = (:right, :top),
-    xticklabelsize     = 11,
+    xticklabelsize     = 12,
     yticklabelsize     = 12,
     xlabelsize         = 14,
     ylabelsize         = 14,
@@ -124,6 +130,21 @@ scatter!(ax2, xs, cum_pct;
     markersize   = 10,
     strokewidth  = 1.0,
     strokecolor  = PAGE_BG,
+)
+
+# --- 80% crossing annotation: diamond + label reveal the "vital few" --------
+scatter!(ax2, [cross_x], [80.0];
+    color       = IMPRINT_PALETTE[5],
+    marker      = :diamond,
+    markersize  = 14,
+    strokewidth = 1.5,
+    strokecolor = PAGE_BG,
+)
+text!(ax2, [cross_x + 0.2], [89.0];
+    text     = ["Top $(cross_idx) of $(n) categories"],
+    color    = INK,
+    fontsize = 11,
+    align    = [(:left, :bottom)],
 )
 
 # --- Legend ------------------------------------------------------------------
