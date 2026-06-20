@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 77/100 | Updated: 2026-06-20
@@ -101,7 +101,7 @@ risks["im_jitter"] = risks["impact"] + np.array(offsets_y)
 # Even rank within each impact row → nudge below point; odd rank → nudge above.
 # This staggers labels so adjacent x-positions land on alternating y levels.
 risks["_rank"] = risks.groupby("impact")["likelihood"].transform(lambda s: s.rank(method="first").astype(int) - 1)
-risks["label_y"] = risks.apply(lambda r: r["im_jitter"] + (-0.42 if r["_rank"] % 2 == 0 else 0.42), axis=1)
+risks["label_y"] = risks.apply(lambda r: min(r["im_jitter"] + (-0.28 if r["_rank"] % 2 == 0 else 0.28), 5.35), axis=1)
 risks = risks.drop(columns="_rank")
 
 # Rich tooltips for interactive HTML
@@ -117,11 +117,11 @@ zone_colors = {
     "Critical": "#AE3030",  # Imprint red    — critical alert
 }
 
-# Category marker colors — Imprint positions distinct from zone hues
+# Category marker colors — Imprint palette: first series must be #009E73
 cat_colors = {
-    "Technical": "#4467A3",  # Imprint blue
+    "Technical": "#009E73",  # Imprint green — first series
     "Financial": "#C475FD",  # Imprint lavender
-    "Operational": "#2ABCCD",  # Imprint cyan
+    "Operational": "#4467A3",  # Imprint blue
 }
 
 anyplot_theme = theme(
@@ -154,9 +154,14 @@ plot = (
         alpha=0.92,
         tooltips=risk_tooltips,
     )
-    + geom_text(aes(x="lk_jitter", y="label_y", label="risk_name"), data=risks, size=9, fontface="bold", color=INK)
+    + geom_text(aes(x="lk_jitter", y="label_y", label="risk_name"), data=risks, size=7, fontface="bold", color=INK)
     + scale_size(range=[4, 12], name="Risk Score", guide="none")
-    + scale_fill_manual(values=zone_colors, name="Risk Level")
+    + scale_fill_manual(
+        values=zone_colors,
+        name="Risk Level",
+        breaks=["Low", "Medium", "High", "Critical"],
+        labels=["Low (1–4)", "Medium (5–9)", "High (10–16)", "Critical (20–25)"],
+    )
     + scale_color_manual(values=cat_colors, name="Category")
     + scale_x_continuous(breaks=[1, 2, 3, 4, 5], labels=likelihood_labels, limits=[0.4, 5.6])
     + scale_y_continuous(breaks=[1, 2, 3, 4, 5], labels=impact_labels, limits=[0.4, 5.6])
