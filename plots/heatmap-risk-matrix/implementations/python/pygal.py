@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-06-20
@@ -28,63 +28,67 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
 # Zone colors: Imprint-aligned semantic gradient (green → amber → orange → red)
-LOW_COLOR = "#4DAF8D"  # lighter Imprint green — low risk = safe
-MED_COLOR = "#DDCC77"  # Imprint amber anchor — warning/caution
-HIGH_COLOR = "#CC7830"  # interpolated between amber and Imprint matte red
-CRIT_COLOR = "#AE3030"  # Imprint matte red anchor — error/critical
+LOW_COLOR = "#4DAF8D"
+MED_COLOR = "#DDCC77"
+HIGH_COLOR = "#CC7830"
+CRIT_COLOR = "#AE3030"
 ZONE_COLORS = [(4, LOW_COLOR), (9, MED_COLOR), (16, HIGH_COLOR), (25, CRIT_COLOR)]
 
 # Category colors — Imprint palette positions, avoiding green to prevent clash with Low zone
-CAT_COLORS = {
-    "Technical": "#4467A3",  # Imprint blue (pos 3)
-    "Financial": "#C475FD",  # Imprint lavender (pos 2)
-    "Operational": "#BD8233",  # Imprint ochre (pos 4)
-    "External": "#2ABCCD",  # Imprint cyan (pos 6)
-}
+CAT_COLORS = {"Technical": "#4467A3", "Financial": "#C475FD", "Operational": "#BD8233", "External": "#2ABCCD"}
+
+# Data
+likelihood_labels = ["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"]
+impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
+
+risk_scores = [[li * im for im in range(1, 6)] for li in range(1, 6)]
+
+risk_items = [
+    {"name": "Server Outage", "likelihood": 3, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
+    {"name": "Data Breach", "likelihood": 2, "impact": 5, "category": "Technical", "color": CAT_COLORS["Technical"]},
+    {"name": "Bgt. Overrun", "likelihood": 4, "impact": 3, "category": "Financial", "color": CAT_COLORS["Financial"]},
+    {"name": "Currency Risk", "likelihood": 3, "impact": 2, "category": "Financial", "color": CAT_COLORS["Financial"]},
+    {
+        "name": "Vendor Delay",
+        "likelihood": 4,
+        "impact": 2,
+        "category": "Operational",
+        "color": CAT_COLORS["Operational"],
+    },
+    {
+        "name": "Staff Turnover",
+        "likelihood": 4,
+        "impact": 1,
+        "category": "Operational",
+        "color": CAT_COLORS["Operational"],
+    },
+    {
+        "name": "Scope Creep",
+        "likelihood": 5,
+        "impact": 2,
+        "category": "Operational",
+        "color": CAT_COLORS["Operational"],
+    },
+    {"name": "Reg. Change", "likelihood": 2, "impact": 4, "category": "External", "color": CAT_COLORS["External"]},
+    {"name": "Supply Chain", "likelihood": 3, "impact": 5, "category": "External", "color": CAT_COLORS["External"]},
+    {"name": "Market Shift", "likelihood": 2, "impact": 3, "category": "Financial", "color": CAT_COLORS["Financial"]},
+    {"name": "Tech Debt", "likelihood": 4, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
+    {"name": "Cyber Attack", "likelihood": 1, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
+    {"name": "Key Person", "likelihood": 4, "impact": 5, "category": "Operational", "color": CAT_COLORS["Operational"]},
+    {"name": "Pandemic", "likelihood": 1, "impact": 5, "category": "External", "color": CAT_COLORS["External"]},
+]
 
 
 class RiskMatrixHeatmap(Graph):
     _series_margin = 0
 
-    def __init__(self, *args, **kwargs):
-        self.risk_scores = kwargs.pop("risk_scores", [])
-        self.risk_items = kwargs.pop("risk_items", [])
-        self.row_labels = kwargs.pop("row_labels", [])
-        self.col_labels = kwargs.pop("col_labels", [])
-        self.zone_colors = kwargs.pop("zone_colors", [])
-        super().__init__(*args, **kwargs)
-
-    def _get_zone_color(self, score):
-        for max_score, color in self.zone_colors:
-            if score <= max_score:
-                return color
-        return self.zone_colors[-1][1]
-
-    def _get_zone_label(self, score):
-        if score <= 4:
-            return "Low"
-        elif score <= 9:
-            return "Medium"
-        elif score <= 16:
-            return "High"
-        return "Critical"
-
-    def _text_color(self, bg_color):
-        r, g, b = int(bg_color[1:3], 16), int(bg_color[3:5], 16), int(bg_color[5:7], 16)
-        brightness = (r * 299 + g * 587 + b * 114) / 1000
-        return "#1A1A17" if brightness > 140 else "#F0EFE8"
-
     def _plot(self):
-        if not self.risk_scores:
-            return
-
-        n_rows = len(self.row_labels)
-        n_cols = len(self.col_labels)
+        n_rows = len(likelihood_labels)
+        n_cols = len(impact_labels)
 
         plot_width = self.view.width
         plot_height = self.view.height
 
-        # Layout margins (custom, on top of pygal's own chart margins)
         margin_left = 420
         margin_bottom = 210
         margin_top = 20
@@ -105,7 +109,6 @@ class RiskMatrixHeatmap(Graph):
         plot_node = self.nodes["plot"]
         group = self.svg.node(plot_node, class_="risk-matrix")
 
-        # Font sizes proportional to cell size
         score_font = int(cell_size * 0.24)
         zone_font = int(cell_size * 0.15)
         marker_font = int(cell_size * 0.105)
@@ -119,9 +122,11 @@ class RiskMatrixHeatmap(Graph):
         for i in range(n_rows):
             for j in range(n_cols):
                 row_idx = n_rows - 1 - i
-                score = self.risk_scores[row_idx][j]
-                color = self._get_zone_color(score)
-                tc = self._text_color(color)
+                score = risk_scores[row_idx][j]
+                color = next((c for s, c in ZONE_COLORS if score <= s), ZONE_COLORS[-1][1])
+                r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
+                tc = "#1A1A17" if (r * 299 + g * 587 + b * 114) / 1000 > 140 else "#F0EFE8"
+                zone_label = "Low" if score <= 4 else "Medium" if score <= 9 else "High" if score <= 16 else "Critical"
 
                 x = x0 + j * (cell_size + gap)
                 y = y0 + i * (cell_size + gap)
@@ -132,7 +137,6 @@ class RiskMatrixHeatmap(Graph):
                 rect.set("stroke", PAGE_BG)
                 rect.set("stroke-width", "4")
 
-                zone_label = self._get_zone_label(score)
                 title_el = self.svg.node(cell_group, "title")
                 title_el.text = f"Risk Score: {score} ({zone_label})"
 
@@ -152,7 +156,7 @@ class RiskMatrixHeatmap(Graph):
         # --- Risk item markers ---
         np.random.seed(42)
         cell_items = {}
-        for item in self.risk_items:
+        for item in risk_items:
             key = (item["likelihood"], item["impact"])
             cell_items.setdefault(key, []).append(item)
 
@@ -189,10 +193,8 @@ class RiskMatrixHeatmap(Graph):
                 circle.set("opacity", "0.95")
 
                 label_y = cy + marker_r + marker_font + 2
-                # Clamp label within cell vertical bounds
                 label_y = min(label_y, cell_y + cell_size - 5)
 
-                # Shadow halo then fill — paint-order ensures halo drawn first
                 lbl = self.svg.node(mg, "text", x=cx, y=label_y)
                 lbl.set("text-anchor", "middle")
                 lbl.set("fill", INK)
@@ -215,7 +217,7 @@ class RiskMatrixHeatmap(Graph):
             num_node.set("text-anchor", "end")
             num_node.set("fill", INK_SOFT)
             num_node.set("style", f"font-size:{label_font}px;font-weight:600;font-family:sans-serif")
-            num_node.text = f"{row_idx + 1}. {self.row_labels[row_idx]}"
+            num_node.text = f"{row_idx + 1}. {likelihood_labels[row_idx]}"
 
         # --- X-axis labels (rotated 35° for readability) ---
         for j in range(n_cols):
@@ -227,7 +229,7 @@ class RiskMatrixHeatmap(Graph):
             num_node.set("fill", INK_SOFT)
             num_node.set("style", f"font-size:{label_font}px;font-weight:600;font-family:sans-serif")
             num_node.set("transform", f"rotate(-35, {x}, {y})")
-            num_node.text = f"{j + 1}. {self.col_labels[j]}"
+            num_node.text = f"{j + 1}. {impact_labels[j]}"
 
         # --- Axis titles ---
         mid_y = y0 + grid_h / 2
@@ -293,54 +295,13 @@ class RiskMatrixHeatmap(Graph):
             ly += legend_box + 18
 
     def _compute(self):
-        n_rows = len(self.row_labels) if self.row_labels else 1
-        n_cols = len(self.col_labels) if self.col_labels else 1
+        n_rows = len(likelihood_labels)
+        n_cols = len(impact_labels)
         self._box.xmin = 0
         self._box.xmax = n_cols
         self._box.ymin = 0
         self._box.ymax = n_rows
 
-
-# Data
-likelihood_labels = ["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"]
-impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
-
-risk_scores = [[li * im for im in range(1, 6)] for li in range(1, 6)]
-
-risk_items = [
-    {"name": "Server Outage", "likelihood": 3, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
-    {"name": "Data Breach", "likelihood": 2, "impact": 5, "category": "Technical", "color": CAT_COLORS["Technical"]},
-    {"name": "Bgt. Overrun", "likelihood": 4, "impact": 3, "category": "Financial", "color": CAT_COLORS["Financial"]},
-    {"name": "Currency Risk", "likelihood": 3, "impact": 2, "category": "Financial", "color": CAT_COLORS["Financial"]},
-    {
-        "name": "Vendor Delay",
-        "likelihood": 4,
-        "impact": 2,
-        "category": "Operational",
-        "color": CAT_COLORS["Operational"],
-    },
-    {
-        "name": "Staff Turnover",
-        "likelihood": 4,
-        "impact": 1,
-        "category": "Operational",
-        "color": CAT_COLORS["Operational"],
-    },
-    {
-        "name": "Scope Creep",
-        "likelihood": 5,
-        "impact": 2,
-        "category": "Operational",
-        "color": CAT_COLORS["Operational"],
-    },
-    {"name": "Reg. Change", "likelihood": 2, "impact": 4, "category": "External", "color": CAT_COLORS["External"]},
-    {"name": "Supply Chain", "likelihood": 3, "impact": 5, "category": "External", "color": CAT_COLORS["External"]},
-    {"name": "Market Shift", "likelihood": 2, "impact": 3, "category": "Financial", "color": CAT_COLORS["Financial"]},
-    {"name": "Tech Debt", "likelihood": 4, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
-    {"name": "Cyber Attack", "likelihood": 1, "impact": 4, "category": "Technical", "color": CAT_COLORS["Technical"]},
-    {"name": "Key Person", "likelihood": 4, "impact": 5, "category": "Operational", "color": CAT_COLORS["Operational"]},
-    {"name": "Pandemic", "likelihood": 1, "impact": 5, "category": "External", "color": CAT_COLORS["External"]},
-]
 
 # Style — pygal Style carries all theme-adaptive chrome tokens
 custom_style = Style(
@@ -366,14 +327,9 @@ chart = RiskMatrixHeatmap(
     height=2400,
     style=custom_style,
     title=TITLE,
-    risk_scores=risk_scores,
-    risk_items=risk_items,
-    row_labels=likelihood_labels,
-    col_labels=impact_labels,
-    zone_colors=ZONE_COLORS,
     show_legend=False,
     margin=40,
-    margin_top=130,
+    margin_top=50,
     margin_bottom=60,
     margin_left=60,
     margin_right=60,
