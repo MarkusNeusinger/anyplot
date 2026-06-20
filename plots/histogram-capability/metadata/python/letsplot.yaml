@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:43:56Z'
-updated: '2026-06-20T15:23:00Z'
+updated: '2026-06-20T15:44:53Z'
 generated_by: claude-sonnet
 workflow_run: 27874959537
 issue: 4552
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: histogram + fitted normal distribution curve + LSL/USL
-    dashed lines + target line + Cp/Cpk annotations all present and correct'
-  - 'Semantic color choices: matte red #AE3030 for out-of-spec limits (danger anchor)
-    and brand green #009E73 for data are intentional and meaningful'
-  - 'Excellent data quality: realistic shaft diameter precision machining scenario
-    with plausible Cp=1.49/Cpk=1.45 capability indices'
-  - 'Perfect code quality: KISS linear structure, np.random.seed(42), all imports
-    used, no over-engineering'
-  - Theme-adaptive chrome correctly implemented in both light and dark renders with
-    proper INK/INK_SOFT/PAGE_BG tokens
-  - layer_tooltips() for rich interactive HTML output is idiomatic and distinctive
-    to lets-plot
+  - 'Semantic color use: matte red (#AE3030) for spec limits communicates danger/out-of-spec
+    without legend'
+  - Callout box with ELEVATED_BG creates a visually anchored focal point for Cp/Cpk
+    — the primary engineering insight
+  - 'Fully theme-adaptive: all chrome tokens correctly flip between light and dark
+    with no dark-on-dark failures'
+  - 'All spec requirements met precisely: correct Six Sigma formulas (Cp, Cpk), correct
+    nominal values, 200 measurements'
+  - letsplot-specific layer_tooltips() adds genuine interactivity in the HTML output
   weaknesses:
-  - '"Target 10.000" label is positioned at (10.005, y_max*0.42 ≈ 15) which falls
-    within the histogram bars (bars at x=10.005 reach frequency ~29) and overlaps
-    the peak of the normal distribution curve — reposition the target label outside
-    the data-dense region, e.g. just below the x-axis or to the right of the USL line,
-    or use a small offset above the histogram top with a connecting line'
-  - 'Design Excellence has room for improvement: consider adding a subtle rounded-corner
-    annotation box (using geom_rect or lets-plot''s annotate) behind the Cp/Cpk text
-    to visually separate the key metric from the data, and reduce grid line presence
-    to only very light horizontal lines to increase visual sophistication'
-  - The annotation text for stats (geom_text size=4mm) is slightly small relative
-    to the overall composition — raising to size=4.5mm would improve hierarchy without
-    crowding
+  - '"Target\n10.000" label is positioned at y_max * 1.05 which is tight near the
+    top of the plot panel; within the 15% y-axis expansion but little breathing room
+    — could be moved lower or offset with vjust'
+  - Callout box left edge nearly touches the LSL dashed line (ann_x = lsl + 0.004),
+    creating minor visual crowding; a wider offset (lsl + 0.006) would improve separation
+  - Callout box proportions and internal padding could be more refined for a more
+    polished appearance (consistent padding all sides)
+  - 'LM-02 could be stronger: using letsplot''s geom_density() or stat_density() would
+    be more distinctively idiomatic than manual PDF calculation and custom geom_area'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface. ✓
-      Chrome: Title "histogram-capability · python · letsplot · anyplot.ai" in bold dark INK (#1A1A17), spanning ~60% of canvas width — fully readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Frequency" both in dark INK, clearly legible. Tick labels at 10pt in INK_SOFT dark grey, readable throughout. Y-axis horizontal grid lines are subtle (GRID_COLOR #D8D7D0), no x-axis grid. All text readable against light background. ✓
-      Data: 30-bin histogram in brand green #009E73 with 0.75 alpha and PAGE_BG bar edges for separation. Normal distribution curve as green area fill (alpha=0.15) with a solid green outline — elegant overlay. LSL and USL vertical dashed lines in matte red #AE3030, prominent and semantically appropriate. Target dashed line in INK dark color. "LSL 9.950" and "USL 10.050" labels in red. "Cp = 1.49 | Cpk = 1.45" bold annotation in upper-left data region. "Mean = 10.0015 mm | Std = 0.0112 mm" secondary annotation below it. "Target\n10.000" label in INK_SOFT positioned at approximately (10.005, y≈15) which falls within the histogram bars and overlaps the distribution curve peak area — the text is readable but visually overlaps with bars reaching frequency ~29 at that x position.
-      Legibility verdict: PASS — all text readable, minor annotation overlap with data elements.
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "histogram-capability · python · letsplot · anyplot.ai" in bold dark (#1A1A17) — fully readable. Axis labels "Shaft Diameter (mm)" and "Frequency" in dark text. Tick labels in #4A4A44 (INK_SOFT) — all readable.
+      Data: Histogram bars in brand green (#009E73) with alpha=0.75. Normal distribution curve overlay in same green (solid 1.5pt + 15% alpha fill). LSL/USL dashed lines in matte red (#AE3030) clearly visible. Target dashed line in black (INK = #1A1A17). Callout box (ELEVATED_BG #FFFDF6 fill, INK_SOFT border) with bold Cp/Cpk text and lighter Mean/Std text. LSL/USL/Target labels visible. First series = #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface. ✓
-      Chrome: Title in light INK (#F0EFE8), fully readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0, light grey) — all clearly legible, no dark-on-dark failure. Grid lines subtle (GRID_COLOR #3A3A37), appropriate. ✓
-      Data: Histogram bars remain brand green #009E73 — identical to light render (Imprint palette data colors are theme-independent). ✓ Normal distribution curve same green. LSL/USL dashed lines remain matte red #AE3030, same as light. Target dashed line is now white/light (#F0EFE8 = INK in dark mode) — appropriate inversion. "Cp = 1.49 | Cpk = 1.45" in light INK text, bold, readable. Stats annotation in INK_SOFT light grey. "Target\n10.000" in INK_SOFT (#B8B7B0) — readable but same overlap issue with bars and curve as in light render.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Data colors identical to light render as required.
+      Background: Near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8) — fully readable against dark background. Axis labels in light cream. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Subtle dark grey grid lines (#3A3A37). No dark-on-dark failures detected.
+      Data: Histogram bars still #009E73 — identical to light render (data colors preserved). Distribution curve same green. LSL/USL lines still #AE3030 — visible on dark background. Target line flips to #F0EFE8 (white/cream) — correctly theme-adaptive. Callout box uses ELEVATED_BG (#242420) with light-colored Cp/Cpk text (#F0EFE8) and lighter Mean/Std (#B8B7B0) — all readable on dark elevated background. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,55 +56,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=4-5mm).
-          Both themes readable. Minor: stats annotation at size=4mm is slightly small
-          but legible.'
+        comment: All font sizes explicitly set; both renders fully legible. Target
+          label tight at top but within expanded y-axis range.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minor: ''Target 10.000'' label at (10.005, ~15 freq) overlaps histogram
-          bars (reach ~29 at that x) and the distribution curve. Text is readable
-          but sits in busy data area.'
+        comment: No text-on-text overlap; callout box cleanly isolates Cp/Cpk from
+          histogram; LSL/USL labels in open space.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars (alpha=0.75) clearly visible. Distribution curve (alpha=0.15
-          fill + solid outline) clear. Dashed spec limit lines prominent. All elements
-          well-sized.
+        comment: Histogram bars at alpha=0.75 prominent; curve at size=1.5 clearly
+          visible; spec limit dashed lines at size=1.5 highly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe palette. Green bars vs red dashed lines vs black target
-          line use both color and linestyle for redundant encoding. Good contrast.
+        comment: Imprint palette CVD-safe by design; brand green and matte red have
+          strong hue+luminance separation; target line in neutral INK universally
+          distinguishable.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (ggsize 800x450 scale=4). Well-proportioned, canvas
-          gate passed. Histogram centered in plot with appropriate margins. No clipping
-          detected.
+        comment: Canvas gate not triggered (3200x1800 confirmed). Good margins, callout
+          box in upper-left uses sparse area effectively. No content clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Shaft Diameter (mm)'' with units. Y: ''Frequency''. Both descriptive
-          and appropriate.'
+        comment: 'X: Shaft Diameter (mm) with units. Y: Frequency (appropriate, counts
+          need no unit). Title matches required format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single data series in brand green #009E73. Spec limits use semantic
-          red #AE3030 (appropriate danger anchor). Target uses theme-adaptive INK.
-          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Both themes correct.'
+        comment: 'First series = #009E73. LSL/USL use #AE3030 (Imprint pos 5, semantic
+          exception for danger). Target uses theme-adaptive INK. Backgrounds #FAF8F1/#1A1A17.
+          Chrome correctly flips.'
     design_excellence:
       score: 13
       max: 20
@@ -120,27 +111,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color choices for all elements (red=danger,
-          green=data, adaptive=reference), clean annotation hierarchy (bold Cp/Cpk
-          over soft stats), professional multi-layer composition. Not quite FiveThirtyEight-level
-          but clearly intentional design.'
+        comment: 'Above generic configured default: semantic color assignment, elevated
+          callout box with ELEVATED_BG, clear visual layering. Callout box slightly
+          crowded near LSL line.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() removes top/right spines. Custom GRID_COLOR removes
-          x-axis grid, subtle y-axis horizontal grid only. axis_line explicitly colored.
-          Good refinement above library defaults.
+        comment: 'Strategic grid: y-major only (x-major and minor suppressed). theme_minimal()
+          removes top/right spines. Explicit axis_line styling. Legend correctly absent.
+          Room to improve whitespace.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear capability story: process well within spec limits (Cp=1.49,
-          Cpk=1.45 prominently annotated). Visual hierarchy from title → key metrics
-          → distribution shape → limits guides viewer naturally. Wide margin between
-          data and limits confirms capability visually.'
+        comment: 'Clear focal point (Cp/Cpk callout box conveys key insight: process
+          is capable). Semantic red for spec limits. Hierarchy within annotation (bold
+          Cp/Cpk, lighter Mean/Std). Above default.'
     spec_compliance:
       score: 15
       max: 15
@@ -150,31 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram + fitted normal distribution + vertical spec
-          limit lines + target line + Cp/Cpk annotation.'
+        comment: 'Correct: histogram + fitted normal curve + spec limit vlines + target
+          line — all elements of a process capability plot.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: histogram, normal fit curve, LSL/USL lines (red dashed),
-          target line (neutral dashed), Cp/Cpk text annotation, mean/std annotation.
-          Complete.'
+        comment: 'All present: histogram, normal curve fitted to sample stats, LSL/USL
+          red dashed, target neutral dashed, Cp/Cpk via Six Sigma formulas annotated,
+          labels for all lines, 200 measurements.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shaft diameter on x-axis, frequency on y-axis. Axes display full
-          data range with appropriate limits.
+        comment: 'X-axis: measurement values; Y-axis: frequency count; normal curve
+          scaled by bin_width*n to match histogram scale; all elements correctly positioned.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-capability · python · letsplot · anyplot.ai' matches
-          required format. No legend appropriate for single-series with annotation
-          labels.
+        comment: 'Title: histogram-capability · python · letsplot · anyplot.ai (exact
+          required format). No legend (correctly omitted; series annotated directly).'
     data_quality:
       score: 15
       max: 15
@@ -184,23 +172,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all capability plot aspects: data distribution, normal fit,
-          spec limits, target, capability indices, descriptive stats. Comprehensive.'
+        comment: 'All aspects demonstrated: frequency distribution, normality fit,
+          spec boundaries, target reference, Cp/Cpk indices, descriptive stats. Slight
+          centering offset produces Cpk < Cp showing the distinction.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter precision machining (10mm nominal, ±0.05mm tolerance)
-          is a highly realistic, neutral, common Six Sigma engineering context.
+        comment: Shaft diameter measurement in precision CNC machining; Six Sigma
+          application; neutral industrial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 measurements, mean≈10.002mm, std≈0.012mm, Cp≈1.49, Cpk≈1.45.
-          All physically plausible for precision machining. Capability indices in
-          realistic 'capable' range.
+        comment: +-50um tolerance on 10mm shaft realistic for precision machining.
+          sigma~0.011mm producing Cp~1.49 factually consistent with 6-sigma capable
+          process. 200 measurements appropriate.
     code_quality:
       score: 10
       max: 10
@@ -210,8 +199,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → data → plot → save. No functions
-          or classes.'
+        comment: 'Linear: imports -> tokens -> data -> computation -> DataFrames ->
+          plot layers -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,22 +212,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports verified used: all lets_plot symbols used in plot construction,
-          scipy.stats.norm.pdf used for curve.'
+        comment: All 18 lets_plot symbols verified used. scipy.stats for norm.pdf.
+          os, numpy, pandas all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering. Appropriate use of multiple
-          DataFrames for annotation layers.
+        comment: Clean and idiomatic. Manual bin computation for curve scaling necessary
+          (histogram scale-matching). Comments explain non-obvious decisions. No fake
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current lets-plot
-          API.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current API.
+          LetsPlot.setup_html() called.
     library_mastery:
       score: 7
       max: 10
@@ -248,26 +238,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct grammar of graphics: ggplot() + geom_*() chaining. Proper
-          aes() mappings, scale functions with format strings, element_* theme customization.
-          Well above minimal.'
+        comment: Correct ggplot grammar. geom_area with custom DataFrame for PDF curve
+          (more precise than auto geom_density). inherit_aes=False correctly used.
+          ggsize()+ggsave(scale=4) per library convention.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with format() and line() customization is distinctive
-          to lets-plot (provides rich interactive tooltip content in HTML output).
-          HTML export alongside PNG is characteristic of lets-plot's interactive-first
-          design.
-  verdict: REJECTED
+        comment: layer_tooltips().format().line() is distinctly letsplot-specific
+          tooltip customization. Dual PNG+HTML output leverages letsplot's interactive
+          pipeline. geom_rect callout annotation is idiomatic.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
   - layer-composition
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
