@@ -102,7 +102,7 @@ chart.setOption({
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     max: yMax,
     axisLabel: { color: t.inkSoft, fontSize: 12 },
-    axisLine: { show: false },
+    axisLine: { show: true, lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
     axisTick: { show: false }
   },
@@ -127,25 +127,55 @@ chart.setOption({
     children: [
       {
         type: "rect",
-        shape: { width: 148, height: 78, r: 4 },
+        shape: { width: 158, height: 78, r: 4 },
         style: { fill: t.elevatedBg, stroke: t.grid, lineWidth: 1 }
       },
+      // Brand green left-border accent
+      {
+        type: "rect",
+        shape: { x: 0, y: 0, width: 4, height: 78, r: [4, 0, 0, 4] },
+        style: { fill: t.palette[0], lineWidth: 0 }
+      },
+      // "Cp" label in brand green
       {
         type: "text",
         top: 14,
-        left: 14,
+        left: 18,
         style: {
-          text: "Cp  = " + cp.toFixed(2),
+          text: "Cp",
+          font: "bold 16px 'Helvetica Neue', Arial, sans-serif",
+          fill: t.palette[0]
+        }
+      },
+      // Cp numeric value in ink
+      {
+        type: "text",
+        top: 14,
+        left: 62,
+        style: {
+          text: "= " + cp.toFixed(2),
           font: "bold 16px 'Helvetica Neue', Arial, sans-serif",
           fill: t.ink
         }
       },
+      // "Cpk" label in brand green
       {
         type: "text",
         top: 44,
-        left: 14,
+        left: 18,
         style: {
-          text: "Cpk = " + cpk.toFixed(2),
+          text: "Cpk",
+          font: "bold 16px 'Helvetica Neue', Arial, sans-serif",
+          fill: t.palette[0]
+        }
+      },
+      // Cpk numeric value in ink
+      {
+        type: "text",
+        top: 44,
+        left: 62,
+        style: {
+          text: "= " + cpk.toFixed(2),
           font: "bold 16px 'Helvetica Neue', Arial, sans-serif",
           fill: t.ink
         }
@@ -165,7 +195,7 @@ chart.setOption({
         silent: true,
         label: {
           show: true,
-          fontSize: 13,
+          fontSize: 15,
           fontWeight: "bold",
           formatter: params => params.name
         },
