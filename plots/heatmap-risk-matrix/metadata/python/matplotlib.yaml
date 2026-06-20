@@ -1,116 +1,147 @@
 library: matplotlib
+language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:52:21Z'
-updated: '2026-03-17T22:24:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23217984795
+updated: '2026-06-20T06:06:22Z'
+generated_by: claude-sonnet
+workflow_run: 27861659491
 issue: 4567
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/matplotlib/plot.png
-preview_html: null
-quality_score: 89
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent visual hierarchy through marker size scaling by risk score
-  - FancyBboxPatch rounded rectangles give a modern polished appearance
-  - Path effects on labels ensure readability over any background color
-  - Zone boundary dashed lines effectively communicate risk severity thresholds
-  - Comprehensive data with 14 well-chosen risk items spanning all zones and categories
-  - Dual legend (Category + Risk Level) provides complete visual decoding
+  - 'Full spec compliance: zone labels, jitter, descriptive axis labels (Rare/Unlikely/etc.),
+    risk scores in each cell, and zone boundary dashed lines all present'
+  - 'Excellent use of matplotlib-specific features: FancyBboxPatch rounded cells,
+    patheffects.withStroke for label contrast, custom LinearSegmentedColormap built
+    from Imprint palette colors'
+  - Proper theme-adaptive chrome throughout — INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
+    PAGE_BG tokens applied to title, axis labels, ticks, legend frames, and path effects
+  - Marker size variation by risk score (10–18 pt) creates a natural visual hierarchy
+    — critical risks are visually larger than low-risk items
+  - Smart label_offsets dict prevents overlap for most items in crowded cells; path
+    effects ensure legibility on the colored heatmap background
   weaknesses:
-  - Color gradient starts at light cream/yellow rather than green for lowest-risk
-    cells as specified in the spec
-  - Minor label crowding where risk labels overlap with semi-transparent score numbers
-  image_description: 'The plot displays a 5x5 risk assessment matrix with Likelihood
-    (Rare to Almost Certain) on the y-axis and Impact (Negligible to Catastrophic)
-    on the x-axis. Each cell is rendered as a rounded rectangle colored from light
-    cream/pale yellow (low scores like 1-2) through amber and orange to dark crimson
-    (scores 20-25). Risk score numbers appear semi-transparently in each cell background.
-    White dashed diagonal lines demarcate zone boundaries (Low, Medium, High, Critical).
-    Fourteen risk items are plotted as colored circle markers — dark teal for Technical
-    (Data Breach, Server Outage, Cyber Attack, Power Failure), purple for Financial
-    (Budget Overrun, Regulatory Change, Vendor Failure, Market Shift, Minor Delay),
-    and green for Operational (Supply Chain Disruption, Key Staff Turnover, Scope
-    Creep, Deadline Slip, Equipment Wear). Marker sizes scale with risk score, creating
-    visual hierarchy. Labels have white stroke outlines for readability over any background
-    color. Two legends sit to the right: Category (marker colors) and Risk Level (zone
-    color swatches with score ranges). Title reads heatmap-risk-matrix · matplotlib
-    · pyplots.ai. All spines are removed and tick marks hidden for a clean modern
-    appearance.'
+  - 'Label crowding in the Possible row (y≈2.5): Key Staff Turnover, Market Shift,
+    Server Outage, and Budget Overrun/Supply Chain Disruption in the Likely row all
+    compete for label space — some near-overlap remains despite label_offsets (VQ-02)'
+  - Risk item label fontsize=7 is small; at mobile width (~400 px display) these labels
+    risk becoming illegible — increase to fontsize=8 (VQ-01)
+  - Green-to-red risk gradient is a CVD accessibility concern (deuteranopia/protanopia
+    confuse these hues); score numbers in cells provide partial mitigation but redundant
+    shape encoding (e.g. triangle vs circle per category) would fully address it (VQ-04)
+  - Score numbers use alpha=0.58 — borderline too subtle; in dark mode the INK token
+    (#F0EFE8) on green cells has less intrinsic contrast before alpha is applied —
+    consider alpha=0.70 or dropping to 0.65 minimum (VQ-01/VQ-03)
+  - Two stacked legends below the matrix feel vertically tight; leg1 is at bbox_to_anchor
+    y=-0.08 and leg2 at y=-0.18 — the gap is narrow and the second legend's bottom
+    may be clipped at canvas edge on some renders (VQ-05)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "heatmap-risk-matrix · python · matplotlib · anyplot.ai" fully visible in dark INK text; x-axis label "Impact" and y-axis label "Likelihood" readable at 10pt; tick labels (Negligible/Minor/.../Catastrophic on x, Rare/.../Almost Certain on y) readable at 8pt; "Almost Certain" wraps to two lines cleanly.
+      Data: 5×5 grid of rounded-corner cells with green→amber→ochre→red gradient based on risk score; each cell has a subtle score number (alpha=0.58, fontsize=10); 14 risk items plotted as circles with white edges in three Imprint palette colors: Operational=#009E73 (green), Technical=#C475FD (lavender), Financial=#4467A3 (blue); marker sizes vary 10–18pt by risk severity; white dashed zone boundary lines visible; two legends below (Category ncols=3, Risk Level ncols=4).
+      Legibility verdict: PASS — all chrome elements readable; risk labels (fontsize=7) small but legible at full resolution; some crowding in the Possible row but no actual text overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels rendered in light INK (#F0EFE8) — all clearly readable against dark background. No dark-on-dark failures observed. Legend frames use ELEVATED_BG (#242420) with INK_SOFT (#B8B7B0) edge — correct dark-theme theming. Legend text in INK_SOFT (light gray), legend titles in INK (cream).
+      Data: Heatmap cell colors are identical to the light render (Imprint-derived green→amber→ochre→red gradient is theme-independent as required). Risk item marker colors are unchanged (#009E73, #C475FD, #4467A3). Path effects (withStroke foreground=PAGE_BG=#1A1A17) create a dark halo around the light-colored labels — effective contrast on colored cells. Score numbers use INK (#F0EFE8) for scores < 10 and white for ≥ 10.
+      Legibility verdict: PASS — all text readable; dark-on-dark failure not present; the dark stroke on light label text provides adequate contrast over colored heatmap cells.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, risk labels 14pt, score numbers 18pt'
+        comment: Title/axis/tick labels all readable in both themes. Risk label fontsize=7
+          is small — legible at full res but at risk for mobile. Score numbers alpha=0.58
+          borderline subtle.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: label_offsets dict prevents most overlap, but Possible row (Key Staff
+          Turnover, Market Shift, Server Outage) is notably crowded with near-collisions.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding between risk labels and background score numbers;
-          all readable thanks to white stroke path effects
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Markers well-sized with white edge highlighting and size scaling
-          by risk score
+        comment: Markers visible with white edges and alpha=0.92; size variation 10–18pt
+          by risk score is effective. Score number alpha=0.58 slightly too subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 1
+        max: 2
         passed: true
-        comment: Custom colormap avoids red-green ambiguity; category colors clearly
-          distinguishable
+        comment: Imprint palette markers are CVD-safe. The green-to-red risk gradient
+          is a deuteranopia/protanopia concern; score numbers provide partial mitigation
+          but no redundant shape encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Equal aspect ratio on 16:9 figure creates some unused vertical space
-          but legends fill right side
+        comment: Square 2400×2400 canvas appropriate; canvas gate passed. Stacked
+          legends at y=-0.08/-0.18 are tight — bottom of leg2 may be near canvas edge.
+          Otherwise good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with ordinal scale tick labels
+        comment: Descriptive tick labels (Rare/Unlikely/.../Almost Certain on y, Negligible/.../Catastrophic
+          on x). Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Category markers use Imprint positions 1→3 in canonical order. Risk
+          colormap built from Imprint palette colors (green/amber/ochre/red) — justified
+          by spec requirement and traffic-light semantic convention. Backgrounds #FAF8F1/#1A1A17
+          correct.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colormap, FancyBboxPatch rounded rectangles, path effects,
-          marker size hierarchy — clearly above defaults
+        comment: Rounded cell corners (FancyBboxPatch), zone boundary dashed lines,
+          and size-varied risk markers show intentional design. Above baseline but
+          not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden, rounded corners, white borders,
-          semi-transparent score numbers
+        comment: All spines removed; no grid (correct for heatmap); PAGE_BG cell edges
+          create clean separation. Stacked legends below are functional but somewhat
+          compressed.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Marker sizes proportional to risk score create visual hierarchy;
-          zone boundary lines guide viewer
+        comment: Zone boundaries and color gradient guide viewer through risk severity;
+          marker size variation reinforces hierarchy. Crowding in middle cells slightly
+          reduces clarity.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -118,26 +149,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 heatmap risk matrix
+        comment: Correct 5x5 risk matrix heatmap with cell color encoding risk score.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present except gradient starts at cream instead of green
-          as specified
+        comment: 'All spec features present: green-yellow-orange-red gradient, descriptive
+          axis tick labels, labeled risk markers with jitter, zone legend (Low/Medium/High/Critical),
+          zone boundary lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Impact, Y=Likelihood correctly mapped with all 14 risks visible
+        comment: X=Impact, Y=Likelihood, cell score=likelihood×impact. All 14 risk
+          items correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, dual legends with correct labels
+        comment: Title 'heatmap-risk-matrix · python · matplotlib · anyplot.ai' matches
+          required format. Category and Risk Level legends present and labelled correctly.
     data_quality:
       score: 15
       max: 15
@@ -147,21 +181,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 14 risks across all zones, likelihood levels, impact levels, and
-          3 categories
+        comment: 'All aspects covered: 5x5 grid, 3 categories, 14 risk items spanning
+          all severity zones, score numbers, zone boundaries.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world enterprise risk management with plausible neutral risk
-          names
+        comment: Risk items are real-world plausible (Supply Chain Disruption, Data
+          Breach, Budget Overrun, etc.). Categories (Operational/Technical/Financial)
+          are industry-standard. Neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 1-5 integer scales for risk matrix
+        comment: 1-5 likelihood/impact scale standard for risk matrices. 14 items
+          appropriate density for 5×5 grid.
     code_quality:
       score: 10
       max: 10
@@ -171,60 +207,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure with no functions or classes
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before jitter generation
+        comment: np.random.seed(42) for jitter offsets.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os/sys for path fix, matplotlib.patches/patheffects/pyplot/colors/lines,
+          numpy.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI elements
+        comment: No fake UI, well-organized sections, label_offsets dict is a clean
+          pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout; FancyBboxPatch, patheffects, Line2D handles
+          — all idiomatic matplotlib patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout, FancyBboxPatch for rounded corners; slightly
-          non-standard for heatmaps but effective
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: FancyBboxPatch, patheffects, LinearSegmentedColormap, dual legend
-          via add_artist
-  verdict: REJECTED
+        comment: 'FancyBboxPatch rounded corners, pe.withStroke path effects, dual
+          ax.legend() with bbox_to_anchor — strong matplotlib-specific usage. Small
+          deduction: LinearSegmentedColormap usage is common.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   - patches
+  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
