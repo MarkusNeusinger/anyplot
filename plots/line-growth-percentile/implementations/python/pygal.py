@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-20
@@ -31,9 +31,9 @@ if THEME == "light":
     BAND_MID = "#BAC5D6"  # lerp(#FAF8F1, #4467A3, t=0.35)
     BAND_INNER = "#D9DEE3"  # lerp(#FAF8F1, #4467A3, t=0.18)
 else:
-    BAND_OUTER = "#314464"  # lerp(#1A1A17, #4467A3, t=0.55)
-    BAND_MID = "#293548"  # lerp(#1A1A17, #4467A3, t=0.35)
-    BAND_INNER = "#222830"  # lerp(#1A1A17, #4467A3, t=0.18)
+    BAND_OUTER = "#354C72"  # lerp(#1A1A17, #4467A3, t=0.65)
+    BAND_MID = "#2E3F5A"  # lerp(#1A1A17, #4467A3, t=0.48)
+    BAND_INNER = "#273141"  # lerp(#1A1A17, #4467A3, t=0.30)
 
 # Data — WHO weight-for-age reference for boys, 0–36 months
 np.random.seed(42)
@@ -92,7 +92,7 @@ custom_style = Style(
         BAND_INNER,
         BAND_MID,
         BAND_OUTER,  # P50–P75, P75–P90, P90–P97
-        INK_MUTED,  # P50 median (neutral, subordinate to patient)
+        "#4467A3",  # P50 median (Imprint blue, visually emphasized reference)
         BRAND,  # Patient data — Imprint position 1
     ),
     opacity=".65",
@@ -117,7 +117,7 @@ chart = pygal.XY(
     title=TITLE,
     x_title="Age (months)",
     y_title="Weight (kg)",
-    show_dots=False,
+    show_dots=True,
     show_x_guides=False,
     show_y_guides=True,
     fill=True,
@@ -156,7 +156,7 @@ for label, lower, upper in band_configs:
     polygon = [(float(a), float(u)) for a, u in zip(age_months, upper, strict=True)]
     for a, lo in zip(reversed(age_months), reversed(lower), strict=True):
         polygon.append((float(a), float(lo)))
-    chart.add(label, polygon, stroke_style={"width": 0.3, "opacity": 0.1})
+    chart.add(label, polygon, stroke_style={"width": 0.3, "opacity": 0.1}, dots_size=0)
 
 # P50 median — dashed neutral line (de-emphasized so patient data stands out)
 median_pts = [(float(a), float(v)) for a, v in zip(age_months, percentile_50, strict=True)]
@@ -166,7 +166,7 @@ chart.add(
     fill=False,
     stroke=True,
     dots_size=0,
-    stroke_style={"width": 5, "linecap": "round", "dasharray": "10,6"},
+    stroke_style={"width": 8, "linecap": "round", "dasharray": "14,7"},
 )
 
 # Patient data — brand green, prominent connected markers
@@ -212,7 +212,7 @@ for lbl, val in percentile_label_vals:
     el = ET.SubElement(lbl_group, f"{{{ns_svg}}}text")
     el.set("x", str(x_right_svg + 10))
     el.set("y", str(y_svg + 7))
-    el.set("font-size", "28")
+    el.set("font-size", "38")
     el.set("font-family", 'Helvetica, Arial, "DejaVu Sans", sans-serif')
     el.set("font-weight", "bold" if lbl == "P50" else "normal")
     el.set("fill", "#4467A3" if lbl == "P50" else INK_MUTED)
