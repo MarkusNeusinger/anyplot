@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: curve-oc
 created: '2026-06-20T11:27:34Z'
-updated: '2026-06-20T11:33:35Z'
+updated: '2026-06-20T11:45:54Z'
 generated_by: claude-sonnet
 workflow_run: 27869625312
 issue: 4553
@@ -12,99 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/muix/plot-dark.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all four reference lines (AQL, LTPD, 1-alpha, beta)
-    correctly placed with appropriate styling using t.inkSoft tokens'
-  - Binomial CDF computed correctly from first principles, 200-point smooth S-curves
-    with catmullRom interpolation
-  - Imprint palette applied in canonical order with correct brand green as first series;
-    both theme renders pass the readability check
-  - ChartsReferenceLine used idiomatically for all reference annotations — correct
-    MUI X community API usage
-  - 'Data storytelling is strong: increasing n clearly shows tighter discrimination,
-    matching the spec''s stated educational purpose'
+  - Mathematically correct binomial CDF implementation with proper boundary clamping
+  - All four analytical reference lines (AQL, LTPD, 1-alpha, beta) present and correctly
+    positioned — full spec compliance
+  - 'Clean token-driven theme integration: t.ink, t.inkSoft, t.palette applied correctly;
+    both renders fully readable'
+  - 200-point smooth catmullRom curves produce excellent S-shape visual quality
+  - Manual title via Typography plus reduced chart height is a clean workaround for
+    MUI X title slot limitation
   weaknesses:
-  - 'X-axis auto-generates duplicate tick labels (0%, 1%, 1%, 2%, 2%...) because 200
-    dense data points trigger ticks at ~0.1% intervals; rounding to integer % produces
-    visually paired duplicates. Fix: add explicit tickInterval (e.g., 0.02) or tickNumber
-    on the xAxis config to show ticks only at 0%, 2%, 4%, ..., 20%.'
-  - 'Legend label ''n=100, c=2'' line-wraps at the comma, showing ''n=100,'' and ''c=2''
-    on two lines. Fix: replace the comma-space in the label with a non-breaking separator
-    or drop the comma: ''n=100 c=2''.'
-  - Right half of chart (~10-20% defective range) is nearly all near-zero data, creating
-    visible empty space. Consider reducing P_MAX to 0.15 to keep the visual weight
-    balanced.
+  - Helper functions binomCoeff and pAccept at module level break the KISS (no-functions)
+    pattern; inline computation would be stricter
+  - Reference line labels for AQL (2%) and LTPD (10%) at 12-13px are slightly small
+    for mobile-scaled renders — increase to 14px
+  - No explicit intersection-point markers on the curves at AQL/LTPD to show exact
+    producer/consumer risk values per plan
+  - MUI X top/right axis borders not explicitly suppressed — a subtle visual refinement
+    gap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly themed, not pure white
-      Chrome: Title "curve-oc · javascript · muix · anyplot.ai" in dark text, clearly visible. Y-axis label "Probability of Acceptance" and X-axis label "Fraction Defective (p)" both readable. Tick labels set at 14px. Reference line labels "AQL (2%)", "LTPD (10%)", "1-alpha = 0.95", "beta = 0.10" all readable in inkSoft color.
-      Data: Three smooth S-shaped OC curves. First series (n=50, c=1) is brand green #009E73 — correct. Second (n=100, c=2) is lavender #C475FD. Third (n=200, c=4) is blue #4467A3. Four dashed reference lines (two vertical, two horizontal) correctly placed.
-      Issue: X-axis shows duplicate tick labels (0%, 1%, 1%, 2%, 2%...) due to auto-generated dense ticks. Legend label "n=100, c=2" wraps at comma.
-      Legibility verdict: PASS (all text readable; tick clutter noted as weakness)
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "curve-oc · javascript · muix · anyplot.ai" in dark ink at top, clearly readable. X-axis label "Fraction Defective (p)" and Y-axis label "Probability of Acceptance" both in dark ink, readable. Tick labels (0% to 14% on x, 0% to 100% on y) in dark ink, readable. Legend labels "n=50 c=1", "n=100 c=2", "n=200 c=4" clearly visible. Reference line labels "AQL (2%)", "LTPD (10%)", "1-alpha = 0.95", "beta = 0.10" visible in inkSoft color.
+      Data: Three smooth S-shaped OC curves — brand green (#009E73) for n=50 c=1, lavender (#C475FD) for n=100 c=2, blue (#4467A3) for n=200 c=4. First series is correct Imprint position 1 (brand green). Vertical dashed lines at AQL=2% and LTPD=10%. Horizontal dashed lines at P=0.95 and P=0.10.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly themed, not pure black
-      Chrome: Title, axis labels, tick labels, and reference line labels all rendered in light text on dark background. No dark-on-dark failure detected. All text clearly readable.
-      Data: Colors are identical to light render (brand green, lavender, blue) — only chrome flips as required. Brand green #009E73 clearly visible on dark background.
-      Issue: Same x-axis duplicate tick label issue and legend label wrap as light render.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title visible in light ink. Both axis labels visible in light ink. All tick labels visible in light ink. Legend labels readable. Reference line labels "AQL (2%)", "LTPD (10%)", "1-alpha = 0.95", "beta = 0.10" visible in inkSoft (lighter than ink, still readable on dark). No dark-on-dark failures detected.
+      Data: All three curves identical in color to light render — green, lavender, blue — confirming Imprint palette is theme-independent. Reference lines at same positions.
+      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: X-axis tick labels duplicated (0%, 1%, 1%, 2%, 2%...) due to dense
-          auto-ticks; legend label wraps at comma for n=100 c=2. Title and axis labels
-          otherwise well-sized.
+        comment: 'Font sizes explicitly set (title 22px, axis 16px, ticks 14px, ref-line
+          labels 12-13px). All readable in both themes. Minor: ref-line labels at
+          12px are slightly small for mobile.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Duplicate x-axis tick labels create visual confusion; legend label
-          line-wraps. No hard text-on-data overlap.
+        comment: No text collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three curves clearly visible with strokeWidth=3, smooth catmullRom
-          interpolation, distinguishable colors.
+        comment: Three smooth S-curves with strokeWidth=3, clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette (green/lavender/blue) is CVD-safe, no red-green sole
-          signal.
+        comment: Imprint positions 1-3 (green/lavender/blue) adequate contrast, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. X-axis tick density creates bottom clutter. Right
-          ~50% of chart near-empty as curves approach zero by ~10%.
+        comment: Good proportions, appropriate margins. Canvas gate passed. Nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Fraction Defective (p) and Probability of Acceptance are clear and
-          descriptive. Title format correct.
+        comment: Descriptive axis labels with percentage formatting via valueFormatter.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73. Canonical Imprint order. Backgrounds
-          correct both themes. Data colors identical across themes.'
+        comment: 'First series #009E73, t.palette used, correct backgrounds, chrome
+          flips correctly.'
     design_excellence:
       score: 12
       max: 20
@@ -114,24 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Four analytical reference lines add meaningful
-          context. Imprint palette correct. catmullRom smoothing gives professional
-          quality.
+        comment: 'Above well-configured-default: four analytical reference lines add
+          domain depth, token-driven colors integrate cleanly. Falls short of publication-ready:
+          no spine removal, MUI default grid.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Above default (2). Explicit font sizes, dashed reference lines styled
-          with inkSoft, strokeWidth 3 for line prominence. ThemeProvider handles chrome
-          adaptation.
+        comment: Reference lines with appropriate dashing, explicit margins. Top/right
+          axis lines not suppressed, no custom legend styling.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Three curves demonstrate discrimination improvement
-          with larger n. Four reference lines encode producer/consumer risk directly.
+        comment: Four reference lines actively guide the viewer through AQL/LTPD/alpha/beta
+          quality concepts. Three plans ordered by n to tell discrimination-power
+          story.
     spec_compliance:
       score: 15
       max: 15
@@ -141,71 +131,72 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curve as smooth decreasing line chart.
+        comment: 'Correct OC curve: monotonically decreasing S-shaped acceptance probability
+          vs fraction defective.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: AQL vertical reference, LTPD vertical reference, 1-alpha horizontal
-          reference, beta horizontal reference, 3 sampling plans (within spec's 2-4)
-          — all present.
+        comment: 3 sampling plans, AQL/LTPD vertical reference lines, 1-alpha/beta
+          horizontal reference lines, catmullRom smooth curves, 0-15% x-range, binomial
+          CDF.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: fraction defective 0-20%, Y: probability of acceptance 0-100%,
-          binomial CDF correctly computed.'
+        comment: fraction_defective on x-axis, probability_acceptance on y-axis, both
+          correctly ranged 0-15% and 0-100%.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: curve-oc · javascript · muix · anyplot.ai format correct. Legend
-          labels match series.
+        comment: Title 'curve-oc · javascript · muix · anyplot.ai' correct. Legend
+          labels match sampling plans.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Covers S-shaped discrimination curves, multiple plans for comparison,
-          all four risk reference lines.
+        comment: 'Shows all core OC curve features. Minor gap: no explicit intersection-point
+          markers at AQL/LTPD on each curve.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AQL=2%, LTPD=10%, plans n=50/c=1, n=100/c=2, n=200/c=4 are industry-standard
-          QC values.
+        comment: AQL=2%, LTPD=10%, n=50/100/200 with c=1/2/4 are standard industrial
+          acceptance sampling values. Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'X: 0-20% appropriate for practical sampling plans. Y: 0-100%. 200
-          points yields smooth curves.'
+        comment: Binomial CDF mathematically correct, x-axis 0-15% practical range,
+          200 points smooth curves.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (binomCoeff, pAccept) are mathematically
-          necessary. Exported Chart component is MUI X mandatory.
+        comment: Helper functions binomCoeff and pAccept break strict no-functions
+          pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Pure deterministic math (binomial CDF), no random state.
+        comment: 'Fully deterministic: binomial computation from fixed constants.'
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -217,15 +208,16 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clear structure, appropriate complexity, no fake UI.
+        comment: Clean, well-named code, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness controls output; uses current MUI X community API correctly.
+        comment: Default export component, harness handles output, ANYPLOT_SIZE used
+          correctly.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -233,20 +225,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct default-export component, skipAnimation, window.ANYPLOT_SIZE,
-          window.ANYPLOT_TOKENS, colors={t.palette}. Margin prop handles axis spacing.
+        comment: ChartsReferenceLine as children of LineChart is idiomatic MUI X.
+          sx, skipAnimation, colors from t.palette all correct.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: ChartsReferenceLine (MUI X-specific) used for four analytical thresholds.
-          curve=catmullRom exploits MUI X interpolation options.
+        comment: ChartsReferenceLine (MUI X-specific), curve=catmullRom, valueFormatter
+          used. Does not reach deeper features like custom slots or ChartsAxisHighlight.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
