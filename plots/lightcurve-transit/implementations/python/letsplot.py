@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-20
@@ -40,7 +40,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 
 # Imprint palette — first series always #009E73
 IMPRINT_GREEN = "#009E73"
-IMPRINT_BLUE = "#4467A3"
+IMPRINT_LAVENDER = "#C475FD"
 
 # Theme-adaptive chrome tokens
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
@@ -122,7 +122,7 @@ plot = (
         aes(x="phase", ymin="lower", ymax="upper", fill="band"),
         data=df_model,
         alpha=0.18,
-        color=IMPRINT_BLUE,
+        color=IMPRINT_LAVENDER,
         size=0.0,
         tooltips=layer_tooltips()
         .line("Model flux|@flux")
@@ -148,12 +148,12 @@ plot = (
     )
     + geom_line(aes(x="phase", y="flux", color="series"), data=df_model, size=1.5, tooltips="none")
     + geom_text(aes(x="phase", y="flux", label="label"), data=df_annot, color=INK_SOFT, size=3, hjust=0.5, vjust=0.5)
-    + scale_color_manual(values={"Observations": IMPRINT_GREEN, "Transit Model": IMPRINT_BLUE}, name="")
-    + scale_fill_manual(values={"Model ±1.5σ": IMPRINT_BLUE}, name="")
+    + scale_color_manual(values={"Observations": IMPRINT_GREEN, "Transit Model": IMPRINT_LAVENDER}, name="")
+    + scale_fill_manual(values={"Model ±1.5σ": IMPRINT_LAVENDER}, name="")
     + scale_x_continuous(name="Orbital Phase", breaks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(name="Relative Flux")
     + labs(
-        title="lightcurve-transit · letsplot · pyplots.ai",
+        title="lightcurve-transit · python · letsplot · anyplot.ai",
         subtitle="Phase-folded exoplanet transit  ·  Depth: ~1%  ·  Quadratic limb darkening model",
     )
     + theme_minimal()
@@ -169,7 +169,8 @@ plot = (
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=GRID_COLOR, size=0.4),
         axis_ticks=element_blank(),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
     )
