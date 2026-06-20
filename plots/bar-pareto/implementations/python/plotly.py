@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-06-20
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import os
