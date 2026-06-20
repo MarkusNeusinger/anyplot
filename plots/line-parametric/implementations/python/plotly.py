@@ -1,138 +1,114 @@
-""" pyplots.ai
+"""anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-03-20
+Library: plotly | Python
+Quality: 87 -> regen | 2026-06-20
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint sequential colorscale: brand green → blue (single-polarity continuous t)
+imprint_seq = [[0.0, "#009E73"], [1.0, "#4467A3"]]
+
+# Pre-compute 100 segment colors from Imprint seq palette via numpy (no helper function)
+n_seg = 100
+c0, c1 = np.array([0x00, 0x9E, 0x73]), np.array([0x44, 0x67, 0xA3])
+seg_rgb = (c0 + np.linspace(0, 1, n_seg)[:, None] * (c1 - c0)).astype(int)
+seg_colors = [f"rgb({r},{g},{b})" for r, g, b in seg_rgb]
+
 # Data
-n_points = 2000
-n_segments = 200
+n_pts = 2000
+t_liss = np.linspace(0, 2 * np.pi, n_pts)
+x_liss, y_liss = np.sin(3 * t_liss), np.sin(2 * t_liss)
 
-t_lissajous = np.linspace(0, 2 * np.pi, n_points)
-x_lissajous = np.sin(3 * t_lissajous)
-y_lissajous = np.sin(2 * t_lissajous)
-
-t_spiral = np.linspace(0, 4 * np.pi, n_points)
+t_spiral = np.linspace(0, 4 * np.pi, n_pts)
 x_spiral = t_spiral * np.cos(t_spiral)
 y_spiral = t_spiral * np.sin(t_spiral)
 
-# Custom colorscale from Python Blue (#306998) through teal to coral (#E4573A)
-colorscale = [
-    [0.0, "rgb(48,105,152)"],
-    [0.15, "rgb(42,128,148)"],
-    [0.35, "rgb(68,148,120)"],
-    [0.55, "rgb(148,138,78)"],
-    [0.75, "rgb(198,105,62)"],
-    [1.0, "rgb(228,87,58)"],
-]
-
-
-def interpolate_color(frac):
-    """Interpolate RGB color from the custom colorscale at given fraction [0, 1]."""
-    stops = [0.0, 0.15, 0.35, 0.55, 0.75, 1.0]
-    colors = [(48, 105, 152), (42, 128, 148), (68, 148, 120), (148, 138, 78), (198, 105, 62), (228, 87, 58)]
-    for i in range(len(stops) - 1):
-        if frac <= stops[i + 1]:
-            local = (frac - stops[i]) / (stops[i + 1] - stops[i])
-            r = int(colors[i][0] + local * (colors[i + 1][0] - colors[i][0]))
-            g = int(colors[i][1] + local * (colors[i + 1][1] - colors[i][1]))
-            b = int(colors[i][2] + local * (colors[i + 1][2] - colors[i][2]))
-            return f"rgb({r},{g},{b})"
-    return f"rgb({colors[-1][0]},{colors[-1][1]},{colors[-1][2]})"
-
-
-# Plot
+# Figure with two subplots
 fig = make_subplots(
     rows=1,
     cols=2,
     subplot_titles=(
-        "<b>Lissajous Figure</b><br><i>x = sin(3t), y = sin(2t) — closed, self-intersecting curve</i>",
-        "<b>Archimedean Spiral</b><br><i>x = t·cos(t), y = t·sin(t) — open, expanding outward</i>",
+        "<b>Lissajous Figure</b><br><i>x = sin(3t), y = sin(2t),  t ∈ [0, 2π]</i>",
+        "<b>Archimedean Spiral</b><br><i>x = t·cos(t), y = t·sin(t),  t ∈ [0, 4π]</i>",
     ),
-    horizontal_spacing=0.16,
+    horizontal_spacing=0.14,
 )
 
-# Draw smooth colored line segments for each curve
-for xx, yy, t_vals, col_idx, cb_x, cb_ticks, cb_labels in [
-    (
-        x_lissajous,
-        y_lissajous,
-        t_lissajous,
-        1,
-        0.44,
-        [0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi],
-        ["0", "π/2", "π", "3π/2", "2π"],
-    ),
-    (x_spiral, y_spiral, t_spiral, 2, 1.02, [0, np.pi, 2 * np.pi, 3 * np.pi, 4 * np.pi], ["0", "π", "2π", "3π", "4π"]),
+# Capture subplot title annotation count before adding data annotations
+n_title_anns = len(fig.layout.annotations)
+
+seg_size = n_pts // n_seg
+
+for xx, yy, tt, t_max, col_idx, xref, yref, t_end_lbl in [
+    (x_liss, y_liss, t_liss, 2 * np.pi, 1, "x", "y", "2π"),
+    (x_spiral, y_spiral, t_spiral, 4 * np.pi, 2, "x2", "y2", "4π"),
 ]:
-    # Create smooth gradient by drawing overlapping line segments
-    seg_size = n_points // n_segments
-    for i in range(n_segments):
-        start = i * seg_size
-        end = min(start + seg_size + 1, n_points)
-        frac = i / (n_segments - 1)
-        color = interpolate_color(frac)
+    # Gradient line segments using pre-computed Imprint palette colors
+    for i, color in enumerate(seg_colors):
+        s = i * seg_size
+        e = min(s + seg_size + 1, n_pts)
         fig.add_trace(
             go.Scatter(
-                x=xx[start:end],
-                y=yy[start:end],
-                mode="lines",
-                line={"width": 3.5, "color": color},
-                showlegend=False,
-                hoverinfo="skip",
+                x=xx[s:e], y=yy[s:e], mode="lines", line=dict(width=3, color=color), showlegend=False, hoverinfo="skip"
             ),
             row=1,
             col=col_idx,
         )
 
-    # Invisible scatter for colorbar and hover
+    # Invisible markers for hover + single shared colorbar on far right
     fig.add_trace(
         go.Scatter(
             x=xx[::10],
             y=yy[::10],
             mode="markers",
-            marker={
-                "size": 0.1,
-                "opacity": 0,
-                "color": t_vals[::10],
-                "colorscale": colorscale,
-                "showscale": True,
-                "colorbar": {
-                    "title": {"text": "Parameter <i>t</i> (rad)", "font": {"size": 18}, "side": "right"},
-                    "tickvals": cb_ticks,
-                    "ticktext": cb_labels,
-                    "tickfont": {"size": 16},
-                    "len": 0.75,
-                    "x": cb_x,
-                    "thickness": 16,
-                    "outlinewidth": 0,
-                },
-            },
-            hovertemplate=("t = %{customdata[0]:.3f} rad<br>x(t) = %{x:.3f}<br>y(t) = %{y:.3f}<extra></extra>"),
-            customdata=np.column_stack([t_vals[::10]]),
+            marker=dict(
+                size=0.1,
+                opacity=0,
+                color=tt[::10] / t_max,
+                colorscale=imprint_seq,
+                showscale=(col_idx == 2),
+                colorbar=dict(
+                    title=dict(text="Curve progress", font=dict(size=12, color=INK), side="right"),
+                    tickvals=[0.0, 0.5, 1.0],
+                    ticktext=["Start", "Midpoint", "End"],
+                    tickfont=dict(size=10, color=INK_SOFT),
+                    len=0.7,
+                    x=1.03,
+                    thickness=14,
+                    outlinewidth=0,
+                    bgcolor=ELEVATED_BG,
+                ),
+            ),
+            hovertemplate="t = %{customdata:.3f} rad<br>x = %{x:.3f}<br>y = %{y:.3f}<extra></extra>",
+            customdata=tt[::10],
             showlegend=False,
         ),
         row=1,
         col=col_idx,
     )
 
-# Start/end markers and annotations for both curves
-markers_config = [(x_lissajous, y_lissajous, 1, "x", "y", "0", "2π"), (x_spiral, y_spiral, 2, "x2", "y2", "0", "4π")]
-for xx, yy, col_idx, xref, yref, t_start, t_end in markers_config:
-    # Start marker
+    # Start marker (Imprint green — matches start of Imprint seq gradient)
     fig.add_trace(
         go.Scatter(
             x=[xx[0]],
             y=[yy[0]],
             mode="markers",
-            marker={"size": 16, "color": "#306998", "symbol": "circle", "line": {"color": "white", "width": 2.5}},
+            marker=dict(size=14, color="#009E73", symbol="circle", line=dict(color=PAGE_BG, width=2)),
             showlegend=False,
-            hovertemplate=f"<b>Start</b> (t = {t_start})<extra></extra>",
+            hovertemplate="<b>Start</b>: t = 0<extra></extra>",
         ),
         row=1,
         col=col_idx,
@@ -140,125 +116,121 @@ for xx, yy, col_idx, xref, yref, t_start, t_end in markers_config:
     fig.add_annotation(
         x=xx[0],
         y=yy[0],
-        text=f"<b>Start</b> (t = {t_start})",
+        text="<b>t = 0</b>",
         showarrow=True,
         arrowhead=0,
         arrowwidth=1.5,
-        arrowcolor="#306998",
+        arrowcolor="#009E73",
         ax=55,
-        ay=-45,
-        font={"size": 16, "color": "#306998"},
-        bgcolor="rgba(255,255,255,0.88)",
-        bordercolor="#306998",
+        ay=-42,
+        font=dict(size=11, color="#009E73"),
+        bgcolor=ELEVATED_BG,
+        bordercolor="#009E73",
         borderwidth=1,
-        borderpad=4,
+        borderpad=3,
         xref=xref,
         yref=yref,
     )
-    # End marker
+
+    # End marker (Imprint blue — matches end of Imprint seq gradient)
     fig.add_trace(
         go.Scatter(
             x=[xx[-1]],
             y=[yy[-1]],
             mode="markers",
-            marker={"size": 16, "color": "#E4573A", "symbol": "square", "line": {"color": "white", "width": 2.5}},
+            marker=dict(size=14, color="#4467A3", symbol="square", line=dict(color=PAGE_BG, width=2)),
             showlegend=False,
-            hovertemplate=f"<b>End</b> (t = {t_end})<extra></extra>",
+            hovertemplate=f"<b>End</b>: t = {t_end_lbl}<extra></extra>",
         ),
         row=1,
         col=col_idx,
     )
-    ax_offset = -55 if col_idx == 1 else -60
-    ay_offset = 45 if col_idx == 1 else -35
     fig.add_annotation(
         x=xx[-1],
         y=yy[-1],
-        text=f"<b>End</b> (t = {t_end})",
+        text=f"<b>t = {t_end_lbl}</b>",
         showarrow=True,
         arrowhead=0,
         arrowwidth=1.5,
-        arrowcolor="#E4573A",
-        ax=ax_offset,
-        ay=ay_offset,
-        font={"size": 16, "color": "#E4573A"},
-        bgcolor="rgba(255,255,255,0.88)",
-        bordercolor="#E4573A",
+        arrowcolor="#4467A3",
+        ax=(-55 if col_idx == 1 else -60),
+        ay=(45 if col_idx == 1 else -35),
+        font=dict(size=11, color="#4467A3"),
+        bgcolor=ELEVATED_BG,
+        bordercolor="#4467A3",
         borderwidth=1,
-        borderpad=4,
+        borderpad=3,
         xref=xref,
         yref=yref,
     )
 
-# Style
+# Apply theme-adaptive INK color to subplot title annotations only
+for ann in list(fig.layout.annotations)[:n_title_anns]:
+    ann.update(font=dict(size=12, color=INK))
+
+# Layout — canvas: width=800, height=450, scale=4 → 3200×1800 px (landscape)
 fig.update_layout(
-    title={
-        "text": "line-parametric · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#2a2a2a"},
-        "x": 0.5,
-        "xanchor": "center",
-        "y": 0.97,
-    },
-    template="plotly_white",
-    plot_bgcolor="rgba(248,249,252,1)",
-    paper_bgcolor="white",
-    width=1200,
-    height=600,
-    margin={"l": 70, "r": 70, "t": 120, "b": 70},
+    title=dict(
+        text="line-parametric · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
+    ),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    autosize=False,
+    width=800,
+    height=450,
+    margin=dict(l=80, r=100, t=90, b=80),
+    font=dict(color=INK),
 )
 
-# Style subplot titles
-for annotation in fig.layout.annotations:
-    if hasattr(annotation, "text") and ("<b>" in str(annotation.text)):
-        annotation.font = {"size": 18, "color": "#2a2a2a"}
-
 for col in [1, 2]:
+    y_ref = "y" if col == 1 else "y2"
     fig.update_xaxes(
-        title={"text": "Horizontal Position x(t)", "font": {"size": 22, "color": "#444"}, "standoff": 12},
-        tickfont={"size": 18, "color": "#666"},
+        title=dict(text="x(t)", font=dict(size=12, color=INK), standoff=8),
+        tickfont=dict(size=10, color=INK_SOFT),
         showgrid=True,
         gridwidth=1,
-        gridcolor="rgba(0,0,0,0.05)",
+        gridcolor=GRID,
         zeroline=True,
-        zerolinewidth=1.5,
-        zerolinecolor="rgba(0,0,0,0.15)",
+        zerolinewidth=1,
+        zerolinecolor=INK_SOFT,
         showline=True,
         linewidth=1,
-        linecolor="rgba(0,0,0,0.18)",
-        scaleanchor="y" if col == 1 else "y2",
+        linecolor=INK_SOFT,
+        scaleanchor=y_ref,
         scaleratio=1,
         row=1,
         col=col,
     )
     fig.update_yaxes(
-        title={"text": "Vertical Position y(t)", "font": {"size": 22, "color": "#444"}, "standoff": 12},
-        tickfont={"size": 18, "color": "#666"},
+        title=dict(text="y(t)", font=dict(size=12, color=INK), standoff=8),
+        tickfont=dict(size=10, color=INK_SOFT),
         showgrid=True,
         gridwidth=1,
-        gridcolor="rgba(0,0,0,0.05)",
+        gridcolor=GRID,
         zeroline=True,
-        zerolinewidth=1.5,
-        zerolinecolor="rgba(0,0,0,0.15)",
+        zerolinewidth=1,
+        zerolinecolor=INK_SOFT,
         showline=True,
         linewidth=1,
-        linecolor="rgba(0,0,0,0.18)",
+        linecolor=INK_SOFT,
         row=1,
         col=col,
     )
 
-# Plotly-specific: interactive reset button
+# Interactive reset button (Plotly-specific feature)
 fig.update_layout(
     updatemenus=[
-        {
-            "type": "buttons",
-            "showactive": True,
-            "x": 0.5,
-            "y": -0.12,
-            "xanchor": "center",
-            "buttons": [
-                {
-                    "label": "Reset View",
-                    "method": "relayout",
-                    "args": [
+        dict(
+            type="buttons",
+            showactive=True,
+            x=0.5,
+            y=-0.14,
+            xanchor="center",
+            buttons=[
+                dict(
+                    label="Reset View",
+                    method="relayout",
+                    args=[
                         {
                             "xaxis.autorange": True,
                             "yaxis.autorange": True,
@@ -266,16 +238,16 @@ fig.update_layout(
                             "yaxis2.autorange": True,
                         }
                     ],
-                }
+                )
             ],
-            "font": {"size": 14},
-            "bgcolor": "rgba(48,105,152,0.08)",
-            "bordercolor": "#306998",
-            "borderwidth": 1,
-        }
+            font=dict(size=12, color=INK),
+            bgcolor=ELEVATED_BG,
+            bordercolor=INK_SOFT,
+            borderwidth=1,
+        )
     ]
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — 3200×1800 landscape (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
