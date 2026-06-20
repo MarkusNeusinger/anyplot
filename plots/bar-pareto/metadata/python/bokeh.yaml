@@ -1,83 +1,106 @@
 library: bokeh
+language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:23:06Z'
-updated: '2026-03-20T07:42:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23332978271
+updated: '2026-06-20T17:21:49Z'
+generated_by: claude-sonnet
+workflow_run: 27877430863
 issue: 4550
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/bokeh/plot.html
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/bokeh/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent vital few / trivial many color distinction that enhances the Pareto
-    narrative
-  - All spec requirements implemented completely (descending bars, cumulative line,
-    80% threshold, secondary axis)
-  - Clean polished styling with removed ticks, subtle grid, and cohesive color palette
-  - Realistic manufacturing defect data with appropriate Pareto distribution
-  - Good use of Bokeh-specific features (HoverTool, ColumnDataSource, dual output)
+  - Vital-few / trivial-many color split using brand green vs. INK_MUTED semantic
+    anchor directly encodes the Pareto principle's core insight
+  - 'Full spec compliance: all required Pareto features (sorted bars, cumulative line,
+    secondary axis, 80% threshold, markers, percentage labels) are correctly implemented'
+  - Theme adaptation is complete and correct — all chrome tokens flip properly; no
+    dark-on-dark or light-on-light failures in either render
+  - HoverTool with defect/count/cumulative tooltip leverages Bokeh's interactive HTML
+    capability effectively
+  - Data is realistic, domain-appropriate manufacturing defect data with a proper
+    Pareto distribution shape
+  - Code is clean, linear, and idiomatic with no over-engineering
   weaknesses:
-  - Minor crowding of cumulative percentage labels at the right end where values converge
-    (94-100%)
-  - Could benefit from slightly more distinctive Bokeh features
-  image_description: The plot displays a Pareto chart of manufacturing defect types.
-    Ten descending blue bars represent defect counts, with the first five bars (Scratches=187,
-    Dents=143, Misalignment=98, Discoloration=72, Cracks=54) rendered in darker blue
-    (#306998) as the "vital few," and the remaining five (Burrs=38, Warping=27, Contamination=19,
-    Chipping=12, Porosity=7) in lighter blue (#7BA4C7) as the "trivial many." An orange
-    cumulative percentage line with circular markers overlays the bars, with percentage
-    labels (28%, 50%, 65%, 76%, 84%, 90%, 94%, 97%, 99%, 100%) above each marker.
-    A dashed orange 80% threshold line spans the full width with an "80% threshold"
-    label at the right. The right y-axis shows cumulative percentage (0-100%) with
-    "%" formatted ticks. The left y-axis shows "Defect Count" (0-200). X-axis labels
-    are slightly rotated. Title reads "bar-pareto · bokeh · pyplots.ai" centered at
-    top. A legend in the top-left corner shows "Defect Count" and "Cumulative %".
-    Background is white with subtle horizontal gridlines.
+  - 'Percentage labels for the first two vital bars (29% at Scratches, 56% at Dents)
+    are positioned inside the bar bodies because the cumulative pct-axis position
+    maps below the corresponding bar height on the left axis. Fix: detect when the
+    label y-position falls below the bar top and clamp label y to max(cumulative_pct[i]
+    + 3, bar_top_in_pct_units + 3) so labels always sit above the bar body.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bar-pareto · python · bokeh · anyplot.ai" centered in dark ink, readable. X-axis label "Defect Type" and Y-axis label "Defect Count" in dark ink. Right secondary axis label "Cumulative %" also dark. All tick labels in INK_SOFT (dark gray), readable. X-axis tick labels rotated ~29° and legible.
+      Data: 10 descending bars — first 5 (Scratches, Dents, Misalignment, Discoloration, Cracks) in brand green #009E73; last 5 in muted gray. Blue (#4467A3) cumulative line with circle markers. Amber (#DDCC77) dashed 80% threshold line with "80% threshold" label. Percentage labels (29%, 56%, 65%, 76%, 84%) in blue above vital-few markers. Legend top-left shows "Defect Count" and "Cumulative %".
+      Minor note: 29% and 56% labels fall inside their respective bar bodies (blue on green), readable but slightly suboptimal placement.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels all switch to light colors (#F0EFE8 / #B8B7B0). No dark-on-dark failures observed. Legend text is light-colored and readable. "80% threshold" amber label visible against dark background.
+      Data: Vital few bars remain in brand green #009E73 — identical to light render. Trivial many bars adapt to lighter gray (#A8A79F — INK_MUTED dark token), visible against the dark background. Cumulative line (#4467A3) unchanged. Amber threshold line unchanged. All data colors identical to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 36pt, axis labels 28pt, ticks
-          22-24pt, percentage labels 18pt, legend 20pt'
+        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks, 24pt cumulative labels). Both themes readable. Minor: 29%/56% labels
+          inside green bar bodies reduce legibility slightly.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Minor crowding of cumulative percentage labels at right end (94-100%)
+        comment: First two cumulative percentage labels (29%, 56%) overlap with bar
+          bodies due to pct-axis position mapping below bar tops. Blue on green remains
+          readable but is text-data overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars, line, and markers all clearly visible with appropriate sizing
+        comment: 'All elements clearly visible: bars with strong color coding, 5pt
+          cumulative line, size=18 markers, amber dashed threshold, percentage annotations.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange palette is colorblind-safe with good contrast
+        comment: CVD-safe Imprint palette. Green vs. gray uses both hue and lightness.
+          No red-green-only signals.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization at 4800x2700 with balanced margins
+        comment: Canvas gate passed (3200x1800). Min-border values appropriately set.
+          Balanced margins with enlarged right border for secondary axis.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Defect Count, Defect Type, Cumulative %'
+        comment: Defect Type, Defect Count, Cumulative % — all descriptive and appropriate.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Vital few bars in #009E73, cumulative line in #4467A3, threshold
+          in #DDCC77 amber, trivial bars in INK_MUTED. Backgrounds #FAF8F1/#1A1A17
+          correct. Both theme renders pass.'
     design_excellence:
       score: 14
       max: 20
@@ -87,22 +110,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with vital few/trivial many color coding, cohesive
-          blue-orange palette, white bar borders
+        comment: 'Strong, intentional design: vital-few/trivial-many color split encodes
+          the Pareto principle. Semantic amber for threshold, blue for trend line.
+          Clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: outline removed, ticks removed, x-grid hidden,
-          y-grid subtle'
+        comment: Outline box removed, tick marks removed, horizontal-only grid at
+          alpha=0.12, legend with elevated background. Good refinement level.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Vital few/trivial many color distinction and 80% threshold line create
-          visual narrative
+        comment: Green/gray split creates immediate focal point for the vital few.
+          Amber threshold enforces 80/20 narrative. Percentage labels on vital bars
+          show cumulative contribution explicitly.
     spec_compliance:
       score: 15
       max: 15
@@ -112,26 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative line
+        comment: 'Correct Pareto chart: descending sorted bars + cumulative % line
+          on secondary y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: descending sort, cumulative line, 80% reference, markers
-          at bar centers'
+        comment: 'All features: sorted bars, secondary axis (0-105%), 80% reference
+          line, percentage labels on vital few, markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on primary y, cumulative % on secondary y
+        comment: Categories on x, counts on primary y, cumulative % on secondary y.
+          All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels match data
+        comment: 'Title: bar-pareto · python · bokeh · anyplot.ai. Legend: Defect
+          Count and Cumulative %.'
     data_quality:
       score: 15
       max: 15
@@ -141,19 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 categories with clear Pareto distribution, wide range 7-187
+        comment: 'Shows all Pareto aspects: descending bars, cumulative line, vital
+          few/trivial many distinction, 80% threshold, annotations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect types represent genuine quality control scenario
+        comment: Manufacturing defect types in quality control context — neutral,
+          plausible, domain-appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Defect counts 7-187 realistic for manufacturing inspection
+        comment: Counts 187→7 follow realistic heavy-tail Pareto distribution. Top
+          5 = ~88% consistent with 80/20 principle.
     code_quality:
       score: 10
       max: 10
@@ -163,57 +194,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: 'Linear: imports → data → figure → glyphs → styling → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data
+        comment: All data hardcoded, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. No unused packages.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized with elegant vital_mask logic
+        comment: Clean, idiomatic. vital_mask loop concise. Separate ColumnDataSource
+          for labels appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via export_png and plot.html via save
+        comment: Saves plot-{THEME}.html (interactive) and plot-{THEME}.png. Current
+          API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Bokeh: ColumnDataSource, extra_y_ranges, PrintfTickFormatter,
+          LinearAxis add_layout, Span, HoverTool, categorical x_range.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, categorical x_range, extra_y_ranges,
-          LinearAxis, PrintfTickFormatter, Span, Label
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with tooltips and HTML export leverage Bokeh's interactive
-          capabilities
+        comment: HoverTool vline mode (interactive tooltip), HTML artifact export,
+          extra_y_ranges secondary axis, PrintfTickFormatter. No custom JS callbacks.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - twin-axes
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - columndatasource
   dataprep:
@@ -221,4 +256,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
