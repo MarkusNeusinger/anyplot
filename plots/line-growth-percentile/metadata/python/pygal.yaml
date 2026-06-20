@@ -1,46 +1,61 @@
 library: pygal
+language: python
 specification_id: line-growth-percentile
 created: '2026-03-19T19:54:03Z'
-updated: '2026-03-19T20:28:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23313901356
+updated: '2026-06-20T09:54:33Z'
+generated_by: claude-sonnet
+workflow_run: 27866800339
 issue: 4555
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/pygal/plot.html
-quality_score: 85
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent clinical data realism with WHO-approximating weight-for-age values
-  - Band color gradient correctly matches spec (darker at extremes, lighter near median)
-  - Right-margin percentile labels implemented as native SVG text elements — more
-    idiomatic than PIL approach
-  - Patient data clearly visible with prominent red dots and connecting line
-  - Thoughtful graduated blue palette with custom backgrounds and typography
-  - Creative polygon fill technique for percentile bands using pygal XY
+  - Correct graduated blue-band approach matching clinical 'boys' convention — band
+    tones derived from Imprint blue (#4467A3) via lerp from PAGE_BG, creating proper
+    'darker near extremes, lighter near median' effect in light render
+  - Brand green (#009E73) used for patient data as the clear focal element — semantically
+    correct choice (patient=primary, population bands=reference), overriding strict
+    ordinal series position with clinically appropriate convention
+  - Sophisticated SVG post-processing injects right-margin percentile labels (P3–P97)
+    not available natively in pygal; P50 distinctively rendered in bold Imprint blue
+    while others use INK_MUTED
+  - 'Proper dual-theme adaptation throughout: PAGE_BG, INK, INK_MUTED tokens correctly
+    threaded into Style object; dark render shows light text on near-black background
+    with no dark-on-dark failures'
+  - Correct canvas (3200×1800), np.random.seed(42), both plot-{THEME}.png and plot-{THEME}.html
+    outputs — all pipeline requirements satisfied
   weaknesses:
-  - 'Minor dead code: ns dict and plot_group variable assigned but never used (lines
-    173-174)'
-  image_description: The plot displays a WHO Weight-for-Age growth chart for boys
-    aged 0–36 months. Six graduated blue percentile bands (P3–P10, P10–P25, P25–P50,
-    P50–P75, P75–P90, P90–P97) fan outward from a narrow origin near birth weight
-    ~2–4 kg to a wider spread at 36 months (~11–17.5 kg). The bands correctly use
-    darker blue (#2E86C1) at the extremes (P3–P10, P90–P97), medium blue (#85C1E9)
-    for intermediate bands (P10–P25, P75–P90), and lightest blue (#D6EAF8) near the
-    median (P25–P50, P50–P75), all at 0.55 opacity. A dashed dark navy (#154360) P50
-    median line with stroke width 7 runs through the center. Red (#C0392B) connected
-    dots (dots_size=12, stroke 5.5) clearly show an individual patient's weight trajectory
-    tracking between the 25th and 50th percentiles. Right-margin percentile labels
-    (P3, P10, P25, P50, P75, P90, P97) are rendered as native SVG text elements in
-    gray/navy. The x-axis shows "Age (months)" from 0 to 36 with major labels every
-    6 months, and the y-axis shows "Weight (kg)" from 0 to 18. The title reads "WHO
-    Weight-for-Age (Boys) · line-growth-percentile · pygal · pyplots.ai". A bottom
-    legend in two rows of four items identifies all 8 series. The background is white
-    with a subtle off-white (#FAFCFF) plot area and dashed horizontal grid lines.
+  - P50 median is de-emphasized (dashed gray, thin) despite the spec explicitly requiring
+    'visually emphasized (thicker or distinct color)' for the 50th percentile median
+    line — stroke width=8 with dasharray renders subtly behind the band fills
+  - Patient data markers (dots_size=10) are too small relative to the 3200px canvas
+    for 'prominent connected markers' as specified — markers appear as minor swellings
+    on the green line rather than clearly visible circular dots
+  - 'Dark render band graduation is low-contrast — BAND_OUTER (#354C72), BAND_MID
+    (#2E3F5A), and BAND_INNER (#273141) appear as near-identical dark navies against
+    #1A1A17, making the clinical ''graduated intensity'' harder to read in dark mode'
+  - 'Inner band legend swatches (BAND_INNER = #273141 in dark mode) are nearly indistinguishable
+    from the near-black background (#1A1A17) in the dark render legend'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "WHO Weight-for-Age · line-growth-percentile · python · pygal · anyplot.ai" in dark ink, clearly readable. X-axis label "Age (months)" and Y-axis label "Weight (kg)" in appropriate dark tones. Tick labels (0–36 months, 2–18 kg) readable. Right-margin percentile labels P3–P97 in INK_MUTED gray, P50 in bold Imprint blue — all readable.
+      Data: Six graduated blue-tone bands from outer (BAND_OUTER #96A8C6 darker, more saturated) to inner (BAND_INNER #D9DEE3 lighter, near-off-white) — "darker near extremes, lighter near median" gradient correctly implemented. Dashed gray P50 median line runs through mid-band area. Brand green (#009E73) patient data line traces from 3.2 kg at birth to 13.7 kg at 36 months, tracking near P25–P50 range. Small circular green markers at each of 12 data points (visible but small). Legend at bottom with 8 entries.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and axis labels rendered in light cream (#F0EFE8), clearly readable against dark background. Tick labels in appropriate light tones. Right-margin labels (P50 in Imprint blue #4467A3, others in #A8A79F) readable. No dark-on-dark failures for any title, label, or tick element. Legend text in light color against dark background — readable.
+      Data: Band colors use dark-mode lerped palette (BAND_OUTER #354C72, BAND_MID #2E3F5A, BAND_INNER #273141) — data colors visually distinct from background though inter-band graduation is less pronounced than in light render (three shades appear as similar dark navies). P50 dashed line visible as lighter element. Patient data green (#009E73) — identical color to light render — clearly visible as a distinct green line against the dark bands and background.
+      Legibility verdict: PASS — all chrome readable; minor issue: inner band swatches (#273141) have very low contrast against legend background in dark mode
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -48,68 +63,91 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set in Style (title=58, labels=40, major=42,
-          legend=36). Right-margin SVG labels at font-size 38. All readable.
+        comment: 'All font sizes explicitly set (title_fs=44-66 scaled, label=56,
+          major_label=44, legend=44). Both renders fully readable. Minor: dark render
+          INK_MUTED (#A8A79F) on #1A1A17 for right-margin labels is readable but lighter
+          than ideal.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Right-margin percentile labels P25/P10/P3 vertically close but distinct.
-          No other overlaps.
+        comment: No overlapping text or data elements. Right-margin labels well-spaced.
+          Legend at bottom with 4 columns clean.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Patient dots prominent at size 12 with red stroke. P50 dashed line
-          visible. Bands clearly differentiated.
+        comment: Percentile bands clearly visible in light render. Patient markers
+          (dots_size=10) visible but small for 'prominent connected markers' spec
+          requirement. Dark render band graduation less pronounced — outer/mid/inner
+          bands appear as similar dark navies.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette colors used. Green patient data vs blue
+          bands — no red-green sole signal. Adequate contrast.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue-red palette is colorblind-safe with excellent contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization. Y-range 0-18 tighter than before. Minor
-          unused space above data max ~17.5.
+        comment: 3200x1800 canvas confirmed (gate passed). Good proportions. Y-axis
+          0-18 range appropriate for clinical chart (starting at 0 is medically correct).
+          Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age (months) and Weight (kg) — descriptive with units.
+        comment: 'X: ''Age (months)'', Y: ''Weight (kg)'' — descriptive with units.
+          Title includes descriptive prefix + correct spec-id/lang/lib/anyplot.ai
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient data uses #009E73 (Imprint position 1) as focal series —
+          semantic exception justified (clinical convention: blue=population bands,
+          green=individual patient). Bands use tones derived from Imprint blue #4467A3.
+          Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom graduated blue palette, off-white plot background, thoughtful
-          typography. Above defaults but not publication-level.
+        comment: Above default (4). Custom graduated palette derived from Imprint
+          blue via lerp — elegant domain-specific approach. Brand green for focal
+          patient data. SVG-injected right-margin labels with P50 styled distinctly.
+          Thoughtful opacity for band fills (0.65). Dashed median creates visual distinction
+          from solid bands.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Dashed guide strokes, hidden x-guides, custom margins, subtle grid
-          styling. Good refinement.
+        comment: Above default (2). Band borders very subtle (stroke width=0.3, opacity=0.1).
+          Only y-guides shown. Clean bottom legend with 4 columns. Pygal doesn't support
+          explicit spine removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Patient trajectory between P25-P50 creates clear focal point. Red
-          against blue creates strong visual hierarchy.
+        comment: 'Above default (2). Clear visual hierarchy: blue bands = population
+          reference context, green patient line = clinical focal point. Right-margin
+          labels enable instant percentile reading. Color contrast between patient
+          data and band background guides the viewer to the key clinical question.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -117,53 +155,63 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct growth chart with filled percentile bands and patient overlay.
+        comment: 'Correct chart type: XY chart with filled percentile bands and patient
+          data overlay — matches WHO/CDC-style growth chart spec exactly.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: graduated bands (darker at extremes), emphasized
-          P50, blue tones, right-margin labels, patient connected markers.'
+        comment: Filled graduated bands ✓, P50 line present but DE-EMPHASIZED (code
+          comment says so) rather than spec's 'visually emphasized' requirement. Patient
+          dots_size=10 produces small markers vs. spec's 'prominent connected markers'.
+          Blue tones for boys ✓. Right-margin P3-P97 labels ✓. Connected patient data
+          in contrasting color ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=age months, Y=weight kg. Correctly mapped.
+        comment: X=age (months) 0-36, Y=weight (kg) 0-18. All seven percentile curves
+          correctly mapped. Patient data overlaid correctly as connected points.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format. Legend labels match data series.
+        comment: 'Title: ''WHO Weight-for-Age · line-growth-percentile · python ·
+          pygal · anyplot.ai'' — correct format with descriptive prefix. Legend shows
+          all 8 series. Right-margin labels supplement legend.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 7 percentile levels, filled bands, median emphasis, patient tracking
-          across full range.
+        comment: All 7 percentile curves shown (P3/P10/P25/P50/P75/P90/P97). Six filled
+          bands between curves. Individual patient trajectory overlaid. Median distinctly
+          marked. Graduated color intensity. Complete clinical growth chart feature
+          set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO weight-for-age boys — real clinical scenario, neutral medical
-          data.
+        comment: WHO weight-for-age reference for boys, 0-36 months — real established
+          standard. Neutral medical context. Patient measurements at well-child visit
+          intervals are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Birth weight ~3.3 kg, 36-month ~14.3 kg. Closely approximates WHO
-          standards.
+        comment: P50 at birth 3.3 kg → 14.3 kg at 36 months. Patient from 3.2 kg →
+          13.7 kg tracking near P25-P50. Values approximate WHO growth standards accurately.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -171,8 +219,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → style → chart → render → save. No functions
-          or classes.
+        comment: 'Linear: imports → tokens → data → style → chart → series → SVG manipulation
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -184,22 +232,24 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: io, os, xml.etree.ElementTree, cairosvg, numpy,
+          pygal, PIL.Image, pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dead code: ns dict and plot_group variable assigned but never used
-          (lines 173-174).'
+        passed: true
+        comment: Clean and Pythonic. SVG post-processing for right-margin labels is
+          an appropriate workaround for pygal's limitation, not over-engineering.
+          band_configs loop is clean. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with DPI. Also renders HTML.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -207,28 +257,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good pygal.XY usage with fill, Style customization, stroke_style,
-          x_labels_major, legend_at_bottom_columns.
+        comment: Above default (3). Uses pygal.XY correctly for coordinate-based plotting.
+          Custom Style object properly carries all theme tokens. Polygon trick for
+          filled bands is clever native pygal technique. cairosvg for PNG conversion
+          is the standard approach.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Creative polygon fill for bands, native SVG text injection for labels
-          (improved from PIL), HTML export, js=[] for static.
+        comment: 'Above default (1). Leverages: pygal''s interactive HTML output,
+          SVG post-processing via chart.render() to inject right-margin labels (not
+          possible in matplotlib/seaborn), polygon-based band rendering using pygal.XY
+          fill — all distinctively pygal.'
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - pillow
   - cairosvg
+  - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - gradient-fill
