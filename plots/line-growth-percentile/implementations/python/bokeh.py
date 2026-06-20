@@ -1,7 +1,7 @@
-"""
+""" anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
-Library: bokeh | Python
-Imprint palette — blue (#4467A3) bands for boys, green (#009E73) patient line
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-06-20
 """
 
 import base64
