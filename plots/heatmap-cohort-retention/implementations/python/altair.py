@@ -1,13 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-16
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 94/100 | Updated: 2026-06-20
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap: brand green → blue (single-polarity continuous data)
+SEQ_LOW = "#009E73"  # brand green — low retention
+SEQ_HIGH = "#4467A3"  # blue — high retention
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution — callout annotations
 
 # Data
 np.random.seed(42)
@@ -54,31 +70,34 @@ for i, cohort in enumerate(cohort_labels):
 
 df = pd.DataFrame(rows)
 
-# Sort orders
 cohort_order = [f"{c} (n={s:,})" for c, s in zip(cohort_labels, cohort_sizes, strict=True)]
 period_order = [f"Month {p}" for p in range(n_periods)]
 
-# Custom dark teal-to-gold diverging-inspired sequential palette for sophistication
-color_domain = [0, 20, 40, 60, 80, 100]
-color_range = ["#f7f7f7", "#d4e8e0", "#7bc8b5", "#2a9d8f", "#264653", "#1d3557"]
+# Average Month 0→1 retention drop — used for cliff callout annotation
+avg_month1_retention = df[df["period"] == 1]["retention_rate"].mean()
+avg_drop = round(100 - avg_month1_retention)
 
-# Heatmap rectangles
+# Title — len=55 < 67, no font-size shrink needed; default 16px applies
+title = "heatmap-cohort-retention · python · altair · anyplot.ai"
+title_fontsize = 16
+
+# Heatmap rectangles — Imprint sequential palette
 heatmap = (
     alt.Chart(df)
-    .mark_rect(stroke="#e8e8e8", strokeWidth=1.5, cornerRadius=3)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=0.5, cornerRadius=3)
     .encode(
         x=alt.X(
             "period_label:O",
             title="Months Since Signup",
             sort=period_order,
             axis=alt.Axis(
-                labelFontSize=17,
-                titleFontSize=22,
+                labelFontSize=10,
+                titleFontSize=12,
                 titleFontWeight="bold",
-                labelAngle=0,
+                labelAngle=-40,
                 domainWidth=0,
                 tickWidth=0,
-                titlePadding=16,
+                titlePadding=12,
                 labelPadding=8,
             ),
         ),
@@ -87,27 +106,27 @@ heatmap = (
             title="Signup Cohort",
             sort=cohort_order,
             axis=alt.Axis(
-                labelFontSize=17,
-                titleFontSize=22,
+                labelFontSize=10,
+                titleFontSize=12,
                 titleFontWeight="bold",
                 domainWidth=0,
                 tickWidth=0,
-                titlePadding=16,
-                labelPadding=8,
+                titlePadding=12,
+                labelPadding=6,
             ),
         ),
         color=alt.Color(
             "retention_rate:Q",
-            scale=alt.Scale(domain=color_domain, range=color_range),
+            scale=alt.Scale(domain=[0, 100], range=[SEQ_LOW, SEQ_HIGH]),
             legend=alt.Legend(
                 title="Retention %",
-                titleFontSize=18,
+                titleFontSize=10,
                 titleFontWeight="bold",
-                labelFontSize=16,
-                gradientLength=400,
-                gradientThickness=18,
+                labelFontSize=10,
+                gradientLength=200,
+                gradientThickness=14,
                 orient="right",
-                offset=12,
+                offset=10,
             ),
         ),
         tooltip=[
@@ -118,54 +137,89 @@ heatmap = (
     )
 )
 
-# Text annotations with suffix
+# Retention rate value inside each cell
 text = (
     alt.Chart(df)
-    .mark_text(fontSize=15, fontWeight="bold")
+    .mark_text(fontSize=11, fontWeight="bold")
     .encode(
         x=alt.X("period_label:O", sort=period_order),
         y=alt.Y("cohort_label:O", sort=cohort_order),
-        text=alt.Text("retention_rate:Q", format=".1f"),
-        color=alt.condition(alt.datum.retention_rate > 50, alt.value("white"), alt.value("#333333")),
+        text=alt.Text("retention_rate:Q", format=".0f"),
+        color=alt.value("#F0EFE8"),
     )
 )
 
-# Percent symbol as separate smaller text layer for polish
+# Percent symbol — smaller, offset right for typographic polish
 pct = (
     alt.Chart(df)
-    .mark_text(fontSize=10, fontWeight="normal", dx=20)
+    .mark_text(fontSize=8, fontWeight="normal", dx=14)
     .encode(
         x=alt.X("period_label:O", sort=period_order),
         y=alt.Y("cohort_label:O", sort=cohort_order),
         text=alt.value("%"),
-        color=alt.condition(
-            alt.datum.retention_rate > 50, alt.value("rgba(255,255,255,0.7)"), alt.value("rgba(51,51,51,0.5)")
-        ),
+        color=alt.value("rgba(240,239,232,0.7)"),
     )
 )
 
-# Combine
+# Amber border on Jan 2024 row confirms the subtitle insight (earliest = strongest)
+jan_df = df[df["cohort"] == "Jan 2024"].copy()
+jan_highlight = (
+    alt.Chart(jan_df)
+    .mark_rect(fill=None, stroke=ANYPLOT_AMBER, strokeWidth=2, cornerRadius=3)
+    .encode(x=alt.X("period_label:O", sort=period_order), y=alt.Y("cohort_label:O", sort=cohort_order))
+)
+
+# Callout annotation at top of Month 1 column for the ~Month 0→1 retention cliff
+cliff_df = pd.DataFrame(
+    [{"period_label": "Month 1", "cohort_label": cohort_order[0], "annotation": f"avg −{avg_drop}%"}]
+)
+cliff_label = (
+    alt.Chart(cliff_df)
+    .mark_text(fontSize=9, fontWeight="bold", dy=-26, color=ANYPLOT_AMBER, clip=False)
+    .encode(
+        x=alt.X("period_label:O", sort=period_order), y=alt.Y("cohort_label:O", sort=cohort_order), text="annotation:N"
+    )
+)
+
+# Combine layers — square canvas (2400×2400) for symmetric heatmap grid
 chart = (
-    alt.layer(heatmap, text, pct)
+    alt.layer(heatmap, jan_highlight, text, pct, cliff_label)
     .properties(
-        width=1400,
-        height=900,
+        width=370,
+        height=440,
+        background=PAGE_BG,
         title=alt.Title(
-            "heatmap-cohort-retention · altair · pyplots.ai",
-            fontSize=28,
+            title,
+            fontSize=title_fontsize,
             fontWeight="bold",
             anchor="middle",
+            color=INK,
             subtitle="Monthly SaaS user retention — earliest cohorts show strongest long-term engagement",
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-            subtitlePadding=8,
+            subtitleFontSize=11,
+            subtitleColor=INK_MUTED,
+            subtitlePadding=6,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure(padding={"left": 20, "right": 20, "top": 20, "bottom": 20}, background="#ffffff")
-    .configure_axis(labelColor="#444444", titleColor="#333333")
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridOpacity=0.0, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG — then pad-only to exactly 2400×2400
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Interactive HTML (no padding applied — only PNGs are gated)
+chart.save(f"plot-{THEME}.html")
