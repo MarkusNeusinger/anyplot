@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: histogram-capability
 created: '2026-06-20T15:20:16Z'
-updated: '2026-06-20T15:26:58Z'
+updated: '2026-06-20T15:39:42Z'
 generated_by: claude-sonnet
 workflow_run: 27875110775
 issue: 4552
@@ -12,50 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — histogram, fitted normal curve, LSL/USL dashed lines,
-    target line, and Cp/Cpk annotation box all present and correctly computed from
-    data
-  - Excellent reproducibility via LCG + Box-Muller (seed=42), satisfying Chart.js's
-    lack of a seeded RNG without any network calls
-  - Custom afterDatasetsDraw plugin is idiomatic Chart.js — draws spec lines and elevated
-    Cp/Cpk callout box using the canvas 2D context, cleanly theme-adaptive via ANYPLOT_TOKENS
-  - 'Both renders pass legibility: warm #FAF8F1 light bg with dark chrome; near-black
-    #1A1A17 dark bg with light chrome; no dark-on-dark failures anywhere'
-  - Realistic engineering context (shaft diameter, ±0.05 mm tolerance) with plausible
-    Cp=1.43, Cpk=1.27 — immediately recognisable to quality engineers
-  - Mixed bar+line chart type used idiomatically for histogram overlay; barPercentage:1
-    + categoryPercentage:1 produces correct touching histogram bars
-  - Alpha-blended histogram bars (palette[0]+'bb') let the normal curve show through
-    without visual confusion
+  - In-spec region background shading is a high-quality design touch that immediately
+    communicates the tolerance band
+  - Custom specPlugin using Chart.js plugin lifecycle hooks (beforeDatasetsDraw/afterDatasetsDraw)
+    is idiomatic and elegant
+  - Deterministic LCG + Box-Muller RNG handles JS lack of seeded random correctly
+  - All spec requirements fully covered including Cp/Cpk calculated from sample statistics
+  - Theme adaptation is thorough — annotation box, all text, grid, and backgrounds
+    properly use t. tokens
   weaknesses:
-  - 'Palette order violation: normal fit curve uses t.palette[2] (#4467A3 blue), skipping
-    t.palette[1] (#C475FD lavender). The second categorical series must be palette[1]
-    per Imprint canonical order; there is no semantic exception that justifies jumping
-    to slot 3 for a ''Normal fit'' label.'
-  - 'Design Excellence ceiling: top/right axis borders are retained (no explicit spine
-    removal via Chart.js borderWidth:0 on scales). Removing the top/right scale borders
-    would push DE-02 refinement closer to the maximum.'
-  - DE-03 storytelling is functional but not exceptional — the Cp/Cpk box is well-placed
-    but the chart lacks a visual emphasis cue (e.g. shading the 'in-spec' region between
-    LSL and USL) that would immediately direct the viewer's eye to the key message.
+  - Spec-line labels (LSL, USL, Target) rendered at 15px bold are marginally smaller
+    than axis titles at 16px — consider bumping to 16–17px for visual balance
+  - Both axes have grid lines active; style guide prefers y-axis grid only for bar/histogram
+    charts — consider removing x-axis grid
+  - Legend order shows Normal fit before Frequency due to order property; canonical
+    order (histogram bars first) would be more intuitive
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot surface.
-      Chrome: Title "histogram-capability · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Legend at top ("Normal fit" + "Frequency") in dark ink. X-axis label "Shaft Diameter (mm)" and Y-axis label "Frequency" both in dark ink at matching font sizes. Tick labels in inkSoft (#4A4A44) — clear, consistent size on both axes.
-      Data: Histogram bars in #009E73 (palette[0]) with ~73% alpha transparency. Normal fit curve in #4467A3 (palette[2]). LSL/USL dashed vertical lines in #AE3030 (semantic red). Target dashed line in inkSoft (neutral gray). Cp/Cpk annotation box (elevated bg #FFFDF6, thin border, dark text) in upper-right.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "histogram-capability · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "Shaft Diameter (mm)" and "Frequency" in dark ink at 16px. Tick labels in inkSoft at 14px. LSL/USL/Target labels in 15px bold at top of their respective spec lines.
+      Data: Histogram bars in #009E73 (palette[0]) with 'bb' alpha transparency and green border. Normal-fit curve in lavender #C475FD (palette[1]). LSL/USL dashed lines in #AE3030 (Imprint slot 5 semantic red). Target dashed line in inkSoft gray. Light green in-spec region shading. Cp/Cpk annotation box in white (#FFFDF6 elevatedBg) with dark text.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot surface.
-      Chrome: Title in light #F0EFE8 ink, clearly readable. Legend labels in light ink. Axis labels and tick labels in #B8B7B0 (inkSoft dark) — readable, no dark-on-dark failure. Cp/Cpk box uses elevated dark bg (#242420) with light text — both values legible.
-      Data: Histogram bars identical green #009E73, normal curve identical #4467A3, LSL/USL identical red #AE3030 — data colors are unchanged from light render as required. Target line in #B8B7B0 (inkSoft dark), visible against the dark background.
-      Legibility verdict: PASS — all text and data elements clearly readable against near-black background; no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels appear as off-white/light ink (#F0EFE8) on dark background. Tick labels in inkSoft lighter gray (#B8B7B0). All text clearly visible against near-black background.
+      Data: All data colors identical to light render — histogram bars same green, normal-fit same lavender, spec lines same red/gray. Annotation box uses elevatedBg (#242420) fill with t.ink (light) text. In-spec shading retains same green alpha.
+      Legibility verdict: PASS — no dark-on-dark failure; all text is clearly visible against #1A1A17 background
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,57 +52,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes; font sizes explicitly set (title
-          22px, labels 16px, ticks 14px, annotation 18px). Minor: spec-line label
-          font is hardcoded string rather than token-derived, though size is appropriate.'
+        comment: All text readable in both themes. Spec-line labels (15px bold) marginally
+          smaller than axis titles (16px).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; LSL/USL/Target labels placed at chart-area
-          top with correct left/right alignment; Cp/Cpk box in upper-right clear of
-          all labels.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: green bars, blue normal curve, red
-          dashed spec lines, target line, and annotation box are all distinct and
-          readable in both themes.'
+        comment: All elements clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Red spec lines serve a semantic role
-          (danger/limit), disambiguated from green bars by line style (dashed vs.
-          solid bars) and position — not sole signal.
+        comment: 'Imprint palette compliant; #AE3030 for limits is a semantic anchor
+          with redundant encoding.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions; title ~65% of width (expected
-          for this title length). No overflow. Balanced axis labels at matching font
-          sizes.
+        comment: Canvas gate passed; good proportions and layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Shaft Diameter (mm)'' with units. Y: ''Frequency''. Title matches
-          required format exactly.'
+        comment: Descriptive labels with units; correct title format.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Palette order violation: second categorical series (Normal fit)
-          uses palette[2]=#4467A3, skipping palette[1]=#C475FD. No semantic exception
-          justifies jumping from slot 1 to slot 3; ''Normal fit'' carries no domain-conventional
-          color expectation. Backgrounds correct (#FAF8F1 light / #1A1A17 dark).'
+        passed: true
+        comment: First series palette[0] (#009E73); Normal fit palette[1]; LSL/USL
+          use Imprint slot 5 (#AE3030) as semantic red. Backgrounds correct.
     design_excellence:
       score: 12
       max: 20
@@ -123,27 +101,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above-default. Custom specPlugin shows design intent; elevated Cp/Cpk
-          callout box with thin border adds polish; intentional three-level color
-          hierarchy (green histogram / blue curve / red spec lines).
+        comment: In-spec region shading and styled Cp/Cpk annotation box demonstrate
+          genuine design intent above default.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Above-default. Subtle grid via t.grid token; alpha-blended bars;
-          appropriate legend padding. Top/right axis borders not explicitly removed
-          (borderWidth:0 not applied to scales) — keeps L-frame but does not achieve
-          minimal-chrome refinement.
+        comment: Axis borders removed, theme-adaptive grid at 15% opacity. Both axes
+          have grid lines; y-only preferred for histograms.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above-default. Clear focal point (histogram centered near target),
-          Cp/Cpk box immediately quantifies capability, visual hierarchy guides the
-          eye. Missing: in-spec region shading that would more dramatically direct
-          viewer attention.'
+        comment: Clear focal point via in-spec shading; capability indices prominent;
+          red spec lines guide attention.
     spec_compliance:
       score: 15
       max: 15
@@ -153,30 +126,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with fitted normal distribution overlay, implemented
-          as Chart.js mixed bar+line chart.'
+        comment: 'Correct: histogram with fitted normal distribution curve and spec
+          lines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: histogram bars, fitted normal curve, LSL/USL red dashed
-          lines, target line, Cp and Cpk annotated on plot.'
+        comment: Histogram, normal curve, LSL/USL dashed lines, Target line, Cp/Cpk
+          annotation — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: shaft diameter in mm. Y: frequency counts. N=200 within spec
-          range. LSL=9.95, USL=10.05, TARGET=10.00 match spec exactly.'
+        comment: X = shaft diameter (mm), Y = frequency. 200 measurements, full data
+          range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'histogram-capability · javascript · chartjs · anyplot.ai'
-          matches required format. Legend shows 'Frequency' and 'Normal fit'. Spec
-          lines labeled directly on chart.
+        comment: 'Title format correct. Legend labels: Frequency and Normal fit.'
     data_quality:
       score: 15
       max: 15
@@ -186,66 +157,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete representation: all five aspects of capability analysis
-          shown (distribution shape, spec limits, target, fitted model, quantified
-          indices).'
+        comment: All aspects shown including bonus in-spec shading.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter (mm) with ±0.05 mm tolerance is a standard precision
-          machining scenario. Cp=1.43, Cpk=1.27 are realistic values for a capable
-          but slightly off-center process.
+        comment: Shaft diameter manufacturing scenario is realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: X-range 9.93–10.08 mm captures full distribution with clear margins.
-          Y-max=65 with 1.2× headroom. Scale appropriate for 200-sample capability
-          study.
+        comment: 200 measurements within recommended range; Cp=1.43/Cpk=1.27 are plausible
+          engineering values.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Helper functions lcg() and randn() are minimal and necessary (no
-          native seeded RNG in browser). specPlugin object is the idiomatic Chart.js
-          extension pattern, not over-engineering.
+        comment: lcg/randn helper functions minimal and necessary for JS seeded RNG.
+          specPlugin object is idiomatic Chart.js.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) + Box-Muller transform ensures fully deterministic
-          output across runs.
+        comment: LCG seeded at 42 with Box-Muller; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart.js is consumed as a pre-loaded global, per harness
-          contract.
+        comment: No imports; window globals only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-sectioned code with clear comments. No fake UI elements.
+        comment: Well-sectioned, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No savefig calls; animation:false; responsive:true; maintainAspectRatio:false.
-          Chart.js 4.4.7 API used correctly throughout.
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html. Current API
+          used.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -253,26 +216,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Mixed dataset type (bar+line) used correctly. Linear scale on x-axis
-          for continuous data. Correct responsive options. Tick callback formatter.
-          Above idiomatic baseline.
+        comment: barPercentage/categoryPercentage for gapless bins, linear scale,
+          order property, mixed chart type — all idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom afterDatasetsDraw plugin with canvas 2D context manipulation
-          is a distinctive Chart.js capability — draws dashed spec lines and themed
-          annotation box not possible through the standard API. Above default of 1.
+        comment: Custom Chart.js plugin using beforeDatasetsDraw/afterDatasetsDraw
+          lifecycle hooks is an advanced, distinctive feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
