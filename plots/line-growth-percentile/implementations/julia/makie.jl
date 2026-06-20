@@ -75,6 +75,9 @@ ax = Axis(
     title              = title_str,
     titlesize          = 20,
     titlecolor         = INK,
+    subtitle           = "Boys weight-for-age — WHO reference (0–36 months)",
+    subtitlecolor      = INK_SOFT,
+    subtitlesize       = 13,
     xlabel             = "Age (months)",
     ylabel             = "Weight (kg)",
     xlabelsize         = 16,
@@ -106,8 +109,8 @@ ylims!(ax, 1.5, 20.0)
 # Percentile bands — graduated: outer bands darker, inner bands lighter
 band!(ax, ages, p3,  p10; color = (BAND_COLOR, 0.38))
 band!(ax, ages, p10, p25; color = (BAND_COLOR, 0.23))
-band!(ax, ages, p25, p50; color = (BAND_COLOR, 0.13))
-band!(ax, ages, p50, p75; color = (BAND_COLOR, 0.13))
+band!(ax, ages, p25, p50; color = (BAND_COLOR, 0.16))
+band!(ax, ages, p50, p75; color = (BAND_COLOR, 0.16))
 band!(ax, ages, p75, p90; color = (BAND_COLOR, 0.23))
 band!(ax, ages, p90, p97; color = (BAND_COLOR, 0.38))
 
@@ -138,7 +141,7 @@ for (lbl, yv) in [
     ("P50", p50[end]), ("P75", p75[end]), ("P90", p90[end]), ("P97", p97[end]),
 ]
     lbl_color = lbl == "P50" ? INK : INK_SOFT
-    lbl_size  = lbl == "P50" ? 13  : 12
+    lbl_size  = lbl == "P50" ? 14  : 13
     text!(ax, label_x, yv;
           text     = lbl,
           color    = lbl_color,
@@ -154,7 +157,7 @@ axislegend(ax;
     framecolor      = INK_SOFT,
     labelcolor      = INK,
     labelsize       = 13,
-    framevisible    = true,
+    framevisible    = false,
 )
 
 # --- Save ---
