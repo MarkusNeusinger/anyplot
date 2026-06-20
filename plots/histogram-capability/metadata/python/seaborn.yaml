@@ -1,86 +1,101 @@
 library: seaborn
+language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:44:15Z'
-updated: '2026-03-19T21:56:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318228473
+updated: '2026-06-20T15:14:47Z'
+generated_by: claude-sonnet
+workflow_run: 27874605753
 issue: 4552
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent visual design with intentional color palette and color-coded capability
-    annotations
-  - Shaded out-of-spec zones add depth and immediately draw attention to specification
-    limits
-  - Color-coded capability status (Adequate in orange) creates clear data storytelling
-  - All font sizes explicitly set for high-resolution output
-  - Clean well-structured code with appropriate use of seaborn integrated KDE
+  - 'Excellent spec coverage: every required element (histogram, parametric curve,
+    KDE, spec lines, target, Cp/Cpk annotation) is present and visually distinct'
+  - 'Smart semantic color use: red for out-of-spec regions, amber for the adequate
+    caution status — communicates process state without an extra legend entry'
+  - 'Status-reactive annotation border (color changes with capability tier: green/amber/red)
+    is a sophisticated storytelling touch'
+  - Perfect palette compliance across both themes; no dark-on-dark failures in either
+    render
+  - Clean, flat code structure; correct canvas sizing (3200x1800); reproducible seed
+    (np.random.seed(42))
   weaknesses:
-  - Uses KDE overlay instead of a fitted normal distribution curve as specified (spec
-    explicitly requests normal fit using sample mean and standard deviation)
-  image_description: The plot displays a histogram of 200 shaft diameter measurements
-    (mm) using blue bars (#306998) with white edge coloring, overlaid with a dark
-    blue KDE curve. Two orange dashed vertical lines mark the Lower Specification
-    Limit (LSL = 9.95) and Upper Specification Limit (USL = 10.05). A teal dash-dot
-    vertical line marks the target value (10.0). Light orange shaded regions highlight
-    areas outside specification limits on both sides. A white annotation box with
-    orange border in the upper right displays Cp = 1.19, Cpk = 1.18, μ = 9.9994, σ
-    = 0.0140. Below the box, the word "Adequate" appears in orange, indicating the
-    process capability status. The legend in the upper left lists KDE Fit, LSL, USL,
-    and Target. The title reads "histogram-capability · seaborn · pyplots.ai". X-axis
-    is labeled "Shaft Diameter (mm)", Y-axis is labeled "Density". Top and right spines
-    are removed. The grid is subtle with low alpha. The layout is well-proportioned
-    at 16:9.
+  - Annotation monospace text at fontsize=8 is on the small side for a 3200x1800 canvas
+    — consider raising to fontsize=9 for better thumbnail readability
+  - 'LM-02: seaborn distinctive API is used but not fully exploited — the implementation
+    is mostly matplotlib with seaborn histplot/kdeplot on top; deeper library mastery
+    would use a seaborn figure-level approach'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "histogram-capability · python · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Tablet Weight (mg)" and Y-axis label "Density" in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt. Subtle y-axis grid lines at 15% alpha. Legend with ELEVATED_BG frame (#FFFDF6) upper left. Annotation box with ELEVATED_BG background and amber border upper right — all chrome readable.
+      Data: Green histogram bars (#009E73, Imprint pos 1) at alpha=0.70 with PAGE_BG edge. Blue parametric fit curve (#4467A3, linewidth=2.5). Cyan dotted empirical KDE (#2ABCCD, linewidth=2.0). Red dashed LSL/USL lines (#AE3030, linewidth=2.0). Amber dash-dot target line (#DDCC77, linewidth=2.0). Light red out-of-spec zones and light green in-spec zone shaded via axvspan. Annotation: Cp=1.28, Cpk=1.27, mu=500.09 mg, sigma=2.61 mg, Status: Adequate.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light cream text (#F0EFE8), clearly readable. Axis labels and tick labels in appropriate light tones (#B8B7B0 for secondary). Legend box uses ELEVATED_BG (#242420). Annotation box uses ELEVATED_BG (#242420) with amber border. Grid lines in light ink at 15% alpha — subtle and appropriate. No dark-on-dark failures observed.
+      Data: All data colours identical to light render — green bars, blue parametric curve, cyan KDE, red spec limit lines, amber target line unchanged. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, annotation 18pt, legend 16pt'
+        comment: All text readable in both themes; annotation monospace at 8pt is
+          slightly small but legible at canvas scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend and annotation box well-separated
+        comment: Legend upper left and annotation box upper right well separated;
+          no text-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars well-sized with 25 bins, KDE line thick, specification
-          lines prominent
+        comment: All five overlaid elements (histogram, parametric curve, KDE, spec
+          lines, target) clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette with blue, orange, teal distinguished by
-          color and line style
+        comment: Imprint palette; semantic red for out-of-spec only; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout, plot fills canvas well
+        comment: Correct 3200x1800; good whitespace; title ~70% width; balanced labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) includes units, Density is appropriate
+        comment: Tablet Weight (mg) and Density with units; correct mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; semantic colors
+          used correctly; both themes correct'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -88,24 +103,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with intentional color palette, color-coded annotations,
-          and shaded zones
+        comment: Semantic color use, shaded capability zones, dual-curve overlay,
+          status-reactive annotation border show clear design thinking
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, white edge highlights on bars, generous
-          whitespace
+        comment: Top/right spines removed; subtle y-axis grid at 15% alpha; elevated-background
+          legend and annotation properly styled
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color-coded capability status, shaded out-of-spec zones, annotation
-          box provides immediate context
+        comment: Shaded zones create visual narrative; amber annotation border communicates
+          adequate status; clear focal point on data vs spec limits
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -113,50 +128,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with distribution curve overlay and specification
-          lines'
+        comment: 'Correct: histogram with overlaid normal distribution, spec limits,
+          target, and capability annotations'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All features present but uses KDE instead of fitted normal distribution
-          as specified
+        comment: 'All features present: histogram, parametric normal fit (scipy),
+          empirical KDE (seaborn), LSL/USL lines, target line, Cp/Cpk'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis shows measurements, Y-axis shows density, all data visible
+        comment: 'X: tablet weight (mg); Y: density; all 200 measurements represented'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend labels
+        comment: Title matches mandated format exactly; legend labels all five overlaid
+          elements with values
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows histogram, KDE fit, spec limits, target, Cp/Cpk. Adequate capability
-          scenario is interesting
+        comment: 'Comprehensive: histogram + parametric distribution + empirical KDE
+          + spec limits + target + shaded zones + full metrics annotation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter manufacturing QC - classic neutral real-world application
+        comment: Pharmaceutical tablet weight QC (target 500 mg, sigma~2.6 mg, n=200)
+          is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values for precision machining tolerances
+        comment: 200 data points in recommended range; sigma=2.61 mg plausible; Cp=1.28/Cpk=1.27
+          yields realistic Adequate status
     code_quality:
       score: 10
       max: 10
@@ -166,31 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, calculations, plot, style, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Three imports, all used
+        comment: All imports used (os, matplotlib, numpy, seaborn, Line2D, scipy.stats.norm)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code
+        comment: Appropriate complexity; no fake UI; axvspan for shaded zones is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -200,18 +218,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of axes-level API with sns.histplot and explicit ax parameter
+        comment: sns.histplot with stat=density, sns.kdeplot, sns.set_theme with rc
+          dict, axes-level API — all idiomatic seaborn
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages seaborn integrated kde=True with line_kws customization
+        passed: false
+        comment: Labels KDE as Empirical KDE (seaborn) to showcase density estimation;
+          could further leverage seaborn figure-level API
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
@@ -220,4 +242,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

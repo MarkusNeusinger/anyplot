@@ -1,43 +1,52 @@
 library: altair
+language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:47:40Z'
-updated: '2026-03-19T22:10:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318228617
+updated: '2026-06-20T15:18:28Z'
+generated_by: claude-sonnet
+workflow_run: 27874753337
 issue: 4552
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/altair/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent data storytelling with background shading zones distinguishing in-spec
-    from out-of-spec regions
-  - Colorblind-safe palette with orange/purple/blue avoiding red-green conflicts
-  - Complete spec compliance with all required features including Cp/Cpk annotations
-    and capability status
-  - Clean layer composition with well-separated visual elements and no text overlap
-  - Interactive hover highlight leveraging Altair native selection mechanism
+  - 'Excellent spec compliance: all required features (histogram, normal curve, LSL/USL,
+    target, Cp/Cpk) fully implemented'
+  - Background zones (mark_rect at 12% opacity) provide immediate visual context for
+    in-spec vs out-of-spec regions
+  - 'Semantic color use: #AE3030 for danger/out-of-spec, #4467A3 for nominal target
+    — immediately interpretable'
+  - CAPABLE status annotation gives at-a-glance process judgment, elevating data storytelling
+  - 'Perfect theme adaptation: all chrome tokens correctly flip between light and
+    dark themes'
+  - Interactive hover tooltips with binned range and count — proper Altair idiom,
+    not simulated
   weaknesses:
-  - Pre-binned histogram approach (mark_rect) instead of Altair built-in mark_bar
-    with bin transform reduces idiomatic score
-  - Subtitle font size at 16pt is slightly small relative to other text elements
-  image_description: The plot displays a process capability histogram for shaft diameter
-    measurements (mm). Blue rectangular bars form the histogram distribution centered
-    around 10.002 mm, overlaid with a dark blue fitted normal distribution curve.
-    Orange dashed vertical lines mark the LSL (9.950) and USL (10.050) specification
-    limits, labeled in bold orange text at the top. A purple dashed vertical line
-    indicates the Target (10.000), labeled in purple. A light gray dashed line marks
-    the sample mean (x̄=10.002) near the bottom. Background shading distinguishes
-    in-spec (light green) from out-of-spec (light peach/orange) zones. The Cp=1.49
-    and Cpk=1.45 capability indices are annotated in bold dark text at the top-right,
-    with a green "CAPABLE" status below. The subtitle shows n=200, σ=0.0112 mm. Axis
-    labels read "Shaft Diameter (mm)" and "Frequency" with appropriate font sizes.
-    The overall layout is clean with no grid lines and good use of canvas space.
+  - 'The Target 10.000 mark_text label uses align=center with no dx offset, causing
+    the blue dashed target rule line to visually bisect the label text. Fix: add dx=6
+    and align=left to shift the label off the rule line.'
+  - No Y-axis grid lines — subtle Y-axis grid lines (opacity ~15%) would help readers
+    estimate bar heights more precisely for a frequency/count chart.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "histogram-capability · python · altair · anyplot.ai" in bold dark text, fully readable. Subtitle in secondary text color, readable. Y-axis label "Frequency" and X-axis label "Shaft Diameter (mm)" in dark text, both clear. Tick labels in secondary dark gray, readable. All chrome dark on light — no legibility failures.
+      Data: Brand green (#009E73) histogram bars forming a bell-shaped distribution. Black normal curve overlaid. Red dashed LSL/USL lines at 9.950 and 10.050 with red bold labels. Blue dashed target line at 10.000. Gray dotted mean line at 10.002. Background zones: muted salmon/rose for out-of-spec regions, muted teal for in-spec region. Cp=1.49 Cpk=1.45 annotation in dark text top-right. "CAPABLE" in brand green. x-bar label at bottom.
+      Legibility verdict: PASS — all text readable. Minor: target rule line bisects "Target 10.000" label text visually.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light cream/white text (#F0EFE8), fully readable against dark background. Subtitle in secondary light gray. Y-axis "Frequency" and X-axis "Shaft Diameter (mm)" labels in light text, readable. Tick labels in light gray, readable. NO dark-on-dark text failures detected.
+      Data: Brand green (#009E73) histogram bars — identical color to light render. Normal curve switches to light cream/white (INK token = #F0EFE8 in dark mode), clearly visible. Red dashed LSL/USL lines, blue dashed target line, gray dotted mean line all visible. Out-of-spec zones render as dark maroon overlay; in-spec zone as dark teal overlay. "CAPABLE" in brand green (#009E73) — visible on dark surface. Cp/Cpk annotation in light text.
+      Legibility verdict: PASS — all text readable in dark theme. Theme chrome tokens correctly adapted.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -45,42 +54,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (title 28, axis titles 22, labels
-          18, annotations 17-21). Subtitle at 16pt slightly small but readable.
+        comment: 'All text readable in both themes. Minor: target rule line bisects
+          ''Target 10.000'' label text.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All text elements well-separated. LSL/USL labels offset outward,
-          no text-on-text collisions.
+        comment: Target rule line passes through center of 'Target 10.000' mark_text
+          label (no dx offset). Minor visual interference.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible with white stroke separation. Normal
-          curve and spec lines prominent.
+        comment: All elements clearly visible. Histogram bars prominent, normal curve
+          clear, LSL/USL rules visually distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Colorblind-safe palette: blue bars, orange spec limits, purple target.
-          Avoids red-green.'
+        comment: Red/green color use follows industry convention for spec charts;
+          text labels (LSL/USL) provide full CVD redundancy.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins. Background zones extend
-          edge-to-edge.
+        comment: Canvas gate passed. Good proportions with generous padding. Title
+          spans ~55% width at appropriate fontsize.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units, Frequency is descriptive.
+        comment: X-axis 'Shaft Diameter (mm)' with units, Y-axis 'Frequency'. Title
+          format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Histogram bars #009E73 (first series), spec limits #AE3030 (semantic
+          red), target #4467A3 (Imprint blue). Backgrounds #FAF8F1/#1A1A17. Both themes
+          correct.'
     design_excellence:
       score: 15
       max: 20
@@ -90,22 +108,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, background shading zones, rounded
-          bar corners, intentional typography hierarchy.
+        comment: Background zones, hover interaction, CAPABLE status annotation, subtitle
+          with stats. Above default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, custom axis colors, white stroke
-          on bars.
+        comment: No grid, no chart frame border (strokeWidth=0), white bar strokes
+          for definition, zone tints subtle.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Background zones communicate in-spec vs out-of-spec, CAPABLE status
-          provides instant insight, Cp/Cpk prominently displayed.
+        comment: CAPABLE annotation gives at-a-glance judgment. Background zones guide
+          eye. Cp/Cpk with status create clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -115,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with normal curve overlay and specification limit
-          lines.'
+        comment: Correct histogram with fitted normal distribution curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: histogram, normal curve, LSL/USL lines, target line,
-          Cp/Cpk annotations, capability status.'
+        comment: Histogram, normal curve, LSL/USL lines, target line, Cp/Cpk annotations
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X is measurement values, Y is frequency. Full data range with appropriate
-          padding.
+        comment: X = shaft diameter (mm), Y = frequency/count. Full data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Inline labels serve as identification.
+        comment: Title 'histogram-capability · python · altair · anyplot.ai' correct.
+          Legend disabled (appropriate — elements labeled directly).
     data_quality:
       score: 15
       max: 15
@@ -146,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows histogram, normal curve, spec limits, target, mean, Cp/Cpk,
-          and capability status.
+        comment: Histogram, distribution curve, LSL, USL, target, mean line, Cp, Cpk,
+          status, background zones. Comprehensive.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter manufacturing scenario - real-world, neutral, comprehensible.
+        comment: Shaft diameter in mm with realistic ±0.05 mm tolerance. 200 measurements.
+          Neutral industrial quality-control context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 measurements around 10mm, sigma 0.012mm, Cp=1.49/Cpk=1.45 - realistic
-          for capable process.
+        comment: sigma=0.012 mm, centered at 10.002 mm. Cp=1.49, Cpk=1.45. Realistic
+          capable process values.
     code_quality:
       score: 10
       max: 10
@@ -170,62 +188,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, layers, combine, save. No functions
-          or classes.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas, scipy.stats.'
+        comment: All imports (os, sys, altair, numpy, pandas, PIL, scipy.stats) are
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured layer separation. Hover is legitimate Altair interactivity.
+        comment: Appropriate complexity. sys.path guard prevents self-import. Clean
+          layer composition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct pad-only canvas
+          logic.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: alt.layer(), alt.Bin(), alt.Title with subtitle, configure_axis/configure_view,
+          alt.condition(). Fully idiomatic Altair.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of alt.layer(), encoding types, alt.Title. Pre-binning is
-          pragmatic but less idiomatic than built-in bin transform.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses selection_point for hover, conditional encoding, tooltips, HTML
-          export - distinctive Altair features.
+        comment: alt.selection_point() for hover, alt.condition() for state-dependent
+          opacity, mark_rect() for zones, binned tooltip. Good Altair-distinctive
+          usage; minor deduction for target label offset not using Altair's encoding
+          approach.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
+  - annotations
+  - html-export
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
