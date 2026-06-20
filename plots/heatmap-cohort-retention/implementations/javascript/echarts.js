@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-cohort-retention: Cohort Retention Heatmap
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-20
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;

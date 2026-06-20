@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-cohort-retention
 created: '2026-06-20T01:16:12Z'
-updated: '2026-06-20T01:24:15Z'
+updated: '2026-06-20T01:34:27Z'
 generated_by: claude-sonnet
 workflow_run: 27855622678
 issue: 4570
@@ -12,51 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Clean triangular cohort heatmap with correct shape: Jan 2024 has 10 periods,
-    Oct 2024 has 1 — exactly per spec'
-  - Perfect use of imprint_seq sequential colormap via t.seq tokens for retention
-    data (single-polarity continuous)
-  - 'Fully theme-adaptive chrome: title uses t.ink, all labels use t.inkSoft, background
-    uses t.pageBg — both renders look correct'
-  - 'All spec requirements met: sequential colormap, percentage text in cells, cohort
-    sizes in Y-axis labels, Week N axis labels, color bar'
-  - X-axis positioned at top — idiomatic choice for cohort heatmap reading pattern
-  - Cell borders use t.pageBg for clean visual separation between cells
-  - Deterministic data with realistic SaaS retention decay pattern and cohort improvement
-    trend
-  - 'animation: false set correctly; no explicit size or devicePixelRatio passed to
-    echarts.init'
-  - 'Excellent ECharts API usage: visualMap for continuous scale, label/tooltip formatters,
-    yAxis inverse'
+  - Triangular cohort heatmap shape correctly implemented — older cohorts have more
+    periods, newer cohorts fewer, giving the expected triangular form
+  - Imprint sequential colormap used correctly via t.seq tokens API, producing a green-to-blue
+    gradient that is CVD-safe and perceptually uniform
+  - 'All chrome is theme-adaptive: background uses t.pageBg, titles t.ink, axis labels
+    t.inkSoft — both renders pass the theme-readability check'
+  - 'Spec fully satisfied: triangular shape, cell percentage labels, cohort sizes
+    in y-axis labels (n=Xk), week labels on x-axis at top, colorbar legend'
+  - Informative subtitle explicitly narrates the retention improvement story
+  - 'Clean ECharts idiom: heatmap series with visualMap, inverse y-axis, axis lines/ticks/splitLines
+    all hidden, borderColor=pageBg for crisp cell separation'
   weaknesses:
-  - Cell label font size is 13px, slightly below the style-guide default of 14px for
-    JS library labels — increase to 14px for optimal readability at mobile widths
-  - 'Design storytelling is minimal: the color gradient shows retention decay but
-    there is no visual emphasis on key patterns (e.g., the clear improvement in later
-    cohorts or the steep Week 0 to Week 1 drop). Consider a subtitle or annotation
-    to guide the reader.'
-  - 'Design aesthetic is clean but not exceptional (DE-01=5/8): the plot looks like
-    a polished library default rather than a publication-ready composition. Removing
-    the axis lines or adding more generous padding would add refinement.'
-  - No explicit axis title labels (no xAxis.name for Period Since Signup, no yAxis.name
-    for Cohort Month). The descriptive tick labels partially compensate, but adding
-    brief axis names would clearly label the axes for readers unfamiliar with cohort
-    notation.
+  - 'Cell label color is hardcoded #FFFFFF (white) — on low-retention cells (~25-30%
+    values at right edge) contrast is marginal. Consider using a theme-adaptive label
+    color that switches between white and ink based on cell brightness (e.g. luminance
+    threshold on the cell value)'
+  - formatSize() helper function deviates from KISS structure; inline the formatting
+    directly in the cohortLabels mapping
+  - DE-03 storytelling is carried entirely by the subtitle text — no visual emphasis
+    on the retention improvement trend (e.g. a slight highlight or annotation on week-1
+    column could reinforce the narrative)
+  - 'LM-02: ECharts-distinctive visualMap and inverse axis are used correctly, but
+    the implementation doesn''t leverage more advanced ECharts heatmap capabilities
+    like piecewise visualMap or custom label formatter based on value thresholds'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "heatmap-cohort-retention · javascript · echarts · anyplot.ai" bold, centered, dark text (#1A1A17 via t.ink). X-axis tick labels "Week 0"–"Week 9" in muted dark (#4A4A44 via t.inkSoft), positioned above the chart. Y-axis tick labels "Jan 2024 (n=2.1k)"–"Oct 2024 (n=1.6k)" in muted dark, all readable. Color bar on right with "100%" / "0%" labels in muted dark — readable.
-      Data: Triangular heatmap — 10 cohorts, 10 periods for Jan, decreasing to 1 for Oct. Colors range from deep blue (#4467A3 range, high retention=100%) to teal-green (#009E73 range, lower retention). White cell text annotations show percentage values (e.g., "100%", "72%", "25%"). Cell borders in warm off-white match background for clean separation.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "heatmap-cohort-retention · javascript · echarts · anyplot.ai" in dark ink at top center, clearly readable. Subtitle "Monthly SaaS cohorts — later cohorts show improved Week-1 retention" in softer ink below. X-axis week labels (Week 0–Week 9) rendered at top in inkSoft; Y-axis cohort labels (Jan 2024 (n=2.1k) … Oct 2024 (n=1.6k)) in inkSoft on left. Colorbar on right with "100%" / "0%" text labels.
+      Data: Triangular heatmap — 10 cohorts × 10 max periods. Color gradient from lighter teal-green (low retention ~25%) to deep blue-green (100%). Percentage values printed as white text with a subtle dark border on each cell. The triangular void in the lower-right is empty (correctly, as newer cohorts have fewer elapsed periods). First series anchor is the imprint_seq gradient starting at #009E73 (brand green).
+      Legibility verdict: PASS — all text readable, cell labels legible even on lighter cells thanks to textBorderColor.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light cream (#F0EFE8 via t.ink), clearly visible. X-axis and Y-axis tick labels in light muted (#B8B7B0 via t.inkSoft), all readable. Color bar labels light-colored and readable. No dark-on-dark text failures observed.
-      Data: Data colors are identical to light render — same blue-to-teal imprint_seq progression. White cell text annotations remain readable on colored cells. Cell borders in near-black match background.
-      Legibility verdict: PASS — all text is clearly readable against the near-black background. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title and subtitle visible in light ink (F0EFE8 / B8B7B0 range). X-axis and Y-axis labels in inkSoft light tone — all clearly readable against dark background. Colorbar legend text visible. No dark-on-dark failure observed.
+      Data: Cell colors are identical to the light render — same teal-green to blue gradient (data colors unchanged, only chrome flips). White percentage labels with subtle border remain readable on all cells.
+      Legibility verdict: PASS — no dark-on-dark failure. All text, axis labels, and cell values are clearly legible against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,55 +61,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=22, axis labels=13-14, cell
-          labels=13, colorbar=13). All text readable in both themes. Minor: cell labels
-          at 13px slightly below 14px style-guide default for JS libraries.'
+        comment: 'All font sizes explicitly set (title 22, subtitle 14, axis labels
+          13-14, cell labels 14). Readable in both themes. Minor: cell label color
+          hardcoded #FFFFFF — marginally lower contrast on lightest cells.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render. Cell annotations, axis
-          labels, and color bar all have clear space.
+        comment: No overlapping elements. Cohort labels with sizes fit cleanly, week
+          labels well-spaced, cell percentages clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible, white text annotations readable, color
-          bar well-sized. Triangular shape clearly defined.
+        comment: Heatmap cells are prominent and well-sized for the square canvas.
+          All percentage labels clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap (green to blue) is CVD-safe. White text
-          on colored cells provides good contrast.
+        comment: Sequential green-to-blue gradient is CVD-safe. White cell text with
+          dark border ensures contrast on all cell colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) appropriate for symmetric heatmap. Grid
-          margins (left=210, right=110, top=110, bottom=60) give good spacing. Canvas
-          gate passed.
+        comment: '2400x2400 square canvas (correct orientation directive present).
+          Good margins: left=210 for y-axis labels, right=110 for colorbar, top=130
+          for title+x-axis, bottom=80. Triangular heatmap fills space naturally.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Week N tick labels convey time units. Cohort labels include month/year
-          and cohort size (n=Xk). Color bar shows 0%-100%. Descriptive tick labels
-          serve as effective axis labels per spec requirements.
+        comment: 'Title exact format correct. X-axis: Week 0–Week 9 descriptive. Y-axis:
+          cohort month+year with cohort sizes. Colorbar: 0%/100% labels.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses t.seq (imprint_seq: green to blue) for single-polarity continuous
-          retention data — correct cmap choice. Background uses t.pageBg (#FAF8F1
-          light / #1A1A17 dark). All chrome uses t.ink and t.inkSoft. Both renders
-          are theme-correct.'
+        comment: 'Uses t.seq (imprint_seq) for continuous heatmap — correct for single-polarity
+          retention data. Background is t.pageBg (#FAF8F1 light / #1A1A17 dark). Chrome
+          tokens correctly applied. Data colors identical across both renders.'
     design_excellence:
       score: 12
       max: 20
@@ -125,26 +117,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above well-configured library default (4). Clean triangular heatmap
-          with professional color scheme, intentional x-axis top placement, cell borders
-          using theme background. Not yet publication-ready (8).
+        comment: 'Above generic defaults: clean Imprint palette, subtitle for context,
+          borderColor=pageBg for crisp cell borders. Not quite publication-ready —
+          no additional polish beyond standard heatmap styling.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: axis ticks removed, split lines removed, cell borders
-          use t.pageBg. Axis lines still present with inkSoft color (acceptable).
-          Not perfect (6) but clearly above minimal defaults.'
+        comment: 'Spines removed (axisLine: show false), ticks removed, splitLines
+          off. Clean whitespace and generous margins. Cells neatly separated via borderColor=pageBg.
+          Good but not fully polished (e.g., could use more breathing room or typographic
+          refinement).'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Color gradient communicates retention decay. Triangular shape tells
-          the 'newer cohorts have less history' story. But no explicit focal point
-          or annotation to highlight the cohort improvement trend or the Week 0-to-1
-          churn cliff.
+        comment: Subtitle explicitly names the retention improvement insight. Triangular
+          shape naturally guides the eye. However, no visual emphasis highlights the
+          week-1 retention trend — the story is told in text but not in visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -154,30 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap with triangular shape per spec.
+        comment: Correct cohort retention heatmap with triangular shape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: sequential colormap, cell percentage text, cohort
-          sizes in labels, Week N x-axis labels, color bar, period 0 = 100%, triangular
-          shape.'
+        comment: Triangular shape ✓, cell percentage labels ✓, cohort sizes in y-axis
+          ✓, Week N x-axis labels ✓, colorbar ✓, period 0 = 100% ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=period (Week 0-9), Y=cohort (Jan-Oct 2024), color=retention rate.
-          Correct mapping throughout.
+        comment: X=periods since signup, Y=cohorts, color=retention rate, cell text=retention
+          %, y-label includes cohort size.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-cohort-retention · javascript · echarts · anyplot.ai''
-          — correct format. Color bar with 0%/100% labels replaces categorical legend
-          appropriately.'
+        comment: Title is exactly 'heatmap-cohort-retention · javascript · echarts
+          · anyplot.ai'. Colorbar legend with 0%/100% range labels.
     data_quality:
       score: 15
       max: 15
@@ -187,60 +177,65 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 cohorts, 10 periods — within spec range. Triangular shape, period
-          0 = 100%, realistic decay, cohort quality variation (product improvement
-          over the year).
+        comment: 10 cohorts × up to 10 periods. Shows retention decay (100% → ~25-28%
+          over 9 weeks) and cohort quality improvement across months. Realistic triangular
+          void for newer cohorts.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS product analytics with monthly cohorts Jan-Oct 2024. Realistic
-          business context, plausible cohort sizes (1.6k-2.6k users).
+        comment: Monthly SaaS product cohorts for 2024. Realistic retention curve
+          with natural decay. Plausible cohort sizes (1640–2580 users). Product improvement
+          narrative is credible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention 25-100% is realistic for SaaS. Cohort sizes 1600-2600 are
-          plausible. Decay pattern (100% → 82% → 68% → ...) matches typical SaaS retention
-          curves.
+        comment: Retention rates from 100% at week 0 to ~25-28% at week 9 — plausible
+          weekly SaaS retention. Cohort multipliers (0.88–0.99) produce realistic
+          improvement trend. Cohort sizes appropriate for mid-size SaaS.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean structure: data → init → option. Small formatSize helper is
-          justified (3 lines, label formatting). No classes.'
+        comment: 'Linear data → option → setOption structure. Minor deviation: formatSize()
+          helper function adds one level of abstraction.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded, deterministic. No random number generation.
+        comment: Fully deterministic — no RNG. Data built from hard-coded arrays with
+          simple arithmetic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Correct use of window.ANYPLOT_TOKENS and echarts globals.
+        comment: No imports — ECharts uses globals. All globals used (window.ANYPLOT_TOKENS,
+          echarts, document).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. Good variable naming. No over-engineering.
+        comment: Clean, well-organized code. No fake interactivity (tooltip exists
+          but won't appear in PNG — this is expected per echarts.md). Appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. echarts.init with no explicit size and no
-          devicePixelRatio. Correct harness API usage.'
+        comment: ECharts is an interactive library — harness generates both plot-{theme}.png
+          and plot-{theme}.html. Current ECharts 5.5.1 API used correctly.
     library_mastery:
       score: 8
       max: 10
@@ -250,31 +245,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expertly uses ECharts high-level API: heatmap series, visualMap
-          component, axis position/inverse, label/tooltip formatters. All idiomatic
-          ECharts patterns.'
+        comment: 'Fully idiomatic: echarts.init on #container, animation: false, heatmap
+          series type, visualMap for continuous color, inverse:true on y-axis, position:top
+          on x-axis. Correct mount-node contract.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses visualMap (ECharts-distinctive continuous scale), heatmap series
-          with cell labels, custom formatters, xAxis at top, yAxis inverse. Good use
-          of ECharts-specific features though not uniquely novel.
-  verdict: REJECTED
+        comment: Uses ECharts-specific visualMap (calculable, orient, itemWidth/Height,
+          text), inverse y-axis, x-axis at top position, tooltip with custom formatter,
+          and itemStyle borderColor=pageBg for clean cell separation. Could go further
+          with piecewise visualMap or value-threshold label coloring.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
-  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
   - edge-highlighting
