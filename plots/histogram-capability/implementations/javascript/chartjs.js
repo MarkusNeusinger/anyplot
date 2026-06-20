@@ -56,6 +56,18 @@ const yMax = Math.ceil(maxFreq * 1.2 / 5) * 5;
 // ── Spec-lines + capability annotation plugin ────────────────────────────────
 const specPlugin = {
   id: 'specLines',
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+
+    // In-spec region background shading (behind histogram bars)
+    const xLSL = xScale.getPixelForValue(LSL);
+    const xUSL = xScale.getPixelForValue(USL);
+    ctx.save();
+    ctx.fillStyle = t.palette[0] + '20';
+    ctx.fillRect(xLSL, chartArea.top, xUSL - xLSL, chartArea.bottom - chartArea.top);
+    ctx.restore();
+  },
   afterDatasetsDraw(chart) {
     const { ctx, chartArea, scales } = chart;
     const xScale = scales.x;
@@ -132,7 +144,7 @@ new Chart(canvas, {
         type: 'line',
         label: 'Normal fit',
         data: normalData,
-        borderColor: t.palette[2],
+        borderColor: t.palette[1],
         borderWidth: 3.5,
         pointRadius: 0,
         tension: 0.4,
@@ -174,7 +186,7 @@ new Chart(canvas, {
           callback: v => v.toFixed(3),
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: 'Shaft Diameter (mm)',
@@ -193,7 +205,7 @@ new Chart(canvas, {
           stepSize: 10,
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: 'Frequency',
