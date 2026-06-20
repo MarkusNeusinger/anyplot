@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -83,7 +83,7 @@ curve_source = ColumnDataSource(data={"x": x_curve, "y": y_curve})
 p = figure(
     width=3200,
     height=1800,
-    title="histogram-capability · bokeh · anyplot.ai",
+    title="histogram-capability · python · bokeh · anyplot.ai",
     x_axis_label="Shaft Diameter (mm)",
     y_axis_label="Frequency",
     toolbar_location=None,
@@ -182,7 +182,9 @@ p.title.text_font_style = "bold"
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_style = "normal"
 p.yaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
