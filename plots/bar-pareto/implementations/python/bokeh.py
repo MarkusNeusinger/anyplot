@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -22,6 +22,7 @@ import numpy as np
 from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Label, LinearAxis, PrintfTickFormatter, Range1d, Span
 from bokeh.plotting import figure
+from bokeh.resources import INLINE
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -142,23 +143,28 @@ p.scatter(
     line_width=3,
 )
 
-# Percentage labels — vital few only to avoid crowding at right end
-for i, pct in enumerate(cumulative_pct):
-    if not vital_mask[i]:
-        continue
-    p.add_layout(
-        Label(
-            x=i,
-            y=pct,
-            text=f"{pct:.0f}%",
-            text_font_size="24pt",
-            text_color=LINE_COLOR,
-            text_font_style="bold",
-            text_align="center",
-            y_offset=22,
-            y_range_name="pct",
-        )
-    )
+# Percentage labels — use text glyph with categorical x for correct anchoring
+# (Label.x must be numeric; p.text() accepts string categories via ColumnDataSource)
+vital_indices = [i for i in range(len(categories)) if vital_mask[i]]
+label_source = ColumnDataSource(
+    data={
+        "lx": [categories[i] for i in vital_indices],
+        "ly": [float(cumulative_pct[i]) + 3 for i in vital_indices],  # 3 pct-pts above marker
+        "lt": [f"{cumulative_pct[i]:.0f}%" for i in vital_indices],
+    }
+)
+p.text(
+    x="lx",
+    y="ly",
+    text="lt",
+    source=label_source,
+    y_range_name="pct",
+    text_font_size="24pt",
+    text_color=LINE_COLOR,
+    text_font_style="bold",
+    text_align="center",
+    text_baseline="bottom",
+)
 
 # 80% reference line
 p.add_layout(
@@ -249,9 +255,9 @@ if p.legend:
     legend.padding = 15
     legend.spacing = 8
 
-# Save HTML artifact (interactive)
+# Save HTML artifact (interactive) — inline resources so Selenium can render via file://
 output_file(f"plot-{THEME}.html")
-save(p)
+save(p, resources=INLINE)
 
 # Screenshot with Selenium headless Chrome
 W, H = 3200, 1800
