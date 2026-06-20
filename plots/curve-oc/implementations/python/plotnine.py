@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-20
@@ -42,6 +42,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+ZONE_ALPHA = 0.09 if THEME == "light" else 0.15
 
 # Data
 fraction_defective = np.linspace(0, 0.15, 200)
@@ -95,15 +96,15 @@ linetypes = {"n=75, c=2": "solid", "n=120, c=1": "dashed", "n=200, c=2": "dashdo
 plot = (
     ggplot(df, aes(x="fraction_defective", y="probability_acceptance", color="plan", linetype="plan"))
     # Shaded quality zones
-    + annotate("rect", xmin=0, xmax=aql, ymin=0, ymax=1.05, fill=IMPRINT[0], alpha=0.09)
-    + annotate("rect", xmin=ltpd, xmax=0.15, ymin=0, ymax=1.05, fill=IMPRINT[4], alpha=0.09)
+    + annotate("rect", xmin=0, xmax=aql, ymin=0, ymax=1.05, fill=IMPRINT[0], alpha=ZONE_ALPHA)
+    + annotate("rect", xmin=ltpd, xmax=0.15, ymin=0, ymax=1.05, fill=IMPRINT[4], alpha=ZONE_ALPHA)
     # Discrimination envelope ribbon — shows range of plan discrimination power
     + geom_ribbon(
         aes(x="fraction_defective", ymin="ymin", ymax="ymax"),
         data=envelope,
         inherit_aes=False,
-        fill=IMPRINT[0],
-        alpha=0.10,
+        fill=INK_MUTED,
+        alpha=0.06,
     )
     # AQL / LTPD reference lines
     + geom_vline(xintercept=aql, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.8)
@@ -122,15 +123,15 @@ plot = (
         shape="o",
     )
     # AQL / LTPD axis labels
-    + annotate("text", x=aql + 0.002, y=0.05, label="AQL", size=3.0, color=INK_MUTED, fontstyle="italic")
-    + annotate("text", x=ltpd + 0.002, y=0.11, label="LTPD", size=3.0, color=INK_MUTED, fontstyle="italic")
+    + annotate("text", x=aql + 0.002, y=0.05, label="AQL", size=3.5, color=INK_MUTED, fontstyle="italic")
+    + annotate("text", x=ltpd + 0.002, y=0.11, label="LTPD", size=3.5, color=INK_MUTED, fontstyle="italic")
     # Risk annotations
     + annotate(
         "text",
-        x=aql + 0.007,
+        x=aql + 0.012,
         y=1 - alpha_risk - 0.07,
         label=f"α = {alpha_risk:.2f}",
-        size=2.8,
+        size=3.2,
         color=IMPRINT[0],
         fontweight="bold",
     )
@@ -139,7 +140,7 @@ plot = (
         x=ltpd + 0.007,
         y=beta_risk + 0.06,
         label=f"β = {beta_risk:.2f}",
-        size=2.8,
+        size=3.2,
         color=IMPRINT[0],
         fontweight="bold",
     )
