@@ -45,13 +45,14 @@ Label(
     padding  = (0, 0, 12, 0),
 )
 
-grid_color = RGBAf(INK.r, INK.g, INK.b, 0.12f0)
+grid_color  = RGBAf(INK.r, INK.g, INK.b, 0.12f0)
+spine_color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.35f0)
 
 # Left panel — Lissajous figure
 ax1 = Axis(
     fig[1, 1];
     title              = "Lissajous Figure · sin(3t), sin(2t)",
-    titlesize          = 16,
+    titlesize          = 18,
     titlecolor         = INK,
     xlabel             = "x = sin(3t)",
     ylabel             = "y = sin(2t)",
@@ -68,8 +69,8 @@ ax1 = Axis(
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
-    leftspinecolor     = INK_SOFT,
-    bottomspinecolor   = INK_SOFT,
+    leftspinecolor     = spine_color,
+    bottomspinecolor   = spine_color,
     xgridcolor         = grid_color,
     ygridcolor         = grid_color,
     aspect             = DataAspect(),
@@ -92,7 +93,7 @@ scatter!(ax1, [x_liss[1]], [y_liss[1]];
 ax2 = Axis(
     fig[1, 2];
     title              = "Archimedean Spiral · t·cos(t), t·sin(t)",
-    titlesize          = 16,
+    titlesize          = 18,
     titlecolor         = INK,
     xlabel             = "x = t·cos(t)",
     ylabel             = "y = t·sin(t)",
@@ -109,8 +110,8 @@ ax2 = Axis(
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
-    leftspinecolor     = INK_SOFT,
-    bottomspinecolor   = INK_SOFT,
+    leftspinecolor     = spine_color,
+    bottomspinecolor   = spine_color,
     xgridcolor         = grid_color,
     ygridcolor         = grid_color,
     aspect             = DataAspect(),
@@ -135,6 +136,9 @@ scatter!(ax2, [x_spiral[end]], [y_spiral[end]];
     color       = ANYPLOT_SEQ[1.0],
     strokecolor = INK,
     strokewidth = 1.5)
+
+# Mid-curve directional label near spiral midpoint (t ≈ 2π: x ≈ 6.28, y ≈ 0)
+text!(ax2, 5.0, 1.8; text = "t = 2π →", color = INK_SOFT, fontsize = 11, font = :italic, align = (:left, :bottom))
 
 # Colorbar — shared direction legend for both panels
 Colorbar(
