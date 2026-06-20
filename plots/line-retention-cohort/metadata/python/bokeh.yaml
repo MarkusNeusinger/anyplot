@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-retention-cohort
 created: '2026-03-16T20:44:38Z'
-updated: '2026-06-20T03:31:38Z'
+updated: '2026-06-20T03:41:38Z'
 generated_by: claude-sonnet
 workflow_run: 27858562402
 issue: 4572
@@ -12,52 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-rete
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Correct Imprint palette in canonical order (Jan 2025 = #009E73 as first series,
-    through position 5 for May 2025)'
-  - 'Progressive visual weight encoding: older cohorts are thinner (2.5pt) and more
-    transparent (alpha=0.55), newer cohorts are thicker (5.5pt) and fully opaque (alpha=1.0)
-    — exactly what the spec recommends'
-  - 20% retention reference line implemented correctly as a Bokeh Span model with
-    a theme-adaptive INK_MUTED label
-  - 'Both renders pass theme-readability: light (#FAF8F1) and dark (#1A1A17) backgrounds
-    correct, all text readable in both themes, data colors identical between themes'
-  - 'Full idiomatic Bokeh usage: ColumnDataSource per series, HoverTool with formatted
-    tooltips, Span model, custom Legend with glyph configuration, HTML+PNG dual output
-    via Selenium'
-  - Canvas gate passed (3200×1800), min_border values match library guide, toolbar_location=None
-    during PNG save then re-enabled for HTML artifact
-  - 'Perfect spec compliance: all 5 cohorts start at 100%, legend shows ''Month YYYY
-    (n=X,XXX)'', Y-axis 0–105%, dashed lines for oldest two cohorts, solid for newer
-    three'
+  - Progressive visual weight (older cohorts = thinner + lower alpha + dashed) creates
+    intentional narrative hierarchy, exactly as spec recommends
+  - 'All five Imprint palette positions used in canonical order with correct first
+    series #009E73 for Jan 2025'
+  - 20% retention threshold reference line (Span) implemented with readable label
+    — meaningful benchmark annotation
+  - 'Perfect spec compliance: all curves start at 100%, legend shows cohort label
+    + size (n=X,XXX format), Y-axis 0–100% with gridlines'
+  - HoverTool provides genuine interactivity for the HTML artifact; scatter markers
+    atop each line segment add data-point clarity
+  - Theme-adaptive chrome complete and correct — both light (#FAF8F1) and dark (#1A1A17)
+    renders pass legibility check with no dark-on-dark failures
+  - Code is clean, reproducible (seed=42), all imports used, KISS structure throughout
   weaknesses:
-  - Legend text set to 28pt but the library guide recommends 34pt for legend labels
-    at 3200×1800 canvas — the legend entries ('Jan 2025 (n=1,245)' etc.) are slightly
-    undersized relative to the axis tick labels at 34pt, creating a minor visual imbalance
-  - Axis labels render in Bokeh's default italic font style; setting p.xaxis.axis_label_text_font_style
-    = 'normal' and p.yaxis.axis_label_text_font_style = 'normal' would improve typographic
-    consistency with other library implementations
-  - 'DE-02 (Visual Refinement): the box frame is removed via outline_line_color=None
-    which is correct in Bokeh, but whitespace and margin feel could benefit from slightly
-    more top margin (min_border_top=130) to give the 50pt title more breathing room
-    above the plot area'
+  - Jan 2025 cohort (alpha=0.55, line_width=2.5, dashed green) is very faint in both
+    renders — especially in the dark render it nearly disappears; consider raising
+    floor alpha to 0.65 and minimum line_width to 3.0 to keep all cohorts traceable
+  - May 2025 cohort is rendered in matte red (#AE3030, Imprint slot 5), which is the
+    semantic anchor for bad/loss/error roles — in this retention chart the most-recent
+    cohort is the best performer, so using red for it could confuse readers expecting
+    red=bad; consider swapping to a non-red canonical order or adding a note clarifying
+    the canonical ordering
+  - Legend at label_text_font_size='34pt' produces a large legend block in the upper-right;
+    glyph_height/width of 36 is slightly small relative to the 34pt label text — consider
+    raising glyph sizes to 48–52 to match the label height better
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "line-retention-cohort · python · bokeh · anyplot.ai" in dark ink, spans ~50% of canvas width at 50pt — readable. Y-axis label "Retention Rate (%)" and X-axis label "Weeks Since Signup" in dark ink at 42pt, both in italic (Bokeh default). Tick labels at 34pt in INK_SOFT (#4A4A44). Legend in top-right with semi-transparent elevated background (#FFFDF6), text at 28pt in INK_SOFT. "20% threshold" label in INK_MUTED at right side of dashed reference line.
-      Data: 5 cohort lines in Imprint palette order — Jan 2025 (#009E73 green, dashed, thin, alpha 0.55), Feb 2025 (#C475FD lavender, dashed, alpha 0.65), Mar 2025 (#4467A3 blue, solid, alpha 0.75), Apr 2025 (#BD8233 ochre, solid, alpha 0.88), May 2025 (#AE3030 red, solid, thickest, alpha 1.0). Markers visible at each weekly data point. Horizontal dashed line at 20% retention. Subtle horizontal Y-grid only at 12% opacity.
-      Legibility verdict: PASS — all title, axis labels, tick labels, legend text, and the 20% threshold annotation are clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "line-retention-cohort · python · bokeh · anyplot.ai" in dark #1A1A17, clearly readable. X-axis label "Weeks Since Signup" and Y-axis label "Retention Rate (%)" in matching dark ink, both readable. Tick labels in secondary INK_SOFT color, clearly legible. Y-grid only, alpha ~0.12, very subtle.
+      Data: Five cohort curves using Imprint palette positions 1–5 (green, purple, blue, ochre, red). Progressive visual weight: Jan 2025 (green, dashed, thin, alpha=0.55) through May 2025 (red, solid, thick, alpha=1.0). All curves start at 100% at week 0. Scatter markers at each data point add definition. Dashed horizontal reference line at 20% with "20% threshold" annotation.
+      Legend: Top-right, elevated background (#FFFDF6), shows all 5 cohorts with cohort label and size (n=X,XXX format).
+      Legibility verdict: PASS — all text readable. Minor note: Jan 2025 line at alpha=0.55 is faint but traceable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in INK (#F0EFE8 near-white), clearly readable. Axis labels in same light color, tick labels in INK_SOFT (#B8B7B0). Legend elevated box uses #242420, text in INK_SOFT. "20% threshold" label adapts to INK_MUTED (#A8A79F) and is visible. Grid lines subtle (INK at 12% opacity = near-white at 12% on dark bg, appropriately subtle).
-      Data: Identical data colors to light render — Jan 2025 green, Feb 2025 lavender, Mar 2025 blue, Apr 2025 ochre, May 2025 red. Marker edge color PAGE_BG = #1A1A17 in dark theme creates a subtle ring that blends with the background (intended, no clipping issue). All 5 cohort lines and data points clearly visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark issues detected. Title, axis labels, tick labels, legend, and annotation are all readable against the #1A1A17 surface.
+      Background: Warm near-black #1A1A17 — correct, no pure black.
+      Chrome: Title in light #F0EFE8, clearly readable against dark surface. Axis labels and tick labels in appropriate light-toned secondary tokens — no dark-on-dark failures observed. Grid lines visible but subtle.
+      Data: All five cohort colors are identical to the light render (green, purple, blue, ochre, red) — only chrome flipped. Lines, scatter markers, and the 20% threshold annotation are all visible. Jan 2025 (alpha=0.55) is more challenging to see on the dark background but remains traceable.
+      Legend: Dark elevated background (#242420), text in light secondary color, fully readable.
+      Legibility verdict: PASS — all chrome elements readable. Jan 2025 line is intentionally de-emphasized but visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -65,57 +64,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 50pt, axis labels 42pt, tick labels 34pt all correctly sized
-          and readable in both themes. Legend at 28pt is slightly below 34pt standard,
-          creating minor imbalance vs tick labels.
+        comment: 'All text explicitly sized (50pt title, 42pt axis labels, 34pt ticks/legend).
+          Readable in both themes. Minor: legend glyph sizes (36) slightly small relative
+          to 34pt label text.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps with data or other text. '20% threshold' label positioned
-          at x=11.8 with right alignment stays within plot bounds.
+        comment: No text-on-text or text-on-data collisions. '20% threshold' annotation
+          at x=11.8 is well-placed with no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 5 cohort lines clearly visible. Markers sized 9-17px (increasing
-          per cohort). Data density is sparse (5 cohorts × 13 points) so prominent
-          markers appropriate.
+        comment: Intentional per spec ('older cohorts thinner/more transparent').
+          Jan 2025 at alpha=0.55 + dashed + width=2.5 is very faint, especially on
+          dark render. Floor alpha could be raised.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimized. Redundant encoding via linestyle
-          (dashed vs solid) and line weight aids differentiation beyond color.
+        comment: Imprint palette + redundant encoding (line width, alpha, dash pattern)
+          provides multiple CVD-safe differentiation channels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200×1800). min_border values correct (bottom=160,
-          left=180, top=110, right=60). No overflow or clipping detected. Legend placement
-          in top-right does not obscure data.
+        comment: 3200x1800 canvas confirmed (gate passed). Title spans ~55% of width
+          — appropriate. Generous min_border_* reservations. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Retention Rate (%)' includes unit. X-axis 'Weeks Since Signup'
-          is descriptive. Title format 'line-retention-cohort · python · bokeh · anyplot.ai'
-          correct.
+        comment: 'Title matches required format. X: ''Weeks Since Signup'', Y: ''Retention
+          Rate (%)'' — both descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Jan 2025 = #009E73 correct. All 5 cohorts use canonical
-          Imprint positions 1-5. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
-          between themes, only chrome flips.'
+        comment: 'First series #009E73. All 5 cohorts use Imprint positions 1–5 in
+          canonical order. Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -123,26 +119,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): progressive visual weight encoding (thin+dashed
-          older → thick+solid newer) demonstrates intentional design hierarchy. Palette
-          applied correctly with opacity graduation.'
+        comment: 'Above default (4): progressive line weight + alpha + dash is intentional
+          and elegant. Scatter markers on line segments add polish. Custom Imprint
+          palette. Reference threshold line adds context without clutter.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): outline_line_color=None removes box frame (L-frame
-          via axis lines), Y-only grid at 12% opacity is subtle, generous min_border
-          whitespace. Axis labels render in Bokeh''s default italic style which is
-          a minor refinement miss.'
+        comment: 'Above default (2): Y-grid only at alpha=0.12, no X-grid, outline_line_color=None
+          (L-shape frame), minor ticks removed, legend with elevated bg and subtle
+          border.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): 20% reference line creates a meaningful benchmark,
-          progressive weight makes May 2025 (best retention) the natural focal point.
-          Dashed vs solid linestyle adds redundant encoding for temporal ordering.'
+        comment: 'Above default (2): progressive opacity/width hierarchy clearly directs
+          attention to recent cohorts. 20% threshold benchmark creates meaningful
+          context. Diverging curves tell a story of improving retention.'
     spec_compliance:
       score: 15
       max: 15
@@ -152,30 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with multiple overlapping cohort curves, all starting
-          at 100%.
+        comment: Multi-line retention curve chart — exactly what spec requires.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 100% start, legend with ''Month (n=size)'',
-          Y-axis 0-100%, X-axis time since signup, decreasing opacity for older cohorts,
-          20% threshold reference line.'
+        comment: All curves start at 100% at t=0. Legend shows cohort + size. Y-axis
+          0–100% with gridlines. X-axis is time since signup. Opacity/width emphasis
+          for older cohorts. 20% reference threshold.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup (0-12), Y=retention rate (0-100%). All 5 cohorts
-          shown across 13 time points.
+        comment: X=weeks since signup, Y=retention rate (%), color=cohort identity,
+          line weight/alpha=cohort age.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-retention-cohort · python · bokeh · anyplot.ai' is correct
-          format. Legend labels 'Jan 2025 (n=1,245)' match spec example format.
+        comment: 'Title: ''line-retention-cohort · python · bokeh · anyplot.ai''.
+          Legend: ''Jan 2025 (n=1,245)'' format for all 5 cohorts.'
     data_quality:
       score: 15
       max: 15
@@ -185,25 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full cohort comparison: exponential decay curves, temporal
-          divergence, trend comparison, retention benchmark line. All key retention
-          analysis features visible.'
+        comment: 5 cohorts (within 3–6 spec range). 0–12 weeks (13 data points per
+          cohort — slightly above 6-12 range but covers 12-week window). Varying decay
+          rates show retention trend improvement.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly signup cohorts tracked weekly for 12 weeks — standard product
-          analytics scenario. Cohort sizes 1,245-1,680 are realistic. Decay rates
-          produce plausible 8-49% retention at week 12.
+        comment: Monthly cohorts Jan–May 2025 for product analytics. Exponential decay
+          model is realistic. Improving retention trend across cohorts is plausible.
+          Cohort sizes 1,245–1,680 are realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-100% with 105 ceiling for breathing room. Decay spread (0.06-0.22)
-          creates good visual differentiation showing improving product retention
-          over time.
+        comment: 0–100% Y scale appropriate. 0–12 weeks X scale appropriate. Retention
+          spreads from ~5% to ~50% at week 12 — realistic variation.
     code_quality:
       score: 10
       max: 10
@@ -213,8 +206,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level script, no classes or functions. Linear flow from data
-          generation to output.
+        comment: No functions or classes. Clean top-level script with a single for
+          loop for cohort iteration.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,44 +219,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: io (BytesIO), os (getenv), time (sleep), pathlib.Path,
-          numpy, bokeh.io/models/plotting, PIL.Image, selenium.'
+        comment: 'All imports used: io, os, time, pathlib, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Cohort data organized in a dict. Iteration over cohorts builds sources
-          and legend items cleanly. No fake UI or unnecessary complexity.
+        comment: No fake UI. HoverTool is real interactivity. Clean loop for multi-series
+          rendering. Legend built correctly for grouped line+scatter pairs.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via Selenium crop and plot-{THEME}.html twice
-          (once without toolbar for screenshot, once with toolbar for interactive
-          artifact).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare 'plot.png'.
+          Current API used.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource used for every series (Bokeh's recommended pattern).
-          HoverTool, Span, Label models used idiomatically. Legend built via items
-          list and add_layout(). Toolbar lifecycle managed correctly.
+        comment: ColumnDataSource used correctly per series. figure() with all canonical
+          parameters. Legend constructed with items list for grouped line+scatter
+          glyphs — correct approach for multi-glyph legend entries.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Bokeh-specific: HoverTool with formatted tooltip fields, Span model
-          for reference line, Label model for annotation, custom Legend with glyph_height/width/spacing/padding,
-          HTML+PNG dual artifact via Selenium. Strong use of Bokeh''s interactive+static
-          hybrid output.'
+        comment: HoverTool with @column tooltips. Span for reference line. Label for
+          annotation. HTML artifact saved alongside PNG. Selenium screenshot pattern
+          from bokeh.md canonical pattern.
   verdict: APPROVED
 impl_tags:
   dependencies:
