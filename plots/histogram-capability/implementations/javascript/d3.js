@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-capability: Process Capability Plot with Specification Limits
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
