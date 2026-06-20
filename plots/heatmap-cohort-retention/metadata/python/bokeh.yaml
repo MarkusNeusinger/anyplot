@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:46:00Z'
-updated: '2026-06-20T01:03:24Z'
+updated: '2026-06-20T01:26:54Z'
 generated_by: claude-sonnet
 workflow_run: 27855132428
 issue: 4570
@@ -12,44 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Complete spec implementation: all required features present — triangular shape,
-    cell text, cohort sizes, color bar, Month N labels'
-  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) applied to continuous
-    retention data'
-  - Full theme-adaptive chrome in both renders with no dark-on-dark failures
-  - 'Idiomatic Bokeh patterns: ColumnDataSource, transform(), HoverTool, ColorBar
-    all used correctly'
-  - Insight annotation adds editorial value and storytelling
-  - Reproducible data with np.random.seed(42) and realistic SaaS cohort scenario
-  - CDP viewport override ensures exact 2400x2400 canvas dimensions
+  - Correct triangular cohort heatmap shape with 10 cohorts x 10 periods; Month 0
+    is always 100% for every cohort
+  - 'Full spec compliance: cohort sizes shown in y-axis labels, retention text inside
+    cells, colorbar with Retention % label'
+  - 'Imprint sequential colormap correctly interpolates #009E73 to #4467A3 (imprint_seq),
+    verified via endpoint check'
+  - Proper theme-adaptive chrome in both renders — INK/INK_SOFT/INK_MUTED tokens correctly
+    applied; no dark-on-dark failures
+  - 'Idiomatic Bokeh usage: ColumnDataSource, transform() for color mapping, add_tools()
+    for HoverTool, add_layout() for Label/ColorBar'
+  - HTML export as catalog artifact + Selenium headless screenshot correctly handles
+    Bokeh JS rendering
+  - Insight annotation adds data storytelling value (Month 3 retention range across
+    cohorts)
+  - HoverTool provides Bokeh-distinctive interactive exploration; toolbar disabled
+    for clean static export
   weaknesses:
-  - 'Annotation overlap: Label at screen x=30, y=30 overlaps the Oct 2024 (n=1,266)
-    y-axis label at bottom-left — increase y to 65+ or reposition to upper-right triangular
-    empty space'
-  - 'Top header density: 42pt x-axis label immediately below 50pt title creates compressed
-    visual hierarchy — reduce axis label to 34pt or increase min_border_top from 230
-    to 280'
-  - 'Design sophistication could be stronger: consider varying cell text size for
-    100% baseline column or adding subtle visual hierarchy in the empty triangular
-    region'
+  - X-axis label ("Months Since Signup") is set at 34pt, same as tick labels, while
+    Y-axis label ("Signup Cohort") is 42pt — creates a visible axis-label size imbalance;
+    both should be 42pt per bokeh style guide
+  - X-axis tick labels (Month 0 through Month 9) at 34pt are tightly packed across
+    10 columns in 2400px canvas; estimated ~175px label width in ~198px columns leaves
+    minimal breathing room — consider reducing to 28pt or rotating labels
+  - Design Excellence is competent but not distinctive — no cell separation lines,
+    no per-column highlights, and the colormap ramp (both endpoints are mid-dark)
+    offers less lightness contrast than a green-to-white-to-blue diverging map would
+    for readability across the full 2–100% retention range
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed correct, not pure white
-      Chrome: Title 'heatmap-cohort-retention · python · bokeh · anyplot.ai' bold at 50pt, readable. X-axis label 'Months Since Signup' at 42pt positioned at top (x_axis_location=above). Y-axis label 'Signup Cohort' rotated. Tick labels 'Month 0'-'Month 9' and cohort labels with sizes (e.g. 'Jan 2024 (n=1,926)') — all readable in dark ink colors.
-      Data: Triangular heatmap using Imprint sequential colormap green #009E73 (low retention) to blue #4467A3 (100% retention). Bold white 22pt percentage text in each cell. Color bar on right labeled 'Retention %'. Grey italic annotation at bottom-left partially overlapping the 'Oct 2024 (n=1,266)' y-axis label.
-      Legibility verdict: PASS (annotation-to-label overlap at bottom-left is a layout issue, not a legibility failure)
+      Background: Warm off-white (#FAF8F1) — correct brand surface, not pure white.
+      Chrome: Title "heatmap-cohort-retention · python · bokeh · anyplot.ai" in bold dark ink, spans ~85% of canvas width — expected for this title length. X-axis label "Months Since Signup" in bold dark ink above the tick row; Y-axis label "Signup Cohort" in bold dark ink on left. Tick labels ("Month 0" … "Month 9" across top; cohort labels with n= sizes on left) in INK_SOFT — all readable. Color bar on right with "Retention %" title and 0–100 scale in dark ink. Annotation "Month 3 retention: 27%–48% across cohorts" in italic INK_MUTED bottom-right.
+      Data: Triangular heatmap with green (#009E73) to blue (#4467A3) imprint_seq gradient. Period 0 column is consistently deep teal (100% retention); cells fade through mid-teal toward lighter green as retention drops. White bold text at 22pt inside each cell shows exact percentage (e.g., "100.0%", "66.1%", "2.4%"). Triangular step-down shape clearly visible — Jan 2024 has 10 columns, Oct 2024 has 1.
+      Legibility verdict: PASS. All chrome text readable. Minor concern: 10 x-axis tick labels at 34pt across ~1980px plot-area (≈198px/column) are tight; labels have minimal gap (~11px) between them but are not visibly overlapping at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed correct, not pure black
-      Chrome: Title, axis labels, tick labels, cohort labels, color bar labels all render in light colors (#F0EFE8 / #B8B7B0) — fully readable against dark surface. No dark-on-dark failures detected. Annotation renders in muted light grey, readable.
-      Data: Data colors identical to light render — same Imprint seq green-to-blue gradient, same bold white cell text. Color bar unchanged. Only chrome elements (background, text, borders) have flipped to dark-theme tokens.
-      Legibility verdict: PASS (same annotation overlap present but all text readable)
+      Background: Warm near-black (#1A1A17) — correct brand surface, not pure black.
+      Chrome: Title, axis labels, color bar text all flip to light (#F0EFE8 / #B8B7B0 / #A8A79F) — correctly following INK/INK_SOFT/INK_MUTED dark-theme tokens. No dark-on-dark failures observed; text is clearly visible against the dark background. Cell borders use PAGE_BG (#1A1A17) matching the background, creating a clean grid appearance.
+      Data: Colormap colors are identical to light render — imprint_seq green-to-blue gradient unchanged, confirming only chrome flips between themes. White cell text retains readability against mid-dark cells in both endpoints (#009E73 green and #4467A3 blue both provide adequate contrast for white 22pt bold text). Brand green #009E73 visible throughout lower-retention cells.
+      Legibility verdict: PASS. Both themes fully readable. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,54 +64,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 22pt cell text). Both themes readable. Minor deduction: 42pt axis
-          label immediately below 50pt title creates compressed header hierarchy.'
+        comment: 'All title/axis/tick/cell text readable in both themes. Minor deduction:
+          x-axis label at 34pt vs y-axis label at 42pt creates visible size imbalance
+          — both should be 42pt per bokeh style guide.'
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Annotation 'Month 3 retention ranges from 27% to 48% across cohorts'
-          at screen (x=30, y=30) overlaps the 'Oct 2024 (n=1,266)' y-axis label in
-          both renders.
+        passed: true
+        comment: No overlap at full resolution, but 10 x-axis tick labels at 34pt
+          across ~1980px plot width leave only ~11px gap between labels — noticeably
+          tight. Reducing to 28pt would give breathing room.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with bold white percentage text. Color
-          gradient well-differentiated across the retention range.
+        comment: Heatmap cells, retention percentages, colorbar, and annotation all
+          clearly visible. Triangular shape immediately apparent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq palette is colorblind-safe. White text on mid-dark cells
-          provides good contrast.
+        comment: Imprint sequential colormap used correctly. White text on mid-dark
+          colored cells provides acceptable contrast. No red/green-only signals.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 2400x2400 canvas utilization. Triangular shape uses space well.
-          Minor deduction for dense top header and annotation placement causing bottom-margin
-          tension.
+        comment: 2400x2400 square canvas correct for symmetric heatmap (gate passed).
+          Good min_border reservations. Minor deduction for axis label size imbalance
+          (34pt x vs 42pt y).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Months Since Signup, Signup Cohort, Retention % color bar — all descriptive.
-          Month N tick labels clear.
+        comment: 'Title correct format. X-axis: ''Months Since Signup'' descriptive.
+          Y-axis: ''Signup Cohort''. Colorbar: ''Retention %''. All present and meaningful.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Imprint sequential colormap (#009E73 to #4467A3) for single-polarity
-          retention data. Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive in
-          both renders.'
+        comment: 'imprint_seq correctly built (#009E73 to #4467A3, verified at t=0
+          and t=255). Light bg #FAF8F1, dark bg #1A1A17. Data colors identical in
+          both renders. Theme chrome correctly adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -114,25 +121,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: x-axis-on-top placement, white bold
-          cell text, insight annotation, clean Imprint seq palette. Not quite publication
-          level.'
+        comment: 'Above default (4): Imprint sequential palette, insight annotation,
+          HoverTool integration, clean cell borders using PAGE_BG. Held back from
+          higher score as the design is clean but not especially refined — no separators,
+          no per-column highlights.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, axis lines and tick marks removed, no box frame. Clean
-          minimalist look. Slight deduction for dense title + axis label stack at
-          top.
+        comment: 'Above default (2): All spines/axes/ticks/grid removed. Cell borders
+          match PAGE_BG for clean look. Colorbar well-styled. Toolbar suppressed for
+          clean export. Generous min_border margins.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triangular shape communicates cohort maturity, color gradient tells
-          retention story, Month 3 annotation highlights real insight. Above default
-          data display.
+        comment: 'Above default (2): Triangular shape itself communicates cohort maturity
+          stages. Insight annotation on Month 3 retention range across cohorts. Clear
+          focal point (100% column). Data storytelling is present and effective.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Correct triangular cohort retention heatmap with p.rect() glyphs.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangular shape, sequential colormap, percentage text in cells,
-          cohort sizes on y-axis, Month N x-axis labels, color bar legend — all present.
+        comment: 'All spec features present: triangular shape, period 0=100%, cell
+          text with retention %, cohort sizes in y-labels, sequential colormap, colorbar,
+          x-axis showing periods as ''Month X''.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cohorts on y-axis, periods on x-axis, color encodes retention rate,
-          period 0 always 100%.
+        comment: 'X: periods (Month 0-9), Y: cohorts (Jan-Oct 2024), Color: retention_rate
+          via LinearColorMapper(low=0, high=100).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Color bar labeled Retention %.
+        comment: Title exactly 'heatmap-cohort-retention · python · bokeh · anyplot.ai'.
+          No categorical legend needed (colorbar serves as legend for continuous data).
     data_quality:
       score: 15
       max: 15
@@ -172,22 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows triangular structure, period 0 baseline at 100%, realistic
-          decay patterns, variation across cohorts.
+        comment: Shows triangular shape, retention evolution across periods, cohort-to-cohort
+          comparison, insight annotation highlighting variance.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS cohorts Jan-Oct 2024, realistic cohort sizes 800-2500
-          users, plausible SaaS retention domain.
+        comment: SaaS monthly cohorts Jan-Oct 2024 with 800-2500 user sizes. Retention
+          decay rates 65-80% per period — realistic for SaaS. Neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Period 0 = 100% for all cohorts, monthly decay 65-80%, end values
-          2-10% after 9 months — realistic for SaaS.
+        comment: 10 cohorts and 10 periods (both within 8-12 spec range). Retention
+          2-100% range is appropriate. Cohort sizes realistic for SaaS.
     code_quality:
       score: 10
       max: 10
@@ -197,55 +207,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports, tokens, data, plot, save. No functions or classes.'
+        comment: Linear script, no classes or functions. Clean top-to-bottom flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; selenium required for Bokeh screenshot pattern.
+        comment: 'All imports used: os (THEME), time (sleep), pathlib (file path),
+          numpy (data), bokeh.* (plotting), selenium (screenshot).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. Good use of list comprehensions
-          and zip.
+        comment: Clean, readable code. Appropriate use of list comprehensions for
+          ANYPLOT_SEQ256 and data flattening. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html + plot-{THEME}.png. CDP viewport override
-          for exact dimensions. Current Bokeh API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
+          3.x API. No bare plot.png.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, rect() glyph, transform() with LinearColorMapper,
-          add_layout() for ColorBar, x_axis_location=above, HoverTool — all idiomatic
-          Bokeh patterns.
+        comment: 'Strong idiomatic usage: ColumnDataSource, transform() for color
+          mapping, add_tools() for HoverTool, add_layout() for Label and ColorBar,
+          categorical x_range/y_range, toolbar_location=None.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'HoverTool with interactive tooltips in HTML artifact distinctively
-          Bokeh. LinearColorMapper + transform() data binding library-specific. CDP
-          setDeviceMetricsOverride for exact viewport. Minor deduction: HoverTool
-          not exploited beyond basic tooltips.'
-  verdict: REJECTED
+        comment: HoverTool for interactive exploration (Bokeh-distinctive), HTML export
+          as catalog artifact, Selenium headless screenshot leverages Bokeh's JS rendering
+          pipeline. CDP-based viewport override is a nice touch.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
