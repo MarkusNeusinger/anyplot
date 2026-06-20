@@ -1,114 +1,143 @@
 library: letsplot
+language: python
 specification_id: curve-oc
 created: '2026-03-19T20:35:57Z'
-updated: '2026-03-19T21:13:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23315609119
+updated: '2026-06-20T11:34:14Z'
+generated_by: claude-sonnet
+workflow_run: 27869339230
 issue: 4553
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-oc/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/curve-oc/letsplot/plot.html
-quality_score: 93
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent quality zone shading (green/yellow/pink) creates immediate visual context
-    for interpreting curves
-  - Four well-chosen sampling plans with independently varying n and c demonstrate
-    discrimination power differences
-  - Risk annotations (α=0.264, β=0.034) with styled red markers provide precise quantitative
-    storytelling
-  - Colorblind-safe Okabe-Ito palette with good luminance differentiation
-  - Clean refined theme with removed x-grid, subtle y-grid, and light axis lines
-  - layer_tooltips() with formatting leverages lets-plot distinctive interactive features
+  - 'Comprehensive spec implementation: 4 OC curves with AQL/LTPD annotations, producer''s
+    and consumer''s risk labeled at threshold points'
+  - Quality zone backgrounds (green/ochre/red Imprint semantic colors) provide immediate
+    visual context for lot quality interpretation
+  - Strong theme adaptation — all chrome tokens flip correctly between light and dark;
+    data colors identical across both renders
+  - 'Idiomatic letsplot usage: layer_tooltips() with format specs, scale_fill_identity(),
+    legend position as float-list coordinates, geom_vline/hline for reference lines'
+  - Data storytelling through zone regions, risk annotations, and descriptive subtitle
+    creates a self-explanatory chart
   weaknesses:
-  - Manual construction of reference line dataframes instead of using geom_vline/geom_hline
-  - Zone labels could use slightly more refined positioning or sizing
-  image_description: 'The plot displays four Operating Characteristic (OC) curves
-    comparing acceptance sampling plans. The x-axis shows "Fraction Defective (p)"
-    ranging from 0 to 0.20, and the y-axis shows "Probability of Acceptance P(a)"
-    from 0 to 1. Three colored background zones divide the chart: a green "Acceptable
-    Quality" zone (0 to AQL=0.02), a pale yellow "Indifference Zone" (AQL to LTPD),
-    and a pink "Rejectable Quality" zone (LTPD=0.10 to 0.20). Four curves are plotted
-    in colorblind-safe colors: dark blue (n=50, c=1), vermillion/orange (n=100, c=2),
-    light blue (n=80, c=1), and teal (n=150, c=3). Two red circle markers with white
-    stroke highlight risk points on the n=50 c=1 curve: producer''s risk α=0.264 at
-    AQL and consumer''s risk β=0.034 at LTPD, with bold red labels. Dotted vertical
-    reference lines mark AQL and LTPD, with dashed horizontal lines connecting to
-    the y-axis. Bold "AQL" and "LTPD" labels are positioned near the bottom of the
-    chart. The title reads "curve-oc · letsplot · pyplots.ai" with an italic subtitle.
-    A legend box in the upper right lists all four sampling plans.'
+  - 'Typography hierarchy inversion: axis_title=20 exceeds plot_title=16 in element_text
+    units, so the Y/X axis labels render larger than the main title — correct hierarchy
+    should be plot_title > axis_title'
+  - geom_text annotation sizes (size=8 for zone labels, size=9-10 for risk and AQL/LTPD
+    labels) exceed the letsplot library guide's recommended ~3-5mm for annotation
+    text — zone labels in particular are more prominent than background context elements
+    should be
+  - 'Minor: n=80, c=1 and n=50, c=1 share the same acceptance number (c=1), making
+    their curve shapes similar in the indifference zone; substituting one plan with
+    a different c value (e.g. n=80, c=3) would better illustrate the independent effect
+    of acceptance number on discrimination power'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "curve-oc · python · letsplot · anyplot.ai" in bold dark ink (readable). Italic subtitle "Comparing acceptance sampling plans — producer's & consumer's risk at AQL=0.02, LTPD=0.10" in INK_SOFT. Y-axis label "Probability of Acceptance P(a)" and X-axis label "Fraction Defective (p)" in dark ink. Tick labels in INK_SOFT. Legend "Sampling Plan" with 4 entries. All text clearly readable.
+      Data: 4 S-shaped OC curves — green (#009E73, n=50 c=1), lavender (#C475FD, n=100 c=2), blue (#4467A3, n=80 c=1), ochre (#BD8233, n=150 c=3). Quality zone backgrounds in green/ochre/red at alpha=0.08 for Acceptable/Indifference/Rejectable zones. Dotted vertical lines at AQL=0.02 and LTPD=0.10. Dashed horizontal lines at risk probability levels. Red filled circles (shape=21) marking alpha and beta risk points. Bold red text labels "α = 0.264" near AQL and "β = 0.034" near LTPD. Zone label text italic gray. AQL/LTPD bold labels at x-axis bottom.
+      Legibility verdict: PASS — all text readable; minor note: axis_title=20 renders larger than plot_title=16 (inverted hierarchy).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and subtitle in light cream text (F0EFE8 / B8B7B0 tokens) — clearly readable against dark background. Axis labels in light ink. Tick labels in secondary light ink. Legend text in light tones. No dark-on-dark failures detected. All chrome elements correctly flip to light-on-dark.
+      Data: OC curve colors identical to light render — green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233). Zone backgrounds at slightly higher alpha=0.14 for dark theme. Red risk point markers (#AE3030) visible. Risk labels in #AE3030 (semantic red unchanged across themes). AQL/LTPD bold labels in light INK token — readable.
+      Legibility verdict: PASS — all text readable against dark background; data colors match light render exactly (only chrome flipped).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, axis
-          text 16pt, legend text 16pt, legend title 18pt'
+        comment: 'All fonts explicitly set and readable in both themes. Minor hierarchy
+          inversion: axis_title=20 > plot_title=16 in element_text units, causing
+          axis labels to render larger than the main title. Annotation geom_text sizes
+          (8-10mm) above recommended 3-5mm range.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-positioned with appropriate nudges, no overlapping
-          elements
+        comment: No text overlap observed. Zone labels at y=0.5 fall below OC curves
+          in their respective zones. Risk labels nudged clear of curves. Legend positioned
+          above zone text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at size=2.2 clearly distinguishable, risk markers at size=7
-          stand out
+        comment: 4 OC curves clearly visible at size=2.2. Risk point markers at size=7
+          prominent. Zone backgrounds at low alpha (0.08/0.14) provide context without
+          obscuring data.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Okabe-Ito inspired colorblind-safe palette with good luminance variation
+        comment: Imprint palette (CVD-safe). 4 series span distinct hue families.
+          Red used only for semantic risk role, not as sole distinguisher.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned in unused
-          space
+        comment: Canvas gate passed (800x450, scale=4 = 3200x1800). Good margins (plot_margin=[30,30,30,20]).
+          Legend inside plot. No clipping detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Fraction Defective (p) and Probability
-          of Acceptance P(a)'
+        comment: 'X: ''Fraction Defective (p)'', Y: ''Probability of Acceptance P(a)''
+          — descriptive with variable notation. Subtitle provides sampling context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Canonical Imprint order for
+          all 4 categorical series. Risk markers use #AE3030 semantic anchor correctly.
+          Zone fills use Imprint semantic colors at low alpha. Backgrounds #FAF8F1
+          / #1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, zone shading, styled risk markers, intentional typographic
-          hierarchy
+        comment: 'Above defaults: quality zone backgrounds with semantic Imprint colors,
+          styled risk markers (shape=21 with stroke), legend inside plot. Good intentional
+          design hierarchy but not FiveThirtyEight level.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid, clean white background, light axis
-          lines, generous margins
+        comment: Y-axis-only grid (major_y at 0.3 size, no X grid). Themed backgrounds.
+          Elevated legend box. Axis lines styled. Plot margin set. Clear refinement
+          above library defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Quality zones create immediate context, risk markers as focal points,
-          subtitle contextualizes comparison
+        comment: 'Quality zones visually explain the AQL/LTPD threshold concept. Risk
+          annotations quantify producer''s and consumer''s risk. Subtitle provides
+          quantitative context. Visual hierarchy: zones → curves → risk points. Good
+          storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OC curve with smooth S-shaped curves
+        comment: 'Correct OC curve implementation: continuous S-shaped probability
+          curves from binomial CDF.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: binomial CDF, AQL/LTPD lines, alpha/beta markers,
-          4 curves, x 0-0.20'
+        comment: 'All spec features present: multiple curves (4 plans), AQL/LTPD vertical
+          reference lines, producer''s risk (alpha) and consumer''s risk (beta) labeled
+          with points, x-axis range 0-0.20.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction defective, Y=probability of acceptance, correct ranges
+        comment: 'X: fraction_defective (0 to 0.20), Y: probability_acceptance (0
+          to 1.0). 200 points per curve for smooth rendering.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, legend labels match sampling plan descriptions
+        comment: 'Title: ''curve-oc · python · letsplot · anyplot.ai'' matches required
+          format. Legend titled ''Sampling Plan'' with correctly labeled entries.'
     data_quality:
       score: 15
       max: 15
@@ -147,20 +180,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four plans with varying n and c, both risks annotated, full acceptance
-          range shown
+        comment: 'Shows all OC curve aspects: multiple plans for comparison, AQL/LTPD
+          thresholds, risk zones, producer''s/consumer''s risk quantification.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world quality inspection scenario with standard AQL/LTPD terminology
+        comment: AQL=0.02, LTPD=0.10 are standard acceptance sampling values. Plans
+          n=50-150, c=1-3 are industry-realistic. Quality control context is neutral
+          and professional.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard industry AQL=0.02, LTPD=0.10, realistic sample sizes 50-150
+        comment: X-axis 0-0.20 is the practical working range for acceptance sampling.
+          Y-axis 0-1.0 for probability. Sampling plan parameters are factually correct
+          for binomial acceptance sampling.
     code_quality:
       score: 10
       max: 10
@@ -170,62 +207,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow, no functions or classes
+        comment: 'Linear structure: imports → tokens → data → plot layers → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic binomial CDF calculations
+        comment: Fully deterministic — binomial CDF calculation requires no random
+          seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, scipy.stats.binom'
+        comment: os, numpy, pandas, lets_plot.*, scipy.stats.binom — all imports actively
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean loop for curve computation
+        comment: Clean, appropriately complex for the visualization. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale=3 and plot.html, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave with scale=4.
+          Current letsplot API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert letsplot usage: grammar of graphics layering, scale_fill_identity(),
+          geom_vline/hline, aes mappings, ggsize/ggsave with scale.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Strong ggplot grammar usage, could use geom_vline/geom_hline instead
-          of manual line dataframes
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: layer_tooltips() with format/line chaining, dual PNG+HTML export,
-          scale_fill_identity()
+        comment: Uses layer_tooltips() with .format() and .line() chains (distinctively
+          letsplot), HTML interactive export, shape=21 filled markers with stroke,
+          legend position as float-list coordinates.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
