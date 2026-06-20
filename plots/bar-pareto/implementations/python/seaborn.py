@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -22,7 +22,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Imprint palette position 1 — dominant bars (≤80%)
 LINE_COLOR = "#AE3030"  # Imprint semantic red — cumulative threshold line
 
-# Apply seaborn theme
+# Apply seaborn theme with explicit RC overrides, then context for font hierarchy
 sns.set_theme(
     style="ticks",
     rc={
@@ -39,6 +39,7 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+sns.set_context("notebook", font_scale=0.8)
 
 # Data — 10 surface-quality defect categories (paint/surface/rework domain), descending frequency
 data = pd.DataFrame(
@@ -62,17 +63,18 @@ data = pd.DataFrame(
 # Cumulative percentage
 cumulative_pct = np.cumsum(data["count"]) / data["count"].sum() * 100
 
-# Bar colors: dominant (≤80%) → brand green; tail → muted (Imprint semantic anchors)
-bar_colors = [BRAND if cum <= 80 else INK_MUTED for cum in cumulative_pct]
+# Bar colors via seaborn palette API: dominant (≤80%) → brand green; tail → muted
+bar_color_list = [BRAND if cum <= 80 else INK_MUTED for cum in cumulative_pct]
+bar_palette = sns.color_palette(bar_color_list)
 
 # Canvas — 3200 × 1800 px landscape (hard contract: figsize=(8,4.5) × dpi=400)
 fig, ax1 = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax1.set_facecolor(PAGE_BG)
 
 # Bars
-sns.barplot(data=data, x="defect", y="count", hue="defect", palette=bar_colors, legend=False, width=0.72, ax=ax1)
+sns.barplot(data=data, x="defect", y="count", hue="defect", palette=bar_palette, legend=False, width=0.72, ax=ax1)
 
-# Count annotations above each bar
+# Count annotations above each bar (fontsize=8 for safer mobile readability)
 for i, (_, row) in enumerate(data.iterrows()):
     ax1.text(
         i,
@@ -80,7 +82,7 @@ for i, (_, row) in enumerate(data.iterrows()):
         str(int(row["count"])),
         ha="center",
         va="bottom",
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
         color=BRAND if cumulative_pct.iloc[i] <= 80 else INK_MUTED,
     )
@@ -99,7 +101,20 @@ sns.despine(ax=ax1, top=True, right=True)
 ax2 = ax1.twinx()
 ax2.patch.set_alpha(0)  # transparent so ax1 background shows through
 
-sns.lineplot(x=range(len(data)), y=cumulative_pct, color=LINE_COLOR, marker="o", markersize=5, linewidth=2.5, ax=ax2)
+# Cumulative line — seaborn lineplot with DataFrame, explicit sort/estimator control
+line_df = pd.DataFrame({"x": range(len(data)), "cumulative_pct": cumulative_pct})
+sns.lineplot(
+    data=line_df,
+    x="x",
+    y="cumulative_pct",
+    color=LINE_COLOR,
+    marker="o",
+    markersize=5,
+    linewidth=2.5,
+    sort=False,
+    estimator=None,
+    ax=ax2,
+)
 for line in ax2.get_lines():
     line.set_markeredgecolor(PAGE_BG)
     line.set_markeredgewidth(1.5)
@@ -115,11 +130,24 @@ ax2.spines["right"].set_color(LINE_COLOR)
 ax2.axhline(y=80, color=LINE_COLOR, linestyle="--", linewidth=1.2, alpha=0.55)
 ax2.text(len(data) - 0.5, 82, "80%", fontsize=8, color=LINE_COLOR, ha="right", va="bottom")
 
+# Narrative annotation: 4 categories drive 75% of defects — Pareto insight at crossover
+ax2.text(
+    3.5,
+    88,
+    "top 4 → 75% of defects",
+    fontsize=7.5,
+    color=LINE_COLOR,
+    ha="center",
+    va="bottom",
+    alpha=0.85,
+    style="italic",
+)
+
 # Title
 title = "bar-pareto · python · seaborn · anyplot.ai"
 ax1.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=12)
 
-fig.subplots_adjust(left=0.08, right=0.88, top=0.93, bottom=0.20)
+fig.subplots_adjust(left=0.08, right=0.88, top=0.93, bottom=0.22)
 
 # Save — no bbox_inches so figsize × dpi lands on exact 3200 × 1800
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
