@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: lightcurve-transit
 created: '2026-06-20T07:54:44Z'
-updated: '2026-06-20T08:02:51Z'
+updated: '2026-06-20T08:16:55Z'
 generated_by: claude-sonnet
 workflow_run: 27864669257
 issue: 4559
@@ -12,64 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/chartjs/plot-dark.html
-quality_score: 81
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance — scatter + error bars + smooth transit model overlay
-    with all required features (phase folding, ~1% depth, 200-1000 points, quadratic
-    limb-darkening)
-  - Robust deterministic data generation using a seeded LCG (seed=1337) and Box-Muller
-    transform — no Math.random(), fully reproducible
-  - 'Idiomatic Chart.js plugin API usage: Chart.register with beforeDraw (canvas background)
-    and afterDatasetsDraw (per-point error bars with canvas clipping) — correct way
-    to extend Chart.js rendering'
-  - 'Realistic TESS-like exoplanet photometry: physically accurate ~1.08% transit
-    depth, 0.16-0.28% per-point noise, ingress/egress shape, 320 data points'
-  - 'Correct Imprint palette for primary series (t.palette[0] = #009E73) and full
-    theme-adaptive chrome via ANYPLOT_TOKENS — both light and dark renders readable
-    with correct backgrounds'
+  - Physics-accurate quadratic limb-darkened transit model with 320 phase-folded synthetic
+    measurements
+  - Custom Chart.js plugin implementing error bars with caps (not natively supported
+    by Chart.js) via canvas 2D API
+  - Transit window shading and dashed baseline at flux=1.0 create strong visual storytelling
+    focal points
+  - Deterministic LCG with seed=1337 ensures full reproducibility without Math.random()
+  - Mixed scatter+line chart types with correct Imprint palette (green for data, lavender
+    for model)
+  - Both themes handled correctly via t.pageBg, t.ink, t.inkSoft — no dark-on-dark
+    failures
+  - Correct axis labels (Orbital Phase, Relative Flux) with explicitly set font sizes
+    throughout
   weaknesses:
-  - 'VQ-07 (1/2): Second series uses t.palette[2] (#4467A3 blue), skipping t.palette[1]
-    (#C475FD lavender) — violates canonical Imprint palette ordinal order. Fix: change
-    t.palette[2] to t.palette[1] for the transit model dataset, or document a clear
-    semantic reason for the skip'
-  - 'DE-03 (2/6): No design emphasis on the transit region — the dip appears naturally
-    but there is no visual treatment (no shaded transit window, no horizontal reference
-    line at flux=1.0, no ingress/egress markers). Fix: draw a semi-transparent rect
-    over the transit window (phase ±0.042) using the plugin''s beforeDatasetsDraw
-    hook with t.palette[0] at ~10% opacity'
-  - 'DE-01 (4/8): Chart reads as a well-configured default rather than a publication-quality
-    design. The model line at 2.5px and scatter at radius 3 could be more visually
-    differentiated — e.g. increase model line width to 3.5px, reduce scatter point
-    opacity slightly, or add a shaded ±1σ band around the model'
-  - 'DE-02 (3/6): Chart.js default box frame (all 4 axis borders visible) not removed
-    — style guide prefers L-shaped frame. Fix: add `border: { display: false }` to
-    the unused top/right border sides, or at minimum set the border color to match
-    pageBg to visually suppress top/right spines'
-  - 'VQ-05 (3/4): Right-side canvas margin is tight — ''0.5'' x-axis tick label is
-    very close to the right canvas edge. Fix: add options.layout = { padding: { right:
-    20, top: 10 } } to prevent clipping risk'
-  - 'VQ-01 (7/8): Y-axis tick callback shows 4 decimal places (v.toFixed(4)) which
-    is compact at 13px font. Fix: reduce to v.toFixed(3) for 0.980 / 0.990 / 1.000
-    display — preserves precision while improving mobile readability'
-  - 'CQ-01 (2/3): Three helper functions defined (rand, randn, transitFlux) — necessary
-    for JS determinism but departs from the KISS flat-structure ideal. The transitFlux
-    function could be inlined or expressed more compactly'
+  - Scatter point radius=3 is slightly on the small side for 320 data points — consider
+    radius=4 to improve individual-point visibility in the dense transit region
+  - Tick labels at 13px are slightly below the recommended 14px — a minor but addressable
+    detail
+  - Transit window shading (palette[0] + 1a = 10% opacity) is less prominent in the
+    dark render where the teal wash is harder to read against the near-black background
+    — consider boosting to 25-30% opacity in dark mode
+  - 'KISS concern: three top-level helper functions (rand, randn, transitFlux) plus
+    a multi-hook plugin add complexity beyond a flat script — acceptable here but
+    worth noting'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface.
-      Chrome: Title "lightcurve-transit · javascript · chartjs · anyplot.ai" in dark text (~22px) is clearly readable at the top center. X-axis label "Orbital Phase" and Y-axis label "Relative Flux" are dark, readable. Tick labels in secondary dark ink at 13px; Y-axis shows 4-decimal values (0.9800–1.0100). Legend in top-right shows "Transit model" (blue swatch) and "Photometric data" (green swatch) in dark text. Grid lines are very subtle (low-opacity ink strokes). Right margin is slightly tight — the "0.5" x-tick is close to the right canvas edge.
-      Data: Scatter points in #009E73 (Imprint brand green, palette[0]) at radius 3 with ~73% opacity and thin gray error bars. Transit model line in #4467A3 (Imprint blue, palette[2]) at 2.5px. The transit dip is prominently centered around phase 0, dropping to ~0.989. All data elements are clearly visible.
-      Legibility verdict: PASS — all text readable on light background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct, visually confirmed.
+      Chrome: Title "lightcurve-transit · javascript · chartjs · anyplot.ai" displayed clearly in dark ink at ~65% canvas width. Y-axis label "Relative Flux" rotated left, X-axis label "Orbital Phase" at bottom — both dark, fully readable. Tick labels in dark-gray (inkSoft) on all axes clearly visible and balanced. Legend top-right shows "Transit model" (lavender circle) and "Photometric data" (green circle) in dark ink — readable.
+      Data: 320 green (#009E73) scatter dots with error bars spanning orbital phase -0.5 to 0.5. Transit dip visible around phase 0 dropping to ~0.988 relative flux. Smooth lavender (#C475FD) model curve overlaid. Semi-transparent green shading marks the transit window. Dashed gray baseline at flux=1.0.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title in light ink, clearly readable. X and Y axis labels in light ink, readable. Tick labels in secondary light ink (#B8B7B0), readable. Legend text in light ink. Grid lines subtle (low-opacity light strokes). No dark-on-dark text failures observed.
-      Data: Scatter points identical #009E73 green (confirmed same as light render). Transit model line identical #4467A3 blue. Error bars visible in light-muted stroke. Transit dip identical shape and position.
-      Legibility verdict: PASS — all text readable on dark background. Data colors are identical to light render. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, visually confirmed.
+      Chrome: Title, axis labels, tick labels, and legend all rendered in light cream/gray tones against the dark surface. No dark-on-dark failures observed. Axis labels and title clearly readable.
+      Data: Green scatter dots (#009E73) and lavender model curve (#C475FD) are identical in color to the light render — only chrome flipped. Error bars visible in a lighter inkSoft tone. Transit window shading appears as a subtle darker-teal wash (10% opacity green on near-black is less obvious but still detectable). Dashed baseline visible.
+      Legibility verdict: PASS — all text readable against dark background. Minor: transit shading is slightly less prominent in dark mode than light mode, but data and model remain fully readable.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -77,86 +61,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, legend 14px, axis labels
-          15px, ticks 13px). Readable in both themes. Minor deduction: y-axis 4-decimal
-          tick labels at 13px slightly compact at mobile scale.'
+        comment: 'All font sizes explicitly set (title 22px, axis labels 15px, ticks
+          13px, legend 14px). Proportional and readable in both themes. Minor: ticks
+          at 13px slightly below recommended 14px.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements. Legend is clearly
-          separated in top-right corner.
+        comment: No text overlaps. Legend positioned top-right clear of data. Tick
+          labels balanced and non-colliding.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Scatter markers (radius 3) and error bars visible for 320 points.
-          Transit model line clearly distinguishable. Minor deduction: markers could
-          be slightly larger for more prominence at 320 points.'
+        comment: Error bars and model curve clearly visible. Scatter pointRadius=3
+          is slightly small for 320 data points (borderline for density). Data is
+          readable but points could be radius=4.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are clearly distinguishable by
-          hue and luminance. CVD-safe combination. No red-green sole-signal issue.
+        comment: Green scatter and lavender model clearly distinguishable by both
+          hue and form (dots vs. line). CVD-safe Imprint palette members.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good canvas utilization. Plot fills ~75% of canvas with balanced
-          margins on most sides. Minor deduction: right margin is tight — ''0.5''
-          x-tick label very close to right canvas edge.'
+        comment: Canvas gate passed (default landscape). Plot fills canvas well with
+          balanced margins. Legend not isolated. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Orbital Phase'' (dimensionless, correct). Y: ''Relative Flux''
-          (dimensionless ratio, correct). Both descriptive and appropriate for astronomical
-          light curve.'
+        comment: 'X: Orbital Phase, Y: Relative Flux — both descriptive and domain-appropriate
+          scientific terminology.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly uses t.palette[0] (#009E73). Second series
-          uses t.palette[2] (#4467A3), skipping t.palette[1] (#C475FD lavender) —
-          violates canonical Imprint ordinal order without a documented semantic reason.
-          Backgrounds correct (#FAF8F1 / #1A1A17). Chrome is theme-correct.'
+        passed: true
+        comment: 'First series (photometric data) = t.palette[0] = #009E73. Second
+          series (transit model) = t.palette[1] = #C475FD. Background = t.pageBg (#FAF8F1
+          light / #1A1A17 dark). Text uses t.ink and t.inkSoft (theme-adaptive). Full
+          Imprint compliance.'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured Chart.js implementation with correct theming. Looks
-          professional but is essentially a styled default — no exceptional design
-          choices that go beyond proper setup.
+        comment: Clearly above library defaults. Custom error-bar plugin, transit
+          window shading, dashed baseline, and mixed chart types create a scientifically
+          polished visualization. Not quite FiveThirtyEight-level but strong design
+          intent.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid via t.grid tokens (good). Legend uses usePointStyle for
-          cleaner look. Title padding set. However, Chart.js default box frame (all
-          4 sides) is not addressed — style guide prefers L-shaped frame. Some refinement
-          visible but defaults largely preserved.
+        comment: 'border: {display: false} removes axis lines. Grid uses subtle t.grid
+          color. Some padding applied. Clean but could further refine (e.g., grid
+          on y-axis only).'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed correctly and the transit dip is a natural focal
-          point. But there is no deliberate visual emphasis on the transit region
-          (no shading, no reference line at flux=1.0, no annotation for depth/duration).
-          Viewers must identify the transit without design guidance.
+        passed: true
+        comment: Transit window shading creates immediate focal point. Dashed baseline
+          at 1.0 makes transit depth obvious. Contrast between dense scatter and crisp
+          model line creates visual hierarchy. Viewer immediately grasps the story.
     spec_compliance:
       score: 15
       max: 15
@@ -166,31 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with error bars and smooth model line overlay
-          — exactly the right chart type for an astronomical light curve.
+        comment: 'Correct: phase-folded light curve with scatter photometric data
+          and model overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: error bars, smooth model curve overlay,
-          phase-folded data (-0.5 to 0.5), ~1% transit depth (1.08%), 320 data points
-          (within 200-1000 range), relative flux Y-axis, transit dip going downward.'
+        comment: 'All spec features present: error bars, transit model curve, phase-folded
+          data, transit dip downward, clean style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Orbital Phase (-0.5 to 0.5), Y = Relative Flux (0.98 to 1.01).
-          Correct mapping with full data range visible.
+        comment: X=Orbital Phase (-0.5 to 0.5), Y=Relative Flux (0.980-1.010). Transit
+          dip downward. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'lightcurve-transit · javascript · chartjs · anyplot.ai' is
-          in the correct format. Legend labels 'Transit model' and 'Photometric data'
-          are descriptive and accurate.
+        comment: 'Title: ''lightcurve-transit · javascript · chartjs · anyplot.ai''
+          — correct format. Legend: ''Photometric data'' and ''Transit model'' — appropriate
+          labels.'
     data_quality:
       score: 15
       max: 15
@@ -200,25 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: scattered photometric measurements with error
-          bars, flat out-of-transit baseline, transit ingress/egress, dip at phase
-          0, and fitted model overlay. Comprehensive coverage.'
+        comment: 'Shows all key aspects: phase-folded observations, error bars, transit
+          dip, out-of-transit baseline, model overlay, and transit window context.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TESS-like exoplanet photometry with realistic noise model (0.16-0.28%
-          per-point scatter). Phase-folded light curve is standard in exoplanet science.
-          Fully realistic context.
+        comment: TESS-like photometry with realistic noise levels (0.16-0.28%), ~1%
+          transit depth, Gaussian measurement errors. Neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Transit depth 1.08% matches typical sub-Jupiter exoplanets. Error
-          bars 0.16-0.28% match TESS photometric precision. Phase range -0.5 to 0.5
-          is standard for phase folding. All physically accurate.
+        comment: T_DEPTH=1.08% is realistic for a hot Jupiter. Error range 0.16-0.28%
+          matches TESS precision. 320 data points covers realistic survey cadence.
     code_quality:
       score: 9
       max: 10
@@ -228,67 +205,65 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Defines three helper functions (rand, randn, transitFlux). While
-          these are necessary for JS determinism and data generation, they depart
-          from the ideal flat structure. Deducting 1 point.
+        comment: Three top-level functions (rand, randn, transitFlux) plus a multi-hook
+          plugin add necessary complexity. Justified but departs from flat script
+          ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic 31-bit LCG with seed=1337, no Math.random(). Fully
-          reproducible data generation.
+        comment: Deterministic 31-bit LCG with seed=1337. No Math.random(). Fully
+          reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses browser globals (window.ANYPLOT_TOKENS, window.Chart).
-          Clean.
+        comment: No imports/requires. Uses Chart (global) and window.ANYPLOT_TOKENS
+          correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized and readable. Custom plugin for error bars is necessary
-          complexity, implemented cleanly with canvas clipping. No fake functionality.
+        comment: Custom plugin is necessary for Chart.js error bars. Code is well-organized.
+          No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Chart.js 4.x API correctly (new Chart, Chart.register). Harness
-          handles output. Interactive library — HTML files also generated.
+        comment: No savefig (correct for Chart.js). animation:false, responsive:true,
+          maintainAspectRatio:false all set. Chart.register() used correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Chart.js mixed chart types, plugin lifecycle hooks,
+          dataset order property, usePointStyle legend, and scatter {x,y} data format.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Chart.js plugin registration API correctly, mixed dataset types
-          (scatter + line) in a single chart, proper options structure. Idiomatic
-          and correct usage of Chart.js 4.x patterns.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Chart.js's plugin lifecycle hooks (beforeDraw for background,
-          afterDatasetsDraw for error bars with canvas clipping) — distinctly Chart.js.
-          Mixed chart types in one datasets array also leverages Chart.js's mixed
-          chart capability.
-  verdict: REJECTED
+        comment: Chart.js plugin API with beforeDraw/beforeDatasetsDraw/afterDatasetsDraw
+          hooks is a distinctive Chart.js pattern. Custom canvas 2D drawing within
+          Chart.js lifecycle is highly library-specific. Mixed chart type (scatter+line
+          in single instance) leverages Chart.js core feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - annotations
+  - layer-composition
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
