@@ -62,11 +62,11 @@ for (let i = 0; i <= 500; i++) {
 const allFlux = fluxes.concat(modelPts.map(d => d[1]));
 const fMin = Math.min(...allFlux);
 const fMax = Math.max(...allFlux);
-const vPad = (fMax - fMin) * 0.42;
+const vPad = (fMax - fMin) * 0.20;
 
 // Imprint palette — first series is always brand green
 const obsColor = t.palette[0];  // #009E73 — observed photometry
-const modColor = t.palette[2];  // #4467A3 — fitted transit model
+const modColor = t.palette[1];  // #C475FD — fitted transit model
 
 // Title length: 77 chars → fontSize = round(22 × 67/77) = 19px
 const chart = Highcharts.chart("container", {
