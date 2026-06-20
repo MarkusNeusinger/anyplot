@@ -1,0 +1,239 @@
+library: chartjs
+language: javascript
+specification_id: histogram-capability
+created: '2026-06-20T15:20:16Z'
+updated: '2026-06-20T15:39:42Z'
+generated_by: claude-sonnet
+workflow_run: 27875110775
+issue: 4552
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - In-spec region background shading is a high-quality design touch that immediately
+    communicates the tolerance band
+  - Custom specPlugin using Chart.js plugin lifecycle hooks (beforeDatasetsDraw/afterDatasetsDraw)
+    is idiomatic and elegant
+  - Deterministic LCG + Box-Muller RNG handles JS lack of seeded random correctly
+  - All spec requirements fully covered including Cp/Cpk calculated from sample statistics
+  - Theme adaptation is thorough — annotation box, all text, grid, and backgrounds
+    properly use t. tokens
+  weaknesses:
+  - Spec-line labels (LSL, USL, Target) rendered at 15px bold are marginally smaller
+    than axis titles at 16px — consider bumping to 16–17px for visual balance
+  - Both axes have grid lines active; style guide prefers y-axis grid only for bar/histogram
+    charts — consider removing x-axis grid
+  - Legend order shows Normal fit before Frequency due to order property; canonical
+    order (histogram bars first) would be more intuitive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "histogram-capability · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "Shaft Diameter (mm)" and "Frequency" in dark ink at 16px. Tick labels in inkSoft at 14px. LSL/USL/Target labels in 15px bold at top of their respective spec lines.
+      Data: Histogram bars in #009E73 (palette[0]) with 'bb' alpha transparency and green border. Normal-fit curve in lavender #C475FD (palette[1]). LSL/USL dashed lines in #AE3030 (Imprint slot 5 semantic red). Target dashed line in inkSoft gray. Light green in-spec region shading. Cp/Cpk annotation box in white (#FFFDF6 elevatedBg) with dark text.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels appear as off-white/light ink (#F0EFE8) on dark background. Tick labels in inkSoft lighter gray (#B8B7B0). All text clearly visible against near-black background.
+      Data: All data colors identical to light render — histogram bars same green, normal-fit same lavender, spec lines same red/gray. Annotation box uses elevatedBg (#242420) fill with t.ink (light) text. In-spec shading retains same green alpha.
+      Legibility verdict: PASS — no dark-on-dark failure; all text is clearly visible against #1A1A17 background
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes. Spec-line labels (15px bold) marginally
+          smaller than axis titles (16px).
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements clearly visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette compliant; #AE3030 for limits is a semantic anchor
+          with redundant encoding.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good proportions and layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units; correct title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series palette[0] (#009E73); Normal fit palette[1]; LSL/USL
+          use Imprint slot 5 (#AE3030) as semantic red. Backgrounds correct.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: In-spec region shading and styled Cp/Cpk annotation box demonstrate
+          genuine design intent above default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axis borders removed, theme-adaptive grid at 15% opacity. Both axes
+          have grid lines; y-only preferred for histograms.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point via in-spec shading; capability indices prominent;
+          red spec lines guide attention.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: histogram with fitted normal distribution curve and spec
+          lines.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histogram, normal curve, LSL/USL dashed lines, Target line, Cp/Cpk
+          annotation — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = shaft diameter (mm), Y = frequency. 200 measurements, full data
+          range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct. Legend labels: Frequency and Normal fit.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All aspects shown including bonus in-spec shading.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter manufacturing scenario is realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 measurements within recommended range; Cp=1.43/Cpk=1.27 are plausible
+          engineering values.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: lcg/randn helper functions minimal and necessary for JS seeded RNG.
+          specPlugin object is idiomatic Chart.js.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seeded at 42 with Box-Muller; fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; window globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-sectioned, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html. Current API
+          used.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: barPercentage/categoryPercentage for gapless bins, linear scale,
+          order property, mixed chart type — all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Chart.js plugin using beforeDatasetsDraw/afterDatasetsDraw
+          lifecycle hooks is an advanced, distinctive feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
