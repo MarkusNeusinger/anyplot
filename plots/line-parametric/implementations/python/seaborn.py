@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 line-parametric: Parametric Curve Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
