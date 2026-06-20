@@ -1,8 +1,9 @@
-""" pyplots.ai
+"""pyplots.ai
 lightcurve-transit: Astronomical Light Curve
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-18
+Library: letsplot | Python
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -17,6 +18,7 @@ from lets_plot import (
     geom_line,
     geom_point,
     geom_ribbon,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
@@ -33,12 +35,26 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data - simulated exoplanet transit (phase-folded)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Imprint palette — first series always #009E73
+IMPRINT_GREEN = "#009E73"
+IMPRINT_BLUE = "#4467A3"
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Grid: rgba(INK, 0.15) composited on PAGE_BG
+GRID_COLOR = "#D8D7D0" if THEME == "light" else "#3A3A36"
+
+# Data: simulated phase-folded exoplanet transit
 np.random.seed(42)
 n_points = 400
 phase = np.sort(np.random.uniform(0.0, 1.0, n_points))
 
-# Transit parameters
 transit_center = 0.5
 transit_duration = 0.08
 transit_depth = 0.01
@@ -46,7 +62,7 @@ ingress_duration = 0.015
 half_dur = transit_duration / 2
 half_ingress = ingress_duration / 2
 
-# Vectorized transit model with quadratic limb darkening (observations)
+# Limb-darkened transit model (observations)
 dist_obs = np.abs(phase - transit_center)
 model_flux = np.ones_like(phase)
 in_transit = dist_obs < half_dur - half_ingress
@@ -55,11 +71,10 @@ model_flux[in_transit] = 1.0 - transit_depth * (1 - 0.3 * (1 - np.sqrt(1 - r_obs
 in_ingress = (dist_obs >= half_dur - half_ingress) & (dist_obs < half_dur + half_ingress)
 model_flux[in_ingress] = 1.0 - transit_depth * (half_dur + half_ingress - dist_obs[in_ingress]) / (2 * half_ingress)
 
-# Add noise to create observed flux
 flux_err = np.random.uniform(0.001, 0.003, n_points)
 flux = model_flux + np.random.normal(0, 1, n_points) * flux_err
 
-# Smooth model curve with uncertainty band
+# Smooth model curve with uncertainty envelope
 phase_model = np.linspace(0.0, 1.0, 1000)
 dist_model = np.abs(phase_model - transit_center)
 model_smooth = np.ones_like(phase_model)
@@ -71,11 +86,9 @@ model_smooth[in_ingress_m] = 1.0 - transit_depth * (half_dur + half_ingress - di
     2 * half_ingress
 )
 
-# Model uncertainty envelope (±0.0015 flux, realistic systematic uncertainty)
 model_upper = model_smooth + 0.0015
 model_lower = model_smooth - 0.0015
 
-# DataFrames
 df_obs = pd.DataFrame(
     {
         "phase": phase,
@@ -98,14 +111,17 @@ df_model = pd.DataFrame(
     }
 )
 
-# Plot with lets-plot distinctive features: geom_ribbon, layer_tooltips
+# Annotation: mark the transit minimum
+transit_min = model_smooth[np.argmin(np.abs(phase_model - transit_center))]
+df_annot = pd.DataFrame({"phase": [transit_center], "flux": [transit_min - 0.0018], "label": ["Transit Minimum"]})
+
 plot = (
     ggplot()
     + geom_ribbon(
         aes(x="phase", ymin="lower", ymax="upper", fill="band"),
         data=df_model,
-        alpha=0.15,
-        color="#C44E52",
+        alpha=0.18,
+        color=IMPRINT_BLUE,
         size=0.0,
         tooltips=layer_tooltips()
         .line("Model flux|@flux")
@@ -114,13 +130,13 @@ plot = (
         .format("@phase", ".3f"),
     )
     + geom_errorbar(
-        aes(x="phase", ymin="ymin", ymax="ymax"), data=df_obs, color="#A8C4D8", alpha=0.35, size=0.4, width=0.0
+        aes(x="phase", ymin="ymin", ymax="ymax"), data=df_obs, color=INK_MUTED, alpha=0.5, size=0.4, width=0.0
     )
     + geom_point(
         aes(x="phase", y="flux", color="series"),
         data=df_obs,
-        size=3.5,
-        alpha=0.45,
+        size=2.5,
+        alpha=0.5,
         tooltips=layer_tooltips()
         .line("Flux|@flux")
         .line("Phase|@phase")
@@ -129,9 +145,10 @@ plot = (
         .format("@phase", ".3f")
         .format("@flux_err", ".4f"),
     )
-    + geom_line(aes(x="phase", y="flux", color="series"), data=df_model, size=2, tooltips="none")
-    + scale_color_manual(values={"Observations": "#306998", "Transit Model": "#C44E52"}, name="")
-    + scale_fill_manual(values={"Model ±1.5σ": "#C44E52"}, name="")
+    + geom_line(aes(x="phase", y="flux", color="series"), data=df_model, size=1.5, tooltips="none")
+    + geom_text(aes(x="phase", y="flux", label="label"), data=df_annot, color=INK_SOFT, size=3, hjust=0.5, vjust=0.5)
+    + scale_color_manual(values={"Observations": IMPRINT_GREEN, "Transit Model": IMPRINT_BLUE}, name="")
+    + scale_fill_manual(values={"Model ±1.5σ": IMPRINT_BLUE}, name="")
     + scale_x_continuous(name="Orbital Phase", breaks=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     + scale_y_continuous(name="Relative Flux")
     + labs(
@@ -140,22 +157,23 @@ plot = (
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold", color="#2D2D2D"),
-        plot_subtitle=element_text(size=16, color="#777777"),
-        axis_title=element_text(size=20, color="#444444"),
-        axis_text=element_text(size=16, color="#555555"),
-        legend_text=element_text(size=16),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        plot_subtitle=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="top",
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#ECECEC", size=0.4),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.4),
         axis_ticks=element_blank(),
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
-        panel_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
+        axis_line=element_line(color=INK_SOFT),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", scale=3, path=".")
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
