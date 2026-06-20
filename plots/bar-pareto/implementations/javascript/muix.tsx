@@ -11,11 +11,11 @@
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { BarPlot } from "@mui/x-charts/BarChart";
+import { LinePlot, MarkPlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -29,66 +29,16 @@ const categories = [
 const counts = [412, 298, 187, 143, 98, 76, 54, 32];
 const total = counts.reduce((a, b) => a + b, 0); // 1300
 
-// Cumulative percentages: 31.7, 54.6, 69.0, 80.0, 87.5, 93.4, 97.5, 100.0
+// Cumulative percentages (0–100 range): 31.7, 54.6, 69.0, 80.0, 87.5, 93.4, 97.5, 100.0
 let running = 0;
 const cumPercent = counts.map((c) => {
   running += c;
   return parseFloat(((running / total) * 100).toFixed(1));
 });
 
-const COUNT_MAX = 460;       // primary y-axis max (headroom above 412)
-const PCT_SCALE = COUNT_MAX / 100; // 4.6 — maps 100% → COUNT_MAX
+const COUNT_MAX = 500; // multiple of 500 ensures left ticks (100,200,300,400,500) align with right ticks (20,40,60,80,100%) at exact 20% intervals
 
-// Cumulative values in primary-axis units (same scale as bars)
-const scaledCum = cumPercent.map((p) => parseFloat((p * PCT_SCALE).toFixed(1)));
-// [145.8, 251.2, 317.4, 368.0, 402.5, 429.6, 448.5, 460.0]
-
-// 80% threshold in primary scale units (80 × 4.6 = 368)
-const EIGHTY_Y = 80 * PCT_SCALE;
-
-const MARGIN = { top: 24, right: 90, bottom: 72, left: 80 };
-
-// Renders inside ChartContainer's SVG — uses MUI X coordinate hooks.
-// useXScale()/useYScale() return values in FULL SVG coordinates (margins included),
-// so NO translate is needed on the <g> element.
-function CumulativeLine() {
-  const xScale = useXScale();
-  const yScale = useYScale("counts");
-
-  if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
-
-  const bw = xScale.bandwidth();
-  const pts = scaledCum.map((v, i) => ({
-    x: (xScale(categories[i]) ?? 0) + bw / 2, // center of each bar, SVG x coords
-    y: yScale(v) ?? 0,                          // SVG y coords (includes margin.top)
-  }));
-
-  const pathD = pts.map(({ x, y }, i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
-
-  return (
-    // No translate — scale output is already in full SVG coordinate space
-    <g>
-      <path
-        d={pathD}
-        fill="none"
-        stroke={t.palette[1]}
-        strokeWidth={3}
-        strokeLinejoin="round"
-      />
-      {pts.map(({ x, y }, i) => (
-        <circle
-          key={i}
-          cx={x}
-          cy={y}
-          r={7}
-          fill={t.palette[1]}
-          stroke={t.pageBg}
-          strokeWidth={2}
-        />
-      ))}
-    </g>
-  );
-}
+const MARGIN = { top: 24, right: 90, bottom: 80, left: 80 };
 
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;   // 1600 CSS px (landscape)
@@ -129,6 +79,16 @@ export default function Chart() {
             label: "Defect Count",
             color: t.palette[0],
           },
+          {
+            type: "line",
+            id: "cum-line",
+            yAxisId: "percent",
+            data: cumPercent,
+            label: "Cumulative %",
+            color: t.palette[1],
+            showMark: true,
+            curve: "linear",
+          },
         ]}
         xAxis={[
           {
@@ -144,17 +104,17 @@ export default function Chart() {
             id: "counts",
             min: 0,
             max: COUNT_MAX,
-            tickInterval: [0, 100, 200, 300, 400],
+            tickMinStep: 100,
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
           },
           {
-            // Right axis: same 0–460 range re-labelled as 0–100%
-            id: "percentR",
+            // Right axis: 0–100% domain. Aligned with left axis (100/500 = 20/100).
+            id: "percent",
             position: "right",
             min: 0,
-            max: COUNT_MAX,
-            tickInterval: [0, 92, 184, 276, 368, 460], // 0 20 40 60 80 100 %
-            valueFormatter: (v) => `${Math.round(v / PCT_SCALE)}%`,
+            max: 100,
+            tickMinStep: 20,
+            valueFormatter: (v) => `${v}%`,
             tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
           },
         ]}
@@ -167,11 +127,12 @@ export default function Chart() {
       >
         <ChartsGrid horizontal />
         <BarPlot />
-        <CumulativeLine />
-        {/* 80% threshold: y=368 on primary scale == 80% on right-axis label */}
+        <LinePlot />
+        <MarkPlot />
+        {/* 80% threshold on the percentage axis — y=80 == 80% cumulative */}
         <ChartsReferenceLine
-          y={EIGHTY_Y}
-          axisId="counts"
+          y={80}
+          axisId="percent"
           label="80%"
           labelAlign="end"
           lineStyle={{ stroke: t.amber, strokeDasharray: "8 5", strokeWidth: 2.5 }}
@@ -179,7 +140,7 @@ export default function Chart() {
         />
         <ChartsXAxis axisId="x" position="bottom" label="Defect Type" labelStyle={{ fontSize: 14, fill: t.ink }} />
         <ChartsYAxis axisId="counts" position="left" label="Defect Count" labelStyle={{ fontSize: 14, fill: t.ink }} />
-        <ChartsYAxis axisId="percentR" position="right" label="Cumulative %" labelStyle={{ fontSize: 14, fill: t.ink }} disableLine />
+        <ChartsYAxis axisId="percent" position="right" label="Cumulative %" labelStyle={{ fontSize: 14, fill: t.ink }} disableLine disableTicks />
       </ChartContainer>
 
       {/* Legend */}
