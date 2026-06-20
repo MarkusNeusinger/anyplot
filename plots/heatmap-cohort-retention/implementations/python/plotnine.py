@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-20
 """
 
 # Remove script dir from sys.path first to prevent self-shadowing the 'plotnine' library import
@@ -93,6 +92,11 @@ jan_m4 = df[(df["cohort"] == "Jan 2024") & (df["period"] == compare_period)]["re
 jun_m4 = df[(df["cohort"] == "Jun 2024") & (df["period"] == compare_period)]["retention_rate"].values[0]
 improvement = jun_m4 - jan_m4
 
+# Discrete y positions: reversed categories → Oct 2024 at pos 1 (bottom), Jan 2024 at pos 10 (top)
+# Jun 2024 is index 5 in original → position (n_cohorts - 5) = 5 from bottom
+JAN_Y = n_cohorts  # 10
+JUN_Y = n_cohorts - cohorts.index("Jun 2024")  # 10 - 5 = 5
+
 # Build plot — square 2400×2400 canvas
 plot = (
     ggplot(df, aes(x="period", y="cohort_label", fill="retention_rate"))
@@ -102,12 +106,33 @@ plot = (
     + scale_color_identity()
     + scale_x_continuous(breaks=list(range(n_cohorts)), labels=[f"M{i}" for i in range(n_cohorts)])
     + scale_y_discrete(expand=(0, 0))
+    # Highlight the two cells being compared — borders only (fill="none")
+    + annotate(
+        "rect",
+        xmin=compare_period - 0.5,
+        xmax=compare_period + 0.5,
+        ymin=JAN_Y - 0.5,
+        ymax=JAN_Y + 0.5,
+        fill="none",
+        color=INK,
+        size=2.0,
+    )
+    + annotate(
+        "rect",
+        xmin=compare_period - 0.5,
+        xmax=compare_period + 0.5,
+        ymin=JUN_Y - 0.5,
+        ymax=JUN_Y + 0.5,
+        fill="none",
+        color=INK,
+        size=2.0,
+    )
     + annotate(
         "text",
-        x=7.5,
-        y=3,
+        x=7.2,
+        y=2.3,
         label=f"M{compare_period}: +{improvement:.0f}pp\nJan→Jun 2024",
-        size=3.0,
+        size=3.8,
         color=INK_MUTED,
         ha="center",
     )
@@ -127,9 +152,10 @@ plot = (
         axis_text_y=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
+        legend_position=(0.87, 0.58),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_border=element_blank(),
+        panel_border=element_rect(color=INK_SOFT, size=0.8),
         axis_ticks=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color="none"),
         panel_background=element_rect(fill=PAGE_BG, color="none"),
