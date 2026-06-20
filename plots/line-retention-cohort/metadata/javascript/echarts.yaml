@@ -1,0 +1,258 @@
+library: echarts
+language: javascript
+specification_id: line-retention-cohort
+created: '2026-06-20T03:42:34Z'
+updated: '2026-06-20T03:59:05Z'
+generated_by: claude-sonnet
+workflow_run: 27859036247
+issue: 4572
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Strong spec compliance: all cohort lines start at 100%, 20% benchmark reference
+    line present, legend with cohort sizes'
+  - 'Intentional visual hierarchy: older cohorts are thinner/less opaque, newer cohorts
+    thicker/more prominent'
+  - 'Excellent ECharts library mastery: endLabel for direct series labeling, markLine
+    for benchmark, smooth curves, emphasis.focus:series'
+  - Both light and dark themes correctly render with Imprint palette — data colors
+    identical, only chrome flips
+  - Realistic product analytics scenario with plausible improving retention trend
+    across 5 monthly cohorts
+  weaknesses:
+  - 'End labels at week 12 are crowded near the 20% benchmark line: Feb 2025, 20%
+    benchmark label, and Jan 2025 compete for vertical space and appear to overlap
+    — increase grid right margin or stagger endLabel positions to avoid collision'
+  - Helper function retentionAt() adds slight indirection; a more KISS approach would
+    inline the computation inside the cohorts.map callback
+  - Older cohort lines (Jan-Feb 2025) with opacity 0.45-0.59 become quite faint, which
+    may reduce readability on mobile viewports — consider a higher minimum opacity
+    floor (e.g. 0.6)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-retention-cohort · javascript · echarts · anyplot.ai" centered in dark ink, clearly readable. Y-axis label "Retention (%)" and X-axis label "Week since signup" in dark secondary ink, both legible. Tick labels in soft ink color at readable size. Y-axis gridlines subtle and horizontal-only.
+      Data: 5 cohort lines starting at 100% at week 0, exhibiting exponential decay. Colors: Jan 2025 = #009E73 (brand green, thinnest/most faded), Feb 2025 = #C475FD (lavender), Mar 2025 = #4467A3 (blue), Apr 2025 = #BD8233 (ochre), May 2025 = #AE3030 (red, thickest/most prominent). Horizontal dashed reference line at 20% with "20% benchmark" label. End labels at week 12 for each series. Bottom legend shows all cohorts with n= values.
+      Legibility verdict: PASS — all text readable; minor crowding of end labels near 20% benchmark line (Feb 2025, 20% benchmark text, Jan 2025 are clustered)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8 equivalent), clearly readable against dark background. Axis labels and tick labels in lighter secondary tone, all legible. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — same brand green for Jan 2025, same lavender/blue/ochre/red progression. The benchmark dashed line and end labels render in light ink tones appropriate for dark theme.
+      Legibility verdict: PASS — all text readable in dark theme; same end-label crowding near 20% benchmark as light render, but all text remains legible
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, labels 14px, ticks 13px).
+          Minor concern: end labels at week 12 are small (12px) and cluster near 20%
+          benchmark area'
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: End labels at right side cluster near 20% benchmark — Feb 2025 end
+          label, 20% benchmark marker label, and Jan 2025 end label compete for vertical
+          space; minimal but visible crowding
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and markers clearly visible; intentional opacity gradient (0.45-1.0)
+          makes older cohorts faint but is a design choice
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; redundant encoding via line width and
+          opacity variation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good margins (left:90, right:130, top:88, bottom:110);
+          legend and title well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Week since signup (x), Retention (%) with % formatter (y) — both
+          descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Jan 2025) = palette[0] = #009E73; all 5 series use
+          Imprint palette positions 0-4; background transparent (harness provides
+          correct theme bg); ink/inkSoft used for chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional progressive hierarchy (older=thinner/faded, newer=thicker/prominent)
+          is a thoughtful design; custom palette; end labels for direct labeling —
+          above defaults but not publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only; axisTick hidden on both axes; y-axis axisLine hidden;
+          generous margins — visible refinement beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Progressive fade creates clear focal point on May 2025 (newest/best
+          cohort); benchmark line contextualizes target; improving trend across cohorts
+          readable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: multi-series line chart showing retention decay curves'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All curves start at 100%; distinct colors per cohort; legend with
+          n= sizes; Y-axis 0-100%; 20% benchmark dashed line; opacity/width variation
+          for older vs newer cohorts
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: weeks 0-12 since signup; Y: retention %; all 5 cohorts visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: line-retention-cohort · javascript · echarts · anyplot.ai;
+          legend shows cohort labels with n= values'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 cohorts (within spec 3-6 range), 13 time points (weeks 0-12), exponential
+          decay with floor, improving trend visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts (Jan-May 2025) tracked weekly — real product
+          analytics scenario; cohort sizes 1245-1834 are realistic; improving retention
+          reflects real product iteration
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% retention range; realistic floor values (12-26%); exponential
+          decay model is domain-appropriate
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Named helper function retentionAt() adds minor indirection; otherwise
+          flat and linear
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministically computed from fixed parameters; no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; echarts is global; t = window.ANYPLOT_TOKENS used
+          throughout
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-structured JS; appropriate use of Array.from, map, Math.exp
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init(el) with no explicit size; animation: false; no devicePixelRatio
+          passed'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ECharts API: setOption with animation:false, proper grid/axis
+          config, markLine, endLabel — all idiomatic'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: endLabel for right-side series annotation, markLine for benchmark
+          reference, smooth:0.3, emphasis.focus:series, custom tooltip formatter —
+          multiple ECharts-distinctive features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

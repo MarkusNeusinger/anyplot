@@ -1,15 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-16
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-20
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Data - Monthly signup cohorts tracked weekly for 12 weeks
+# Script filename shadows the installed `pygal` package when run as `python pygal.py`;
+# dropping the script directory from sys.path lets the real package resolve.
+sys.path.pop(0)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — canonical order, position 1 = brand green
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+# 5 cohort series use positions 1-5; threshold reference line gets muted neutral
+SERIES_COLORS = IMPRINT_PALETTE[:5] + (INK_MUTED,)
+
+# Data — Monthly signup cohorts tracked weekly for 12 weeks
 np.random.seed(42)
 
 cohorts = {
@@ -31,45 +50,38 @@ for cohort, params in cohorts.items():
         retention.append(max(round(prev - max(drop, 0.5), 1), 5.0))
     retention_data[cohort] = retention
 
-# Style - bold palette with strong contrast, threshold line first
-colors_with_opacity = (
-    "#B03030",
-    "rgba(48, 105, 152, 0.80)",
-    "rgba(215, 100, 45, 0.85)",
-    "rgba(45, 155, 90, 0.88)",
-    "rgba(200, 155, 30, 0.92)",
-    "rgba(115, 70, 170, 1.0)",
-)
+# Title — 51 chars, within 67-char baseline so no font scaling needed
+title = "line-retention-cohort · python · pygal · anyplot.ai"
 
+# Style — theme-adaptive Imprint palette tokens
 custom_style = Style(
-    background="#f7f7f7",
-    plot_background="#fdfdfd",
-    foreground="#2a2a2a",
-    foreground_strong="#1a1a1a",
-    foreground_subtle="#e0e0e0",
-    colors=colors_with_opacity,
-    title_font_size=74,
-    label_font_size=48,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=SERIES_COLORS,
+    title_font_size=66,
+    label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=46,
+    legend_font_size=44,
     value_font_size=36,
     opacity=".95",
     opacity_hover="1",
-    transition="200ms ease-in",
+    stroke_width=3,
     font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     title_font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     legend_font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     label_font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     major_label_font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     value_font_family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-    stroke_width=5,
 )
 
 # Plot
 chart = pygal.Line(
-    width=4800,
-    height=2700,
-    title="line-retention-cohort \u00b7 pygal \u00b7 pyplots.ai",
+    width=3200,
+    height=1800,
+    title=title,
     x_title="Weeks Since Signup",
     y_title="Retained Users (%)",
     style=custom_style,
@@ -103,18 +115,8 @@ chart = pygal.Line(
 chart.x_labels = [str(w) for w in weeks]
 chart.x_labels_major = ["0", "3", "6", "9", "12"]
 
-# Add reference threshold line at 20% retention
-chart.add(
-    "\u2500\u2500 20% Retention Threshold",
-    [{"value": 20.0, "label": "Target: 20% retention benchmark"}] * len(weeks),
-    stroke_style={"width": 6, "dasharray": "24, 14", "linecap": "round"},
-    show_dots=False,
-    dots_size=0,
-    allow_interruptions=False,
-)
-
-# Add cohorts with increasing stroke width and dot size for newer cohorts
-stroke_widths = [4, 4.5, 5.5, 6.5, 8]
+# Add cohorts: oldest=thinnest/smaller dots, newest=thickest/larger for visual emphasis
+stroke_widths = [4, 5, 6, 7, 8.5]
 dot_sizes = [5, 6, 7, 8, 10]
 cohort_list = list(cohorts.items())
 
@@ -132,6 +134,18 @@ for i, (cohort, params) in enumerate(cohort_list):
         allow_interruptions=False,
     )
 
-# Save
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Reference threshold at 20% retention (gets muted neutral — 6th color in SERIES_COLORS)
+# Dash-dot pattern "28, 8, 4, 8" is visually distinct from pygal's Y-guide dashes in light mode
+chart.add(
+    "─ 20% Retention Threshold",
+    [{"value": 20.0, "label": "Target: 20% retention benchmark"}] * len(weeks),
+    stroke_style={"width": 5.5, "dasharray": "28, 8, 4, 8", "linecap": "round"},
+    show_dots=False,
+    dots_size=0,
+    allow_interruptions=False,
+)
+
+# Save PNG and interactive HTML
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
