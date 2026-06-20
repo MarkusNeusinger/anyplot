@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -66,18 +66,22 @@ for i in range(num_cohorts):
                 f"Cohort size: {cohort_sizes[i]:,} users<br>"
                 f"Retained: <b>{val:.1f}%</b>"
             )
-            # Dark text on green-end cells, light on blue-end cells
-            text_color = "#1A1A17" if val < 50 else "#F0EFE8"
+            # Luminance-based contrast: WCAG crossover on imprint_seq is ~88%
+            text_color = "#F0EFE8" if val >= 88 else "#1A1A17"
             cell_annotations.append(
                 {
                     "x": x_labels[j],
                     "y": y_labels[i],
                     "text": f"<b>{val:.0f}%</b>",
                     "showarrow": False,
-                    "font": {"size": 8, "color": text_color},
+                    "font": {"size": 9, "color": text_color},
                 }
             )
     hover_text.append(row_hover)
+
+# Storytelling: identify the cohort with the best Month-3 retention
+m3_entries = [(retention[i, 3], i) for i in range(num_cohorts) if not np.isnan(retention[i, 3])]
+best_m3_val, best_m3_i = max(m3_entries)
 
 # Plot
 fig = go.Figure(
@@ -107,6 +111,23 @@ fig = go.Figure(
 
 for ann in cell_annotations:
     fig.add_annotation(**ann)
+
+# Storytelling annotation in the empty lower-right triangle (newer cohorts, later months)
+fig.add_annotation(
+    xref="paper",
+    yref="paper",
+    x=0.72,
+    y=0.10,
+    text=f"★ Best Month-3 cohort<br>{cohort_labels[best_m3_i]}: {best_m3_val:.0f}%",
+    showarrow=False,
+    font={"size": 9, "color": INK, "family": "Arial, Helvetica, sans-serif"},
+    bgcolor=PAGE_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    xanchor="center",
+    yanchor="middle",
+    opacity=0.9,
+)
 
 title = "heatmap-cohort-retention · python · plotly · anyplot.ai"
 
