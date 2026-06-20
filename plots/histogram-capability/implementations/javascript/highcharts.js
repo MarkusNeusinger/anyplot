@@ -105,6 +105,20 @@ const chart = Highcharts.chart("container", {
             style: { color: t.inkSoft, fontSize: "14px" }
         },
         gridLineWidth: 0,
+        plotBands: [
+            {
+                from: BIN_MIN,
+                to: LSL,
+                color: "rgba(174, 48, 48, 0.08)",
+                zIndex: 0
+            },
+            {
+                from: USL,
+                to: BIN_MAX,
+                color: "rgba(174, 48, 48, 0.08)",
+                zIndex: 0
+            }
+        ],
         plotLines: [
             {
                 color: "#AE3030",
@@ -188,7 +202,7 @@ const chart = Highcharts.chart("container", {
             name: "Normal Fit",
             type: "line",
             data: normalCurveData,
-            color: t.palette[2],
+            color: t.palette[1],
             lineWidth: 3,
             marker: { enabled: false }
         }
