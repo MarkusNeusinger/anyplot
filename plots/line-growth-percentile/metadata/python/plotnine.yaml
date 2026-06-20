@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-growth-percentile
 created: '2026-03-19T19:52:08Z'
-updated: '2026-06-20T09:33:57Z'
+updated: '2026-06-20T09:53:38Z'
 generated_by: claude-sonnet
 workflow_run: 27866754930
 issue: 4555
@@ -12,130 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-grow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Excellent spec compliance — all required features present (graduated percentile
-    bands, right-margin labels, patient overlay, blue semantic exception for boys,
-    emphasized median)
-  - 'Clean palette usage: #009E73 for patient data (Imprint position 1 correct), #4467A3
-    with graduated alpha for bands (valid semantic exception)'
-  - 'Both themes render correctly with proper #FAF8F1 / #1A1A17 backgrounds and theme-adaptive
-    chrome tokens throughout'
-  - Idiomatic plotnine code using geom_ribbon(), scale_fill_manual(), scale_alpha_manual()
-    — clean grammar of graphics layer composition
-  - Realistic WHO-style weight-for-age data with a believable patient trajectory around
-    the 65th percentile
+  - Graduated alpha bands (darker extremes, lighter near median) elegantly implement
+    the spec requirement
+  - Semantic blue (#4467A3 Imprint position 3) for boys with explicit palette justification
+    in code comments
+  - Perfect theme adaptation in both renders — INK/INK_SOFT/PAGE_BG tokens applied
+    to all chrome elements
+  - 'Idiomatic plotnine grammar: geom_ribbon + scale_fill_manual + scale_alpha_manual
+    + pd.Categorical ordering'
+  - Clean multi-layer composition — reference bands → boundary lines → emphasized
+    median → patient overlay with open-circle markers (fill=PAGE_BG)
   weaknesses:
-  - Percentile margin labels (P3-P97) are small (geom_text size=3.0mm ≈ 8.5pt) — tight
-    clustering in upper margin where bands converge, and hard to read at mobile scale
-    (400px)
-  - Median line emphasis is present but subtle — size=1.5 vs boundary lines at size=0.5
-    — the distinction could be stronger with a more prominent size difference or a
-    slightly brighter shade of blue
-  - No explicit top/right spine removal beyond theme_minimal defaults — removing residual
-    spines explicitly would add refinement
+  - 'Patient trajectory falls below P3 reference line from ~age 18 months onwards:
+    polynomial approximation overestimates median for 18-36 months (formula gives
+    P50≈20.5 kg at 36 months vs WHO P50≈14.3 kg), causing the patient at 15.6 kg to
+    appear well below P3=18.4 kg — contradicts the code comment describing a healthy
+    boy at the 65th percentile'
+  - Patient also exceeds P97 at ages 2-6 months (patient=5.8 kg at age 2 vs P97≈5.5
+    kg) — polynomial approximation is inaccurate in both directions
+  - Right-margin percentile labels (geom_text size=3.8mm) are tight and small — consider
+    size=4.5 and nudge_x=1.2 for better readability
+  - No descriptive title prefix — chart would benefit from Pediatric Weight-for-Age
+    Growth Chart · line-growth-percentile · ... for context
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "line-growth-percentile · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Age (months)" and "Weight (kg)" in dark ink at 10pt, well-proportioned. Tick labels at 8pt in secondary ink (#4A4A44), readable. Subtle horizontal grid lines only (y-axis), low opacity.
-      Data: Five graduated-alpha blue (#4467A3) ribbons with darker alpha at extremes (P3-P10, P90-P97: α=0.40) and lighter near median (P25-P75: α=0.14). Thin boundary lines between bands. Thick dark blue median line (P50, size=1.5) visible. Brand green (#009E73) patient line with white-filled open circle markers overlaid, contrasting clearly against blue bands. Percentile labels P3-P97 at right margin in secondary ink — present but small and tight.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "line-growth-percentile · python · plotnine · anyplot.ai" in dark ink, clearly readable. X-axis "Age (months)" and Y-axis "Weight (kg)" in dark ink, readable. Tick labels (0,3,6...36 and 2,4,6...18) in softer INK_SOFT, readable.
+      Data: Five blue (#4467A3) graduated-alpha bands spanning P3–P97. Thin low-alpha boundary lines trace P3/P10/P25/P75/P90/P97 edges. Bold thick median line (P50) prominent in blue. Small right-margin labels (P97...P3) stacked at x=36.5, readable though compact. Patient trajectory in brand green #009E73 — open-circle markers with PAGE_BG fill and green stroke, connected by a green line. "Patient" label in green at the right end of the patient line. From ~age 18 months, the patient line visually falls BELOW the bottom edge of the reference bands (P3 bottom), indicating the polynomial reference formula significantly overestimates growth for ages 18-36 months.
+      Legibility verdict: PASS (all chrome elements readable). Data accuracy note: patient falls outside reference range in second half of chart.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light near-white (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in adaptive lighter tones, readable. Subtle horizontal grid lines visible but not dominant.
-      Data: Same blue ribbons now appear brighter/more vivid against the dark background (same #4467A3 with graduated alpha). Brand green (#009E73) patient line with white-filled markers stands out dramatically against the dark surface. Percentile labels on right margin appear in lighter muted tone, readable but still small.
-      Data colors are identical to light render — only chrome (background, text, grid) flipped. No dark-on-dark failures observed.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected
+      Background: Warm near-black #1A1A17 — correct, no pure black.
+      Chrome: Title, axis labels, and tick labels all render in light INK/INK_SOFT tokens — clearly readable against the dark background. No dark-on-dark failures detected. Grid lines subtle.
+      Data: Blue bands appear in richer/deeper tones on the dark surface. Patient green #009E73 is vibrant and clearly distinguishable. Data colors are IDENTICAL to the light render — only background and text chrome flipped. The same patient-below-P3 issue applies structurally.
+      Legibility verdict: PASS (all elements readable; theme adaptation correct).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title (12pt), axis labels (10pt), ticks (8pt) all readable in both
-          themes. Right-margin percentile labels at geom_text size=3.0mm (~8.5pt)
-          are small and tight at top of chart — marginally readable at full canvas,
-          likely too small at mobile scale
+        comment: Font sizes explicitly set (title=12pt, axis=10pt, ticks=8pt, labels=3.8mm).
+          Readable at desktop. Right-margin percentile labels small but legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No major text overlaps. Percentile labels in right margin are closely
-          spaced (especially P75-P97 where bands converge), nearly touching but not
-          clearly overlapping
+        comment: Right-margin percentile labels (P97...P3) tightly stacked at age
+          36 — readable but compact.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Patient line (#009E73) highly visible over bands. Graduated alpha
-          bands clearly show intensity gradient. Median line size=1.5 vs boundary
-          size=0.5 — emphasis present but subtle
+        comment: Patient markers (size=4) appropriate for 12 sparse data points. Lines
+          and bands clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green patient vs blue bands — high contrast, CVD-safe. White-filled
-          markers add redundant encoding
+        comment: Green patient (#009E73) on blue bands (#4467A3) — CVD-safe, clearly
+          distinguishable.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title ~65% width. No clipping. Extended
-          x-axis to 39 accommodates margin labels. Proportions appropriate for clinical
-          chart
+        comment: Canvas gate passed. Good proportions. Title fits at ~65% width. Nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. 'Age (months)' and 'Weight (kg)' with
-          units — descriptive and correct
+        comment: Title format correct. Age (months) and Weight (kg) with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 (Imprint pos 1) for patient data — first categorical series
-          correct. #4467A3 (Imprint pos 3) for bands — valid semantic exception (spec
-          explicitly requires blue for boys). Correct backgrounds both themes'
+        comment: 'Patient uses #009E73 (Imprint position 1). Blue #4467A3 (Imprint
+          position 3) for boys reference bands — semantic exception correct. Theme
+          chrome correct in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above-default design: semantic color exception correctly applied,
-          graduated alpha creates clinical depth, white-filled patient markers add
-          visual distinction, margin labels instead of legend is sophisticated'
+        comment: 'Clearly above defaults: graduated alpha bands, emphasized median,
+          semantic blue for boys, open-circle patient markers with PAGE_BG fill —
+          thoughtful design hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Legend removed in favor of margin labels, x-grid removed, y-grid
-          subtle, theme_minimal base. No explicit top/right spine removal statement
-          — could be more refined
+        comment: X-grid removed, Y-grid subtle (alpha=0.15), legend suppressed, panel
+          border removed. Good refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: patient green line is the focal element
-          on reference band background. Graduated band intensity guides eye toward
-          or away from extremes. White-filled markers make patient visits readable'
+        comment: Green patient pops against blue bands. Bold P50 guides eye. Patient
+          annotation at line end. Visual hierarchy guides the reader.
     spec_compliance:
       score: 15
       max: 15
@@ -145,32 +138,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: WHO/CDC-style growth chart with percentile bands and patient overlay
-          — correct
+        comment: 'Correct: percentile band chart with individual patient overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 percentile levels (P3-P97), graduated color intensity, emphasized
-          median, margin labels, patient connected markers, blue semantic exception
-          — all present
+        comment: 'All required features: graduated bands, emphasized P50, blue for
+          boys, right-margin labels, connected patient markers, contrasting patient
+          color.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: age in months, Y: weight in kg. Patient data overlaid on reference
-          bands. All data mapped correctly'
+        comment: X=age_months, Y=weight_kg. All percentile curves shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-growth-percentile · python · plotnine · anyplot.ai' exactly
-          correct. Right-margin labels serve as legend for percentile levels
+        comment: 'Title format correct: line-growth-percentile · python · plotnine
+          · anyplot.ai. Legend suppressed; right-margin labels + Patient annotation
+          used instead.'
     data_quality:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: DQ-01
@@ -178,23 +170,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 percentile bands shown with proper graduation, both reference
-          and patient data, median emphasis, margin annotation
+        comment: All 7 percentile curves, 5 graduated alpha bands, emphasized median,
+          patient overlay with markers and annotation.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: WHO weight-for-age for boys 0-36 months using clinically appropriate
-          formula. Patient tracking around 65th percentile with realistic well-child
-          visit schedule. Neutral medical context
+        passed: false
+        comment: Pediatric growth chart context is realistic. But the polynomial formula
+          overestimates the reference median for ages 18-36 months (~43% too high
+          at 36 months vs WHO P50), causing the patient to visually fall below P3
+          in the second half — contradicting the stated 65th percentile clinical scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 0-36 months range appropriate for infant/toddler chart. Weights 2.5-18
-          kg realistic. Patient weights 3.5-15.6 kg — clinically plausible trajectory
+        passed: false
+        comment: 'Patient weight values individually plausible. However, relational
+          accuracy fails: patient exceeds P97 at ages 2-6 months and falls below P3
+          from ages 18-36 months due to inaccurate polynomial approximation of WHO
+          growth standards.'
     code_quality:
       score: 10
       max: 10
@@ -204,52 +199,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, linear structure, direct operations
+        comment: 'Linear flow: imports → tokens → data → bands → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, os/sys needed for path fix and theme
+        comment: All imports used. sys.path manipulation necessary to prevent self-import
+          (file named plotnine.py).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean use of pd.concat with list comprehensions, pd.Categorical for
-          band ordering, appropriate complexity
+        comment: band_specs list elegantly parameterizes bands. pd.Categorical for
+          ordering. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at correct dimensions (8x4.5in @400dpi)
+        comment: Saves as plot-{THEME}.png, verbose=False.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics: geom_ribbon, scale_fill_manual, scale_alpha_manual,
+          pd.Categorical, proper aes() throughout, layer composition via + operator.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: geom_ribbon(), scale_fill_manual(), scale_alpha_manual() — correct
-          ggplot grammar patterns. pd.Categorical for ordered factor. theme() overrides
-          idiomatic
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: geom_ribbon for confidence bands is a plotnine/ggplot2 distinctive
-          feature. Separate fill+alpha scale management. Multi-layer grammar composition.
-          Could use more plotnine-specific capabilities
+        comment: geom_ribbon for percentile bands (ggplot2-distinctive), scale_alpha_manual
+          for graduated transparency, pd.Categorical for rendering order — features
+          unique to plotnine/ggplot2 grammar.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -258,7 +254,6 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-06-20
+Quality: 87/100 | Updated: 2026-06-20
 """
 
 import os
