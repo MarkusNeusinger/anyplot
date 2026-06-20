@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-parametric: Parametric Curve Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -80,40 +80,43 @@ ax2.add_collection(lc2)
 ax2.autoscale()
 
 # Lissajous is a closed curve (start = end = origin) — single marker
-ax1.scatter(
-    x_liss[0],
-    y_liss[0],
+sns.scatterplot(
+    x=[x_liss[0]],
+    y=[y_liss[0]],
     s=150,
     color="#009E73",
     marker="o",
     zorder=5,
     label="t = 0 / 2π  (closed)",
-    edgecolors=PAGE_BG,
+    edgecolor=PAGE_BG,
     linewidth=1.5,
+    ax=ax1,
 )
 
 # Spiral: distinct start (green) and end (red) markers
-ax2.scatter(
-    x_spiral[0],
-    y_spiral[0],
+sns.scatterplot(
+    x=[x_spiral[0]],
+    y=[y_spiral[0]],
     s=150,
     color="#009E73",
     marker="o",
     zorder=5,
     label="Start  t = 0",
-    edgecolors=PAGE_BG,
+    edgecolor=PAGE_BG,
     linewidth=1.5,
+    ax=ax2,
 )
-ax2.scatter(
-    x_spiral[-1],
-    y_spiral[-1],
+sns.scatterplot(
+    x=[x_spiral[-1]],
+    y=[y_spiral[-1]],
     s=150,
     color="#AE3030",
     marker="s",
     zorder=5,
     label="End  t = 4π",
-    edgecolors=PAGE_BG,
+    edgecolor=PAGE_BG,
     linewidth=1.5,
+    ax=ax2,
 )
 
 # Colorbars with π-symbol tick labels
@@ -121,22 +124,25 @@ cb1 = fig.colorbar(lc1, ax=ax1, shrink=0.65, pad=0.04)
 cb1.set_label("Parameter t", fontsize=8, color=INK)
 cb1.set_ticks([0, np.pi, 2 * np.pi])
 cb1.set_ticklabels(["0", "π", "2π"])
-cb1.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cb1.ax.tick_params(labelsize=8, colors=INK_SOFT)
 
 cb2 = fig.colorbar(lc2, ax=ax2, shrink=0.65, pad=0.04)
 cb2.set_label("Parameter t", fontsize=8, color=INK)
 cb2.set_ticks([0, 2 * np.pi, 4 * np.pi])
 cb2.set_ticklabels(["0", "2π", "4π"])
-cb2.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cb2.ax.tick_params(labelsize=8, colors=INK_SOFT)
 
 # Panel styling via seaborn's despine + explicit chrome
-for ax, panel_title in [(ax1, "Lissajous: x = sin(3t),  y = sin(2t)"), (ax2, "Spiral: x = t·cos(t),  y = t·sin(t)")]:
+for ax, panel_title, legend_loc in [
+    (ax1, "Lissajous: x = sin(3t),  y = sin(2t)", "lower right"),
+    (ax2, "Spiral: x = t·cos(t),  y = t·sin(t)", "best"),
+]:
     ax.set_aspect("equal")
     ax.set_title(panel_title, fontsize=10, fontweight="medium", color=INK)
     ax.set_xlabel("x(t)", fontsize=9, color=INK)
     ax.set_ylabel("y(t)", fontsize=9, color=INK)
-    ax.tick_params(axis="both", labelsize=7, colors=INK_SOFT)
-    ax.legend(fontsize=7, loc="best", framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
+    ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+    ax.legend(fontsize=8, loc=legend_loc, framealpha=0.9, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
     ax.grid(True, alpha=0.12, linewidth=0.5, color=INK)
     sns.despine(ax=ax)
 
@@ -154,7 +160,7 @@ ax1.text(
 )
 
 fig.suptitle("line-parametric · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, y=0.99)
-fig.subplots_adjust(left=0.07, right=0.95, top=0.90, bottom=0.10, wspace=0.65)
+fig.subplots_adjust(left=0.07, right=0.95, top=0.90, bottom=0.10, wspace=0.45)
 
 # Save — exact 3200 × 1800 px; no bbox_inches="tight" (would trim canvas)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
