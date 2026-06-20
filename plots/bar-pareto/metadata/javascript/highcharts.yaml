@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-pareto
 created: '2026-06-20T16:54:44Z'
-updated: '2026-06-20T17:01:40Z'
+updated: '2026-06-20T17:13:55Z'
 generated_by: claude-sonnet
 workflow_run: 27877631843
 issue: 4550
@@ -12,141 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-paret
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance — all Pareto chart requirements implemented correctly:
-    descending bars, cumulative percentage line on dual y-axis (0–100%), and the 80%
-    threshold reference line'
-  - Semantically correct use of the amber anchor (#DDCC77) for the 80% threshold plotLine
-    — a warning/caution role that the style guide explicitly maps to amber
-  - 'Clean, readable data computation: hard-coded deterministic manufacturing defect
-    data, correctly sorted descending, with an efficient running cumulative-sum'
-  - 'Idiomatic Highcharts dual-axis configuration: plotLines for the threshold line,
-    per-axis grid control (secondary axis grid hidden to reduce clutter), and correct
-    animation: false in both positions'
-  - Theme adaptation is thorough — transparent background, all chrome tokens (t.ink,
-    t.inkSoft, t.grid) applied to title, axis labels, tick labels, and legend in both
-    light and dark renders
+  - Perfect Pareto chart implementation with all required spec features (descending
+    bars, cumulative line, 80% threshold reference)
+  - 'Correct Imprint palette usage: brand green #009E73 for bars, lavender #C475FD
+    for cumulative line, semantic amber #DDCC77 for 80% threshold — a thoughtful semantic
+    anchor choice'
+  - Native Highcharts dual-axis implementation using yAxis array with opposite:true
+    and plotLines with dashStyle and label — idiomatic library patterns
+  - All font sizes explicitly set (title 22px, axis labels 16px, tick/legend labels
+    14px) — readable in both light and dark themes with no dark-on-dark failures
+  - Deterministic hard-coded data with a realistic manufacturing defect distribution
+    that genuinely demonstrates the Pareto principle
   weaknesses:
-  - 'Palette ordering violation: the cumulative % line uses t.palette[2] (#4467A3,
-    blue) instead of t.palette[1] (#C475FD, lavender) — canonical rule is positions
-    1→N in order; palette[1] is skipped without a semantic reason'
-  - 'Top and right chart spines (frame box) are visible in both renders — style guide
-    default is to remove top and right spines (L-shaped frame). Highcharts does not
-    auto-remove these; set xAxis.lineWidth: 0 / yAxis[0].lineWidth: 0 and remove via
-    chart styling or plotOptions to achieve L-shaped look'
-  - 'Design Excellence is competent but generic: no visual hierarchy emphasis beyond
-    color (no size variation, no direct data labels on the 80% crossing bar, no annotation
-    calling out which categories fall below the 80% threshold)'
-  - The 80% threshold label font size (12px) is smaller than tick labels (14px) —
-    slight typographic inconsistency; aligning it to 13–14px would be more polished
+  - 'DE-01 moderate: the chart reads as a well-configured default (4/8) rather than
+    publication-ready — bar dataLabels showing counts or a subtitle summarising the
+    80/20 finding would lift the aesthetic and storytelling simultaneously'
+  - 'LM-02 partial: uses Highcharts dual-axis and plotLines API idiomatically but
+    could further leverage Highcharts-specific features such as dataLabels on the
+    column series for count values or a plot band behind the 80% region'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct anyplot surface color, not pure white.
-      Chrome: Title "bar-pareto · javascript · highcharts · anyplot.ai" in dark ink at 22px is bold and clearly readable. Left y-axis title "Defect Count" and right y-axis title "Cumulative Percentage (%)" both in soft-ink at 16px are readable. X-axis category tick labels (Scratches, Dents, Cracks, Misalignment, Discoloration, Blistering, Warping, Contamination) at 14px are clearly legible. Numeric tick labels on both y-axes at 14px are readable. Legend ("Defect Count", "Cumulative %") at bottom center is readable.
-      Data: Eight descending green bars (#009E73, palette[0]) dominate the left portion. The blue cumulative line (#4467A3, palette[2]) rises from ~33% at Scratches through to 100% at Contamination, with filled circle markers at each data point. An amber dashed reference line (#DDCC77) is drawn at the 80% mark on the right axis, labeled "80% threshold" in amber text at the right margin — crossing approximately between the Misalignment and Discoloration bars.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background with no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "bar-pareto · javascript · highcharts · anyplot.ai" in dark ink at 22px occupies ~65% of width — well-proportioned. Left Y-axis "Defect Count" and right Y-axis "Cumulative Percentage (%)" labels visible in dark soft ink. X-axis tick labels (Scratches, Dents, Cracks, Misalignment, Discoloration, Blistering, Warping, Contamination) in dark soft ink at 14px — all readable. Legend at bottom clearly shows green circle (Defect Count) and lavender circle (Cumulative %). Amber dashed 80% threshold line with "80% threshold" label visible on the right side.
+      Data: Bars in brand green #009E73 descend from Scratches (120) to Contamination (8). Cumulative line in lavender #C475FD with circle markers rises from ~33% to 100%. Amber dashed horizontal line marks the 80% threshold.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title in light ink is clearly readable. Left and right y-axis titles in soft-light ink are readable. X-axis and y-axis tick labels in soft-light ink are clearly visible against the dark background — no dark-on-dark failures observed. Legend text is readable. The amber 80% threshold label is clearly visible against the dark background.
-      Data: Brand green bars (#009E73) are identical in color to the light render — data colors unchanged between themes. The blue cumulative line (#4467A3) is identical to the light render. The amber threshold line remains the same. Only chrome elements (backgrounds, tick labels, axis labels, title) have adapted to the dark theme.
-      Legibility verdict: PASS — all text is clearly readable against the warm near-black background; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title in light ink clearly visible against dark background. All axis labels (Y-axis titles, tick labels, legend text) rendered in light/soft ink tones — no dark-on-dark failures observed. The 80% threshold label in amber is visible. Legend at bottom with same layout as light render.
+      Data: Bars remain identical brand green #009E73 — data colors are unchanged from light render. Cumulative line is the same lavender #C475FD. Amber threshold line at 80% is visible. All data colors are identical between themes; only chrome (background, text, grid) has flipped.
+      Legibility verdict: PASS — all text clearly readable against the near-black background, no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 22px, axis labels 16px, tick/legend 14px — all readable in
-          both themes. Minor deduction: 80% threshold label at 12px is slightly smaller
-          than surrounding text (14px tick labels), a small typographic inconsistency.'
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, tick/legend
+          14px). Readable in both themes. Title ~65% of width — appropriate for this
+          title length.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render. Category labels, tick labels,
-          and the cumulative line markers all have adequate spacing.
+        comment: 8 categories with no overlapping labels. Legend below chart does
+          not overlap data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible with appropriate height variation. Cumulative
-          line with circle markers is clearly distinguishable. Amber threshold dashed
-          line is visible in both themes.
+        comment: Bars clearly visible and well-proportioned. Cumulative line markers
+          (radius 5) appropriate for 8 data points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green bars (#009E73) and blue line (#4467A3) have sufficient hue
-          contrast. Amber (#DDCC77) threshold line adds a third distinguishable element.
-          No red-green sole signal.
+        comment: Green and lavender (Imprint positions 1 and 2) have sufficient contrast
+          differential. Amber threshold provides additional CVD-safe visual cue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed. Good proportions with marginRight: 80 giving
-          secondary y-axis label sufficient space. Title occupies ~65% of canvas width
-          — within expected range. No clipping detected.'
+        comment: 'Landscape 3200x1800. Chart fills canvas well. marginRight: 80 provides
+          proper spacing for secondary right axis.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Left y-axis 'Defect Count' and right y-axis 'Cumulative Percentage
-          (%)' are both descriptive with units. Title follows the correct format 'bar-pareto
-          · javascript · highcharts · anyplot.ai'.
+        comment: 'Left Y-axis: Defect Count. Right Y-axis: Cumulative Percentage (%)
+          with % tick format. Title in correct spec format.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series (bars) correctly uses palette[0] = #009E73. However,
-          the cumulative line uses palette[2] = #4467A3 (blue) instead of palette[1]
-          = #C475FD (lavender) — the canonical second position is skipped without
-          a semantic justification. Background is transparent (shows page #FAF8F1/#1A1A17).
-          Amber (#DDCC77) for threshold line is correctly used as a semantic anchor.'
+        passed: true
+        comment: 'Bars use t.palette[0]=#009E73 (brand green). Line uses t.palette[1]=#C475FD
+          (lavender). Threshold uses #DDCC77 (amber semantic anchor). Background transparent
+          (inherits pageBg). All chrome via t.ink/t.inkSoft/t.grid tokens.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: 'Above default (4/8): intentional use of amber semantic anchor for
-          the 80% threshold adds polish. Imprint palette applied correctly. However,
-          Highcharts default frame box (top/right spines) remains, and there is no
-          typographic hierarchy variation beyond font sizes.'
+        comment: Well-configured library default. Intentional semantic amber for threshold
+          is a thoughtful touch, but overall reads as configured defaults rather than
+          publication-ready design.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Above default (2/6): secondary axis grid lines are hidden (gridLineColor:
-          transparent) — reduces visual noise well. Bars have borderWidth: 0. But
-          top and right spines are visible (Highcharts default box frame) — style
-          guide calls for L-shaped or no-spine frame.'
+        passed: true
+        comment: 'Secondary yAxis has transparent gridLineColor (avoids double grid).
+          plotBorderWidth: 0 removes plot border. Column borderWidth: 0. These are
+          above-default refinements.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Above default (2/6): the amber 80% threshold dashed line creates
-          a strong focal point that communicates the Pareto principle visually. Descending
-          bars naturally guide the viewer to dominant defect types. The dual-narrative
-          (count bars + cumulative line) is effective. Could be further enhanced with
-          direct annotation of the 80% crossing bar.'
+        passed: true
+        comment: 80% threshold line creates clear focal point. Descending bar ordering
+          explicitly demonstrates Pareto principle. The amber threshold line provides
+          visual emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -156,34 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Pareto chart: descending column series for counts + spline/line
-          series for cumulative percentage on dual y-axes.'
+        comment: 'Correct Pareto chart: descending column series + cumulative line
+          on secondary y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: bars sorted descending, cumulative %
-          line on secondary y-axis (0-100%), 80% horizontal reference line (plotLines
-          on secondary axis), primary axis shows raw counts, secondary shows cumulative
-          %, line markers placed at center-top of each bar (Highcharts aligns line
-          points to category x-positions by default).'
+        comment: 'All spec features: descending bars, cumulative % line on secondary
+          axis, 80% reference line, primary axis (counts), secondary axis (0-100%),
+          markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 8 defect categories on x-axis in descending count order. Primary
-          left y-axis shows counts (0-132). Secondary right y-axis shows cumulative
-          percentage (0-100%). All data points visible.
+        comment: 'X-axis: category names. Left Y-axis: raw defect counts. Right Y-axis:
+          cumulative percentage.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bar-pareto · javascript · highcharts · anyplot.ai'.
-          Legend shows 'Defect Count' (green dot) and 'Cumulative %' (blue dot) —
-          clear and accurate.
+        comment: 'Title: ''bar-pareto · javascript · highcharts · anyplot.ai'' — correct.
+          Legend shows ''Defect Count'' and ''Cumulative %''.'
     data_quality:
       score: 15
       max: 15
@@ -193,25 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full Pareto chart feature coverage: descending frequency bars, cumulative
-          percentage overlay, dual y-axis, 80/20 threshold line. All aspects of the
-          plot type are demonstrated.'
+        comment: 8 categories within spec range (5-15). Realistic power-law-like distribution
+          demonstrates the Pareto principle. Includes the example defect types from
+          the spec.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect data (Scratches, Dents, Cracks, Misalignment,
-          Discoloration, Blistering, Warping, Contamination) is a canonical Six Sigma
-          Pareto example — realistic, neutral, and domain-appropriate.
+        comment: Manufacturing defect quality control scenario — real, neutral, comprehensible.
+          Types (Scratches, Dents, Cracks, Misalignment, Discoloration, Blistering,
+          Warping, Contamination) are realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Counts range 8-120 across 8 categories (total 363). Distribution
-          is reasonably skewed (Pareto-like): top 3 categories account for ~70% of
-          defects. Scale is plausible for a manufacturing quality control batch.'
+        comment: Counts (120, 80, 55, 40, 30, 18, 12, 8) form a realistic Pareto distribution.
+          First 3 defects account for ~70% of issues — plausible for quality control
+          data.
     code_quality:
       score: 10
       max: 10
@@ -221,65 +199,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Flat, sequential script: data → computation
-          → chart call. Clear and readable.'
+        comment: No functions or classes. Data → cumulative calculation → Chart. Clean
+          linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded (deterministic). No random number generation.
-          Running cumSum is deterministic.
+        comment: Hard-coded deterministic data array. Correct approach for JS (no
+          seeded RNG in browser).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No explicit imports. Highcharts is a pre-loaded global (correct for
-          JS harness). ANYPLOT_TOKENS accessed via window.ANYPLOT_TOKENS correctly.
+        comment: No imports needed — uses Highcharts global as specified. Correct.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Efficient cumulative sum with running variable. Clean use of map().
-          Appropriate complexity for the plot type. No fake interactivity.
+        comment: Clean use of map/reduce for category/count extraction and cumulative
+          calculation. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Highcharts.chart('container', ...) correctly. Harness produces
-          plot-{theme}.png and plot-{theme}.html. orientation directive on its own
-          line. No explicit width/height set.
+        comment: Highcharts.chart('container', ...) with animation:false in both chart
+          and plotOptions.series. credits disabled. No explicit width/height.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correctly uses Highcharts dual yAxis array, plotLines for the threshold
-          reference, per-series yAxis index, column/line series combination, and animation:
-          false in both required locations. All mandatory Highcharts patterns followed.'
+        comment: Multi-yAxis array with opposite:true for right-side axis. Mixed column+line
+          series with different yAxis bindings. plotLines for threshold reference
+          — all idiomatic Highcharts patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Good use of plotLines with label for the 80% threshold (built-in
-          Highcharts annotation capability). Dual y-axis with independent grid control.
-          Above default (1/5) but stops short of using more advanced Highcharts features
-          like plotBands or advanced label formatting that could further distinguish
-          the implementation.
+        passed: true
+        comment: Uses Highcharts-specific plotLines with dashStyle, zIndex, and styled
+          label. Dual yAxis binding for Pareto is idiomatic to Highcharts. Could additionally
+          leverage dataLabels or plot bands for higher mastery score.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
-  - html-export
   patterns:
   - data-generation
   dataprep:
