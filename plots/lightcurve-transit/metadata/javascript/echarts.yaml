@@ -1,0 +1,245 @@
+library: echarts
+language: javascript
+specification_id: lightcurve-transit
+created: '2026-06-20T07:58:32Z'
+updated: '2026-06-20T08:24:23Z'
+generated_by: claude-sonnet
+workflow_run: 27864758493
+issue: 4559
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/echarts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Custom ECharts renderItem for error bars provides professional-quality scientific
+    visualization matching real astronomy papers
+  - Transit window markArea and depth markLine annotations guide the viewer directly
+    to the key scientific event
+  - 'Perfect palette compliance: photometry in brand green (#009E73), transit model
+    in Imprint lavender (#C475FD)'
+  - Fully deterministic data via fixed-seed LCG — no Math.random() drift between renders
+  - 'Perfect spec compliance: all required features present (error bars, smooth model
+    overlay, phase-folded 0-1 data, downward flux dip)'
+  weaknesses:
+  - 'Annotation text fontSize=11 (CSS px) for Transit Window and depth ≈ 1.2% labels
+    maps to ~22 source pixels — at 400px mobile viewport these are invisible; increase
+    to at least fontSize: 13'
+  - 'Legend itemGap: 14 with fontSize: 14 creates visually tight spacing between Photometry
+    and Transit Model entries — increase itemGap to 18-20 for clearer separation'
+  - 'Y-axis grid right: 215 CSS px allocates significant canvas space for the legend;
+    reducing to ~170 would give more breathing room to the data area'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1 style) — NOT pure white; the off-cream surface is clearly visible.
+      Chrome: Title "Astronomical Light Curve · lightcurve-transit · javascript · echarts · anyplot.ai" renders in dark ink at fontSize=18 and is clearly readable. Axis labels ("Orbital Phase", "Relative Flux") and tick labels (0-1 on x-axis, 0.980-1.010 on y-axis) use t.inkSoft and are all fully legible. Small annotation labels "Transit Window" and "depth ≈ 1.2%" use fontSize=11 and are readable at full resolution but will not survive mobile scaling to ~400px.
+      Data: 400 green (#009E73) scatter points with matching green error bars at 0.4 opacity. Lavender (#C475FD) smooth transit model line overlaid. Gray shaded transit window around phase 0.45-0.55. Dashed horizontal depth annotation at flux≈0.988. Legend box (top-right, styled with border and elevated background) showing "Photometry" and "Transit Model" entries.
+      Legibility verdict: PASS — all major text readable; annotation text at fontSize=11 is a minor concern for mobile.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17 style) — NOT pure black; warm-dark surface visible.
+      Chrome: Title, axis labels, and tick labels all render in light-colored text (t.ink / t.inkSoft) against the dark background — no dark-on-dark failure observed. The legend box uses t.elevatedBg (#242420) and t.grid border, which is correctly adapted for dark mode.
+      Data: Green scatter (#009E73) and lavender model line (#C475FD) are IDENTICAL to the light render — only chrome (background, text, grid, legend box fill) flipped. Transit window shading appears as a darker band against the near-black background. Depth annotation visible but small.
+      Legibility verdict: PASS — light text on dark background throughout; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis labels, ticks all explicitly sized and readable; annotation
+          fontSize=11 too small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No data element overlaps; legend items tight but separable at full
+          resolution
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 400 medium-density points, symbolSize=5 appropriate; error bars at
+          opacity=0.4 slightly faint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + lavender well-distinguished; CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 landscape; balanced layout; right=215 slightly
+          generous for legend space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Orbital Phase and Relative Flux are clear descriptive labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0]=#009E73 for photometry, palette[1]=#C475FD for model;
+          transparent bg; full token usage
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom error bar renderer, transit window shading, depth annotation,
+          styled legend — above default but not Nature-publication level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-axis grid suppressed, subtle Y-axis grid, transparent background;
+          all-four-spines kept (ECharts default, acceptable)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Transit dip is clear focal point; window shading + depth annotation
+          guide viewer to the key scientific event
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: scatter + error bars + model overlay light curve'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars on each point, smooth model overlay, phase-folded 0-1,
+          flux dip going downward — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Orbital Phase 0-1, Y=Relative Flux 0.980-1.010, full data range
+          displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows Descriptive · spec-id · javascript · echarts · anyplot.ai
+          format; legend labels Photometry and Transit Model correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: scatter photometry, error bars, transit model,
+          transit window region, depth marking'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ~1.2% transit depth realistic for hot Jupiter; photometric errors
+          0.0018-0.0026 consistent with space-based photometry
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0.980-1.010 captures the transit depth; X-axis 0-1 standard
+          for phase-folded light curves
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions lcg/randn/transitModel present; necessary for deterministic
+          data gen in browser JS; slight KISS tension
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with seed=42, fully deterministic across all runs
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — echarts and window.ANYPLOT_TOKENS are globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic ECharts code; no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness generates plot-{THEME}.png and .html; animation: false set;
+          no explicit size/devicePixelRatio'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Perfectly follows echarts.md: no explicit init size, no devicePixelRatio,
+          animation:false, transparent bg, color:t.palette, all token mappings correct'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom series renderItem for error bars, markArea for transit window,
+          markLine for depth, SVG path icon in legend — all ECharts-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-renderer
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
