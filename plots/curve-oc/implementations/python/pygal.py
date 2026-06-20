@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -16,6 +16,7 @@ if _thisdir in sys.path:
 
 from math import comb
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -86,7 +87,7 @@ chart = pygal.XY(
     style=custom_style,
     title="curve-oc · python · pygal · anyplot.ai",
     x_title="Fraction Defective (p)",
-    y_title="Probability of Acceptance P(accept)",
+    y_title="P(accept)",
     show_dots=False,
     stroke=True,
     fill=False,
@@ -112,7 +113,6 @@ chart = pygal.XY(
     margin_bottom=80,
     margin_left=60,
     spacing=20,
-    explicit_size=True,
 )
 
 # Linestyle map: solid for n=100 plans, dashed for n=50 to aid distinction near p=0
@@ -169,9 +169,22 @@ chart.add(
     formatter=lambda v: f"β={v[1]:.1%}" if isinstance(v, (list, tuple)) else f"{v:.3f}",
 )
 
-# Save PNG via pygal's built-in render_to_png (wraps cairosvg internally)
-chart.render_to_png(f"plot-{THEME}.png")
+# Post-process SVG: inject CSS to remove the 4-sided box frame (top/right spines).
+# Pygal draws a full border rect around the plot area; there is no built-in option
+# to suppress individual sides, so we hide the rect stroke via CSS.
+_svg = chart.render()
+_frame_css = (
+    b'<style type="text/css">'
+    b".graph .plot .background{stroke:none!important}"
+    b".graph .plot rect.background{stroke:none!important}"
+    b"</style>"
+)
+_svg_patched = (
+    _svg.replace(b"</defs>", _frame_css + b"</defs>", 1)
+    if b"</defs>" in _svg
+    else _svg.replace(b"</svg>", _frame_css + b"</svg>", 1)
+)
 
-# Save interactive HTML
+cairosvg.svg2png(bytestring=_svg_patched, write_to=f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(_svg_patched)
