@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:21:00Z'
-updated: '2026-06-20T16:56:33Z'
+updated: '2026-06-20T17:07:47Z'
 generated_by: claude-sonnet
 workflow_run: 27877280744
 issue: 4550
@@ -12,108 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-paret
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required Pareto features present — descending bars,
-    cumulative % on secondary y-axis, 80% reference line, markers at bar centers'
-  - 'Excellent semantic color coding: green (#009E73) for vital few, muted gray for
-    trivial many — immediately communicates the 80/20 insight'
-  - 'Strong data storytelling: color contrast + ''80% reached (4 of 8 types)'' annotation
-    with arrow explicitly guides the viewer to the Pareto insight'
-  - 'Flawless theme adaptation: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all flip correctly;
-    data colors identical across both renders'
-  - 'Perfect code quality: KISS structure, all imports used, deterministic data, correct
-    output filenames, no bbox_inches=''tight'''
-  - 'Idiomatic matplotlib: uses Axes methods (ax.bar, ax.twinx, ax.bar_label), FuncFormatter
-    for % ticks, Patch for custom legend handles, set_axisbelow(True)'
+  - 'Smart semantic color coding — vital few (green #009E73) vs trivial many (muted)
+    directly communicates the Pareto principle before reading any legend'
+  - 'Complete spec coverage: sorted bars, cumulative % line on secondary y-axis, 80%
+    dashed reference line, marker at every bar center, all present and correct'
+  - Professional annotation with arrowprops pointing to the exact 80% crossing with
+    programmatic count text (4 of 8 types)
+  - 'Full theme-adaptive chrome: INK/INK_SOFT/INK_MUTED/PAGE_BG/ELEVATED_BG all flip
+    correctly between themes — both renders are readable'
+  - 'Clean canvas: figsize=(8,4.5) dpi=400, no bbox_inches=tight, correct 3200x1800
+    landscape output'
+  - Right spine of secondary axis colored to match the cumulative line — subtle but
+    intentional design detail that connects axis to data
   weaknesses:
-  - 'VQ-02 OVERLAP: The cumulative % line''s last markers (near x=6-7, ~95-100%) pass
-    through the legend box in the upper right, causing the ''Trivial many'' legend
-    label to render as ''Trivial●any'' in both light and dark renders. Fix: move legend
-    to upper-left (loc=''upper left'') or use bbox_to_anchor to place it at a position
-    the cumulative line does not cross, such as (0.01, 0.99).'
-  - 'DE-01 / DE-02 POLISH: Design is good but not exceptional — the right secondary
-    spine (ax2.spines[''right'']) using LINE_COLOR is a nice touch but overall the
-    chart looks like a configured default. To push to publication-ready, consider:
-    (1) subtle dotted separator between vital few and trivial many bars, (2) slightly
-    bolder bar labels for the vital few vs lighter for trivial many to reinforce the
-    visual hierarchy, (3) the 80% reference line at alpha=0.4 is too faint — raise
-    to alpha=0.6 for better visibility.'
-  - 'DE-03 STORYTELLING: The annotation callout is good but placed slightly awkwardly
-    (xytext offset 1.8 units right brings it close to the right edge). Consider anchoring
-    the annotation text at a cleaner position — e.g., centered above the 4th bar (Cracks)
-    pointing down to the cumulative crossing point, with clearer visual separation
-    from the cumulative line.'
+  - 'Legend overlaps cumulative line markers in the upper-right area — matplotlib
+    auto-repositioned it away from upper-left (blocked by tall Scratches bar) into
+    upper-right where the cumulative line terminates near 100%. Fix: pin legend inside
+    plot with bbox_to_anchor coordinates (e.g. bbox_to_anchor=(0.98, 0.55), loc=upper
+    right) to avoid the cumulative line, or use loc=center left with explicit position
+    below the bars'
+  - LM-02 could use a more distinctively matplotlib feature — the combination of bar_label
+    + FuncFormatter + Patch handles + annotate arrowprops is good but standard; consider
+    adding ax.bar(..., bottom=...) or a more unusual matplotlib-only API call
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "bar-pareto · python · matplotlib · anyplot.ai" in dark ink at ~70% canvas width — readable. "Frequency" (left y-axis) and "Defect Type" (x-axis) labels in dark ink at 10pt — readable. "Cumulative %" (right y-axis) in blue (#4467A3) — readable. X-axis tick labels rotated 20°, 8pt, in INK_SOFT — all readable, no overlap between adjacent labels. Left y-axis tick labels in INK_SOFT — readable.
-      Data: 8 bars total. First 4 (Scratches 142, Dents 98, Misalignment 71, Cracks 45) rendered in brand green #009E73 — vital few. Last 4 (Discoloration 32, Burrs 18, Warping 12, Contamination 7) in muted gray (INK_MUTED #6B6A63 light) — trivial many. Blue (#4467A3) cumulative % line with circle markers overlaid on secondary y-axis. Dashed 80% reference line at y=80 (alpha=0.4, somewhat faint but visible). "80% reached (4 of 8 types)" annotation box with arrow clearly visible at approximately x=5, y=62%.
-      CRITICAL OVERLAP: The cumulative line's marker at x≈7 (Contamination, ~100%) intersects the legend box in the upper right corner. "Trivial many" legend label renders as "Trivial●any" — partially obscured by the marker circle.
-      Legibility verdict: PASS overall — all axis labels, tick labels, title, and bar labels readable. FAIL for legend: "Trivial many" partially obscured by cumulative line marker.
+      Background: Warm off-white #FAF8F1 — correct surface color, not pure white.
+      Chrome: Title "bar-pareto · python · matplotlib · anyplot.ai" in dark ink at fontsize=12, clearly readable. X-axis label "Defect Type" and Y-axis label "Frequency" in dark ink at fontsize=10, both readable. Right secondary Y-axis label "Cumulative %" in blue (#4467A3) matching the line color. Tick labels at fontsize=8 in INK_SOFT (#4A4A44) — all readable. X-tick labels slightly rotated (20°) — no overlap between tick labels.
+      Data: 8 bars sorted descending (Scratches=142 → Contamination=7). First 4 "vital few" bars in brand green #009E73; last 4 "trivial many" bars in INK_MUTED (#6B6A63 muted gray). Cumulative % line in blue (#4467A3) with circle markers. 80% dashed reference line visible. Bar labels (142, 98, 71, 45, 32, 18, 12, 7) in bold dark ink above each bar. Annotation box "80% reached (4 of 8 types)" with blue arrow. Legend in upper-right area (auto-repositioned from upper-left by matplotlib) showing green "Vital few" and gray "Trivial many" patches — partially overlapping with the last 2-3 cumulative line markers (mild VQ-02 issue).
+      Legibility verdict: PASS — all text readable. Minor overlap between legend and cumulative line markers in upper-right area.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, warm dark surface
-      Chrome: Title in light cream (#F0EFE8 equivalent) — readable against dark background. "Frequency" and "Defect Type" in light ink — readable. "Cumulative %" in blue (#4467A3) on right axis — readable. Tick labels in INK_SOFT dark (#B8B7B0) — readable. No dark-on-dark failures detected. Annotation box has elevated dark background (#242420) with light text — readable.
-      Data: Green bars (#009E73) for vital few IDENTICAL to light render — confirmed. Trivial many bars now appear as light gray (INK_MUTED dark #A8A79F) against the dark background — visible and correctly theme-adapted. Blue cumulative line identical. Same legend overlap issue — "Trivial●any" in upper right.
-      Legibility verdict: PASS overall — all chrome readable against dark background, no dark-on-dark failures. FAIL for legend: same "Trivial many" overlap as light render.
+      Background: Warm near-black #1A1A17 — correct surface color, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — visible, no dark-on-dark failure. Right secondary Y-axis label in blue — readable. Grid lines subtle (alpha=0.15).
+      Data: Vital few bars remain identical #009E73 green — consistent with light render. Trivial many bars now in INK_MUTED dark (#A8A79F — lighter beige-gray) and visible against dark background. Cumulative line and markers identical to light render. Bar labels in light ink (#F0EFE8) clearly visible above bars. Annotation box in elevated dark background (#242420) with blue border. Same legend overlap issue as light render.
+      Legibility verdict: PASS — all text readable in dark theme. No dark-on-dark failures observed. Data colors identical to light render (only chrome flipped).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 12pt, axis labels 10pt, ticks
-          8pt, legend 8pt, bar labels 8pt. Well-proportioned in both themes.'
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, legend=8).
+          Readable in both themes. Title fills ~65% width — expected for 46-char mandated
+          title at fontsize=12. Minor deduction for bar labels using default fontsize
+          parameter via ax.bar_label rather than tuned value.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Cumulative line marker at x=7 (~100%) overlaps legend box in upper
-          right — 'Trivial many' legend text reads as 'Trivial●any' in both renders.
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Bars clearly visible including smallest (7, labeled). Cumulative
-          line markers at 6px with white edge ring — visible. 80% reference line at
-          alpha=0.4 is slightly faint.
+        comment: Legend auto-repositioned by matplotlib to upper-right (blocked from
+          upper-left by tall Scratches bar), overlapping the last 2-3 cumulative %
+          line markers. Main content remains readable but overlap is visible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All elements clearly visible in both themes. Vital-few bars prominent
+          green, trivial-many bars visible muted gray/beige. Cumulative line markers
+          with white edge provide good contrast. Bar labels bold and clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs muted gray — CVD-safe; no red-green sole signal. Good luminance
-          contrast.
+        comment: Green (#009E73) and blue (#4467A3) are CVD-safe and perceptually
+          distinct. Green vs muted-gray distinction is shape+color redundant (bar
+          vs legend label). No red-green only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, no bbox_inches='tight', subplots_adjust properly
-          set, plot fills canvas well, no clipping.
+        comment: Landscape 3200x1800, no bbox_inches=tight. subplots_adjust correctly
+          reserves space for both y-axes and x-tick rotation. Canvas gate passed.
+          All elements within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Frequency'', ''Defect Type'', ''Cumulative
-          %'' (with unit).'
+        comment: 'Title is correct mandated format. X: Defect Type, Y-left: Frequency,
+          Y-right: Cumulative % — all descriptive and accurate.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for vital few. INK_MUTED semantic
-          anchor for trivial many — correct. Cumulative line uses Imprint pos 3 (#4467A3).
-          Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
+        comment: 'First series = #009E73 (brand green) for vital-few bars. Cumulative
+          line = #4467A3 (Imprint pos 3). INK_MUTED used as semantic anchor for trivial-many
+          (correct usage). Background #FAF8F1/#1A1A17 correct. Data colors identical
+          across both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -123,25 +120,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: semantic green/muted color coding, styled
-          annotation box, dual-axis with colored secondary spine, Patch legend handles.
-          Not quite publication-ready.'
+        comment: Above well-configured default (4) due to intentional semantic color
+          distinction (vital/trivial), colored secondary axis spine, elevated background
+          annotation box. Not at strong-design level (6) as typography is all standard
+          sizes and font family is default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top+right primary spines removed, secondary right spine kept in blue
-          (good dual-axis convention), tick lengths=0, y-axis only grid at alpha=0.15,
-          legend frame styled with ELEVATED_BG.
+        comment: 'Good refinement: top/right primary spines removed, secondary right
+          spine colored blue to match line, y-only grid at alpha=0.15, tick length=0,
+          bar edges match background, legend frame uses elevated bg + INK_SOFT edge.
+          Not perfect (6) — tight margins on some edges.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color contrast (green vs muted) immediately communicates vital-few
-          concept. Explicit '80% reached' annotation with arrow guides the viewer.
-          Reference line reinforces the threshold. Good visual hierarchy.
+        comment: 'Good visual hierarchy: green vital-few bars create immediate focal
+          point, muted trivial-many fade to background, annotation with arrow pinpoints
+          80% crossing. Viewer immediately grasps Pareto principle. Arrow annotation
+          adds useful quantitative context.'
     spec_compliance:
       score: 15
       max: 15
@@ -151,30 +151,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Pareto chart: descending bars + cumulative % line overlay
-          on secondary y-axis.'
+        comment: 'Correct Pareto chart: descending-sorted bars + cumulative % line
+          overlay on secondary y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: descending sort, cumulative % on secondary y-axis,
-          80% reference line, primary y-axis for counts, cumulative markers at bar
-          centers.'
+        comment: 'All spec features present: bars descending, cumulative % line on
+          secondary axis, 80% horizontal reference line, primary y-axis = raw counts,
+          secondary = cumulative %, markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: defect types (categorical, sorted descending). Y-left: frequency
-          counts. Y-right: cumulative %. All 8 data points visible.'
+        comment: Categories on x-axis, frequency on primary y, cumulative % on secondary
+          y. All 8 data points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-pareto · python · matplotlib · anyplot.ai' — correct format.
-          Legend labels 'Vital few' / 'Trivial many' — appropriate and informative.
+        comment: Title is exactly 'bar-pareto · python · matplotlib · anyplot.ai'.
+          Legend clearly labels Vital few / Trivial many.
     data_quality:
       score: 15
       max: 15
@@ -184,22 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clear Pareto distribution (142 to 7), 8 categories within spec
-          range, demonstrable 80/20 split (first 4 of 8 types ~80%).
+        comment: 'Shows all Pareto aspects: strong 80/20 distribution visible, clear
+          vital-few / trivial-many distinction, 8 categories gives good spread, real
+          Pareto curve shape with exponential dropoff.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect analysis — exactly the scenario mentioned in
-          the spec. Real-world, neutral, appropriate.
+        comment: Manufacturing defect analysis is a canonical Six Sigma Pareto use
+          case. Defect types (Scratches, Dents, Misalignment, Cracks, etc.) are realistic
+          and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Defect counts 142, 98, 71, 45, 32, 18, 12, 7 — realistic Pareto distribution,
-          plausible for a manufacturing process.
+        comment: Counts (7-142) are realistic for a manufacturing defect dataset.
+          Distribution follows Pareto principle naturally (top 4 of 8 = ~83%). Values
+          factually plausible.
     code_quality:
       score: 10
       max: 10
@@ -209,55 +212,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save. No functions or classes.'
+        comment: 'Flat script: constants → data → sort → compute cumulative → plot
+          → style → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data — no seed needed.
+        comment: Fully deterministic hardcoded arrays. No random sampling.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, matplotlib.pyplot, matplotlib.ticker, numpy, matplotlib.patches.Patch)
-          are used.
+        comment: os, matplotlib.pyplot, matplotlib.ticker, numpy, matplotlib.patches.Patch
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: np.searchsorted + np.interp for crossing point is elegant. No over-engineering.
-          No fake UI.
+        comment: Clean, Pythonic. np.searchsorted + np.interp for 80% crossing is
+          elegant. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', uses Axes methods,
-          no deprecated API.
+        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches=tight. Current
+          matplotlib API used throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Strong: Axes methods throughout, ax.bar_label(), ax.twinx(), mticker.FuncFormatter,
-          Patch legend handles, ax.set_axisbelow(True), fig.subplots_adjust(), plt.setp()
-          for batch text styling.'
+        comment: 'Expertly uses axes methods throughout: ax.bar, ax.twinx, ax.bar_label,
+          ax.annotate with arrowprops, ax.set_axisbelow, mticker.FuncFormatter, Patch
+          handles. All idiomatic matplotlib patterns.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ax.bar_label() (matplotlib 3.4+ convenience), FuncFormatter for custom
-          % ticks, Patch handles for custom legend — some matplotlib-specific features
-          used.
-  verdict: REJECTED
+        comment: ax.bar_label() for automatic bar value labels (matplotlib-specific
+          high-level API), mticker.FuncFormatter for custom tick format (distinctive),
+          Patch handles for custom legend (matplotlib-specific), annotate with arrowprops
+          (matplotlib style). Good set but not a single uniquely impressive feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -267,7 +272,6 @@ impl_tags:
   - manual-ticks
   patterns:
   - explicit-figure
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
