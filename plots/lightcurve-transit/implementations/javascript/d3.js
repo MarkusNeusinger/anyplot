@@ -1,7 +1,7 @@
 // anyplot.ai
 // lightcurve-transit: Astronomical Light Curve
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-20
 
 //# anyplot-orientation: landscape
 
