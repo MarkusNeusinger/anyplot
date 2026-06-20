@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -82,7 +82,7 @@ plot = (
     )
     + scale_fill_identity()
     # Zone labels
-    + geom_text(data=df_zones, mapping=aes(x="lx", label="zone"), y=0.5, size=10, color=INK_MUTED, fontface="italic")
+    + geom_text(data=df_zones, mapping=aes(x="lx", label="zone"), y=0.5, size=8, color=INK_MUTED, fontface="italic")
     # Vertical reference lines (geom_vline — idiomatic)
     + geom_vline(xintercept=aql, linetype="dotted", color=INK_SOFT, size=0.7)
     + geom_vline(xintercept=ltpd, linetype="dotted", color=INK_SOFT, size=0.7)
@@ -107,7 +107,7 @@ plot = (
     + geom_text(
         data=df_risk.iloc[:1],
         mapping=aes(x="x", y="y", label="label"),
-        size=12,
+        size=9,
         color="#AE3030",
         fontface="bold",
         nudge_x=0.015,
@@ -117,7 +117,7 @@ plot = (
     + geom_text(
         data=df_risk.iloc[1:2],
         mapping=aes(x="x", y="y", label="label"),
-        size=12,
+        size=9,
         color="#AE3030",
         fontface="bold",
         nudge_x=0.025,
@@ -128,7 +128,7 @@ plot = (
         data=pd.DataFrame({"x": [aql], "label": ["AQL"]}),
         mapping=aes(x="x", label="label"),
         y=0.08,
-        size=13,
+        size=10,
         color=INK,
         fontface="bold",
     )
@@ -137,7 +137,7 @@ plot = (
         data=pd.DataFrame({"x": [ltpd], "label": ["LTPD"]}),
         mapping=aes(x="x", label="label"),
         y=0.12,
-        size=13,
+        size=10,
         color=INK,
         fontface="bold",
     )
@@ -167,7 +167,7 @@ plot = (
         axis_line_x=element_line(color=INK_SOFT, size=0.8),
         axis_line_y=element_line(color=INK_SOFT, size=0.8),
         axis_ticks=element_line(color=INK_SOFT, size=0.4),
-        legend_position=[0.82, 0.88],
+        legend_position=[0.82, 0.72],
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
         plot_margin=[30, 30, 30, 20],
     )
