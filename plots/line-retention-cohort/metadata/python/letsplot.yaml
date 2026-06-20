@@ -1,38 +1,53 @@
 library: letsplot
+language: python
 specification_id: line-retention-cohort
 created: '2026-03-16T20:44:20Z'
-updated: '2026-03-16T20:57:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23164943466
+updated: '2026-06-20T03:48:02Z'
+generated_by: claude-sonnet
+workflow_run: 27858797247
 issue: 4572
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent data storytelling through progressive line weights and color intensity
-    emphasizing newer cohorts
-  - Endpoint labels with overlap prevention provide clear final-retention context
-  - 20% threshold reference line adds analytical value
-  - Full spec compliance with all required features implemented
-  - Interactive tooltips leverage lets-plot distinctive capabilities
+  - Correct Imprint palette with progressive line widths creating visual hierarchy
+    (Jan thinnest → May boldest)
+  - Direct endpoint percentage labels at week 12 with overlap prevention — reduces
+    legend lookup cognitive load
+  - 'Spec fully compliant: all curves start at 100%, dashed 20% reference line, cohort
+    sizes in legend, Y-only subtle grid'
+  - Theme-adaptive chrome correctly wired throughout — dark render is fully legible
+    with no dark-on-dark failures
+  - letsplot interactive HTML output with per-layer tooltip configuration via layer_tooltips()
+  - 'Perfect canvas: 800×450 + scale=4 = 3200×1800, passes dimension gate'
   weaknesses:
-  - Endpoint labels for lower cohorts (12%, 15%, 17%) are slightly tight despite overlap
-    prevention
-  image_description: 'The plot displays 5 retention curves for monthly signup cohorts
-    (Jan–May 2025) on a clean white background. All curves start at 100% at week 0
-    and decay over 12 weeks with exponential profiles. Colors progress from light
-    blue (Jan 2025, oldest) through green (Feb), orange (Mar), red (Apr), to dark
-    navy blue (May 2025, newest). Newer cohorts have thicker lines, creating clear
-    visual hierarchy. Data points are marked along each curve. Endpoint percentage
-    labels (12%, 15%, 17%, 23%, 31%) are displayed at week 12, color-matched to their
-    respective cohorts. A dashed gray horizontal line at y=20 marks the "20% threshold"
-    benchmark. The legend on the right lists each cohort with sample size (e.g., "Jan
-    2025 (n=1,245)"). Title reads "line-retention-cohort · letsplot · pyplots.ai".
-    X-axis: "Weeks Since Signup", Y-axis: "Retained Users (%)". Subtle light gray
-    major gridlines on a minimal theme.'
+  - Endpoint labels for 12%, 15%, 17% at week 12 are tightly grouped despite min_gap=5
+    — consider increasing min_gap to 7-8 or nudging labels horizontally away from
+    the line endpoints more aggressively
+  - DE-01 could reach publication-level by adding a brief subtitle describing the
+    improving retention trend (or using a text annotation near the May 2025 line to
+    call out the top performer)
+  - 'LM-02: the loop-per-cohort pattern for progressive line widths is functional
+    but letsplot supports geom_ribbon and layer-composition patterns that could add
+    confidence bands or area fills unique to the library'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-retention-cohort · python · letsplot · anyplot.ai" bold and centered at ~70% plot width — well-proportioned. Y-axis label "Retained Users (%)" and X-axis label "Weeks Since Signup" in dark ink, clearly readable. Tick labels dark (INK_SOFT), all fully legible.
+      Data: 5 retention curves from 100% at week 0 decaying to 12-31% by week 12. Jan 2025 (#009E73 green, thinnest), Feb 2025 (#C475FD purple), Mar 2025 (#4467A3 blue), Apr 2025 (#BD8233 ochre), May 2025 (#AE3030 red, boldest). Dashed horizontal reference at 20% with "20% target" annotation. Percentage labels at right (12%, 15%, 17%, 23%, 31%) color-coded per cohort. Points plotted at each week interval.
+      Legend: Right side, box with light elevated background and border, cohort names with sample sizes in "(n=X,XXX)" format.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all axis/tick labels rendered in light text (F0EFE8 / B8B7B0 tokens). Legend text light, legend box uses elevated dark (#242420) fill. Grid lines subtle on dark surface. All text clearly legible.
+      Data: Data colors IDENTICAL to light render — green, purple, blue, ochre, red cohort lines unchanged. Dashed reference line and endpoint percentage labels all visible. Brand green #009E73 (Jan 2025) clearly visible on dark background.
+      Legibility verdict: PASS — no dark-on-dark failures detected, all chrome elements theme-correct.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -40,69 +55,84 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis_title=22, axis_text=18,
-          legend_text=16'
+        comment: All font sizes explicitly set (title 16pt bold, axis 12pt, ticks
+          10pt, legend 10pt, annotations 3.5-4mm). Good proportions overall; endpoint
+          label cluster at 12-17% range is tight but non-overlapping.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Endpoint labels use overlap prevention but 12%/15%/17% are still
-          fairly tight
+        comment: No text overlap. Overlap prevention logic (min_gap=5) successfully
+          spread the endpoint percentage labels. Legend does not overlap data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines well-sized with progressive widths 1.5-3.0, points at size=4
-          clearly visible
+        comment: 65 data points (5 cohorts × 13 weeks) at medium density. Lines size=1.0-3.0
+          progressive widths, points size=2.5, alpha=0.85-0.9. All elements clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Distinct colorblind-friendly palette: light blue, green, orange,
-          red, dark blue'
+        comment: Imprint palette is CVD-optimized. Progressive line widths add redundant
+          encoding. All 5 cohorts distinguishable.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, x-axis extended to accommodate endpoint labels
+        comment: 3200×1800 px (800×450 × scale=4). Canvas gate passed. Plot occupies
+          ~75% of canvas with balanced margins. Legend well-placed at right.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Weeks Since Signup, Retained Users
-          (%)'
+        comment: 'Y: ''Retained Users (%)'' — descriptive with units. X: ''Weeks Since
+          Signup'' — descriptive. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Multi-series follows Imprint
+          canonical order. Backgrounds #FAF8F1 / #1A1A17. Theme chrome adapts correctly
+          in both renders.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette with light-to-bold progression, endpoint labels and
-          threshold annotation add polish
+        comment: Above well-configured default. Intentional visual hierarchy through
+          progressive line widths (older cohorts thinner), direct endpoint labels,
+          business-context reference line. Not yet at FiveThirtyEight publication
+          level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal(), subtle grid, no minor grid, white background
+        comment: Y-only grid (X grid suppressed), panel border removed, subtle 0.15
+          opacity grid, custom legend background. Good refinement level above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong visual hierarchy through line width/color, endpoint labels,
-          threshold reference line
+        comment: Progressive widths make the May 2025 (newest) cohort the visual focal
+          point. 20% target dashed line creates a clear performance benchmark. Endpoint
+          labels deliver the takeaway immediately.
     spec_compliance:
       score: 15
       max: 15
@@ -112,50 +142,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with multiple cohort retention curves
+        comment: Correct line chart with multiple retention curves.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including threshold line, varying line
-          thickness, legend with sizes
+        comment: All curves start at 100% at week 0, distinct colors, legend with
+          n= sizes, Y-axis 0-100% with gridlines, X-axis is time since signup, thinner
+          lines for older cohorts, 20% dashed reference line.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=weeks since signup, Y=retention percentage, correctly mapped
+        comment: X = Weeks Since Signup, Y = Retention %, Color = Cohort. All axes
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match spec format with cohort
-          size
+        comment: 'Title: ''line-retention-cohort · python · letsplot · anyplot.ai''
+          — exact format. Legend: ''Jan 2025 (n=1,245)'' format as specified.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 5 cohorts with different decay rates showing clear variation
+        comment: '5 cohorts (spec: 3-6 ✓), 12 weeks (spec: 6-12 ✓). Shows improving
+          retention trend across cohorts. Some cohorts close together in the middle
+          range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly signup cohorts with realistic sizes and plausible retention
-          decay rates
+        comment: Monthly signup cohorts with named months (Jan–May 2025), realistic
+          cohort sizes (1102–1510). Product analytics context is real and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention values 12-31% at week 12, cohort sizes 1102-1510 realistic
+        comment: Retention 12-31% at 12 weeks is realistic for SaaS. Improving decay
+          rates (0.18→0.10) reflect plausible onboarding improvements. All constraints
+          satisfied.
     code_quality:
       score: 10
       max: 10
@@ -165,31 +201,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: Imports → constants → data → plot → save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot'
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code with thoughtful endpoint label overlap prevention
+        comment: Loop over cohorts for progressive line widths is justified (letsplot
+          lacks per-group aesthetic mapping for size). Overlap prevention logic is
+          clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3 and plot.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current letsplot API.
     library_mastery:
       score: 7
       max: 10
@@ -199,20 +237,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage, per-group loop justified for varying line
-          widths
+        comment: 'Uses grammar-of-graphics idiom correctly: ggplot() + geom_* + scale_*
+          + theme(). Proper use of aes() mappings and fixed aesthetics.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover, HTML export, ggsize()
+        comment: Uses layer_tooltips().line() for interactive tooltip configuration
+          in HTML output — a letsplot-specific API. HTML export via ggsave(.html)
+          is letsplot-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
@@ -221,4 +260,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
