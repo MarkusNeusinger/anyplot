@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -97,7 +97,8 @@ ax1.scatter(
     sample_ids[xbar_ooc],
     sample_means[xbar_ooc],
     color=OOC_COLOR,
-    s=100,
+    marker="X",
+    s=110,
     zorder=4,
     edgecolors=PAGE_BG,
     linewidth=1.0,
@@ -110,9 +111,9 @@ ax1.axhline(xbar_lcl, color=OOC_COLOR, linewidth=1.5, linestyle="--", zorder=2)
 ax1.axhline(xbar_upper_warn, color=AMBER, linewidth=1.0, linestyle=":", alpha=0.9, zorder=2)
 ax1.axhline(xbar_lower_warn, color=AMBER, linewidth=1.0, linestyle=":", alpha=0.9, zorder=2)
 
-ax1.text(n_samples + 0.6, xbar_ucl, "UCL", fontsize=7, color=OOC_COLOR, va="center", fontweight="bold")
-ax1.text(n_samples + 0.6, xbar_lcl, "LCL", fontsize=7, color=OOC_COLOR, va="center", fontweight="bold")
-ax1.text(n_samples + 0.6, xbar_bar, f"CL={xbar_bar:.3f}", fontsize=7, color=INK_SOFT, va="center")
+ax1.text(n_samples + 0.6, xbar_ucl, "UCL", fontsize=8, color=OOC_COLOR, va="center", fontweight="bold")
+ax1.text(n_samples + 0.6, xbar_lcl, "LCL", fontsize=8, color=OOC_COLOR, va="center", fontweight="bold")
+ax1.text(n_samples + 0.6, xbar_bar, f"CL={xbar_bar:.3f}", fontsize=8, color=INK_SOFT, va="center")
 
 ax1.set_xlim(0.5, n_samples + 3.5)
 ax1.set_ylabel("Sample Mean, X̄ (mm)", fontsize=10, color=INK)
@@ -149,8 +150,19 @@ ax2.plot(
     markeredgecolor=PAGE_BG,
     markeredgewidth=0.8,
     zorder=3,
+    label="Sample Range",
 )
-ax2.scatter(sample_ids[r_ooc], sample_ranges[r_ooc], color=OOC_COLOR, s=90, zorder=4, edgecolors=PAGE_BG, linewidth=1.0)
+ax2.scatter(
+    sample_ids[r_ooc],
+    sample_ranges[r_ooc],
+    color=OOC_COLOR,
+    marker="X",
+    s=100,
+    zorder=4,
+    edgecolors=PAGE_BG,
+    linewidth=1.0,
+    label="Out-of-Control",
+)
 
 ax2.axhline(r_bar, color=INK_SOFT, linewidth=1.5, linestyle="-", zorder=2)
 ax2.axhline(r_ucl, color=OOC_COLOR, linewidth=1.5, linestyle="--", zorder=2)
@@ -160,8 +172,8 @@ ax2.axhline(r_upper_warn, color=AMBER, linewidth=1.0, linestyle=":", alpha=0.9, 
 if r_lower_warn > 0:
     ax2.axhline(r_lower_warn, color=AMBER, linewidth=1.0, linestyle=":", alpha=0.9, zorder=2)
 
-ax2.text(n_samples + 0.6, r_ucl, "UCL", fontsize=7, color=OOC_COLOR, va="center", fontweight="bold")
-ax2.text(n_samples + 0.6, r_bar, f"CL={r_bar:.3f}", fontsize=7, color=INK_SOFT, va="center")
+ax2.text(n_samples + 0.6, r_ucl, "UCL", fontsize=8, color=OOC_COLOR, va="center", fontweight="bold")
+ax2.text(n_samples + 0.6, r_bar, f"CL={r_bar:.3f}", fontsize=8, color=INK_SOFT, va="center")
 
 ax2.set_xlabel("Sample Number", fontsize=10, color=INK)
 ax2.set_ylabel("Sample Range, R (mm)", fontsize=10, color=INK)
@@ -173,6 +185,10 @@ for s in ("left", "bottom"):
     ax2.spines[s].set_color(INK_SOFT)
 ax2.yaxis.grid(True, alpha=0.12, linewidth=0.7, color=INK)
 ax2.yaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
+
+leg2 = ax2.legend(fontsize=8, loc="upper left", facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
+if leg2:
+    plt.setp(leg2.get_texts(), color=INK_SOFT)
 
 fig.subplots_adjust(left=0.08, right=0.88, top=0.93, bottom=0.10, hspace=0.08)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
