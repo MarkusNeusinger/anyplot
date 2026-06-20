@@ -70,6 +70,19 @@ ax = Axis(
     limits            = (0.0, 0.205, 0.0, 1.05),
 )
 
+# Risk zone shading — drawn first so OC curves render on top
+hspan!(ax, 0.95, 1.05; color = RGBAf(0.0, 0.62, 0.45, 0.07))   # producer risk (1−α region), brand green tint
+hspan!(ax, 0.0,  0.05; color = RGBAf(0.68, 0.19, 0.19, 0.07))  # consumer risk (β region), matte red tint
+
+# AQL and LTPD vertical reference lines
+ref_color = RGBAf(INK.r, INK.g, INK.b, 0.45)
+vlines!(ax, [aql];  color = ref_color, linestyle = :dash, linewidth = 1.5)
+vlines!(ax, [ltpd]; color = ref_color, linestyle = :dash, linewidth = 1.5)
+
+# Producer risk (α) and consumer risk (β) horizontal reference lines
+hlines!(ax, [0.95]; color = RGBAf(INK.r, INK.g, INK.b, 0.30), linestyle = :dot, linewidth = 1.2)
+hlines!(ax, [0.05]; color = RGBAf(INK.r, INK.g, INK.b, 0.30), linestyle = :dot, linewidth = 1.2)
+
 # OC curves
 for (i, (pa, lab)) in enumerate(zip(pa_data, plan_labs))
     lines!(ax, p_range, pa;
@@ -78,22 +91,13 @@ for (i, (pa, lab)) in enumerate(zip(pa_data, plan_labs))
            label     = lab)
 end
 
-# AQL and LTPD vertical reference lines
-ref_color = RGBAf(INK.r, INK.g, INK.b, 0.45)
-vlines!(ax, [aql];  color = ref_color, linestyle = :dash, linewidth = 1.5)
-vlines!(ax, [ltpd]; color = ref_color, linestyle = :dash, linewidth = 1.5)
+# AQL / LTPD labels — raised to y=0.87 to anchor near the high-probability zone
+text!(ax, aql + 0.003, 0.87;  text = "AQL = 2%",  color = INK_SOFT, fontsize = 11, align = (:left, :center))
+text!(ax, ltpd + 0.003, 0.87; text = "LTPD = 8%", color = INK_SOFT, fontsize = 11, align = (:left, :center))
 
-# Producer risk (α) and consumer risk (β) horizontal reference lines
-hlines!(ax, [0.95]; color = RGBAf(INK.r, INK.g, INK.b, 0.25), linestyle = :dot, linewidth = 1.2)
-hlines!(ax, [0.05]; color = RGBAf(INK.r, INK.g, INK.b, 0.25), linestyle = :dot, linewidth = 1.2)
-
-# AQL / LTPD labels above the vertical lines
-text!(ax, aql + 0.003, 0.78;  text = "AQL = 2%",  color = INK_SOFT, fontsize = 11, align = (:left, :center))
-text!(ax, ltpd + 0.003, 0.78; text = "LTPD = 8%", color = INK_SOFT, fontsize = 11, align = (:left, :center))
-
-# Risk threshold labels on the right margin
-text!(ax, 0.200, 0.96; text = "1−α", color = INK_SOFT, fontsize = 11, align = (:right, :bottom))
-text!(ax, 0.200, 0.06; text = "β",   color = INK_SOFT, fontsize = 11, align = (:right, :bottom))
+# Risk threshold labels — 1−α placed on left to avoid legend overlap; β given left padding
+text!(ax, 0.005, 0.965; text = "1−α", color = INK_SOFT, fontsize = 11, align = (:left, :bottom))
+text!(ax, 0.190, 0.065; text = "β",   color = INK_SOFT, fontsize = 11, align = (:right, :bottom))
 
 axislegend(ax;
            position        = :rt,
