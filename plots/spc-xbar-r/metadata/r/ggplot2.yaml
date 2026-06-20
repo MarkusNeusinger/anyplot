@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: spc-xbar-r
 created: '2026-06-20T13:07:25Z'
-updated: '2026-06-20T13:13:55Z'
+updated: '2026-06-20T13:26:59Z'
 generated_by: claude-sonnet
 workflow_run: 27871886542
 issue: 4551
@@ -12,52 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: dual-panel SPC chart with all required features (UCL/LCL
-    dashed, CL solid, warning limits dotted, OOC highlighted with redundant shape+color+size
-    encoding)'
-  - 'Semantically meaningful Imprint palette: green for in-control, red (matte red
-    position 5) for out-of-control, ochre for warning zone — textbook semantic color
-    mapping'
-  - 'Idiomatic ggplot2: long-format data + facet_wrap(scales=''free_y'') + facet-filtered
-    geom_hline is exactly the right pattern for this dual-panel SPC chart'
-  - Realistic CNC machining data with correct SPC constants (A2=0.577, D3=0, D4=2.114
-    for n=5) and 3 injected OOC events demonstrating detection capability
-  - 'Full theme adaptation: center line, text, and grid all correctly flip between
-    light and dark using adaptive INK tokens'
-  - Clean, flat script with excellent reproducibility (set.seed(42)) and idiomatic
-    geom_hline(data=ref_lines[...]) facet filtering
+  - Correct and complete SPC chart with all required statistical elements (CL, UCL,
+    LCL, ±2σ) and proper control chart constants (A2, D3, D4 for n=5)
+  - 'Excellent semantic color mapping: green=stable, red=alarm, blue=control limits,
+    ochre=warnings — immediately legible to SPC practitioners'
+  - OOC detection with redundant encoding (color + shape + size) is CVD-safe
+  - 'Strong data storytelling: callout labels (n=8, n=27, n=22) immediately identify
+    problematic subgroups across both panels'
+  - Clean idiomatic ggplot2 code using long-format data with facet_wrap for dual-panel
+    SPC
+  - Correct theme-adaptive chrome in both renders; no dark-on-dark failures
   weaknesses:
-  - Right-side annotation labels (geom_text(size = 2.4)) are small (~6.8 pt equivalent)
-    and may be difficult to read at mobile widths (~400 px); increasing to size =
-    2.8-3.0 would improve mobile legibility
-  - scale_x_continuous(limits = c(1, 40)) extends the axis 10 sample-widths beyond
-    the data (samples end at 30) solely to reserve space for annotations, leaving
-    ~25% of horizontal canvas empty — consider using coord_cartesian(xlim = c(1, 34))
-    to reduce wasted space
-  - Warning limit lines (+/-2 sigma) are not labeled in the right-side annotations
-    or legend, which may confuse readers unfamiliar with SPC notation; adding brief
-    annotation text (e.g. '+2sigma' / '-2sigma') would aid comprehension
-  - No callout annotations marking specific out-of-control events with sample numbers
-    — adding geom_text labels near OOC diamonds would strengthen data storytelling
-    (DE-03)
+  - OOC callout label text (geom_text size=2.5mm ≈ 7pt) is borderline small for mobile
+    viewports (~400px); increase to size=3.0
+  - Vertical major grid lines (panel.grid.major.x) add noise to a time-series SPC
+    chart — consider removing with panel.grid.major.x = element_blank()
+  - Right-side annotation margin is tight (X_LIM_MAX = n_samples + 8L) with 4 stacked
+    labels in the X-bar panel; consider increasing to n_samples + 10L
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
-      Chrome: Title "spc-xbar-r · r · ggplot2 · anyplot.ai" in dark ink — readable. Facet strip labels "X-bar Chart (Shaft Diameter, mm)" and "R Chart (Sample Range, mm)" in bold dark ink on elevated #FFFDF6 background — clearly readable. X-axis label "Sample Number" in dark ink — readable. Tick labels in INK_SOFT (#4A4A44) — readable. Right-side annotation labels (UCL/CL/LCL values) in INK_SOFT at size 2.4mm (~6.8pt) — small but readable at full canvas size. Legend text "In control" / "Out of control" in INK_SOFT — readable.
-      Data: Green (#009E73) line and circular markers for in-control data points. Red (#AE3030) diamond markers at samples 8 and 27 (X-bar OOC) and sample 22 (R chart OOC). UCL/LCL as blue (#4467A3) dashed lines. Warning limits as ochre (#BD8233) dotted lines. Center line as solid near-black (#1A1A17) line.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white
+      Chrome: Title "spc-xbar-r · r · ggplot2 · anyplot.ai" top-left, dark ink, fully readable. Facet strip headers ("X-bar Chart (Shaft Diameter, mm)" and "R Chart (Sample Range, mm)") bold dark text on elevated #FFFDF6 strip. X-axis label "Sample Number" clearly readable. Tick labels in INK_SOFT (#4A4A44) readable. Right-side limit annotations (UCL=25.140, +2σ, CL=25.017, LCL=24.893; UCL=0.453, CL=0.214) readable in grey. Legend ("In control" / "Out of control") readable in styled box.
+      Data: Process-mean line in #009E73 (brand green) ✓. In-control points as green circles (size 2.0). OOC points as red diamonds #AE3030 (size 3.5) at samples 8, 27 (X-bar) and 22 (R). UCL/LCL as dashed blue (#4467A3) lines. ±2σ warning limits as dotted ochre (#BD8233) in X-bar panel. Center line solid dark. All data colors first series = #009E73 ✓.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, no pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Facet strip labels in light bold ink on elevated #242420 background — readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Center line correctly flips to near-white (#F0EFE8). No dark-on-dark text failures observed — all labels use the correct dark-theme ink tokens.
-      Data: Colors are identical to light render — green (#009E73) in-control line, red (#AE3030) OOC diamonds, blue (#4467A3) UCL/LCL dashes, ochre (#BD8233) warning dots. Brand green #009E73 is clearly visible against the near-black background.
-      Legibility verdict: PASS — all text readable against dark background, chrome correctly adapted
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title in near-white (#F0EFE8 INK dark token), fully readable. Facet strips on #242420 elevated dark background with near-white bold text. Axis tick labels in #B8B7B0 (INK_SOFT dark), readable. Right-side annotations in #B8B7B0, readable. Legend box on #242420 background with light text. Center line flips to near-white (INK dark) as expected. No dark-on-dark failures — all chrome elements correctly use light tokens.
+      Data: Data colors identical to light render — process-mean line #009E73, OOC markers #AE3030, control limit lines #4467A3, warning limit lines #BD8233. Imprint palette data colors unchanged between themes as required.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,55 +54,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All chrome legible in both themes. Right-side annotations use geom_text(size=2.4)
-          (~6.8pt) which is readable at full canvas but may be tight on mobile scaling.
+        comment: 'All font sizes explicitly set. Both renders fully readable. Minor:
+          OOC callout text at 2.5mm borderline for mobile readability.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text/data collisions. Lower warning limit and LCL are close (~0.04
-          mm apart on Y-axis) and appear slightly crowded but distinct.
+        comment: No text overlaps. Right-side annotations (UCL/+2σ/CL/LCL) are spaced
+          cleanly despite tight Y-range.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green line, control limit lines, warning lines, and OOC red diamonds
-          all clearly visible in both themes.
+        comment: 30-sample chart with appropriately sized markers (2.0 in-control,
+          3.5 OOC). All data elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red OOC distinction uses redundant encoding (circle vs diamond
-          shape + size difference), making it CVD-safe.
+        comment: Green/red OOC distinction supplemented by redundant shape+size encoding.
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800. scale_x_continuous(limits=c(1,40)) reserves
-          25% of horizontal space for right-side annotations, creating noticeable
-          asymmetric whitespace.
+        comment: '3200x1800 landscape, dual facets fill space well. Minor: right annotation
+          margin tight with 4 stacked labels in X-bar panel.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Facet strip labels carry descriptive titles with units (mm). X-axis
-          label 'Sample Number' present. Y-axis label omitted (appropriate given per-panel
-          context in strip labels).
+        comment: 'X-axis: ''Sample Number''. Facet strips carry full descriptive labels
+          with units. Y=NULL appropriate given panel headers.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, OOC #AE3030 (semantic anchor), UCL/LCL #4467A3
-          (pos 3), warnings #BD8233 (pos 4), CL uses adaptive INK token. Backgrounds
-          #FAF8F1/#1A1A17 correct.'
+        comment: 'First series #009E73 ✓. OOC semantic red #AE3030 ✓. Control limits
+          #4467A3 ✓. Warning limits #BD8233 ✓. Backgrounds correct. Chrome flips correctly.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -121,24 +107,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Palette colors carry semantic meaning. Strip headers with elevated
-          background add professionalism. Solid design intent, though not deeply layered.
+        comment: 'Above configured default: semantic color assignments, facet strip
+          elevation, redundant OOC encoding. Not yet publication-ready but clearly
+          intentional design.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid is appropriately subtle (linewidth 0.25 in INK_MUTED). Full
-          panel.border is conventional for SPC charts. Minor alpha on line/points
-          adds subtlety.
+        comment: Subtle grid (INK_MUTED, linewidth=0.25), minor grid disabled, styled
+          facet strips. Vertical major grid lines add noise to time-series context;
+          Y-axis-only grid would be cleaner.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: OOC red diamonds draw the eye. Reference line hierarchy (solid >
-          dashed > dotted) is clear. But no callout annotations marking specific OOC
-          events or their sample numbers.
+        passed: true
+        comment: 'Excellent SPC narrative: OOC focal points with callout labels, dual-panel
+          enables mean-shift vs. variance-spike tracing. One point withheld: no subtitle
+          distinguishing the two types of process upset.'
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: X-bar on top, R chart on bottom, both sharing same x-axis via facet_wrap(ncol=1).
+        comment: 'Correct dual-panel SPC chart: X-bar on top, R on bottom, sharing
+          x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: UCL/LCL dashed and right-annotated; center line solid and distinct;
-          OOC points highlighted; +/-2 sigma warning limits shown as dotted ochre
-          lines.
+        comment: UCL/LCL dashed+labelled, CL solid, OOC highlighted, ±2σ warning limits,
+          ≥3 OOC events, correct A2/D3/D4 constants for n=5.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sample Number on X-axis; sample means on X-bar chart; sample ranges
-          on R chart. All 30 samples displayed.
+        comment: x=sample_id, y=xbar or range per facet. 30 samples within 20-50 specified
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'spc-xbar-r · r · ggplot2 · anyplot.ai'. Legend correctly
-          labels 'In control' / 'Out of control'.
+        comment: 'Title: ''spc-xbar-r · r · ggplot2 · anyplot.ai'' ✓. Legend: ''In
+          control'' / ''Out of control'' ✓.'
     data_quality:
       score: 15
       max: 15
@@ -180,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows X-bar/R pair, UCL/LCL (3-sigma), CL, +/-2 sigma warning limits,
-          OOC markers, standard SPC constants (A2=0.577, D3=0, D4=2.114 for n=5).
+        comment: 'All SPC features shown: in-control run, mean shifts, elevated range,
+          warning zone excursions, full UCL/LCL/CL/±2σ structure.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter in mm at nominal 25.0mm, sigma=0.08mm — physically
-          plausible precision machining scenario, neutral domain.
+        comment: CNC shaft diameter (25.0mm ±0.080mm SD), n=5 subgroups, 30 samples.
+          Classic manufacturing QC scenario, neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 samples (within 20-50 spec), n=5 subgroups. 3 injected OOC events
-          (samples 8, 27 on X-bar; sample 22 on R) demonstrate detection capability.
+        comment: A2=0.577 for n=5 is correct Shewhart constant. Injected shifts produce
+          realistic but visible OOC events.
     code_quality:
       score: 10
       max: 10
@@ -205,59 +192,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential script, no functions or classes.
+        comment: 'Linear: imports → tokens → data → frames → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42) at top of script.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: Only ggplot2 and ragg imported; both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Long-format df_all for faceting, separate ref_lines data frame for
-          facet-aware geom_hline, clean variable naming. No fake interactivity.
+        comment: Long-format data with facet_wrap is the idiomatic ggplot2 approach.
+          Separate data frames for ref_lines, ann_data, ooc_callouts are clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) correct; ragg::agg_png device used.
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png. No deprecated
+          size= for linewidth.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Long-format data + facet_wrap(scales='free_y') is canonical ggplot2
-          for multi-panel charts. geom_hline(data=ref_lines[...]) with facet filtering
-          is idiomatic. Multiple scale_*_manual with guide='none' correctly separates
-          legend control.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses facet_wrap with scales='free_y' for different Y ranges per panel.
-          Facet-aware reference lines via data subsetting in geom_hline is a distinctly
-          ggplot2 strength not easily replicated in other libraries.
+        comment: Expert use of facet_wrap(free_y), geom_hline with data subsets, scale_*_manual
+          for OOC encoding, expansion() for y breathing room.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap with free_y for coupled SPC panels is distinctively ggplot2.
+          Long-format data feeding faceted chart is grammar-of-graphics architecture.
+          Not a creative or non-obvious feature usage.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction

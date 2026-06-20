@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' spc-xbar-r: Statistical Process Control Chart (X-bar/R)
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-06-20
+#' Quality: 88/100 | Created: 2026-06-20
 
 library(ggplot2)
 library(ragg)
