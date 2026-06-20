@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-20
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -101,6 +100,12 @@ p <- ggplot(df, aes(x = x)) +
     x = TARGET, y = max_dens * 0.75,
     label = "Target", color = IMPRINT_PALETTE[4],
     hjust = 1.12, size = 3.5, fontface = "bold"
+  ) +
+  # Normal fit label — inline on the curve at the right tail
+  annotate("text",
+    x = mu_hat + 2.2 * sigma_hat, y = dnorm(mu_hat + 2.2 * sigma_hat, mu_hat, sigma_hat),
+    label = "Normal fit", color = IMPRINT_PALETTE[3],
+    hjust = 0, vjust = -0.4, size = 3.2, fontface = "italic"
   ) +
   # Cp / Cpk annotation box in the upper-right region
   annotate("label",
