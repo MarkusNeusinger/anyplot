@@ -33,6 +33,18 @@ const series = cohorts.map(function (c, i) {
     symbol: "circle",
     symbolSize: 5 + i,
     smooth: 0.3,
+    endLabel: {
+      show: true,
+      formatter: function () { return c.label; },
+      color: t.palette[i],
+      fontSize: 12,
+      fontWeight: "bold",
+      distance: 8,
+    },
+    emphasis: {
+      focus: "series",
+      lineStyle: { width: lineWidth + 2, opacity: 1 },
+    },
   };
   // Attach 20% benchmark reference line to the newest cohort only
   if (i === cohorts.length - 1) {
@@ -45,7 +57,7 @@ const series = cohorts.map(function (c, i) {
         position: "insideEndBottom",
         formatter: "20% benchmark",
         color: t.inkSoft,
-        fontSize: 13,
+        fontSize: 14,
       },
     };
   }
@@ -85,7 +97,7 @@ chart.setOption({
   },
   grid: {
     left: 90,
-    right: 60,
+    right: 130,
     top: 88,
     bottom: 110,
   },
