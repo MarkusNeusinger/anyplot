@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-retention-cohort: User Retention Curve by Cohort
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-20
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 89/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors
