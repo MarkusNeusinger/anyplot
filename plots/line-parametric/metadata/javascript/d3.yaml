@@ -1,0 +1,273 @@
+library: d3
+language: javascript
+specification_id: line-parametric
+created: '2026-06-20T23:10:07Z'
+updated: '2026-06-20T23:28:22Z'
+generated_by: claude-sonnet
+workflow_run: 27886411439
+issue: 4424
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Two-panel layout with equal aspect-ratio panels cleanly isolates Lissajous and
+    Archimedean spiral for easy comparison
+  - Imprint sequential colormap (tok.seq via d3.interpolateRgbBasis) correctly encodes
+    t-direction along each curve — color is identical between light and dark themes
+  - Direction chevron at ~30% traversal plus start/end dot markers satisfy the spec's
+    direction-labeling requirement with elegant SVG primitives
+  - Smart end-dot suppression (distSE > 8 check) avoids drawing a redundant dot on
+    the closed Lissajous curve
+  - 'Full theme-adaptive chrome: tok.ink for title, tok.inkSoft for labels/ticks/formulas,
+    tok.grid for gridlines, tok.pageBg for dot stroke — both renders pass the readability
+    check'
+  - Gradient legend bar built from SVG defs linearGradient is genuinely D3-idiomatic;
+    d3.pairs() for per-segment coloring is a characteristic D3 pattern not easily
+    replicated in other libraries
+  weaknesses:
+  - Axis label and tick text set to 13px; the D3 style guide recommends 14px for ticks
+    and axis labels on the 1600×900 CSS mount — increase to 14px for both
+  - drawPanel() helper function deviates from the KISS no-functions guideline; consider
+    inlining the two panel draws or accepting the minor CQ-01 deduction
+  - 'DE-01: the design is clean but relies largely on spec-mandated elements (gradient
+    color, two panels) rather than original aesthetic choices — consider a thin outer
+    panel border or subtle background tint to add polished framing'
+  - 'DE-02: axis domain lines are kept at full ink-soft opacity on both panels; softening
+    them slightly (lower opacity, or removing the horizontal domain on the y-axis)
+    would add refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface.
+      Chrome: Main title "line-parametric · javascript · d3 · anyplot.ai" at top in dark ink, clearly readable. Panel titles "Lissajous Figure" and "Archimedean Spiral" in bold dark ink above each panel, with italic formula subtitles in inkSoft below them. Tick labels and axis labels "x(t)" / "y(t)" in inkSoft — all legible. Subtle gridlines in both panels.
+      Data: Left panel shows a Lissajous figure (x=sin(3t), y=sin(2t)) tracing a figure-eight-like closed curve; right panel shows an Archimedean spiral expanding outward. Both curves use the Imprint sequential colormap (tok.seq: green #009E73 at t=0 → blue #4467A3 at t=max). Direction chevron visible at ~30% along each curve. Start dot (green) visible at curve origin; end dot (blue) visible at spiral endpoint only (Lissajous is closed — correct suppression). Gradient legend bar at bottom with "t = 0 (start)" / "t = max (end)" labels.
+      Legibility verdict: PASS — all text readable, no overlap, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title, panel titles, formula subtitles, axis labels, tick labels, and legend text all render in light ink / inkSoft tones — clearly readable against the dark background. No dark-on-dark failures observed. Grid lines visible but subtle.
+      Data: Curve colors are identical to the light render — same green-to-blue Imprint sequential gradient. Start/end dots and direction chevrons are unchanged. Legend gradient bar is identical.
+      Legibility verdict: PASS — both themes render correctly with full theme-adaptive chrome. No readability failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 22px, panel titles 17px, formula
+          subtitles/ticks/axis labels 13px. Both themes fully readable. Minor: 13px
+          is one below the recommended 14px for ticks and axis labels on a 1600px
+          mount.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements — panel titles, formula subtitles, tick labels,
+          axis labels, and legend all well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 800 points per curve gives smooth rendering; stroke-width 2.5px with
+          round linecap. Start/end dots at r=6 and direction chevron clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential green→blue is CVD-safe. Direction encoded redundantly
+          via color + chevron + dots.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Two 660×660 panels centered in 1600×900 with
+          80px gap and generous margins. Legend at bottom. All elements within canvas
+          bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x(t) and y(t) are the correct mathematical notation for parametric
+          coordinates. Panel subtitles include full parametric formulas.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses tok.seq (Imprint sequential) via d3.interpolateRgbBasis — correct
+          cmap for continuous t encoding. Background #FAF8F1 light / #1A1A17 dark.
+          Data colors identical across themes. Chrome fully adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above library defaults: panel subtitles with formula text, direction
+          chevron, smart end-dot suppression. Deliberate design but much of the sophistication
+          is spec-driven (gradient color, two-panel requirement). Clean professional
+          result.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle gridlines, L-shaped axis frame (only left + bottom domain
+          lines by D3 default), generous whitespace between panels and at borders.
+          Domain lines could be softened further.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color progression visually narrates t-direction. Contrasting curve
+          types (closed Lissajous vs. expanding spiral) create a natural pedagogical
+          narrative. Direction chevron and dots reinforce directionality. Clear focal
+          points.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with both curve types required by spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal aspect ratio (symmetric domains in square panels), color gradient
+          encoding t-direction, two curves (Lissajous + spiral), start/end point markers
+          and direction chevron all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x(t) on x-axis, y(t) on y-axis, full t range rendered, equal aspect
+          ratio maintained.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-parametric · javascript · d3 · anyplot.ai' matches required
+          format. Color gradient legend with start/end labels present.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both closed (Lissajous — self-intersecting) and open (Archimedean
+          spiral — expanding) parametric curves, covering the full range of behaviours
+          described in the spec.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lissajous figures and Archimedean spirals are canonical mathematical
+          curves used in physics (signal analysis, oscillations) and engineering.
+          Neutral, educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lissajous in [-1.15, 1.15] with 5% padding; spiral in [-maxR, maxR]
+          with 5% padding. 800 points per curve ensures smooth rendering near cusps
+          and self-intersections.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses drawPanel() helper function — minor deviation from no-functions
+          guideline, but practical for two identical panels avoiding 80+ lines of
+          duplication.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data fully deterministic — computed from mathematical formulas with
+          no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the window.d3 global and ANYPLOT_TOKENS/ANYPLOT_SIZE
+          globals as required.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable JavaScript. d3.pairs() for segment coloring is elegant.
+          No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles PNG/HTML output. SVG sized from window.ANYPLOT_SIZE.
+          Single svg appended to #container.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.select/append/attr chain, d3.scaleLinear, d3.axisBottom/Left,
+          d3.pairs() data join, selectAll().data().join() — all idiomatic D3 patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.pairs() for per-segment stroke coloring is distinctively D3. SVG
+          defs linearGradient for the legend bar and d3.interpolateRgbBasis for smooth
+          RGB interpolation are D3-native features not easily replicated in other
+          charting libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
