@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -95,12 +95,13 @@ df_labels = pd.DataFrame(
 )
 
 # ---------------------------------------------------------------------------
-# Color scheme — semantic blue tones for boys (convention), graduated by proximity to median
+# Color scheme — Imprint palette members for boys convention, graduated by proximity to median
+# Outer extremes: Imprint blue (#4467A3, slot 3); inner/mid: Imprint cyan (#2ABCCD, slot 6)
 # ---------------------------------------------------------------------------
-blue_outer = "#1A4C7A"  # darkest — extreme percentiles (P3, P97)
-blue_mid = "#4A8DBF"  # mid — (P10, P90)
-blue_inner = "#A3C9E8"  # lightest — inner band (P25, P75)
-blue_median = "#2C6EA6"  # median P50 line
+blue_outer = IMPRINT_PALETTE[2]  # "#4467A3" — extreme percentiles (P3, P97)
+blue_mid = IMPRINT_PALETTE[5]  # "#2ABCCD" — mid bands (P10, P90)
+blue_inner = IMPRINT_PALETTE[5]  # "#2ABCCD" — inner band (P25, P75), lower alpha → appears lighter
+blue_median = IMPRINT_PALETTE[2]  # "#4467A3" — median P50 line
 
 # Rich tooltips — lets-plot-native structured interactivity
 patient_tooltips = (
@@ -152,7 +153,9 @@ plot = (
     + scale_y_continuous(format=".1f")
     + coord_cartesian(ylim=[1, 18])
     + labs(
-        title="Boys Weight-for-Age · line-growth-percentile · letsplot · anyplot.ai", x="Age (months)", y="Weight (kg)"
+        title="Boys Weight-for-Age · line-growth-percentile · python · letsplot · anyplot.ai",
+        x="Age (months)",
+        y="Weight (kg)",
     )
     + theme_minimal()
     + theme(
