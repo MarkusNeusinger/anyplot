@@ -4,11 +4,6 @@
 // Quality: 86/100 | Created: 2026-06-20
 //# anyplot-orientation: square
 
-// anyplot.ai
-// heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-20
-
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data ---
@@ -84,11 +79,12 @@ chart.setOption({
 
   visualMap: {
     type: "piecewise",
+    seriesIndex: [0],
     pieces: [
-      { min: 1,  max: 4,  label: "Low  1–4",        color: ZONE_COLORS[0] },
-      { min: 5,  max: 9,  label: "Medium  5–9",     color: ZONE_COLORS[1] },
-      { min: 10, max: 19, label: "High  10–16",     color: ZONE_COLORS[2] },
-      { min: 20, max: 25, label: "Critical  20–25", color: ZONE_COLORS[3] },
+      { min: 1,  max: 4,  label: "Low 1–4",        color: ZONE_COLORS[0] },
+      { min: 5,  max: 9,  label: "Medium 5–9",      color: ZONE_COLORS[1] },
+      { min: 10, max: 19, label: "High 10–16",      color: ZONE_COLORS[2] },
+      { min: 20, max: 25, label: "Critical 20–25",  color: ZONE_COLORS[3] },
     ],
     orient: "horizontal",
     left: "center",
@@ -170,7 +166,7 @@ chart.setOption({
         position: "top",
         distance: 8,
         color: t.ink,
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: "600",
         backgroundColor: t.elevatedBg,
         padding: [3, 6, 3, 6],
