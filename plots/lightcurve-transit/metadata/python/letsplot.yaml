@@ -1,39 +1,55 @@
 library: letsplot
+language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:18:08Z'
-updated: '2026-03-18T21:35:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23267445826
+updated: '2026-06-20T08:02:10Z'
+generated_by: claude-sonnet
+workflow_run: 27864530209
 issue: 4559
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent spec compliance with all required features (error bars, model overlay,
-    phase-folding, limb darkening)
-  - Strong scientific data storytelling with informative subtitle and clear transit
-    dip focal point
-  - 'Clean visual refinement: subtle grid, removed chrome, custom background'
-  - Good use of lets-plot distinctive layer_tooltips feature with formatted output
-  - Realistic astronomical data with appropriate noise levels and transit parameters
+  - 'Perfect spec compliance: phase-folded data, error bars, smooth transit model,
+    uncertainty ribbon, and transit minimum annotation all present'
+  - 'Correct Imprint palette usage: Observations in #009E73 (brand green) and Transit
+    Model in #C475FD (lavender) in canonical order'
+  - 'Excellent theme-adaptive chrome: all INK/INK_SOFT/PAGE_BG tokens thread through
+    title, subtitle, axis labels, tick labels, legend, and annotation'
+  - 'Smart geom layering: ribbon → error bars → scatter points → model line creates
+    natural visual depth'
+  - 'Good data density handling: 400 points with alpha=0.5 and size=2.5 prevents overplotting
+    without losing individual data visibility'
+  - 'Idiomatic letsplot usage: layer_tooltips() with custom format strings, HTML +
+    PNG export, ggsize/ggsave scale=4 pattern'
+  - 'Canvas passes gate: ggsize(800, 450) + scale=4 produces exactly 3200×1800 px'
   weaknesses:
-  - Error bars slightly faint (alpha=0.35) on light background — could benefit from
-    slightly higher opacity
-  - Library mastery could be pushed further with additional lets-plot features
-  image_description: 'The plot displays a phase-folded exoplanet transit light curve
-    on a light gray (#FAFAFA) background. The x-axis shows "Orbital Phase" (0.0-1.0)
-    and the y-axis shows "Relative Flux" (~0.984-1.010). Blue scatter points (#306998)
-    with light blue vertical error bars represent photometric observations (400 points,
-    alpha=0.45). A bold red (#C44E52) transit model line shows a characteristic ~1%
-    flux dip centered at phase 0.5, with a semi-transparent pink uncertainty ribbon
-    (Model ±1.5σ). The title "lightcurve-transit · letsplot · pyplots.ai" appears
-    top-left in bold, with a gray subtitle "Phase-folded exoplanet transit · Depth:
-    ~1% · Quadratic limb darkening model". A top-center legend identifies three series:
-    Model ±1.5σ (filled red), Observations (blue dots), and Transit Model (red line).
-    The overall aesthetic is clean and scientific with minimal chrome.'
+  - Transit Minimum annotation text (geom_text size=3mm) is at the lower boundary
+    of readability — consider size=4 or add vjust offset so it clears the transit
+    dip without overlapping the model line
+  - 'DE-01 moderate: design is clean and correct but lacks a distinctive visual touch
+    beyond standard astronomy conventions (e.g. subtle shading of the transit window,
+    or a horizontal baseline reference line at flux=1.0 styled as a semantic anchor)'
+  - 'LM-02: layer_tooltips() is used well but the full set of letsplot''s distinctive
+    features (e.g. sampling for dense data, flipped coordinates, geom_smooth) are
+    not explored'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "lightcurve-transit · python · letsplot · anyplot.ai" in bold dark ink, fully readable. Subtitle "Phase-folded exoplanet transit · Depth: ~1% · Quadratic limb darkening model" in INK_SOFT, clearly visible. Legend at top with three entries (lavender fill square for "Model ±1.5σ", green circle for "Observations", lavender line for "Transit Model") — all readable. Axis labels "Orbital Phase" and "Relative Flux" in dark ink, proportional. Y-axis tick labels (0.985–1.01 range) and X-axis ticks (0.0–1.0) in INK_SOFT — all readable.
+      Data: Green dots (#009E73) for 400 observations with gray error bars (INK_MUTED). Lavender line (#C475FD) for the transit model with a very subtle ribbon envelope (alpha=0.18). A characteristic transit dip at orbital phase ~0.5 dropping to ~0.989 relative flux is the clear visual focal point. Small "Transit Minimum" label visible at the bottom of the dip.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), fully readable against dark background. Subtitle in #B8B7B0 (INK_SOFT dark), readable. Legend entries in light text — readable. Axis labels and tick labels in light tokens — all clearly visible against the dark background. No dark-on-dark issues observed.
+      Data: Data colors are IDENTICAL to light render — green observations (#009E73) and lavender transit model (#C475FD) are consistent across both themes as required. The transit dip is equally prominent and the ribbon is visible.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background. Brand green #009E73 remains clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -41,42 +57,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, subtitle=16, axis_title=20,
-          axis_text=16, legend_text=16'
+        comment: 'Title/subtitle/axes all sized correctly and readable in both themes.
+          Minor: geom_text annotation at size=3mm is at lower readability boundary.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No text-on-text or text-on-data overlap. Alpha=0.5 on points prevents
+          overplotting issues in the dense region.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points visible at appropriate density; error bars slightly faint
-          at alpha=0.35
+        comment: 400 points at size=2.5, alpha=0.5 is appropriate medium-density handling.
+          Error bars visible. Model line size=1.5 prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs red is colorblind-safe
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
+          members.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good layout, plot fills canvas well at 1600x900 base
+        comment: Canvas gate passed (3200x1800). Title fills expected ~75% width.
+          Good whitespace margins. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; quantities are inherently dimensionless
+        comment: 'Axes: ''Orbital Phase'' and ''Relative Flux'' — descriptive and
+          appropriate. Title matches required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second #C475FD (lavender). Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome adapts correctly.'
     design_excellence:
       score: 15
       max: 20
@@ -86,21 +113,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, informative subtitle, coordinated color scheme, professional
-          appearance
+        comment: 'Good design: semantic layer ordering, subtitle metadata, top legend
+          placement, uncertainty ribbon. Raised from default 4 — lacks a truly distinctive
+          touch.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle y-grid only, ticks removed, custom background, spines removed
+        comment: X-grid removed, Y-grid kept at GRID_COLOR. Minor gridlines blanked.
+          Ticks blanked. theme_minimal() removes top/right spines. Clean but no axis
+          line removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transit dip as focal point, red model against blue scatter, informative
-          subtitle
+        comment: Clear focal point at transit dip. Transit Minimum annotation guides
+          viewer. Geom layering creates natural depth. Good but annotation is small.
     spec_compliance:
       score: 15
       max: 15
@@ -110,26 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter + model overlay for transit photometry
+        comment: 'Correct: phase-folded scatter + model overlay light curve.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, model curve, phase-folding, limb darkening, uncertainty
-          band all present
+        comment: Error bars, smooth model curve, phase-folded data, uncertainty ribbon
+          — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=phase, Y=flux, correct mapping
+        comment: X=orbital phase (0-1), Y=relative flux with transit dip going downward
+          as specified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive legend labels
+        comment: 'Title: ''lightcurve-transit · python · letsplot · anyplot.ai''.
+          Legend entries clear and accurate.'
     data_quality:
       score: 15
       max: 15
@@ -139,20 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows baseline, ingress/egress, transit bottom, noise, and model
-          fit
+        comment: Phase-folded multi-transit data, error bars, transit model, uncertainty
+          envelope, transit minimum annotation — full coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic exoplanet transit photometry scenario
+        comment: Simulated exoplanet transit with ~1% depth, quadratic limb darkening,
+          realistic noise (flux_err ~0.001-0.003), 400 points typical for space photometry.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic flux values and error bars for space-based photometry
+        comment: Phase 0-1, flux range 0.985-1.01 (~1% transit depth), error bars
+          0.001-0.003 — all physically realistic.
     code_quality:
       score: 10
       max: 10
@@ -162,54 +196,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: No functions or classes. Sequential, readable code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, explicit named imports
+        comment: All imported names (geom_ribbon, geom_errorbar, geom_point, geom_line,
+          geom_text, layer_tooltips, etc.) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, vectorized transit model computation
+        comment: Clean structure, no fake UI, appropriate complexity for the plot
+          type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with ggsave, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics layer composition, ggsize/ggsave scale
+          pattern, theme_minimal + custom theme, scale_color_manual/scale_fill_manual.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with layered geoms, scales, theme composition
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: layer_tooltips with .line() and .format() is distinctive to lets-plot
+        comment: layer_tooltips() with format strings and field labels, HTML interactive
+          export, geom_ribbon. Good but not maximally distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []

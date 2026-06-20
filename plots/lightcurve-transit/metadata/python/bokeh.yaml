@@ -1,91 +1,117 @@
 library: bokeh
+language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:20:16Z'
-updated: '2026-03-18T21:41:29Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23267445258
+updated: '2026-06-20T07:55:26Z'
+generated_by: claude-sonnet
+workflow_run: 27864288478
 issue: 4559
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent scientific storytelling with transit depth annotation, box highlight,
-    and baseline reference
-  - Strong blue+gold color palette that is both aesthetically pleasing and colorblind-safe
-  - 'Thorough visual refinement: removed outline, subtle y-grid only, customized axis
-    styling'
-  - Good use of Bokeh-specific features (HoverTool, Band, Whisker, CustomJSTickFormatter)
-  - Perfect spec compliance with all required features implemented
-  - Realistic astronomical data with appropriate noise characteristics
+  - Perfect spec compliance — phase-folded scatter with error bars, smooth transit
+    model overlay, and transit dip going downward all implemented correctly
+  - 'Rich data storytelling: transit window BoxAnnotation (subtle green highlight),
+    confidence Band around model, quantitative depth annotation with connecting line
+    and diamond markers, baseline dashed Span — multiple semantic layers guide the
+    viewer to the transit event'
+  - Exemplary Bokeh feature usage — Whisker, Band, BoxAnnotation, Span, CustomJSTickFormatter,
+    HoverTool, ColumnDataSource all used idiomatically and appropriately
+  - Full theme-adaptive chrome with all tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    threaded through to every non-data element in both light and dark renders
+  - Correct dual output (HTML + PNG) via robust Selenium CDP screenshot technique
+    that preserves exact 3200×1800 canvas dimensions
   weaknesses:
-  - Error bars at alpha=0.1 are essentially invisible in the rendered plot, reducing
-    their communicative value
-  - Confidence band spanning the full phase range is slightly distracting outside
-    the transit window
-  - Transit depth annotation text (22pt) could be slightly larger for the 4800x2700
-    canvas
-  image_description: The plot displays an exoplanet transit light curve on a light
-    gray (#F5F6F8) background. The x-axis shows "Orbital Phase" (0 to 1) and the y-axis
-    shows "Relative Flux" (approximately 0.9850 to 1.0050) with 4-decimal precision
-    formatting. Blue (#306998) scatter points represent 600 photometric data measurements
-    distributed across the full phase range. A gold/amber (#D4A017) transit model
-    curve is overlaid, showing a smooth cosine-bell dip centered at phase 0.5 reaching
-    down to ~0.988 (1.2% depth). A subtle blue-tinted box annotation highlights the
-    transit window region. A dashed gray baseline at flux=1.0 provides reference.
-    A light blue confidence band (±0.0008) surrounds the model curve. Very faint error
-    whiskers (alpha=0.1) extend from each data point. A "Transit depth 1.2%" italic
-    annotation with a vertical gold line and diamond markers quantifies the dip magnitude.
-    The legend in the top-left corner shows "Photometric Data" (scatter) and "Transit
-    Model" (line) with a clean white background and subtle border. The title reads
-    "lightcurve-transit · bokeh · pyplots.ai" in bold dark text.
+  - X-axis label 'Orbital Phase' is very hard to confirm in the rendered images —
+    the tick labels appear close to the canvas bottom edge and the label below them
+    is not clearly visible; verify that min_border_bottom=160 is sufficient or increase
+    to 200 to ensure 'Orbital Phase' renders fully within the canvas
+  - 'DE-02 refinement: the legend box has a visible border (border_line_color=INK_SOFT)
+    which adds visual noise — consider removing or using a very faint border; also
+    consider removing the y-axis line itself (p.yaxis.axis_line_color = None) to further
+    clean the L-frame'
+  - Error bar whiskers at the out-of-transit baseline (600 densely packed whiskers
+    at flux≈1.0) create significant visual noise — consider reducing whisker line_alpha
+    from 0.3 to 0.15 for baseline-region clarity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold title "lightcurve-transit · python · bokeh · anyplot.ai" in dark ink at top, filling ~50% canvas width. Y-axis label "Relative Flux" rotated on left in dark ink, clearly readable. X-axis "Orbital Phase" label set in code but hard to confirm visually at compressed scale — tick labels (0, 0.2, 0.4, 0.6, 0.8, 1.0) are visible at the bottom; 160px min_border_bottom should provide room for the label but it is not clearly visible. Y-axis tick labels (0.9850, 0.9900, 0.9950, 1.0000, 1.0050) in secondary ink color, clearly readable at 4-decimal precision.
+      Data: Green (#009E73) scatter markers at alpha=0.45 with thin green whiskers (error bars) distributed across phase 0–1. Transit dip clearly visible around phase 0.5, descending to ~0.9875 flux. Lavender/purple (#C475FD) smooth transit model curve at line_width=4 overlaid. Subtle green BoxAnnotation highlights the transit window (phase 0.44–0.56). Faint purple confidence Band around the model. Dashed gray baseline at flux=1.0. Transit depth annotation "Transit depth\n1.2%" in dark italic text with connecting line and purple diamond markers to the right of the transit window.
+      Legibility verdict: PASS — all text readable; minor uncertainty about x-axis label at bottom edge
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black; matches prescribed dark surface
+      Chrome: Title in warm near-white/off-white light text — clearly readable against dark background. Y-axis label "Relative Flux" in light color, clearly visible. Y-axis tick labels in secondary light color (INK_SOFT = #B8B7B0 in dark mode), readable. X-axis tick labels visible in lighter color. "Orbital Phase" x-axis label same uncertainty as light render.
+      Data: Green scatter markers (#009E73, identical to light render) clearly visible against dark background. Purple transit model (#C475FD, identical to light render). Transit depth annotation "Transit depth 1.2%" in warm near-white text (INK_MUTED/INK in dark mode), readable. Transit window BoxAnnotation barely visible (very subtle green tint at 6% alpha on dark background — expected for such low alpha).
+      Legibility verdict: PASS — no dark-on-dark failures; data colors identical to light render; all chrome elements correctly flip to light-on-dark
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 38pt, axis labels 28pt, ticks
-          20pt, annotation 22pt). Annotation text slightly small relative to canvas.
+        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks/legend). Text well-proportioned in both themes. Minor deduction: x-axis
+          label ''Orbital Phase'' not clearly visible at compressed scale — 160px
+          min_border_bottom should provide room but cannot confirm from thumbnail.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend positioned away from data.
+        comment: No text overlap. Error bar whisker density at baseline creates visual
+          noise but no actual text-on-text or text-on-data overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 600 data points clearly visible at size=16 and alpha=0.5. Error bars
-          at alpha=0.1 are essentially invisible.
+        comment: 600 data points with size=8, alpha=0.45 — correct density adaptation.
+          Error bars at alpha=0.3. Transit model at line_width=4, line_alpha=0.9.
+          All elements appropriately visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs gold is an excellent colorblind-safe combination.
+        comment: Green (#009E73) and purple (#C475FD) — Imprint positions 1 and 2
+          — are CVD-safe and clearly distinguishable.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: 'Correct 3200x1800 landscape canvas. Canvas gate passed. Good proportions.
+          Minor concern: bottom margin appears tight for x-axis label. Title fills
+          ~50% canvas width — appropriate.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive and domain-appropriate.
+        comment: '''Orbital Phase'' and ''Relative Flux'' are correct scientific labels
+          for dimensionless quantities — no units needed. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) for photometric data. Second
+          series #C475FD (Imprint position 2) for transit model. Warm backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark). All chrome tokens theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -93,22 +119,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with intentional blue+gold palette, custom background,
-          styled legend. Approaches publication quality.
+        comment: 'Clearly above library defaults: transit window BoxAnnotation with
+          semantic green, confidence Band around model, quantitative depth annotation
+          with connecting line and diamond markers, baseline Span reference, warm
+          backgrounds, Imprint palette with intentional assignments. Strong design.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Outline removed, x-grid removed, y-grid subtle, minor ticks removed.
-          Confidence band slightly distracting at full width.
+        comment: Y-axis-only grid at alpha=0.15 (very subtle), no x-grid, outline_line_color=None
+          (no plot box), appropriate axis colors, alpha blending on all data elements,
+          no toolbar. Good refinement but legend border and some minor details could
+          be further polished.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point on transit dip with depth annotation, box highlight,
-          and baseline reference.
+        comment: 'Clear visual hierarchy guiding viewer to transit event: transit
+          window highlight + model overlay + quantitative depth annotation. Multiple
+          semantic layers create a coherent narrative about exoplanet transit detection.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series scatter plot with model overlay showing phase-folded
-          transit.
+        comment: 'Correct phase-folded light curve: scatter with error bars + smooth
+          model overlay. Transit dip going downward as required.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, smooth model curve, phase-folded data, clean minimal
-          style all present.
+        comment: Error bars (Whisker), smooth transit model overlay (line), phase-folded
+          data (0.0-1.0), fitted transit model with quadratic limb-darkening — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase (0-1), Y=relative flux with transit dip going downward.
+        comment: 'X: Orbital Phase (0-1), Y: Relative Flux (0.985-1.006). All data
+          visible within plot bounds.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels clear and accurate.
+        comment: Title 'lightcurve-transit · python · bokeh · anyplot.ai' — correct
+          format. Legend labels 'Photometric Data' and 'Transit Model' are clear and
+          accurate.
     data_quality:
       score: 15
       max: 15
@@ -148,22 +183,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows transit dip, baseline scatter, error bars, model fit with confidence
-          band.
+        comment: 'Shows all light curve aspects: scatter with error bars, smooth model,
+          transit dip, baseline, confidence band, transit window. Comprehensive coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated hot Jupiter transit with realistic photometric noise and
-          proper phase-folding.
+        comment: 'Simulated hot Jupiter exoplanet transit — scientifically realistic:
+          1.2% transit depth, 600 data points, error bars ~0.001-0.002, quadratic
+          limb-darkened model. Neutral astronomy science context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flux 0.985-1.005, phase 0-1, errors 0.001-0.002 — realistic for space-based
-          photometry.
+        comment: Flux range 0.985-1.006, phase 0-1, transit depth 1.2% — all factually
+          correct for a hot Jupiter transiting a Sun-like star.
     code_quality:
       score: 10
       max: 10
@@ -173,33 +209,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the start.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: 'All imports used: base64, os, time, Path, numpy, bokeh models (all
+          used), selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code with appropriate complexity.
+        comment: Clean Pythonic code. Appropriate complexity. No fake UI elements.
+          CDP screenshot is more sophisticated than save_screenshot but valid for
+          exact canvas capture.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_png. Current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. ANYPLOT_THEME env var
+          used. Current Bokeh API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -207,23 +247,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ColumnDataSource, Bokeh models, and renderer-specific
-          HoverTool.
+        comment: Expert use of ColumnDataSource, Whisker (error bars), Band (confidence
+          region), BoxAnnotation (transit window), Span (baseline), Label, CustomJSTickFormatter,
+          HoverTool — all idiomatic Bokeh patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool with HTML tooltips, Band, CustomJSTickFormatter, and dual
-          PNG+HTML output.
+        comment: HoverTool for interactive exploration, Band model for uncertainty
+          visualization, BoxAnnotation for region annotation, CustomJSTickFormatter
+          for JS-based tick formatting, dual HTML+PNG output. Strong distinctive Bokeh
+          feature usage; minor deduction as the CDP screenshot technique, while clever,
+          is outside bokeh's own API.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - columndatasource
