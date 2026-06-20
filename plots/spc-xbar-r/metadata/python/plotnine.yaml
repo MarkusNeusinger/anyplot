@@ -1,38 +1,61 @@
 library: plotnine
+language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:18Z'
-updated: '2026-03-19T22:27:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318370331
+updated: '2026-06-20T13:28:00Z'
+generated_by: claude-sonnet
+workflow_run: 27871690843
 issue: 4551
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/plotnine/plot.png
-preview_html: null
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Excellent spec compliance with all required SPC features (UCL/LCL, CL, warning
-    limits, OOC highlighting, standard constants)
-  - Professional color-coding system with colorblind-safe palette distinguishing control
-    lines, warning lines, and data
-  - Realistic CNC shaft diameter data with well-chosen OOC injection points demonstrating
-    different failure modes
-  - Clean grammar-of-graphics composition using facet_wrap for the two-panel layout
-  - Effective left-edge label placement with de-overlap logic for readability
+  - 'Perfect spec compliance: X-bar and R charts stacked vertically via facet_wrap
+    with correct UCL/LCL/CL/warning limits and out-of-control highlighting'
+  - 'Semantically correct Imprint palette: green (#009E73) for in-control, matte red
+    (#AE3030) for OOC/limits, blue (#4467A3) for center line, amber (#DDCC77) for
+    warning lines'
+  - Shape and size redundancy for OOC points (diamond marker + larger size=4.0) provides
+    CVD-safe dual encoding
+  - Authentic SPC implementation using correct control chart constants (A2=0.577,
+    D3=0, D4=2.114 for n=5)
+  - Right-edge label de-overlap logic prevents label crowding on the control limit
+    annotations
+  - 'Fully theme-adaptive chrome: all text/background/grid tokens flip correctly between
+    light and dark renders'
+  - 'Clean, idiomatic plotnine code: facet_wrap for dual-panel layout, scale_*_identity()
+    for direct aesthetic mapping, layered geoms for line-type differentiation'
+  - 'Perfect code quality: KISS structure, np.random.seed(42), all imports used, correct
+    output filenames'
   weaknesses:
-  - Left-edge labels (LWL/LCL) in X-bar chart slightly crowded despite de-overlap
-    logic
-  - R chart panel compressed vertically due to single extreme OOC point stretching
-    the y-axis
-  - Could leverage more distinctive plotnine features (e.g., annotate for zone shading,
-    coord_cartesian for axis limits)
+  - Right-edge labels in the R chart panel are somewhat crowded — the de-overlap min_gap
+    of 30% of chart_range may displace labels significantly from their actual control
+    lines; UWL and LWL labels in the R chart appear close together
+  - In-control data points (geom_point size=2.5) are on the minimum end for a sparse
+    30-point dataset — the density heuristic recommends larger, prominent markers
+    for < 50 points; slightly increasing to size=3.0 would improve visibility
+  - geom_label size=3 (mm, ~8.5pt) for control limit annotations is small relative
+    to the canvas; increasing to size=3.5 or 4 would improve legibility of UCL/CL/LCL/UWL/LWL
+    labels at mobile scale
+  - panel_spacing_y=0.05 makes the two panels very tightly packed — a slightly larger
+    spacing (0.10–0.15) would give the facet headers more breathing room
   image_description: |-
-    The plot displays a two-panel SPC chart for CNC shaft diameter monitoring. The top panel is the X̄ Chart showing sample means (mm), the bottom is the R Chart showing sample ranges (mm), both sharing a Sample Number x-axis (1–30). The title reads "CNC Shaft Diameter Monitoring · spc-xbar-r · plotnine · pyplots.ai" in bold dark text at the top.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "CNC Shaft Diameter Monitoring · spc-xbar-r · python · plotnine · anyplot.ai" at 12pt bold is fully visible and spans ~80% of canvas width. Y-axis label "Measurement (mm)" and X-axis label "Sample Number" are clearly readable at 10pt. Tick labels at 8pt are legible. Facet strip headers ("X̄ Chart · Sample Mean (mm)" and "R Chart · Sample Range (mm)") have a slightly elevated background (#FFFDF6) and 9pt bold text — readable. Right-edge control limit labels (UCL, CL, LCL, UWL, LWL) at size=3mm (~8.5pt) are small but legible.
+      Data: In-control points rendered in #009E73 (brand green) as circles — consistent with Imprint[0]. Out-of-control points (sample 8 in X-bar chart, samples 19 and 25 in both charts) rendered in #AE3030 (matte red) as diamond markers — immediately visible. Solid blue center line (#4467A3), dashed red UCL/LCL, dotted amber (#DDCC77) warning limits. Data line in teal (#009E73) with alpha=0.55. Subtle y-axis grid (alpha=0.15), no x-axis grid.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light failures.
 
-    In the X̄ chart, a semi-transparent steel blue line connects 30 data points (blue circles). Three out-of-control points appear as larger red diamonds: sample 8 (above UCL), sample 19 (below LCL), and sample 25 (above UCL). Horizontal reference lines include a solid steel blue center line (CL ≈ 25.000), dashed red UCL/LCL lines, and dotted amber UWL/LWL lines. Left-edge labels (UCL, UWL, CL, LWL, LCL) have white background fills for readability.
-
-    In the R chart, similar styling shows one prominent OOC red diamond at sample 25 (range ≈ 0.21, well above UCL ≈ 0.11). Normal points cluster between 0.02–0.09. Labels (UCL, UWL, CL, LWL) are on the left edge. The background is light gray, strip headers have gray backgrounds, and only subtle horizontal gridlines appear. The overall design is clean and professional with a clear color-coding system for control limits.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and all labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. Facet strip headers use #242420 elevated background — labels still clearly readable. No dark-on-dark text failures observed. Grid lines are subtly lighter on dark background.
+      Data: All data colors (green in-control #009E73, red OOC #AE3030, blue center line #4467A3, amber warning #DDCC77) are identical to the light render — only chrome (background, text, grid) flipped. The green-vs-red contrast is strong and immediately legible on the dark surface.
+      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -40,68 +63,83 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          strip_text=18'
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
+          strip 9pt). Right-edge geom_label at size=3mm (~8.5pt) is slightly small
+          but readable. Both themes legible.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Left-edge labels use de-overlap logic; LWL/LCL labels in X-bar chart
-          slightly crowded
+        comment: De-overlap logic prevents most crowding. R chart right-edge labels
+          (UWL/LWL/CL) are slightly close given the compressed range scale.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points well-sized, OOC diamonds larger, line alpha keeps data visible
+        comment: In-control circles (size=2.5) and OOC diamonds (size=4) clearly visible.
+          Data line at size=0.9 with alpha=0.55 provides continuity without dominating.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape redundancy (circle vs diamond) for OOC/in-control distinction
+          ensures CVD safety beyond color alone.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Steel blue, muted red, amber palette is colorblind-safe
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Two-panel layout works but X-bar chart has excess whitespace, R chart
-          compressed by outlier
+        comment: Correct 3200x1800 canvas. Two panels fill canvas well. Balanced margins.
+          Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Number and Measurement (mm) with units, descriptive strip
-          text
+        comment: Y-axis 'Measurement (mm)' with units. X-axis 'Sample Number'. Facet
+          headers include measurement units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series green #009E73, center line blue #4467A3 (Imprint[2]),
+          OOC/limits red #AE3030 (Imprint[4] semantic), warning amber #DDCC77 (semantic
+          anchor). Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom color palette, intentional typography hierarchy, themed backgrounds,
-          styled strips
+        comment: Intentional semantic color assignment (green=safe, red=alert, blue=reference,
+          amber=warning). Different linetypes per limit type. Above 'well-configured
+          default' but not FiveThirtyEight level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Removed x-grid, subtle y-grid, custom axis lines, styled backgrounds
+        comment: No vertical grid, subtle horizontal grid (alpha=0.15), strip backgrounds
+          with elevated fill. Panel borders appropriate for SPC chart. Panel spacing
+          0.05 is tight.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: OOC points highlighted with different color and shape creating clear
-          focal points
+        comment: OOC points immediately pop visually (red diamonds vs green circles).
+          Three distinct excursion types shown (mean shift up, mean shift down, variability
+          increase). Viewer instantly identifies process instabilities.
     spec_compliance:
       score: 15
       max: 15
@@ -111,27 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: X-bar on top, R on bottom, vertically stacked sharing x-axis
+        comment: Correct X-bar chart on top + R chart on bottom, stacked via facet_wrap
+          sharing x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: UCL/LCL dashed, CL solid, OOC highlighted, warning limits shown,
-          A2/D3/D4 constants used
+        comment: UCL/LCL dashed, center line solid, warning limits (±2σ) dotted, OOC
+          highlighted with different color+shape, 3 OOC events, correct SPC constants.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sample number, Y=means/ranges, all data visible
+        comment: Sample IDs on X, measurement values on Y, X-bar in top panel, R in
+          bottom panel.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spc-xbar-r, plotnine, pyplots.ai with descriptive
-          context
+        comment: 'Title format: ''CNC Shaft Diameter Monitoring · spc-xbar-r · python
+          · plotnine · anyplot.ai'' — correct Descriptive · spec-id · lang · lib ·
+          anyplot.ai format. Right-edge labels serve as legend.'
     data_quality:
       score: 15
       max: 15
@@ -141,21 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows upward shift, downward shift, high variability, normal operation
-          in both charts
+        comment: Both chart types shown, multiple OOC signal types (mean shift up/down,
+          variability increase), warning limits shown.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter 25mm, sigma=0.02mm, subgroup of 5 - realistic
-          manufacturing QC
+        comment: CNC shaft diameter monitoring — real, neutral, professional manufacturing
+          QC scenario. Subgroups of n=5 is standard in SPC.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for precision CNC machining
+        comment: A2=0.577, D3=0, D4=2.114 are correct SPC constants for n=5. 25mm
+          target with 0.02mm process std is realistic for CNC machining.
     code_quality:
       score: 10
       max: 10
@@ -165,31 +207,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, data, plot, save structure with no functions or classes
+        comment: No functions/classes. Follows imports → tokens → data → plot → save
+          structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All plotnine imports (aes, element_blank, element_line, element_rect,
+          element_text, facet_wrap, geom_hline, geom_label, geom_line, geom_point,
+          ggplot, labs, scale_*_identity, scale_x_continuous, theme, theme_minimal)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with necessary label de-overlap logic
+        comment: De-overlap logic is the most complex section but serves a legitimate
+          purpose. Overall clean and readable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png using plot.save(). Current plotnine API
+          used throughout.
     library_mastery:
       score: 7
       max: 10
@@ -199,15 +247,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Excellent grammar-of-graphics composition with scale_*_identity()
-          and Categorical ordering
+        comment: 'Idiomatic plotnine: facet_wrap for multi-panel, scale_*_identity()
+          for direct aesthetic mapping, geom_hline with separate dataframes, grammar-of-graphics
+          layering.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap with free_y, geom_label, scale_*_identity() pattern
-  verdict: REJECTED
+        comment: facet_wrap(scales='free_y') for dual SPC panels is a distinctly ggplot2/plotnine
+          approach. scale_*_identity() for programmatic color/shape/size mapping is
+          distinctive. Could further leverage plotnine-specific stat functions.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -218,5 +269,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
