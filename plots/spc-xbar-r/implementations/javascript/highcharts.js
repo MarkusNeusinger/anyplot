@@ -33,12 +33,14 @@ const SIGMA = 0.06;
 const xbarVals = [], rVals = [];
 for (let i = 0; i < N; i++) {
   const sub = [];
+  // Sample 25 (i=24): tooling wear causes elevated variability → OOC range event
+  const localSigma = (i === 24) ? SIGMA * 4 : SIGMA;
   for (let j = 0; j < N_SUB; j++) {
     // Inject upward shifts to create realistic OOC signals
     let shift = 0;
     if (i >= 9 && i <= 11) shift = 0.22;  // process drift (samples 10-12)
     if (i === 19) shift = 0.30;            // isolated spike (sample 20)
-    sub.push(TARGET + shift + randN() * SIGMA);
+    sub.push(TARGET + shift + randN() * localSigma);
   }
   xbarVals.push(sub.reduce((a, b) => a + b, 0) / N_SUB);
   rVals.push(Math.max(...sub) - Math.min(...sub));
@@ -107,9 +109,9 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
-    gridLineWidth: 1,
+    gridLineWidth: 0,
     labels: {
-      style: { color: t.inkSoft, fontSize: "11px" },
+      style: { color: t.inkSoft, fontSize: "13px" },
       step: 2
     },
     title: {
@@ -124,14 +126,14 @@ Highcharts.chart("container", {
         style: { color: t.inkSoft, fontSize: "14px" }
       },
       labels: {
-        style: { color: t.inkSoft, fontSize: "12px" },
+        style: { color: t.inkSoft, fontSize: "13px" },
         formatter: function () { return this.value.toFixed(3); }
       },
       gridLineColor: t.grid,
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
-      top: "8%",
-      height: "40%",
+      top: "7%",
+      height: "43%",
       offset: 0
     },
     {
@@ -140,14 +142,14 @@ Highcharts.chart("container", {
         style: { color: t.inkSoft, fontSize: "14px" }
       },
       labels: {
-        style: { color: t.inkSoft, fontSize: "12px" },
+        style: { color: t.inkSoft, fontSize: "13px" },
         formatter: function () { return this.value.toFixed(3); }
       },
       gridLineColor: t.grid,
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
-      top: "57%",
-      height: "38%",
+      top: "53%",
+      height: "42%",
       offset: 0,
       min: 0
     }
@@ -187,7 +189,7 @@ Highcharts.chart("container", {
       type: "line",
       data: flat(xbb, N),
       color: t.palette[0],
-      lineWidth: 2.5,
+      lineWidth: 3,
       yAxis: 0,
       marker: { enabled: false },
       legendIndex: 1,
@@ -257,7 +259,7 @@ Highcharts.chart("container", {
       type: "line",
       data: flat(rb, N),
       color: t.palette[0],
-      lineWidth: 2.5,
+      lineWidth: 3,
       yAxis: 1,
       marker: { enabled: false },
       showInLegend: false,
