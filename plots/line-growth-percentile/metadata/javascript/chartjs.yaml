@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: line-growth-percentile
+created: '2026-06-20T09:39:03Z'
+updated: '2026-06-20T09:47:25Z'
+generated_by: claude-sonnet
+workflow_run: 27867038194
+issue: 4555
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Full spec compliance: all 7 percentile curves, correct graduated opacity (darker
+    extremes lighter near median), P50 emphasized, right-margin labels, patient trajectory'
+  - 'Accurate WHO-approximate data: median/SD knots match real Child Growth Standards
+    at 12m and 24m reference values; realistic well-child visit schedule'
+  - 'Excellent Chart.js technique: fill:-1 for adjacent fills, plugin system for background+custom
+    labels, selective legend filter — idiomatic and advanced'
+  - 'Correct Imprint palette: #009E73 patient line as first categorical series; #4467A3
+    for boys bands (semantic exception); theme-adaptive chrome via tokens'
+  - Both renders fully readable with no dark-on-dark failures in dark mode
+  weaknesses:
+  - Right-margin percentile labels at 13px CSS slightly undersized compared to the
+    14px guideline for secondary labels — consider bumping to 14px
+  - Layout padding on top/left/bottom (10px) is functional but not generous — could
+    use 16-20px to improve whitespace breathing room
+  - Design is above generic defaults but does not reach strong design level — no micro-typography
+    touches; axis label font weight could be more deliberate
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-growth-percentile · javascript · chartjs · anyplot.ai" in dark ink, fully visible at ~65% plot width. Axis labels "Age (months)" and "Weight (kg)" in dark ink. Tick labels "0m–36m" and "0 kg–20 kg" in inkSoft. Right-margin labels P97/P90/P75/P50(bold)/P25/P10/P3 all visible. Legend top-right shows P50 (Median) and Patient weight.
+      Data: Seven graduated blue (#4467A3) percentile bands with opacity 0.22 (extremes) to 0.08 (near median). P50 solid blue line at 2.5px. Patient weight in #009E73 (Imprint green, first categorical series) with 6px markers and white borders, 12 data points from birth to 36 months ascending from near-P50 to above P75. Subtle grid lines visible.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all axis/tick labels switch to light-colored text (t.ink = #F0EFE8 equivalent). Right-margin percentile labels visible in light color. Grid lines subtle. Legend text light and readable.
+      Data: Patient weight remains #009E73 (identical to light render). Blue percentile bands retain same hue and opacity structure (navy-tinted on dark surface but data colors unchanged). No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues, brand green clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px adaptive, axis labels
+          15px, ticks 13px, legend 14px, right-margin labels 13px). Well-proportioned.
+          Minor: right-margin labels at 13px slightly below 14px guideline.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions in either render. Legend, percentile labels, tick
+          labels and data elements all spatially separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 sparse patient points with 6px radius markers and 2.5px line.
+          P50 at 2.5px vs other curves 1px. Band opacity 0.08-0.22 visible without
+          overpowering.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Good contrast between #009E73 and #4467A3 bands. White marker borders
+          provide definition. Imprint palette is CVD-optimized.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Chart fills canvas well. Right padding 52px for
+          margin labels. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Age (months), Y: Weight (kg) — descriptive with units. Title
+          format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient uses t.palette[0] (#009E73). Bands use #4467A3 (Imprint
+          position 3, semantic blue for boys). Background t.pageBg correct in both
+          themes. Chrome via t.ink/t.inkSoft/t.grid tokens.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: graduated opacity bands, selective legend,
+          semantic blue for boys, patient markers with white borders, custom inline
+          plugin. Not yet at strong design level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines fully removed, grid subtle via t.grid token. Layout padding
+          tight (10px top/left/bottom). Clean but not generously spaced.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear focal point: green patient line. P50 provides anchor. Story
+          of healthy growth above median immediately legible via color contrast and
+          line weight hierarchy.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct WHO/CDC-style growth chart with percentile bands and patient
+          overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentile curves, graduated opacity, P50 emphasized, blue
+          for boys, right-margin labels, patient connected markers.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: age months 0-36, Y: weight kg 0-20. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: line-growth-percentile · javascript · chartjs · anyplot.ai.
+          Legend shows P50 (Median) and Patient weight.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile curves, gradient fills, cross-percentile patient
+          tracking, full 0-36 month range, realistic visit schedule.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age reference data for boys 0-36 months — real, neutral,
+          clinically standard.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Median knots match WHO standards (9.6 kg at 12m, 12.2 kg at 24m).
+          Patient 3.5 kg birth weight realistic. Y-axis 0-20 kg appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Tokens → data → helpers (concise lambdas) → mount → Chart. Plugin
+          compact and necessary.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data deterministic. Knots and patient visits hardcoded. No RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed. Chart and tokens are harness globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: fill:-1 for adjacent bands is elegant. lerp/interp as arrow functions
+          clean. Plugin concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Chart.js 4.4.7 current API. animation:false, responsive:true, maintainAspectRatio:false.
+          No manual save.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: fill:-1 relative target, legend filter callback, tension for bezier,
+          {x,y} linear scatter data, beforeDraw/afterDraw lifecycle — all idiomatic
+          Chart.js 4.x.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Plugin architecture with beforeDraw (page background) and afterDraw
+          (custom 2D canvas label rendering) is distinctly Chart.js. fill:-1 shorthand
+          and legend filter are Chart.js API. Just short of 5 since inline canvas
+          drawing could notionally be replicated in other canvas-based libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - edge-highlighting
