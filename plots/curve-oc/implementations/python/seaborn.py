@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-19
+Library: seaborn | Python 3.14
+Quality: pending | Created: 2026-06-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +13,37 @@ import seaborn as sns
 from scipy.stats import binom
 
 
-# Data - OC curves for different acceptance sampling plans
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution anchor for risk markers
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+sns.set_context("notebook", font_scale=1.0)
+
+# Data — OC curves for acceptance sampling plans (binomial CDF)
 fraction_defective = np.linspace(0, 0.20, 200)
 
 plans = [
@@ -20,78 +52,87 @@ plans = [
     {"n": 100, "c": 2, "label": "n=100, c=2"},
 ]
 
-# Build a long-form DataFrame for seaborn hue-based plotting
 rows = []
 for plan in plans:
     prob_accept = binom.cdf(plan["c"], plan["n"], fraction_defective)
     for p, pa in zip(fraction_defective, prob_accept, strict=True):
-        rows.append({"Fraction Defective (p)": p, "Probability of Acceptance P(a)": pa, "Sampling Plan": plan["label"]})
+        rows.append({"Fraction Defective (p)": p, "P(Accept)": pa, "Sampling Plan": plan["label"]})
 
 df = pd.DataFrame(rows)
 
-# Quality levels
 aql = 0.02
 ltpd = 0.10
 
-# Seaborn theming and context for global styling
-sns.set_theme(style="ticks", rc={"axes.spines.top": False, "axes.spines.right": False})
-sns.set_context("talk", font_scale=1.2, rc={"lines.linewidth": 3})
-
-# Custom palette starting with Python Blue
-palette = sns.color_palette(["#306998", "#E6894A", "#5BA67D"])
-
-# Plot using DataFrame + hue for automatic legend and color mapping
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.lineplot(
-    data=df, x="Fraction Defective (p)", y="Probability of Acceptance P(a)", hue="Sampling Plan", palette=palette, ax=ax
-)
-
-# AQL and LTPD reference lines with labels at top
-ax.axvline(x=aql, color="#888888", linestyle="--", linewidth=1.5, alpha=0.6)
-ax.axvline(x=ltpd, color="#888888", linestyle="--", linewidth=1.5, alpha=0.6)
-ax.text(aql + 0.002, 1.02, f"AQL = {aql}", fontsize=13, color="#555555", fontweight="medium", va="bottom")
-ax.text(ltpd + 0.002, 1.02, f"LTPD = {ltpd}", fontsize=13, color="#555555", fontweight="medium", va="bottom")
-
-# Risk annotations for the middle plan (n=80, c=2)
-alpha_risk = 1 - binom.cdf(plans[1]["c"], plans[1]["n"], aql)
-beta_risk = binom.cdf(plans[1]["c"], plans[1]["n"], ltpd)
+# Risk values for the middle plan (n=80, c=2)
 prob_at_aql = binom.cdf(plans[1]["c"], plans[1]["n"], aql)
+beta_risk = binom.cdf(plans[1]["c"], plans[1]["n"], ltpd)
+alpha_risk = 1 - prob_at_aql
 
-ax.plot(aql, prob_at_aql, "o", color="#E6894A", markersize=10, zorder=5)
-ax.plot(ltpd, beta_risk, "o", color="#E6894A", markersize=10, zorder=5)
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+sns.lineplot(
+    data=df,
+    x="Fraction Defective (p)",
+    y="P(Accept)",
+    hue="Sampling Plan",
+    palette=IMPRINT_PALETTE[:3],
+    linewidth=2.5,
+    ax=ax,
+)
+
+# AQL and LTPD reference lines
+ax.axvline(x=aql, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.6)
+ax.axvline(x=ltpd, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.6)
+ax.text(aql + 0.002, 1.03, f"AQL = {aql}", fontsize=8, color=INK_MUTED, va="bottom")
+ax.text(ltpd + 0.002, 1.03, f"LTPD = {ltpd}", fontsize=8, color=INK_MUTED, va="bottom")
+
+# Risk markers using amber (warning/caution anchor)
+ax.plot(aql, prob_at_aql, "o", color=ANYPLOT_AMBER, markersize=6, zorder=5)
+ax.plot(ltpd, beta_risk, "o", color=ANYPLOT_AMBER, markersize=6, zorder=5)
 
 ax.annotate(
-    f"Producer's risk\n\u03b1 = {alpha_risk:.3f}",
+    f"Producer's risk\nα = {alpha_risk:.3f}",
     xy=(aql, prob_at_aql),
-    xytext=(aql + 0.018, prob_at_aql + 0.02),
-    fontsize=14,
-    color="#444444",
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.2},
+    xytext=(aql + 0.020, prob_at_aql - 0.10),
+    fontsize=8,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.0},
 )
 
 ax.annotate(
-    f"Consumer's risk\n\u03b2 = {beta_risk:.3f}",
+    f"Consumer's risk\nβ = {beta_risk:.3f}",
     xy=(ltpd, beta_risk),
-    xytext=(ltpd + 0.018, beta_risk + 0.12),
-    fontsize=14,
-    color="#444444",
-    arrowprops={"arrowstyle": "->", "color": "#888888", "lw": 1.2},
+    xytext=(ltpd + 0.020, beta_risk + 0.13),
+    fontsize=8,
+    color=INK_SOFT,
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.0},
 )
 
 # Style
-ax.set_title("curve-oc \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
+ax.set_title("curve-oc · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Fraction Defective (p)", fontsize=10, color=INK)
+ax.set_ylabel("Probability of Acceptance P(a)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_xlim(0, 0.20)
-ax.set_ylim(0, 1.05)
+ax.set_ylim(0, 1.10)
 
-# Style the legend
+# Legend
 legend = ax.get_legend()
 legend.set_title("Sampling Plan")
-plt.setp(legend.get_title(), fontsize=17)
-for text in legend.get_texts():
-    text.set_fontsize(16)
-legend.set_frame_on(False)
+plt.setp(legend.get_title(), fontsize=8, fontweight="medium", color=INK)
+plt.setp(legend.get_texts(), fontsize=8, color=INK_SOFT)
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+legend.get_frame().set_linewidth(0.5)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+
+# Save — no bbox_inches='tight' to preserve exact 3200×1800 canvas
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
