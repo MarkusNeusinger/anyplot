@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -40,7 +40,7 @@ cumulative_pct = np.cumsum(counts) / total * 100
 
 # Scale cumulative percentages to share the primary y-axis
 max_count = max(counts)
-y_max = int(max_count * 1.25)
+y_max = total
 scale_factor = y_max / 100
 
 cumulative_scaled = cumulative_pct * scale_factor
@@ -136,7 +136,7 @@ plot = (
         data=sec_labels_df[sec_labels_df["label"] != "100%"],
         mapping=aes(x="category", y="y", label="label"),  # noqa: F405
         color=CUMLINE_COLOR,
-        size=11,
+        size=6,
         hjust=-1.6,
         fontface="bold",
         inherit_aes=False,
@@ -145,7 +145,7 @@ plot = (
         data=sec_labels_df[sec_labels_df["label"] == "100%"],
         mapping=aes(x="category", y="y", label="label"),  # noqa: F405
         color=CUMLINE_COLOR,
-        size=11,
+        size=6,
         hjust=-1.6,
         vjust=1.8,
         fontface="bold",
