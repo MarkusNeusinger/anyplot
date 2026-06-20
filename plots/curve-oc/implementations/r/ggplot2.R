@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-20
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -99,9 +98,9 @@ p <- ggplot(df, aes(x = fraction_defective, y = probability_acceptance,
     label = "AQL\n2%", hjust = 0,
     color = IMPRINT_PALETTE[1], size = 3.0, fontface = "bold"
   ) +
-  # LTPD label
+  # LTPD label (y=0.02 to avoid crowding with Pa annotation above)
   annotate("text",
-    x = LTPD + 0.001, y = 0.05,
+    x = LTPD + 0.001, y = 0.02,
     label = "LTPD\n8%", hjust = 0,
     color = IMPRINT_PALETTE[5], size = 3.0, fontface = "bold"
   ) +
@@ -109,13 +108,13 @@ p <- ggplot(df, aes(x = fraction_defective, y = probability_acceptance,
   annotate("text",
     x = AQL - 0.001, y = pa_aql + 0.05,
     label = sprintf("Pa = %.0f%%", pa_aql * 100),
-    hjust = 1, color = INK_SOFT, size = 2.8
+    hjust = 1, color = INK_SOFT, size = 3.2
   ) +
   # Consumer's risk annotation (Pa at LTPD)
   annotate("text",
     x = LTPD - 0.001, y = pa_ltpd + 0.05,
     label = sprintf("Pa = %.0f%%", pa_ltpd * 100),
-    hjust = 1, color = INK_SOFT, size = 2.8
+    hjust = 1, color = INK_SOFT, size = 3.2
   ) +
   scale_color_manual(values = plan_colors, name = "Sampling Plan") +
   scale_x_continuous(
