@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -21,7 +21,8 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 BRAND = "#009E73"  # Imprint position 1 — histogram bars
-BLUE = "#4467A3"  # Imprint position 3 — fitted normal curve
+BLUE = "#4467A3"  # Imprint position 3 — theoretical normal fit
+CYAN = "#2ABCCD"  # Imprint position 6 — empirical KDE
 RED = "#AE3030"  # Imprint position 5 — semantic: spec limits / out-of-spec
 AMBER = "#DDCC77"  # Imprint semantic anchor — target / caution
 
@@ -65,8 +66,11 @@ ax.set_facecolor(PAGE_BG)
 # Histogram bars
 sns.histplot(weights, bins=25, stat="density", color=BRAND, edgecolor=PAGE_BG, linewidth=0.6, alpha=0.70, ax=ax)
 
-# Fitted normal distribution
+# Fitted normal distribution (parametric — theoretical)
 ax.plot(x_fit, y_fit, color=BLUE, linewidth=2.5, zorder=5)
+
+# Empirical KDE (seaborn's non-parametric density estimation)
+sns.kdeplot(weights, color=CYAN, linewidth=2.0, linestyle=":", ax=ax, zorder=6)
 
 # Specification limit and target lines
 ax.axvline(lsl, color=RED, linestyle="--", linewidth=2.0, zorder=4)
@@ -79,11 +83,14 @@ ax.axvspan(lsl, usl, alpha=0.05, color=BRAND, zorder=0)
 ax.axvspan(xlim[0], lsl, alpha=0.07, color=RED, zorder=0)
 ax.axvspan(usl, xlim[1], alpha=0.07, color=RED, zorder=0)
 
-# Capability status color
+# Capability status color and label
+status = "Capable" if cpk >= 1.33 else "Adequate" if cpk >= 1.0 else "Not Capable"
 cp_color = BRAND if cpk >= 1.33 else AMBER if cpk >= 1.0 else RED
 
-# Metrics annotation box
-annotation_text = f"Cp  = {cp:.2f}\nCpk = {cpk:.2f}\nμ   = {mean:.2f} mg\nσ   = {sigma:.2f} mg"
+# Metrics annotation box — status integrated as 5th line
+annotation_text = (
+    f"Cp     = {cp:.2f}\nCpk   = {cpk:.2f}\nμ       = {mean:.2f} mg\nσ       = {sigma:.2f} mg\nStatus: {status}"
+)
 ax.text(
     0.975,
     0.96,
@@ -103,20 +110,6 @@ ax.text(
     color=INK,
 )
 
-# Capability status label
-status = "Capable" if cpk >= 1.33 else "Adequate" if cpk >= 1.0 else "Not Capable"
-ax.text(
-    0.975,
-    0.70,
-    status,
-    transform=ax.transAxes,
-    fontsize=8,
-    fontweight="bold",
-    verticalalignment="top",
-    horizontalalignment="right",
-    color=cp_color,
-)
-
 # Style
 title = "histogram-capability · python · seaborn · anyplot.ai"
 ax.set_xlabel("Tablet Weight (mg)", fontsize=10, color=INK)
@@ -131,7 +124,8 @@ ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
 # Legend
 legend_handles = [
-    Line2D([0], [0], color=BLUE, linewidth=2.5, label="Normal Fit"),
+    Line2D([0], [0], color=BLUE, linewidth=2.5, label="Parametric Fit (Normal)"),
+    Line2D([0], [0], color=CYAN, linewidth=2.0, linestyle=":", label="Empirical KDE (seaborn)"),
     Line2D([0], [0], color=RED, linestyle="--", linewidth=2.0, label=f"LSL = {lsl:.0f} mg"),
     Line2D([0], [0], color=RED, linestyle="--", linewidth=2.0, label=f"USL = {usl:.0f} mg"),
     Line2D([0], [0], color=AMBER, linestyle="-.", linewidth=2.0, label=f"Target = {target:.0f} mg"),
