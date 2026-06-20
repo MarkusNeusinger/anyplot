@@ -1,86 +1,109 @@
 library: matplotlib
+language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:18:37Z'
-updated: '2026-03-18T21:32:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23267445288
+updated: '2026-06-20T07:47:33Z'
+generated_by: claude-sonnet
+workflow_run: 27864147094
 issue: 4559
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Two-panel layout (main + zoom) is scientifically appropriate and tells a clear
-    story
-  - Quadratic limb-darkened transit model with realistic parameters
-  - 'Strong visual hierarchy: in-transit points differentiated by size, color, and
-    opacity'
-  - ΔF annotation with FancyArrowPatch provides quantitative insight in zoom panel
-  - Clean, publication-quality aesthetic with removed spines, subtle grid, and refined
-    typography
-  weaknesses: []
-  image_description: The plot features a two-panel layout (16:9 landscape). The left
-    main panel shows a full phase-folded light curve with "Orbital Phase" (0.0–1.0)
-    on the x-axis and "Relative Flux" on the y-axis. ~500 blue data points with vertical
-    error bars scatter around flux=1.000, with a clear U-shaped dip centered at phase
-    0.5 reaching down to ~0.985. A bold red transit model curve overlays the data,
-    flat at 1.0 outside transit and dipping smoothly through the transit. In-transit
-    points are rendered darker and larger than out-of-transit points. Vertical dotted
-    lines mark contact points t1 and t4. A light blue/gray shaded band highlights
-    the transit region. A dashed gray baseline at flux=1.0 provides reference. The
-    legend shows "Transit model" (red line) and "Photometry" (blue dot). The right
-    panel is a zoomed "Transit Detail" view of the transit region (~0.42–0.58 phase),
-    with a red double-headed arrow annotating "ΔF = 1.0%". The fill between baseline
-    and model is shown in light pink. Top/right spines removed, subtle y-axis grid.
-    Title reads "lightcurve-transit · matplotlib · pyplots.ai".
+  - Two-panel overview+zoom layout is an ideal design for scientific light curve data
+    — provides both global context and transit detail in one figure
+  - Physically motivated transit simulation with quadratic limb darkening, realistic
+    error bars, and correct ~1% depth
+  - Differential alpha (0.55 out-of-transit / 0.90 in-transit) creates visual emphasis
+    exactly where needed without redundant encoding
+  - FancyArrowPatch + patheffects combination for the delta-F annotation is polished
+    and robust in both themes
+  - 'Perfect spec compliance: all four required features (error bars, model overlay,
+    phase-folded data, publication style) present and correctly implemented'
+  - Canvas correctly sized to 3200x1800 via figsize=(8,4.5) dpi=400 with no bbox_inches='tight'
+    drift
+  - 'Full theme adaptation: all chrome tokens properly wired for both light and dark
+    renders'
+  weaknesses:
+  - axvspan transit zone shading in main panel at alpha=0.04 is nearly invisible —
+    increase to alpha=0.07-0.08 to improve visual cueing without adding noise
+  - elinewidth=0.7 error bars are quite thin for a 3200-px canvas; 0.9-1.0 would improve
+    visibility without cluttering at 500-point density
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "lightcurve-transit · python · matplotlib · anyplot.ai" at 12pt in dark ink (#1A1A17) — readable. Axis labels "Orbital Phase" and "Relative Flux" at 10pt in dark ink — readable. Tick labels at 8pt in secondary ink (#4A4A44) — readable at native resolution. Legend text in secondary ink — readable.
+      Data: Main panel shows 500 green (#009E73) scatter points with error bars across orbital phase 0.0-1.0. In-transit points at alpha=0.90/markersize=3.5, out-of-transit at alpha=0.55/markersize=2.5. Blue (#4467A3) transit model curve overlaid at linewidth=1.8 with subtle blue fill under the dip. Contact markers t1 and t4 labeled at fontsize=9. Zoom panel on right shows transit detail with double-headed blue arrow and "delta-F = 1.0%" annotation (with path-effects white stroke). First series = #009E73 (brand green) confirmed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in near-white/cream (#F0EFE8) — readable. Axis labels in light ink (#F0EFE8) — readable. Tick labels in secondary light ink (#B8B7B0) — readable. Legend box uses elevated dark fill (#242420). No dark-on-dark issues detected — all text is light-on-dark as required.
+      Data: Same green (#009E73) photometry points and same blue (#4467A3) transit model curve — data colors identical to light render, only chrome flipped. Path-effects stroke (foreground=PAGE_BG = #1A1A17 on dark) keeps the ΔF annotation readable. Grid lines subtle (alpha=0.15, INK on dark theme).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt, annotations 13-14pt'
+        comment: Font sizes explicitly set (12pt title, 10pt labels, 8pt ticks). Readable
+          in both themes. Y-axis 4-decimal values are precise but legible at native
+          resolution.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements, contact labels and legend positioned
-          cleanly
+        comment: No actual overlap. Minor crowding risk in zoom panel with DF annotation
+          near ingress data — path-effects stroke prevents confusion.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 500 points with appropriate marker sizes and alpha; in-transit points
-          differentiated. Slight density in main panel
+        comment: 500-point density handled with markersize=2.5/3.5 and alpha=0.55/0.90.
+          axvspan transit highlight at alpha=0.04 nearly invisible. Error bars at
+          elinewidth=0.7 are thin.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red palette is colorblind-safe with good luminance contrast
+        comment: Green and blue are CVD-safe distinct hue families. No red-green as
+          sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel layout with 3:1.2 ratio makes excellent use of canvas
+        comment: Canvas gate passed (3200x1800). Two-panel gridspec 3:1.2 ratio. No
+          clipping in either render. subplots_adjust used correctly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Domain-appropriate labels: Orbital Phase, Relative Flux'
+        comment: Correct title format. Descriptive axis labels with units clear from
+          context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Model #4467A3 (Imprint position
+          3). Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -88,22 +111,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue/red palette with intentional hierarchy, white marker
-          edges, light fills. Above defaults
+        comment: Two-panel overview+zoom, FancyArrowPatch, patheffects, differential
+          alpha all show design sophistication above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, dashed baseline, axvspan shading,
-          generous whitespace
+        comment: Spines removed, tick marks hidden, subtle y-only grid, legend frame
+          styled. axvspan at alpha=0.04 is barely visible.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Two-panel main+zoom layout, visual differentiation of in-transit
-          points, ΔF annotation provides quantitative insight
+        comment: 'Excellent narrative: main overview draws eye to transit, zoom panel
+          reveals DF=1.0% quantification. Contact markers add scientific context.'
     spec_compliance:
       score: 15
       max: 15
@@ -113,27 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: phase-folded time-series scatter with model overlay'
+        comment: Phase-folded light curve with scatter+error bars+model overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: error bars, model overlay, phase-folded,
-          relative flux, downward dip, minimal scientific style'
+        comment: Error bars, smooth model overlay, phase-folded data, clean scientific
+          style all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase, Y=relative flux. Correct mapping
+        comment: 'X: Orbital Phase 0-1. Y: Relative Flux centered on 1.0. All 500
+          points visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend labels Photometry and Transit model
-          are clear
+        comment: Title in exact required format. Legend labels Transit model and Photometry.
     data_quality:
       score: 15
       max: 15
@@ -143,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Transit dip with limb darkening, varying error bars, baseline scatter,
-          model fit
+        comment: Full light curve + zoom, error bars, model overlay, contacts, depth
+          quantification.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit with realistic limb-darkening coefficients
+        comment: Physically motivated with quadratic limb darkening, realistic ~1%
+          transit depth, photometric noise.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Transit depth ~1%, flux errors 0.08-0.2%, 500 points - realistic
-          for space photometry
+        comment: Phase 0-1, flux normalized to 1.0, realistic error magnitudes and
+          transit duration.
     code_quality:
       score: 10
       max: 10
@@ -167,48 +191,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions/classes'
+        comment: No functions or classes. Direct sequential script with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.pyplot, numpy, FancyArrowPatch'
+        comment: 'All imports used: pyplot, numpy, patheffects, FancyArrowPatch, FormatStrFormatter,
+          os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. Panel repetition is inherent to two-panel
-          design
+        comment: No fake UI. sys.path manipulation to avoid shadowing matplotlib is
+          correct defensive pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: plot-{THEME}.png. No bbox_inches='tight'. subplots_adjust used correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout. gridspec_kw, subplots_adjust, plt.setp,
+          fig.suptitle all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper Axes-method usage, correct subplots with gridspec_kw
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: FancyArrowPatch, gridspec_kw width ratios, axvspan region highlighting
+        comment: FancyArrowPatch with arrowstyle '<->', patheffects.withStroke, fill_between
+          are genuinely distinctive matplotlib capabilities used purposefully.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -218,6 +246,7 @@ impl_tags:
   - patches
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
