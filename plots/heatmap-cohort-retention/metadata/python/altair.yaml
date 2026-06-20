@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:46:10Z'
-updated: '2026-06-20T01:14:12Z'
+updated: '2026-06-20T01:26:32Z'
 generated_by: claude-sonnet
 workflow_run: 27855180877
 issue: 4570
@@ -12,125 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Complete spec compliance: all 7 required features implemented correctly (triangular
-    shape, period 0 = 100%, imprint_seq colormap, cell labels, cohort size annotations,
-    Month N axis labels, colorbar)'
-  - 'Excellent palette compliance: imprint_seq (#009E73→#4467A3) correctly applied;
-    theme-adaptive chrome works flawlessly in both light and dark renders'
-  - 'Typographic polish: the separate % mark layer (smaller, offset dx=14, lower opacity)
-    is a sophisticated typographic touch unique to the three-layer composition approach'
-  - 'Perfect code quality: KISS structure, explicit seed, all imports used, pad-only
-    canvas pipeline correctly implemented'
+  - 'Exemplary data storytelling: amber border on Jan 2024 cohort + ''avg −38%'' cliff
+    annotation + descriptive subtitle work together to guide the viewer through the
+    key insights'
+  - 'Perfect spec compliance: triangular shape correctly implemented, cohort sizes
+    embedded in y-axis labels (n=X,XXX), retention values as cell text, colorbar legend,
+    Month 0/1/2... axis labels all present'
+  - 'Full Imprint palette compliance: imprint_seq (green→blue) correctly applied for
+    single-polarity continuous data; both theme backgrounds correct (#FAF8F1 light
+    / #1A1A17 dark); theme-adaptive chrome (INK, INK_SOFT, INK_MUTED tokens) threaded
+    through all chrome elements'
+  - 'Idiomatic Altair layer composition: five distinct marks (mark_rect heatmap, mark_rect
+    highlight, mark_text values, mark_text percent symbols, mark_text annotation)
+    combined cleanly via alt.layer()'
+  - 'Typographic polish: percentage symbols rendered as a separate layer with dx=14
+    offset and reduced opacity (rgba 0.7), creating a professional sub-number typographic
+    pairing without cluttering the value'
   weaknesses:
-  - 'DE-01/DE-03 gap: the subtitle says earliest cohorts show strongest long-term
-    engagement but there is no visual emphasis to confirm this — consider adding a
-    mark_rule reference line, a mark_rect highlight border, or an annotation on the
-    Jan 2024 row to guide the eye directly to the stated insight'
-  - 'DE-03 underutilized: the Month 0→1 retention cliff (~30-40% drop for every cohort)
-    is the most visually salient feature but goes unremarked — a callout annotation
-    above the Month 1 column reading avg -38% would add 1-2 DE-03 points'
-  - 'DE-01 ceiling: cornerRadius=2 and strokeWidth=0.5 are subtle — consider increasing
-    cornerRadius to 3-4, and potentially using a faint fill for the empty triangular
-    cells to differentiate empty vs. filled regions more deliberately'
+  - 'Cell text color hardcoded to #F0EFE8 (light warm cream) regardless of theme —
+    works because heatmap cells are always colored, but contrast at the green (low-retention)
+    end is borderline (~4.6:1) and would fail WCAG AA for small text on the lightest
+    cells; consider using a theme-adaptive approach or ensuring the domain minimum
+    maps to a darker color'
+  - 8px percentage symbol layer is at the edge of legibility when the plot is scaled
+    to mobile widths (~400 px); consider increasing to 9-10px or omitting at this
+    size
+  - The 'avg −38%' cliff annotation uses clip=False with dy=-26 to position above
+    the first row, placing it in a visually crowded space between the subtitle and
+    the chart area; the annotation is readable but tight against the subtitle line
+    in both renders
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title 'heatmap-cohort-retention · python · altair · anyplot.ai' bold, dark (#1A1A17), ~70% of chart width. Subtitle in muted dark (#6B6A63). Y-axis title 'Signup Cohort' and X-axis title 'Months Since Signup' in dark bold. Tick labels in dark secondary (#4A4A44). All chrome elements readable.
-      Data: Triangular heatmap with 10 cohorts × up to 10 periods. Cell colors range from brand green (#009E73) at low retention to blue (#4467A3) at 100%. Bold white cell text shows retention values with offset '%' symbol. Colorbar 'Retention %' at top-right.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-cohort-retention · python · altair · anyplot.ai" bold and clearly readable in dark ink; subtitle "Monthly SaaS user retention — earliest cohorts show strongest long-term engagement" in muted tone readable; Y-axis "Signup Cohort" label and tick labels (e.g. "Jan 2024 (n=1,926)") clearly visible in INK_SOFT; X-axis "Months Since Signup" and tick labels at -40° angle fully legible; colorbar legend "Retention %" with INK title and INK_SOFT labels readable
+      Data: Triangular heatmap with cells colored from #009E73 (brand green, low retention ~0%) to #4467A3 (blue, high retention 100%); Month 0 column shows solid blue (100% retention); retention values printed as white (#F0EFE8) bold numbers with smaller % symbols; Jan 2024 row highlighted with amber (#DDCC77) border; "avg −38%" annotation in amber above Month 1 column
+      Legibility verdict: PASS — all text fully readable; 8px % symbol is small but discernible at full resolution
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, subtitle, axis labels, tick labels all appear in light cream (#F0EFE8 / #B8B7B0 range) — clearly readable against the dark background. Legend 'Retention %' text in light colors. No dark-on-dark failures observed.
-      Data: Heatmap cell colors are identical to the light render — same green-to-blue gradient, same bold white cell text. Imprint data colors are theme-invariant as required.
-      Legibility verdict: PASS — all text readable against near-black background.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle text render in light warm color (#F0EFE8 / #A8A79F) clearly visible against dark background; Y-axis and X-axis labels adapt to light INK_SOFT tokens (#B8B7B0) — fully readable; no dark-on-dark failure observed; legend title and labels in appropriate light tones; colorbar gradient clearly visible on dark surface
+      Data: Data colors are identical to the light render — imprint_seq green→blue gradient unchanged between themes; Jan 2024 amber border still clearly visible; "avg −38%" amber annotation visible; white cell text reads identically to light render
+      Legibility verdict: PASS — all chrome elements correctly adapt to dark theme; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, axis labels 12px bold,
-          ticks 10px, cell text 11px bold, % symbol 8px). Well-proportioned hierarchy.
-          Readable in both themes.
+        comment: All text readable in both themes; 8px percent symbol layer borderline
+          at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. The offset % symbol layer is
-          clean and non-colliding.
+        comment: No overlap; percent symbols offset right (dx=14) to avoid collision
+          with value numbers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with strong color differentiation.
-          White bold cell labels highly legible on saturated backgrounds.
+        comment: All cells, text values, amber highlight and annotation clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential palette is CVD-safe. White text on colored cells
-          provides adequate contrast.
+        comment: imprint_seq is CVD-safe; white text on colored cells provides adequate
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas well-utilized. Chart fills ~65% of canvas
-          with balanced whitespace. Legend properly positioned.
+        comment: Canvas gate passed; 2400×2400 square appropriate for symmetric heatmap;
+          good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Months Since Signup (X) and Signup Cohort (Y) are descriptive. Title
-          correct.
+        comment: 'Title matches required format; X: ''Months Since Signup'', Y: ''Signup
+          Cohort'' — descriptive and accurate'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Sequential colormap range=[#009E73, #4467A3] matches imprint_seq
-          exactly. Light bg #FAF8F1, dark bg #1A1A17. Theme-adaptive chrome in both
-          renders.'
+        comment: 'imprint_seq (green→blue) correctly used for single-polarity continuous
+          data; backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: explicit Imprint sequential palette, subtitle, corner
-          radius (2), subtle cell borders (0.5px), separate % typography layer, full
-          INK/INK_SOFT/INK_MUTED hierarchy. Not quite at strong design with intentional
-          hierarchy level.'
+        comment: Amber row highlight + cliff annotation + subtitle with narrative
+          + typographic % symbol layer demonstrate genuine design intent beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid removed (gridOpacity=0.0), tick marks removed (tickWidth=0,
-          domainWidth=0), domain lines hidden. Good refinement.
+        comment: gridOpacity=0.0 (appropriate for heatmap), subtle cell borders (0.5px),
+          clean configure_view; full theme-adaptive chrome
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtitle provides direct interpretation. Triangular shape communicates
-          structure. No visual emphasis on Month 0→1 retention cliff or earliest cohort
-          insight.
+        passed: true
+        comment: Three narrative elements (amber border, avg drop annotation, subtitle)
+          guide viewer to key insight about earliest cohort retention
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Correct cohort retention heatmap with triangular shape
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangular shape, period 0 always 100%, sequential colormap, retention
-          % text in cells, cohort sizes in labels, Month N axis labels, colorbar —
-          all present.
+        comment: 'All features present: triangular shape, sequential colormap, cell
+          text values, cohort sizes in labels, Month 0/1/... x-axis, colorbar legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=periods since signup, Y=cohort labels, color=retention rate. All
-          correctly mapped.
+        comment: X=periods, Y=cohorts, Color=retention_rate; Period 0 = 100% for all
+          cohorts
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title heatmap-cohort-retention · python · altair · anyplot.ai correct.
-          Legend Retention % labels match data.
+        comment: Title 'heatmap-cohort-retention · python · altair · anyplot.ai' matches
+          required format; legend labeled 'Retention %'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 cohorts × up to 10 periods. Triangular structure fully realized.
-          Realistic retention decay. Month 0 always 100%.
+        comment: Full triangular cohort structure shown; all 10 cohorts × up to 10
+          periods; realistic decay pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS user retention is a standard, neutral business analytics
-          scenario. Cohort sizes 800-2500 are plausible.
+        comment: SaaS monthly cohort retention — realistic scenario; cohort sizes
+          800-2500 plausible; retention decay pattern realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Retention 0-100%, month 1 drop to 55-72%, subsequent 5-15% per-period
-          decay — all realistic SaaS retention patterns.
+        comment: Retention 0-100%, cohort sizes 800-2500, 10 months of cohorts — all
+          appropriate for SaaS product context
     code_quality:
       score: 10
       max: 10
@@ -197,53 +199,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → chart layers → save → pad. No
-          functions or classes.'
+        comment: Flat script, no functions or classes; each layer defined inline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image — all used, none extraneous.
+        comment: All imports (os, altair, numpy, pandas, PIL) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Three clean chart layers composed via alt.layer(). No over-engineering,
-          no fake UI.
+        comment: Clean layer composition; no fake UI; each chart layer purposefully
+          named
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (with PIL padding) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (with PIL padding) and plot-{THEME}.html;
+          uses current Altair 6.x API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: mark_rect for heatmap; proper O/Q/N encoding types; sort= on ordinal
+          axes; configure_view/axis/legend; alt.Title with subtitle
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of declarative encoding (O/Q/N types), ordinal sort
-          with explicit ordering, configure_ methods, alt.Title with subtitle.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Three-layer composition (mark_rect + mark_text value + mark_text
-          % symbol), ordinal axis sort with explicit list, alt.Title with subtitle,
-          interactive HTML export.
-  verdict: REJECTED
+        comment: clip=False for out-of-bounds annotation; alt.value() for constant
+          colors; gradientLength/gradientThickness on legend; five-layer alt.layer()
+          composition; alt.Tooltip with format strings
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -251,8 +253,10 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - custom-colormap
+  - edge-highlighting
