@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-growth-percentile
 created: '2026-03-19T19:54:15Z'
-updated: '2026-06-20T09:38:24Z'
+updated: '2026-06-20T09:49:15Z'
 generated_by: claude-sonnet
 workflow_run: 27866898257
 issue: 4555
@@ -12,48 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-grow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Excellent data storytelling: patient trajectory shows growth faltering then catch-up,
-    creating a clear clinical narrative'
-  - Graduated blue band scheme with meaningful opacity variation (darker extremes,
-    lighter near median) is visually sophisticated and domain-appropriate
-  - 'Semantic use of Imprint #AE3030 (matte red) for patient trajectory — correct
-    semantic anchor for clinical concern'
-  - Native letsplot rich tooltips (layer_tooltips with title + line structure) properly
-    suppressed on bands and enabled on patient points only
-  - 'Complete spec compliance: all 7 percentile curves, filled bands, emphasized P50,
-    right-margin labels, contrasting patient overlay'
-  - WHO-realistic data (log-growth shape, birth weight ~3.3 kg, spread widening with
-    age) with excellent factual accuracy
-  - 'Clean theme adaptation: PAGE_BG, INK, INK_SOFT, INK_MUTED tokens all correctly
-    applied and theme-correct in both renders'
-  - Canvas correctly set to ggsize(800, 450) + scale=4 = 3200×1800px, gate passed
+  - 'Semantic Imprint palette: Imprint blue/cyan for boys reference bands and Imprint
+    matte red for clinical growth concern — well-justified exceptions that align with
+    clinical conventions and spec requirements'
+  - Graduated band opacity (alpha 0.35 to 0.30 to 0.28) creates genuine visual depth
+    from outer extremes to the median zone
+  - Native letsplot layer_tooltips() with structured patient visit data (weight, P50
+    reference, P25-P75 range) — interactive HTML output adds real value
+  - P50 emphasis with size=1.8 line and right-margin percentile labels instead of
+    a legend — clinically appropriate layout
+  - 'Complete theme adaptation: all chrome tokens correctly flip between light and
+    dark; no dark-on-dark failures in either render'
+  - Heteroscedastic spread widening with age makes the data realistically approximate
+    WHO growth curves
   weaknesses:
-  - 'Title missing ''python'' language token: actual title is ''Boys Weight-for-Age
-    · line-growth-percentile · letsplot · anyplot.ai'' but required format is ''{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai'' = ''Boys Weight-for-Age
-    · line-growth-percentile · python · letsplot · anyplot.ai'''
-  - 'Band colors use custom hex values (#1A4C7A, #4A8DBF, #A3C9E8, #2C6EA6) not in
-    the Imprint palette. While the spec mandates blue tones for boys, the graduation
-    should be derived from Imprint palette members (#4467A3 blue, #2ABCCD cyan) rather
-    than arbitrary custom hexes — e.g., use #4467A3 for the outer extreme, lighter
-    tints/shades derived from it for intermediate bands'
-  - Percentile labels (geom_text size=5mm) may be borderline small at mobile width
-    (~400px); consider size=6 to improve mobile legibility
+  - Title font size is 16pt for a 79-character title (Boys Weight-for-Age added as
+    prefix pushes past 67-char threshold); style guide recommends scaling to ~14pt
+    to give breathing room — reduce plot_title size to 14pt
+  - Right-margin percentile labels (geom_text size=5mm) are slightly crowded at adjacent
+    band boundaries (P10/P25 and P75/P90) — nudge close label y-positions by ±0.2
+    kg to improve vertical separation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Boys Weight-for-Age · line-growth-percentile · letsplot · anyplot.ai" bold, large, clearly readable against light bg; Y-axis label "Weight (kg)" and X-axis label "Age (months)" both clearly readable with units; tick labels (0-36 months, 2.0-16.0 kg) crisp in dark ink; right-margin percentile labels (P3-P97) in INK_MUTED gray, readable at canvas size
-      Data: Graduated blue-tone bands — dark navy (#1A4C7A) for P3-P10 and P90-P97 extremes, medium blue (#4A8DBF) for P10-P25 and P75-P90, light blue (#A3C9E8) for P25-P75 inner band; thicker navy median P50 line; red (#AE3030 Imprint slot 5) patient trajectory with white-filled circle markers clearly visible; all bands and patient overlay distinguishable
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "Boys Weight-for-Age · line-growth-percentile · python · letsplot · anyplot.ai" bold and dark (#1A1A17), fills ~87% canvas width at 16pt. Axis labels "Weight (kg)" and "Age (months)" in dark ink, clearly readable. Tick labels in INK_SOFT (#4A4A44), readable. Right-margin percentile labels P3-P97 in INK_MUTED, slightly small but legible.
+      Data: Graduated bands in Imprint blue (#4467A3) and cyan (#2ABCCD) with alpha 0.35/0.30/0.28 from extremes to median zone. P50 median emphasized with size=1.8 line. Patient trajectory in Imprint matte red (#AE3030) with hollow circle markers (white fill, red stroke=1.5). Y-grid subtle in GRID token color.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light (#F0EFE8) text, clearly readable against dark bg; axis labels and tick labels in lighter tones (INK_SOFT #B8B7B0), all readable; right-margin P-labels in INK_MUTED (#A8A79F), readable; no dark-on-dark failures detected
-      Data: Blue band colors remain the same hex values — navy and blue-gray tones still clearly visible against dark background (possibly appear slightly more saturated on dark surface); red patient trajectory with white-filled markers is highly visible against dark bg; data colors are consistent with light render
-      Legibility verdict: PASS — all text readable against warm near-black background, chrome correctly flipped to light tones, no dark-on-dark failures
+      Chrome: Title renders in light ink (#F0EFE8), fully readable. Axis labels and tick labels in light secondary ink (#B8B7B0), clearly visible. Right-margin percentile labels in muted light ink, readable. Y-grid flips to dark GRID token (#2E2E2A). No dark-on-dark failures observed anywhere.
+      Data: Band colors identical to light render — Imprint blue (#4467A3) and cyan (#2ABCCD) unchanged across themes. Patient trajectory remains in Imprint matte red (#AE3030) — identical to light render. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues, chrome fully adapted
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,87 +57,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, geom_text=5mm).
-          Well-proportioned in both themes. Minor concern: percentile labels at size=5mm
-          may be borderline at mobile scale (~400px).'
+        comment: All font sizes explicitly set and readable in both themes; title
+          at 16pt for 79-char string fills ~87% canvas width (style guide recommends
+          ~14pt for titles >67 chars with descriptive prefix)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements. Percentile labels on right margin are
-          well-staggered. Patient markers and label positions do not collide.
+        comment: Right-margin percentile labels slightly crowded at adjacent boundaries
+          (P10/P25, P75/P90) but no actual overlap; patient markers don't collide
+          with labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bands clearly visible with graduated opacity. Patient trajectory
-          in red with white-filled markers stands out strongly. P50 median line visually
-          emphasized (size=1.8).
+        comment: Patient markers appropriately sized (size=3.0, stroke=1.5) for 12
+          data points; bands clearly visible with graduated alpha; P50 emphasized
+          with size=1.8
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Good contrast between red patient line and blue bands. CVD-safe:
-          uses position/labels for redundant encoding of percentile bands.'
+        comment: Redundant encoding via right-margin text labels; Imprint palette
+          is CVD-optimised; red/blue combo has sufficient luminance contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Generous right margin (70 units)
-          accommodates P-labels. Balanced whitespace. Plot fills canvas well.
+        comment: Correct 3200x1800 canvas (ggsize(800,450) x scale=4); generous right
+          margin (70 units) for percentile labels; balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Weight (kg)'' with units. X-axis: ''Age (months)'' with
-          units. Descriptive title prefix ''Boys Weight-for-Age''.'
+        comment: Weight (kg) and Age (months) both carry proper units; descriptive
+          title prefix adds clinical context
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Patient trajectory correctly uses #AE3030 (Imprint slot 5, semantic
-          red). However, band colors use custom hex values (#1A4C7A, #4A8DBF, #A3C9E8,
-          #2C6EA6) not in the Imprint palette. Chrome is theme-correct in both renders
-          (warm bg, theme-adaptive text/grid). Partial compliance.'
+        passed: true
+        comment: 'All colors from Imprint palette; bands use #4467A3 (pos 3) and #2ABCCD
+          (pos 6) for boys (blue tones per spec — justified semantic exception); patient
+          uses #AE3030 (pos 5, matte red) for growth faltering — correct semantic
+          anchor; backgrounds #FAF8F1/#1A1A17 correct; chrome fully theme-adaptive'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful graduated blue band scheme with semantic opacity variation
-          (darker extremes, lighter near median). Semantic red for clinical concern.
-          White-filled circle markers add definition. Clearly above defaults but not
-          quite publication-ready.
+        comment: 'Well above defaults: semantic Imprint palette selection, graduated
+          band opacity for perceptual depth, intentional visual hierarchy across bands/median/patient,
+          clinical convention of right-margin percentile labels'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis major grid removed, minor grid removed, only subtle y-axis
-          horizontal grid kept (appropriate for growth chart). Generous right margin
-          for P-labels. Clean axis lines retained (appropriate for clinical reference
-          chart). Good refinement.
+        comment: X-axis grid removed, minor grid removed, only subtle Y-grid, legend
+          replaced with direct labels, generous right margin, theme_minimal + axis_line
+          for L-shaped frame
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear clinical narrative: patient starts near P50, drops toward/below
-          P25 in growth faltering episode (months 9-18), then catches up. Red vs.
-          blue creates strong focal point. Visual hierarchy: reference bands → emphasized
-          median → patient trajectory. Story is implicit but clear.'
+        comment: 'Clear clinical narrative: patient slipping toward lower percentiles
+          (growth faltering) then recovering; red vs blue contrast foregrounds patient
+          against reference population; P50 emphasis provides key reference line'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,34 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: pediatric growth chart with all 7 percentile bands, filled
-          areas between adjacent curves, emphasized median, individual patient overlay.'
+        comment: Correct WHO/CDC-style growth chart with percentile curves and individual
+          patient overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: filled bands with graduated intensity,
-          emphasized P50, blue-tone convention for boys, right-margin P-labels, connected
-          patient markers with contrasting color, age-in-months x-axis, realistic
-          WHO-approximated data.'
+        comment: All 7 percentile curves with filled inter-band areas; graduated intensity
+          (darker at extremes); P50 emphasized; blue tones for boys; right-margin
+          labels; patient as connected markers
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: age_months (0-36), Y: weight_kg. Percentile curves correctly
-          ordered P3 (bottom) to P97 (top). Patient data correctly overlaid.'
+        comment: 'X: age in months 0-36; Y: weight in kg; patient measurements overlaid
+          on reference bands'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing ''python'' language token. Actual: ''Boys Weight-for-Age
-          · line-growth-percentile · letsplot · anyplot.ai''. Required: ''Boys Weight-for-Age
-          · line-growth-percentile · python · letsplot · anyplot.ai''. Percentile
-          labels (P3-P97) in right margin are an appropriate and correct replacement
-          for a traditional legend.'
+        passed: true
+        comment: 'Title format: {Descriptive Title} · {spec-id} · python · letsplot
+          · anyplot.ai correct; percentile labels as right-margin annotations'
     data_quality:
       score: 15
       max: 15
@@ -189,24 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: all 7 percentile curves, filled bands, median
-          emphasis, patient trajectory with growth faltering then catch-up episode.'
+        comment: All 7 percentile levels with filled inter-band regions; heteroscedastic
+          spread widening with age; growth faltering episode then catch-up; np.interp
+          for reference values at patient visit times
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO weight-for-age for boys 0-36 months. Clinical context with growth
-          faltering then catch-up — real medical scenario, neutral, comprehensible.
+        comment: WHO weight-for-age reference for boys 0-36 months; birth weight ~3.3
+          kg, 36-month ~15.2 kg — clinically plausible; growth faltering narrative
+          medically realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: P50 starts at 3.3 kg at birth (WHO median ~3.35 kg — very accurate).
-          Log-growth shape appropriate. Patient weights (3.5-15.2 kg over 0-36 months)
-          highly realistic. Heteroscedastic spread widening with age is correctly
-          modeled.
+        comment: Weight range 1-18 kg covers all percentile bands; age 0-36 months
+          appropriate; values match WHO-approximate proportions
     code_quality:
       score: 10
       max: 10
@@ -216,34 +203,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → constants → data → dataframes
-          → labels → plot → save. No functions or classes.'
+        comment: 'Flat script: imports → tokens → data → plot assembly → save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; data is fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used. ruff noqa comment appropriate
-          for wildcard import.
+        comment: os, numpy, pandas, lets_plot — all used, nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Native letsplot tooltips (layer_tooltips)
-          used correctly — not fake functionality. Token constants named descriptively.
+        comment: Well-structured layer composition; comments explain semantic choices;
+          layer_tooltips() used natively, not as fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API usage.
+        comment: ggsave to plot-{THEME}.png (scale=4) and plot-{THEME}.html; no bare
+          plot.png
     library_mastery:
       score: 9
       max: 10
@@ -253,25 +240,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of ggplot2-style grammar: ggplot() + multiple geom layers
-          + scale + coord + labs + theme_minimal() + theme() + ggsize(). Correct scale=4
-          export pattern.'
+        comment: 'Expert use of letsplot grammar of graphics: layered geoms, proper
+          aes() mappings, scale_x_continuous with format parameter, coord_cartesian,
+          ggsize, ANYPLOT_THEME pattern'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses letsplot-distinctive layer_tooltips() with structured title
-          + line format. tooltips='none' on band layers to suppress auto-tooltips.
-          HTML export alongside PNG. These are features not available in static ggplot2/plotnine
-          equivalents.
-  verdict: REJECTED
+        comment: Uses layer_tooltips() with structured .title()/.line() syntax (distinctive
+          letsplot feature), tooltips='none' per-layer suppression, HTML export alongside
+          PNG; could have gone further with more tooltip variables
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   - annotations
   patterns:
   - data-generation
