@@ -21,9 +21,11 @@ function randn() {
   return Math.sqrt(-2 * Math.log(lcg() + 1e-10)) * Math.cos(2 * Math.PI * lcg());
 }
 
-// Transit model: trapezoidal shape with limb-darkening curvature
+// Transit parameters (shared by model + domain)
+const tc = 0.5, halfDur = 0.065, depth = 0.011;
+
+// Transit model: trapezoidal with limb-darkening curvature
 function transitFlux(phase) {
-  const tc = 0.5, halfDur = 0.065, depth = 0.011;
   const phi = Math.abs(phase - tc);
   if (phi > halfDur) return 1.0;
   const u = phi / halfDur;
@@ -46,38 +48,75 @@ const obs = Array.from({ length: N }, (_, i) => {
   return { phase, flux, fluxErr };
 });
 
-// Smooth model curve (1001 points for clean line rendering)
-const modelCurve = Array.from({ length: 1001 }, (_, i) => ({
-  phase: i / 1000,
-  flux: transitFlux(i / 1000),
-}));
+// Smooth model curve with ±1σ band (1001 points for clean rendering)
+const sigma1 = 0.003;
+const modelCurve = Array.from({ length: 1001 }, (_, i) => {
+  const phase = i / 1000;
+  const flux = transitFlux(phase);
+  return { phase, flux, lo: flux - sigma1, hi: flux + sigma1 };
+});
 
 // SVG
-const svg = d3
-  .select("#container")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height);
+const svg = d3.select("#container").append("svg")
+  .attr("width", width).attr("height", height);
+
+// Clip-path: keep data elements inside axes bounds — idiomatic D3 pattern
+svg.append("defs").append("clipPath")
+  .attr("id", "plot-area")
+  .append("rect")
+  .attr("x", 0).attr("y", 0).attr("width", iw).attr("height", ih);
+
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// Scales
+// Scales — tighten Y domain so transit dip fills canvas (avoids 40% empty space)
+const transitBase = 1.0 - depth; // ~0.989, the transit floor
+const yMin = transitBase - 0.5 * depth; // ~0.9835
 const xScale = d3.scaleLinear().domain([0, 1]).range([0, iw]);
-const yMin = d3.min(obs, (d) => d.flux - d.fluxErr) - 0.002;
 const yScale = d3.scaleLinear().domain([yMin, 1.009]).nice().range([ih, 0]);
+
+// Transit window background — visual storytelling: highlight the ingress/egress window
+g.append("rect")
+  .attr("x", xScale(tc - halfDur))
+  .attr("y", 0)
+  .attr("width", xScale(tc + halfDur) - xScale(tc - halfDur))
+  .attr("height", ih)
+  .attr("fill", t.palette[1])
+  .attr("opacity", 0.07);
+
+// Dashed vertical at transit midpoint — marks the deepest-flux moment
+g.append("line")
+  .attr("x1", xScale(tc)).attr("x2", xScale(tc))
+  .attr("y1", 0).attr("y2", ih)
+  .attr("stroke", t.palette[1])
+  .attr("stroke-width", 1.2)
+  .attr("stroke-dasharray", "5,4")
+  .attr("opacity", 0.6);
 
 // Horizontal grid lines (y-axis only, subtle)
 yScale.ticks(6).forEach((tick) => {
   g.append("line")
-    .attr("x1", 0)
-    .attr("x2", iw)
-    .attr("y1", yScale(tick))
-    .attr("y2", yScale(tick))
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
+    .attr("x1", 0).attr("x2", iw)
+    .attr("y1", yScale(tick)).attr("y2", yScale(tick))
+    .attr("stroke", t.grid).attr("stroke-width", 1);
 });
 
-// Error bars (drawn before points so points sit on top)
-g.append("g")
+// Clipped group: all data elements stay inside the axes frame
+const clipG = g.append("g").attr("clip-path", "url(#plot-area)");
+
+// ±1σ confidence band around model — d3.area() showcases D3's area generator
+const bandGen = d3.area()
+  .x((d) => xScale(d.phase))
+  .y0((d) => yScale(d.lo))
+  .y1((d) => yScale(d.hi));
+
+clipG.append("path")
+  .datum(modelCurve)
+  .attr("fill", t.palette[1])
+  .attr("opacity", 0.18)
+  .attr("d", bandGen);
+
+// Error bars — drawn below points; stroke-width 1.3 for legibility in transit region
+clipG.append("g")
   .selectAll("line")
   .data(obs)
   .join("line")
@@ -86,11 +125,11 @@ g.append("g")
   .attr("y1", (d) => yScale(d.flux - d.fluxErr))
   .attr("y2", (d) => yScale(d.flux + d.fluxErr))
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 0.9)
+  .attr("stroke-width", 1.3)
   .attr("opacity", 0.45);
 
 // Data points — Imprint palette[0] (#009E73) as first series
-g.append("g")
+clipG.append("g")
   .selectAll("circle")
   .data(obs)
   .join("circle")
@@ -100,12 +139,11 @@ g.append("g")
   .attr("fill", t.palette[0])
   .attr("opacity", 0.80);
 
-// Transit model curve — Imprint palette[1] (#C475FD)
-const lineGen = d3
-  .line()
+// Transit model line — Imprint palette[1] (#C475FD)
+const lineGen = d3.line()
   .x((d) => xScale(d.phase))
   .y((d) => yScale(d.flux));
-g.append("path")
+clipG.append("path")
   .datum(modelCurve)
   .attr("fill", "none")
   .attr("stroke", t.palette[1])
@@ -127,58 +165,49 @@ for (const ax of [gx, gy]) {
 
 // Axis labels
 g.append("text")
-  .attr("x", iw / 2)
-  .attr("y", ih + 68)
+  .attr("x", iw / 2).attr("y", ih + 68)
   .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "16px")
+  .attr("fill", t.ink).style("font-size", "16px")
   .text("Orbital Phase");
 
 g.append("text")
   .attr("transform", "rotate(-90)")
-  .attr("x", -(ih / 2))
-  .attr("y", -88)
+  .attr("x", -(ih / 2)).attr("y", -88)
   .attr("text-anchor", "middle")
-  .attr("fill", t.ink)
-  .style("font-size", "16px")
+  .attr("fill", t.ink).style("font-size", "16px")
   .text("Relative Flux");
 
 // Legend
-const lx = iw - 200, ly = 30;
-g.append("circle")
-  .attr("cx", lx)
-  .attr("cy", ly)
-  .attr("r", 5)
-  .attr("fill", t.palette[0])
-  .attr("opacity", 0.80);
+const lx = iw - 220, ly = 20;
+
+// Transit model: confidence band swatch + line
+g.append("rect")
+  .attr("x", lx - 10).attr("y", ly - 5)
+  .attr("width", 20).attr("height", 10)
+  .attr("fill", t.palette[1]).attr("opacity", 0.18);
+g.append("line")
+  .attr("x1", lx - 10).attr("x2", lx + 10)
+  .attr("y1", ly).attr("y2", ly)
+  .attr("stroke", t.palette[1]).attr("stroke-width", 2.5);
 g.append("text")
-  .attr("x", lx + 14)
-  .attr("y", ly + 5)
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
+  .attr("x", lx + 16).attr("y", ly + 5)
+  .attr("fill", t.inkSoft).style("font-size", "14px")
+  .text("Transit Model (±1σ)");
+
+// Observations
+g.append("circle")
+  .attr("cx", lx).attr("cy", ly + 30)
+  .attr("r", 5)
+  .attr("fill", t.palette[0]).attr("opacity", 0.80);
+g.append("text")
+  .attr("x", lx + 16).attr("y", ly + 35)
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text("Observations");
 
-g.append("line")
-  .attr("x1", lx - 8)
-  .attr("x2", lx + 8)
-  .attr("y1", ly + 30)
-  .attr("y2", ly + 30)
-  .attr("stroke", t.palette[1])
-  .attr("stroke-width", 2.5);
-g.append("text")
-  .attr("x", lx + 14)
-  .attr("y", ly + 35)
-  .attr("fill", t.inkSoft)
-  .style("font-size", "14px")
-  .text("Transit Model");
-
 // Title
-svg
-  .append("text")
-  .attr("x", width / 2)
-  .attr("y", 50)
+svg.append("text")
+  .attr("x", width / 2).attr("y", 50)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
-  .style("font-weight", "600")
+  .style("font-size", "22px").style("font-weight", "600")
   .text("lightcurve-transit · javascript · d3 · anyplot.ai");
