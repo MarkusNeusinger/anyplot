@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-16
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-20
 """
 
 import os
