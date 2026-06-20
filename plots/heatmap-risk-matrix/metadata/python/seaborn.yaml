@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:54:49Z'
-updated: '2026-06-20T06:07:01Z'
+updated: '2026-06-20T06:25:59Z'
 generated_by: claude-sonnet
 workflow_run: 27861707413
 issue: 4567
@@ -15,46 +15,43 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance — every required feature (gradient, descriptive tick labels,
-    labeled markers with jitter, zone legend, grid lines) is implemented and visible
-  - 'Smart 4-stop Imprint colormap (green→amber→ochre→red) semantically correct for
-    risk matrices using only Imprint palette colors (#009E73, #DDCC77, #BD8233, #AE3030)'
-  - 'Multi-layer redundant encoding: color + distinct marker shape per category +
-    size-scaled by risk score + critical emphasis rings + score labels in cell corners'
-  - 'Excellent data quality: 15 realistic, neutral enterprise risk items across 4
-    appropriate categories with plausible likelihood/impact ratings'
-  - Clean code structure with np.random.seed(42), no functions or classes, all imports
-    used, correct savefig without bbox_inches='tight'
-  - Correct 2400×2400 square canvas for symmetric 5×5 heatmap
-  - All chrome tokens correctly threaded through sns.set_theme rc dict — no dark-on-dark
-    failures in dark render
+  - 'Perfect spec compliance: all required features (5×5 grid, descriptive ticks,
+    labeled markers with offset positioning, zone legend) fully implemented'
+  - Semantic risk colormap built entirely from Imprint palette anchors (brand green
+    → amber → ochre → matte red) with strong domain justification (ISO 31000 traffic-light
+    convention)
+  - Critical emphasis rings on high-risk items create strong visual hierarchy and
+    focal point
+  - 'Full theme adaptation: both renders pass legibility check with no dark-on-dark
+    failures'
+  - 'Excellent redundant encoding: 4 distinct marker shapes + Imprint colors for categories
+    (CVD-safe)'
+  - 'Perfect code quality: clean structure, deterministic seed, no bbox_inches=tight,
+    correct canvas size'
   weaknesses:
-  - 'Cross-cell label overlap in Unlikely and Possible rows: risk item labels extend
-    beyond their cell boundaries (clip_on=False) and overlap adjacent cell labels
-    — reduce label fontsize from 9 to 7pt, or truncate risk name strings to ~10 chars,
-    or apply larger within-cell y-offsets to tier labels vertically'
-  - 'Rightmost column (Catastrophic impact) labels partially hidden by colorbar: ''Data
-    Breach'' renders as ''Data Breac'' and ''Cyber Attack'' as ''Cyber Attac'' because
-    text boxes extend into colorbar area — increase cbar_kws pad from 0.04 to ~0.10
-    to push colorbar right, or reduce subplots_adjust right from 0.70 to 0.65'
-  - Blank legend spacer handles use color='w' (white) — in dark render these appear
-    as visible white dashes in legend between section groups; change to color='none'
-    or set alpha=0 for blank spacer Line2D entries
+  - 'Label overlap in crowded cells: with clip_on=False, labels from adjacent cells
+    bleed into neighboring cell space; visible as Vendor Failrv Outag string and tafr
+    Loss truncation — reduce fontsize to 5pt for cells with ≥2 items, or increase
+    label_dy offset to 0.36/-0.40 to reduce cross-cell bleed'
+  - Custom risk_imprint 4-stop colormap deviates from imprint_seq/imprint_div-only
+    rule for continuous data — even though all stops are Imprint anchors and the semantic
+    exception is well-justified for risk matrices
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "heatmap-risk-matrix · python · seaborn · anyplot.ai" bold dark text, clearly readable. Axis labels "Impact" (X) and "Likelihood" (Y) at fontsize=10, clearly readable. Tick labels (Rare/Unlikely/Possible/Likely/Almost Certain; Negligible/Minor/Moderate/Major/Catastrophic) at fontsize=8, readable. Colorbar label "Risk Score" readable. Legend title "Categories & Zones" readable.
-      Data: 5×5 heatmap with 4-stop gradient: #009E73 (green, Low 1-4) → #DDCC77 (amber, Medium 5-9) → #BD8233 (ochre, High 10-16) → #AE3030 (red, Critical 20-25). First categorical series (Technical) = #009E73. Category markers: circles=Technical green, squares=Financial lavender, diamonds=Operational blue, triangles=Project ochre. Risk score numbers in cell corners at alpha=0.45. Critical emphasis rings on high-risk items.
-      Legibility verdict: PARTIAL FAIL — rightmost column (Catastrophic impact) labels "Data Breach" and "Cyber Attack" appear as "Data Breac" and "Cyber Attac" with last character hidden behind colorbar. Cross-cell label overlap visible in Unlikely and Possible rows where adjacent risk labels bleed into each other.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "heatmap-risk-matrix · python · seaborn · anyplot.ai" in dark bold text, clearly readable. Axis labels "Impact" (X) and "Likelihood" (Y) in dark text at fontsize=10. Tick labels use descriptive terms (Rare→Almost Certain, Negligible→Catastrophic) in dark muted text at fontsize=8 — all readable. Colorbar labeled "Risk Score" with dark tick labels visible.
+      Data: 5×5 heatmap cells colored green→amber→ochre→red (Imprint anchors); 15 risk items as shaped markers (circle=Technical/#009E73, square=Financial/#C475FD, diamond=Operational/#4467A3, triangle=Project/#BD8233); critical emphasis rings in dark ink; score annotations in cell corners. Legend shows Categories & Zones with all items visible.
+      Issues: Label crowding in cells with multiple risks — "Vendor Failrv Outag" and "tafr Loss" suggest adjacent labels bleed together due to clip_on=False.
+      Legibility verdict: PASS (minor overlap, no unreadable chrome)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light (#F0EFE8) text, clearly readable. Axis labels and tick labels in light text, all readable. No dark-on-dark text failures. Legend background elevated dark (#242420). One artifact: blank spacer legend entries use color="w" (white) and appear as visible white dashes between legend sections — minor unintended visual noise.
-      Data: Heatmap gradient colors identical to light render — green/amber/ochre/red unchanged. Category marker colors (green, lavender, blue, ochre) identical to light render. Only chrome elements (background, text, legend frame) flip to dark-theme tokens.
-      Legibility verdict: PASS for chrome elements. PARTIAL FAIL for same rightmost-column label truncation as light render ("Data Breach"→"Data Breac", "Cyber Attack"→"Cyber Attac").
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels, and colorbar all use light tokens (#F0EFE8/#B8B7B0) — clearly readable against dark surface. No dark-on-dark failures. Legend background uses elevated dark #242420 with light text. Colorbar tick labels light-colored and visible.
+      Data: All data colors (Imprint markers, risk gradient cells) are identical to light render — only chrome flips. Critical emphasis rings render in light ink token, visible.
+      Legibility verdict: PASS — no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -62,55 +59,51 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels readable in both themes. Rightmost
-          column risk labels partially hidden behind colorbar (last char clipped)
-          in both renders.
+        comment: All fonts explicitly set; readable in both themes. Risk item labels
+          at fontsize=6 are very small but appropriate for crowded matrix.
       - id: VQ-02
         name: No Overlap
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Significant cross-cell label overlap in Unlikely and Possible rows
-          — labels use clip_on=False and bleed into adjacent cells. Labels crowd each
-          other in rows with 3-4 risks.
+        passed: true
+        comment: Visible label crowding in occupied cells with clip_on=False causing
+          adjacent-cell bleed. Not catastrophic but imperfect.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers clearly visible with distinct shapes. Critical emphasis rings
-          visible. Risk score numbers at alpha=0.45 appropriately subtle. Some markers
-          partially hidden by overlapping labels.
+        comment: Category markers well-sized with score-based scaling; critical emphasis
+          rings effective.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Category markers use color + distinct shapes (redundant encoding).
-          CVD-safe Imprint palette. No red-green sole signal.
+        comment: Imprint palette with 4 distinct marker shapes — CVD-safe redundant
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2400x2400 canvas correct for symmetric heatmap; canvas gate passed.
-          Rightmost column labels crowded against colorbar due to subplots_adjust
-          right=0.70 leaving insufficient buffer.
+        comment: Square 2400x2400 canvas correct for symmetric grid. Canvas gate passed.
+          Legend slightly crowded next to colorbar but visible.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Impact/Likelihood labels clear. Descriptive tick labels per spec.
-          Title format correct.
+        comment: Impact/Likelihood with full descriptive tick labels as required by
+          spec.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First categorical series (Technical) = #009E73. Custom 4-stop colormap
-          uses only Imprint palette colors and is semantically justified by spec requirement
-          for green-to-red gradient. Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: Backgrounds correct. Category markers use Imprint positions 1-4.
+          Custom risk_imprint 4-stop cmap deviates from imprint_seq/imprint_div rule
+          but uses only Imprint anchors — semantic exception for risk domain.
     design_excellence:
       score: 15
       max: 20
@@ -120,25 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Multi-layer encoding with heatmap background, shaped category markers,
-          size-scaled markers, critical emphasis rings, and cell score labels. Imprint-derived
-          4-stop risk gradient is semantically strong.
+        comment: Custom semantic colormap, 4 category marker shapes, critical emphasis
+          rings, elevated label boxes — professional risk matrix.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All spines removed (appropriate for heatmap), cell separators use
-          PAGE_BG, score labels at alpha=0.45 subtle, legend fancybox=False. Deduction
-          for cross-cell label clutter.
+        comment: sns.despine applied, cell grid lines clean, elevated label boxes
+          add polish.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear focal point at bottom-right red zone. Critical rings guide
-          attention. Zone legend maps scores to severity. Multiple encoding layers
-          create strong visual hierarchy.
+        comment: Strong visual hierarchy via color gradient and critical emphasis
+          rings; clear focal point on Critical zone.
     spec_compliance:
       score: 15
       max: 15
@@ -148,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 heatmap with risk items overlaid as markers.
+        comment: Correct 5x5 heatmap risk matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Green-to-red gradient, descriptive tick labels, labeled markers with
-          jitter, zone legend (Low/Medium/High/Critical), cell grid lines all present.
+        comment: Green-red gradient, descriptive tick labels, labeled markers with
+          offset positioning, zone legend — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Likelihood on Y, Impact on X, risk score = likelihood x impact, all
-          15 risk items plotted.
+        comment: X=Impact, Y=Likelihood; all 15 risk items plotted; full 1-5 range
+          on both axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-risk-matrix · python · seaborn · anyplot.ai' correct.
-          Legend includes categories, zone patches, and critical risk indicator.
+        comment: 'Title: heatmap-risk-matrix · python · seaborn · anyplot.ai. Legend:
+          categories + zones.'
     data_quality:
       score: 15
       max: 15
@@ -179,23 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects covered: background heat gradient, categorical markers,
-          risk score annotation, critical emphasis, zone classification, multi-category
-          grouping.'
+        comment: Full 5x5 grid, 4 risk categories, Low/Medium/High/Critical zones,
+          15 realistic items, critical emphasis.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15 realistic enterprise risk items across 4 appropriate categories.
-          Neutral, non-controversial domain.
+        comment: Real enterprise risk scenarios plausibly distributed across the matrix.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 items within spec's 5-20 range. Likelihood 1-5, Impact 1-5, risk
-          score 1-25.
+        comment: 5x5 grid, 15 risk items (within 5-20 range), scores 1-25 as expected.
     code_quality:
       score: 10
       max: 10
@@ -205,34 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: No classes or unnecessary functions; clean procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports used; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Offset map dictionary is a clean pattern for within-cell jitter.
-          No fake UI.
+        comment: Well-structured with clear variable names; offset logic clean and
+          readable.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches='tight'.
+        comment: Saves as plot-{THEME}.png with dpi=400, no bbox_inches=tight.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -240,22 +227,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.heatmap (high-level API), sns.scatterplot on same axes, sns.set_theme
-          with rc dict, sns.despine. All idiomatic seaborn patterns.
+        comment: sns.heatmap, sns.scatterplot, sns.set_theme, sns.despine — idiomatic
+          seaborn throughout.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Combining sns.heatmap + sns.scatterplot on same axes is an advanced
-          distinctive seaborn technique. Uses cbar_kws for colorbar control, square=True
-          for symmetric cells.
+        comment: Combines sns.heatmap + sns.scatterplot on same axes; uses seaborn
+          heatmap annotation features alongside matplotlib-level customization.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   - custom-legend
   - patches
   patterns:
