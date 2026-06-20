@@ -21,12 +21,13 @@ const IMPRINT_PALETTE = [
     colorant"#009E73",   # 1 — brand green (first series)
     colorant"#C475FD",   # 2 — lavender
     colorant"#4467A3",   # 3 — blue
-    colorant"#BD8233",   # 4 — ochre (warning limits)
+    colorant"#BD8233",   # 4 — ochre
     colorant"#AE3030",   # 5 — matte red (control limits / out-of-control)
     colorant"#2ABCCD",   # 6 — cyan
     colorant"#954477",   # 7 — rose
     colorant"#99B314",   # 8 — lime
 ]
+const ANYPLOT_AMBER = colorant"#DDCC77"  # warning / caution semantic anchor
 
 # SPC control chart constants for subgroup size n = 5
 const n_sub = 5
@@ -81,7 +82,7 @@ grid_c = RGBAf(INK.r, INK.g, INK.b, 0.12f0)
 # Figure — landscape 3200 × 1800 (resolution × px_per_unit = 2)
 fig = Figure(
     size            = (1600, 900),
-    fontsize        = 13,
+    fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
 
@@ -99,11 +100,11 @@ ax_xbar = Axis(fig[1, 1];
     backgroundcolor    = PAGE_BG,
     ylabel             = "Sample Mean (mm)",
     ylabelcolor        = INK,
-    ylabelsize         = 13,
+    ylabelsize         = 14,
     xticklabelsvisible = false,
     xticksize          = 0,
     yticklabelcolor    = INK_SOFT,
-    yticklabelsize     = 11,
+    yticklabelsize     = 12,
     topspinevisible    = false,
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
@@ -120,14 +121,14 @@ ax_r = Axis(fig[2, 1];
     backgroundcolor   = PAGE_BG,
     xlabel            = "Sample Number",
     xlabelcolor       = INK,
-    xlabelsize        = 13,
+    xlabelsize        = 14,
     ylabel            = "Sample Range (mm)",
     ylabelcolor       = INK,
-    ylabelsize        = 13,
+    ylabelsize        = 14,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
-    xticklabelsize    = 11,
-    yticklabelsize    = 11,
+    xticklabelsize    = 12,
+    yticklabelsize    = 12,
     topspinevisible   = false,
     rightspinevisible = false,
     leftspinecolor    = INK_SOFT,
@@ -144,11 +145,11 @@ xlims!(ax_xbar, 0.5, n_samples + 4.0)
 xlims!(ax_r, 0.5, n_samples + 4.0)
 
 # --- X-bar chart ---
-# Warning limits (±2σ) — ochre dashed
+# Warning limits (±2σ) — amber dashed
 lines!(ax_xbar, [1.0, Float64(n_samples)], [uwl_xbar, uwl_xbar];
-    color=IMPRINT_PALETTE[4], linewidth=1.4, linestyle=:dash)
+    color=ANYPLOT_AMBER, linewidth=1.4, linestyle=:dash)
 lines!(ax_xbar, [1.0, Float64(n_samples)], [lwl_xbar, lwl_xbar];
-    color=IMPRINT_PALETTE[4], linewidth=1.4, linestyle=:dash)
+    color=ANYPLOT_AMBER, linewidth=1.4, linestyle=:dash)
 # Control limits (±3σ) — red dashed
 lines!(ax_xbar, [1.0, Float64(n_samples)], [ucl_xbar, ucl_xbar];
     color=IMPRINT_PALETTE[5], linewidth=2.2, linestyle=:dash)
@@ -175,9 +176,9 @@ text!(ax_xbar, x_right, lcl_xbar;
     text="LCL", fontsize=11, color=IMPRINT_PALETTE[5], align=(:left, :center))
 
 # --- R chart ---
-# Warning limit — ochre dashed
+# Warning limit — amber dashed
 lines!(ax_r, [1.0, Float64(n_samples)], [uwl_r, uwl_r];
-    color=IMPRINT_PALETTE[4], linewidth=1.4, linestyle=:dash)
+    color=ANYPLOT_AMBER, linewidth=1.4, linestyle=:dash)
 # UCL — red dashed
 lines!(ax_r, [1.0, Float64(n_samples)], [ucl_r, ucl_r];
     color=IMPRINT_PALETTE[5], linewidth=2.2, linestyle=:dash)
