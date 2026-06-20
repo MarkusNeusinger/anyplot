@@ -1,0 +1,33 @@
+/*
+ * MonoLisa (variable) — brand typeface for the anyplot design system.
+ * Proprietary, © FaceType Foundry. Fetched at sync time from the anyplot GCS
+ * bucket into this gitignored directory; shipped only into the private
+ * claude.ai/design project, never committed to the (public) repo.
+ *
+ * Re-fetch (see .design-sync/NOTES.md):
+ *   curl -sSfo MonoLisaVariableNormal.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableNormal.ttf
+ *   curl -sSfo MonoLisaVariableItalic.ttf https://storage.googleapis.com/anyplot-static/fonts/MonoLisaVariableItalic.ttf
+ */
+@font-face {
+  font-family: 'MonoLisa';
+  src: url('./MonoLisaVariableNormal.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'MonoLisa';
+  src: url('./MonoLisaVariableItalic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+/* Metric-compatible fallback so layout stays stable before MonoLisa loads. */
+@font-face {
+  font-family: 'MonoLisa Fallback';
+  src: local('Consolas'), local('Menlo'), local('Monaco'), local('DejaVu Sans Mono');
+  size-adjust: 106.5%;
+  ascent-override: 105%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}

@@ -1,0 +1,18 @@
+{
+  "//": "Dedicated tsconfig for the /design-sync converter. Only compilerOptions.paths is read (by the esbuild tsconfig-paths plugin) to resolve the app's `src/*` aliases when bundling app/designsync-entry.tsx. Each barrel folder is mapped to its index file BEFORE the `src/*` wildcard — otherwise the wildcard's empty-extension probe matches the directory itself and esbuild fails to bundle it. Not used by the app's own build.",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "paths": {
+      "src/components": ["./src/components/index.ts"],
+      "src/constants": ["./src/constants/index.ts"],
+      "src/hooks": ["./src/hooks/index.ts"],
+      "src/layouts": ["./src/layouts/index.ts"],
+      "src/routes": ["./src/routes/index.tsx"],
+      "src/theme": ["./src/theme/index.ts"],
+      "src/types": ["./src/types/index.ts"],
+      "src/utils": ["./src/utils/index.ts"],
+      "src/*": ["./src/*"]
+    }
+  }
+}
