@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -62,7 +62,7 @@ p = figure(
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
-    min_border_top=110,
+    min_border_top=130,
     min_border_right=60,
 )
 
@@ -126,7 +126,7 @@ p.add_layout(threshold_label)
 
 # Legend — larger text for canvas readability
 legend = Legend(items=legend_items, location="top_right")
-legend.label_text_font_size = "28pt"
+legend.label_text_font_size = "34pt"
 legend.label_text_color = INK_SOFT
 legend.glyph_height = 36
 legend.glyph_width = 36
@@ -150,6 +150,8 @@ p.title.text_color = INK
 
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
 
