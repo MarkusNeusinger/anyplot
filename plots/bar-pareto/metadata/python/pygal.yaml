@@ -1,44 +1,59 @@
 library: pygal
+language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:29:26Z'
-updated: '2026-03-20T08:03:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23332979008
+updated: '2026-06-20T17:26:46Z'
+generated_by: claude-sonnet
+workflow_run: 27877582998
 issue: 4550
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/pygal/plot.html
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/pygal/plot-dark.html
 quality_score: 87
 review:
   strengths:
-  - Complete spec compliance with all required Pareto features (descending bars, cumulative
-    line, 80% threshold, secondary axis)
-  - Strong data storytelling through vital few / trivial many color distinction
-  - Professional color palette and visual design with attention to detail (rounded
-    bars, subtle background, custom legend)
-  - Realistic manufacturing defect context that perfectly fits the Pareto principle
-  - Creative SVG overlay approach to work around pygal dual-axis limitations
+  - Semantic vital-few vs trivial-many color coding (#009E73 green vs INK_MUTED gray)
+    creates immediate visual hierarchy communicating the 80/20 principle
+  - 'Complete spec compliance: descending bars, cumulative line overlay, 80% reference
+    threshold, secondary y-axis, and cumulative markers at each bar center-top'
+  - 'Perfect data quality: realistic manufacturing defect scenario with neutral business
+    context, plausible counts (9-142) showing clear Pareto distribution'
+  - 'Theme tokens correctly applied throughout both renders: PAGE_BG, INK, INK_MUTED
+    all adapt correctly, Imprint palette for data colors is consistent across themes'
+  - Thoughtful SVG injection technique to implement dual-axis Pareto chart beyond
+    pygals native capabilities, with clean coordinate mapping from bar geometry
   weaknesses:
-  - SVG regex manipulation is fragile and verbose (~100 lines of string parsing)
-  - Two-blue palette contrast between vital/trivial could be stronger for accessibility
-  - Cumulative % label placement on first bar (below dot) breaks visual consistency
-  image_description: 'The plot displays a Pareto chart titled "bar-pareto · pygal
-    · pyplots.ai" with 8 descending bars representing manufacturing defect types.
-    The bars are colored in two shades of blue: a darker steel blue (#306998) for
-    the "Vital Few" (Scratches 142, Dents 98, Misalignment 84, Cracks 56) and a lighter
-    blue (#93B5CF) for the "Trivial Many" (Discoloration 42, Warping 31, Contamination
-    18, Burrs 9). A red cumulative percentage line with circular markers runs across
-    the tops, with percentage labels (30%, 50%, 68%, 79%, 88%, 94%, 98%, 100%). A
-    dashed gray 80% threshold line crosses horizontally. The primary y-axis shows
-    "Frequency (Count)" and a secondary red y-axis on the right shows "Cumulative
-    %" from 0% to 100%. X-axis labels are slightly rotated showing defect type names.
-    A centered legend at the bottom identifies all four elements. The background is
-    white with a subtle #FAFBFC plot area. Bars have rounded corners and value labels
-    printed above each bar.'
+  - 'Minor crowding near bars 7-8 (Contamination, Burrs): the cumulative 98% label,
+    secondary axis 0% tick label, and bar value labels are close together in the right
+    portion of the chart — consider nudging the secondary axis 0% label offset or
+    the 98% cumulative label to avoid tightness'
+  - The 50% cumulative label at bar 2 (Dents) and the 68% label at bar 3 (Misalignment)
+    are close together on the cumulative line; verify they are not overlapping at
+    full 3200×1800 resolution
+  - Pygal interactive JS is disabled (js=[]) to enable SVG injection, which sacrifices
+    the library distinctive tooltip interactivity; acceptable for this implementation
+    approach but limits LM-02
+  - DE-01 could be elevated toward publication quality with more refined typography
+    hierarchy — e.g., slightly bolder bar value labels or a subtle drop shadow on
+    the cumulative line to separate it from bar tops
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white.
+      Chrome: Title "bar-pareto · python · pygal · anyplot.ai" clearly visible in dark ink at top. Y-axis label "Frequency (Count)" and x-axis label "Defect Type" readable. Tick labels (0–140 primary, Scratches through Burrs rotated 30°) all legible. Bottom legend with four items (Vital Few, Trivial Many, Cumulative %, 80% Threshold) clearly readable.
+      Data: Three vital-few bars (Scratches 142, Dents 98, Misalignment 84) in brand green #009E73. Five trivial-many bars in INK_MUTED gray. Blue (#4467A3) cumulative polyline with circle dots and percentage labels (30%, ~50%, 68%, 79%, 88%, 94%, 98%). Amber (#DDCC77) dashed 80% horizontal reference line. Secondary right y-axis with "Cumulative %" rotated label and 0%/20%/40%/60%/80% ticks. Bar value labels printed above each bar.
+      Legibility verdict: PASS — all text readable; minor crowding near bars 7-8 right side (0% secondary axis tick close to value labels area) but content remains distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title in light (#F0EFE8) ink clearly visible. Axis labels and tick labels adapt to light-on-dark correctly. Y-axis tick values and rotated x-axis labels all readable in light color. Bottom legend text in light ink. No dark-on-dark failures observed — all chrome elements flip correctly to the dark theme.
+      Data: Vital-few bars in identical brand green #009E73 (same as light render). Trivial-many bars in #A8A79F (dark INK_MUTED). Blue cumulative line and amber dashed threshold remain identical to light render. Bar value labels appear in light color on bars.
+      Legibility verdict: PASS — data colors are identical to light render as required; only chrome (background, text, legend) adapts. No unreadable elements detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -46,67 +61,87 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 52, labels 30, values 26). All
-          text readable. Cumulative labels slightly small relative to bar values.
+        comment: All font sizes explicitly set via Style object; title, axis labels,
+          tick labels, and value labels all readable in both themes. Minor tightness
+          near secondary axis area at bars 7-8.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean. First cumulative label placed below dot to avoid
-          bar value overlap. Minor crowding in middle bars.
+        comment: Generally clean layout. Minor crowding near bars 7-8 right side where
+          98% cumulative label, secondary axis 0% tick, and bar value labels converge.
+          Main content readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with good spacing. Cumulative line dots and line
-          clearly visible.
+        comment: All bars clearly visible, cumulative line prominent, 80% dashed reference
+          line distinct. Circle dots on cumulative line well-sized.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue tones differentiate well. Red line contrasts with blue bars.
-          Two blues could have more contrast for low-vision users.
+        comment: Green vs gray distinction is CVD-safe. Blue cumulative line and amber
+          threshold are distinguishable without relying on hue alone. Bar value labels
+          and line labels provide redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Right margin accommodates secondary y-axis.
-          Bottom margin fits legend and labels.
+        comment: Chart fills canvas well. Asymmetric right margin (420px) justified
+          by secondary axis requirement. Bottom margin (180px) accommodates rotated
+          labels and legend. Overall balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Frequency (Count), Defect Type, Cumulative %.'
+        comment: 'Primary y-axis: ''Frequency (Count)'' with units; x-axis: ''Defect
+          Type''; secondary y-axis: ''Cumulative %''. Title matches required format
+          exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (vital few bars). Trivial many use INK_MUTED
+          semantic anchor (intentional de-emphasis). Cumulative line #4467A3 (Imprint
+          pos 3). Threshold #DDCC77 (amber anchor). Both backgrounds correct: #FAF8F1
+          light / #1A1A17 dark.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful dual-blue palette, professional colors, rounded bars,
-          subtle background. Above defaults but not publication-level.
+        comment: Above a well-configured default. Semantic color coding (vital few
+          green vs trivial many muted) is intentional and communicates the Pareto
+          principle through color. Rounded bars, circle dots, and dashed reference
+          line add polish. Not yet at publication-ready level.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, clean background, good spacing, rounded bars, well-crafted
-          custom legend.
+        comment: Grid intentionally removed (show_y_guides=False, show_x_guides=False).
+          Rounded bars (rounded_bars=6). Generous explicit margins. Good whitespace.
+          Pygal frame remains (cannot remove spines as easily as matplotlib).
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong Pareto narrative with vital few/trivial many coloring and
-          80% threshold. Clear focal point.
+        comment: 'Strong visual hierarchy: vital few bars in green immediately draw
+          attention, trivial many fade to gray. 80% threshold line reinforces the
+          80/20 principle. Viewer immediately sees the insight. This goes beyond just
+          displaying data.'
     spec_compliance:
       score: 15
       max: 15
@@ -116,27 +151,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative line overlay.
+        comment: 'Correct Pareto chart: descending bars with cumulative percentage
+          overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: descending bars, cumulative line, secondary y-axis,
-          80% reference line, markers at bar centers.'
+        comment: 'All spec features present: descending-sorted bars, cumulative percentage
+          line, secondary y-axis (0-100%), 80% horizontal reference line, cumulative
+          markers at center-top of each bar.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, counts on primary y, cumulative % on secondary
-          y.
+        comment: 'X-axis: defect types. Primary y-axis: frequency counts. Secondary
+          y-axis: cumulative percentage 0-100%. Bars sorted descending by count.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format. Custom legend with all four elements.
+        comment: 'Title: ''bar-pareto · python · pygal · anyplot.ai'' — exact required
+          format. Custom SVG legend shows all four elements with correct symbols:
+          Vital Few (green rect), Trivial Many (gray rect), Cumulative % (blue line+dot),
+          80% Threshold (amber dashed line).'
     data_quality:
       score: 15
       max: 15
@@ -146,23 +186,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full Pareto distribution with 8 categories, clear vital/trivial separation,
-          cumulative reaches 100%.
+        comment: 8 categories showing clear Pareto distribution. Vital few (3 bars
+          reaching ~68%) clearly distinguished from trivial many (5 bars). Full range
+          of defect frequencies (9-142).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect analysis - classic, neutral Pareto application.
+        comment: Manufacturing defect analysis — realistic Six Sigma / quality management
+          context. Category names (Scratches, Dents, Misalignment, Cracks, Discoloration,
+          Warping, Contamination, Burrs) are plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Counts 9-142, total 480 defects - realistic for manufacturing quality
-          report.
+        comment: Counts 9-142 are plausible production defect frequencies. Pareto
+          distribution is authentic (first category ~30% of total). Scales are internally
+          consistent.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -170,33 +214,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, chart config, SVG render, overlay injection,
-          save.'
+        comment: 'Linear structure: imports → tokens → data → chart → SVG injection
+          → save. No functions or classes despite complexity.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data.
+        comment: Fully deterministic hardcoded data. No random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re, cairosvg, pygal, Style.'
+        comment: 'All imports used: os (theme env), re (SVG regex), cairosvg (PNG
+          render), pygal, pygal.style.Style.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: SVG regex manipulation necessary but fragile and verbose. Well-organized
-          with clear comments.
+        comment: SVG injection complexity is necessary given pygal's lack of native
+          dual-axis support. Regex-based approach is the correct pattern for pygal
+          SVG manipulation. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png via cairosvg and plot.html via render_to_file.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API used.
     library_mastery:
       score: 6
       max: 10
@@ -206,27 +252,31 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct pygal.Bar usage with Style, print_values, rounded_bars. Extensive
-          SVG post-processing goes around pygal API.
+        comment: Correct pygal Bar usage with Style, x_labels, chart.add(), print_values,
+          value_formatter, rounded_bars. SVG injection via chart.render() is the idiomatic
+          pygal workaround for unsupported features. Not quite 'high-level API best
+          patterns' since it requires low-level SVG manipulation.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal SVG-native rendering for post-processing, rounded_bars,
-          print_values_position, HTML output.
-  verdict: REJECTED
+        comment: Uses pygal's SVG output format as a platform for injection (pygal-specific
+          technique). HTML output saved. However, JS disabled (js=[]) sacrifices pygal's
+          most distinctive feature (interactive tooltips). Some library-specific features
+          used but not the hallmark interactivity.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - twin-axes
   - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
   - edge-highlighting
-  - grid-styling
