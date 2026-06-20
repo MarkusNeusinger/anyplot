@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:18:37Z'
-updated: '2026-06-20T07:38:03Z'
+updated: '2026-06-20T07:47:33Z'
 generated_by: claude-sonnet
 workflow_run: 27864147094
 issue: 4559
@@ -12,51 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (error bars, phase folding,
-    model overlay, transit dip orientation, ingress/egress contact markers)'
-  - Scientifically appropriate dual-panel layout (full orbit + transit zoom) that
-    directly serves the data storytelling
-  - Complete and correct theme adaptation — all chrome tokens applied consistently
-    to every non-data element in both renders
-  - 'Imprint palette correctly applied: brand green (#009E73) for photometry (position
-    1), Imprint blue (#4467A3) for model (position 3)'
-  - Differential visual treatment of in-transit vs out-of-transit data (size + alpha)
-    creates meaningful visual hierarchy
-  - FancyArrowPatch transit depth annotation is a sophisticated, library-specific
-    technique
-  - 'Realistic physical parameters: 1% depth, quadratic limb darkening (u1=0.3, u2=0.1),
-    realistic photon noise (800-2000 ppm)'
+  - Two-panel overview+zoom layout is an ideal design for scientific light curve data
+    — provides both global context and transit detail in one figure
+  - Physically motivated transit simulation with quadratic limb darkening, realistic
+    error bars, and correct ~1% depth
+  - Differential alpha (0.55 out-of-transit / 0.90 in-transit) creates visual emphasis
+    exactly where needed without redundant encoding
+  - FancyArrowPatch + patheffects combination for the delta-F annotation is polished
+    and robust in both themes
+  - 'Perfect spec compliance: all four required features (error bars, model overlay,
+    phase-folded data, publication style) present and correctly implemented'
+  - Canvas correctly sized to 3200x1800 via figsize=(8,4.5) dpi=400 with no bbox_inches='tight'
+    drift
+  - 'Full theme adaptation: all chrome tokens properly wired for both light and dark
+    renders'
   weaknesses:
-  - 'DE-01 (5/8): Typography hierarchy is functional but lacks weight variation for
-    the key scientific result; the delta-F value and contact labels are the same visual
-    weight as surrounding annotation text'
-  - 'DE-02 (4/6): Tick marks remain on both axes of both panels; removing them would
-    add polish; the wspace between panels (0.05) is very tight and the panels feel
-    merged'
-  - 'VQ-01 (7/8): Annotation labels (t1, t4, delta-F) are at 8pt; bumping to 9pt would
-    improve mobile readability'
-  - 'VQ-03 (5/6): Out-of-transit error bar width (elinewidth=0.5) is very thin and
-    barely distinguishable from axis structure; elinewidth=0.7 would improve visibility'
-  - 'LM-02 (3/5): Distinctive matplotlib techniques are solid but limited; ax.xaxis.set_major_formatter
-    or patheffects could demonstrate deeper library mastery'
+  - axvspan transit zone shading in main panel at alpha=0.04 is nearly invisible —
+    increase to alpha=0.07-0.08 to improve visual cueing without adding noise
+  - elinewidth=0.7 error bars are quite thin for a 3200-px canvas; 0.9-1.0 would improve
+    visibility without cluttering at 500-point density
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "lightcurve-transit · python · matplotlib · anyplot.ai" in dark #1A1A17 ink, clearly readable. Y-axis label "Relative Flux" and X-axis label "Orbital Phase" in dark ink at 10pt, readable. Tick labels in #4A4A44 at 8pt, readable. t1/t4 annotation labels at 8pt in muted gray, readable but small. Delta-F annotation at 8pt in blue, readable.
-      Data: Photometry scatter in brand green #009E73 with error bars. Out-of-transit: markersize=2.5, alpha=0.55. In-transit: markersize=3.5, alpha=0.9. Transit model curve in Imprint blue #4467A3. First series is #009E73 (correct).
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "lightcurve-transit · python · matplotlib · anyplot.ai" at 12pt in dark ink (#1A1A17) — readable. Axis labels "Orbital Phase" and "Relative Flux" at 10pt in dark ink — readable. Tick labels at 8pt in secondary ink (#4A4A44) — readable at native resolution. Legend text in secondary ink — readable.
+      Data: Main panel shows 500 green (#009E73) scatter points with error bars across orbital phase 0.0-1.0. In-transit points at alpha=0.90/markersize=3.5, out-of-transit at alpha=0.55/markersize=2.5. Blue (#4467A3) transit model curve overlaid at linewidth=1.8 with subtle blue fill under the dip. Contact markers t1 and t4 labeled at fontsize=9. Zoom panel on right shows transit detail with double-headed blue arrow and "delta-F = 1.0%" annotation (with path-effects white stroke). First series = #009E73 (brand green) confirmed.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8, clearly readable against dark background. Axis labels in light ink, readable. Tick labels in #B8B7B0, readable. No dark-on-dark failures detected. All annotation text (t1/t4, delta-F) readable in their respective colors (muted gray and blue #4467A3) against dark background.
-      Data: Photometry in #009E73 — identical to light render. Model curve in #4467A3 — identical to light render. Data colors unchanged between themes as required.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in near-white/cream (#F0EFE8) — readable. Axis labels in light ink (#F0EFE8) — readable. Tick labels in secondary light ink (#B8B7B0) — readable. Legend box uses elevated dark fill (#242420). No dark-on-dark issues detected — all text is light-on-dark as required.
+      Data: Same green (#009E73) photometry points and same blue (#4467A3) transit model curve — data colors identical to light render, only chrome flipped. Path-effects stroke (foreground=PAGE_BG = #1A1A17 on dark) keeps the ΔF annotation readable. Grid lines subtle (alpha=0.15, INK on dark theme).
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,78 +56,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Minor deduction: annotation labels
-          (t1/t4, delta-F) at 8pt are small for mobile scales; 9pt would improve readability.'
+        comment: Font sizes explicitly set (12pt title, 10pt labels, 8pt ticks). Readable
+          in both themes. Y-axis 4-decimal values are precise but legible at native
+          resolution.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data conflicts. Legend, annotations, and contact
-          labels cleanly separated.
+        comment: No actual overlap. Minor crowding risk in zoom panel with DF annotation
+          near ingress data — path-effects stroke prevents confusion.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker sizing appropriate for 500 points. Out-of-transit elinewidth=0.5
-          is very thin; elinewidth=0.7 would improve visibility.
+        comment: 500-point density handled with markersize=2.5/3.5 and alpha=0.55/0.90.
+          axvspan transit highlight at alpha=0.04 nearly invisible. Error bars at
+          elinewidth=0.7 are thin.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are CVD-safe, not red-green. Good
-          contrast on both backgrounds.
+        comment: Green and blue are CVD-safe distinct hue families. No red-green as
+          sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape 3200x1800. No bbox_inches='tight'. Canvas gate passed.
-          Dual-panel fills canvas well.
+        comment: Canvas gate passed (3200x1800). Two-panel gridspec 3:1.2 ratio. No
+          clipping in either render. subplots_adjust used correctly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are standard astronomical labels
-          for a phase-folded light curve.
+        comment: Correct title format. Descriptive axis labels with units clear from
+          context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint position 1 (#009E73) for photometry, position 3 (#4467A3)
-          for model. Light #FAF8F1, dark #1A1A17. Data colors identical between themes.'
+        comment: 'First series #009E73 (brand green). Model #4467A3 (Imprint position
+          3). Backgrounds #FAF8F1/#1A1A17. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above defaults with intentional dual-panel structure, differential
-          alpha/size, elevated legend frame, FancyArrowPatch annotation. Not yet at
-          FiveThirtyEight publication level.
+        comment: Two-panel overview+zoom, FancyArrowPatch, patheffects, differential
+          alpha all show design sophistication above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis grid (alpha=0.15), white
-          marker edges, custom legend frame. Tick marks remain; wspace between panels
-          is tight (0.05).
+        comment: Spines removed, tick marks hidden, subtle y-only grid, legend frame
+          styled. axvspan at alpha=0.04 is barely visible.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Dual-panel layout explicitly narrates the story. In/out transit differentiation
-          creates focal emphasis. Delta-F quantifies key result. Above default but
-          could emphasize baseline vs dip contrast more.
+        comment: 'Excellent narrative: main overview draws eye to transit, zoom panel
+          reveals DF=1.0% quantification. Contact markers add scientific context.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: phase-folded light curve with scatter+error bars and model
-          overlay. Two-panel enhances the spec.'
+        comment: Phase-folded light curve with scatter+error bars+model overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: error bars, smooth model overlay, phase folding,
-          transit dip downward, clean scientific style.'
+        comment: Error bars, smooth model overlay, phase-folded data, clean scientific
+          style all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Orbital Phase (0.0-1.0), Y: Relative Flux (~0.985-1.005). Transit
-          dip at phase 0.5. All data visible.'
+        comment: 'X: Orbital Phase 0-1. Y: Relative Flux centered on 1.0. All 500
+          points visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'lightcurve-transit · python · matplotlib · anyplot.ai'.
-          Legend labels 'Photometry' and 'Transit model' are descriptive.
+        comment: Title in exact required format. Legend labels Transit model and Photometry.
     data_quality:
       score: 15
       max: 15
@@ -177,24 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: phase-folded scatter, realistic noise, error
-          bars, limb-darkened model, transit depth, ingress/egress contact times,
-          zoom panel.'
+        comment: Full light curve + zoom, error bars, model overlay, contacts, depth
+          quantification.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit with physically grounded parameters.
-          Neutral scientific topic.
+        comment: Physically motivated with quadratic limb darkening, realistic ~1%
+          transit depth, photometric noise.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1% transit depth realistic for Jupiter-like planet. Limb darkening
-          (u1=0.3, u2=0.1) within Solar-type range. Flux errors 800-2000 ppm realistic
-          for photometry.
+        comment: Phase 0-1, flux normalized to 1.0, realistic error magnitudes and
+          transit duration.
     code_quality:
       score: 10
       max: 10
@@ -204,52 +191,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes. Linear flow: imports -> tokens -> data
-          generation -> two-panel figure -> save.'
+        comment: No functions or classes. Direct sequential script with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, plt, np, FancyArrowPatch.'
+        comment: 'All imports used: pyplot, numpy, patheffects, FancyArrowPatch, FormatStrFormatter,
+          os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No fake UI elements.
+        comment: No fake UI. sys.path manipulation to avoid shadowing matplotlib is
+          correct defensive pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
-          3.10.8 API.
+        comment: plot-{THEME}.png. No bbox_inches='tight'. subplots_adjust used correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes methods throughout. gridspec_kw, subplots_adjust, plt.setp,
+          fig.suptitle all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Consistently uses Axes methods, gridspec_kw, plt.setp for legend
-          text, zorder management. Missing advanced idioms like ticker formatters.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: FancyArrowPatch, fill_between, axvspan, axhline, axvline are matplotlib-characteristic.
-          Could push further with tick formatters or patheffects.
-  verdict: REJECTED
+        comment: FancyArrowPatch with arrowstyle '<->', patheffects.withStroke, fill_between
+          are genuinely distinctive matplotlib capabilities used purposefully.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -263,3 +251,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
