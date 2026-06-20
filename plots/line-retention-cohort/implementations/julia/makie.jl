@@ -113,7 +113,7 @@ hlines!(ax, [20.0];
 text!(ax, "20% target";
     position = (11.5, 22.0),
     align    = (:right, :bottom),
-    fontsize = 11,
+    fontsize = 12,
     color    = INK_MUTED,
 )
 
@@ -127,7 +127,7 @@ axislegend(ax;
     framevisible    = true,
     framewidth      = 0.8,
     labelcolor      = INK,
-    labelsize       = 11,
+    labelsize       = 12,
     rowgap          = 4,
     padding         = (8, 8, 6, 6),
     margin          = (4, 4, 4, 4),
