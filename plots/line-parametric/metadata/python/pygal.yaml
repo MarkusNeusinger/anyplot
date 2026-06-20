@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-parametric
 created: '2026-03-20T10:39:29Z'
-updated: '2026-06-20T22:56:27Z'
+updated: '2026-06-20T23:11:24Z'
 generated_by: claude-sonnet
 workflow_run: 27886135547
 issue: 4424
@@ -12,124 +12,140 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-para
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 82
 review:
   strengths:
-  - Correct Imprint palette in full canonical order across all 8 series; perfect theme-adaptive
-    chrome in both renders.
-  - Creative use of 4-colour-segment encoding to show the direction of parametric
-    traversal — a genuine storytelling technique.
-  - 'Perfect code quality: deterministic, KISS structure, clean imports, correct output
-    filenames.'
-  - Square canvas chosen correctly for a symmetric parametric plot; balanced margins
-    and readable legend layout.
+  - 'Imprint palette applied correctly in canonical order across all 8 series with
+    #009E73 as first series'
+  - Clever traversal-direction encoding via color-coded segments (4 colours per curve,
+    cool-to-warm progression)
+  - Solid vs. dashed line styles provide redundant encoding to disambiguate the two
+    curve families
+  - Both light (#FAF8F1) and dark (#1A1A17) backgrounds are theme-correct and all
+    chrome is fully theme-adaptive
+  - All font sizes are explicitly set to style-guide values (title=66, labels=56,
+    ticks=44, legend=44)
+  - Code is clean KISS structure with idiomatic pygal XY usage and proper themed output
+    files
+  - Start/end traversal markers add directional context beyond colour alone
+  - Deterministic mathematical data requires no random seed
   weaknesses:
-  - Missing the spiral curve required by spec (x = t·cos(t), y = t·sin(t)). Replace
-    the rose curve with the spiral, or add it as a third curve. Normalise spiral coordinates
-    to [-1,1] by dividing by (2π) so it fits the same axis range.
-  - No explicit start/end point markers for traversal direction. Add a filled dot
-    marker at t=0 (start) and a different marker or small arrow annotation at t=2π
-    (end) for each curve.
-  - '8 colour-only series at CVD discrimination floor — add secondary encoding: use
-    dashed lines (stroke_style={"dasharray": "10, 5"}) for one curve family to provide
-    non-colour disambiguation.'
+  - Asymmetric margins (margin_top=60, margin_bottom=440, margin_left=80, margin_right=60)
+    on a square canvas cause the plot area to be non-square (~2260×1900 px), distorting
+    the parametric curves — the Lissajous and spiral both appear slightly squished
+    vertically. Equal aspect ratio requires equal pixel extent in x and y; fix by
+    either (a) reducing margin_bottom closer to the space actually needed by the legend,
+    (b) computing legend height and adjusting top margin to compensate, or (c) accepting
+    a landscape canvas (3200×1800) and using more of the horizontal space
+  - Start/end traversal markers (the ● and ◆ series) render as the default pygal dot
+    size which is quite small relative to the thick curve lines (stroke_width=10).
+    They are technically visible but lack emphasis — consider using a larger explicit
+    dot size or separate annotation to make them stand out as directional anchors
+  - 'DE-02 visual refinement is limited by pygal defaults: the box frame (4 spines)
+    and dot-grid pattern are stock pygal chrome. Consider reducing the grid to horizontal
+    lines only (show_x_guides=False, show_y_guides=True) or tweaking foreground_subtle
+    opacity to make the grid more subtle'
+  - 'VQ-04 concern: with 8 categorical colours all visible simultaneously on one chart,
+    CVD discrimination is near its floor (ΔE_CVD ≈ 8.81 at n=8). The solid/dashed
+    family distinction helps, but within each 4-segment family colour is the only
+    discriminator. A legend note or direct label would reduce CVD reliance'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "line-parametric · python · pygal · anyplot.ai" at top, ~65-70% canvas width, fully visible. X-axis label "Horizontal Position x(t)" and Y-axis label "Vertical Position y(t)" proportionally sized and clearly readable. Tick labels (-1.2 to 1.2) readable in dark ink. Legend at bottom in 2 columns, all 8 entries fully legible.
-      Data: Two parametric curves — Lissajous (3,2) in 4 segments using Imprint palette positions 1-4 (brand green #009E73, lavender, blue, ochre); four-petal rose curve in 4 segments using positions 5-8 (matte red, cyan, rose, lime). First series is #009E73 ✓. Subtle grid lines on warm background. Stroke width clearly visible.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-parametric · python · pygal · anyplot.ai" in dark ink at top — readable, occupies ~55% of width at the correct fontsize=66. Y-axis label "Vertical Position y(t)" and X-axis label "Horizontal Position x(t)" are clearly visible in dark ink. Tick labels (-1.2 to 1.2 on both axes) are legible at major_label_font_size=44. Grid is a subtle dot-grid pattern on warm-off-white.
+      Data: Two parametric curves plotted. First Lissajous segment is brand green (#009E73) — correct. Remaining Lissajous segments progress through lavender (#C475FD), blue (#4467A3), ochre (#BD8233). Spiral segments use red (#AE3030), cyan (#2ABCCD), rose (#954477), lime (#99B314). Lissajous uses solid lines; spiral uses dashed lines — good redundant encoding. Small dot markers visible near origin (Start) and at ~(1,0) (Spiral end). Legend at bottom in 2-column layout, all labels readable.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all rendered in light-coloured text against dark background. No dark-on-dark failures observed. Grid lines subtle against dark surface.
-      Data: Data colours are identical to light render — brand green, lavender, blue, ochre, matte red, cyan, rose, lime in same segment order. Curves clearly distinguishable against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8) — clearly visible on dark background. Tick labels are light-coloured and readable. Grid lines are subtly visible. Legend text is light on dark — readable.
+      Data: All 8 data colours are identical to the light render — green, lavender, blue, ochre (Lissajous), red, cyan, rose, lime (spiral). Solid vs dashed distinction is maintained. No dark-on-dark text issues observed; all labels flip correctly to light chrome.
+      Legibility verdict: PASS — all text is readable against the dark background; brand green #009E73 remains clearly visible; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 66, label 56, major_label 44,
-          legend 44). Title fills ~65% width on square canvas. All text readable in
-          both themes.
+        comment: 'All font sizes explicitly set matching style-guide values; all text
+          readable in both themes. Minor deduction: bottom empty-space margin slightly
+          disproportionate.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text or element overlap; 2-column legend is well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: stroke_width=10 produces clear, well-visible lines. 800 points renders
-          smooth curves.
+        comment: Curve lines are well-visible at stroke_width=10. Start/end marker
+          dots are quite small relative to the thick lines, reducing emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: false
-        comment: Imprint palette is CVD-designed but at n=8 series the palette is
-          at the discrimination floor (ΔE_CVD ≈ 8.81). No redundant linestyle encoding
-          to differentiate curve families.
+        passed: true
+        comment: Solid/dashed redundant encoding helps distinguish curve families,
+          but 8 simultaneous categorical colours is at CVD discrimination floor.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for symmetric parametric plot. Plot
-          area ~70% of canvas, balanced margins, clean bottom legend.
+        comment: Good overall layout. Asymmetric margins (bottom=440 for legend) make
+          the actual plot area non-square on a 2400×2400 canvas, introducing mild
+          curve distortion.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Horizontal Position x(t) and Vertical Position y(t) are descriptive
-          with notation.
+        comment: 'Descriptive labels with parameter notation: ''Horizontal Position
+          x(t)'' and ''Vertical Position y(t)''. Correct title format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. All 8 segments follow Imprint canonical
-          order. Background #FAF8F1 (light) / #1A1A17 (dark). Data colours identical
-          across themes. Chrome theme-correct in both renders.'
+        comment: 'Imprint palette in canonical order; first series #009E73; backgrounds
+          #FAF8F1 / #1A1A17; theme-adaptive chrome; data colours identical across
+          themes.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Custom Imprint palette with theme-adaptive chrome and creative 4-segment
-          traversal encoding. Reads as well-configured library default rather than
-          publication-ready.
+        passed: true
+        comment: 'Above a plain library default: colour-coded traversal segments are
+          an intentional and visually interesting design choice. Overall look is still
+          standard pygal rather than publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Grid subtle and appropriate. show_dots=False keeps lines clean. Pygal
-          cannot remove spines on XY charts. Slightly above minimal default.
+        passed: true
+        comment: Explicit margins and font sizes, thoughtful legend placement, but
+          stock pygal box frame (4 spines) and dot-grid pattern remain.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 4-segment colour gradient per curve effectively communicates traversal
-          direction. However two curves look visually similar in complexity; design
-          doesn't guide viewer to notice mathematical differences.
+        passed: true
+        comment: Colour gradient effectively communicates traversal direction; solid
+          vs dashed encodes curve family. Viewer can trace the journey of each curve
+          from start to end.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,55 +153,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot using pygal.XY with stroke=True.
+        comment: Correct parametric XY plot with two distinct curve types.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Spiral (required by spec) replaced with rose curve. No explicit start/end
-          markers — colour segments imply direction but don't satisfy the labeling
-          requirement. Equal aspect ratio achieved via square canvas + equal ranges.
+        passed: true
+        comment: Colour gradient for direction, two curves, start/end markers all
+          present. Equal aspect ratio not enforced — asymmetric margins distort the
+          equal-range axes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) -> X axis, y(t) -> Y axis, equal range [-1.2, 1.2].
+        comment: x(t) and y(t) correctly mapped; both curves visible within axis bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'line-parametric · python · pygal · anyplot.ai' (correct
-          mandatory format). Legend labels are descriptive segment names.
+        comment: Title matches required format. Legend labels are descriptive and
+          accurately represent each curve segment.
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 5
         max: 6
-        passed: false
-        comment: Shows two parametric curves with colour-encoded traversal. Missing
-          spiral which would demonstrate unbounded outward growth — a qualitatively
-          different behaviour from the two bounded closed curves shown.
+        passed: true
+        comment: Shows closed curve (Lissajous), open spiral, traversal direction,
+          and start/end markers. Could show self-intersection behaviour more explicitly.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Lissajous figures and rose curves are classical mathematical curves
-          with real-world physics and engineering applications. Neutral, educational
-          context.
+        comment: Well-known mathematical curves used in real-world physics (signal
+          analysis, antenna design). Educational/scientific context is neutral and
+          appropriate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous (3,2) parametrisation mathematically correct. Rose curve
-          bounded in [-1,1]. Axis padding to [-1.2, 1.2] appropriate.
+        comment: Both curves normalised to [-1, 1] range with appropriate padding
+          to [-1.2, 1.2]; spiral radius correctly reaches 1.0 at t=2pi.
     code_quality:
       score: 10
       max: 10
@@ -195,53 +210,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: imports → tokens → data → style → chart →
-          add series → save.'
+        comment: 'Clean linear structure: imports, constants, data, chart, series
+          addition, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data from np.linspace; deterministic, no random seed needed.
+        comment: Fully deterministic from mathematical formulas; no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style — all used, nothing extraneous.
+        comment: Only os, numpy, pygal, and Style imported — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Segment loops are concise and DRY. stroke_style in chart.add() is
-          idiomatic.
+        comment: Loop-based segment addition is clean; list comprehensions for data
+          are appropriate; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png; current
+          API used.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct use of pygal.XY with stroke mode, Style object, formatters,
-          legend_at_bottom_columns. Competent but doesn't showcase library depth.
+        passed: true
+        comment: 'Correct XY chart with dict-style {value: (x,y)} data format, Style
+          object, stroke_style dict, js=[], xrange/range bounds, legend column control.
+          Slightly below perfect idiomatic due to minor non-standard options.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generates interactive HTML alongside PNG (pygal's core capability).
-          Uses legend_at_bottom_columns and SVG-native stroke_style dict per series.
-          No deeper pygal-specific features (secondary_range, min/max_scale, etc.).
-  verdict: REJECTED
+        passed: true
+        comment: Uses SVG stroke_style with dasharray/linecap/linejoin directly in
+          pygal's XY API, js=[] for headless PNG rendering, truncate_legend=-1 — pygal-specific
+          features not easily replicated in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
