@@ -88,6 +88,7 @@ new Chart(canvas, {
                 labels: { color: t.inkSoft, font: { size: 14 }, boxWidth: 22, padding: 16 },
             },
         },
+        layout: { padding: { top: 10, bottom: 10, left: 10, right: 20 } },
         scales: {
             x: {
                 ticks: {
@@ -96,7 +97,8 @@ new Chart(canvas, {
                     maxRotation: 30,
                     minRotation: 0,
                 },
-                grid: { color: t.grid },
+                grid: { display: false },
+                border: { display: false },
                 title: {
                     display: true,
                     text: 'Defect Category',
@@ -109,6 +111,7 @@ new Chart(canvas, {
                 beginAtZero: true,
                 ticks: { color: t.inkSoft, font: { size: 14 } },
                 grid: { color: t.grid },
+                border: { display: false },
                 title: {
                     display: true,
                     text: 'Defect Count',
@@ -128,6 +131,7 @@ new Chart(canvas, {
                     callback: (v) => v + '%',
                 },
                 grid: { drawOnChartArea: false },
+                border: { display: false },
                 title: {
                     display: true,
                     text: 'Cumulative Percentage',
