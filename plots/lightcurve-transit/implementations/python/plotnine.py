@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -133,7 +133,7 @@ plot = (
         "segment", x=0.54, xend=0.54, y=1.0, yend=min_model, color=INK_MUTED, size=0.5, linetype="dashed", alpha=0.7
     )
     + annotate("text", x=0.08, y=1.0005, label="Baseline", size=2.5, color=INK_MUTED, fontstyle="italic")
-    + labs(x="Orbital Phase", y="Relative Flux", title="lightcurve-transit · plotnine · anyplot.ai")
+    + labs(x="Orbital Phase", y="Relative Flux", title="lightcurve-transit · python · plotnine · anyplot.ai")
     + scale_x_continuous(breaks=np.arange(0, 1.1, 0.1))
     + scale_y_continuous(labels=lambda lst: [f"{v:.3f}" for v in lst])
     + theme_minimal()
