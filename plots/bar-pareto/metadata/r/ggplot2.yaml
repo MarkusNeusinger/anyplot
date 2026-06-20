@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: bar-pareto
+created: '2026-06-20T17:01:29Z'
+updated: '2026-06-20T17:21:14Z'
+generated_by: claude-sonnet
+workflow_run: 27877737903
+issue: 4550
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: all Pareto chart requirements implemented correctly
+    (descending sort, cumulative line, dual y-axis, 80% threshold, markers at bar
+    tops)'
+  - Sophisticated dual-legend using separate fill + color scales with guide_legend(override.aes)
+    — a distinctively idiomatic ggplot2 pattern
+  - 'Excellent data: manufacturing defect scenario with realistic Pareto distribution
+    that exactly demonstrates the 80/20 principle'
+  - Theme adaptation works correctly in both renders with no dark-on-dark or light-on-light
+    failures
+  - Right y-axis label colored to match the cumulative line — intentional and sophisticated
+    design detail
+  weaknesses:
+  - Annotation text at size=2.6 (geom annotation mm scale, approx 7.4 pt) is slightly
+    small; could be raised to 3.0-3.2 for better readability when the plot is displayed
+    at smaller viewport widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Manufacturing Defects · bar-pareto · r · ggplot2 · anyplot.ai" fully visible in dark ink across ~80% of canvas width. Axis labels ("Defect category", "Defect count", "Cumulative percentage (%)") in dark ink, clearly readable. X-axis tick labels rotated ~32°, all readable. Left y-axis ticks in dark secondary ink. Right y-axis ticks and label colored in blue #4467A3 (data color, not chrome — correct). Legend at bottom readable with elevated #FFFDF6 background.
+      Data: Bars in brand green #009E73. Cumulative line in blue #4467A3 with circular markers. Amber #DDCC77 dashed threshold line at 80% level. Amber annotation "Top 2 → 80% of defects" above threshold line. First series is #009E73 as required.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light #F0EFE8, fully visible. Axis labels and tick labels in light secondary #B8B7B0, all clearly readable. Right y-axis title and ticks colored in blue #4467A3 (data color retained — correct). Legend text in light secondary tone. No dark-on-dark failures detected anywhere.
+      Data: Bars remain brand green #009E73 (identical to light render). Cumulative line remains blue #4467A3 (identical). Amber threshold #DDCC77 remains identical. Data colors are unchanged between themes — only chrome flips.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures, brand green #009E73 clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=12, axes=10, ticks=7.5-8, legend=8).
+          Both renders fully readable. Minor: annotation text at size=2.6 (~7.4pt)
+          is slightly small.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; 32-degree x-axis rotation prevents label
+          collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, cumulative line (linewidth=1.3), markers (size=3.5), and threshold
+          line all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-optimised; redundant encoding (bars vs line
+          vs dashed) reinforces distinguishability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well; balanced
+          margins; legend at bottom properly anchored.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Defect category, Defect count, Cumulative percentage (%) — descriptive
+          with implied units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bars use #009E73 (position 1). Cumulative line uses #4467A3 (position
+          3, blue — semantic for analytical reference). Amber #DDCC77 used correctly
+          as warning/threshold anchor. Backgrounds #FAF8F1/#1A1A17 correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Right y-axis label colored to match cumulative line — sophisticated
+          detail. Amber threshold with annotation demonstrates color intentionality.
+          Above library default (4) but short of publication-level (6).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; Y-only grid at 12% opacity; rotated x-tick
+          labels; elevated legend background; subtle tick styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation explicitly surfaces Pareto insight. Amber threshold line
+          draws eye to 80% mark. Descending bars + ascending cumulative line naturally
+          guide reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Pareto chart: descending bars + cumulative percentage line
+          + secondary y-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: descending sort, cumulative line, secondary
+          y-axis 0-100%, 80% reference line, markers at bar center-top, primary axis
+          for raw counts.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: categories; primary Y: raw counts; secondary Y: cumulative percentage.
+          All axes correct.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: Manufacturing Defects · bar-pareto · r · ggplot2 · anyplot.ai
+          (valid descriptive prefix). Legend: Defect count, 80% threshold, Cumulative
+          % — correctly labeled.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 categories with clear Pareto distribution; first two drive ~80%
+          of defects; long tail clearly visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing defect categories (Surface Scratches, Misalignment,
+          Paint Defects, Weld Flaws, etc.) are realistic, neutral, appropriate for
+          Six Sigma context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts (500, 300, 80, 55, 30, 18, 10, 7) produce realistic Pareto
+          curve; first two categories sum to exactly 80% of total.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: Imports -> Tokens -> Data -> Plot -> Save. No
+          functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data; no random generation, no seed
+          required.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (ggplot2, dplyr, scales, ragg) actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R with native pipe (|>); no over-engineering; no
+          fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) for correct output naming; linewidth=
+          (not deprecated size=) used; ragg::agg_png device explicit.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Grammar of graphics used expertly: proper aes() mappings, scale_fill_manual
+          + scale_color_manual for independent legend tracks, expansion() for axis
+          padding, sec_axis() for dual axis.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sec_axis(~ . / total_count * 100) (ggplot2-only secondary axis transform)
+          and guide_legend(override.aes = list(linetype, shape, linewidth)) (ggplot2-specific
+          legend customization) — distinctively ggplot2 features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
