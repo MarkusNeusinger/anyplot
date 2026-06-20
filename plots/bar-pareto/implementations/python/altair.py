@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-06-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-20
 """
 
 import os
