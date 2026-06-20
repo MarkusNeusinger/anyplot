@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: lightcurve-transit
 created: '2026-06-20T07:54:46Z'
-updated: '2026-06-20T08:00:09Z'
+updated: '2026-06-20T08:09:49Z'
 generated_by: claude-sonnet
 workflow_run: 27864622443
 issue: 4559
@@ -12,97 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present — error bars, model overlay,
-    phase-folded data, downward transit dip'
-  - 'Excellent palette compliance: brand green (position 1) for photometry, lavender
-    (position 2) for model, correct backgrounds and theme-adaptive chrome in both
-    renders'
-  - 'Well-considered z-order: error bars → scatter → model ensures the most important
-    element is always on top'
-  - Semi-transparent error bars (alpha=0.28) and scatter (alpha=0.60) prevent clutter
-    without losing information density
-  - Both light and dark renders are fully readable with no dark-on-dark or light-on-light
-    failures
+  - 'Full Imprint palette compliance: brand green (#009E73) for photometry, lavender
+    (#C475FD) for model — correct two-series ordering'
+  - Both themes render correctly — warm off-white (#FAF8F1) light, near-black (#1A1A17)
+    dark, all chrome tokens (INK, INK_SOFT) applied throughout axis labels, ticks,
+    spines, and legend
+  - 'All required spec features present: phase-folded scatter with error bars, smooth
+    transit model overlay, baseline reference line, and contact-point vertical markers'
+  - 'Scientifically realistic data: ~1.2% transit depth, realistic noise floor (~0.18%),
+    appropriate phase range (-0.25 to 0.25), 400 observations'
+  - 'Idiomatic CairoMakie layer composition: errorbars! rendered before scatter! ensures
+    correct draw order; axislegend with ELEVATED_BG frame is polished'
+  - Semi-transparent alpha on photometry points (0.60) and error bars (0.28) — appropriate
+    for 400-point density, prevents overplotting while keeping data visible
   weaknesses:
-  - Scatter marker size (markersize=7) is slightly small for 400 medium-density points;
-    8–9 would give better visibility without overplotting
-  - The transit_model named function technically violates KISS — could be replaced
-    with an inline expression for flat-script style
-  - No additional data storytelling layer (e.g., a flux=1.0 reference line, transit
-    depth annotation, or contact-point markers) to push DE-03 higher
-  - The lavender model line blends into the light-theme plot area near flux=1.0 against
-    the dense scatter; a slightly increased linewidth (e.g., 4.0) would improve separation
+  - transit_model function defined at top level — CQ-01 requires flat KISS structure
+    (no functions/classes); inline the quadratic trapezoid model directly in the data
+    generation block
+  - 'LM-02 moderate: uses Makie correctly but doesn''t leverage a distinctive feature
+    unavailable in other libraries (e.g., Observable-driven reactivity isn''t shown,
+    or a Makie-specific recipe). Could use Makie''s Band! for a shaded uncertainty
+    region around the model curve as a distinctive visual touch.'
+  - 'DE-01/DE-03 could be stronger: the contact-point vlines are semi-transparent
+    and understated — making the ingress/egress region more visually distinct (e.g.,
+    a shaded Band between first/fourth contact and second/third contact) would enhance
+    the storytelling about transit geometry'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Exoplanet Transit · lightcurve-transit · julia · makie · anyplot.ai" in dark ink (#1A1A17), bold, spans ~70–75% of plot width. Axis labels "Orbital Phase" and "Relative Flux" in dark ink (#1A1A17), tick labels in INK_SOFT (#4A4A44). All text readable. L-shaped spines (top/right removed), subtle horizontal y-grid only, legend box with ELEVATED_BG fill in bottom-right.
-      Data: 400 scatter points in brand green (#009E73, 60% alpha) with semi-transparent green error bars (28% alpha). Lavender (#C475FD) transit model line at linewidth=3.5 overlaid. Transit dip at phase=0.0 clearly visible, reaching ~1.2% flux depth.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Exoplanet Transit · lightcurve-transit · julia · makie · anyplot.ai" in dark ink, spans ~65% of width; "Orbital Phase" (x-axis) and "Relative Flux" (y-axis) labels in dark ink; tick labels in INK_SOFT dark gray. All text clearly readable.
+      Data: Brand green (#009E73) scatter points with semi-transparent error bars for 400 photometry observations; lavender (#C475FD) model curve at linewidth=4 clearly overlaid; dashed baseline at flux=1.0; subtle vertical dashed/dotted contact lines near ±0.036 and ±0.022 phase.
+      Layout: Transit dip clearly centered at phase 0.0 with ~1.2% depth; legend bottom-right with ELEVATED_BG frame.
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in light cream (#F0EFE8 = INK dark), clearly readable against near-black. Axis labels in same light cream tone. Tick labels in INK_SOFT dark (#B8B7B0). No dark-on-dark failures — all chrome correctly flips to light tokens. Legend box with ELEVATED_BG dark fill (#242420) and INK_SOFT frame.
-      Data: Data colors identical to light render — brand green scatter (#009E73) with lavender model line (#C475FD). Imprint palette positions 1 and 2 are theme-invariant as required.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels in light cream (#F0EFE8); tick labels in #B8B7B0 (INK_SOFT dark). All text clearly readable against dark background. No dark-on-dark failures detected.
+      Data: Data colors identical to light render — same brand green scatter points, same lavender model curve. Chrome-only flip confirmed.
+      Layout: Same transit structure as light render; legend bottom-right with dark elevated background (#242420).
+      Legibility verdict: PASS — all text readable, brand green remains visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 20pt, axis labels 14pt, tick
-          labels 12pt). Title spans ~70-75% of plot width — expected for long anyplot
-          format. Readable in both themes. Minor: tick labels could be 1-2pt larger
-          for mobile readability.'
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
+          xticklabelsize=12, yticklabelsize=12); proportional in both renders; no
+          overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Natural scatter+errorbars overlap in dense transit
-          core is physically correct and not a layout defect.
+        comment: No text overlaps with data or other elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: markersize=7 with alpha=0.60 for 400 points is adequate but slightly
-          small; 8-9 would improve visibility. Error bars at alpha=0.28 recede appropriately.
-          Model line at linewidth=3.5 is prominent.
+        comment: Scatter markersize=9 with alpha=0.60 is well-adapted for 400 points;
+          error bars slightly crowded in transit region but appropriate for the domain
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green and lavender are CVD-safe Imprint positions 1 and 2.
+        comment: Green and lavender are perceptually distinct; Imprint palette is
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). L-shape spines, y-grid only, generous
-          whitespace, legend in bottom-right clear of data. No overflow or clipping.
+        comment: Plot fills ~80% of canvas; balanced margins; legend positioned bottom-right
+          without overlapping data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive and correct for the
-          domain.
+        comment: '''Orbital Phase'' and ''Relative Flux'' are descriptive scientific
+          labels'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73 (brand green). Model = #C475FD (Imprint position
-          2). Backgrounds #FAF8F1/#1A1A17. All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73 (brand green), second #C475FD (lavender, Imprint
+          position 2); backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive'
     design_excellence:
       score: 13
       max: 20
@@ -112,24 +117,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: alpha-blended error bars behind scatter behind
-          model — deliberate z-order. Dual encoding (scatter + model) executed cleanly.
-          Missing further refinements (flux=1.0 reference line, contact-point markers).'
+        comment: 'Above defaults: layered semi-transparent scatter + model overlay
+          + reference lines is intentional design. Clean scientific aesthetic but
+          not yet FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Y-axis-only grid at low opacity. Clean
-          whitespace. Legend with ELEVATED_BG fill and frame colour.
+        comment: Top/right spines removed, subtle y-only grid at 0.12 opacity, legend
+          with elevated frame. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transit dip at phase=0 is unambiguous focal point. Contrast between
-          noisy scatter and smooth model effectively tells transit detection story.
-          Annotations or contact markers would elevate further.
+        comment: Model curve creates clear focal point at phase 0.0; baseline reference
+          contextualizes the dip. Visual hierarchy is present.
     spec_compliance:
       score: 15
       max: 15
@@ -139,30 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter with error bars + model overlay, phase-folded light
-          curve.'
+        comment: 'Correct: phase-folded scatter + error bars + model overlay'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars on every data point, smooth transit model curve overlaid,
-          data phase-folded, transit dip going downward.
+        comment: Error bars, smooth model curve, phase folding, flux downward transit
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Orbital Phase, Y: Relative Flux. All 400 data points visible
-          across full phase range.'
+        comment: Phase on X, relative flux on Y, all 400 points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches optional {Descriptive Title} · {spec-id} · {lang} ·
-          {lib} · anyplot.ai format. Legend labels Photometry and Transit Model are
-          clear.
+        comment: Title 'Exoplanet Transit · lightcurve-transit · julia · makie · anyplot.ai'
+          matches {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai format;
+          legend labels 'Photometry' and 'Transit Model' are accurate
     data_quality:
       score: 15
       max: 15
@@ -172,24 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all aspects: photometric scatter, measurement uncertainties,
-          fitted model, phase-folded observation window, realistic transit dip depth
-          and shape.'
+        comment: Shows photometry scatter, error bars, transit dip, out-of-transit
+          baseline, model overlay, contact points — comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Scientifically plausible: ~1.2% flux depth, noise sigma 0.0018,
-          variable per-point error bars, 400 observations. Exoplanet transit is neutral
-          domain.'
+        comment: Simulated Kepler/TESS-style exoplanet photometry — very real astronomical
+          scenario, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Phase range -0.25 to 0.25 appropriate for transit window. Flux range
-          ~0.985-1.006 physically correct for stated depth and noise.
+        comment: ~1.2% transit depth, noise ~0.18%, phase range -0.25 to 0.25 — all
+          physically realistic values
     code_quality:
       score: 9
       max: 10
@@ -199,57 +199,56 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: transit_model function is the sole abstraction — justified but technically
-          violates flat-script KISS. Could be inlined.
+        comment: Has a transit_model function — KISS requires flat structure with
+          no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: using CairoMakie, Colors, Random — all three used.
+        comment: CairoMakie, Colors, Random — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, commented, no fake UI, appropriate complexity.
+        comment: Idiomatic Julia broadcasting, clean layer composition, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2.
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2) — correct
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correctly uses errorbars!, scatter!, lines!, axislegend, Figure/Axis
-          construction, RGBAf for grid color — all idiomatic CairoMakie patterns.
+        comment: Uses scatter!, errorbars!, lines!, hlines!, vlines!, axislegend —
+          all native CairoMakie idioms; RGBAf for alpha; correct bang-function composition
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses errorbars! (Makie-native) and layered geometry model. Could
-          further exploit band! for shaded error envelope or vlines! for transit contact
-          markers.
+        passed: true
+        comment: errorbars! is Makie-native (not available in all libs); layer ordering
+          for draw priority; RGBAf alpha — some Makie-specific features but could
+          go further (e.g., Band! for uncertainty region)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   dataprep: []
