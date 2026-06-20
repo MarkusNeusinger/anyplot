@@ -1,42 +1,54 @@
 library: plotnine
+language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:43:39Z'
-updated: '2026-03-19T22:03:52Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318228568
+updated: '2026-06-20T15:29:29Z'
+generated_by: claude-sonnet
+workflow_run: 27874801704
 issue: 4552
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Semantic color palette with clear meaning (red=limits, teal=target, blue=data)
-    creates immediate understanding
-  - Data storytelling through deliberately shifted mean demonstrating Cp vs Cpk difference
-  - Green specification zone provides excellent visual context for process capability
-  - Clean plotnine grammar-of-graphics layer composition with idiomatic features (after_stat,
-    stat_function)
-  - Comprehensive annotation box with Cp, Cpk, μ, σ statistics
+  - 'Semantic Imprint palette application: green histogram, red spec limits, blue
+    target, neutral curve — each color choice has clear justification'
+  - stat_function for the normal PDF overlay is idiomatic plotnine grammar-of-graphics
+    rather than a manual geom workaround
+  - Spec zone translucent shading (geom_rect with alpha=0.07) adds visual context
+    without cluttering; ymax=peak_density*3.0 + coord_cartesian clipping elegantly
+    avoids abrupt upper boundary artifact
+  - Full theme-adaptive chrome with all relevant tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT) applied to both renders correctly
+  - Intentional mean offset (10.008 vs target 10.00) creates a realistic data narrative
+    where Cp!=Cpk, illustrating the real-world distinction between process spread
+    and process centering
   weaknesses:
-  - Annotation text sizes (12-13pt) slightly smaller than ideal relative to axis text
-    (16pt)
-  - Green spec zone upper boundary creates a slightly abrupt visual edge
-  image_description: 'The plot displays a process capability histogram of shaft diameter
-    measurements (mm) with 25 blue semi-transparent bars overlaid by a dark navy fitted
-    normal distribution curve. Red dashed vertical lines mark LSL (9.95) and USL (10.05)
-    with bold red labels at the top. A teal dash-dot vertical line marks the Target
-    at 10.00. A light green shaded zone spans the specification range between LSL
-    and USL. An annotation box in the upper right displays Cp = 1.49, Cpk = 1.27,
-    μ = 10.0075, σ = 0.0112 with a light gray background. The distribution is visibly
-    centered slightly above the target, demonstrating the difference between Cp and
-    Cpk. X-axis: "Shaft Diameter (mm)" with ticks from 9.94 to 10.06. Y-axis: "Density".
-    Title: "histogram-capability · plotnine · pyplots.ai" in bold. White background
-    with subtle horizontal gridlines only.'
+  - Annotation text for LSL, USL, Target labels and stats box values (size=4.0 plotnine
+    mm) is somewhat small; consider increasing to 4.5-5.0 for better mobile readability
+    at thumbnail sizes
+  - Design excellence ceiling limited by purely functional chart nature; a subtle
+    amber (#DDCC77) annotated reference at Cpk=1.33 (standard capable-process threshold)
+    would add meaningful data storytelling for quality engineers
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "histogram-capability · python · plotnine · anyplot.ai" in dark INK, clearly readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Density" in dark INK. Tick labels in INK_SOFT (#4A4A44), fully legible. Subtle horizontal grid lines at alpha=0.15.
+      Data: Green (#009E73) histogram bars (25 bins, density scale), peak density ~40 near diameter 10.01. Black normal distribution curve overlaid. Red (#AE3030) dashed LSL and USL vertical lines with inline "LSL" and "USL" text labels. Blue (#4467A3) dash-dot Target line with labeled box. Stats box upper-right: Cp=1.49, Cpk=1.27, mu=10.0075, sigma=0.0112. Soft green spec-zone shading (alpha=0.07) between LSL and USL.
+      Legibility verdict: PASS — all text readable; annotation text slightly small but acceptable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 ink, clearly readable. Axis labels in INK (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0), legible. Grid lines subtle and visible.
+      Data: Green (#009E73) histogram bars — identical hue to light render. Normal curve rendered in white/light ink (INK in dark mode = #F0EFE8), high contrast. Red (#AE3030) LSL/USL lines and blue (#4467A3) target line retain their Imprint palette colors — identical to light render. Stats box with elevated-dark fill (#242420) and light text. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable against dark background; data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,65 +56,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, axis titles 20pt, ticks
-          16pt). Annotation text at 12-13pt slightly small.
+        comment: Title, axis labels, ticks all legible in both themes. Annotation
+          text (LSL/USL/Target/stats box) at size=4.0 mm is readable at full res but
+          borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, no collisions
+        comment: All elements well-separated; stats box clear of histogram peak; inline
+          labels do not collide
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars well-sized, normal curve clearly visible, spec lines
-          distinct
+        comment: Green bars prominent, normal curve clearly overlaid, red/blue vertical
+          lines distinct, spec-zone shading adds context without competing
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic palette with redundant encoding via line styles and text
+          labels; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Colorblind-safe palette: red limits vs teal target, blue bars'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good 16:9 proportions. Green spec zone extends high creating slight
-          visual noise.
+        comment: Canvas gate passed (3200x1800), good proportions, balanced axis labels,
+          no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) with units, Density appropriate
+        comment: 'X: Shaft Diameter (mm) with units, Y: Density correct, title format
+          matches spec'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, LSL/USL #AE3030 semantic exception, Target
+          #4467A3, normal curve = INK neutral, backgrounds correct in both themes'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom semantic color palette, intentional hierarchy,
-          green spec zone adds professional context'
+        comment: Semantic color assignments, spec-zone translucent fill, theme-adaptive
+          chrome; held from higher by functional-chart nature
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: panel_border removed, x-grid removed, subtle y-only grid alpha=0.15,
+          axis margins set
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: minimal theme, x-gridlines removed, subtle y-gridlines, white
-          background. Spec zone edge slightly abrupt.'
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Good: shifted mean demonstrates Cp vs Cpk, green zone highlights
-          in-spec region, metric box provides quantitative insight'
+        comment: Intentional mean offset illustrates Cp!=Cpk, spec zone shading guides
+          eye, capability stats prominently shown
     spec_compliance:
       score: 15
       max: 15
@@ -112,25 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: histogram with fitted normal curve overlay'
+        comment: Histogram with overlaid fitted normal distribution — correct process
+          capability chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All present: histogram, normal curve, LSL/USL, target, Cp/Cpk annotations'
+        comment: Histogram, fitted normal curve via stat_function, LSL+USL lines,
+          target line, Cp+Cpk annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=measurements, Y=density, correct mapping
+        comment: 'X: diameter measurements, Y: density scale, correct axes, all 200
+          measurements represented'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, no legend needed for single series
+        comment: Title matches required format; no legend needed as inline annotations
+          replace it
     data_quality:
       score: 15
       max: 15
@@ -140,20 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects including Cp vs Cpk difference through shifted
-          mean
+        comment: Histogram, normal curve, LSL, USL, target, Cp, Cpk, mean, sigma —
+          all specification aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter measurements - real manufacturing scenario
+        comment: Shaft diameter measurements in mm with realistic tolerance, 200 measurements,
+          intentional mean offset, neutral industrial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic precision machining tolerances and capability values
+        comment: Cp=1.49, Cpk=1.27 are realistic indices; sigma=0.012 mm proportionate
+          to 0.10 mm tolerance
     code_quality:
       score: 10
       max: 10
@@ -163,49 +192,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, calculations, plot, save'
+        comment: No functions or classes; linear script flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; scipy.stats for norm.pdf
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity
+        comment: Clean layer composition, no fake UI, sys.path manipulation necessary
+          and commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert grammar-of-graphics usage: after_stat, stat_function, annotate
-          label'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses after_stat(), stat_function(), annotate label with padding -
-          distinctive ggplot2/plotnine features
+        comment: after_stat('density'), stat_function, geom_rect with inherit_aes=False,
+          coord_cartesian for clipping — highly idiomatic grammar-of-graphics
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_function, computed aesthetics via after_stat(), coord_cartesian
+          vs scale limits distinction shown
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -213,11 +243,9 @@ impl_tags:
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting

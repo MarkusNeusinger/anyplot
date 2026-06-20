@@ -1,0 +1,279 @@
+library: highcharts
+language: javascript
+specification_id: histogram-capability
+created: '2026-06-20T15:14:17Z'
+updated: '2026-06-20T15:32:27Z'
+generated_by: claude-sonnet
+workflow_run: 27874907855
+issue: 4552
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Full Imprint palette compliance: histogram uses brand green #009E73, normal fit
+    uses palette[1] #C475FD, and transparent background adapts correctly between light/dark
+    themes'
+  - 'Comprehensive spec coverage: histogram + fitted normal curve + LSL/USL dashed
+    lines + target dotted line + Cp/Cpk annotation box + out-of-spec plot bands all
+    present'
+  - Excellent deterministic data generation using LCG (seed=42) + Box-Muller transform
+    — meets the JS no-seeded-RNG requirement cleanly
+  - Strong Highcharts-idiomatic use of plotBands (out-of-spec shading), plotLines
+    with dashStyle/label, and chart.renderer for custom SVG annotation box
+  - 'Clear data storytelling: Cp/Cpk annotation box acts as focal point, plot bands
+    guide the eye to the in-spec zone, subtitle with n/mean/sigma provides quantitative
+    context'
+  weaknesses:
+  - 'DE-01 MODERATE (5/8): Design is above library defaults but not publication-ready
+    — consider removing top/right axis border lines (set xAxis.lineColor: ''transparent''
+    for top/right only via chart.plotBorderWidth: 0), adding a touch more whitespace
+    around the Cp/Cpk box'
+  - 'DE-02 MODERATE (3/6): Visual refinement is partial — x-axis grid removed and
+    bar borders removed are good, but axis lines on both sides are visible; consider
+    setting chart.plotBorderWidth: 0 to remove the chart area frame, and adjusting
+    legend margin for more breathing room'
+  - 'CQ-01 MINOR (2/3): Three helper functions (lcgNext, randn, normalPDF) deviate
+    from the KISS flat-code pattern, though they are justified for JS deterministic
+    data generation'
+  - 'VQ-01 MINOR (7/8): plotLine labels (LSL/USL at 13px) are slightly small relative
+    to axis label sizes (14-16px); consider increasing to 14px for consistency'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface
+      Chrome: Title "histogram-capability · javascript · highcharts · anyplot.ai" in dark ink (~#1A1A17) at 22px, clearly readable and fills ~75% of chart width. Subtitle "Shaft Diameter Measurements · n = 200 · Mean = 10.0037 mm · σ = 0.0121 mm" in softer ink at 14px, readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Count" both in inkSoft at 16px. Tick labels (9.92–10.08 on x-axis, 0–60 on y-axis) in inkSoft at 14px, all readable. LSL/USL labels in red (#AE3030) at 13px, Target label in ochre (#BD8233) at 13px — all readable. Cp/Cpk annotation box (upper-right) with elevated background, border, and ink-colored text at 15px — clearly readable. Legend at bottom with "Measurements" and "Normal Fit" labels in inkSoft at 14px, readable.
+      Data: 20-bin histogram in brand green (#009E73) centered around 10.003 mm. Smooth normal distribution curve in lavender/purple (#C475FD, palette[1]) overlaid. Red dashed vertical lines (LSL at 9.95, USL at 10.05). Amber dotted vertical line (Target at 10.00). Subtle red-tinted plot bands outside spec limits.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light ink (~#F0EFE8) — clearly readable against dark background. Subtitle in lighter gray (inkSoft) — readable. Both axis titles in appropriate light colors at 16px — readable. Tick labels in light gray — readable. LSL/USL labels retain their red color (#AE3030) — visible against dark background. Target label in ochre (#BD8233) — visible. Cp/Cpk box uses elevated dark background (#242420) with light text — readable. Legend labels in light gray — readable. No dark-on-dark failures observed.
+      Data: Histogram bars in same brand green (#009E73) — IDENTICAL to light render. Normal fit curve in same lavender/purple (#C475FD) — IDENTICAL to light render. LSL/USL/Target lines in same colors — IDENTICAL to light render. All data colors unchanged between themes.
+      Legibility verdict: PASS — all text is clearly readable against the warm near-black background; brand green #009E73 remains visible and identifiable on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis titles 16px, tick/legend
+          14px, annotation 15px). Well-proportioned in both themes. Minor: plotLine
+          labels (LSL/USL/Target) at 13px slightly small vs 14-16px elsewhere.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlap. LSL/USL/Target labels positioned without
+          crowding. Cp/Cpk box clear of USL label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram bars clearly visible, normal fit curve well-defined, spec
+          limit lines visible with dashed/dotted styles. Plot bands add context without
+          obscuring data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green bars vs purple curve have good hue separation under CVD. LSL/USL
+          lines distinguished from Target by linestyle (dashed vs dotted) in addition
+          to color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no gate file). Good proportions, balanced margins,
+          histogram fills plot area appropriately. Plot bands extend meaningfully
+          to show out-of-spec zones.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Shaft Diameter (mm)'' with units. Y-axis: ''Count'' appropriate.
+          Title in correct spec-id · language · library · anyplot.ai format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (#009E73 brand green) correct. Second series uses palette[1]
+          (#C475FD lavender). Spec limit lines use #AE3030 (matte red semantic anchor
+          for limits/error). Target uses #BD8233 (ochre palette member). backgroundColor:
+          transparent. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above library defaults. Thoughtful use of plotBands for out-of-spec
+          shading, custom SVG annotation box, informative subtitle, and semantic color
+          choices. Not quite publication-ready — lacks some polish in typography hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: X-axis grid removed, Y-axis grid kept (correct for bar/histogram).
+          Bar borders removed. Transparent background. Tooltip disabled. Axis lines
+          still visible on both axes. Chart frame partially present.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Cp/Cpk annotation box creates clear focal point. Plot bands guide
+          eye to in-spec vs out-of-spec zones. Normal curve overlay contextualizes
+          the distribution. Subtitle provides quantitative context. Good visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct process capability plot: histogram + fitted normal distribution
+          + LSL/USL lines + target line + Cp/Cpk annotation.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: histogram, fitted normal curve, LSL/USL
+          dashed lines, target dotted line, Cp/Cpk computed and annotated.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows shaft diameter measurements, Y-axis shows count. Normal
+          curve correctly scaled to count space (N * BIN_WIDTH * normalPDF). All data
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'histogram-capability · javascript · highcharts · anyplot.ai'
+          correct format. Legend labels 'Measurements' and 'Normal Fit' appropriate
+          and descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects of process capability: histogram shape, normal
+          fit, spec limits, target, out-of-spec zones (plot bands), and capability
+          indices (Cp/Cpk). Comprehensive.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter quality control is a realistic, neutral manufacturing
+          engineering scenario. LSL=9.95, USL=10.05, target=10.00 are typical precision
+          machining tolerances.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cp=1.37, Cpk=1.27 are realistic process capability indices indicating
+          a good but not exceptional process. Mean=10.003 mm (slightly off target)
+          is realistic. 200 measurements appropriate for capability analysis.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions (lcgNext, randn, normalPDF) deviate from flat
+          KISS structure. However, these are justified for JS's lack of seeded RNG
+          and for computing the PDF overlay.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed=42 and Box-Muller transform. All data
+          in-memory. No network calls.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Uses window.ANYPLOT_TOKENS and Highcharts globals — all
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-named code. BIN_WIDTH/BIN_MIN/BIN_MAX constants clear.
+          renderer usage idiomatic. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles PNG/HTML output. Correct Highcharts.chart(''container'',
+          ...) API. animation: false set correctly.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent idiomatic use: plotLines with dashStyle/label, plotBands
+          with alpha fill, mixed column+line series, chart.renderer for SVG overlay,
+          animation:false in both chart and plotOptions.series. All Highcharts canonical
+          patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands (out-of-spec shading), plotLines (spec limit markers with
+          labels), chart.renderer.rect/text (custom annotation box) are genuinely
+          distinctive Highcharts features not easily replicated in matplotlib or plotly.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
