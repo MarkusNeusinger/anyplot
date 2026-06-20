@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-parametric: Parametric Curve Plot
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-20
+// Quality: 89/100 | Created: 2026-06-20
 
 const t = window.ANYPLOT_TOKENS;
 
