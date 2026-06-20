@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: line-retention-cohort
 created: '2026-06-20T03:42:58Z'
-updated: '2026-06-20T03:52:40Z'
+updated: '2026-06-20T04:08:11Z'
 generated_by: claude-sonnet
 workflow_run: 27858988008
 issue: 4572
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-rete
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-retention-cohort/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - All spec requirements implemented with zero omissions — 100% start, legend with
-    n= values, 0–100% Y-axis, gridlines, decreasing opacity/thickness encoding for
-    cohort age, 20% reference line with label.
-  - 'Correct Imprint palette application: brand green (#009E73) as the newest/most
-    prominent cohort; canonical order for remaining cohorts. Full theme adaptation
-    using window.ANYPLOT_TOKENS throughout.'
-  - Fully deterministic data using exponential decay model with realistic plateaus
-    (10–22%) showing genuine improving retention trend across cohorts.
-  - Smooth monotone curves (d3.curveMonotoneX) and deliberate layer-ordering (oldest
-    rendered first so newest sits on top) show thoughtful D3-idiomatic design.
-  - Complete theme adaptation — all chrome (text, grid, axis lines) uses token values,
-    producing a correctly legible dark render with no dark-on-dark failures.
+  - Visual hierarchy through progressive opacity (1.0 → 0.6) and stroke-width (3.5
+    → 1.7) elegantly ranks cohort prominence
+  - Direct inline end-of-line labels complement the legend and reduce back-and-forth
+    eye movement
+  - 20% dashed reference line with annotation adds genuine interpretive value
+  - Fully deterministic data using mathematical decay model with realistic plateaus
+    and improving trend across cohorts
+  - Oldest-first render order ensures newest cohort (brand green) paints on top —
+    correct and intentional
+  - Domain lines and tick marks cleanly removed; gridlines at meaningful breakpoints
+    only
   weaknesses:
-  - No explicit Y-axis domain-line removal or tick-mark suppression. Calling .select('.domain').remove()
-    and .selectAll('.tick line').remove() on both axis groups would lift visual polish
-    toward a cleaner D3 chart aesthetic.
-  - For 5-series line charts, the style guide recommends redundant encoding beyond
-    color. Consider adding distinct linestyles (dashed/dotted) for older cohorts or
-    small circle markers at data-point positions to improve series differentiation
-    for colorblind viewers.
-  - 'LM-02 is low: no advanced D3-distinctive features. Adding inline end-of-line
-    text labels for each cohort at week 12 (positioned using D3 text elements at the
-    terminal data point) would be both a distinctive D3 technique and a design improvement.'
-  - The regular gridline at 20% and the dashed reference line at 20% overlap, creating
-    minor visual redundancy. Consider drawing gridlines only at [40, 60, 80, 100]
-    and letting the dashed reference line stand alone at 20%.
+  - Inline end-of-line labels at 11px CSS are tight — "Feb '25" and "Jan '25" are
+    ~17px apart for 11px-tall text; increase to 12–13px and/or add vertical offset
+    to bottom labels
+  - Circle markers at r=3 CSS are functional but on the small side — r=4 would improve
+    prominence
+  - d3.selectAll(null) per-series loop is slightly dated — grouping each series into
+    a <g> element per cohort is more idiomatic modern D3
+  - DE-01/DE-03 could reach higher with a brief descriptive subtitle below the main
+    title to frame the story explicitly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct for light theme
-      Chrome: Bold title "line-retention-cohort · javascript · d3 · anyplot.ai" in dark ink at 22px; Y-axis label "Retention Rate (%)" and X-axis label "Weeks Since Signup" at 16px in muted dark; tick labels at 14px in muted dark; legend text at 13px in muted dark; "20% target" annotation at 13px. All text clearly readable.
-      Data: 5 cohort curves — May 2025 in #009E73 (brand green, thickest/fully opaque), Apr 2025 in lavender, Mar 2025 in blue, Feb 2025 in ochre, Jan 2025 in matte red (thinnest/most transparent). Smooth exponential decay from 100% at week 0. Dashed reference line at 20%.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "line-retention-cohort · javascript · d3 · anyplot.ai" at 22px, dark ink — clearly readable. Axis labels "Weeks Since Signup" (x) and "Retention Rate (%)" (y) at 16px — clearly readable. Tick labels "Wk 0"/"Wk 2"/…/"Wk 12" and "0%"/"20%"/…/"100%" at 14px — clearly readable. Legend at 13px — readable. Inline labels at 11px — readable but tight at bottom two entries.
+      Data: Five retention curves from brand green (#009E73, May 2025) through lavender, blue, ochre, matte-red (Jan 2025), using Imprint palette positions 1–5. All curves start at 100% at week 0. Dashed reference line at 20%. Horizontal gridlines at 40/60/80/100%. Circle markers at each data point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct for dark theme
-      Chrome: Title and all labels flip to light-colored text (inkSoft/ink tokens). No dark-on-dark failures observed — tick labels, axis labels, legend text, and "20% target" annotation all clearly visible against the near-black background.
-      Data: Colors identical to light render — May 2025 brand green, Apr 2025 lavender, Mar 2025 blue, Feb 2025 ochre, Jan 2025 matte red. Gridlines and reference dashed line visible as subtle light-grey strokes.
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title, axis labels, tick labels, legend text, inline labels, and "20% target" annotation all render in light ink tones (not dark text). No dark-on-dark failure detected. All text clearly visible against dark surface. Grid lines subtle and visible.
+      Data: Identical data colors to light render — brand green, lavender, blue, ochre, matte-red. Only chrome flipped; data colors unchanged.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -63,79 +58,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (22px title, 16px axis labels, 14px
-          ticks, 13px legend/annotation). Readable in both themes. Minor: 0% Y-tick
-          and Wk 0 X-tick are very close at bottom-left but do not overlap.'
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, legend 13px, inline labels 11px). All text readable in both themes.
+          Minor: inline labels at 11px are tight at bottom two entries.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements.
+        comment: No significant overlaps. Inline labels at week 12 are close (Feb/Jan
+          25) but spaced sufficiently. Legend well separated.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 5 cohort lines clearly visible; opacity/thickness taper (1.0
-          to 0.6, 3.5 to 1.75px) creates deliberate visual separation.
+        comment: Lines clearly visible with stroke widths 3.5→1.7. Circle markers
+          at r=3 visible but on the smaller side for 65 data points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; 5 series use hue + opacity + thickness
-          redundantly.
+        comment: Imprint palette is colorblind-safe. Opacity variation adds redundant
+          encoding. No red-green only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous margins. Plot area well-proportioned. Right margin intentionally
-          wider for side legend.
+        comment: Canvas gate passed. Right margin cleanly accommodates inline labels
+          and legend. Plot uses ~70% canvas width. Balanced margins. No overflow or
+          clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Weeks Since Signup and Retention Rate (%) with units. Title correctly
-          formatted.
+        comment: Weeks Since Signup (x) and Retention Rate (%) (y) are descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'May 2025 = #009E73 brand green; remaining cohorts in canonical Imprint
-          order. Correct backgrounds in both themes. Data colors identical across
-          themes.'
+        comment: 'May 2025 uses palette[0]=#009E73. Subsequent cohorts use Imprint
+          positions 2-5 in canonical order. Backgrounds #FAF8F1/#1A1A17. Data colors
+          identical across themes; chrome adapts correctly.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library default: opacity + stroke-width tapering for cohort
-          age is intentional. Smooth monotone curves and deliberate layer-order show
-          aesthetic intent. Not yet at publication-quality polish.'
+        comment: 'Strong design: visual hierarchy through opacity/stroke-width progression,
+          direct inline labeling, dashed benchmark annotation. Clearly above well-configured
+          defaults. Not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle gridlines at 20% intervals, no top/right spines, generous
-          whitespace, reference dashed line. No explicit domain-line removal or tick-mark
-          suppression.
+        comment: Domain lines and tick marks removed. Gridlines at selected intervals
+          (40/60/80/100%). Dashed reference line. Generous margins. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear story: improving retention visible through upward plateau
-          shift; newest cohort dominates focus; 20% reference line establishes business
-          benchmark.'
+        comment: 'Clear visual hierarchy: newest cohort most prominent. Progressive
+          separation tells improving retention story. 20% target anchors interpretation.
+          Direct labeling reduces cognitive load.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: multi-line retention curve with separate cohort lines.'
+        comment: Correct multi-cohort line chart with retention curves, all starting
+          at 100%.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All curves start at 100% at week 0; legend with n= sizes; Y-axis
-          0-100% with gridlines; decreasing opacity/thickness for older cohorts; dashed
-          reference line at 20%.
+        comment: Distinct colors per cohort, legend with n-sizes, y-axis 0-100% with
+          gridlines, x-axis time since signup, decreasing opacity/width for older
+          cohorts, 20% dashed reference line — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: weeks since signup; Y: retention rate %; color: cohort. All data
-          visible.'
+        comment: 'X: weeks since signup (0-12), Y: retention rate (0-100%). All 5
+          cohorts shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: line-retention-cohort · javascript · d3 · anyplot.ai. Legend
-          format: Month Year (n=X,XXX).'
+        comment: 'Title: ''line-retention-cohort · javascript · d3 · anyplot.ai''.
+          Legend: ''May 2025 (n=2,940)'' etc.'
     data_quality:
       score: 15
       max: 15
@@ -177,23 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: multiple cohorts, exponential decay curves,
-          varying long-term plateaus, visual encoding of cohort recency, quantitative
-          cohort sizes.'
+        comment: 'Shows all aspects: multiple cohorts, exponential decay, improving
+          retention trend, different plateaus and decay rates.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS product analytics scenario with monthly signup cohorts Jan-May
-          2025. Neutral, real-world domain. Cohort sizes 1,850-2,940 are plausible.
+        comment: Monthly signup cohorts (Jan-May 2025) with plausible sizes (1,850-2,940).
+          Neutral product analytics scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Long-term retention plateaus of 10-22% are realistic for SaaS products.
-          Exponential decay model appropriate. 12-week tracking window is standard.
+        comment: 0-100% retention, 0-12 weeks, cohort sizes in thousands, realistic
+          long-term plateaus (10-22%).
     code_quality:
       score: 10
       max: 10
@@ -203,37 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes; linear flow: data, SVG, scales, gridlines,
-          reference line, lines, axes, legend, title.'
+        comment: Linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: fixed constants and mathematical formula, no
-          RNG.'
+        comment: 'Fully deterministic: fixed cohort definitions and pure Math.exp
+          curve generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only window globals used: window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE,
-          d3. No unused references.'
+        comment: No imports; only window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, and
+          global d3.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean readable code, no fake UI elements.
+        comment: Clean idiomatic code; appropriate complexity; no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 is an interactive library; harness produces both plot-{theme}.png
-          and plot-{theme}.html. Current D3 7.x API used.
+        comment: D3 7.9.0 current API; rendered via harness.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -241,23 +235,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic D3: d3.scaleLinear(), d3.axisBottom()/axisLeft(),
-          d3.line() with d3.curveMonotoneX, .datum() pattern for path data, .selectAll().attr()
-          for batch styling, .call() for axis rendering.'
+        comment: 'D3 line generator with curveMonotoneX, scaleLinear, axisBottom/axisLeft,
+          data join .join(circle), proper mount-node. Slightly anti-idiomatic: d3.selectAll(null)
+          loop vs <g>-per-cohort pattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: d3.curveMonotoneX and manual z-order control via array reversal are
-          distinctly D3 idioms. No advanced D3 features (join patterns, force layout,
-          custom generators) that would push higher.
-  verdict: REJECTED
+        passed: true
+        comment: curveMonotoneX interpolation, direct SVG text for inline labels,
+          .domain().remove() + .tick line.remove(), oldest-first render order via
+          .reverse(). More than generic but not deeply exploiting D3 hierarchy/nest
+          patterns.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
