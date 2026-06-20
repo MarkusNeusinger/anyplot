@@ -1,31 +1,55 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 83/100 | Created: 2026-03-17
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-20
 """
 
+import os
+import sys
+
+
+# Prevent this file (bokeh.py) from shadowing the installed bokeh package
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
+
+import time
 from collections import defaultdict
+from pathlib import Path
 
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Label, LabelSet, LinearColorMapper, Range1d
 from bokeh.plotting import figure
-from bokeh.resources import Resources
 from bokeh.transform import transform
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_WATERMARK = "#1A1A1720" if THEME == "light" else "#F0EFE820"
+
+# Imprint categorical palette — positions 1-4 for risk categories
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Imprint sequential colormap (green→blue) for continuous heatmap — colorblind-safe
+_c0 = np.array([0x00, 0x9E, 0x73])  # #009E73 brand green
+_c1 = np.array([0x44, 0x67, 0xA3])  # #4467A3 blue
+ANYPLOT_SEQ256 = ["#{:02X}{:02X}{:02X}".format(*(_c0 + (_c1 - _c0) * t / 255).round().astype(int)) for t in range(256)]
+
+# Pre-computed zone swatch colors sampled from the gradient at representative t values
+# Low(t≈0.06), Medium(t≈0.25), High(t≈0.50), Critical(t≈0.88)
+zone_swatches = ["#049B76", "#11907F", "#22838B", "#3C6E9D"]
 
 # Data
 np.random.seed(42)
 
-likelihood_labels = ["Rare", "Unlikely", "Possible", "Likely", "Almost Certain"]
-impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
-
-# Build background grid with risk scores (using numeric coords)
-grid_x = []
-grid_y = []
-risk_scores = []
-score_text = []
-
+# Build 5×5 background grid with risk scores (likelihood × impact)
+grid_x, grid_y, risk_scores, score_text = [], [], [], []
 for i in range(5):
     for j in range(5):
         grid_x.append(j + 0.5)
@@ -35,23 +59,9 @@ for i in range(5):
         score_text.append(str(score))
 
 grid_source = ColumnDataSource(data={"x": grid_x, "y": grid_y, "score": risk_scores, "text": score_text})
+mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=1, high=25)
 
-# Color mapper: green (low) -> yellow -> orange -> red (critical)
-risk_palette = [
-    "#2D8A4E",
-    "#4CAF50",
-    "#8BC34A",
-    "#CDDC39",
-    "#FFEB3B",
-    "#FFC107",
-    "#FF9800",
-    "#FF5722",
-    "#E53935",
-    "#B71C1C",
-]
-mapper = LinearColorMapper(palette=risk_palette, low=1, high=25)
-
-# Risk items
+# Risk items: (name, likelihood 1-5, impact 1-5, category)
 risks = [
     ("Server Outage", 3, 4, "Technical"),
     ("Data Breach", 2, 5, "Technical"),
@@ -70,18 +80,18 @@ risks = [
     ("System Migration", 2, 4, "Technical"),
 ]
 
-cat_colors = {"Technical": "#306998", "Financial": "#9C27B0", "Operational": "#00897B", "Legal": "#E65100"}
+cat_order = ["Technical", "Financial", "Operational", "Legal"]
+cat_colors = {cat: IMPRINT_PALETTE[i] for i, cat in enumerate(cat_order)}
 
-# Group risks by cell to apply structured offsets (avoids overlap)
+# Group risks by cell to apply structured position offsets (avoids marker/label overlap)
 cell_groups = defaultdict(list)
 for idx, (name, likelihood, impact, category) in enumerate(risks):
     cell_groups[(impact, likelihood)].append((idx, name, category))
 
-# Structured offsets for multiple items in the same cell (vertical spread avoids label overlap)
 cell_offsets = {
     1: [(0, 0)],
-    2: [(-0.12, 0.22), (0.12, -0.22)],
-    3: [(-0.2, 0.25), (0.2, 0.25), (0, -0.22)],
+    2: [(-0.12, 0.2), (0.12, -0.2)],
+    3: [(-0.18, 0.22), (0.18, 0.22), (0, -0.22)],
     4: [(-0.18, 0.22), (0.18, 0.22), (-0.18, -0.22), (0.18, -0.22)],
 }
 
@@ -99,7 +109,6 @@ for (impact, likelihood), items in cell_groups.items():
         risk_y[idx] = likelihood - 1 + 0.5 + oy
         risk_names[idx] = name
         risk_marker_colors[idx] = cat_colors[category]
-        # Vary marker size by risk score for visual hierarchy
         score = likelihood * impact
         if score >= 20:
             risk_sizes[idx] = 44
@@ -114,14 +123,21 @@ risk_source = ColumnDataSource(
     data={"x": risk_x, "y": risk_y, "label": risk_names, "color": risk_marker_colors, "size": risk_sizes}
 )
 
-# Plot — extend x_range to make room for legend on the right
+# Plot — 2400×2400 square canvas; x_range extended to 6.5 to hold legend area
+W, H = 2400, 2400
+title_str = "heatmap-risk-matrix · python · bokeh · anyplot.ai"
+
 p = figure(
-    width=4800,
-    height=2700,
-    x_range=Range1d(0, 7.2),
+    width=W,
+    height=H,
+    x_range=Range1d(0, 6.5),
     y_range=Range1d(0, 5),
-    title="heatmap-risk-matrix · bokeh · pyplots.ai",
+    title=title_str,
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Background heatmap cells
@@ -132,11 +148,11 @@ p.rect(
     height=1,
     source=grid_source,
     fill_color=transform("score", mapper),
-    line_color="white",
-    line_width=4,
+    line_color=PAGE_BG,
+    line_width=3,
 )
 
-# Risk score watermark in each cell
+# Risk score watermarks in each cell (low alpha)
 p.text(
     x="x",
     y="y",
@@ -144,92 +160,102 @@ p.text(
     source=grid_source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="28pt",
-    text_color="#00000020",
+    text_font_size="24pt",
+    text_color=INK_WATERMARK,
     text_font_style="bold",
 )
 
-# Risk markers (size varies by risk score)
-p.scatter(x="x", y="y", source=risk_source, size="size", color="color", line_color="white", line_width=2.5, alpha=0.9)
+# Risk item markers (size varies by risk score for visual hierarchy)
+p.scatter(x="x", y="y", source=risk_source, size="size", color="color", line_color=INK, line_width=2, alpha=0.9)
 
-# Risk name labels
+# Risk name labels below each marker
 labels = LabelSet(
     x="x",
     y="y",
     text="label",
     source=risk_source,
     x_offset=0,
-    y_offset=-24,
+    y_offset=-22,
     text_align="center",
     text_baseline="top",
-    text_font_size="16pt",
-    text_color="#222222",
+    text_font_size="18pt",
+    text_color=INK,
     text_font_style="bold",
-    background_fill_color="white",
-    background_fill_alpha=0.7,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.8,
+    border_line_color=None,
 )
 p.add_layout(labels)
 
-# Custom tick labels for categorical axes
+# Axis tick overrides — descriptive categorical labels per spec
 p.xaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5]
 p.yaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5]
 p.xaxis.major_label_overrides = {0.5: "Negligible", 1.5: "Minor", 2.5: "Moderate", 3.5: "Major", 4.5: "Catastrophic"}
 p.yaxis.major_label_overrides = {0.5: "Rare", 1.5: "Unlikely", 2.5: "Possible", 3.5: "Likely", 4.5: "Almost Certain"}
 
-# Zone legend (using data coordinates in the extended right area)
-zone_data = [
-    ("Low (1-4)", "#2D8A4E"),
-    ("Medium (5-9)", "#9E9D24"),
-    ("High (10-16)", "#FF9800"),
-    ("Critical (20-25)", "#B71C1C"),
-]
-p.add_layout(
-    Label(x=5.3, y=4.8, text="Risk Zones", text_font_size="18pt", text_font_style="bold", text_color="#333333")
-)
-for idx, (zone_label, zone_color) in enumerate(zone_data):
-    p.add_layout(
-        Label(
-            x=5.3,
-            y=4.4 - idx * 0.35,
-            text=zone_label,
-            text_font_size="16pt",
-            text_color=zone_color,
-            text_font_style="bold",
-        )
-    )
+# Separator between grid and legend area
+p.line([5.05, 5.05], [0.1, 4.9], line_color=INK_SOFT, line_width=1, line_alpha=0.4)
+
+# Zone legend — swatch colors sampled from the actual imprint_seq gradient
+zone_labels = ["Low (1–4)", "Medium (5–9)", "High (10–16)", "Critical (20–25)"]
+p.add_layout(Label(x=5.15, y=4.72, text="Risk Zones", text_font_size="22pt", text_font_style="bold", text_color=INK))
+for idx, (zone_label, swatch_color) in enumerate(zip(zone_labels, zone_swatches, strict=True)):
+    py = 4.3 - idx * 0.42
+    p.rect(x=[5.35], y=[py], width=0.2, height=0.24, color=swatch_color, line_color=None)
+    p.add_layout(Label(x=5.52, y=py, text=zone_label, text_font_size="17pt", text_color=INK_SOFT, y_offset=-9))
 
 # Category legend
-p.add_layout(
-    Label(x=5.3, y=2.8, text="Categories", text_font_size="18pt", text_font_style="bold", text_color="#333333")
-)
-for idx, (cat_name, cat_color) in enumerate(cat_colors.items()):
-    p.scatter(x=[5.45], y=[2.4 - idx * 0.35], size=18, color=cat_color, line_color="white", line_width=1.5, alpha=0.9)
-    p.add_layout(
-        Label(
-            x=5.6,
-            y=2.4 - idx * 0.35,
-            text=cat_name,
-            text_font_size="15pt",
-            text_color=cat_color,
-            text_font_style="bold",
-            y_offset=-10,
-        )
-    )
+p.add_layout(Label(x=5.15, y=2.5, text="Categories", text_font_size="22pt", text_font_style="bold", text_color=INK))
+for idx, cat_name in enumerate(cat_order):
+    py = 2.1 - idx * 0.38
+    p.scatter(x=[5.35], y=[py], size=20, color=cat_colors[cat_name], line_color=INK, line_width=1.5)
+    p.add_layout(Label(x=5.52, y=py, text=cat_name, text_font_size="17pt", text_color=INK_SOFT, y_offset=-9))
 
-# Style
-p.title.text_font_size = "28pt"
+# Style — theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 p.title.align = "center"
+
 p.xaxis.axis_label = "Impact (Consequence Severity)"
 p.yaxis.axis_label = "Likelihood (Probability of Occurrence)"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+
 p.axis.axis_line_color = None
 p.axis.major_tick_line_color = None
 p.grid.grid_line_color = None
-p.outline_line_color = None
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=Resources(mode="cdn"), title="Risk Assessment Matrix")
+# Save HTML (catalog artifact) then screenshot with headless Chrome
+output_file(f"plot-{THEME}.html")
+save(p)
+
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# CDP override forces an exact W×H viewport regardless of outer window chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
