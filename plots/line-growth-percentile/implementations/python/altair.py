@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -46,13 +46,13 @@ patient_df = pd.DataFrame({"age_months": patient_ages, "weight": patient_weights
 title_str = "line-growth-percentile · python · altair · anyplot.ai"
 title_fontsize = 16
 
-# Percentile band layers — graduated opacity (darker near median)
+# Percentile band layers — graduated opacity (darker near extremes, lighter near median)
 band_defs = [
-    ("P3", "P10", 0.14),
+    ("P3", "P10", 0.36),
     ("P10", "P25", 0.22),
-    ("P25", "P75", 0.36),
+    ("P25", "P75", 0.14),
     ("P75", "P90", 0.22),
-    ("P90", "P97", 0.14),
+    ("P90", "P97", 0.36),
 ]
 
 band_layers = []
@@ -92,7 +92,7 @@ label_df = pd.DataFrame(
 
 percentile_text = (
     alt.Chart(label_df)
-    .mark_text(align="left", dx=2, fontSize=9, fontWeight="bold", font="Helvetica Neue, Arial, sans-serif")
+    .mark_text(align="left", dx=2, fontSize=10, fontWeight="bold", font="Helvetica Neue, Arial, sans-serif")
     .encode(x=alt.X("age_months:Q"), y=alt.Y("value:Q"), text="label:N", color=alt.value(INK_SOFT))
 )
 
@@ -128,9 +128,19 @@ patient_label = (
     .encode(x=alt.X("age_months:Q"), y=alt.Y("weight:Q"), text="label:N", color=alt.value(PATIENT_COLOR))
 )
 
+# Storytelling callout: patient's approximate percentile at final visit
+callout_df = pd.DataFrame({"age_months": [36], "weight": [15.6], "label": ["≈ P75"]})
+callout = (
+    alt.Chart(callout_df)
+    .mark_text(align="right", dx=-6, dy=-12, fontSize=9, fontStyle="italic", font="Helvetica Neue, Arial, sans-serif")
+    .encode(x=alt.X("age_months:Q"), y=alt.Y("weight:Q"), text="label:N", color=alt.value(PATIENT_COLOR))
+)
+
 # Compose all layers
 chart = (
-    alt.layer(*band_layers, other_lines, p50_line, percentile_text, patient_line, patient_points, patient_label)
+    alt.layer(
+        *band_layers, other_lines, p50_line, percentile_text, patient_line, patient_points, patient_label, callout
+    )
     .properties(
         width=620,
         height=320,
