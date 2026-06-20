@@ -1,42 +1,46 @@
 library: matplotlib
+language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:48:01Z'
-updated: '2026-03-16T21:00:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23165008020
+updated: '2026-06-20T01:05:27Z'
+generated_by: claude-sonnet
+workflow_run: 27854983918
 issue: 4570
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Rounded-corner cells via FancyBboxPatch give a modern, polished look distinct
-    from standard heatmaps
-  - Best-cohort highlighting (star icon + gold dashed border + bold text) creates
-    effective data storytelling
-  - 'Excellent spec compliance: triangular shape, cell annotations, cohort sizes,
-    colorbar all present'
-  - Clean, well-structured code with meaningful data variation across cohorts
+  - 'Complete triangular heatmap with all spec requirements: cell percentages, cohort
+    sizes, triangular mask, colorbar, Month-N labels, and Period 0 = 100% invariant
+    all satisfied'
+  - Best-cohort detection and triple-cue emphasis (amber dashed border + star prefix
+    + bold text) creates an effective focal point and lifts the design above a static
+    heatmap
+  - Luminance-adaptive text color inside cells ensures readability across the full
+    green-to-blue range in both themes without any manual threshold tuning
+  - 'Full theme-adaptive chrome implementation with correct Imprint backgrounds (#FAF8F1
+    / #1A1A17), text tokens, and colorbar styling; no dark-on-dark failures in dark
+    render'
   weaknesses:
-  - Cell text fontsize (15) is slightly below the recommended 16pt minimum for tick-level
-    text
-  - Could explore a warmer sequential colormap that maps more intuitively to good
-    retention = green
-  image_description: 'The plot displays a triangular cohort retention heatmap with
-    10 monthly signup cohorts (Jan 2024 – Oct 2024) on the y-axis and periods (Month
-    0 – Month 9) on the x-axis. Cells use the viridis colormap — bright yellow-green
-    for high retention (100%), transitioning through teal to dark blue for low retention
-    (~33–39%). Each cell contains a bold percentage label with automatic contrast
-    (white text on dark cells, dark text on light cells). The triangular shape is
-    correctly formed: Jan 2024 has all 10 periods while Oct 2024 has only 1. Cohort
-    sizes are shown in parentheses next to each cohort label (e.g., "Jan 2024 (n=1,200)").
-    The May 2024 cohort is marked with a gold star (★) and surrounded by a gold dashed
-    border, identifying it as the best-performing cohort with retention of 74% at
-    Month 5. Cells have rounded corners with white borders, creating a clean, modern
-    appearance. A vertical colorbar on the right labeled "Retention Rate (%)" maps
-    the 0–100% range. The title reads "heatmap-cohort-retention · matplotlib · pyplots.ai".'
+  - Cell percentage labels at fontsize=9 are borderline small for mobile preview (~400
+    px width); consider bumping to 10pt for better mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "heatmap-cohort-retention · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Months Since Signup" and "Signup Cohort" in dark ink at 10pt. Y-axis tick labels (cohort names with sizes, e.g. "★ May 2024  (n=1,450)") at 8pt in INK_SOFT. X-axis tick labels ("Month 0" through "Month 9") rotated 45° at 8pt in INK_SOFT. Colorbar label "Retention Rate (%)" and tick labels visible and readable.
+      Data: Imprint sequential colormap (green #009E73 → blue #4467A3). High-retention cells (100%, Month 0) render as navy blue; lower retention cells grade toward teal/green. Cell percentage text uses adaptive luminance-based color (white on dark cells, dark on light cells). May 2024 cohort highlighted with amber (#DDCC77) dashed border and bold text. Triangular shape correctly formed with NaN masking.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title switches to light ink (#F0EFE8), clearly readable. Axis labels and tick labels switch to #B8B7B0 (INK_SOFT dark), clearly readable. Colorbar tick labels and label visible in light color. No dark-on-dark failures detected.
+      Data: Identical colormap colors to light render (imprint_seq green→blue unchanged). Amber dashed border and star marker for May 2024 cohort identical and visible. Cell percentage text uses same adaptive luminance logic, rendering correctly on dark background.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 29
@@ -47,41 +51,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, labels 20, ticks 16, cell
-          text 15). Cell text slightly below 16pt guideline but readable.
+        comment: Title, axis labels, colorbar text all clear in both themes. Cell
+          percentage labels at fontsize=9 are borderline small for mobile (~400px)
+          preview.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere. All cell values, axis labels, and tick
-          labels fully readable.
+        comment: No overlapping text or data elements; well-separated layout.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells well-sized with white borders and rounded corners creating
-          excellent separation.
+        comment: All cells, labels, amber highlight, and colorbar render with strong
+          contrast.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis is perceptually-uniform and colorblind-safe.
+        comment: imprint_seq is CVD-safe; adaptive luminance text in cells ensures
+          readability.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Colorbar compact and well-positioned. Balanced
-          margins.
+        comment: Square 2400x2400 canvas correct for heatmap; canvas gate passed;
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Months Since Signup, Signup Cohort.'
+        comment: Descriptive axis labels with context; title matches mandated format
+          exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq for continuous data; correct backgrounds; amber as semantic
+          anchor; full theme-adaptive chrome.
     design_excellence:
       score: 16
       max: 20
@@ -91,22 +104,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Rounded-corner cells, white borders, gold star/border highlight,
-          luminance-based text contrast. Above defaults with intentional design.
+        comment: FancyBboxPatch rounded corners, luminance-adaptive text, and best-cohort
+          triple-cue highlight show clear design intent above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines removed, tick marks hidden, colorbar outline removed,
-          generous whitespace between cells.
+        comment: All spines removed, no grid, colorbar outline removed, tick length=0,
+          clean cohort label spacing.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Best cohort highlighted with star icon and gold dashed border. Clear
-          focal point guides viewer to key insight.
+        comment: Best cohort identified algorithmically with three simultaneous visual
+          cues (amber border, star, bold text) creating clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -116,52 +129,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap.
+        comment: Triangular heatmap with correct staggered shape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: triangular shape, cell annotations, cohort
-          sizes, colorbar, period labels.'
+        comment: 'All features present: cell text, cohort sizes, triangular mask,
+          colorbar, Month-N labels, Period 0=100%.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cohorts on Y, periods on X, retention mapped to color.
+        comment: 'X: periods since signup; Y: signup cohort; color: retention rate;
+          triangular mask via NaN.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Colorbar serves as legend with proper
-          label.
+        comment: Exact title format; colorbar labelled Retention Rate (%).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good variation: fast-churning and high-retention cohorts shown.
-          Could show slightly more extreme variation.'
+        comment: 10 cohorts and 10 periods (within spec 8-12 range); full triangular
+          structure; all data fields present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SaaS monthly cohort retention is a real, neutral business analytics
-          scenario.
+        comment: Monthly SaaS retention cohorts Jan-Oct 2024 with plausible sizes
+          (980-1,450); realistic exponential decay; neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic retention values: 100% at signup, decaying to 30-40%.
-          Cohort sizes 980-1450 plausible.'
+        comment: Retention decays from 100% at Month 0 to ~36-47% by Month 9; sensible
+          SaaS values.
     code_quality:
       score: 10
       max: 10
@@ -171,51 +184,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, plot, style, save.'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: mcolors, mpatches, plt, np.'
+        comment: All imports used; sys.path.pop(0) correctly prevents module shadowing.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. FancyBboxPatch justified for rounded-corner
-          aesthetic.
+        comment: FancyBboxPatch loop appropriate for rounded-corner effect; no fake
+          UI; luminance computation clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight. No deprecated
-          API.
+        comment: Saves plot-{THEME}.png; no bbox_inches='tight' on savefig; canvas
+          gate passed.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses Axes methods, FancyBboxPatch, ScalarMappable, mcolors.Normalize
-          correctly. Manual heatmap for rounded corners.
+        comment: All Axes methods; fig.colorbar with ScalarMappable; LinearSegmentedColormap
+          correctly constructed.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: FancyBboxPatch with BoxStyle.Round, luminance-based text color, ScalarMappable
-          for standalone colorbar are distinctively matplotlib.
+        comment: FancyBboxPatch with BoxStyle.Round for rounded cells is a genuine
+          matplotlib-specific technique; luminance-adaptive text via RGB decomposition
+          leverages matplotlib color model.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,4 +245,3 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
