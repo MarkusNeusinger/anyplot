@@ -92,7 +92,7 @@ const matrixBg = {
 
         // Risk score in bottom-right corner
         ctx.font = "bold 12px sans-serif";
-        ctx.fillStyle = THEME === "light" ? "rgba(255,255,255,0.70)" : "rgba(0,0,0,0.50)";
+        ctx.fillStyle = THEME === "light" ? "rgba(255,255,255,0.70)" : "rgba(255,255,255,0.65)";
         ctx.textAlign = "right";
         ctx.textBaseline = "bottom";
         ctx.fillText(String(score), x1 - 7, y1 - 5);
@@ -112,7 +112,7 @@ const matrixBg = {
       ctx.font = "bold 13px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = THEME === "light" ? "rgba(255,255,255,0.90)" : "rgba(0,0,0,0.60)";
+      ctx.fillStyle = THEME === "light" ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.85)";
       ctx.fillText(label, cx, cy);
     });
 
@@ -182,7 +182,7 @@ const zoneLegend = {
     const by = ca.bottom - boxH - 10;
 
     // Legend box background
-    ctx.fillStyle = THEME === "light" ? "#FFFDF6" : "#242420";
+    ctx.fillStyle = t.elevatedBg;
     ctx.strokeStyle = THEME === "light" ? "rgba(26,26,23,0.15)" : "rgba(240,239,232,0.15)";
     ctx.lineWidth = 1;
     ctx.beginPath();
