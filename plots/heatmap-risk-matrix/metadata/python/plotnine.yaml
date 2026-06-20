@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:53:37Z'
-updated: '2026-06-20T06:02:15Z'
+updated: '2026-06-20T06:12:36Z'
 generated_by: claude-sonnet
 workflow_run: 27861900238
 issue: 4567
@@ -12,59 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present — 5×5 grid with green→ochre→red
-    Imprint-palette gradient, descriptive axis labels with qualitative terms, labeled
-    risk markers with smart cell-aware offset logic, zone annotation above the matrix,
-    and colorbar legend with meaningful breaks'
-  - 'Excellent code quality: clean grammar-of-graphics layering, all font sizes explicitly
-    set, reproducible seed, idiomatic plotnine usage with geom_tile + geom_text +
-    geom_label + annotate in a single ggplot expression'
-  - 'Good theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
-    ELEVATED_BG) correctly applied in both light and dark renders; risk item labels
-    use ELEVATED_BG fill with INK text color — correctly dark-box/light-text in dark
-    mode'
-  - 'Thoughtful information hierarchy: heatmap cell colors (primary) → labeled risk
-    items (secondary) → semi-transparent score numbers (tertiary) → zone annotation
-    (contextual) creates four distinct visual layers'
-  - 'Realistic, neutral data: 12 plausible project-management risk items (Supply Delay,
-    Budget Overrun, Data Breach, etc.) spread across all risk zones, with sensible
-    likelihood × impact mappings'
+  - 'Perfect spec compliance: all required features (grid, gradient, labels, zone
+    annotation, jitter) present and working'
+  - 'Excellent theme-adaptive implementation: both renders fully correct with no chrome
+    failures'
+  - 'Intentional design hierarchy: four-layer visual stack (gradient, borders, labels,
+    scores) with strategic alpha'
+  - Smart shared-cell offset logic handles overlapping risk items cleanly
+  - Realistic, recognizable project management risk context
+  - 'Perfect code quality: clean KISS structure, seed set, all imports used, correct
+    output filename'
   weaknesses:
-  - Zone annotation text (annotate size=2.8 mm ≈ 8 pt source pixels) is very small
-    — at mobile display widths (~400 px) this text would be virtually unreadable;
-    increase to size=3.5–4.0 for comfortable legibility as secondary context
-  - 'Continuous cmap uses a custom 3-stop gradientn([''#009E73'',''#BD8233'',''#AE3030''])
-    which does not match the prescribed imprint_seq (#009E73→#4467A3) or imprint_div
-    (#AE3030→neutral→#4467A3) colormaps — while all three stops are Imprint palette
-    members, the gradient deviates from the brand cmap spec; for risk matrix semantics
-    consider using imprint_div (red=high, neutral=mid, green=low) re-ordered so low
-    risk maps to #009E73'
-  - 'DE-01 limited: design is above defaults (rounded labels, semi-transparent scores)
-    but does not reach ''strong design'' level — the visual lacks a bold focal point;
-    consider adding a subtle highlighted border or slightly enlarged risk labels for
-    the Critical zone cells to make the most dangerous quadrant unmistakably stand
-    out'
-  - Risk score numbers (alpha=0.38, size=3.2) are intentionally tertiary but are very
-    faint at full canvas size; increasing to alpha=0.45 would maintain their secondary
-    role while being slightly more readable on the heatmap cells
+  - 'Continuous color gradient (green to ochre to red) deviates from the two mandated
+    Imprint cmaps (imprint_seq: green to blue; imprint_div: red to neutral to blue)
+    — uses Imprint stops but non-standard arrangement'
+  - Zone annotation text (size=3.5mm) is the smallest readable element — increase
+    to 4.0-4.5 for better mobile legibility
+  - VQ-02 tight in shared-cell situations (Possible/Major has two stacked labels)
+    — larger cell expand or smaller label_padding could add breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct; not pure white.
-      Chrome: Title "heatmap-risk-matrix · python · plotnine · anyplot.ai" in bold dark (#1A1A17) at 12pt is clearly readable. X-axis label "Impact →" and Y-axis label "Likelihood →" in bold dark at 10pt, clearly visible. Tick labels (Negligible/Minor/Moderate/Major/Catastrophic on X; Rare/Unlikely/Possible/Likely/Almost Certain on Y) in INK_SOFT (#4A4A44) at 8pt, readable. Zone annotation "Zones: Low (1–4) · Medium (5–9) · High (10–16) · Critical (20–25)" in INK_MUTED italic at size=2.8 — visible at full resolution but quite small. Legend title "Risk Score" and breaks (1/5/10/15/20/25) in INK_SOFT at 8pt, readable. Risk item labels (e.g. Scope Creep, Budget Overrun, Market Shift) in off-white boxes (FFFDF6) with dark INK text at 3.8mm, clearly readable.
-      Data: 5×5 heatmap tiles showing a smooth green (#009E73) → ochre (#BD8233) → red (#AE3030) gradient from low-risk (1) to critical-risk (25). All 12 risk items are labeled and correctly positioned within their risk cells with smart vertical offset for co-located risks (Market Shift + Compliance Gap at likelihood=3, impact=4 are both visible and separated). Risk score numbers (1–25) shown semi-transparently in top-left corners of each cell. Colorbar legend on right correctly aligned.
-      Legibility verdict: PASS — all primary text readable; zone annotation is small but legible at full resolution; minor concern at mobile scale.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "heatmap-risk-matrix · python · plotnine · anyplot.ai" in bold dark ink (#1A1A17), readable. Axis labels "Impact →" and "Likelihood →" in dark ink bold 10pt. Tick labels ("Negligible", "Minor", "Moderate", "Major", "Catastrophic"; "Rare", "Unlikely", "Possible", "Likely", "Almost Certain") in secondary dark (#4A4A44) 8pt, all readable. Zone annotation in tertiary muted color, small but legible. Legend "Risk Score" with dark ink text. All chrome readable against light background.
+      Data: 5×5 heatmap with green→ochre→red gradient (Imprint stops #009E73 → #BD8233 → #AE3030). First series / low-risk cells in brand green #009E73. Risk item labels in rounded elevated boxes (cream #FFFDF6 fill). Semi-transparent risk score numbers (alpha=0.45) in cell corners. Critical-zone overlay borders in #AE3030.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct; not pure black.
-      Chrome: Title in light (#F0EFE8) clearly readable against near-black background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — all readable, no dark-on-dark failure. Risk item labels have dark elevated background (#242420) with light INK text (#F0EFE8) — correctly themed dark-box/light-text in dark mode. Legend background (#242420) with light legend text — correct.
-      Data: Heatmap cell colors are identical to the light render (green → ochre → red gradient unchanged). Cell borders appear in light INK_SOFT creating clear cell delineation. All 12 risk item labels visible with dark-on-dark-background styling (correct dark-mode adaptation).
-      Legibility verdict: PASS — no dark-on-dark failure detected; all text is light-colored on dark background; data colors identical to light render confirming only chrome flipped.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in near-white (#F0EFE8), fully readable. Axis labels and tick labels in secondary light (#B8B7B0), all readable against dark background. Zone annotation in tertiary muted light (#A8A79F). Legend text in theme-adaptive light colors. No dark-on-dark failures detected.
+      Data: Heatmap gradient colors identical to light render — #009E73 (green), #BD8233 (ochre), #AE3030 (red) unchanged. Risk item label boxes use elevated dark fill (#242420). Data colors confirmed identical between themes; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -72,86 +55,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title/axis/tick labels well-proportioned.
-          Zone annotation (size=2.8mm) is quite small and may be hard to read at mobile
-          widths — minor deduction.
+        comment: All font sizes explicitly set; zone annotation at size=3.5mm is slightly
+          small for mobile but legible at canvas scale. Both themes readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlap. Smart cell-aware offset logic correctly separates co-located
-          risks (Market Shift and Compliance Gap both visible in same cell).
+        comment: Offset logic handles shared-cell items; Possible/Major cell with
+          two stacked labels is tight but readable. No text-on-text collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells, risk item labels, and score numbers clearly visible.
-          Density-appropriate element sizing for a 5×5 grid.
+        comment: Heatmap tiles fully visible, risk labels have solid elevated backgrounds,
+          critical-zone overlay adds emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant non-color encoding via risk score numbers in each cell;
-          traffic-light convention with domain label redundancy; CVD accommodation
-          adequate.
+        comment: Good luminance contrast; redundant text labels mitigate green-to-red
+          CVD concern; alpha=0.92 on labels ensures readability.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas appropriate for 5×5 symmetric grid. Good
-          proportions, no clipping, plot fills canvas well with appropriate margins.
+        comment: Square 2400x2400 appropriate for 5x5 matrix. Canvas gate passed.
+          Well-balanced margins and legend placement.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive qualitative labels ('Impact →', 'Likelihood →'); tick
-          labels use spec-required descriptive terms (Rare/Unlikely/Possible/Likely/Almost
-          Certain; Negligible/Minor/Moderate/Major/Catastrophic).
+        comment: Descriptive axis labels with directional arrows. Full descriptive
+          tick labels from spec.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). All gradient stops are Imprint
-          palette members (#009E73, #BD8233, #AE3030). However, scale_fill_gradientn
-          with 3 custom stops is neither imprint_seq (#009E73→#4467A3) nor imprint_div
-          (#AE3030→neutral→#4467A3) — partial compliance.'
+        comment: 'Backgrounds correct, chrome theme-adaptive. Deduction: continuous
+          gradient uses green-ochre-red (all Imprint stops) but not one of the two
+          mandated cmaps (imprint_seq: green-blue; imprint_div: red-neutral-blue).'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: rounded risk item labels (label_r=0.08), semi-transparent
-          tertiary score numbers, Imprint-palette-derived risk gradient with semantic
-          color logic. Functional and professional but does not reach ''strong design''
-          level — lacks bold focal emphasis.'
+        comment: 'Strong design above defaults: intentional four-layer hierarchy,
+          strategic alpha, semantic color gradient, bolded arrow axis labels. Not
+          publication-ready but well above generic.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed (geom_tile cell borders used instead — elegant for heatmap).
-          Panel border retained (appropriate for enclosed grid per style guide). Legend
-          background uses ELEVATED_BG. Rounded label corners. Some refinement visible
-          above defaults.
+        comment: Grid removed, panel border appropriate for enclosed heatmap, legend
+          sized explicitly, expand parameters add breathing room. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient creates natural visual hierarchy — red cells (top-right)
-          draw the eye immediately to high/critical risk zone. Zone annotation provides
-          contextual categorization. Risk items are labeled by name enabling specific
-          identification. Above default 2 due to effective color-driven visual hierarchy.
+        comment: Color gradient communicates risk severity immediately. Critical zone
+          borders create focal point. Zone annotation provides context. Visual hierarchy
+          guides viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -161,30 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5×5 heatmap risk matrix with color-coded cells and labeled
-          risk item markers.
+        comment: Correct 5x5 risk matrix heatmap with labeled risk items.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: green-to-red color gradient, descriptive
-          axis labels, labeled markers with jitter/offset, zone labels as annotation,
-          grid lines delineating cells.'
+        comment: 'All features present: gradient, descriptive tick labels, labeled
+          markers with offset, zone labels, cell delineation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Impact, Y=Likelihood, fill=risk_score (likelihood×impact). All
-          12 risk items correctly positioned in their cells.
+        comment: Y=Likelihood, X=Impact, risk score=L*I, all 12 items plotted correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-risk-matrix · python · plotnine · anyplot.ai''
-          — correct format. Risk Score colorbar legend with meaningful breaks (1,5,10,15,20,25).'
+        comment: Title format correct. Legend Risk Score colorbar with 6 breaks present.
     data_quality:
       score: 15
       max: 15
@@ -194,25 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All matrix zones represented (Low/Medium/High/Critical). 12 risk
-          items spanning all zones. Risk score numbers in each cell. Zone annotation.
-          Full feature coverage.
+        comment: All 25 cells shown, all four risk zones represented, 12 risks spread
+          across matrix demonstrating full range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible project management risk register (Supply Delay, Budget
-          Overrun, Data Breach, Scope Creep, etc.) — neutral, real-world business
-          scenario.
+        comment: Real-world project management risks (Supply Delay, Budget Overrun,
+          Data Breach, etc.) in neutral business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-5 scales for likelihood and impact; risk scores 1-25 (product).
-          Zone thresholds (Low 1-4, Medium 5-9, High 10-16, Critical 20-25) match
-          spec exactly.
+        comment: Standard 1-5 scales, risk scores 1-25, zone thresholds align with
+          ISO 31000. Gap from 16 to 20 mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -222,68 +190,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level: imports → data → plot → save. No functions or classes.'
+        comment: 'Linear: imports -> sys.path fix -> theme tokens -> grid data ->
+          risk data -> label offsets -> plot -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Risk data is hardcoded (deterministic). Offset
-          logic is deterministic via groupby cumcount.
+        comment: np.random.seed(42) set before risk item generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys (path fix), numpy (seed), pandas (DataFrames),
-          all 14 plotnine imports are referenced in the code.'
+        comment: All plotnine symbols and stdlib imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. No fake UI elements. Smart offset
-          logic for co-located labels is concise.
+        comment: Clean and Pythonic; offset logic is appropriate; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=400, width=6, height=6,
-          units='in'. No deprecated APIs.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=6, height=6 units=in.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Well above default: grammar-of-graphics layering (ggplot + multiple
-          geoms + scales + theme), correct aes() mappings, proper use of geom_tile/geom_text/geom_label
-          distinction, scale_fill_gradientn with explicit limits/breaks. Solid plotnine
-          expertise.'
+        comment: 'Expert use of plotnine grammar: geom_tile + scale_fill_gradient2,
+          geom_label with label_padding/label_size/label_r, geom_text with ha/va,
+          annotate, full theme() customization.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses plotnine/ggplot2-specific features: geom_label with label_r
-          (rounded corners), label_padding, label_size; scale_fill_gradientn for multi-stop
-          continuous gradients; annotate() for zone text. These parameters are specific
-          to the ggplot2 API family.'
-  verdict: REJECTED
+        comment: geom_label() rounded corners (label_r) and padding are distinctly
+          plotnine. Multiple geom layers with independent data= arguments show grammar-of-graphics
+          mastery.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - colorbar
   - layer-composition
+  - annotations
   patterns:
-  - matrix-construction
-  - groupby-aggregation
+  - data-generation
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
+  - edge-highlighting
