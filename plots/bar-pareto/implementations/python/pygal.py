@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-06-20
@@ -65,7 +65,7 @@ chart = pygal.Bar(
     print_values=True,
     print_values_position="top",
     value_formatter=lambda x: f"{x:,.0f}",
-    show_y_guides=True,
+    show_y_guides=False,
     show_x_guides=False,
     margin=20,
     margin_bottom=180,
@@ -167,10 +167,6 @@ for i, (cx, cy) in enumerate(cum_points):
     if i >= len(cum_points) - 2:
         lx = cx - 22
         anchor = "end"
-    if i == 0:
-        lx = cx - 26
-        ly = cy + 42
-        anchor = "end"
     if i == 1:
         lx = cx + 28
         ly = cy - 32
@@ -191,7 +187,7 @@ cumulative_svg += "</g>"
 right_edge = bar_centers_x[-1] + 90
 sec_axis_svg = '<g id="secondary-y-axis">'
 
-for pct in [0, 20, 40, 60, 80, 100]:
+for pct in [0, 20, 40, 60, 80]:
     y_pos = y_base - (pct / 100.0) * plot_height
     sec_axis_svg += f'''
   <line x1="{right_edge:.1f}" y1="{y_pos:.1f}"
@@ -209,7 +205,7 @@ sec_axis_svg += f'''
 '''
 
 mid_y = (y_base + y_plot_top) / 2
-title_x = right_edge + 130
+title_x = right_edge + 100
 sec_axis_svg += f'''
   <text x="{title_x:.1f}" y="{mid_y:.1f}"
     fill="{COLOR_LINE}" font-size="42" font-family="sans-serif"
