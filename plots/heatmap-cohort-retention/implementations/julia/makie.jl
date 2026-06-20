@@ -64,6 +64,9 @@ ax = Axis(
     xlabel              = "Months Since Signup",
     xlabelcolor         = INK,
     xlabelsize          = 14,
+    ylabel              = "Signup Cohort",
+    ylabelcolor         = INK,
+    ylabelsize          = 14,
     xticklabelsize      = 10,
     yticklabelsize      = 10,
     xticklabelcolor     = INK_SOFT,
@@ -93,20 +96,31 @@ hm = heatmap!(ax, 1:n_periods, 1:n_cohorts, retention_data;
 )
 
 # Text annotations — batch all valid cells into one text! call
-text_xs   = Float64[]
-text_ys   = Float64[]
-text_strs = String[]
+# Use luminance-adaptive text colors: dark ink on lighter cells, white on darker cells
+function cell_text_color(v)
+    t = clamp(v / 100.0, 0.0, 1.0)
+    bg = get(ANYPLOT_SEQ, t)
+    to_linear(c) = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055)^2.4
+    lum = 0.2126 * to_linear(red(bg)) + 0.7152 * to_linear(green(bg)) + 0.0722 * to_linear(blue(bg))
+    return lum > 0.179 ? INK : colorant"#FFFFFF"
+end
+
+text_xs     = Float64[]
+text_ys     = Float64[]
+text_strs   = String[]
+text_colors = RGBAf[]
 for c in 1:n_cohorts, p in 1:n_periods
     v = retention_data[p, c]
     isnan(v) && continue
-    push!(text_xs,   Float64(p))
-    push!(text_ys,   Float64(c))
-    push!(text_strs, "$(round(Int, v))%")
+    push!(text_xs,     Float64(p))
+    push!(text_ys,     Float64(c))
+    push!(text_strs,   "$(round(Int, v))%")
+    push!(text_colors, RGBAf(cell_text_color(v)))
 end
 
 text!(ax, text_xs, text_ys;
     text     = text_strs,
-    color    = :white,
+    color    = text_colors,
     align    = (:center, :center),
     fontsize = 10,
 )
@@ -119,7 +133,7 @@ Colorbar(fig[1, 2], hm;
     ticklabelcolor = INK_SOFT,
     ticklabelsize  = 10,
     tickcolor      = INK_SOFT,
-    width          = 16,
+    width          = 22,
 )
 
 colgap!(fig.layout, 8)
