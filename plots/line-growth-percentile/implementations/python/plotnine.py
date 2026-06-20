@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_blank,
     element_line,
     element_rect,
@@ -116,10 +117,19 @@ plot = (
     + scale_fill_manual(values=band_fill_map)
     + scale_alpha_manual(values=band_alpha_map)
     + geom_line(df_boundary, aes(x="age", y="weight", group="percentile"), color=BOYS_BLUE, size=0.5, alpha=0.5)
-    + geom_line(df_median, aes(x="age", y="weight"), color=BOYS_BLUE, size=1.5)
-    + geom_text(df_labels, aes(x="age", y="weight", label="label"), ha="left", size=3.0, color=INK_SOFT, nudge_x=0.5)
+    + geom_line(df_median, aes(x="age", y="weight"), color=BOYS_BLUE, size=2.5)
+    + geom_text(df_labels, aes(x="age", y="weight", label="label"), ha="left", size=3.8, color=INK_SOFT, nudge_x=0.5)
     + geom_line(df_patient, aes(x="age", y="weight"), color=PATIENT_COLOR, size=1.5)
-    + geom_point(df_patient, aes(x="age", y="weight"), color=PATIENT_COLOR, fill=PAGE_BG, size=3, stroke=0.8)
+    + geom_point(df_patient, aes(x="age", y="weight"), color=PATIENT_COLOR, fill=PAGE_BG, size=4, stroke=1.0)
+    + annotate(
+        "text",
+        x=patient_ages[-1] + 0.8,
+        y=patient_weights[-1],
+        label="Patient",
+        color=PATIENT_COLOR,
+        size=3.5,
+        ha="left",
+    )
     + labs(x="Age (months)", y="Weight (kg)", title=title)
     + scale_x_continuous(breaks=range(0, 37, 3), limits=(0, 39))
     + scale_y_continuous(breaks=range(2, 20, 2))
@@ -128,6 +138,7 @@ plot = (
         figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         panel_grid_minor=element_blank(),
