@@ -1,0 +1,264 @@
+library: makie
+language: julia
+specification_id: heatmap-risk-matrix
+created: '2026-06-20T06:17:28Z'
+updated: '2026-06-20T06:43:54Z'
+generated_by: claude-sonnet
+workflow_run: 27862130419
+issue: 4567
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Perfect spec compliance — all required features implemented (green-yellow-red
+    gradient, descriptive tick labels, labeled markers with jitter, zone labels, cell
+    grid lines)
+  - CVD-safe shape encoding (circle/diamond/triangle/square) provides redundant category
+    differentiation alongside color
+  - 'Idiomatic Makie composable layout: Legend(fig[2,1:2], ax) auto-extracts labeled
+    series from scatter! calls — a layout feature unique to Makie'
+  - 'Fully theme-adaptive chrome: all text, backgrounds, marker fills correctly switch
+    between light and dark modes'
+  - Realistic enterprise risk dataset with plausible likelihood/impact ratings across
+    Technical/Financial/Operational/Regulatory categories
+  weaknesses:
+  - 'Custom 3-stop RISK_CMAP uses Imprint-sourced colors (#009E73, #DDCC77, #AE3030)
+    but is not imprint_seq or imprint_div — VQ-07 docked to 1/2 (spec mandates green→amber→red
+    for risk matrix, which is a valid semantic exception, but the palette rule expects
+    only imprint_seq/imprint_div for continuous data)'
+  - apply_jitter helper function breaks the KISS flat-script structure (no functions/classes
+    rule) — could be inlined as a short block after risk data definition
+  - Risk item labels at fontsize=11 (22 source-px on 2400-px canvas) slightly small
+    for mobile readability — bump to fontsize 12 or 13
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "heatmap-risk-matrix · julia · makie · anyplot.ai" at titlesize=22, spans ~65% of plot width, dark ink (#1A1A17). X-axis label "Likelihood" and Y-axis label "Consequence / Impact" both at xlabelsize=16/ylabelsize=16 in dark ink. Tick labels (Rare/Unlikely/Possible/Likely/Almost Certain; Negligible/Minor/Moderate/Major/Catastrophic) at xticklabelsize=12/yticklabelsize=12 in INK_SOFT (#4A4A44). Colorbar label and zone tick labels visible. All chrome readable.
+      Data: 5×5 heatmap transitions from Imprint green (#009E73) at bottom-left (low risk) through amber (#DDCC77) to matte red (#AE3030) at top-right (critical risk). 12 risk items plotted as hollow markers (cream fill #FFFDF6, INK stroke #1A1A17) with distinct shapes per category: circle=Technical, diamond=Financial, triangle=Operational, square=Regulatory. Risk name labels (fontsize=11, dark INK) positioned above each marker. Cell risk scores annotated in each grid cell at fontsize=9. Colorbar on right shows zone labels (Low 1–4, Medium 5–9, High 10–16, Critical 20–25). Horizontal legend below shows all 4 category shapes. First series/gradient starts at #009E73 (correct).
+      Legibility verdict: PASS — all text readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title, axis labels, tick labels all rendered in warm cream (INK=#F0EFE8 on dark). Colorbar zone labels in INK_SOFT (#B8B7B0). Legend labels in INK_SOFT. All chrome light-colored and clearly legible against the dark surface. No dark-on-dark failures detected.
+      Data: Heatmap gradient colors (green→amber→red) are visually identical to the light render — only chrome flips. Markers now show dark fill (#242420=ELEVATED_BG on dark) with light cream stroke (#F0EFE8=INK on dark), maintaining visibility on all heatmap cell backgrounds. Risk name labels rendered in light cream (#F0EFE8), readable against the colored heatmap cells. Cell score annotations in INK_SOFT with 0.75 alpha — subtle but present.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=22, axis labels=16, tick labels=12,
+          risk names=11, cell scores=9). Readable in both themes. Minor dock: fontsize=11
+          risk labels (22 source-px) slightly small for mobile.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Each risk item in its own cell; jitter function handles co-location;
+          no label collisions detected.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers at markersize=20 visible and shape-distinguishable. Cell
+          score annotations at fontsize=9 intentionally subtle. Minor dock for small-ish
+          marker size on large canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape encoding provides CVD-safe redundant category differentiation.
+          INK-stroke markers readable on all heatmap colors.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 suits 5x5 symmetric matrix. Heatmap fills most of
+          canvas; balanced colorbar and legend placement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with semantic tick labels (Rare/Unlikely/Possible/Likely/Almost
+          Certain; Negligible/Minor/Moderate/Major/Catastrophic).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Custom RISK_CMAP uses Imprint colors (#009E73, #DDCC77, #AE3030)
+          in a 3-stop gradient — not imprint_seq or imprint_div. Plot backgrounds
+          (#FAF8F1/#1A1A17) and all chrome are theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above-default design: shape encoding for CVD safety, risk score
+          cell annotations, colorbar zone labels, traffic-light gradient, frameless
+          legend with theme-adaptive labels.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid replaced with explicit semi-transparent cell lines (linewidth=1.2,
+          alpha=0.6); all 4 spines retained (appropriate for enclosed heatmap); frameless
+          legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient creates immediate visual hierarchy low→critical; Cyber
+          Attack at (5,5) stands out as single critical-zone item; zone labels guide
+          interpretation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5x5 risk matrix heatmap with labeled markers.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: green-yellow-red gradient, descriptive tick labels,
+          labeled markers with jitter, zone labels (Low/Medium/High/Critical), cell
+          grid lines.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Likelihood on x-axis, impact on y-axis, risk score=likelihood*impact
+          as colormap, all 12 items plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: heatmap-risk-matrix · julia · makie · anyplot.ai — correct
+          format. Legend shows all 4 category shapes with correct labels.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 12 risks spanning likelihood 1-5 and impact 2-5; covers all 4 categories.
+          Bottom rows (Negligible impact) are unpopulated — realistic but leaves bottom
+          of matrix under-demonstrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real enterprise/project risks (Data Breach, Cyber Attack, Budget
+          Overrun, Vendor Failure, etc.) in neutral professional context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Risk scores correctly computed (likelihood x impact); zone boundaries
+          align with standard ISO 31000 risk matrix conventions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: apply_jitter helper function breaks flat-script KISS rule; functionally
+          justified for deterministic cell offsetting but adds structural complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; jitter algorithm is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; no over-engineering; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct output format
+          for static library.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses CairoMakie: heatmap!, scatter! with label attribute,
+          hlines!/vlines!, Colorbar with custom zone ticks, rowgap! for layout spacing,
+          xlims!/ylims!.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Makie composable layout (fig[1,1], fig[1,2], fig[2,1:2]) and automatic
+          legend extraction from labeled scatter! calls — not available in matplotlib.
+          cgrad with explicit stop positions for precise gradient control.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - alpha-blending
