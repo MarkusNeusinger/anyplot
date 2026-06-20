@@ -1,0 +1,271 @@
+library: ggplot2
+language: r
+specification_id: heatmap-risk-matrix
+created: '2026-06-20T06:00:44Z'
+updated: '2026-06-20T06:27:41Z'
+generated_by: claude-sonnet
+workflow_run: 27862085856
+issue: 4567
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - Perfect spec compliance — all five required features implemented (zone-colored
+    cells, descriptive axis labels, labeled markers with jitter, risk-level legend,
+    cell delineation via tile borders)
+  - 'Semantically correct Imprint palette mapping: #009E73 (brand green) for Low,
+    #DDCC77 (amber anchor) for Medium caution, #BD8233 (ochre) for High, #AE3030 (matte
+    red) for Critical — all from the authorised palette'
+  - Critical zone emphasized with an annotate('rect') red border outline, adding immediate
+    visual emphasis to the highest-risk cells
+  - 'Realistic software project risk register: 12 plausible risks (Budget Overrun,
+    Data Breach, Ransomware, etc.) with sensible likelihood/impact ratings'
+  - Both themes adapt correctly — all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) wired through to every non-data element
+  - Risk score reference labels (small muted numbers) in each cell corner add useful
+    context without visual clutter
+  weaknesses:
+  - 'Top-row label clipping: risks at impact=5 (Data Breach, Ransomware, Critical
+    Dependency) have their text labels placed above markers with vjust=-0.55, but
+    the y-limit of 5.88 leaves insufficient headroom — ''Ransomware'' label is visibly
+    truncated at the panel top boundary in both renders. Fix: expand y upper limit
+    to ~6.3 or reduce vjust to -0.35 so labels stay within the panel.'
+  - 'Critical zone border slight mismatch: annotate(''rect'', xmin=3.5, xmax=5.5,
+    ymin=3.5, ymax=5.5) encloses cell (likelihood=4, impact=4) whose score=16 is High
+    (not Critical). The border should start at likelihood=3.5+1=4.5 to xmax=5.5 and
+    from ymin=4.5 to ymax=5.5 to strictly include only the 3 Critical cells — or accept
+    the rectangle as a visual convention but note it in a comment.'
+  - 'Moderate label crowding at impact=3 (Moderate row): Scope Creep (likelihood=5)
+    and Vendor Delay (likelihood=4) are adjacent and their text labels nearly touch.
+    Minor — jitter helps but labels are still close.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "heatmap-risk-matrix · r · ggplot2 · anyplot.ai" rendered bold in dark ink (#1A1A17), clearly readable. Axis labels "Likelihood" (x) and "Impact" (y) in dark ink, appropriately sized. Tick labels use descriptive text (Rare/Unlikely/Possible/Likely/Almost Certain on x; Negligible/Minor/Moderate/Major/Catastrophic on y) in INK_SOFT (#4A4A44), readable. Legend "Risk Level" with four swatches (Critical at top, Low at bottom) styled with elevated background and soft border.
+      Data: 5×5 grid of colored tiles — green (Low 1-4), amber/yellow (Medium 5-9), ochre/brown (High 10-16), matte red (Critical 20-25). 12 white-filled circle markers with dark borders overlay the matrix, each labeled with the risk name in dark text above. Small muted score numbers in cell bottom-left corners. Red rectangle border outlines the critical zone (xmin=3.5–xmax=5.5, ymin=3.5–ymax=5.5).
+      Issue: "Ransomware" label at impact=5 (Catastrophic) row is visibly clipped at the panel top boundary — "Ransomwa..." is all that renders. Adjacent labels (Data Breach, Critical Dependency) are crowded in the same top row.
+      Legibility verdict: PASS with caveats — most text is readable but "Ransomware" label is panel-clipped.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light tokens (INK=#F0EFE8 or INK_SOFT=#B8B7B0). No dark-on-dark failures observed. Legend background uses ELEVATED_BG (#242420) with INK_SOFT border — correctly elevated.
+      Data: Zone colors are identical to light render (#009E73 / #DDCC77 / #BD8233 / #AE3030) — only chrome flips. Marker fill switches to dark PAGE_BG (#1A1A17) with INK border (#F0EFE8), making markers lighter-rimmed on the dark surface. Risk labels appear in near-white ink. Muted score numbers are soft gray (#A8A79F) — still legible against the colored tiles. Red critical zone border (#AE3030) remains visible.
+      Issue: Same "Ransomware" panel-boundary clipping present as in light render.
+      Legibility verdict: PASS with same caveat — no dark-on-dark failures, chrome adapts correctly.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis labels, and tick labels readable in both themes. Risk
+          item labels mostly readable but 'Ransomware' at impact=5 is clipped at panel
+          top boundary in both renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Three risks in the Catastrophic row (Data Breach, Ransomware, Critical
+          Dependency) create label crowding. Vendor Delay/Scope Creep labels in Moderate
+          row are also close. No severe collision but noticeable density.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone tiles clearly differentiated, markers visible with PAGE_BG fill
+          + INK border. Small risk score numbers are subtle but intentionally so.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All zone colors are from the Imprint palette or semantic anchors.
+          CVD-safe green/amber/ochre/red sequence. Markers use shape+outline redundant
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas. Good proportions overall. Minor
+          deduction for panel-boundary overflow of top-row risk labels (stays within
+          canvas but extends past panel limit).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format. Axes labeled 'Likelihood' and 'Impact'
+          with descriptive tick labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Zone colors use Imprint brand green (#009E73), amber anchor (#DDCC77),
+          ochre (#BD8233), matte red (#AE3030). Backgrounds #FAF8F1 / #1A1A17 correct.
+          Data colors identical between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional semantic color mapping (green=safe, amber=caution,
+          ochre=elevated, red=critical), risk score corner labels, critical zone border
+          annotation, white-circle markers with ink outline. Professional appearance.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed, panel border removed, legend styled with elevated background
+          and soft border, x-axis ticks rotated 20°. Noticeably cleaner than default
+          ggplot2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Immediate risk story from green-to-red zone gradient. Critical zone
+          gets additional red border emphasis. Named markers let viewer read specific
+          risks at a glance. Risk scores provide quantitative context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5x5 heatmap risk matrix.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All 5 required features: zone-colored cells, descriptive axis labels,
+          labeled markers with jitter, zone legend, cell delineation.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Likelihood on x, Impact on y, risk score = likelihood x impact, all
+          12 items correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-risk-matrix · r · ggplot2 · anyplot.ai' correct. Legend
+          'Risk Level' with all four zones, reversed order.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 5x5 matrix, all zone types present, 12 individual risks, jitter
+          for overlap prevention, risk scores per cell.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software project risk register with plausible risks (Budget Overrun,
+          Data Breach, Ransomware, Scope Creep, etc.) and sensible likelihood/impact
+          ratings.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 1-5 scale, 12 items (within 5-20 spec range), scores 1-25.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean layered ggplot2 structure, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_tile for heatmap, scale_fill_manual for zones, annotate('rect')
+          for border, scale_x/y_continuous with breaks and labels, theme() for chrome.
+          Idiomatic ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layered composition of 4 geoms + annotate, expand.grid for matrix,
+          dplyr::case_when for zone classification, factor ordering for legend, guide_legend(reverse=TRUE).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
