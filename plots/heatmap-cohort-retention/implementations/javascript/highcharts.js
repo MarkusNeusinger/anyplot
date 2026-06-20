@@ -113,13 +113,13 @@ function drawAll() {
     );
   });
 
-  // X-axis labels: "Wk 0" … "Wk 9", centered in each column
+  // X-axis labels: "Wk 0" … "Wk 9", centered in each column; bold Wk 0 to anchor the 100% baseline
   periodLabels.forEach((lbl, p) => {
     const px = ch.plotLeft + (p + 0.5) * cW;
     drawn.push(
       r.text(lbl, px, ch.plotTop + ch.plotHeight + 18)
         .attr({ align: 'center', zIndex: 3 })
-        .css({ color: t.inkSoft, fontSize: '13px' })
+        .css({ color: t.inkSoft, fontSize: '13px', fontWeight: p === 0 ? '700' : '400' })
         .add()
     );
   });
@@ -163,7 +163,7 @@ function drawAll() {
   [['100%', bY + 10], ['50%', bY + bH / 2 + 4], ['0%', bY + bH + 2]].forEach(([txt, cy]) => {
     drawn.push(
       r.text(txt, bX + bW + 4, cy)
-        .css({ color: t.inkSoft, fontSize: '11px' })
+        .css({ color: t.inkSoft, fontSize: '13px' })
         .add()
     );
   });
@@ -171,7 +171,7 @@ function drawAll() {
   drawn.push(
     r.text('Retention', bX + bW / 2, bY - 6)
       .attr({ align: 'center', zIndex: 3 })
-      .css({ color: t.inkSoft, fontSize: '11px' })
+      .css({ color: t.inkSoft, fontSize: '13px' })
       .add()
   );
 }
@@ -181,13 +181,17 @@ Highcharts.chart('container', {
     backgroundColor: 'transparent',
     animation: false,
     style: { fontFamily: 'inherit' },
-    margin: [68, 72, 58, 200],
+    margin: [90, 72, 58, 200],
     events: { load: drawAll, redraw: drawAll }
   },
   credits: { enabled: false },
   title: {
     text: 'heatmap-cohort-retention · javascript · highcharts · anyplot.ai',
     style: { color: t.ink, fontSize: '22px', fontWeight: '600' }
+  },
+  subtitle: {
+    text: 'May 2024 leads all cohorts with 78% week-1 retention — average across cohorts: 72%',
+    style: { color: t.inkSoft, fontSize: '13px' }
   },
   xAxis: { visible: false },
   yAxis: { visible: false, gridLineWidth: 0 },
