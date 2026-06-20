@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' curve-oc: Operating Characteristic (OC) Curve
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-06-20
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 88/100 | Created: 2026-06-20
 
 library(ggplot2)
 library(dplyr)
