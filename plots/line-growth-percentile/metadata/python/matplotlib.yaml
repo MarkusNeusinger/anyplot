@@ -1,42 +1,61 @@
 library: matplotlib
+language: python
 specification_id: line-growth-percentile
 created: '2026-03-19T19:55:06Z'
-updated: '2026-03-19T20:08:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23313901307
+updated: '2026-06-20T09:42:23Z'
+generated_by: claude-sonnet
+workflow_run: 27866517577
 issue: 4555
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent data storytelling with clinically meaningful patient trajectory and
-    annotated growth events
-  - Custom blue gradient palette with intentional color hierarchy creates a professional
-    clinical look
-  - Complete spec compliance — all 7 percentile curves, filled bands, right-margin
-    labels, patient overlay
-  - Deterministic, realistic WHO-like data with appropriate weight values
-  - Clean, well-organized code with no unnecessary complexity
+  - 'Perfect spec compliance: all 7 percentile curves rendered as filled bands with
+    graduated alpha, P50 emphasized with bold/thick line, percentile labels on right
+    margin with collision avoidance, patient trajectory as connected green markers
+    over blue reference bands'
+  - 'Strong semantic color design: Imprint blue (#4467A3) used for boys-blue convention
+    (correctly documented as semantic exception), patient line in brand green #009E73
+    stands out clearly against the blue background'
+  - 'Distinctive matplotlib features: axvspan() for developmental phase shading, ax.get_xaxis_transform()
+    for mixed-coordinate ''Infancy'' label, minor tick locator for clinical chart
+    convention, annotation_clip=False for right-margin percentile labels'
+  - 'Clinical storytelling: LGA normalization arc is explicitly annotated (''High
+    birth weight (LGA)'' and ''Normalized to P50''), developmental phase context via
+    ''Infancy'' shading, P50 emphasis guides clinical interpretation'
+  - 'Perfect code quality: KISS structure, all font sizes explicitly set, dynamic
+    title fontsize formula, deterministic data, all imports used, no deprecated APIs,
+    correct output naming'
   weaknesses:
-  - Green annotation text alongside red creates a red-green color pairing that could
-    be improved for colorblind accessibility
-  - Right-margin percentile labels are slightly compressed at higher percentiles
-  image_description: The plot displays a pediatric growth chart (Weight-for-Age, Boys,
-    0-36 months) with WHO-style percentile curves. Seven percentile lines (P3, P10,
-    P25, P50, P75, P90, P97) are drawn in graduated blue tones, with the P50 median
-    line rendered thicker and darker. Filled bands between adjacent percentile curves
-    use a blue gradient with varying alpha — darker at the extremes (P3-P10, P90-P97),
-    lighter near the median. Percentile labels appear on the right margin, with P50
-    in bold. A red patient trajectory line with circular white-edged markers overlays
-    the bands, showing 12 data points from birth to 36 months. Two clinical annotations
-    with arrows highlight "Growth faltering" (around 9 months, red text) and "Catch-up
-    growth" (around 30 months, green text). The title follows the required format.
-    A subtitle reads "Weight-for-Age, Boys, 0-36 months - WHO Growth Standards". Axes
-    are labeled "Age (months)" and "Weight (kg)". Top and right spines are removed,
-    with a subtle y-axis grid. The legend shows "Patient (Boy)" in the upper left.
+  - 'Synthetic weight values diverge substantially from real WHO standards at older
+    ages: P50 at 36 months is ~20 kg in the code versus ~14.3 kg in actual WHO data
+    (~40% too high). The polynomial formula grows too steeply after 12 months. Consider
+    scaling the polynomial to approximate: P50 = 3.3 kg at birth, 9.7 kg at 12 months,
+    12.2 kg at 24 months, 14.3 kg at 36 months.'
+  - Birth annotation ('High birth weight (LGA)') positioned at xytext=(3.0, 5.2 kg)
+    overlaps slightly with the patient trajectory line in the 2-4 month region where
+    patient weight is ~5 kg. Move the annotation higher, e.g. xytext=(4.0, 7.5) to
+    position the text clearly above the patient line at that age.
+  - 'DE-02 refinement: the right-side percentile labels (outside axes) could be improved
+    by aligning the annotation anchor to ax.transAxes to avoid manual x=36.6 positioning
+    that may drift if xlim changes. Minor visual polish opportunity.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white.
+      Chrome: fig.suptitle "line-growth-percentile · python · matplotlib · anyplot.ai" at ~12pt — dark ink (#1A1A17), readable and fills ~65% of canvas width as expected. Subtitle "Weight-for-Age, Boys, 0–36 months • WHO Growth Standards" at 8pt readable in INK_MUTED. Y-axis "Weight (kg)" and X-axis "Age (months)" at 10pt, dark, clearly readable. Tick labels at 8pt in INK_SOFT (#4A4A44) — all readable. Legend "Patient (Boy, LGA)" in upper-left with elevated cream background frame, INK_SOFT text — readable.
+      Data: Percentile bands in Imprint blue (#4467A3) with graduated alpha (darkest at extremes P3/P10 and P90/P97, lightest at P25/P75). Seven percentile curves at varying linewidth and alpha. P50 boldest (lw=2.5, full alpha, solid). Patient trajectory in Imprint green (#009E73, lw=2.0) with circular markers, white edge, zorder=5 — stands out clearly. Clinical annotations "High birth weight (LGA)" (arrow from birth point) and "Normalized to P50" (arrow to final point) in INK_SOFT, readable. "Infancy" italic label in shaded 0–12 month region. Right-margin percentile labels P3–P97 in blue.
+      Legibility verdict: PASS — all text readable. Minor: birth annotation text sits close to patient trajectory line at 2–4 months.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Subtitle, axis labels, tick labels in INK_SOFT (#B8B7B0) — all readable as light text on dark background. NO dark-on-dark failures observed. Legend frame in elevated dark (#242420) with light text — readable.
+      Data: Percentile bands, curves, and patient trajectory colors are IDENTICAL to light render (Imprint blue #4467A3 bands, #009E73 patient line, #009E73 markers). Only chrome flips. Annotations with INK_SOFT arrows readable against dark background. Right-margin percentile labels in blue — visible but slightly lower contrast than light render (still acceptable).
+      Legibility verdict: PASS — all text readable in dark theme. No dark-on-dark issues.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,44 +63,61 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 16pt'
+        comment: 'All font sizes explicitly set (title dynamic formula, xlabel/ylabel=10,
+          ticks=8, legend=8, annotations=8). Well-proportioned at canvas size. Minor:
+          subtitle at 8pt may be small at 400px mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Percentile labels slightly compressed at upper end but readable
+        comment: Birth annotation xytext=(3.0, 5.2 kg) slightly overlaps patient trajectory
+          line in 2-4 month region. All other text clearly separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Patient markers well-sized with white edges, percentile lines differentiated
+        comment: Patient line markersize=5.5 and lw=2.0 perfectly visible. Percentile
+          bands at graduated alpha clearly communicate statistical depth. All elements
+          optimally sized.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue+red is colorblind-safe but green annotation alongside red is
-          problematic
+        comment: Green (#009E73) patient line clearly distinguishable from blue (#4467A3)
+          bands. No red-green sole signal. Annotations use INK_SOFT (non-hue signal).
+          CVD-safe combination.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent 16:9 layout, plot fills canvas well
+        comment: Canvas gate passed. Plot fills canvas well in landscape 3200x1800.
+          Right margin (89%) reserved for percentile labels. Top margin (82%) for
+          two title lines. No content cut off. Balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Age (months), Weight (kg)'
+        comment: Y-axis 'Weight (kg)' with units. X-axis 'Age (months)' with units.
+          Both descriptive and correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient (first/only categorical series) uses #009E73 (Imprint position
+          1). Percentile bands use #4467A3 (Imprint position 3) as semantic boys-blue
+          exception — correctly documented. Background #FAF8F1 (light) / #1A1A17 (dark).
+          Theme chrome fully adaptive. Data colors identical across both renders.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,19 +125,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom blue gradient palette with intentional hierarchy, above defaults
+        comment: 'Strong design: intentional semantic color exception for boys-blue,
+          graduated band alphas (darker extremes, lighter middle), bold P50 emphasis,
+          clinical phase shading, collision-avoidance for right-margin labels. Clearly
+          above library defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, minor ticks, thin spine lines
+        comment: 'Good refinement: top/right spines removed, remaining spines in INK_SOFT
+          at 0.6 linewidth, Y-only grid at alpha=0.15, minor tick marks on x-axis
+          (clinical convention), legend frame with ELEVATED_BG fill. Some polish but
+          not every detail perfected.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Patient trajectory tells clinical story with annotated growth events
+        comment: 'Good storytelling: clinical annotations explicitly label the LGA
+          normalization arc, ''Infancy'' shading adds temporal context, P50 emphasis
+          creates clear focal point. Viewer immediately sees the trajectory from high
+          birth weight to median. Annotations could be better positioned to avoid
+          trajectory overlap.'
     spec_compliance:
       score: 15
       max: 15
@@ -111,27 +157,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: line chart with filled percentile bands'
+        comment: Correct WHO/CDC-style growth chart with percentile curves and patient
+          overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: 'All required features present: filled percentile bands with graduated
+          alpha, P50 emphasized (bold, thicker), boys-blue convention, P3/P10/P25/P50/P75/P90/P97
+          labels on right margin, patient data as connected markers, age in months
+          on x-axis, synthetic WHO-like data.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Age on x-axis, weight on y-axis, all data visible
+        comment: 'X-axis: age_months (0-36), Y-axis: weight in kg. All percentile
+          curves and patient data correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend label
+        comment: 'Title: ''line-growth-percentile · python · matplotlib · anyplot.ai''
+          — exact required format. Legend: ''Patient (Boy, LGA)'' — descriptive and
+          correct.'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -139,19 +192,29 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 percentiles with bands, clinically interesting patient trajectory
+        comment: 'Full feature coverage: all 7 percentile curves (P3-P97), filled
+          bands between adjacent curves, 12 patient data points across the full 0-36
+          month range, clinical annotations, developmental phase shading, patient
+          trajectory that crosses multiple percentile bands.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO weight-for-age for boys, neutral healthcare topic
+        comment: WHO Weight-for-Age chart for boys 0-36 months with LGA normalization
+          — a well-known, clinically appropriate and neutral pediatric scenario. No
+          controversial content.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Realistic infant/toddler weight values matching WHO standards
+        passed: false
+        comment: 'The synthetic polynomial diverges substantially from real WHO data
+          at older ages: P50 at 36 months = 20.1 kg in code vs ~14.3 kg in actual
+          WHO standards (~40% too high). At 24 months, P50 = ~15.9 kg vs actual ~12.2
+          kg. Values at birth are accurate (3.3 kg). The chart''s internal consistency
+          (LGA patient normalizing to P50) is maintained, but the absolute magnitudes
+          at 24-36 months are notably higher than real WHO data.'
     code_quality:
       score: 10
       max: 10
@@ -161,47 +224,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save flow
+        comment: 'Clean linear structure: imports → theme tokens → data → canvas →
+          phase shading → bands → curves → labels → patient → annotations → chrome
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation
+        comment: Fully deterministic — all data computed from polynomial formulas,
+          no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os (ANYPLOT_THEME), sys (path manipulation), matplotlib.pyplot, matplotlib.ticker
+          (MultipleLocator), numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean, Pythonic. zip(..., strict=True) is modern Python 3.10+. Collision
+          avoidance algorithm for right-margin labels is appropriately complex for
+          the visual goal. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          APIs.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic usage: ax.fill_between(), ax.axvspan(), ax.annotate()
+          with arrowprops and connectionstyle, ax.get_xaxis_transform() for mixed
+          coordinates, ax.xaxis.set_minor_locator(), annotation_clip=False for out-of-axes
+          labels, ax.set_axisbelow(). All axes methods (no pyplot plot calls).'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Consistent axes methods, fill_between, annotate with arrowprops
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: fill_between, annotation_clip=False, connectionstyle, MultipleLocator
+        comment: 'Uses distinctively matplotlib features: axvspan() for region shading,
+          get_xaxis_transform() for cross-coordinate text, MultipleLocator for minor
+          ticks, connectionstyle=''arc3,rad=...'' for curved arrows, annotation_clip=False
+          for margin labels. These would require significant effort or workarounds
+          in other libraries.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -211,9 +288,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - gradient-fill
-  - grid-styling
   - edge-highlighting
+  - grid-styling
