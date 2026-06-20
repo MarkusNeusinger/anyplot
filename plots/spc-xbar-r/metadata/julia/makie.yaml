@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: spc-xbar-r
 created: '2026-06-20T13:12:49Z'
-updated: '2026-06-20T13:19:24Z'
+updated: '2026-06-20T13:31:00Z'
 generated_by: claude-sonnet
 workflow_run: 27871934917
 issue: 4551
@@ -15,42 +15,38 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Complete dual-panel SPC chart (X-bar + R) with all required elements: UCL/LCL
-    (red dashed), warning limits (ochre dashed), center lines (solid), and highlighted
-    OOC points'
-  - 'Excellent redundant OOC encoding: color (red) + shape (diamond) + size (14 vs
-    10) + stroke make violations immediately obvious'
-  - Both themes correctly implemented with adaptive chrome tokens; no dark-on-dark
-    failures in dark render
-  - linkxaxes!() for shared x-axis is the correct idiomatic Makie pattern for multi-panel
-    charts
-  - Realistic CNC machining context with properly calculated SPC constants (A2=0.577,
-    D4=2.115, d2=2.326) and injected OOC signals covering both mean shift and range
-    excursion
-  - Right-edge limit labels (UCL, X-bar-bar, LCL, R-bar) follow professional SPC chart
-    conventions and eliminate the need for a legend box
+  - Full SPC implementation with correct statistical foundations (A2, D4, d2 constants)
+    — all required features present and working
+  - 'Excellent semantic color mapping: green data line, red control limits/OOC points,
+    amber warning limits, INK neutral center line — each color earns its role'
+  - 'Clean Makie idioms: linkxaxes!, figure-level title via Label(fig[0, 1], ...),
+    rowgap! — shows deep Makie familiarity'
+  - 'Theme-adaptive chrome is correct throughout: no dark-on-dark failures, all text
+    readable in both renders'
+  - OOC points use redundant encoding (diamond shape + red color + larger size + white
+    stroke) — strong accessibility
   weaknesses:
-  - 'Warning limits (±2σ) use ochre #BD8233 (categorical palette slot 4) instead of
-    the amber semantic anchor #DDCC77 (warning/caution per style guide); replace IMPRINT_PALETTE[4]
-    with colorant"#DDCC77" for warning limit lines in both X-bar and R panels'
-  - Axis labels (ylabelsize/xlabelsize=13pt) and tick labels (xticklabelsize/yticklabelsize=11pt)
-    are one step below Makie library guide defaults (14pt and 12pt respectively);
-    increase to match recommendations
+  - 'Warning limit lines (amber dashed) are unlabeled — no UWL/LWL right-edge labels
+    in either panel; readers must infer their meaning from color and dashing pattern
+    alone. Fix: add text! labels at x_right for uwl_xbar, lwl_xbar, and uwl_r using
+    ANYPLOT_AMBER at fontsize=11'
+  - Design Excellence is functional rather than sophisticated — add shaded Band regions
+    between UCL and UWL to visually communicate warning zones and lift DE-03 storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "Shaft Diameter QC · spc-xbar-r · julia · makie · anyplot.ai" in bold near-black ink, spans ~68% of width; Y-axis labels "Sample Mean (mm)" and "Sample Range (mm)" in near-black; X-axis label "Sample Number" in near-black; tick labels in #4A4A44 (INK_SOFT); right-edge limit labels in matte red (UCL/LCL) and near-black (X-bar-bar, R-bar) — all readable
-      Data: Green #009E73 data lines and circular markers for in-control points; red #AE3030 diamond markers (size 14, white stroke) for 3 OOC points (samples 8, 19 in X-bar; sample 25 in R); red dashed UCL/LCL lines; ochre #BD8233 dashed warning limits (±2σ); solid near-black center lines
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "Shaft Diameter QC · spc-xbar-r · julia · makie · anyplot.ai" in bold dark ink, clearly readable; Y-axis labels "Sample Mean (mm)" and "Sample Range (mm)" in dark INK; X-axis label "Sample Number" in dark INK; tick labels in INK_SOFT gray; right-edge limit labels UCL/X̄/LCL/R̄ readable in red/black colors
+      Data: green #009E73 line and circle markers for in-control points; red #AE3030 diamond markers (markersize=14) for OOC points at samples 8, 19, 25 (X-bar) and sample 25 (R); amber #DDCC77 dashed warning limit lines; red #AE3030 dashed UCL/LCL lines; solid black center lines
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title in near-white #F0EFE8; axis labels and tick labels in #B8B7B0 (INK_SOFT dark); right-edge UCL/LCL labels in matte red #AE3030 (readable against dark); center line labels (X-bar-bar, R-bar) in near-white INK — all readable against dark background; no dark-on-dark failures detected
-      Data: Green #009E73 data lines and markers identical to light render; red #AE3030 OOC diamonds identical; center lines now render as near-white (INK token correctly adapts); ochre warning limits identical; red dashed UCL/LCL identical — data colors unchanged between themes as required
-      Legibility verdict: PASS — all text clearly readable against dark background; center lines correctly flip to near-white; no dark-on-dark failures
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title and axis labels in near-white #F0EFE8; tick labels in #B8B7B0 (INK_SOFT dark); center lines flip to near-white; right-edge labels UCL/LCL in red (readable), X̄/R̄ in near-white; no dark-on-dark failures detected
+      Data: green #009E73 line and markers identical to light render; red #AE3030 diamonds for OOC points; amber #DDCC77 warning limit lines visible against dark surface; red #AE3030 dashed UCL/LCL lines visible
+      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,54 +54,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; axis labels at 13pt and tick labels
-          at 11pt slightly below Makie guide defaults (14pt/12pt) but legible
+        comment: All font sizes explicitly set and readable in both themes; right-edge
+          limit labels at fontsize=11 are slightly small; warning limit lines (amber)
+          are unlabeled
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Right-edge limit labels well-separated; no label/data collisions
-          in either panel or theme
+        comment: No text or element collisions in either panel or either theme
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: In-control circles (size 10) and OOC diamonds (size 14) appropriately
-          prominent for 30 sparse samples; all control lines clearly visible
+        comment: 30 samples at markersize=10/14 well-adapted to density; lines at
+          2.2pt clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-green differentiation backed by redundant shape (circle vs diamond)
-          and size encoding; CVD-safe
+        comment: OOC points use redundant encoding (diamond shape + red color + larger
+          size); CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed; dual-panel shared-x-axis layout clean;
-          no overflow or clipping
+        comment: Canvas gate passed 3200x1800; two-panel layout fills canvas well
+          with good rowgap
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sample Mean (mm), Sample Range (mm), Sample Number descriptive with
-          units; title format correct
+        comment: Sample Mean (mm), Sample Range (mm), Sample Number — all descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Data uses #009E73 first; OOC/limits use #AE3030 semantic red correctly;
-          backgrounds correct; themes adaptive; BUT warning limits use ochre #BD8233
-          (categorical slot 4) instead of amber semantic anchor #DDCC77 (warning/caution
-          per style guide)'
+        passed: true
+        comment: 'Data line #009E73; OOC/limits #AE3030 semantic; warning limits #DDCC77
+          amber anchor; center line INK neutral; correct backgrounds; data colors
+          identical across themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,24 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color mapping (green=data, red=error, ochre=warning),
-          redundant OOC encoding, right-edge labels following Tufte/SPC conventions;
-          above defaults
+        comment: Well-configured with intentional semantic color mapping; professional
+          two-panel SPC layout; above defaults but not FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle grid at alpha=0.12, clean panel
-          spacing via rowgap!, INK_SOFT for spines and ticks
+        passed: false
+        comment: Top/right spines removed, grid at 12% alpha, INK_SOFT tick labels;
+          warning limits lack identifying labels; limited padding/margin finesse beyond
+          rowgap
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: OOC points stand out immediately via color+shape+size redundancy;
-          dual-panel layout communicates mean/range duality; 3 injected signals demonstrate
-          detection capability
+        passed: false
+        comment: OOC red diamonds create clear focal points; extreme spike at sample
+          8 draws the eye; amber warning zones add interpretive layers but no annotations
+          or shaded zones explain the process excursions
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: X-bar chart top, R chart bottom, vertically stacked sharing x-axis
-          — canonical SPC dual-chart layout
+        comment: X-bar chart (top) + R chart (bottom) stacked vertically with shared
+          x-axis
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: UCL/LCL dashed and labeled; center line solid and distinct; OOC points
-          highlighted (different color + diamond marker); warning limits (±2σ) shown
-          as lighter dashed lines; 3 OOC signals; standard SPC constants used
+        comment: Center line solid, UCL/LCL dashed and labeled, warning limits ±2sigma
+          (amber dashed), OOC highlighted (red diamonds), 3 OOC in X-bar + 1 in R;
+          standard constants A2=0.577, D4=2.115, d2=2.326 for n=5
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: sample_id on x-axis; sample_mean on top y-axis; sample_range on bottom
-          y-axis; all 30 samples shown
+        comment: Sample_id on x-axis (1-30), sample means on top y-axis (mm), sample
+          ranges on bottom y-axis (mm)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Shaft Diameter QC · spc-xbar-r · julia · makie · anyplot.ai — descriptive
-          prefix + mandatory suffix format correct; right-edge labels serve as legend
+        comment: Shaft Diameter QC · spc-xbar-r · julia · makie · anyplot.ai matches
+          optional descriptive-prefix format; in-context right-edge labels replace
+          formal legend
     data_quality:
       score: 15
       max: 15
@@ -173,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both X-bar AND R chart; UCL/LCL, warning limits, center lines all
-          present; OOC signals cover mean shift (above+below) and range excursion
+        comment: Both X-bar and R charts demonstrated; in-control and OOC points shown;
+          warning limits and control limits present; center lines for both subcharts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC machining shaft diameter is a canonical SPC use case; 25mm nominal
-          with ±0.04mm random variation is realistic; neutral manufacturing domain
+        comment: Shaft diameter measurements from CNC machining (25mm nominal, ±0.04mm
+          sigma) is a textbook SPC scenario; neutral manufacturing context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 subgroups (within 20-50 range); n=5 subgroup size (within 4-5);
-          realistic control limit spread; range values 0.03-0.35mm realistic
+        comment: 30 subgroups of n=5 within the 20-50 spec range; values ~25mm with
+          ranges ~0.05-0.35mm realistic for precision machining
     code_quality:
       score: 10
       max: 10
@@ -198,52 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-to-bottom script
+        comment: 'Flat script: constants -> data generation -> statistics -> figure
+          + axes -> per-panel drawing -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) plus deterministic OOC injection; fully reproducible
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all four used, none extraneous
+        comment: CairoMakie, Colors, Random, Statistics — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Dynamic title fontsize calculation handles long titles; SPC constants
-          documented; no fake UI
+        comment: No fake UI, appropriate complexity; conditional scatter for OOC points
+          is clean Julia idiom
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png via ANYPLOT_THEME env var; current CairoMakie
-          API; no bare plot.png
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2); modern size= parameter
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: linkxaxes!() for shared x-axis, Label() in grid row 0, rowgap!(),
-          RGBAf() for transparent grids — idiomatic Makie layout patterns
+        comment: linkxaxes!, xlims!, rowgap!, Label(fig[0,1],...) for figure-level
+          title, RGBAf for grid color — all correct Makie idioms
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: linkxaxes!() for linked multi-panel axes; Label(fig[0,1],...) uses
-          Makie grid layout for title (not Axis title); rowgap!(fig.layout,...) for
-          panel gap control
+        comment: Multi-panel grid layout, linkxaxes! for synchronized axes, text!
+          with :left alignment for right-edge labels are Makie-specific; could further
+          leverage Band for shaded limit zones or Legend element for warning lines
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -251,11 +247,8 @@ impl_tags:
   - subplots
   - annotations
   - manual-ticks
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
-  - alpha-blending
   - edge-highlighting
