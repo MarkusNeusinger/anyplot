@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -137,7 +137,7 @@ p.title.text_font_style = "bold"
 
 p.xaxis.axis_label = "Months Since Signup"
 p.yaxis.axis_label = "Signup Cohort"
-p.xaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_size = "34pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_font_style = "bold"
 p.yaxis.axis_label_text_font_style = "bold"
@@ -161,11 +161,11 @@ worst_val = month3_retentions[min(month3_retentions, key=month3_retentions.get)]
 
 p.add_layout(
     Label(
-        x=30,
-        y=30,
+        x=1000,
+        y=400,
         x_units="screen",
         y_units="screen",
-        text=f"Month 3 retention ranges from {worst_val:.0f}% to {best_val:.0f}% across cohorts",
+        text=f"Month 3 retention: {worst_val:.0f}%–{best_val:.0f}% across cohorts",
         text_font_size="24pt",
         text_color=INK_MUTED,
         text_font_style="italic",
