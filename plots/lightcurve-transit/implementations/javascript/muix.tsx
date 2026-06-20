@@ -77,7 +77,7 @@ function DataLayer() {
           <line
             key={i}
             x1={x} y1={y - ey} x2={x} y2={y + ey}
-            stroke={C} strokeWidth={1.2} opacity={0.38}
+            stroke={C} strokeWidth={1.2} opacity={0.52}
           />
         );
       })}
@@ -85,7 +85,7 @@ function DataLayer() {
       {phases.map((ph, i) => (
         <circle
           key={`d${i}`}
-          cx={toX(ph)} cy={toY(observedFlux[i])} r={2.8}
+          cx={toX(ph)} cy={toY(observedFlux[i])} r={3.5}
           fill={C} opacity={0.82}
         />
       ))}
@@ -144,7 +144,7 @@ export default function Chart() {
       <ChartContainer
         width={width}
         height={height - titleH}
-        margin={{ left: 112, right: 172, top: 28, bottom: 72 }}
+        margin={{ left: 138, right: 172, top: 28, bottom: 72 }}
         series={[
           {
             type: "line",
