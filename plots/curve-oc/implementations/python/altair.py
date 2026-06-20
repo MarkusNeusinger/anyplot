@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -199,12 +199,12 @@ risk_points = (
 )
 alpha_label = (
     alt.Chart(ref_data.iloc[:1])
-    .mark_text(fontSize=9, fontWeight="bold", align="left", dx=8, dy=-8, color=INK)
+    .mark_text(fontSize=10, fontWeight="bold", align="left", dx=8, dy=-8, color=INK)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="risk:N")
 )
 beta_label = (
     alt.Chart(ref_data.iloc[1:])
-    .mark_text(fontSize=9, fontWeight="bold", align="left", dx=10, dy=-14, color=INK)
+    .mark_text(fontSize=10, fontWeight="bold", align="left", dx=10, dy=-14, color=INK)
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="risk:N")
 )
 
@@ -263,7 +263,7 @@ chart = (
         gridOpacity=0.15,
         gridColor=INK,
         domainWidth=0,
-        tickColor=INK_SOFT,
+        tickSize=0,
     )
     .configure_legend(titlePadding=6, labelLimit=300)
     .configure_title(color=INK)
