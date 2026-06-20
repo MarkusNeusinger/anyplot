@@ -66,6 +66,22 @@ g.append("g").attr("class", "grid")
   .call((ag) => ag.select(".domain").remove())
   .call((ag) => ag.selectAll("line").attr("stroke", t.grid).attr("stroke-width", 1));
 
+// --- In-spec zone (d3.area() fill under normal curve between LSL and USL) ---
+const inSpecPoints = Array.from({ length: 201 }, (_, i) => {
+  const xv = LSL + (i / 200) * (USL - LSL);
+  return { x: xv, y: normalPDF(xv, mean, sigma) };
+});
+const inSpecArea = d3.area()
+  .x((d) => x(d.x))
+  .y0(ih)
+  .y1((d) => y(d.y))
+  .curve(d3.curveBasis);
+g.append("path")
+  .datum(inSpecPoints)
+  .attr("fill", t.palette[0])
+  .attr("opacity", 0.12)
+  .attr("d", inSpecArea);
+
 // --- Histogram bars ---
 g.selectAll(".bar").data(bins).join("rect")
   .attr("class", "bar")
@@ -104,7 +120,7 @@ for (const [val, label] of [[LSL, "LSL"], [USL, "USL"]]) {
     .attr("y", 18)
     .attr("text-anchor", lAnchor)
     .attr("fill", t.palette[4])
-    .style("font-size", "13px")
+    .style("font-size", "14px")
     .style("font-weight", "700")
     .text(label);
 }
@@ -121,7 +137,7 @@ g.append("text")
   .attr("y", 38)
   .attr("text-anchor", "start")
   .attr("fill", t.palette[3])
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .style("font-weight", "700")
   .text("Target");
 
@@ -135,7 +151,7 @@ const yAxis = g.append("g")
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.grid);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.select(".domain").remove();
 }
 
 // --- Axis labels ---
@@ -208,7 +224,7 @@ legendItems.forEach((item, i) => {
   g.append("text")
     .attr("x", lx0 + 28).attr("y", iy)
     .attr("fill", t.inkSoft)
-    .style("font-size", "13px")
+    .style("font-size", "14px")
     .text(item.label);
 });
 
