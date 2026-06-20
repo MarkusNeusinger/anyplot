@@ -1,43 +1,54 @@
 library: pygal
+language: python
 specification_id: heatmap-risk-matrix
 created: '2026-03-17T21:54:04Z'
-updated: '2026-03-17T22:22:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23217984897
+updated: '2026-06-20T06:22:30Z'
+generated_by: claude-sonnet
+workflow_run: 27861949039
 issue: 4567
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/pygal/plot.html
-quality_score: 81
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent spec compliance — all required features implemented correctly (15/15)
-  - Creative use of pygal Graph base class to build a custom heatmap chart type not
-    natively available
-  - Shadow text technique ensures marker labels are readable on any background color
-  - SVG tooltip support via native title elements is idiomatic pygal
-  - Realistic risk management data with 14 diverse risk items across 4 categories
-  - Dual legend (zones + categories) is well-organized and informative
+  - 'Full spec compliance with all 5x5 risk matrix features: zone gradient, zone labels
+    in cells, score values, labeled category markers with jitter, and dual legend
+    system'
+  - Theme-adaptive chrome works correctly in both renders - luminance-aware cell text
+    switching (dark/light based on cell background luminance) ensures legibility across
+    all zone colors in both themes
+  - 14 realistic enterprise risk items across four professional categories provide
+    high-quality, neutral domain data
+  - The importlib workaround for the filename collision with the pygal package is
+    the correct and clean solution
   weaknesses:
-  - Some marker labels (Budget Overrun, Key Person) are clipped at cell edges
-  - sys.path manipulation for import workaround is a code smell
-  - HTML output generation adds unnecessary code beyond spec requirements
-  - Orange category markers on orange High cells have reduced contrast
-  image_description: 'The plot displays a 5x5 risk assessment matrix with LIKELIHOOD
-    on the Y-axis (1. Rare through 5. Almost Certain) and IMPACT on the X-axis (1.
-    Negligible through 5. Catastrophic). Each cell shows a bold risk score (product
-    of likelihood x impact) and a zone label (Low/Medium/High/Critical). Cells are
-    color-coded using a sequential palette: light blue for Low (1-4), yellow for Medium
-    (5-9), orange for High (10-16), and red for Critical (20-25). Fourteen risk items
-    are plotted as colored circular markers with bold text labels - blue for Technical
-    (Server Outage, Data Breach, Tech Debt, Cyber Attack), purple for Financial (Budget
-    Overrun, Currency Risk, Market Shift), orange for Operational (Vendor Delay, Staff
-    Turnover, Scope Creep, Key Person), and teal for External (Reg. Change, Supply
-    Chain, Pandemic). A right-side legend shows both Risk Zones and Risk Categories.
-    The title reads heatmap-risk-matrix · pygal · pyplots.ai. X-axis labels are rotated
-    at ~35 degrees for readability. Cells have rounded corners with white borders
-    creating clear delineation.'
+  - 'Category marker colors do not start with brand green #009E73 - Technical category
+    uses #4467A3 (Imprint position 3) to avoid visual conflict with the Low zone green
+    (#4DAF8D). Fix: use #009E73 for Technical and choose a Low zone background with
+    enough visual distance from it so brand green category markers are distinguishable
+    from their host cells'
+  - Risk item marker label font size (marker_font = cell_size x 0.105) renders small
+    at mobile scale - increase to cell_size x 0.13 or higher to improve readability
+    when the plot is scaled to 400 px
+  - Noticeable empty canvas space at the top between the title and the matrix grid
+    - reduce margin_top in the custom _plot code or adjust the y0 centering calculation
+    to distribute whitespace more evenly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "heatmap-risk-matrix · python · pygal · anyplot.ai" visible in dark ink at top. Y-axis labels "1. Rare" through "5. Almost Certain" in dark ink. X-axis labels "1. Negligible" through "5. Catastrophic" rotated 35deg in dark ink. "LIKELIHOOD" and "IMPACT" axis titles in bold dark ink. All chrome text is clearly readable.
+      Data: 5x5 grid cells colored by zone - green (Low 1-4), amber (Medium 5-9), orange (High 10-16), red (Critical 20-25). Cell text (score number + zone label) adapts color (dark/light) based on cell luminance. Risk markers as colored circles - blue (#4467A3 Technical), purple (#C475FD Financial), brown (#BD8233 Operational), cyan (#2ABCCD External). First categorical series is #4467A3, not brand green #009E73.
+      Legibility verdict: PASS - all elements readable, minor concern for small marker labels at mobile scale
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title and all axis labels/titles rendered in light cream tones, clearly readable against the dark background. No dark-on-dark failures. Legend text is legible. Cell text luminance-adaptation still works correctly.
+      Data: Cell fill colors identical to light render (zone gradient unchanged). Category marker circle colors identical to light render. No chrome-vs-data color confusion.
+      Legibility verdict: PASS - both themes render correctly with no readability failures
   criteria_checklist:
     visual_quality:
       score: 24
@@ -45,45 +56,55 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly calculated relative to cell size; title slightly
-          small relative to canvas
+        comment: Title, axis titles, zone labels, tick labels all legible in both
+          themes. Risk item marker labels small at cell_size x 0.105 - near mobile
+          readability limit.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Budget Overrun and Key Person labels clipped at cell edges; some
-          crowding near boundaries
+        comment: Spread offsets and jitter handle same-cell items effectively. Minor
+          crowding at cell borders but no severe collision.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers well-sized with outline strokes; shadow text ensures readability;
-          slightly tight in dense cells
+        comment: All 14 risk markers visible with good contrast. Score numerals and
+          zone text distinguishable in all cells.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential palette generally distinguishable; orange markers on orange
-          cells reduce contrast
+        comment: Zone text labels provide redundant encoding for CVD. Imprint palette
+          members used for categories.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Grid well-centered with legend on right; good proportions; some wasted
-          space
+        comment: Correct 2400x2400 square canvas. Noticeable empty space at top between
+          title and matrix grid wastes canvas area.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: LIKELIHOOD and IMPACT axis titles with numbered descriptive labels
+        comment: LIKELIHOOD and IMPACT axis titles bold and uppercase. Tick labels
+          use numbered + word format. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). Zone semantic gradient acceptable
+          per spec. But first categorical marker color is #4467A3 (Technical) not
+          brand green #009E73 - hard rule violation.'
     design_excellence:
       score: 13
       max: 20
@@ -93,22 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, rounded corners, shadow text, category-coded markers
-          — above defaults
+        comment: Custom SVG rendering, rounded cells, luminance-aware text color,
+          dual legend system show above-default design thought.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Default chrome hidden, clean white borders, organized dual legends,
-          letter-spacing on titles
+        comment: PAGE_BG cell gap stroke, rounded rects, organized legend. Good whitespace
+          in legend area.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient guides viewer from low-risk to critical; category
-          coding adds analytical dimension
+        comment: Color gradient draws eye to critical zone. Category colors communicate
+          grouping. Zone text reinforces visual signal.
     spec_compliance:
       score: 15
       max: 15
@@ -118,52 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 5x5 grid heatmap risk matrix
+        comment: Correct 5x5 heatmap risk matrix.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: gradient, labels, markers with jitter,
-          zone legend, grid delineation'
+        comment: 'All required features present: zone gradient, descriptive tick labels,
+          labeled markers with jitter, zone legend, cell delineation.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Likelihood on Y-axis, Impact on X-axis, scores correctly calculated
+        comment: X=Impact, Y=Likelihood, cell color=risk score. All 14 items correctly
+          placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; zone and category legends with matching labels
+        comment: Title matches required format. Dual legend covers all zones and categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 14 risk items across 4 categories spanning Low through Critical zones;
-          shared-cell jitter shown
+        comment: 'All aspects shown: grid, zone gradient, cell labels, score values,
+          markers, jitter, zone legend, category legend.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world enterprise risk management with plausible risk names;
-          neutral business context
+        comment: 14 realistic enterprise risks across 4 standard risk management categories.
+          Professional, neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Likelihood and impact ratings realistic for described risks
+        comment: 1-5 integer scales, 1-25 risk scores, 14 items within 5-20 range.
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -171,33 +193,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Class extending Graph necessary for pygal but adds complexity; sys.path
-          workaround
+        comment: Class (RiskMatrixHeatmap extends Graph) necessary for custom pygal
+          chart type. Minimal and justified.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before jitter calculations
+        comment: np.random.seed(42) ensures deterministic jitter.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: importlib and sys used solely for naming workaround
+        passed: true
+        comment: All imports used. importlib workaround correctly prevents filename
+          shadowing.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: sys.path manipulation is a code smell; HTML output adds unnecessary
-          complexity
+        passed: true
+        comment: No fake UI. Clean SVG sections. Luminance formula for text color
+          is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 8
       max: 10
@@ -207,27 +230,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Extends Graph base class correctly, uses SVG node system, leverages
-          Style class
+        comment: Correctly subclasses Graph, uses pygal Style for theme tokens, uses
+          view coordinate system and svg.node API.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Native SVG title tooltips, Graph base class extension, embedded SVG
-          HTML export — pygal-specific
-  verdict: REJECTED
+        comment: SVG node rendering API for custom heatmap, title tooltip mechanism,
+          dual PNG+HTML output leveraging pygal interactivity.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
   - edge-highlighting
-  - alpha-blending
