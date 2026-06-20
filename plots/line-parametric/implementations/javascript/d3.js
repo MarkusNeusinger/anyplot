@@ -74,17 +74,15 @@ function drawPanel(points, xDomain, yDomain, titleText, formulaText, px, py) {
     ax.select(".domain").attr("stroke", tok.inkSoft);
   }
 
-  // Curve: colored segments encoding t-progress (Imprint sequential)
-  const segGroup = g.append("g");
-  for (let i = 0; i < points.length - 1; i++) {
-    const a = points[i], b = points[i + 1];
-    segGroup.append("line")
-      .attr("x1", xSc(a.x)).attr("y1", ySc(a.y))
-      .attr("x2", xSc(b.x)).attr("y2", ySc(b.y))
-      .attr("stroke", colorT(a.u))
-      .attr("stroke-width", 2.5)
-      .attr("stroke-linecap", "round");
-  }
+  // Curve: colored path segments encoding t-progress (Imprint sequential)
+  g.append("g").selectAll("path")
+    .data(d3.pairs(points))
+    .join("path")
+    .attr("d", ([a, b]) => `M${xSc(a.x)},${ySc(a.y)}L${xSc(b.x)},${ySc(b.y)}`)
+    .attr("stroke", ([a]) => colorT(a.u))
+    .attr("stroke-width", 2.5)
+    .attr("stroke-linecap", "round")
+    .attr("fill", "none");
 
   // Direction chevron at ~30% of traversal
   const ai = Math.floor(N * 0.3);
@@ -125,23 +123,23 @@ function drawPanel(points, xDomain, yDomain, titleText, formulaText, px, py) {
     .style("font-size", "17px").style("font-weight", "600")
     .text(titleText);
 
-  // Formula subtitle
+  // Formula subtitle (italic for visual hierarchy below panel title)
   g.append("text")
     .attr("x", panelSize / 2).attr("y", -16)
     .attr("text-anchor", "middle").attr("fill", tok.inkSoft)
-    .style("font-size", "13px")
+    .style("font-size", "13px").style("font-style", "italic")
     .text(formulaText);
 
   // Axis labels
   g.append("text")
     .attr("x", panelSize / 2).attr("y", panelSize + 44)
     .attr("text-anchor", "middle").attr("fill", tok.inkSoft)
-    .style("font-size", "13px").text("x");
+    .style("font-size", "13px").text("x(t)");
 
   g.append("text")
     .attr("transform", `rotate(-90) translate(${-panelSize / 2},${-50})`)
     .attr("text-anchor", "middle").attr("fill", tok.inkSoft)
-    .style("font-size", "13px").text("y");
+    .style("font-size", "13px").text("y(t)");
 }
 
 // --- Draw panels ---
@@ -170,7 +168,7 @@ const legendY = height - 42;
 svg.append("text")
   .attr("x", width / 2).attr("y", legendY - 10)
   .attr("text-anchor", "middle").attr("fill", tok.inkSoft)
-  .style("font-size", "12px")
+  .style("font-size", "13px")
   .text("Color encodes direction of parameter t");
 
 svg.append("rect")
@@ -180,12 +178,12 @@ svg.append("rect")
 
 svg.append("text")
   .attr("x", legendX - 5).attr("y", legendY + 10)
-  .attr("text-anchor", "end").attr("fill", tok.inkSoft).style("font-size", "12px")
+  .attr("text-anchor", "end").attr("fill", tok.inkSoft).style("font-size", "13px")
   .text("t = 0 (start)");
 
 svg.append("text")
   .attr("x", legendX + legendW + 5).attr("y", legendY + 10)
-  .attr("text-anchor", "start").attr("fill", tok.inkSoft).style("font-size", "12px")
+  .attr("text-anchor", "start").attr("fill", tok.inkSoft).style("font-size", "13px")
   .text("t = max (end)");
 
 // --- Main title ---
