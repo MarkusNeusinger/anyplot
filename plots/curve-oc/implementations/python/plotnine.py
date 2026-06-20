@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-19
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -31,13 +33,23 @@ from plotnine import (
 from scipy.stats import binom
 
 
+# Theme tokens — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
+
 # Data
 fraction_defective = np.linspace(0, 0.15, 200)
 
 sampling_plans = [
-    {"n": 50, "c": 1, "label": "n=50, c=1"},
-    {"n": 100, "c": 2, "label": "n=100, c=2"},
-    {"n": 150, "c": 3, "label": "n=150, c=3"},
+    {"n": 75, "c": 2, "label": "n=75, c=2"},
+    {"n": 120, "c": 1, "label": "n=120, c=1"},
+    {"n": 200, "c": 2, "label": "n=200, c=2"},
 ]
 
 rows = []
@@ -50,13 +62,13 @@ df = pd.DataFrame(rows)
 plan_order = [p["label"] for p in sampling_plans]
 df["plan"] = pd.Categorical(df["plan"], categories=plan_order, ordered=True)
 
-# Discrimination envelope between the steepest and most gradual curves
+# Discrimination envelope between most lenient (n=75,c=2) and most strict (n=200,c=2)
 envelope_df = df.pivot(index="fraction_defective", columns="plan", values="probability_acceptance").reset_index()
 envelope = pd.DataFrame(
     {
         "fraction_defective": envelope_df["fraction_defective"],
-        "ymin": envelope_df["n=50, c=1"],
-        "ymax": envelope_df["n=150, c=3"],
+        "ymin": envelope_df["n=200, c=2"],
+        "ymax": envelope_df["n=75, c=2"],
     }
 )
 
@@ -64,85 +76,73 @@ envelope = pd.DataFrame(
 aql = 0.01
 ltpd = 0.08
 
-# Risk points for the primary plan (n=100, c=2)
-plan_ref = sampling_plans[1]
-alpha = 1 - binom.cdf(plan_ref["c"], plan_ref["n"], aql)
-beta = binom.cdf(plan_ref["c"], plan_ref["n"], ltpd)
+# Risk metrics for reference plan (n=75, c=2)
+plan_ref = sampling_plans[0]
+alpha_risk = 1 - binom.cdf(plan_ref["c"], plan_ref["n"], aql)
+beta_risk = binom.cdf(plan_ref["c"], plan_ref["n"], ltpd)
 
 risk_points = pd.DataFrame(
     [
-        {
-            "fraction_defective": aql,
-            "probability_acceptance": 1 - alpha,
-            "label": f"Producer's risk (α={alpha:.2f})",
-            "plan": plan_ref["label"],
-        },
-        {
-            "fraction_defective": ltpd,
-            "probability_acceptance": beta,
-            "label": f"Consumer's risk (β={beta:.2f})",
-            "plan": plan_ref["label"],
-        },
+        {"fraction_defective": aql, "probability_acceptance": 1 - alpha_risk},
+        {"fraction_defective": ltpd, "probability_acceptance": beta_risk},
     ]
 )
 
-# Colorblind-safe palette (blue, orange, purple)
-colors = {"n=50, c=1": "#306998", "n=100, c=2": "#E0652B", "n=150, c=3": "#9467BD"}
-linetypes = {"n=50, c=1": "solid", "n=100, c=2": "dashed", "n=150, c=3": "dashdot"}
+colors = {p["label"]: c for p, c in zip(sampling_plans, IMPRINT[:3], strict=False)}
+linetypes = {"n=75, c=2": "solid", "n=120, c=1": "dashed", "n=200, c=2": "dashdot"}
 
 # Plot
 plot = (
     ggplot(df, aes(x="fraction_defective", y="probability_acceptance", color="plan", linetype="plan"))
-    # Shaded risk zones
-    + annotate("rect", xmin=0, xmax=aql, ymin=0, ymax=1.05, fill="#306998", alpha=0.06)
-    + annotate("rect", xmin=ltpd, xmax=0.15, ymin=0, ymax=1.05, fill="#E0652B", alpha=0.06)
-    # Discrimination envelope as ribbon (distinctive plotnine grammar)
+    # Shaded quality zones
+    + annotate("rect", xmin=0, xmax=aql, ymin=0, ymax=1.05, fill=IMPRINT[0], alpha=0.09)
+    + annotate("rect", xmin=ltpd, xmax=0.15, ymin=0, ymax=1.05, fill=IMPRINT[4], alpha=0.09)
+    # Discrimination envelope ribbon — shows range of plan discrimination power
     + geom_ribbon(
         aes(x="fraction_defective", ymin="ymin", ymax="ymax"),
         data=envelope,
         inherit_aes=False,
-        fill="#306998",
+        fill=IMPRINT[0],
         alpha=0.10,
     )
-    + geom_line(size=2, alpha=0.9)
-    + geom_vline(xintercept=aql, linetype="dashed", color="#888888", size=0.7, alpha=0.7)
-    + geom_vline(xintercept=ltpd, linetype="dashed", color="#888888", size=0.7, alpha=0.7)
+    # AQL / LTPD reference lines
+    + geom_vline(xintercept=aql, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.8)
+    + geom_vline(xintercept=ltpd, linetype="dashed", color=INK_SOFT, size=0.5, alpha=0.8)
+    # OC curves
+    + geom_line(size=1.0, alpha=0.9)
+    # Producer's and consumer's risk markers on reference plan
     + geom_point(
         aes(x="fraction_defective", y="probability_acceptance"),
         data=risk_points,
         inherit_aes=False,
-        size=6,
-        color="#E0652B",
-        fill="white",
-        stroke=1.5,
+        size=3,
+        color=IMPRINT[0],
+        fill=PAGE_BG,
+        stroke=1,
         shape="o",
     )
-    # Zone labels
-    + annotate("text", x=0.003, y=0.15, label="Accept\nZone", size=10, color="#306998", alpha=0.6, ha="left")
-    + annotate("text", x=0.135, y=0.15, label="Reject\nZone", size=10, color="#E0652B", alpha=0.6, ha="right")
-    # AQL/LTPD labels
-    + annotate("text", x=aql + 0.003, y=0.06, label="AQL", size=12, color="#555555", fontstyle="italic")
-    + annotate("text", x=ltpd + 0.003, y=0.12, label="LTPD", size=12, color="#555555", fontstyle="italic")
+    # AQL / LTPD axis labels
+    + annotate("text", x=aql + 0.002, y=0.05, label="AQL", size=3.0, color=INK_MUTED, fontstyle="italic")
+    + annotate("text", x=ltpd + 0.002, y=0.11, label="LTPD", size=3.0, color=INK_MUTED, fontstyle="italic")
     # Risk annotations
     + annotate(
         "text",
-        x=risk_points["fraction_defective"].iloc[0] + 0.008,
-        y=risk_points["probability_acceptance"].iloc[0],
-        label=f"α = {alpha:.2f}",
-        size=11,
-        color="#E0652B",
+        x=aql + 0.007,
+        y=1 - alpha_risk - 0.07,
+        label=f"α = {alpha_risk:.2f}",
+        size=2.8,
+        color=IMPRINT[0],
         fontweight="bold",
     )
     + annotate(
         "text",
-        x=risk_points["fraction_defective"].iloc[1] + 0.008,
-        y=risk_points["probability_acceptance"].iloc[1] + 0.06,
-        label=f"β = {beta:.2f}",
-        size=11,
-        color="#E0652B",
+        x=ltpd + 0.007,
+        y=beta_risk + 0.06,
+        label=f"β = {beta_risk:.2f}",
+        size=2.8,
+        color=IMPRINT[0],
         fontweight="bold",
     )
-    # Scales with dual encoding (color + linetype)
     + scale_color_manual(values=colors)
     + scale_linetype_manual(values=linetypes)
     + scale_x_continuous(
@@ -152,31 +152,30 @@ plot = (
     + labs(
         x="Fraction Defective (p)",
         y="Probability of Acceptance P(a)",
-        title="curve-oc · plotnine · pyplots.ai",
+        title="curve-oc · python · plotnine · anyplot.ai",
         color="Sampling Plan",
         linetype="Sampling Plan",
     )
     + guides(color=guide_legend(override_aes={"size": 4, "alpha": 1}))
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14, color="#2a2a2a"),
-        axis_title=element_text(size=20, weight="bold"),
-        axis_text=element_text(size=16, color="#444444"),
-        plot_title=element_text(size=24, weight="bold", color="#1a1a1a"),
-        legend_title=element_text(size=18, weight="bold"),
-        legend_text=element_text(size=16),
-        legend_position=(0.78, 0.75),
-        legend_background=element_rect(fill="white", alpha=0.85),
-        legend_key_size=20,
+        figure_size=(8, 4.5),
+        text=element_text(size=7, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
+        legend_title=element_text(size=8, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_position=(0.78, 0.78),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#e0e0e0", size=0.4),
-        axis_line=element_line(color="#333333", size=0.6),
-        plot_background=element_rect(fill="#fafafa", color="none"),
-        panel_background=element_rect(fill="#fafafa", color="none"),
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
