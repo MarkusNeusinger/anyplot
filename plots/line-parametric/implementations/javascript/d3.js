@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-parametric: Parametric Curve Plot
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-20
+// Quality: 88/100 | Created: 2026-06-20
 
 const tok = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
