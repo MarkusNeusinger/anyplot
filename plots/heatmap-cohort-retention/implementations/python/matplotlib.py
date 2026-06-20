@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-cohort-retention: Cohort Retention Heatmap
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -26,8 +26,8 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 ANYPLOT_AMBER = "#DDCC77"  # warning / caution semantic anchor
 
-# Imprint sequential colormap — blue → green so high retention maps to brand green
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#4467A3", "#009E73"])
+# Imprint sequential colormap — canonical green→blue (low retention → green, high retention → blue)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data
 np.random.seed(42)
