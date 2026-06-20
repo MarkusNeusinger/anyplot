@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-cohort-retention: Cohort Retention Heatmap
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-06-20
+# Quality: 87/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors

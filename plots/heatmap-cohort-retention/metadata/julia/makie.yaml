@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-cohort-retention
 created: '2026-06-20T01:17:20Z'
-updated: '2026-06-20T01:23:49Z'
+updated: '2026-06-20T01:33:55Z'
 generated_by: claude-sonnet
 workflow_run: 27855476265
 issue: 4570
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — triangular heatmap shape, all 12 cohorts with sizes,
-    sequential Imprint colormap, cell percentage annotations, and colorbar all correctly
-    implemented
-  - Correct use of ANYPLOT_SEQ (green→blue) for single-polarity continuous retention
-    data; matches imprint_seq specification exactly
-  - Thorough theme-adaptive chrome — INK/INK_SOFT tokens applied to title, axis labels,
-    spine colors, colorbar label and ticks; PAGE_BG used for nan_color to achieve
-    seamless triangular cutout in both themes
-  - Efficient batch text! call for all cell annotations avoids per-cell loop overhead;
-    uses NaN guard to skip empty cells
-  - Square canvas (2400×2400) correctly chosen for the symmetric 12×12 heatmap grid;
-    xtickcolor/ytickcolor set to PAGE_BG for invisible tick marks (clean refinement)
+  - Luminance-adaptive in-cell text using WCAG sRGB formula ensures readability across
+    entire green-to-blue gradient in both themes
+  - Full theme support with all chrome tokens (INK, INK_SOFT, PAGE_BG) correctly applied
+    to every element including colorbar
+  - Complete spec compliance — all required features present (triangular shape, cell
+    text, cohort sizes, colorbar, Month N labels)
+  - Realistic SaaS cohort data with proper decay curve, varied cohort quality multipliers,
+    and realistic cohort sizes
+  - Correct imprint_seq colormap (green low to blue high) with proper colorrange=(0,
+    100) and nan_color for triangular cutout
   weaknesses:
-  - Y-axis label missing — no ylabel defined in Axis(); the cohort dimension should
-    carry a label like "Cohort" or "Signup Cohort" for axis completeness (x-axis has
-    "Months Since Signup", y-axis has no title — VQ-06)
-  - 'Cell text color fixed as :white for all cells — cells near the green-teal end
-    of the colormap (#009E73-area, low retention ~15-20%) have insufficient contrast
-    with white text (~2.6:1 WCAG ratio); use a luminance-adaptive approach: dark ink
-    text on lighter cells, white on darker cells — VQ-04 / DE-02'
-  - Colorbar is very narrow (width=16) — the thin strip makes the gradient hard to
-    read and looks visually sparse; increase to 20-24 — DE-02
+  - cell_text_color helper function defined at top level — breaks KISS no-functions
+    guideline; inline luminance logic into the for loop
+  - 'No visual storytelling layer: no annotation or emphasis highlighting the Month
+    1 churn cliff or strongest/weakest cohort row'
+  - In-cell fontsize=10 (effective 20px) is at the lower edge of mobile-readability
+    for rightmost small cells
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, clearly distinguishable from pure white
-      Chrome: Title "heatmap-cohort-retention · julia · makie · anyplot.ai" in dark ink, fully readable; x-axis label "Months Since Signup" in dark ink, readable; y-axis has no title label (only cohort tick labels); x-axis tick labels "Month 0"–"Month 11" rotated 45°, readable; y-axis tick labels "Jan 2024 (2840)"–"Dec 2024 (3680)" in INK_SOFT, readable at this scale; colorbar label "Retention Rate (%)" readable
-      Data: Triangular heatmap with sequential green (#009E73) to blue (#4467A3) colormap; Month 0 column (100% retention) is deepest blue; Month 1 (~65-73%) is teal; later months progressively lighten toward green; NaN cells (empty triangular area) render as the off-white page background making the triangular shape seamless; white percentage text annotations in every active cell, readable on the blue and teal cells but with marginal contrast on the lighter green-teal end (~2.6:1); colorbar on right side shows 0-100 gradient, narrow but functional
-      Legibility verdict: PASS — all chrome text readable; cell annotation contrast is borderline on lowest-retention cells but still legible
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-cohort-retention · julia · makie · anyplot.ai" in dark INK (#1A1A17) — readable. Axis label "Months Since Signup" (x) and "Signup Cohort" (y) in dark INK — readable. Tick labels in INK_SOFT (#4A4A44) — readable. Colorbar label "Retention Rate (%)" — readable.
+      Data: imprint_seq gradient — green (#009E73) for low retention (~15%), blue (#4467A3) for high (100%). First column (Month 0) is solid blue representing 100% baseline. Luminance-adaptive cell text (dark on light cells, white on dark blue cells). Triangular shape via NaN cells rendered as PAGE_BG.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct warm dark background
-      Chrome: Title in light (#F0EFE8-ish) text clearly readable against dark background; axis labels and tick labels in INK_SOFT (#B8B7B0) light enough for dark bg — no dark-on-dark failure; colorbar label and tick labels readable; all chrome correctly flipped for dark theme
-      Data: Identical green-to-blue colormap as light render — data colors unchanged; NaN (empty triangular) cells render as #1A1A17 matching the dark background — correct seamless triangular cutout; white text annotations visible on the colored cells; colorbar gradient correct
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements use theme-adaptive light colors against the dark surface; data colors identical to light render
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) — readable. Axis labels in light INK — readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Colorbar label readable. No dark-on-dark failures.
+      Data: Colors identical to light render — same green-to-blue gradient. NaN cells blend into dark background (#1A1A17). Luminance-adaptive in-cell text correctly uses light INK for dark theme on lighter green cells.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,53 +54,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels all readable in both themes; cell
-          text (fontsize=10, effective 20px) readable; minor: y-axis tick labels with
-          long cohort+size strings are on the smaller side'
+        comment: 'All font sizes explicitly set. Minor: in-cell fontsize=10 (effective
+          20px) at lower edge of mobile-readability for small rightmost cells'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; cell annotations spaced correctly in cell centers;
-          no collision between chart elements
+        comment: No overlap. X-axis labels at 45 degrees avoid collision; in-cell
+          percentages well-centered
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible; color gradient well-distinguished;
-          all percentage text visible
+        comment: Cells clearly visible; luminance-adaptive text ensures readability
+          on both green and blue cells
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue colormap uses CVD-safe Imprint hues; note
-          white text on green-end cells has ~2.6:1 contrast but readable
+        comment: imprint_seq CVD-safe; WCAG luminance threshold for cell text; green-to-blue
+          distinguishable under deuteranopia
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correctly chosen for symmetric heatmap; proportions
-          good; no overflow or clipping; title fits well
+        comment: Square 2400x2400 ideal for symmetric heatmap; fills ~75% of canvas;
+          colorbar well-proportioned; all spines retained (appropriate for enclosed
+          grid)
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: X-axis label 'Months Since Signup' present and descriptive; Y-axis
-          label missing — no ylabel defined, cohort axis lacks title
+        passed: true
+        comment: Months Since Signup (x), Signup Cohort (y), Retention Rate (%) colorbar
+          — all descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'ANYPLOT_SEQ = cgrad([#009E73, #4467A3]) correctly implements imprint_seq;
-          backgrounds #FAF8F1/#1A1A17 correct; both themes properly rendered'
+        comment: 'Correct imprint_seq (cgrad #009E73 to #4467A3); backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes; all chrome tokens theme-adaptive'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,24 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Correct palette selection; square canvas appropriately chosen; cohort
-          sizes in y-labels add business context; overall clean professional look
+        comment: Above well-configured default due to WCAG luminance-adaptive cell
+          text. Professional imprint_seq colormap. Not quite strong design level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid disabled (correct for heatmap); tick marks hidden via xtickcolor/ytickcolor
-          = PAGE_BG (nice refinement); colorbar narrow (width=16, could be wider);
-          all 4 spines kept (appropriate for enclosed heatmap grid)
+        comment: Grid disabled, invisible tick marks (xtickcolor=PAGE_BG), proper
+          colgap!, well-styled colorbar. Above minimal-customization baseline.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Triangular shape clearly communicates cohort structure; dual encoding
-          (color + text) enables both pattern reading and exact values; cohort sizes
-          add business context; yreversed places newest cohort at bottom correctly
+        passed: false
+        comment: Triangular shape and gradient communicate decay. No explicit visual
+          emphasis on Month 1 churn cliff or cohort quality variation.
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular cohort retention heatmap
+        comment: Correct triangular cohort-retention heatmap with NaN staircase
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Triangular shape, cell percentage text, cohort sizes in y-labels,
-          sequential colormap, period 0 = 100%, colorbar legend, Month 0/1/... labels
-          — all present
+        comment: Triangular shape, cell text, cohort sizes in labels, Month N x-axis,
+          colorbar, Period 0=100% — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=months since signup, Y=cohorts, color=retention rate; period 0
-          always 100%
+        comment: X=months since signup, Y=cohorts (yreversed), color=retention rate
+          — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-cohort-retention · julia · makie · anyplot.ai' correct;
-          colorbar labeled 'Retention Rate (%)'
+        comment: 'Title: heatmap-cohort-retention · julia · makie · anyplot.ai — exact
+          format. Colorbar as continuous legend.'
     data_quality:
       score: 15
       max: 15
@@ -172,32 +164,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 12 cohorts x 12 periods fully demonstrated; triangular structure
-          clear; retention decay pattern visible; all heatmap features shown
+        comment: Full triangular pattern, 100% baseline, realistic decay, varied cohort
+          sizes, cohort quality multipliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS cohort data Jan-Dec 2024; retention rates ~15-100% realistic
-          for SaaS; cohort sizes 2760-3680 plausible; neutral business context
+        comment: Monthly SaaS cohort retention Jan-Dec 2024; realistic cohort sizes
+          2840-3680; business-neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12x12 cohort grid appropriate for spec; 0-100% retention scale correct;
-          cohort quality variation adds realistic noise
+        comment: Retention decay 100% to ~15% over 12 months is industry-plausible
+          for SaaS. Cohort sizes realistic.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No functions or classes; flat top-level script; clear sections
+        passed: false
+        comment: Helper function cell_text_color defined — breaks no-functions guideline.
+          Otherwise flat script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,21 +202,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, ColorSchemes, Random — all used
+        comment: All 4 imports (CairoMakie, Colors, ColorSchemes, Random) actively
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Efficient batch text! call; const theme tokens; clean const data
-          arrays
+        comment: Batch text! call is idiomatic and efficient. WCAG luminance formula
+          is correct. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) correct; uses modern
-          size= parameter
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) — correct
     library_mastery:
       score: 7
       max: 10
@@ -233,16 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: heatmap! with colormap/colorrange/nan_color; Colorbar in figure grid;
-          colgap!; text! with vector args; layout system fig[1,1]/fig[1,2]; modern
-          size= API
+        comment: Colorbar in figure grid, colgap!, nan_color, RGBAf typed colors,
+          batch text! — clearly idiomatic Makie
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Makie layout system (figure grid with Colorbar in fig[1,2]); nan_color
-          for triangular masking; colgap! for layout spacing; yreversed axis option
+        comment: nan_color=PAGE_BG for NaN handling, Colorbar as layout object, RGBAf
+          color array, cgrad() colormap construction — Makie/Colors.jl ecosystem distinctively
+          used
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -253,6 +246,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
