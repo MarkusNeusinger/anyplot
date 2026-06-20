@@ -93,6 +93,26 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
+# Baseline flux=1.0 reference — marks the out-of-transit level
+hlines!(ax, [1.0];
+    color     = RGBAf(INK.r, INK.g, INK.b, 0.35),
+    linewidth = 1.0,
+    linestyle = :dash,
+)
+
+# Transit contact-point markers: 1st/4th contact (ingress/egress boundaries)
+# and 2nd/3rd contact (flat-bottom edges)
+vlines!(ax, [-0.036, 0.036];
+    color     = RGBAf(INK.r, INK.g, INK.b, 0.25),
+    linewidth = 1.0,
+    linestyle = :dash,
+)
+vlines!(ax, [-0.022, 0.022];
+    color     = RGBAf(INK.r, INK.g, INK.b, 0.18),
+    linewidth = 1.0,
+    linestyle = :dot,
+)
+
 # Error bars rendered first so scatter points sit on top
 errorbars!(ax, phases_obs, flux_obs, flux_err;
     color        = obs_err_color,
@@ -102,7 +122,7 @@ errorbars!(ax, phases_obs, flux_obs, flux_err;
 # Scattered photometric measurements — Imprint position 1 (brand green)
 scatter!(ax, phases_obs, flux_obs;
     color       = obs_color,
-    markersize  = 7,
+    markersize  = 9,
     strokewidth = 0,
     label       = "Photometry",
 )
@@ -110,7 +130,7 @@ scatter!(ax, phases_obs, flux_obs;
 # Best-fit transit model overlay — Imprint position 2 (lavender)
 lines!(ax, phases_curve, model_curve;
     color     = IMPRINT_PALETTE[2],
-    linewidth = 3.5,
+    linewidth = 4.0,
     label     = "Transit Model",
 )
 
