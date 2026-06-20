@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:08Z'
-updated: '2026-06-20T12:55:41Z'
+updated: '2026-06-20T13:06:38Z'
 generated_by: claude-sonnet
 workflow_run: 27871449830
 issue: 4551
@@ -12,123 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: all required SPC elements present (UCL/LCL, center line,
-    warning limits, zone shading, OOC highlighting, standard A2/D3/D4 constants)'
-  - 'Excellent data quality: realistic CNC shaft diameter scenario with textbook-correct
-    SPC constants and plausible measurement values'
-  - 'Professional semantic color use: brand green for data, amber semantic anchor
-    for warnings, matte red for OOC/errors — all from the Imprint palette'
-  - 'Clean theme-adaptive chrome: both renders pass legibility checks with no dark-on-dark
-    failures'
-  - Proper canvas sizing without bbox_inches='tight'; clean subplots_adjust layout
-    with right-margin reserved for limit labels
+  - Excellent zone shading with semantic color coding (green/amber/red) that immediately
+    communicates the severity framework to readers
+  - Perfect spec compliance — both X-bar and R charts with UCL/LCL dashed lines, warning
+    limits, center line, and prominently highlighted out-of-control points
+  - Correct SPC constants (A2=0.577, D3=0.0, D4=2.114 for n=5) with realistic CNC
+    machining scenario and properly injected process shifts
+  - 'Clean theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders
+    fully readable with no dark-on-dark failures'
+  - 'Idiomatic matplotlib: sharex=True for linked axes, gridspec_kw height_ratios,
+    subplots_adjust without bbox_inches tight, axes-method API throughout'
   weaknesses:
-  - 'VQ-04: OOC vs in-control points distinguished only by color (green vs red) with
-    no redundant marker shape — add marker=''X'' or marker=''D'' for CVD accessibility'
-  - 'VQ-01 minor: Inline UCL/LCL/CL limit annotations at fontsize=7 may be too small
-    at mobile scale (~400px) — increase to fontsize=8'
-  - 'DE-03: R chart has no legend entry for its data series and no annotations highlight
-    specific OOC events — add label=''Sample Range'' to ax2.plot() and a legend, optionally
-    annotate peak OOC excursion at sample 25'
-  - 'DE-01/DE-02: Zone shading creates mild visual density — consider making fills
-    even more subtle or adding a thin divider between subplot panels'
+  - LM-02 could be elevated with more distinctively matplotlib-specific features (e.g.,
+    PathEffects for limit line labels, FancyArrowPatch, or mpl.patches for zone legends)
+    rather than generic axhspan + text
+  - DE-03 could be strengthened by a single callout annotation on the most dramatic
+    out-of-control event (the large spike at sample 25 in the X-bar chart) to explicitly
+    narrate the process instability story
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "spc-xbar-r · python · matplotlib · anyplot.ai" at fontsize=12 in dark INK (#1A1A17) — readable. Axis labels "Sample Mean, X̄ (mm)", "Sample Range, R (mm)", "Sample Number" at fontsize=10 in INK — readable. Tick labels at fontsize=8 in INK_SOFT (#4A4A44) — readable. Inline UCL/LCL/CL annotations at fontsize=7 — small but readable at full resolution.
-      Data: Primary series #009E73 (brand green) line with circle markers. OOC points in #AE3030 (matte red) filled circles. UCL/LCL dashed red lines. Warning limits amber dotted. Zone shading at very low alpha (0.05-0.07). Legend with ELEVATED_BG frame.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — confirmed, not pure white.
+      Chrome: Title "spc-xbar-r · python · matplotlib · anyplot.ai" at fontsize=12 is clearly readable in dark ink (#1A1A17). Both Y-axis labels ("Sample Mean, X̄ (mm)" and "Sample Range, R (mm)") and X-axis label ("Sample Number") are readable in dark ink at fontsize=10. Tick labels at fontsize=8 are legible. Inline right-margin annotations (UCL, LCL, CL=value) at fontsize=8 are small but readable. Legend in each panel styled with themed facecolor/edgecolor — text readable.
+      Data: Main data lines and markers in brand green (#009E73); out-of-control points overlaid as larger red X markers (#AE3030). UCL/LCL as dashed red lines; warning limits as dotted amber (#DDCC77) lines; center lines as solid grey. Zone shading (green/amber/red bands) provides clear visual hierarchy.
+      Legibility verdict: PASS — all text readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and axis labels appear in light #F0EFE8 (INK token for dark theme) — readable. Tick labels in #B8B7B0 (INK_SOFT for dark theme) — readable. UCL/LCL inline labels in #AE3030 (red) — visible against dark background. CL labels in #B8B7B0 — readable. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — green #009E73 line, red #AE3030 OOC markers. Zone shading bands subtly visible. Center lines in light gray.
-      Legibility verdict: PASS — all text readable against dark background, chrome correctly flipped, data colors unchanged
+      Background: Warm near-black (#1A1A17) — confirmed, not pure black.
+      Chrome: Title and axis labels rendered in light cream (#F0EFE8 / INK), clearly visible against dark background. Tick labels in lighter secondary color (#B8B7B0 / INK_SOFT) — readable, no dark-on-dark failures. Inline limit annotations (UCL, LCL, CL=) also in INK_SOFT — visible. Legend text in INK_SOFT against elevated-dark (#242420) legend box — readable.
+      Data: Brand green (#009E73) and matte red (#AE3030) data colors are identical to the light render — only chrome (background, text, grid, legend box) has flipped. Zone shading visible with same semantic color coding.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes. Inline limit
-          annotations at fontsize=7 slightly small at mobile scale.
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend
+          8pt). Readable in both light and dark themes. Proportions well-balanced.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions in either render.
+        comment: No overlap between text elements, data, or legend in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: OOC markers (s=100) prominent. Regular line markers (markersize=5)
-          adequate for 30 points but could be slightly larger (6-7).
+        comment: Main line+marker clearly visible; OOC points highlighted with larger
+          X markers (s=110/100). Appropriate for 30 data points.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green/red used for in-control vs OOC — standard SPC convention but
-          no redundant marker shape encoding for CVD users.
+        passed: true
+        comment: 'CVD-safe: OOC points use both color (red) AND shape (X marker) —
+          redundant encoding prevents green-red CVD ambiguity.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout. Right-margin reserved for limit labels. Height
-          ratios [3,2] appropriate. No clipping.
+        comment: Canvas gate passed. Two-panel layout with height_ratios 3:2 fills
+          canvas well. Right margin reserved for inline limit labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All labels descriptive with units: Sample Mean X̄ (mm), Sample Range
-          R (mm), Sample Number.'
+        comment: 'Both Y-axes include units: ''Sample Mean, X̄ (mm)'' and ''Sample
+          Range, R (mm)''. X-axis: ''Sample Number''. Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Red #AE3030 and amber #DDCC77
-          used as semantic anchors. Backgrounds #FAF8F1/#1A1A17. Chrome theme-adaptive
-          in both renders.'
+        comment: 'First data series is brand green #009E73. OOC uses semantic anchor
+          #AE3030 (correct role: error/bad). Warning limits use amber #DDCC77 (correct
+          role: warning). Backgrounds correct (#FAF8F1 / #1A1A17). Data colors identical
+          across themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library defaults: zone shading with semantic color gradation
-          is a professional SPC technique. Functional rather than editorial — stops
-          short of clearly above defaults territory.'
+        comment: 'Strong design: zone shading with semantic green/amber/red encoding,
+          intentional color hierarchy for limit lines vs data, well above library
+          defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good: top/right spines removed, Y-only grid at alpha=0.12, legend
-          with custom styling, marker edges with PAGE_BG. Zone shading adds mild visual
-          density.'
+        comment: Spines removed (top+right), subtle y-only grid (alpha=0.12), themed
+          legend, subplots_adjust for clean margins, close panel spacing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: red OOC markers draw the eye immediately. Zone
-          shading provides interpretive context. R chart lacks legend/label for its
-          data series.'
+        comment: Zone shading and OOC red-X highlighting create clear visual hierarchy.
+          Viewer immediately sees danger zones and out-of-control events. No narrative
+          annotation on the peak event.
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct X-bar/R paired chart with shared x-axis.
+        comment: 'Correct: X-bar on top, R on bottom, vertically stacked pair sharing
+          x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: UCL/LCL dashed/labeled, center line solid,
-          OOC highlighted, warning limits dotted, 3+ OOC points, standard SPC constants.'
+        comment: 'All present: UCL/LCL dashed, center line solid, warning limits dotted,
+          OOC highlighted. Standard constants A2/D3/D4 used. 3 injected out-of-control
+          points.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sample number; Y1: sample mean X-bar; Y2: sample range R. Correct.'
+        comment: X=sample ID, Y_top=sample means, Y_bottom=sample ranges. All 30 data
+          points shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'spc-xbar-r · python · matplotlib · anyplot.ai'. Legend
-          shows Sample Mean and Out-of-Control.
+        comment: Title 'spc-xbar-r · python · matplotlib · anyplot.ai' matches required
+          format. Legends correctly label 'Sample Mean'/'Sample Range' and 'Out-of-Control'.
     data_quality:
       score: 15
       max: 15
@@ -168,22 +168,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both charts with all elements. OOC in both positive and negative
-          directions. Full zone coverage.
+        comment: 'Shows all SPC aspects: zone bands (1-sigma, 2-sigma, 3-sigma), both
+          chart types, OOC detection in action.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter at 25.0mm with 0.05mm sigma — textbook realistic
-          SPC scenario.
+        comment: CNC shaft diameter measurements (target 25.0 mm, std 0.05 mm, n=5
+          subgroups) — genuine manufacturing quality control scenario, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Control limits ±0.13mm and ranges 0.07-0.21mm are appropriate for
-          n=5 CNC precision machining subgroups.
+        comment: Correct SPC constants (A2=0.577, D3=0.0, D4=2.114 for n=5). R-chart
+          correctly omits LCL when D3=0. Diameter values and process variation realistic
+          for CNC machining.
     code_quality:
       score: 10
       max: 10
@@ -193,52 +194,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no helper functions.
+        comment: 'Linear flow: imports → tokens → data → X-bar plot → R chart → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, matplotlib.ticker, numpy.'
+        comment: 'All 4 imports used: os (ANYPLOT_THEME), matplotlib.pyplot, matplotlib.ticker
+          (FormatStrFormatter), numpy.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Panel repetition is appropriate for independent
-          panel configuration.
+        comment: Clean, appropriately complex for a dual-panel SPC chart. Zone shading
+          inlined as noted in comments.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) without
-          bbox_inches='tight'.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic plt.subplots with sharex, gridspec_kw, Axes methods throughout,
-          fig.subplots_adjust.
+        comment: Axes-method API throughout. sharex=True, gridspec_kw height_ratios,
+          subplots_adjust, ticker.FormatStrFormatter, plt.setp batch styling — all
+          idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses axhspan for zone shading, ticker.FormatStrFormatter, gridspec_kw
-          height_ratios — distinctively matplotlib but not in advanced territory.
-  verdict: REJECTED
+        comment: axhspan for zone shading, mixed ax.plot+ax.scatter overlay for line
+          with selectively highlighted OOC points, gridspec_kw height_ratios for non-equal
+          panel sizes. Good but not reaching PathEffects or FancyArrow territory.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
