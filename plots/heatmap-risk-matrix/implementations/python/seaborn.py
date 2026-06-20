@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-20
@@ -51,20 +51,20 @@ impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
 risk_scores = np.array([[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15], [4, 8, 12, 16, 20], [5, 10, 15, 20, 25]])
 
 risks = [
-    {"name": "Server Outage", "likelihood": 2, "impact": 4, "category": "Technical"},
+    {"name": "Srv Outage", "likelihood": 2, "impact": 4, "category": "Technical"},
     {"name": "Data Breach", "likelihood": 2, "impact": 5, "category": "Technical"},
-    {"name": "Budget Overrun", "likelihood": 4, "impact": 3, "category": "Financial"},
+    {"name": "Over Budget", "likelihood": 4, "impact": 3, "category": "Financial"},
     {"name": "Staff Loss", "likelihood": 3, "impact": 3, "category": "Operational"},
-    {"name": "Vendor Failure", "likelihood": 2, "impact": 3, "category": "Operational"},
+    {"name": "Vendor Fail", "likelihood": 2, "impact": 3, "category": "Operational"},
     {"name": "Scope Creep", "likelihood": 5, "impact": 2, "category": "Project"},
     {"name": "Reg. Change", "likelihood": 3, "impact": 4, "category": "Financial"},
     {"name": "Cyber Attack", "likelihood": 3, "impact": 5, "category": "Technical"},
     {"name": "Supply Delay", "likelihood": 4, "impact": 4, "category": "Operational"},
-    {"name": "Market Shift", "likelihood": 3, "impact": 2, "category": "Financial"},
-    {"name": "Power Failure", "likelihood": 1, "impact": 3, "category": "Technical"},
+    {"name": "Mkt Shift", "likelihood": 3, "impact": 2, "category": "Financial"},
+    {"name": "Power Fail", "likelihood": 1, "impact": 3, "category": "Technical"},
     {"name": "Disputes", "likelihood": 2, "impact": 2, "category": "Financial"},
     {"name": "Defects", "likelihood": 3, "impact": 3, "category": "Project"},
-    {"name": "Deadline Miss", "likelihood": 4, "impact": 2, "category": "Project"},
+    {"name": "Deadline", "likelihood": 4, "impact": 2, "category": "Project"},
     {"name": "IP Theft", "likelihood": 1, "impact": 5, "category": "Technical"},
 ]
 
@@ -84,7 +84,7 @@ sns.heatmap(
     vmax=25,
     linewidths=1.8,
     linecolor=PAGE_BG,
-    cbar_kws={"shrink": 0.72, "pad": 0.04, "aspect": 22},
+    cbar_kws={"shrink": 0.72, "pad": 0.10, "aspect": 22},
     square=True,
     ax=ax,
 )
@@ -130,6 +130,8 @@ for _key, items in cell_items.items():
     for i, risk in enumerate(items):
         ox, oy = offsets[i] if i < len(offsets) else (0, 0)
         score = risk["likelihood"] * risk["impact"]
+        # Alternate labels above/below for multi-item cells to prevent overlap
+        label_dy = 0.26 if i % 2 == 0 else -0.30
         plot_data.append(
             {
                 "x": risk["impact"] - 1 + 0.5 + ox,
@@ -139,6 +141,7 @@ for _key, items in cell_items.items():
                 "score": score,
                 "size": 120 + score * 12,
                 "is_critical": score >= 16,
+                "label_dy": label_dy,
             }
         )
 
@@ -173,14 +176,13 @@ for _, row in critical_df.iterrows():
 
 # Risk item labels with elevated background boxes
 for _, row in df_risks.iterrows():
-    label_y_offset = 0.28 if row["score"] >= 12 else 0.25
     ax.text(
         row["x"],
-        row["y"] + label_y_offset,
+        row["y"] + row["label_dy"],
         row["name"],
         ha="center",
         va="top",
-        fontsize=9,
+        fontsize=6,
         fontweight="bold",
         color=INK,
         zorder=6,
@@ -229,7 +231,7 @@ legend_handles = [
     )
     for cat in categories
 ]
-legend_handles.append(plt.Line2D([0], [0], color="w", label=""))
+legend_handles.append(plt.Line2D([0], [0], color="none", linewidth=0, label=""))
 
 zone_levels = [
     ("Low (1–4)", "#009E73"),
@@ -240,7 +242,7 @@ zone_levels = [
 for label, color in zone_levels:
     legend_handles.append(mpatches.Patch(facecolor=color, edgecolor=INK_MUTED, linewidth=0.7, label=label))
 
-legend_handles.append(plt.Line2D([0], [0], color="w", label=""))
+legend_handles.append(plt.Line2D([0], [0], color="none", linewidth=0, label=""))
 legend_handles.append(
     plt.Line2D(
         [0],
