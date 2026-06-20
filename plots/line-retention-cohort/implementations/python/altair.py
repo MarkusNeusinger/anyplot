@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -67,7 +67,7 @@ threshold_df = pd.DataFrame({"y": [20]})
 threshold = alt.Chart(threshold_df).mark_rule(strokeDash=[8, 6], strokeWidth=2, color=INK_MUTED).encode(y="y:Q")
 threshold_label = (
     alt.Chart(threshold_df)
-    .mark_text(text="20% Target", align="left", dx=5, dy=-12, fontSize=11, fontWeight="bold", color=INK_MUTED)
+    .mark_text(text="20% Target", align="left", dx=5, dy=-12, fontSize=13, fontWeight="bold", color=INK_MUTED)
     .encode(x=alt.value(20), y="y:Q")
 )
 
@@ -105,7 +105,8 @@ lines = (
     .add_params(highlight)
 )
 
-# Points with graduated size matching the line hierarchy
+# Points with graduated size + distinct shapes for CVD accessibility
+shape_range = ["circle", "square", "cross", "diamond", "triangle-up"]
 points = (
     alt.Chart(df)
     .mark_point(filled=True)
@@ -113,6 +114,7 @@ points = (
         x="Week:Q",
         y="Retention (%):Q",
         color=alt.Color("Cohort:N", scale=alt.Scale(domain=cohort_labels, range=IMPRINT_PALETTE), legend=None),
+        shape=alt.Shape("Cohort:N", scale=alt.Scale(domain=cohort_labels, range=shape_range), legend=None),
         opacity=alt.condition(
             highlight,
             alt.value(1.0),
@@ -146,7 +148,7 @@ chart = (
     )
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_axis(
-        domainColor=INK_SOFT,
+        domain=False,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.15,
