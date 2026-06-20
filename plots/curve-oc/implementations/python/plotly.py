@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-oc: Operating Characteristic (OC) Curve
-Library: plotly | Python
-Imprint palette, theme-adaptive chrome, 3200×1800 px canvas.
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-06-20
 """
 
 import os
