@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:21:33Z'
-updated: '2026-06-20T16:52:25Z'
+updated: '2026-06-20T17:04:13Z'
 generated_by: claude-sonnet
 workflow_run: 27877378590
 issue: 4550
@@ -12,104 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-paret
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Semantic color coding (brand green for Vital Few, muted anchor for Trivial Many,
-    Imprint blue for cumulative line) instantly communicates the Pareto story without
-    needing to read the legend
-  - 'All five spec requirements delivered correctly: descending bars, secondary y-axis,
-    80% reference line, annotated threshold crossing, and cumulative markers at bar
-    centers'
-  - Subtle vrect shading for the Vital Few region provides elegant visual hierarchy
-    that reinforces the storytelling
-  - Value annotations on the three highest-impact bars and the '81%' cumulative annotation
-    at the threshold crossing guide the viewer's eye to the key insights
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
-    fully legible with no dark-on-dark failures; data colors are identical between
-    themes as required'
-  - Clean, deterministic code with correct canvas dimensions (3200x1800) and proper
-    plot-{THEME}.png / plot-{THEME}.html output
+  - 'All required Pareto chart features correctly implemented: descending bars, secondary
+    y-axis cumulative line, 80% threshold reference line, and Vital Few/Trivial Many
+    split'
+  - 'Excellent theme adaptation: all chrome tokens correctly flip between light and
+    dark, data colors remain constant, no dark-on-dark failures in either render'
+  - Semantic color use of muted anchor for Trivial Many bars — correctly treated as
+    rest/other category, not a palette position
+  - 'Good data storytelling: green shading region, value labels on top 3 bars, and
+    81% threshold annotation guide the viewer toward the Pareto insight'
+  - Clean deterministic code using idiomatic Plotly patterns with high-level convenience
+    APIs (add_hline, add_vrect, add_annotation)
   weaknesses:
-  - barmode='relative' is semantically incorrect for non-overlapping bar traces; replace
-    with barmode='overlay' or remove the setting entirely
-  - Spline interpolation (shape='spline') on the cumulative line creates smooth arcs
-    between discrete category points, slightly misrepresenting the true step-wise
-    cumulative distribution; shape='linear' would be more accurate for a standard
-    Pareto chart
-  - 'The Trivial Many bars in the dark render appear noticeably light (sand/cream
-    tone from INK_MUTED #A8A79F) — while semantically correct, consider adding a comment
-    explaining this design choice so the repair loop does not mistake it for a bug'
+  - 'Cumulative percentage line uses Imprint palette position 3 (blue #4467A3) instead
+    of position 2 (lavender #C475FD); canonical palette order should be followed unless
+    a semantic exception is documented — change to #C475FD or add a clear comment
+    explaining why blue is semantically preferred for the cumulative trend line (VQ-07
+    -1pt)'
+  - barmode='overlay' is set but has no effect since the two bar traces have non-overlapping
+    x values (Vital Few and Trivial Many are disjoint category lists); remove for
+    code clarity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "bar-pareto · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. X-axis label "Defect Type" and Y-axis label "Frequency" in dark ink at size 12px. Secondary Y-axis label "Cumulative Percentage (%)" on the right side. Tick labels in INK_SOFT (#4A4A44). All axis labels and tick labels clearly readable. Y-axis grid lines at 15% opacity (subtle, not dominant). Dotted 80% threshold line in INK_SOFT with "80% threshold" annotation at far right.
-      Data: First five bars (Scratches=142, Dents=118, Misalignment=87, Cracks=64, Discoloration=53) in brand green #009E73 (Vital Few). Remaining five bars (Burrs=38, Warping=29, Contamination=21, Chipping=15, Porosity=9) in INK_MUTED (#6B6A63, dark gray). Cumulative % line in Imprint blue (#4467A3) with circle markers (size 14). Subtle green vrect (#009E73 at 6% opacity) over the Vital Few region. Value labels "142", "118", "87" in green above top 3 bars. "81%" annotation in blue above the Discoloration cumulative point. First series is #009E73 (correct).
-      Legibility verdict: PASS — all text readable, no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "bar-pareto · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. X-axis label "Defect Type", left y-axis label "Frequency", right y-axis label "Cumulative Percentage (%)" all in dark ink. Tick labels in INK_SOFT (#4A4A44). "80% threshold" annotation and "81%" cumulative label both readable. Value labels 142, 118, 87 in bold green above top 3 bars. Legend with elevated background showing Vital Few, Trivial Many, Cumulative %.
+      Data: Vital Few bars in brand green #009E73 (Scratches, Dents, Misalignment, Cracks, Discoloration). Trivial Many bars in muted dark gray #6B6A63 (Burrs through Porosity). Cumulative line in blue #4467A3 with white-bordered circle markers. Subtle green region shading (#009E73 at 6% opacity) behind Vital Few. Dotted 80% reference line in INK_SOFT.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels in #F0EFE8. Tick labels in INK_SOFT dark (#B8B7B0, light gray). Y-axis grid lines at 15% opacity, visible but subtle. 80% threshold dotted line in #B8B7B0. "80% threshold" annotation in light gray. Legend on elevated dark background (#242420) with border. No dark-on-dark failures detected — all text elements contrast adequately with the near-black background.
-      Data: Vital Few bars remain in brand green #009E73 — identical to light render. Trivial Many bars appear in #A8A79F (INK_MUTED dark, light sand/cream tone) — this is the theme-adaptive muted anchor, semantically correct for "other/rest" role. Cumulative % blue line and markers (#4467A3) are identical to light render. Data colors are consistent between themes; only chrome flips.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all render in light warm tones (#F0EFE8 / #B8B7B0). No dark-on-dark failures. "80% threshold" annotation and "81%" label visible in light gray. Legend uses #242420 elevated background with #B8B7B0 border. Grid lines use low-opacity light GRID token.
+      Data: Vital Few bars remain #009E73 (identical to light render). Cumulative line remains #4467A3 (identical to light render). Trivial Many bars adapt to #A8A79F (dark-mode muted anchor), clearly visible against dark background. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and annotations all readable in
-          both themes. Secondary y-axis label 'Cumulative Percentage (%)' is slightly
-          compact but legible.
+        comment: Title, axis labels, tick labels, value annotations, and legend text
+          all readable in both themes at appropriate sizes (title 16px, labels 12px,
+          ticks 10px)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Minimal concern: ''81%'' text annotation sits near the 80% threshold
-          dashed line but no actual pixel overlap. All other elements clearly separated.'
+        comment: No collisions between text, data elements, or legend; 81% annotation
+          and 80% threshold label are close vertically but clearly separated horizontally
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 sparse data points; markers (size=14) and line (width=3.5) are
-          well-sized. Bars prominent with good spacing.
+        comment: All bars, cumulative line markers, reference line, shading, and annotations
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs muted-gray vs blue — three visually distinct signals. No
-          red-green-only encoding.
+        comment: Imprint palette is CVD-safe; bars vs line use distinct visual encodings
+          (filled bars vs line+markers); no red-green ambiguity
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas. Margins (t=80, b=60, l=80, r=90) prevent
-          clipping. Title at ~55% of width. No overflows.
+        comment: Correct 3200x1800 landscape canvas; explicit margins (t=80, b=60,
+          l=80, r=90); secondary y-axis label fully visible; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Defect Type'', ''Frequency'', and ''Cumulative Percentage (%)''
-          are descriptive with implied units.'
+        comment: Frequency, Defect Type, Cumulative Percentage (%) with percent suffix
+          on ticks; title in correct format
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series #009E73 brand green. Blue #4467A3 (Imprint position
-          3) for cumulative line. INK_MUTED for Trivial Many (semantic other/rest
-          anchor). Backgrounds #FAF8F1/#1A1A17 correct. Chrome correctly theme-adaptive.'
+        passed: false
+        comment: 'Vital Few bars correctly use position 1 (#009E73) and Trivial Many
+          correctly uses muted semantic anchor; however cumulative line uses position
+          3 (blue #4467A3) instead of position 2 (lavender #C475FD), skipping canonical
+          order without documented semantic reason'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -117,26 +113,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong semantic color coding: Vital Few in brand green, Trivial
-          Many in muted anchor, cumulative line in Imprint blue. Subtle vrect region
-          shading, targeted value annotations on top 3 bars, annotated 80% threshold
-          — all deliberate and purposeful.'
+        comment: 'Above-default design: Vital Few/Trivial Many semantic color distinction,
+          subtle green region shading, white-bordered circular markers, value labels
+          on top 3 bars all demonstrate intentional design hierarchy'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid at 15% opacity, no x-axis grid, minimal chrome.
-          Could be further refined by fully hiding axis spines and softening borders
-          more aggressively.
+        comment: Y-axis-only grid at low opacity; legend uses elevated background
+          with border; no unnecessary chrome; generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green Vital Few bars with region shading instantly communicate the
-          80/20 principle. '81%' annotation and dotted threshold highlight the crossing
-          point. Top-3 value labels guide the viewer to most impactful defects.
+        comment: 'Clear visual hierarchy: green bars draw focus, muted bars recede,
+          80% threshold line anchors key insight, Vital Few/Trivial Many naming reinforces
+          Pareto principle'
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Pareto chart: descending bars + cumulative % overlay on
-          secondary y-axis.'
+        comment: 'Correct Pareto chart: descending-sorted bars with cumulative percentage
+          line overlay'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Descending sort, secondary y-axis for cumulative %, 80% reference
-          line, markers at bar centers — all present.
+        comment: 'All spec requirements present: descending sort, cumulative % on
+          secondary y-axis, 80% reference line, primary y-axis raw counts, cumulative
+          markers at bar centers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: defect categories. Y-left: frequency counts. Y-right: cumulative
-          percentage (0-108% range). All correctly mapped.'
+        comment: 'X-axis: defect categories; left y-axis: frequency counts; right
+          y-axis: cumulative percentage 0-100%; all 10 categories visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-pareto · python · plotly · anyplot.ai''. Legend: ''Vital
-          Few'', ''Trivial Many'', ''Cumulative %''.'
+        comment: Title 'bar-pareto · python · plotly · anyplot.ai' matches required
+          format; legend labels Vital Few, Trivial Many, Cumulative % are clear
     data_quality:
       score: 15
       max: 15
@@ -178,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Pareto chart aspects: bars, dual-axis, cumulative line, Vital
-          Few/Trivial Many distinction, 80% threshold annotation.'
+        comment: 'Demonstrates all Pareto chart aspects: descending bars, cumulative
+          overlay, threshold marking, Vital Few/Trivial Many split at 80%'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect data (Scratches, Dents, Misalignment, etc.)
-          is a textbook Pareto application, plausible, and neutral.
+        comment: Manufacturing defect types with plausible declining counts (142 to
+          9); realistic quality-control scenario; neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 categories within spec 5-15 range. Counts 9-142 with right-skewed
-          Pareto distribution are realistic for defect data.
+        comment: Counts range 9-142, realistic for defect frequency; cumulative percentage
+          correctly computed 24.65% to 100%; proper descending sort
     code_quality:
       score: 10
       max: 10
@@ -203,35 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat sequential code.
+        comment: No functions or classes; linear procedural script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded static data; no randomness; fully deterministic.
+        comment: Fully deterministic; hardcoded data arrays, no random generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects imported; all three used.
+        comment: Only os, numpy, and plotly.graph_objects imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Threshold index computed cleanly with np.searchsorted.
-          Text label list comprehension is concise. No fake UI.
+        comment: Clean, readable code; no fake UI; appropriate complexity for a dual-axis
+          Pareto chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (3200x1800 via width=800, height=450, scale=4)
-          and plot-{THEME}.html. autosize=False.
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4) and plot-{THEME}.html
+          with CDN Plotly
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -239,18 +234,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper go.Figure() + add_trace() pattern; update_layout for configuration;
-          add_hline, add_vrect, add_annotation are canonical plotly helpers. Minor:
-          barmode=''relative'' is semantically odd for non-overlapping categorical
-          bar groups.'
+        comment: Correct use of go.Figure() with multiple add_trace() calls; add_hline(),
+          add_vrect(), and add_annotation() high-level convenience APIs; proper yaxis2
+          secondary-axis pattern
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Uses dual y-axis (yaxis2 with overlaying), add_vrect for region shading,
-          add_hline for threshold, add_annotation for value labels, spline line shape,
-          and write_html for interactive output.
+        passed: false
+        comment: add_vrect() background shading and add_hline() are distinctively
+          Plotly; secondary y-axis via yaxis2 overlay is well-executed; HTML interactive
+          export leverages Plotly's core differentiator, but no custom hover templates
+          or interactive-specific features beyond defaults
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -258,9 +253,9 @@ impl_tags:
   - twin-axes
   - annotations
   - html-export
-  patterns: []
+  patterns:
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
-  - edge-highlighting
-  - grid-styling
+  - alpha-blending
