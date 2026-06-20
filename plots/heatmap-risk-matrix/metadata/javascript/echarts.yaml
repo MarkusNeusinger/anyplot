@@ -1,0 +1,260 @@
+library: echarts
+language: javascript
+specification_id: heatmap-risk-matrix
+created: '2026-06-20T06:12:14Z'
+updated: '2026-06-20T06:33:37Z'
+generated_by: claude-sonnet
+workflow_run: 27862270527
+issue: 4567
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/echarts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Excellent semantic color choice for risk zones: brand green (#009E73) for Low,
+    amber anchor (#DDCC77) for Medium, ochre (#BD8233) for High, matte red (#AE3030)
+    for Critical — all Imprint palette members in semantically appropriate roles'
+  - Intelligent fixed jitter lookup table prevents marker overlap without randomness,
+    ensuring reproducible pixel-identical renders
+  - Dual-series ECharts composition (heatmap background + scatter overlay) is sophisticated
+    and idiomatic
+  - Theme-adaptive chrome tokens correctly applied throughout; piecewise visualMap
+    data colors are identical between light and dark renders
+  - Realistic IT infrastructure risk dataset (12 risks covering cybersecurity, project,
+    HR, compliance domains) — plausible and neutral
+  - 'Clean deterministic code structure: no functions/classes, well-organized sections,
+    reproducible output'
+  weaknesses:
+  - 'Risk score labels use hardcoded color: "#F0EFE8" (line 148) rather than a theme
+    token — works because cell backgrounds are always colored, but bypasses the token
+    system'
+  - Jitter pattern table caps at 4 items per cell (Math.min(group.length, 4)) — if
+    5+ risks ever share a cell, overflow items stack at [0,0]; acceptable for this
+    dataset but fragile
+  - 'Score label offset: [0, 50] pushes numbers to cell bottom-left — functional but
+    could produce minor visual crowding when a risk marker also occupies the lower
+    region of a cell'
+  - 'Label boxes with backgroundColor: t.elevatedBg in dark mode produce a very dark
+    box (#242420) with light text against near-black background — contrast is sufficient
+    but reduces visual pop'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "heatmap-risk-matrix · javascript · echarts · anyplot.ai" in dark bold text, clearly visible. X-axis label "IMPACT" and Y-axis label "LIKELIHOOD" in dark uppercase bold. Tick labels (Negligible/Minor/Moderate/Major/Catastrophic and Rare/Unlikely/Possible/Likely/Almost Certain) in dark secondary text. Piecewise legend (Low 1–4 / Medium 5–9 / High 10–16 / Critical 20–25) at bottom in secondary text.
+      Data: Four zone colors — brand green (#009E73) Low, amber (#DDCC77) Medium, ochre (#BD8233) High, matte red (#AE3030) Critical. Risk score integers in light cream with text shadow in cell lower-left. Twelve risk markers as dark dots with elevated-background label boxes.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, tick labels, and legend text flip to light cream/gray tones — all readable against dark surface. Risk item label boxes use dark elevated background (#242420) with light ink text — legible. No dark-on-dark failure detected.
+      Data: Zone colors (green/amber/ochre/red) are visually identical to light render — only chrome flips. Score labels use hardcoded #F0EFE8 (light) which works on all colored cell backgrounds.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title, axis labels, tick labels, risk item labels all readable in
+          both renders. Minor deduction: score labels hardcode #F0EFE8 rather than
+          using a theme token.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Jitter algorithm separates most risk items well. Minor crowding in
+          the Likely row with three adjacent labels, no hard overlap observed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Zone colors vivid and distinct. Risk markers (symbolSize 15) clearly
+          visible against all zone backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All zone colors from Imprint palette (CVD-safe). Zone meaning conveyed
+          via text labels as well as color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for symmetric matrix. Generous margins,
+          balanced grid, legend at bottom. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. IMPACT and LIKELIHOOD axis names with descriptive
+          categorical tick labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Zone colors from Imprint palette. Backgrounds correct (#FAF8F1/#1A1A17).
+          Chrome tokens used throughout. Data colors identical between renders.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semantic color mapping, jitter algorithm, text shadows, tooltip-style
+          label boxes. Held from 6+ by plain dot markers without category-level visual
+          encoding.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Cell gap borders via pageBg borderWidth, axis tick marks hidden.
+          Clean but limited refinement beyond functional requirements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Zone coloring communicates severity. Named risk markers tell a project
+          risk story. Slightly held back by absence of in-matrix zone text overlays.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 5x5 heatmap risk matrix with overlaid labeled scatter plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Green-to-red zone gradient, descriptive axis tick labels, labeled
+          risk markers with jitter, zone legend all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Impact, Y=Likelihood, cell color=risk score, markers=individual
+          risk items.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact. Piecewise legend labels match spec zone definitions.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 5x5 risk grid, four risk zones, twelve named risk items, jitter,
+          descriptive labels, zone legend — all aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: IT infrastructure risk register with 12 plausible, neutral risks
+          across cybersecurity, project management, HR, compliance domains.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1-5 scales standard for risk matrices. 12 items within 5-20 spec
+          range. Scores 1-25 correctly computed.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Clean procedural flow: data, init, option.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded/deterministic. Jitter patterns are fixed lookup
+          tables.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (echarts is a global). No unused constructs.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Jitter pattern lookup table is elegant. cellGroups construction is
+          clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'anyplot-orientation: square directive present. animation: false
+          set. No explicit devicePixelRatio.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Heatmap+scatter dual series, piecewise visualMap, emphasis: { disabled:
+          true }, animation: false — all idiomatic ECharts. Minor deduction for hardcoded
+          label color bypassing tokens.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: piecewise visualMap, dual-series composition, textShadowColor/textShadowBlur,
+          label backgroundColor/padding/borderRadius. Solid ECharts feature utilization.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
