@@ -1,0 +1,287 @@
+library: echarts
+language: javascript
+specification_id: line-growth-percentile
+created: '2026-06-20T09:49:55Z'
+updated: '2026-06-20T09:57:21Z'
+generated_by: claude-sonnet
+workflow_run: 27867136312
+issue: 4555
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Stacked area series with graduated opacity (#4467A3 at 0.13/0.28/0.45) correctly
+    implements 'darker near extremes, lighter near median' from the spec — a visually
+    elegant clinical-chart convention
+  - Patient trajectory uses brand green (#009E73) as the first categorical series,
+    creating strong visual contrast against the blue percentile bands; correct Imprint
+    palette application
+  - ECharts-native endLabel cleanly annotates all 7 percentile curves (P3–P97) at
+    the right margin without legend clutter — an idiomatic pattern few other libraries
+    support natively
+  - 'connectNulls: true handles visit gaps in patient data naturally; symbolSize:
+    12 markers are well-sized for the sparse dataset'
+  - P50 median correctly emphasized with width:3 and bold end-label; legendHoverLink:false
+    and silent:true on background series are clean ECharts-idiomatic patterns
+  - 'Full spec compliance: all 7 percentile curves rendered, graduated bands, gender-specific
+    blue convention, patient overlay with contrasting color, end labels on right margin'
+  - Both light and dark renders are theme-correct — data colors identical across themes,
+    chrome adapts via t.ink/t.inkSoft/t.grid tokens throughout
+  weaknesses:
+  - 'DE-01: All percentile bands derive from a single base color (#4467A3) at varying
+    opacities — while effective, a publication-level treatment could add a subtle
+    visual differentiation to the outer extreme bands (e.g., slightly warmer tint
+    for P3–P10/P90–P97) to reinforce the ''danger zone'' vs. ''normal range'' narrative'
+  - 'DE-03: Clear visual hierarchy exists (P50 emphasized, patient in contrasting
+    green) but the chart lacks a storytelling callout — a brief annotation at the
+    patient''s latest point (e.g., ''~68th percentile'') or a subtle highlight band
+    around the patient''s trajectory region would guide the viewer directly to the
+    key insight'
+  - 'VQ-01 minor: P3 and P10 end labels are at fontSize:13 with opacity:0.75, making
+    them slightly smaller/dimmer than adjacent labels — increasing to fontSize:14
+    and opacity:0.85 would improve readability when the chart is scaled to mobile
+    widths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "line-growth-percentile · javascript · echarts · anyplot.ai" in bold dark text, clearly readable. Subtitle "WHO Weight-for-Age Reference · Boys 0–36 Months" in secondary ink. Y-axis label "Weight (kg)" and X-axis label "Age (months)" readable at 16px CSS. Tick labels at 14px readable. End labels P3–P97 at 13–14px visible at right margin. Legend at bottom in 15px secondary ink — readable.
+      Data: Six graduated percentile bands in #4467A3 at varying opacities (0.13 for central P25–P75, 0.28 for P10–P25/P75–P90, 0.45 for outer P3–P10/P90–P97). Seven reference lines run through bands; P50 emphasized with width:3 solid dark blue. Patient trajectory in brand green #009E73 with circle markers at well-child visit months, connected line running above median.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title and axis labels appear in light text (t.ink = #F0EFE8), tick labels in secondary light text (t.inkSoft = #B8B7B0). Grid lines subtle via t.grid token. End labels P3–P97 readable in blue at right margin. Legend entries readable.
+      Data: Data colors identical to light render — patient line in #009E73 (brand green), percentile bands in #4467A3 blues at same opacities. No color shift between themes.
+      Legibility verdict: PASS — no dark-on-dark failures. All chrome elements adapt correctly to the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set via textStyle/nameTextStyle/axisLabel.
+          Title at 22px, axis labels at 16px, tick labels at 14px, legend at 15px.
+          Minor: P3/P10 end labels at fontSize:13 opacity:0.75 are slightly small
+          for mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text. End labels on right margin are well-spaced as
+          percentile curves diverge by month 36. Legend at bottom is clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patient markers at symbolSize:12 are prominent for the sparse dataset
+          (~9 visits). Percentile bands clearly visible at appropriate opacity levels.
+          P50 median stands out with width:3.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green (#009E73) against blue (#4467A3) bands — strong luminance
+          contrast, CVD-safe via Imprint palette. Patient markers have pageBg border
+          for definition.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Grid margins left:90 right:120 top:100 bottom:78
+          give balanced whitespace. Plot fills the canvas well. Right margin accommodates
+          end labels cleanly.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Weight (kg)'' with units. X-axis: ''Age (months)'' with
+          units. Title follows correct spec-id · javascript · echarts · anyplot.ai
+          format with descriptive subtitle.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient line uses t.palette[0] = #009E73 as first series. Percentile
+          bands use #4467A3 (Imprint position 3) — valid semantic exception for boys-blue
+          clinical convention. Background transparent → pageBg token. Both renders
+          theme-correct with t.ink/t.inkSoft/t.grid throughout.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): graduated opacity bands show intentional design
+          — darker at extremes, lighter at center — matching clinical convention.
+          Semantic blue for boys, contrasting green patient line. Thoughtful, but
+          not quite FiveThirtyEight/Nature publication level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Transparent background (page shows through correctly), xAxis splitLine
+          disabled, subtle t.grid for y-axis only, generous margins. Refinement visible
+          and intentional. Short of 'every detail polished' (6) due to the standard
+          spine treatment.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy guides reader: patient trajectory in contrasting
+          green is the clear focal point; P50 emphasized with width:3 and bold end-label;
+          graduated bands visually represent normal range. Story is readable. Lacks
+          a direct callout/annotation at the patient''s position for maximum narrative
+          impact.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct WHO/CDC-style growth chart with filled percentile bands and
+          individual patient trajectory overlaid. All subtypes present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: graduated band fills (darker extremes/lighter
+          center), P50 emphasized (thicker line), blue convention for boys, all 7
+          percentile labels on right margin, patient as connected markers with contrasting
+          color.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: age_months (0–36), Y-axis: weight in kg. Patient data aligned
+          to reference age grid with nulls for no-visit months. All data correctly
+          mapped and visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-growth-percentile · javascript · echarts · anyplot.ai''
+          — correct format. Legend identifies ''Patient (Boy, 2024)'' and ''50th Percentile
+          (Median)'' — appropriate and sufficient.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 7 percentile curves (P3–P97), all 6 inter-percentile bands,
+          individual patient trajectory with visit gaps, 0–36 month range with appropriate
+          resolution (every 3 months).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO Weight-for-Age reference for boys 0–36 months — neutral, clinically
+          standard scenario. Patient values track ~65th–68th percentile consistently.
+          Realistic well-child visit schedule with gaps.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Y-axis 0–20 kg with 2 kg intervals is correct for boys 0–36 months.
+          Reference curve values (P3: 2.5–11.3, P97: 4.3–17.9 kg) approximate WHO
+          standards. Patient values are plausible for the stated trajectory.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data → chart init → setOption. Single utility arrow function (diff)
+          is minimal and appropriate.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded — fully deterministic. No RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — uses window globals (echarts, ANYPLOT_TOKENS). Clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured option object. No fake UI, no over-engineering. The
+          stacked series pattern is the correct ECharts approach for percentile bands.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-light/dark.png and .html output. Current ECharts
+          5.5.1 API used correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses ECharts' stack pattern for percentile bands, smooth:true
+          for reference curves, connectNulls:true for sparse patient data, animation:false
+          (mandatory), transparent backgroundColor. All idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: endLabel for inline series annotation at line terminus is a distinctive
+          ECharts feature not easily replicated in other libraries. legendHoverLink:false
+          and silent:true on background series are ECharts-specific control mechanisms.
+          Strong library mastery.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
