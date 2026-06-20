@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: spc-xbar-r
 created: '2026-06-20T13:10:31Z'
-updated: '2026-06-20T13:19:43Z'
+updated: '2026-06-20T13:37:04Z'
 generated_by: claude-sonnet
 workflow_run: 27871790805
 issue: 4551
@@ -12,112 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct dual-panel SPC layout with X-bar on top and R chart on bottom sharing
-    a single x-axis
-  - Accurate control chart constants (A2=0.577, D3=0, D4=2.115 for n=5) with textbook-correct
-    formula application
-  - 'Excellent semantic color mapping: brand green (#009E73) for center line (process
-    target), Imprint red (#AE3030) for OOC/control limits, Imprint amber (#DDCC77)
-    for warning limits'
-  - Per-point marker overrides in Highcharts elegantly highlight OOC events with size
-    + color dual-encoding (radius 8 red vs. radius 4 blue)
-  - Deterministic LCG + Box-Muller RNG gives reproducibility where JavaScript has
-    no seeded Math.random()
-  - 'Both themes (light #FAF8F1 / dark #1A1A17) render correctly with all chrome elements
-    readable'
-  - Realistic CNC machining context with engineered cluster drift (samples 10–12)
-    and isolated spike (sample 20) demonstrating distinct detection patterns
-  - 'Full spec feature coverage: center line, UCL/LCL dashed, warning limits dashed
-    lighter, OOC highlighting, subtitle with process context'
+  - 'Perfect spec compliance: all SPC elements correctly implemented with standard
+    constants for n=5 (A2=0.577, D3=0, D4=2.115)'
+  - 'Realistic injected OOC scenarios demonstrating the chart''s detection capability:
+    process drift (samples 10-12), isolated spike (sample 20), variability event (sample
+    25)'
+  - 'Correct semantic color usage: amber (#DDCC77) for warning limits, matte red (#AE3030)
+    for control limits and OOC points per Imprint anchors'
+  - Fully deterministic via LCG seed=42 plus Box-Muller for exact reproducibility
+    across runs
+  - 'Idiomatic Highcharts: per-point marker overrides for OOC highlighting, stacked
+    Y-axis panels with top/height, animation disabled for clean static capture'
   weaknesses:
-  - Gap between X-bar and R chart panels is ~9% of canvas height dead space (top panel
-    ends at 48%, bottom panel starts at 57%) — tighten by setting R panel top to ~51%
-    and increasing both panel heights slightly
-  - X-axis category labels at 11px and tick labels at 12px are below the Highcharts
-    guideline of 14px — raise to 13–14px for better mobile readability when scaled
-    to ~400px width
-  - R chart has no out-of-control points — while the X-bar chart demonstrates detection
-    well, engineering at least one OOC range event (e.g. a sample with unusually high
-    variability exceeding rUCL) would give the R chart panel its own story
-  - 'Design polish is functional but not refined: grid lines visible on both axes
-    could be y-axis-only for the X-bar panel per SPC convention; center line could
-    be slightly thicker (3px) to reinforce its role as the process mean anchor'
+  - 'Palette order violation: X-bar data line (first series in legend) uses palette[2]
+    (blue #4467A3) instead of palette[0] (#009E73 brand green) — fix by swapping colors
+    so X-bar uses t.palette[0] and center line uses t.palette[2]'
+  - Warning limit lines at lineWidth=1 are slightly under-weighted; increase to 1.5
+    for better visibility in both renders while keeping them subordinate to UCL/LCL
+    lines at 1.5
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "spc-xbar-r · javascript · highcharts · anyplot.ai" in dark text at 22px — clearly readable. Subtitle "Shaft Diameter (mm) — CNC Machining Process | 28 Subgroups, n=5" in softer dark text. Y-axis labels "X-bar (mm)" and "Range (mm)" with units, in dark secondary text. X-axis label "Sample Number" visible. Tick labels (3-decimal formatted) readable though slightly small (12px). X-axis category labels (S1, S3, S5... every other shown) at 11px — small but legible at canvas resolution.
-      Data: X-bar panel — blue (#4467A3) line with radius-4 circle markers; green (#009E73) solid center line; red (#AE3030) dashed UCL/LCL; amber (#DDCC77) lighter dashed warning limits. Four OOC points clearly highlighted with large radius-8 red filled circles (samples 10–12 cluster and sample 20 spike). R chart panel — same color scheme, no OOC points visible (all ranges within rUCL). Legend at bottom: X-bar, Center (X̄), UCL / LCL (±3σ), Warning (±2σ).
-      Legibility verdict: PASS — all text readable against the light background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "spc-xbar-r · javascript · highcharts · anyplot.ai" in dark ink, fully readable. Subtitle "Shaft Diameter (mm) — CNC Machining Process | 28 Subgroups, n=5" in inkSoft. All axis labels and tick labels readable in dark text. Legend at bottom fully legible.
+      Data: Two-panel layout. Top (X-bar): blue (#4467A3) data line, green (#009E73) center line, red dashed UCL/LCL, amber dashed warning limits, 4 red OOC circles (samples 10-12, 20, 25). Bottom (R): blue data line, green center, red dashed UCL, amber warning, 1 red OOC circle (sample 25).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and subtitle in light text, clearly visible against dark background. Axis labels, tick labels, legend text all in light secondary color (B8B7B0-range). Grid lines subtle but visible. No dark-on-dark failures detected.
-      Data: Colors identical to light render — blue data line, green center line, red OOC markers and UCL/LCL, amber warning limits. The OOC red circles stand out clearly on the dark background. Brand green (#009E73) for center line remains well-visible on dark surface.
-      Legibility verdict: PASS — all text readable in dark theme. Data colors unchanged between themes as required.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle rendered in light text (~#F0EFE8) and clearly readable. Axis labels and tick labels in inkSoft (~#B8B7B0), all visible against dark background. No dark-on-dark failures detected. Grid lines subtle and appropriate.
+      Data: Colors identical to light render — brand green center lines, blue data lines, red OOC markers, amber warning lines. Data colors theme-invariant as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 22px, axis labels 14px readable
-          in both themes. Tick labels 12px and x-category labels 11px are slightly
-          below guideline 14px but still legible at canvas resolution.
+        comment: 'All font sizes explicitly set (title 22px, labels 14px, ticks 13px).
+          Both themes legible. Minor: ticks 1px below 14px guideline.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlaps in either panel or legend.
+        comment: No text-text or text-data collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: OOC markers at radius 8 stand out clearly; normal data markers at
-          radius 4 are adequate but slightly small for the canvas. Control limit lines
-          appropriately lighter than data line.
+        comment: OOC markers radius=8 excellent, normal radius=4 appropriate for 28
+          pts. Warning lines at lineWidth=1 slightly thin.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/red/amber combination CVD-safe. OOC points use dual-encoding
-          (size + color).
+        comment: Redundant encoding via dash style, marker size, line weight. No red-green
+          sole encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Panels well-proportioned but ~9% gap between X-bar (ends at 48%)
-          and R chart (starts at 57%) creates noticeable dead space in the middle
-          of the canvas.
+        comment: Two panels fill ~75% vertical canvas. Balanced margins. No overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-bar (mm), Range (mm), Sample Number all descriptive with units.
-          Informative subtitle adds process context.
+        comment: 'All axes labeled with units: X-bar (mm), Range (mm), Sample Number.
+          Subtitle provides domain context.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Imprint palette correctly used. Brand green #009E73 for center line
-          (semantic: process target/good), Imprint blue palette[2] for data, Imprint
-          matte red #AE3030 for OOC/control limits (semantic: alert), Imprint amber
-          #DDCC77 for warnings (semantic: caution). Background transparent onto theme
-          page bg. Data colors identical between themes.'
+        passed: false
+        comment: 'Background and chrome correct. Semantic red/amber anchors used correctly.
+          Issue: X-bar data line (first series) uses palette[2] blue instead of palette[0]
+          brand green.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,26 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color hierarchy raises this above generic defaults.
-          OOC dual-encoding (size+color) shows design thought. Not quite publication-level
-          but clearly above well-configured default.
+        comment: 'Above default: semantic colors, marker differentiation for OOC,
+          informative subtitle. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Transparent background and theme tokens applied correctly. Grid visible
-          but subtle. Center line heavier than UCL lines. Could benefit from y-axis-only
-          grid lines and tighter panel spacing.
+        comment: No vertical grid, subtle horizontal grids, no legend box, hover artifacts
+          prevented. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC cluster (samples 10-12) and isolated spike (sample 20) create
-          clear visual focal points. Dual-panel layout tells the complete SPC story.
-          Subtitle adds process context. Viewer is guided to the out-of-control events
-          naturally.
+        comment: Visual hierarchy via line weights, OOC focal points, injected failure
+          scenarios tell coherent process story.
     spec_compliance:
       score: 15
       max: 15
@@ -154,29 +133,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SPC X-bar/R chart with two vertically stacked panels sharing
-          x-axis.
+        comment: X-bar top, R chart bottom, vertically stacked, shared x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center line solid/distinct, UCL/LCL dashed and labeled, warning limits
-          (lighter dashed), OOC highlighting, X-bar top / R bottom layout — all present.
+        comment: UCL/LCL dashed, center solid, OOC highlighted, warning limits, 4+
+          OOC points, correct constants.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-bar values on top axis, Range on bottom axis, Sample Number on
-          shared x-axis. Control limits computed from data using correct constants.
+        comment: 'X-axis: sample numbers. Y-axis 0: X-bar mm. Y-axis 1: Range mm.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'spc-xbar-r · javascript · highcharts · anyplot.ai' correct.
-          Legend shows X-bar, Center (X̄), UCL / LCL (±3σ), Warning (±2σ).
+        comment: Title exact required format. Legend labels descriptive and accurate.
     data_quality:
       score: 15
       max: 15
@@ -186,24 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both X-bar and R charts fully featured. Multiple OOC detection patterns
-          (sustained drift cluster + isolated spike). Warning zone lines visible but
-          secondary.
+        comment: Both charts, all control lines, multiple OOC types (drift, spike,
+          variability).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter measurements in CNC machining — a canonical SPC use
-          case. Values and variability are realistic for precision manufacturing.
+        comment: CNC machining shaft diameters, n=5 subgroups. Neutral manufacturing
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25mm nominal diameter, sigma=0.06mm, n=5 subgroups — realistic for
-          CNC precision turning. Process shifts of 0.22–0.30mm create OOC events proportional
-          to the process sigma.
+        comment: 28 subgroups (within 20-50 spec), n=5, realistic mm values, correct
+          SPC constants.
     code_quality:
       score: 10
       max: 10
@@ -213,36 +187,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Minimal utility functions (LCG+Box-Muller for deterministic JS RNG,
-          fix3, flat) are necessary — JS lacks seeded Math.random(). Linear data→config→chart
-          flow.
+        comment: Minimal helpers (lcgRand, randN, fix3, flat), clean main flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG (seed=42) + Box-Muller transform. Produces identical
-          data on every render.
+        comment: Deterministic LCG seed=42 with Box-Muller. No Math.random().
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (correct for Highcharts JS harness). All globals used.
+        comment: No imports; Highcharts is global. Only ANYPLOT_TOKENS used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Per-point marker data built elegantly with map(). No fake UI elements.
-          No over-engineering.
+        comment: Appropriate complexity. No fake UI. Clean structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false in both chart and plotOptions. credits:{enabled:false}.
-          No explicit width/height. Harness handles file output.
+        comment: Correct Highcharts API, no explicit dimensions, animation disabled,
+          landscape orientation declared.
     library_mastery:
       score: 7
       max: 10
@@ -252,18 +222,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Multi-yAxis with top/height positioning, per-point marker overrides,
-          showInLegend:false for duplicate series, legendIndex ordering, enableMouseTracking:false
-          for clean static render — all idiomatic Highcharts patterns.
+        comment: 'Multiple Y-axis with top/height, per-point marker overrides, enableMouseTracking:
+          false, hover artifact prevention.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Dual y-axis panel layout via top/height percentages, per-point data
-          objects with individual marker configs, shared x-axis categories across
-          panels — Highcharts-specific capabilities used effectively.
-  verdict: REJECTED
+        comment: Per-point marker customization and stacked panel via yAxis top/height
+          are genuinely Highcharts-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -272,5 +240,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - control-limits
   styling: []
