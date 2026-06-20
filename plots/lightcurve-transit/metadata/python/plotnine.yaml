@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:19:07Z'
-updated: '2026-06-20T07:47:55Z'
+updated: '2026-06-20T07:54:48Z'
 generated_by: claude-sonnet
 workflow_run: 27864389595
 issue: 4559
@@ -12,123 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Excellent multi-layer composition: observations + error bars + ribbon + model
-    curve + reference elements create a publication-quality scientific figure'
-  - Full Imprint palette compliance with correct theme-adaptive chrome in both light
-    and dark renders
-  - Realistic limb-darkened transit model with vectorized computation is scientifically
-    appropriate
-  - Ribbon uncertainty band near the transit region is a sophisticated addition beyond
-    the bare minimum
-  - Annotations (depth, baseline, dashed center line) effectively guide the viewer's
-    interpretation
-  - 'Perfect code quality: reproducible, clean, idiomatic plotnine throughout'
+  - 'Perfect spec compliance: phase-folded light curve with error bars, limb-darkened
+    model overlay, and confidence ribbon exactly match all requirements'
+  - 'Exemplary theme adaptation: all chrome tokens (background, text, grid, legend)
+    correctly flip between light and dark without any dark-on-dark or light-on-light
+    failures'
+  - 'Strong data storytelling for a scientific context: transit depth annotation,
+    baseline reference line, and transit-center dashed marker all guide reader comprehension
+    directly to the key measurement'
+  - 'Correct Imprint palette application with idiomatic plotnine grammar: multi-source
+    ggplot() pattern, geom_linerange, geom_ribbon, and guide_legend all used appropriately'
   weaknesses:
-  - 'Title is missing the ''python'' language component — must be ''lightcurve-transit
-    · python · plotnine · anyplot.ai'' (SC-04 format: {spec-id} · {language} · {library}
-    · anyplot.ai)'
-  - Scatter point size=1.5 is below the recommended 2.5 starting value for 400-point
-    medium-density data; consider increasing to size=2.0–2.5
-  - Annotation texts ('Baseline' size=2.5, 'Depth' size=3.0) are at the lower bound
-    for readability when scaled to mobile — consider size=3.0 and 3.5 respectively
+  - '"Baseline" annotation (size=2.5mm, ~7pt) is at the very floor of the readable
+    range and adds minimal value since the dotted baseline line already signals the
+    reference level — either remove it or increase to 3mm'
+  - Legend frame border (color=INK_SOFT) adds slight visual noise; a frameless legend
+    (remove color=INK_SOFT from legend_background) would be marginally cleaner for
+    a scientific plot
+  - 'LM-02 held back: while geom_ribbon and geom_linerange are used well, no higher-level
+    plotnine-specific features (stat layers, inherit.aes patterns, or faceted alternatives)
+    are explored'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "lightcurve-transit · plotnine · anyplot.ai" bold dark text — readable. Axis labels "Orbital Phase" and "Relative Flux" in dark ink — readable. Tick labels (0.0–1.0 phase, 0.990/1.000 flux) in INK_SOFT — readable. Legend text in INK_SOFT — readable. Tertiary annotations "Baseline" and "Depth: 1.20%" in INK_MUTED at small size — legible at full resolution.
-      Data: First series (Observations) = #009E73 teal-green scatter with matching error bars. Second series (Transit Model) = #C475FD purple line. Ribbon uncertainty band in purple alpha=0.18. Dotted baseline at flux=1.0 in INK_MUTED. Dashed center-of-transit segment in INK_MUTED.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "lightcurve-transit · python · plotnine · anyplot.ai" at 12pt bold in dark ink (#1A1A17), clearly readable. Axis labels "Orbital Phase" and "Relative Flux" at 10pt in dark ink. Tick labels at 8pt in #4A4A44. All readable.
+      Data: Green scatter (#009E73) 400 observations with teal error bars (alpha=0.30). Lavender transit model line (#C475FD) through smooth dip at phase ~0.5. Very subtle lavender confidence ribbon (alpha=0.18) near transit center. Dotted baseline at flux=1.000. Dashed vertical at transit center. Small italic annotations for "Depth: 1.20%" and "Baseline".
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title in light cream text (#F0EFE8 / INK) — clearly readable. Axis labels and tick labels rendered in INK_SOFT (#B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected — all chrome tokens correctly flip for dark theme. Legend has elevated dark background (#242420).
-      Data: Colors identical to light render — #009E73 for observations, #C475FD for transit model. Brand green #009E73 clearly visible on dark surface. Ribbon and error bars maintain correct hues.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in near-white (#F0EFE8), clearly readable. Axis labels in near-white. Tick labels and legend in #B8B7B0. Legend background switches to #242420. No dark-on-dark failures — all text visible against dark background.
+      Data: Colors identical to light render — green #009E73 observations, lavender #C475FD transit model. Imprint palette colors theme-invariant as required. Error bars and ribbon maintain same appearance.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels readable in both themes. Annotation
-          texts (Baseline size=2.5mm, Depth size=3.0mm) are at lower bound of legibility
-          — slightly larger would improve mobile scaling.
+        comment: Title/axis labels/ticks readable in both themes. "Baseline" annotation
+          at size=2.5mm is at the minimum readable floor.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Minor crowding at transit dip where scatter, error bars, and ribbon
-          converge — expected at data minimum. No text-on-text overlap.
+        comment: No text or data element collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 400 data points (medium density); geom_point size=1.5 is below recommended
-          2.5 for this density. Error bars visible at alpha=0.30, size=0.25. Data
-          readable overall.
+        comment: Scatter alpha=0.65 and error bars alpha=0.30 appropriate for 400-point
+          density. Model line prominent. Ribbon intentionally subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Green #009E73 and purple #C475FD are CVD-safe and perceptually distinct.'
+        comment: Imprint positions 1 (#009E73) and 2 (#C475FD) are CVD-safe and perceptually
+          distinct.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title at 12pt spans ~55% width. No
-          overflow or clipping at any edge.
+        comment: Canvas gate passed (3200x1800). Title ~70% width. Balanced axis labels.
+          No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Orbital Phase and Relative Flux are descriptive. Y-axis tick labels
-          formatted to 3 decimal places — appropriate for flux data.
+        comment: '"Orbital Phase" and "Relative Flux" descriptive. Title correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint positions 1-2). Backgrounds
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1/#1A1A17.
+          Palette identical across both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: ribbon uncertainty band, depth annotation, dashed
-          transit-center marker, baseline reference line. Multi-layer professional
-          scientific figure.'
+        comment: Custom Imprint palette, full theme-adaptive chrome, intentional layer
+          ordering, scientific annotations for depth/baseline/transit center.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-axis-only grid at 12% opacity. theme_minimal() for clean base.
-          No explicit spine removal in code. Legend frame visible but not intrusive.
+        comment: Y-axis-only grid (x blanked), alpha=0.12 subtle grid, L-shaped axis
+          frame. Legend border slightly noisy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transit dip draws the eye naturally. Depth annotation, dashed center
-          line, and ribbon form a coherent interpretive narrative.
+        comment: Transit dip is clear focal point. Depth annotation, baseline reference,
+          transit center marker all guide comprehension. "Baseline" label too small
+          to carry weight.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,30 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct phase-folded light curve with scatter observations, error
-          bars, and smooth model overlay. Transit dip goes downward.
+        comment: Phase-folded light curve with scatter + error bars + model overlay.
+          Transit dip downward as required.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars (geom_linerange), smooth model curve, phase-folded 0.0-1.0,
-          limb-darkened model, ribbon uncertainty band all present.
+        comment: Error bars (geom_linerange), smooth model (2000-pt fine grid), phase-folded
+          data, confidence band (geom_ribbon) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: orbital phase 0-1. Y: normalized relative flux ~0.987-1.005.
-          All data visible.'
+        comment: Phase 0.0-1.0 on x, relative flux on y (~1.2% dip). All data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'lightcurve-transit · plotnine · anyplot.ai' — missing 'python'
-          language token. Should be 'lightcurve-transit · python · plotnine · anyplot.ai'.
-          Legend labels Observations and Transit Model are correct.
+        passed: true
+        comment: '"lightcurve-transit · python · plotnine · anyplot.ai" correct. Legend
+          labels match series.'
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Phase-folded transit, error bars, smooth model, ribbon band, baseline
-          reference, depth annotation — all aspects covered.
+        comment: Phase-folded stacking, per-point error bars, fitted model with limb
+          darkening, confidence ribbon, depth annotation, baseline reference.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit ~1.2% depth with quadratic limb-darkened
-          model. Realistic noise levels. Neutral scientific context.
+        comment: Simulated exoplanet transit with realistic astrophysical parameters
+          (u1=0.4, u2=0.1, ~1.2% depth, 400 points). Scientifically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Phase 0.0-1.0, flux ~0.987-1.005 (hot Jupiter ~1.2% transit depth),
-          400 points within 200-1000 spec range.
+        comment: Flux range ~0.986-1.006 correct for ~1.2% transit. Phase 0.0-1.0.
+          Error bar magnitudes realistic for space photometry.
     code_quality:
       score: 10
       max: 10
@@ -194,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat script from data generation to save.
+        comment: Flat procedural script; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -206,44 +202,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used; numpy, pandas, os, sys all required.
+        comment: All imports used; sys/os for required path fix and THEME env var.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Vectorized transit model; no fake UI; clean layer composition.
+        comment: Vectorized transit model; clean layer composition; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save().
+        comment: Saves as plot-{THEME}.png via plot.save() with correct dpi/units.
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Full grammar-of-graphics composition with multiple geoms, scale_color_manual,
-          guides, labs, scale_x/y_continuous, theme layers. Textbook plotnine idiom.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: geom_ribbon for uncertainty band, geom_linerange for error bars,
-          annotate('segment') for dashed reference, custom scale_y_continuous label
-          formatter. Idiomatic plotnine features used well.
+        comment: ggplot() without top-level data (multiple source DataFrames per geom)
+          is correct plotnine pattern. Scales, guides, theme() overrides idiomatic.
+          annotate("segment") for dashed indicator is proper approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: geom_ribbon for confidence band and geom_linerange for error bars
+          are distinctive. guide_legend(title=None) clean. No higher-level plotnine
+          features (stat layers, facet_wrap, inherit.aes) explored.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
