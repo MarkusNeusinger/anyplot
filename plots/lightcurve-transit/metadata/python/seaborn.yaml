@@ -1,106 +1,129 @@
 library: seaborn
+language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:22:16Z'
-updated: '2026-03-18T21:41:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23267445758
+updated: '2026-06-20T07:50:59Z'
+generated_by: claude-sonnet
+workflow_run: 27864194055
 issue: 4559
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent two-panel scientific layout (light curve + residuals) with shared x-axis
-    and tight spacing
-  - Physically realistic transit model with quadratic limb darkening
-  - Custom blue/amber color palette with strong contrast and colorblind accessibility
-  - Informative annotation highlighting the key scientific measurement (transit depth)
-  - All font sizes explicitly set for high-resolution output
+  - 'Excellent Imprint palette compliance: #009E73 first series, #C475FD second series,
+    correct background tokens in both themes'
+  - Seaborn statistical aggregation (estimator+errorbar) used effectively for binned
+    mean with CI and SD bands
+  - Bonus residuals panel is scientifically appropriate and enhances spec compliance
+  - Transit depth annotation with lavender arrow guides the viewer to the key measurement
+  - Canvas dimensions correct (3200x1800, no bbox_inches=tight), theme tokens threaded
+    through all chrome elements
+  - Phase-binning strategy (40 bins, ~10 pts each) pairs elegantly with seaborn aggregate
+    functions
   weaknesses:
-  - Rugplot on residuals panel creates a dense blue bar artifact at the left y-axis
-    edge
-  - Error bars add slight visual clutter in dense out-of-transit regions
-  image_description: 'The plot displays a two-panel layout. The top panel shows an
-    astronomical light curve: blue scatter points (#306998) with vertical error bars
-    plotted against orbital phase (0.0-1.0) on the x-axis and relative flux (~0.988-1.005)
-    on the y-axis. An amber/orange (#C8702A) transit model curve overlays the data,
-    showing a characteristic V-shaped dip centered at phase 0.5 with ~1% depth. An
-    annotation arrow points to the transit minimum labeled "Transit depth 1.0%". The
-    legend in the lower right reads "Transit model". The bottom panel shows residuals
-    (flux minus model) as smaller blue scatter points around a dashed amber zero-line,
-    with a subtle rug plot on the left y-axis edge. Title reads "lightcurve-transit
-    · seaborn · pyplots.ai". Top and right spines are removed on both panels. Subtle
-    y-axis gridlines are present. The overall appearance is clean and scientific.'
+  - Raw scatter in main panel (s=12, alpha=0.22) is very faint — individual data points
+    serve as texture only; increase alpha to ~0.35 and s to ~18 for more presence
+    without losing layered effect
+  - Annotation text at 8pt is at the mobile legibility threshold — consider 9pt for
+    the annotation label
+  - 'DE-01 headroom: consider adding a shaded transit window (axvspan at ingress/egress)
+    to strengthen the visual focal point and elevate scientific storytelling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "lightcurve-transit · python · seaborn · anyplot.ai" at 12pt in dark ink (#1A1A17), clearly readable. Axis labels "Relative Flux" (y-main), "Orbital Phase" (x), "Residuals" (y-residuals) at 10pt readable. Tick labels at 8pt legible. Legend with "Observed (binned ± 95% CI)" and "Transit model" readable at 8pt. Annotation "Transit depth 1.2%" at 8pt with lavender arrow — at minimum legibility threshold.
+      Data: Two-panel layout. Main panel: faint green (#009E73) scatter (s=12, alpha=0.22), green error bars (alpha=0.42), bold green binned mean line with 95% CI band, lavender (#C475FD) transit model curve. Transit dip at phase ~0.5 drops to ~0.9877 flux. Residuals panel: green scatter, binned ±SD band, lavender dashed zero-reference line.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels rendered in near-white (#F0EFE8 / #B8B7B0), all clearly readable against the dark background. No dark-on-dark text failures. Legend box uses elevated dark fill (#242420). Grid lines subtle but visible.
+      Data: Colors identical to light render — green (#009E73) for observed data and lavender (#C475FD) for transit model. Both colors read well against the dark surface. Transit dip and residual structure clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20/16pt, ticks
-          16pt, annotation 14pt, legend 15pt'
+        comment: Title 12pt, axis labels 10pt, ticks 8pt all readable in both themes.
+          Annotation at 8pt is at minimum mobile legibility threshold.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; annotation well-positioned
+        comment: No unwanted text collisions. Intentional overlapping layers (scatter,
+          error bars, binned line, model) in transit region are correct.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 500 points with s=35, alpha=0.45 within guidelines; error bars add
-          slight visual clutter
+        comment: Binned line and model curve prominent. Raw scatter (s=12, alpha=0.22)
+          very faint — functions as texture rather than informative individual data.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/amber palette is colorblind-safe with strong contrast
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
+          colors with redundant encoding (scatter vs line).
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel layout fills canvas well, 16x9 figsize, nothing cut off
+        comment: 3200x1800 px correct. No bbox_inches=tight. Two-panel layout well-proportioned.
+          No text overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels; phase and relative flux are unitless quantities
+        comment: Descriptive labels with correct anyplot title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, professional scientific typography, clearly above
-          defaults
+        comment: Above default (4). Layered visualization approach and transit depth
+          annotation show thoughtful design. Conventional scientific style without
+          extra creative elevation.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, tight panel spacing; rugplot creates
-          minor artifact
+        comment: Above default (2). sns.despine() on both panels, y-only grid at alpha=0.15,
+          tight panel spacing (hspace=0.05), clean scatter edges.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Transit dip as focal point, annotation highlights key measurement,
-          residuals add scientific rigor
+        comment: Above default (2). Transit dip is clear focal point. Annotation guides
+          viewer to key measurement. Residuals panel demonstrates model quality.
     spec_compliance:
       score: 15
       max: 15
@@ -110,26 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series scatter plot with transit
+        comment: Correct scatter + model overlay light curve with phase folding.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars, model overlay, phase-folded data, scatter points, clean
-          style all present
+        comment: Error bars, smooth transit model, phase-folded data (0.0-1.0), ~1.2%
+          transit depth all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=orbital phase, Y=relative flux, transit dip downward as specified
+        comment: 'X: Orbital Phase (0.0-1.0), Y: Relative Flux (~0.985-1.005). Transit
+          dip visible at phase 0.5.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and accurate legend label
+        comment: Title exactly 'lightcurve-transit · python · seaborn · anyplot.ai'.
+          Legend labels clear.
     data_quality:
       score: 15
       max: 15
@@ -139,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Transit dip, baseline, error bars, limb-darkened model, residuals
-          all shown
+        comment: Raw scatter, error bars, binned mean with CI, transit model, and
+          bonus residuals panel.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated exoplanet transit with quadratic limb darkening, realistic
-          for space photometry
+        comment: Quadratic limb darkening (u1=0.5, u2=0.3), realistic photometric
+          precision (flux_err ~0.0008-0.0015), plausible 1.2% transit depth.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1% transit depth, flux near 1.0, errors 0.0008-0.0015 realistic for
-          Kepler/TESS
+        comment: 400 data points, normalized flux ~0.985-1.005, full orbital phase
+          0.0-1.0.
     code_quality:
       score: 10
       max: 10
@@ -164,31 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: Flat script, no functions or classes, well-organized sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized, appropriate complexity
+        comment: Clean, readable code at appropriate complexity. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, current API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) without bbox_inches='tight'.
     library_mastery:
       score: 7
       max: 10
@@ -198,15 +223,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic axes-level API with scatterplot, lineplot, rugplot, despine,
-          set_context
+        comment: sns.set_theme() for global RC, sns.despine() on both panels, axes-level
+          API throughout. estimator+errorbar in sns.lineplot is canonical seaborn.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.rugplot for density, sns.set_context for scaling, sns.despine
-          are distinctive features
+        comment: Above default (1). Seaborn statistical estimation (estimator='mean',
+          errorbar=('ci',95) and errorbar='sd') is a distinctive seaborn capability.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -216,8 +241,8 @@ impl_tags:
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
