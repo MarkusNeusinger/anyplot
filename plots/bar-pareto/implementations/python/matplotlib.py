@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -58,7 +58,7 @@ ax2.plot(
     markeredgewidth=1.5,
     zorder=3,
 )
-ax2.axhline(y=80, color=LINE_COLOR, linestyle="--", linewidth=1.2, alpha=0.4, zorder=1)
+ax2.axhline(y=80, color=LINE_COLOR, linestyle="--", linewidth=1.2, alpha=0.6, zorder=1)
 
 # Annotate 80% crossing point with interpolated x position
 cross_x = np.interp(80, cumulative_pct[max(0, cross_idx - 1) : cross_idx + 1], x[max(0, cross_idx - 1) : cross_idx + 1])
@@ -108,7 +108,7 @@ legend_elements = [
     Patch(facecolor=BAR_VITAL, edgecolor=PAGE_BG, label="Vital few"),
     Patch(facecolor=INK_MUTED, edgecolor=PAGE_BG, label="Trivial many"),
 ]
-leg = ax.legend(handles=legend_elements, fontsize=8, loc="upper right", frameon=True)
+leg = ax.legend(handles=legend_elements, fontsize=8, loc="upper left", frameon=True)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
