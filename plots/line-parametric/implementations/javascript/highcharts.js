@@ -62,7 +62,8 @@ Highcharts.chart('container', {
     backgroundColor: 'transparent',
     animation: false,
     style: { fontFamily: 'inherit' },
-    margin: [90, 40, 90, 75]
+    margin: [90, 40, 90, 75],
+    plotBorderWidth: 0
   },
   credits: { enabled: false },
   colors: tok.palette,
@@ -116,7 +117,7 @@ Highcharts.chart('container', {
   plotOptions: {
     series: { animation: false, turboThreshold: 0, enableMouseTracking: false },
     scatter: {
-      marker: { radius: 2, symbol: 'circle', lineWidth: 0 },
+      marker: { radius: 3, symbol: 'circle', lineWidth: 0 },
       states: { hover: { enabled: false } }
     }
   },
@@ -149,7 +150,10 @@ Highcharts.chart('container', {
         enabled: true,
         formatter: function () { return 't = 0'; },
         style: { color: tok.inkSoft, fontSize: '13px', fontWeight: '400', textOutline: 'none' },
-        x: 12, y: -12
+        backgroundColor: tok.elevatedBg,
+        borderRadius: 2,
+        padding: 3,
+        x: 18, y: -20
       },
       showInLegend: false
     },
