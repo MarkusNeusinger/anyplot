@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-growth-percentile: Pediatric Growth Chart with Percentile Curves
-Library: altair | Python 3.13
-Quality: 91/100 | Updated: 2026-06-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-20
 """
 
 import os
