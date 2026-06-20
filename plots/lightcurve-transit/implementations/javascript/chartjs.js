@@ -48,13 +48,38 @@ const modelData = Array.from({ length: 800 }, (_, i) => ({
   y: transitFlux(-0.5 + i / 799),
 }));
 
-// Plugin: canvas background + per-point error bars drawn on dataset[0]
+// Plugin: canvas background + transit region shading + per-point error bars
 Chart.register({
   id: 'lightcurveExtras',
   beforeDraw({ ctx, width, height }) {
     ctx.save();
     ctx.fillStyle = t.pageBg;
     ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+  },
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales: { x: xSc, y: ySc } } = chart;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+    ctx.clip();
+
+    // Semi-transparent transit window shading (phase ±T_HALF)
+    const x1 = xSc.getPixelForValue(-T_HALF);
+    const x2 = xSc.getPixelForValue(T_HALF);
+    ctx.fillStyle = t.palette[0] + '1a';
+    ctx.fillRect(x1, chartArea.top, x2 - x1, chartArea.height);
+
+    // Dashed baseline at out-of-transit flux = 1.0
+    const y0 = ySc.getPixelForValue(1.0);
+    ctx.strokeStyle = t.inkSoft + '60';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, y0);
+    ctx.lineTo(chartArea.right, y0);
+    ctx.stroke();
+
     ctx.restore();
   },
   afterDatasetsDraw(chart) {
@@ -111,9 +136,9 @@ new Chart(canvas, {
         label: 'Transit model',
         data: modelData,
         type: 'line',
-        borderColor:     t.palette[2],
+        borderColor:     t.palette[1],
         backgroundColor: 'transparent',
-        borderWidth: 2.5,
+        borderWidth: 3.5,
         pointRadius: 0,
         tension: 0.2,
         order: 1,
@@ -124,6 +149,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: { padding: { right: 20, top: 10 } },
     plugins: {
       title: {
         display: true,
@@ -154,6 +180,7 @@ new Chart(canvas, {
         },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
+        border: { display: false },
         min: -0.5,
         max: 0.5,
       },
@@ -168,9 +195,10 @@ new Chart(canvas, {
         ticks: {
           color: t.inkSoft,
           font: { size: 13 },
-          callback: v => v.toFixed(4),
+          callback: v => v.toFixed(3),
         },
         grid: { color: t.grid },
+        border: { display: false },
       },
     },
   },
