@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: lightcurve-transit
 created: '2026-03-18T21:19:22Z'
-updated: '2026-06-20T07:48:39Z'
+updated: '2026-06-20T07:57:40Z'
 generated_by: claude-sonnet
 workflow_run: 27864437627
 issue: 4559
@@ -12,51 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurv
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - Correct Imprint palette application with canonical color ordering across both
-    themes
-  - Theme-adaptive chrome works correctly in both light and dark renders — no dark-on-dark
-    or light-on-light failures
-  - 'Effective visual hierarchy: in-transit points use larger dots (size 8) and Imprint
-    position 2, creating a natural focal point at the transit dip'
-  - Complete spec coverage including phase-folding, model overlay, and error bound
-    representation despite pygal's XY error bar limitation
-  - 'Perfect code quality: seed, clean imports, KISS structure, correct output format
-    including HTML'
-  - Realistic, scientifically-plausible data simulation with Gaussian limb-darkened
-    model
+  - 'Correct Imprint palette with semantic color choices: green for out-of-transit
+    baseline, lavender for in-transit dip, blue for model curve'
+  - Clear visual emphasis on transit dip through larger in-transit markers (dots_size=8
+    vs 5 for baseline)
+  - 'Perfect theme adaptation in both renders: light (#FAF8F1) and dark (#1A1A17)
+    surfaces with fully legible chrome'
+  - Scientifically plausible Kepler-style simulated exoplanet transit data with correct
+    ~1% depth and limb-darkened Gaussian model
+  - Correct canvas dimensions (3200×1800) and idiomatic pygal API usage including
+    tooltip labels, HTML export, and legend at bottom
   weaknesses:
-  - Error bounds represented as paired dot pairs (±1σ endpoint dots) rather than traditional
-    error bar lines — pygal's XY mode lacks native error bar support, so this creative
-    workaround is valid, but adds 400 extra scatter points that increase visual noise.
-    Consider using a narrow 'error band' alternative via area series or reducing dot
-    density.
-  - Design refinement limited by pygal's SVG renderer — no spine removal, no alpha
-    blending on dense scatter, no custom font. The implementation works within these
-    constraints but a more sophisticated design is not achievable without library-level
-    workarounds.
-  - Legend at bottom is slightly cramped with 4 series in a single row — the 4-column
-    layout fits but could benefit from 2 columns at wider spacing.
-  - Dense out-of-transit scatter (170+ points) would benefit from slight alpha transparency
-    to reduce overplotting perception; pygal's opacity control is limited via the
-    Style object.
+  - Error bars not implemented as true vertical bar segments — pygal XY lacks native
+    error bar API, so approximated with ±1σ endpoint dots at size=2, which are barely
+    visible in the renders and only shown for every 3rd data point; a reader struggles
+    to gauge measurement uncertainty from these nearly-invisible specks
+  - 'DE limited by pygal constraints: no spine control (all four borders remain visible),
+    limited grid styling; the result is functional but lacks the refined L-shaped
+    frame and subtle grid that publication-quality scientific plots achieve'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
-      Chrome: Title "lightcurve-transit · python · pygal · anyplot.ai" in dark ink at top (~60-65% width). Y-axis label "Relative Flux" vertical, dark and readable. X-axis label "Orbital Phase" horizontal, dark and readable. Tick labels at all positions (0.00-1.00 on X, 0.986-1.010 on Y) legible in dark ink. Legend at bottom with 4 entries in light text on cream background.
-      Data: Out-of-transit scatter in brand green #009E73 (Imprint pos 1, dots_size=5). In-transit dip points in lavender #C475FD (Imprint pos 2, dots_size=8, larger for emphasis). Transit model as smooth blue #4467A3 line (Imprint pos 3). Error cap dots in muted gray (INK_SOFT, dots_size=3). Transit dip clearly visible at phase ~0.50, flux reaching ~0.988.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 - correct, no pure white.
+      Chrome: Title "lightcurve-transit · python · pygal · anyplot.ai" in dark ink, clearly readable at top. Y-axis label "Relative Flux" rotated vertically, readable. X-axis label "Orbital Phase" at bottom, readable. Tick labels on both axes in dark muted ink, clearly legible (0.00–1.00 on X; 0.986–1.01 on Y). Bottom legend with 2 columns shows all 4 series legibly.
+      Data: Out-of-transit points in #009E73 brand green (size=5), in-transit points in #C475FD lavender (size=8, larger for emphasis), transit model in #4467A3 blue smooth line, error cap dots in INK_SOFT dark gray (size=2, barely visible). Transit dip clearly visible at phase ~0.5, ~1% depth.
+      Legibility verdict: PASS — all text elements readable; error cap dots nearly invisible due to size=2 but this is a data-density/emphasis issue, not a legibility failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title text flipped to light (#F0EFE8 equivalent), all readable against dark surface. Axis labels and tick labels in light text — no dark-on-dark failures observed. Legend at bottom with light text, clearly readable.
-      Data: Colors identical to light render — #009E73 green, #C475FD lavender, #4467A3 blue, muted gray error caps. Brand green #009E73 reads well on dark surface. Transit dip focal point unchanged.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 - correct, no pure black.
+      Chrome: Title in light cream text, fully readable. Y-axis and X-axis labels in light ink, readable. Tick labels in light muted tone, readable. Bottom legend readable with light text. No dark-on-dark failures detected.
+      Data: Green (#009E73), lavender (#C475FD), and blue (#4467A3) data series colors are identical to the light render — only chrome flipped. Error cap dots slightly lighter gray (INK_SOFT = #B8B7B0 in dark mode).
+      Legibility verdict: PASS — all text clearly visible against dark background; brand green #009E73 remains visible.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -64,55 +55,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor: y-axis tick labels at extremes
-          (0.986) are slightly small but acceptable at full resolution.'
+        comment: All text readable in both renders; font sizes follow style guide
+          defaults; proportions good
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 'Minor: error cap dot pairs (400 dots total) create density near
-          data points and some visual noise, though sizes are well-managed (dots_size=3
-          vs 5/8).'
+        comment: Minimal clustering overlap in in-transit region but not severe; legend
+          is clean
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Main series clearly visible. Error bounds as paired dot pairs are
-          valid pygal workaround but less intuitively readable than traditional error
-          bars.
+        comment: Main data and model visible; error cap dots at size=2 are barely
+          distinguishable — important scientific element nearly invisible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with CVD-safe hues. Size redundancy (in-transit larger)
-          adds non-color discriminator.
+        comment: CVD-safe Imprint palette; three distinct hue families
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Canvas 3200x1800, gate passed. Minor: legend row at bottom with
-          4 columns is slightly cramped.'
+        comment: Canvas gate passed (3200x1800); good margins; legend at bottom appropriate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Axes labeled 'Orbital Phase' and 'Relative
-          Flux' — descriptive and appropriate.
+        comment: 'Descriptive labels: Orbital Phase, Relative Flux; correct title
+          format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, positions 2 and 3 in canonical order. Error
-          caps use INK_SOFT (muted anchor). Backgrounds #FAF8F1 light / #1A1A17 dark.
-          Both renders theme-correct.'
+        comment: 'Background correct (#FAF8F1/#1A1A17); first series #009E73; Imprint
+          canonical order positions 1-3; muted anchor for error bounds'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -120,23 +106,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: intentional visual hierarchy (in-transit larger,
-          different color), Imprint palette applied correctly. Constrained by pygal''s
-          SVG aesthetic.'
+        comment: Good semantic color use (green baseline, lavender dip, blue model);
+          larger markers for in-transit emphasis; clean scientific feel
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Minimal beyond grid axis selection. Pygal doesn't support spine removal
-          or alpha blending on scatter. Default visual refinement level.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
+        passed: false
+        comment: Y-only grid is clean; but pygal keeps all four borders visible (no
+          spine removal control); limited visual refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
         passed: true
-        comment: Transit dip is clear focal point; in/out transit size contrast effective.
-          Model overlay reinforces transit shape. Error noise slightly reduces clarity.
+        comment: Transit dip is clear focal point; in-transit points highlighted with
+          larger markers and distinct color; model curve guides eye through the dip
+          shape
     spec_compliance:
       score: 14
       max: 15
@@ -146,30 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY scatter with model overlay — correct chart type for astronomical
-          light curve.
+        comment: XY scatter with model overlay is the correct representation for a
+          light curve
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 'Error bars present as ±1σ dot pairs (valid pygal workaround). Phase-folding,
-          transit model overlay all present. Minor deduction: non-standard error bar
-          representation.'
+        comment: Phase-folded data, transit model overlay, and transit dip all present;
+          error bars approximated with endpoint dots (not true bars — pygal XY limitation)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Orbital Phase on X (0.0-1.0), Relative Flux on Y, transit dip going
-          downward. Data axes match spec.
+        comment: Phase 0-1 on X, relative flux on Y, transit at phase 0.5
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''lightcurve-transit · python · pygal · anyplot.ai''. Legend
-          labels descriptive and correct.'
+        comment: Title matches required format; legend labels are meaningful and match
+          the series
     data_quality:
       score: 14
       max: 15
@@ -179,24 +163,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Phase-folded, in/out transit split, transit model, error bounds,
-          limb-darkening model all present. Minor: error visualization not traditional
-          error bar lines.'
+        comment: 'Phase-folded light curve, in/out-transit distinction, model overlay,
+          error representation — comprehensive; minor: error bars only every 3rd point'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated Kepler-style exoplanet transit with realistic ~1% depth,
-          Gaussian limb-darkened model, plausible photometric uncertainties (0.0015-0.003).
-          Neutral, scientific domain.
+        comment: Kepler-style exoplanet transit with ~1% depth, Gaussian limb-darkened
+          model, flux_err in range 0.0015-0.003 — scientifically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Flux range 0.986-1.01 realistic for 1% transit depth. Phase 0.0-1.0
-          correct. 200 points appropriate. Deterministic seed.
+        comment: Relative flux ~0.986-1.010, phase 0-1, 200 points — all appropriate
     code_quality:
       score: 10
       max: 10
@@ -206,33 +187,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear, readable code flow.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style — all used, no dead imports.
+        comment: 'Only used imports: os, numpy, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Good list comprehensions, clean data-splitting logic, creative error
-          cap construction. No fake UI.
+        comment: Clean, readable code with appropriate data preparation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. No bare plot.png.
-          Current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -242,21 +221,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.XY(), Style object, stroke=False/True per series,
-          dots_size differentiation, legend_at_bottom_columns, value formatters.
+        comment: Proper Style object, per-series stroke/show_dots/dots_size control,
+          XY coord dict format with labels
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML interactive output, tooltip label customization via formatters,
-          multi-series layering with mixed stroke/dot config, error simulation using
-          fourth series.
+        comment: Interactive tooltip labels per data point, HTML export, legend_at_bottom
+          with columns, x/y value formatters
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
