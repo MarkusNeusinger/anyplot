@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-20
@@ -24,6 +24,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Data: monthly signup cohorts tracked weekly for 12 weeks
 np.random.seed(42)
@@ -95,7 +96,9 @@ plot = (
     + scale_color_manual(values=IMPRINT_PALETTE)
     + scale_x_continuous(breaks=list(range(0, 13, 2)), limits=[0, 15.5])
     + scale_y_continuous(breaks=list(range(0, 101, 20)), limits=[0, 105])
-    + labs(title="line-retention-cohort · letsplot · anyplot.ai", x="Weeks Since Signup", y="Retained Users (%)")
+    + labs(
+        title="line-retention-cohort · python · letsplot · anyplot.ai", x="Weeks Since Signup", y="Retained Users (%)"
+    )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -107,8 +110,10 @@ plot = (
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(color=INK, size=0.3),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
+        panel_border=element_blank(),
         axis_line=element_line(color=INK_SOFT),
     )
     + ggsize(800, 450)
