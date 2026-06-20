@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 lightcurve-transit: Astronomical Light Curve
-Library: letsplot | Python
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 84/100 | Updated: 2026-06-20
 """
 
 import os
