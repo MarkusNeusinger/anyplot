@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-retention-cohort: User Retention Curve by Cohort
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-20
@@ -135,10 +135,11 @@ for i, (cohort, params) in enumerate(cohort_list):
     )
 
 # Reference threshold at 20% retention (gets muted neutral — 6th color in SERIES_COLORS)
+# Dash-dot pattern "28, 8, 4, 8" is visually distinct from pygal's Y-guide dashes in light mode
 chart.add(
     "─ 20% Retention Threshold",
     [{"value": 20.0, "label": "Target: 20% retention benchmark"}] * len(weeks),
-    stroke_style={"width": 4.5, "dasharray": "20, 12", "linecap": "round"},
+    stroke_style={"width": 5.5, "dasharray": "28, 8, 4, 8", "linecap": "round"},
     show_dots=False,
     dots_size=0,
     allow_interruptions=False,
