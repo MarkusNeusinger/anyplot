@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-20
@@ -106,7 +106,19 @@ plot = (
     # Limit labels
     + annotate("text", x=lsl - 0.003, y=peak_density * 0.95, label="LSL", size=4.0, color=RED, fontweight="bold")
     + annotate("text", x=usl + 0.003, y=peak_density * 0.95, label="USL", size=4.0, color=RED, fontweight="bold")
-    + annotate("text", x=target + 0.004, y=peak_density * 0.82, label="Target", size=3.7, color=BLUE, fontweight="bold")
+    + annotate(
+        "label",
+        x=target + 0.004,
+        y=peak_density * 0.82,
+        label="Target",
+        size=4.2,
+        color=BLUE,
+        fontweight="bold",
+        fill=ELEVATED_BG,
+        alpha=0.85,
+        label_size=0.3,
+        label_padding=0.4,
+    )
     # Capability statistics box (theme-adaptive fill and text color)
     + annotate(
         "label",
@@ -139,6 +151,7 @@ plot = (
         legend_text=element_text(size=8, color=INK_SOFT),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
