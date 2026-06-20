@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -26,18 +26,18 @@ impact_labels = ["Negligible", "Minor", "Moderate", "Major", "Catastrophic"]
 
 risk_scores = np.array([[1, 2, 3, 4, 5], [2, 4, 6, 8, 10], [3, 6, 9, 12, 15], [4, 8, 12, 16, 20], [5, 10, 15, 20, 25]])
 
-# Semantic risk-zone colors: green → amber → orange → red (domain convention)
+# Semantic risk-zone colors: green → amber → ochre → red (Imprint palette members)
 zone_thresholds = [(4, "Low"), (9, "Medium"), (16, "High"), (25, "Critical")]
 zone_colors = {
-    "Low": "#4CAF82",
+    "Low": "#009E73",  # Imprint brand green
     "Medium": "#DDCC77",  # Imprint amber anchor
-    "High": "#E8713A",
+    "High": "#BD8233",  # Imprint ochre — closest Imprint member to orange
     "Critical": "#AE3030",  # Imprint matte red
 }
 zone_bg = {
-    "Low": "rgba(76,175,130,0.22)" if THEME == "light" else "rgba(76,175,130,0.20)",
+    "Low": "rgba(0,158,115,0.22)" if THEME == "light" else "rgba(0,158,115,0.20)",
     "Medium": "rgba(221,204,119,0.25)" if THEME == "light" else "rgba(221,204,119,0.22)",
-    "High": "rgba(232,113,58,0.22)" if THEME == "light" else "rgba(232,113,58,0.20)",
+    "High": "rgba(189,130,51,0.22)" if THEME == "light" else "rgba(189,130,51,0.20)",
     "Critical": "rgba(174,48,48,0.22)" if THEME == "light" else "rgba(174,48,48,0.20)",
 }
 # Zone severity → marker border width (consistent marker size per change request)
@@ -104,7 +104,7 @@ for i in range(5):
             y=i + 0.62,
             text=f"<b>{score}</b>",
             showarrow=False,
-            font={"size": 9, "color": INK_MUTED, "family": "Arial"},
+            font={"size": 10, "color": INK_MUTED, "family": "Arial"},
             xanchor="right",
             yanchor="bottom",
         )
@@ -122,9 +122,10 @@ for risk in risks:
     score = risk["likelihood"] * risk["impact"]
     zone = next(name for threshold, name in zone_thresholds if score <= threshold)
 
-    # Text position based on jitter direction to reduce label overlap in shared cells
+    # Text position: alternate top/bottom by impact parity for n=1 to break row-wide crowding;
+    # jitter-relative positioning for shared cells
     if n == 1:
-        tpos = "top center"
+        tpos = "top center" if risk["impact"] % 2 == 1 else "bottom center"
     elif n == 2:
         tpos = "top center" if jy > 0 else "bottom center"
     elif n == 3:
@@ -230,7 +231,7 @@ fig.update_layout(
         "tracegroupgap": 8,
         "itemsizing": "constant",
     },
-    margin={"l": 105, "r": 185, "t": 88, "b": 88},
+    margin={"l": 105, "r": 185, "t": 72, "b": 88},
     hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"size": 11, "family": "Arial", "color": INK}},
 )
 
