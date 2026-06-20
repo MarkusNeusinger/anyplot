@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: histogram-capability
 created: '2026-03-19T21:44:26Z'
-updated: '2026-06-20T15:26:06Z'
+updated: '2026-06-20T15:34:54Z'
 generated_by: claude-sonnet
 workflow_run: 27874856572
 issue: 4552
@@ -12,105 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: histogram, normal curve, LSL/USL, target, mean, Cp/Cpk
-    all present and correctly computed'
-  - Excellent semantic color mapping — red for danger/spec limits, green for measurements,
-    blue for target — using correct Imprint palette members
-  - Cp/Cpk embedded in the title is a smart data-storytelling choice giving the viewer
-    the key metric at a glance
-  - sys.path.pop(0) workaround for the script-name collision with the pygal package
-    is correctly handled and documented
-  - Both light and dark themes fully theme-adaptive with no dark-on-dark failures
-  - Dynamic title font scaling (66 * 67 / len(title)) prevents long title overflow
+  - Correct Imprint palette with justified semantic exception (red for spec limit
+    danger boundaries)
+  - Cp/Cpk values embedded directly in title — clever integration of annotation requirement
+    without needing separate text elements
+  - 'All required spec features present: histogram, normal fit, LSL, USL, Target,
+    Mean'
+  - Realistic shaft-diameter scenario with plausible Cp/Cpk values (1.49/1.45)
+  - 'Perfect code quality: flat script, seeded RNG, clean imports, idiomatic pygal
+    with CSS customization'
+  - Both light and dark renders fully theme-correct — chrome flips, data colors stay
+    constant
   weaknesses:
-  - Target (10.000) and Mean (10.002) reference lines are nearly-identical thin histogram
-    bars at essentially the same X position — they visually overlap and are indistinguishable
-    on the chart; only the legend differentiates them. Widen one bar relative to the
-    other (e.g., line_width=0.002 for Target, line_width=0.0004 for Mean) to make
-    them separable at a glance.
-  - 'LSL/USL spec limit bars are wide solid-filled red rectangles spanning the full
-    plot height, giving them heavy visual weight that dominates the chart. Reduce
-    fill opacity (e.g., add CSS fill-opacity: 0.55 to the LSL/USL series) or narrow
-    the bars to make them read as reference lines rather than data.'
-  - Right canvas margin (margin_right=80) is tight for the rightmost x-axis tick label
-    near x=10.050 — increase to at least 120 to prevent label crowding at the right
-    edge.
-  - With 6 series in the legend, the bottom legend area is visually crowded; consider
-    increasing margin_bottom from 40 to 60 and reducing legend_box_size from 28 to
-    22 for better spacing.
+  - LSL and USL reference lines render as visually wide solid bars rather than thin
+    dashed vertical lines as specified — the spec_lw=0.0008 value does not produce
+    hair-thin lines in pygal.Histogram; they appear as prominent colored columns spanning
+    the full height
+  - Target (10.00) and Mean (10.002) lines are extremely narrow (target_lw=0.0020
+    / mean_lw=0.0005) and nearly indistinguishable from each other near x≈10.000;
+    the two thin vertical strips overlap and are hard to read individually
+  - Tick labels and legend text are slightly small relative to the 3200×1800 canvas
+    — major_label_font_size=44 and legend_font_size=44 feel under-scaled for confident
+    mobile readability
+  - 'Design excellence is modest: no shading of out-of-spec regions, no annotation
+    boxes within the plot area for Cp/Cpk (title inclusion is pragmatic but the spec
+    asks for plot annotations), minimal visual storytelling beyond color coding'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "histogram-capability · python · pygal · anyplot.ai | Cp = 1.49 · Cpk = 1.45" bold dark text, fills ~80-85% canvas width. Y-axis label "Frequency" (rotated) and X-axis label "Shaft Diameter (mm)" are bold and readable. Tick labels on both axes clear. Rightmost x-axis tick (~10.050) is tight against the right canvas edge but all digits appear present.
-      Data: Green (#009E73) histogram bars are the primary visual element. Lavender (#C475FD) normal fit curve rendered as staircase of thin bars overlaid on the histogram. LSL (9.95) and USL (10.05) shown as wide solid red (#AE3030) vertical rectangles spanning full plot height. Target (10.00) and Mean (10.002) are very thin blue (#4467A3) and gray bars respectively, overlapping in the center due to near-identical values.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct light theme surface.
+      Chrome: Title "histogram-capability · python · pygal · anyplot.ai | Cp = 1.49 · Cpk = 1.45" in dark ink, readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Frequency" both clear. Y-axis tick labels (0–36 in steps of 4) and X-axis tick labels (9.950–10.050) readable. Legend at bottom with 6 labeled entries in two rows, text legible.
+      Data: Green (#009E73) histogram bars form a bell-shaped distribution centered near 10.000. Lavender (#C475FD) semi-transparent normal fit overlay covers the histogram smoothly. LSL (9.95) and USL (10.05) appear as wide reddish-brown (#AE3030) tall bars at the left and right edges of the data range. Target (10.00) and Mean (10.002) appear as very narrow vertical bands (blue and near-black) near x=10.000 — they almost merge visually. Y-axis grid lines are subtle.
+      Legibility verdict: PASS — all chrome elements readable on the warm off-white surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all switch to light-colored text (#F0EFE8), clearly readable against the dark surface. Legend text at bottom is white, legible.
-      Data: Colors identical to light render — green histogram, lavender curve, red spec-limit bars, blue target, gray mean. Grid lines subtle on dark theme. Same central overlap of target/mean lines.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly use light tokens on dark background.
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title and all axis/tick labels render in warm light ink (#F0EFE8 equivalent). No dark-on-dark failures observed. Legend text at bottom appears light-colored and readable. Y-axis grid lines subtle on the dark surface.
+      Data: Data colors are identical to the light render — green histogram, lavender normal fit, red LSL/USL bars, blue Target, near-neutral Mean. The LSL/USL bars appear as muted dark-red columns. The Target and Mean thin lines near 10.000 are visible, with Target appearing as a lighter (near-white/blue) thin band and Mean as a darker narrow band.
+      Legibility verdict: PASS — all elements readable; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title scaled for length; all text
-          readable in both themes. Minor deduction: rightmost x-axis tick label (~10.050)
-          is tight against the right canvas edge.'
+        comment: Title, axis labels readable in both renders; tick labels (major_label_font_size=44)
+          and legend (legend_font_size=44) slightly small for 3200×1800 canvas — minor
+          readability gap at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend at bottom cleanly separated
-          from data.
+        comment: No overlapping text or elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Histogram and normal curve clearly visible. Deduction: Target (10.000)
-          and Mean (10.002) are nearly-identical thin bars at essentially the same
-          X position, making them visually indistinguishable without the legend.'
+        comment: Histogram and normal fit clearly visible; Target and Mean lines are
+          extremely narrow and nearly overlap at x≈10.000; LSL/USL render as wide
+          bars rather than thin reference lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with semantic color assignment; CVD-safe combination.
+        comment: Imprint palette is CVD-safe; semantic red for danger boundaries is
+          acceptable
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Good canvas use and margins. Deduction: margin_right=80 is tight
-          for the rightmost x-axis tick label near 10.050.'
+        comment: Canvas gate passed; title fits well; no overflow; legend clean at
+          bottom; LSL/USL wide-bar rendering occupies too much plot real estate
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Shaft Diameter (mm) and Frequency with units; title in correct format
-          with Cp/Cpk bonus.
+        comment: 'X: ''Shaft Diameter (mm)'', Y: ''Frequency'' — units present; title
+          conforms to spec-id · lang · lib · anyplot.ai format with Cp/Cpk appended'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; semantic exception correctly applied (red
-          for spec-limit danger, blue for target, adaptive gray for mean); backgrounds
-          #FAF8F1/#1A1A17; data colors identical across themes; chrome fully theme-adaptive.'
+        comment: 'First series #009E73; semantic exception #AE3030 for LSL/USL justified;
+          backgrounds #FAF8F1/#1A1A17 correct; chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,25 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default for intentional semantic color reasoning and CSS injection
-          for chrome customization. Below 6 because the wide solid red LSL/USL bars
-          look visually heavy and inconsistent with typical capability plot aesthetics.
+        comment: Thoughtful semantic color mapping; CSS axis-line removal; Cp/Cpk
+          in title; above default but no shading for out-of-spec regions
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Spines removed via CSS, grid opacity reduced to 0.25. Above default
-          but the prominent solid-red spec limit bars dominate the chart chrome and
-          the 6-series bottom legend is crowded.
+        passed: true
+        comment: Axis lines removed via CSS; Y-grid subtle; legend clean; CSS inline
+          customization shows effort
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Cp/Cpk in the title gives the viewer the key metric immediately.
-          Bell curve confined between red spec-limit bars tells a clear 'process is
-          capable' story with meaningful visual hierarchy.
+        comment: Color coding guides the eye; Cp/Cpk in title contextualizes the chart;
+          no out-of-spec region shading or focal emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -146,27 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct process capability plot using native pygal.Histogram.
+        comment: 'Correct: histogram with overlaid normal distribution and vertical
+          specification references'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Histogram, fitted normal curve, LSL/USL lines, target line, mean
-          line, Cp/Cpk annotation all present.
+        comment: Histogram, normal fit, LSL, USL, Target, Mean, Cp/Cpk all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=shaft diameter (mm), Y=frequency; axis range covers full distribution.
+        comment: X=shaft diameter (mm), Y=frequency; full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with Cp/Cpk appended; legend labels
-          clearly identify all 6 series.
+        comment: Title matches required format; legend labels all 6 series correctly
     data_quality:
       score: 15
       max: 15
@@ -176,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All capability-plot features demonstrated: histogram, normal fit,
-          spec boundaries, target, mean, Cp and Cpk metrics.'
+        comment: 'Full capability plot: histogram, fit curve, LSL/USL, Target, Mean,
+          Cp/Cpk'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Shaft diameter manufacturing scenario; realistic values (LSL=9.95,
-          USL=10.05, target=10.00 mm); neutral industrial context.
+        comment: Shaft diameter manufacturing scenario is highly realistic; LSL=9.95/USL=10.05/target=10.00
+          are plausible tolerances
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: sigma~0.012 mm gives Cp~1.49, Cpk~1.45 — realistic Six Sigma values;
-          200 measurements within 50-500 spec range.
+        comment: Values in mm range for shaft, Cp=1.49/Cpk=1.45 are realistic Six
+          Sigma indices
     code_quality:
       score: 10
       max: 10
@@ -201,35 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports -> data -> binning -> style -> chart -> save.
-          No unnecessary abstractions.'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, Style, scipy.stats all used; no dead imports.
+        comment: 'All imports used: os, sys, numpy, pygal, pygal.style.Style, scipy.stats'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clever sys.path.pop(0) workaround for script-name collision documented.
-          CSS injection approach appropriate for pygal's styling model.
+        comment: Documented sys.path.pop(0) trick; organized CSS list; clean data
+          pipeline
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -237,18 +230,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.Histogram natively, Style object for theming, x_value_formatter/y_value_formatter
-          lambdas, stroke_style for dashed overlays, render_to_png and render() —
-          all idiomatic pygal patterns.
+        comment: Native pygal.Histogram with (height, start, end) tuple format; Style
+          object used properly; CSS customization idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: 'CSS injection via inline: rules (pygal-specific), interactive HTML
-          export alongside PNG, stroke_style with dasharray on individual series,
-          native pygal.Histogram chart type.'
-  verdict: REJECTED
+        passed: false
+        comment: HTML interactive output (pygal's signature feature); native histogram
+          format; x/y_value_formatter — good use but not comprehensive exploitation
+          of pygal's SVG/interaction capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -258,5 +250,4 @@ impl_tags:
   - data-generation
   dataprep:
   - binning
-  styling:
-  - minimal-chrome
+  styling: []
