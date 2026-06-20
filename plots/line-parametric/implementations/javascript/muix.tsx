@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-parametric: Parametric Curve Plot
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-20
+// Quality: 86/100 | Created: 2026-06-20
 
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import Box from "@mui/material/Box";
