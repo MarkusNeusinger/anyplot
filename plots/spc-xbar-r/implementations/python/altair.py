@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-Library: altair | Python 3.14
+Library: altair 6.2.1 | Python 3.13.14
 Quality: 90/100 | Updated: 2026-06-20
 """
 
