@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: heatmap-cohort-retention
 created: '2026-03-16T20:45:58Z'
-updated: '2026-06-20T01:20:18Z'
+updated: '2026-06-20T01:29:03Z'
 generated_by: claude-sonnet
 workflow_run: 27855374479
 issue: 4570
@@ -12,60 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: triangular heatmap shape, cohort sizes in Y-axis labels,
-    retention percentages in cells, color bar, sequential imprint_seq gradient (green→blue)
-    — all required features present'
-  - 'Outstanding data quality: 10 realistic monthly SaaS cohorts with distinct per-cohort
-    profiles showing meaningful variation in retention (14%–73% by Month 1), plausible
-    cohort sizes (800–2500 users), always 100% at Month 0'
-  - 'Adaptive cell text contrast: dark text for low-retention cells (<50%) and light
-    text for high-retention cells (≥50%) using theme-aware INK token — both themes
-    render correctly'
-  - Strong storytelling via orange Month 1 border highlight + subtitle that directs
-    the viewer to the critical churn event across all cohorts
-  - 'Flawless code quality: seed set, KISS structure, clean imports, correct ggsave
-    calls for both PNG and HTML, canonical 2400×2400 square canvas (ggsize(600,600)
-    × scale=4)'
-  - layer_tooltips() used idiomatically for letsplot, providing proper interactive
-    HTML output
-  - 'Theme adaptation is correct: both renders pass the theme-readability check —
-    light uses #FAF8F1 background with dark chrome; dark uses #1A1A17 background with
-    light chrome'
+  - Perfect spec compliance — triangular heatmap, cell labels, cohort sizes, colorbar,
+    and amber Month 1 churn highlighting all correctly implemented
+  - Correct imprint_seq (green→blue) colormap for single-polarity retention data,
+    with proper limits [0,100] and labelled breaks
+  - 'Adaptive cell text contrast: dark INK text for low-retention cells (<50%), near-white
+    for high-retention — prevents invisible text anywhere in the color range'
+  - 'Fully theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders
+    are completely legible with no dark-on-dark or light-on-light failures'
+  - 'Idiomatic letsplot usage: layer composition (dual geom_tile + dual geom_text),
+    layer_tooltips() with custom formatting, HTML export alongside PNG'
+  - 'Clear data storytelling: amber (#DDCC77) borders on Month 1 column create an
+    immediate focal point matching the subtitle explanation of critical first-month
+    churn'
   weaknesses:
-  - 'VQ-07 / Palette Compliance: The Month 1 border highlight uses #FF6F00 (vivid
-    orange), which is not part of the Imprint palette or any of the three semantic
-    anchors. The correct accent for a caution/attention role is amber (#DDCC77). Replace
-    the hardcoded #FF6F00 with the ANYPLOT_AMBER constant (#DDCC77) in the geom_tile
-    border layer.'
-  - 'DE-01 / Aesthetic Sophistication: The plot is well-designed but falls short of
-    publication-ready polish. The tile borders default to the same PAGE_BG color which
-    works but lacks crispness. Consider: (1) adding a very subtle spine/frame around
-    the heatmap area for containment, (2) slightly increasing the geom_text label
-    size for better cell readability at mobile widths.'
-  - 'DE-02 / Visual Refinement: The layout is clean but could be more polished. The
-    legend floats with default positioning — consider pinning it closer to the plot.
-    Whitespace between the plot and the legend could be tightened for a more cohesive
-    layout.'
-  - 'DE-03 / Data Storytelling: The Month 1 highlight and subtitle are good storytelling
-    touches, but the overall visual hierarchy could be stronger. Consider adding a
-    concise annotation on the Jan 2024 cohort row (the strongest cohort at 31% Month
-    9) or a brief callout that contrasts best vs worst cohort performance directly
-    on the chart.'
+  - Cell text (geom_text size=4 mm) is on the smaller end — readable but borderline
+    in the bottom-right cells of the triangular layout where cells are fewer; consider
+    size=4.5 or 5 to give the labels more visual weight
+  - Design Excellence is moderate — the plot is technically correct but the aesthetic
+    is primarily functional; additional typography refinement (e.g. explicit fontface/weight
+    variation in axis labels) or a directional annotation pointing to the best/worst
+    cohort row could elevate DE-03
+  - DE-02 refinement limited to grid removal and tile gap sizing; explicit spine removal
+    via axis_line=element_blank() or axis_ticks=element_blank() would sharpen the
+    clean heatmap look further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface. The panel background matches the plot background creating a seamless canvas.
-      Chrome: Bold title "heatmap-cohort-retention · python · letsplot · anyplot.ai" appears in dark ink (#1A1A17) at the top, well-sized and fully visible. Italic subtitle "Month 1 critical churn highlighted — largest retention drop across all cohorts" in muted gray below. Y-axis label "Signup Cohort" and X-axis label "Months Since Signup" in dark ink, appropriately sized. Axis tick labels (cohort names with n= sizes on Y, "Month 0"–"Month 9" rotated on X) in dark secondary ink — all readable. Legend box "Retention %" with correct gradient swatch and percentage labels, positioned to the right.
-      Data: Triangular heatmap with 10 cohorts × 10 periods. Cells filled with imprint_seq gradient (green #009E73 = low retention → blue #4467A3 = 100%). Month 0 column shows solid blue (100% for all cohorts). Subsequent months fade toward teal-green as retention drops. Orange (#FF6F00) borders prominently highlight the entire Month 1 column. White bold percentage labels in high-retention (≥50%) cells; dark ink labels in low-retention (<50%) cells. Both contrast against their respective cell backgrounds.
-      Legibility verdict: PASS — all text fully readable against the warm off-white background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correctly set, not pure white.
+      Chrome: Title "heatmap-cohort-retention · python · letsplot · anyplot.ai" bold dark (#1A1A17), clearly visible. Italic subtitle in muted dark tone. Y-axis label "Signup Cohort" and X-axis label "Months Since Signup" both in dark INK, readable. Tick labels (cohort names with sizes, Month 0–9 rotated) in INK_SOFT dark gray — all legible.
+      Data: Triangular heatmap with 10 cohorts (Jan–Oct 2024) × up to 10 periods. Sequential gradient from brand green (#009E73, ~low retention) to blue (#4467A3, ~high retention = 100% signup period rendered as solid blue). Month 0 column uniformly blue (100%). Amber (#DDCC77) borders on Month 1 column highlight critical churn. Dual cell text: white (#F0EFE8) for high-retention cells (≥50%), dark INK for low-retention cells (<50%). Colorbar legend on right labeled "Retention %" with 0%–100% breaks.
+      Legibility verdict: PASS — all chrome and data text is clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface. The heatmap area sits cleanly against the dark page.
-      Chrome: Title renders in near-white (#F0EFE8) against dark background — clearly readable. Subtitle in muted light gray — readable. Y-axis cohort labels and X-axis month tick labels appear in light secondary ink — all readable. Legend box uses the elevated dark surface (#242420) with light text — properly adapted. No dark-on-dark failures observed.
-      Data: The imprint_seq gradient colors (green→blue) are identical to the light render — the data colors do not shift between themes, only the chrome flips. The orange Month 1 borders remain vivid and attention-grabbing on the dark surface. Cell text: near-white labels on blue/teal cells (high retention), near-white (INK dark=#F0EFE8) on green-teal cells (low retention) — both readable.
-      Legibility verdict: PASS — all text readable against the near-black background. No dark-on-dark failures. Data colors correctly identical to light render.
+      Background: Warm near-black (#1A1A17) — correctly set, not pure black.
+      Chrome: Title and subtitle in light cream text (#F0EFE8 / INK token), clearly visible. Y-axis and X-axis labels in light INK, tick labels in softer light gray (INK_SOFT #B8B7B0) — all legible. Colorbar legend frame uses elevated dark surface (#242420).
+      Data: Data tile colors are identical to the light render — same green-to-blue gradient, same amber Month 1 borders. Cell text contrast logic unchanged: white text on high-retention cells, dark INK text on low-retention cells. No dark-on-dark failures detected.
+      Legibility verdict: PASS — chrome fully adapts to dark theme; data colors hold identity across both renders. No dark-on-dark issues anywhere in the plot.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -76,56 +61,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title: computed scale, subtitle:
-          10, axis_title: 12, axis_text: 10, legend: 10/12, geom_text: 4mm). All readable
-          in both themes. Minor deduction: subtitle at size=10 is slightly conservative
-          for a 2400px square canvas.'
+        comment: 'Title, axis labels, tick labels, and cell labels all legible in
+          both themes. Minor deduction: cell text (size=4 mm) is on the smaller end
+          in the bottom-right triangular cells.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Cell labels fit within tiles. Rotated X-axis labels
-          clear of data.
+        comment: No text overlaps; triangular heatmap layout prevents any collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible, orange borders prominent, color gradient
-          shows clear retention variation.
+        comment: Tiles, amber borders, and cell labels are all visible. Minor deduction
+          for slightly small cell text in bottom-right cells.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe. Adaptive text contrast in cells
-          handles luminance differences correctly.
+        comment: imprint_seq (green→blue) is perceptually uniform and CVD-safe. Adaptive
+          text contrast ensures readability across the full retention range.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400×2400 square canvas correct. Plot fills space well. Legend well-positioned.
-          No overflow or clipping.
+        comment: Square 2400×2400 px canvas is correct for symmetric heatmap. Canvas
+          gate passed. Proportions are well-balanced with no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct. X: ''Months Since Signup'', Y: ''Signup Cohort''.
-          Legend: ''Retention %''. Subtitle adds insight.'
+        comment: Title correct format. X-axis 'Months Since Signup', Y-axis 'Signup
+          Cohort', legend 'Retention %' — all descriptive with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'imprint_seq gradient correctly used (low=#009E73, high=#4467A3).
-          Backgrounds correct (#FAF8F1/#1A1A17). VIOLATION: Month 1 border highlight
-          uses #FF6F00 (vivid orange) which is not in the Imprint palette or semantic
-          anchors. Should use ANYPLOT_AMBER (#DDCC77) for caution/attention role.'
+        passed: true
+        comment: 'imprint_seq correctly used (low=#009E73 → high=#4467A3). Amber #DDCC77
+          used as semantic anchor for Month 1 highlight. Backgrounds #FAF8F1 / #1A1A17
+          correct. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -133,24 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-default design: adaptive cell text contrast, Orange Month
-          1 highlight accent, subtitle, Imprint gradient. Not quite publication-ready
-          — lacks final polish touches.'
+        comment: 'Above default (4): adaptive cell text contrast and amber Month 1
+          churn highlighting show intentional design thinking. Not exceptional — the
+          overall composition is functional rather than artistically ambitious.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid fully disabled (element_blank), clean tile borders via PAGE_BG
-          color, theme_minimal base. Above default but not every detail polished.
+        comment: 'Above default (2): grid removed (element_blank), tile borders use
+          PAGE_BG for subtle separation, elevated legend background. Could be sharper
+          with explicit axis spine/tick removal.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Orange Month 1 borders create clear focal point. Subtitle explains
-          the key insight. Triangular shape is itself visually distinctive. Good but
-          could benefit from one more emphasis layer.
+        comment: 'Above default (2): amber Month 1 highlight + subtitle creates a
+          clear focal point. Triangular shape tells the cohort maturity story. Could
+          be stronger with a directional annotation on the best/worst cohort row.'
     spec_compliance:
       score: 15
       max: 15
@@ -160,30 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct triangular heatmap with geom_tile. Triangular shape properly
-          implemented via period-limited data per cohort.
+        comment: Correct cohort retention heatmap with proper triangular shape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: triangular shape, retention % in cells,
-          cohort size in Y labels, sequential colormap, color bar legend, Month 0
-          = 100% for all cohorts.'
+        comment: Triangular shape, sequential colormap, cell text labels, cohort sizes
+          in labels, Month X x-axis labels, colorbar legend, period 0=100% — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = months since signup, Y = cohort (newest at top per reverse ordering),
-          fill = retention rate. All correct.
+        comment: X=periods since signup, Y=cohort, color=retention rate. All data
+          ranges correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''heatmap-cohort-retention · python · letsplot · anyplot.ai''
-          — exact required format. Legend: ''Retention %'' with 0/25/50/75/100% breakpoints.'
+        comment: Title 'heatmap-cohort-retention · python · letsplot · anyplot.ai'
+          is correct. Legend correctly labeled.
     data_quality:
       score: 15
       max: 15
@@ -193,24 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 cohorts with distinct profiles (strong Jan/Mar, weak Apr/Aug,
-          recovery Sep). Shows full range of retention patterns including best, worst,
-          improving, declining.
+        comment: 10 cohorts × up to 10 periods. Distinct per-cohort retention profiles
+          (strong, weak, best, poor, average, etc.) show full range of the visualization's
+          capabilities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly SaaS cohort retention is a canonical, neutral, well-understood
-          business scenario. No controversial content.
+        comment: Monthly SaaS cohort retention is a canonical real-world use case.
+          Cohort sizes 921–2,438 and retention curves 14%–73% at Month 9 are realistic.
+          Neutral, non-controversial data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Month 1 retention 49–73% is realistic for SaaS. Long-term (Month
-          9) at 14–31% is plausible. Cohort sizes 800–2500 are reasonable. Monotonically
-          decreasing within cohorts enforced by code.
+        comment: Period 0=100% for all cohorts. Monotonically decreasing retention.
+          Values within 5–100% range as expected.
     code_quality:
       score: 10
       max: 10
@@ -220,67 +201,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level flow: imports → tokens → data → dataframe → plot
-          layers → save. No unnecessary abstractions.'
+        comment: Linear script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all actually used. No dead imports.
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriately complex. Split df_dark_text/df_light_text
-          approach for adaptive contrast is clean. No fake UI.
+        comment: Clean dual-layer approach for cell text contrast. No fake UI. Categorical
+          ordering via pd.Categorical is idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
-          correctly. ggsave path='.' is correct.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Full grammar of graphics: ggplot + aes + multiple geoms + scales
+          + labs + theme_minimal + custom theme + ggsize. pd.Categorical for axis
+          ordering. Idiomatic letsplot.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: High-level ggplot grammar used throughout. layer_tooltips() with
-          format/line/min_width is proper letsplot API. pd.Categorical with ordered
-          categories for correct axis ordering is the right pattern.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: layer_tooltips() is distinctively letsplot (not just a generic annotation).
-          HTML export is a lets-plot strength. Multi-layer geom_tile composition (data
-          tiles + highlight tiles + text layers) leverages the grammar-of-graphics
-          power.
-  verdict: REJECTED
+        comment: layer_tooltips() with custom format/min_width, dual geom_tile layers
+          (fill heatmap + amber border overlay), dual geom_text layers (adaptive contrast),
+          HTML export, ggsize square canvas. Good distinctive feature use; not quite
+          the maximum.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - layer-composition
+  - colorbar
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - edge-highlighting
+  - minimal-chrome
