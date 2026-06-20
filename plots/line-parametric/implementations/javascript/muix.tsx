@@ -31,7 +31,7 @@ const lissajousPoints = Array.from({ length: N }, (_, i) => {
 
 // Archimedean spiral: x = t·cos(t), y = t·sin(t), t ∈ [0, 4π]
 const spiralPoints = Array.from({ length: N }, (_, i) => {
-  const ti = (i / (N - 1)) * 4 * PI2;
+  const ti = (i / (N - 1)) * 2 * PI2;
   return { x: ti * Math.cos(ti), y: ti * Math.sin(ti), id: i };
 });
 
@@ -59,6 +59,9 @@ export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const half = Math.floor((width - 60) / 2);
   const chartH = height - 100;
+  // Square chart enforces equal aspect ratio when both axes cover the same numeric range.
+  // Margins top=25, bottom=50, left=55, right=20 → plot area = (side-75) × (side-75).
+  const chartSide = Math.min(half, chartH);
 
   const axisLabel = { fill: t.ink, fontSize: 13 };
   const axisTick = { fill: t.inkSoft, fontSize: 11 };
@@ -89,17 +92,18 @@ export default function Chart() {
         line-parametric · javascript · muix · anyplot.ai
       </Typography>
 
-      <Box sx={{ display: "flex", gap: 2, flex: 1 }}>
-        {/* Lissajous figure */}
+      <Box sx={{ display: "flex", gap: 2, flex: 1, justifyContent: "center", alignItems: "flex-start" }}>
+        {/* Lissajous figure — equal aspect ratio: square chart, same axis range, balanced margins */}
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Typography sx={{ color: t.inkSoft, fontSize: 12, mb: 0.5 }}>
+          <Typography sx={{ color: t.inkSoft, fontSize: 14, mb: 0.5 }}>
             Lissajous Figure &mdash; x = sin(3t + π/4), y = sin(2t), t ∈ [0, 2π]
           </Typography>
           <ScatterChart
-            width={half}
-            height={chartH}
+            width={chartSide}
+            height={chartSide}
             skipAnimation
             series={lissajousSeries}
+            grid={{ horizontal: false, vertical: false }}
             xAxis={[{
               label: "x(t)",
               labelStyle: axisLabel,
@@ -114,38 +118,43 @@ export default function Chart() {
               min: -1.25,
               max: 1.25,
             }]}
-            margin={{ top: 10, bottom: 50, left: 55, right: 20 }}
+            margin={{ top: 25, bottom: 50, left: 55, right: 20 }}
             slotProps={{ legend: { hidden: true } }}
           />
         </Box>
 
-        {/* Archimedean spiral */}
+        {/* Archimedean spiral — equal aspect ratio: square chart, symmetric axis range */}
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Typography sx={{ color: t.inkSoft, fontSize: 12, mb: 0.5 }}>
+          <Typography sx={{ color: t.inkSoft, fontSize: 14, mb: 0.5 }}>
             Archimedean Spiral &mdash; x = t·cos(t), y = t·sin(t), t ∈ [0, 4π]
           </Typography>
           <ScatterChart
-            width={half}
-            height={chartH}
+            width={chartSide}
+            height={chartSide}
             skipAnimation
             series={spiralSeries}
+            grid={{ horizontal: false, vertical: false }}
             xAxis={[{
               label: "x(t)",
               labelStyle: axisLabel,
               tickLabelStyle: axisTick,
+              min: -14,
+              max: 14,
             }]}
             yAxis={[{
               label: "y(t)",
               labelStyle: axisLabel,
               tickLabelStyle: axisTick,
+              min: -14,
+              max: 14,
             }]}
-            margin={{ top: 10, bottom: 50, left: 55, right: 20 }}
+            margin={{ top: 25, bottom: 50, left: 55, right: 20 }}
             slotProps={{ legend: { hidden: true } }}
           />
         </Box>
       </Box>
 
-      <Typography sx={{ color: t.inkSoft, fontSize: 11, textAlign: "center", mt: 0.5 }}>
+      <Typography sx={{ color: t.inkSoft, fontSize: 13, textAlign: "center", mt: 0.5 }}>
         Color encodes direction of traversal — green (t = start) → blue (t = end)
       </Typography>
     </Box>
