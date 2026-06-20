@@ -1,14 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-pareto: Pareto Chart with Cumulative Line
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-20
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
-# Data - Manufacturing defect analysis
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+VITAL_COLOR = "#009E73"  # Imprint position 1 — vital few bars
+LINE_COLOR = "#BD8233"  # Imprint position 4 — cumulative % line
+
+# Data — manufacturing defect analysis
 defects = pd.DataFrame(
     {
         "category": [
@@ -27,19 +41,20 @@ defects = pd.DataFrame(
     }
 )
 
-# Sort descending and compute cumulative percentage
 defects = defects.sort_values("count", ascending=False).reset_index(drop=True)
 total = defects["count"].sum()
 defects["cumulative_pct"] = defects["count"].cumsum() / total * 100
-
-# Mark vital few (categories contributing up to ~80%) vs trivial many
 defects["vital_few"] = defects["cumulative_pct"].shift(1, fill_value=0) < 80
 sort_order = defects["category"].tolist()
 
-# 80% threshold reference data
 threshold_df = pd.DataFrame({"pct": [80]})
 
-# Bars - color-coded by vital few (dark blue) vs trivial many (light gray-blue)
+# Title with length-scaled fontsize (floor 11, default 16 at 67 chars)
+title_text = "Manufacturing Defect Analysis · bar-pareto · python · altair · anyplot.ai"
+n = len(title_text)
+title_fs = max(11, round(16 * 67 / n)) if n > 67 else 16
+
+# Bars: vital few → Imprint green, trivial many → theme-adaptive muted
 bars = (
     alt.Chart(defects)
     .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4)
@@ -48,10 +63,10 @@ bars = (
             "category:N",
             title="Defect Type",
             sort=sort_order,
-            axis=alt.Axis(labelAngle=-45, labelFontSize=18, titleFontSize=22),
+            axis=alt.Axis(labelAngle=-45, labelFontSize=10, titleFontSize=12),
         ),
-        y=alt.Y("count:Q", title="Frequency", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
-        color=alt.condition(alt.datum.vital_few, alt.value("#306998"), alt.value("#A8C4D9")),
+        y=alt.Y("count:Q", title="Frequency", axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
+        color=alt.condition(alt.datum.vital_few, alt.value(VITAL_COLOR), alt.value(INK_MUTED)),
         tooltip=[
             alt.Tooltip("category:N", title="Defect"),
             alt.Tooltip("count:Q", title="Count"),
@@ -60,13 +75,13 @@ bars = (
     )
 )
 
-# Cumulative percentage line on secondary y-axis (colorblind-safe dark orange)
+# Cumulative % line on secondary y-axis (Imprint ochre)
 line = (
     alt.Chart(defects)
     .mark_line(
-        color="#D4770B",
+        color=LINE_COLOR,
         strokeWidth=3,
-        point=alt.OverlayMarkDef(color="#D4770B", size=120, filled=True, stroke="white", strokeWidth=2),
+        point=alt.OverlayMarkDef(color=LINE_COLOR, size=80, filled=True, stroke=PAGE_BG, strokeWidth=1.5),
     )
     .encode(
         x=alt.X("category:N", sort=sort_order),
@@ -74,7 +89,9 @@ line = (
             "cumulative_pct:Q",
             title="Cumulative Percentage (%)",
             scale=alt.Scale(domain=[0, 105]),
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, titleColor="#D4770B", labelColor="#D4770B", format=".0f"),
+            axis=alt.Axis(
+                labelFontSize=10, titleFontSize=12, titleColor=LINE_COLOR, labelColor=LINE_COLOR, format=".0f"
+            ),
         ),
         tooltip=[
             alt.Tooltip("category:N", title="Defect"),
@@ -83,40 +100,56 @@ line = (
     )
 )
 
-# 80% threshold reference line
+# 80% reference line
 rule = (
     alt.Chart(threshold_df)
-    .mark_rule(strokeDash=[8, 6], strokeWidth=2, color="#888888")
+    .mark_rule(strokeDash=[8, 6], strokeWidth=1.5, color=INK_MUTED)
     .encode(y=alt.Y("pct:Q", scale=alt.Scale(domain=[0, 105])))
 )
 
 # 80% label
 rule_label = (
     alt.Chart(pd.DataFrame({"pct": [80], "label": ["80%"]}))
-    .mark_text(align="left", dx=5, dy=-10, fontSize=18, fontWeight="bold", color="#888888")
+    .mark_text(align="left", dx=5, dy=-8, fontSize=10, fontWeight="bold", color=INK_MUTED)
     .encode(x=alt.value(10), y=alt.Y("pct:Q", scale=alt.Scale(domain=[0, 105])), text="label:N")
 )
 
-# Combine layers: bars use left y-axis, line/rule use right y-axis
+# Compose: bars + cumulative line + reference line, independent y-scales
 chart = (
     alt.layer(bars, line + rule + rule_label)
     .resolve_scale(y="independent")
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=308,
+        background=PAGE_BG,
         title=alt.Title(
-            text="Manufacturing Defect Analysis · bar-pareto · altair · pyplots.ai",
-            subtitle="Vital few defects (dark) account for 80% of all occurrences",
-            fontSize=28,
-            subtitleFontSize=18,
-            subtitleColor="#666666",
+            text=title_text,
+            subtitle="Vital few categories (green) account for 80% of all defect occurrences",
+            fontSize=title_fs,
+            subtitleFontSize=10,
+            subtitleColor=INK_SOFT,
+            color=INK,
         ),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(grid=False)
-    .configure_axisY(grid=True, gridOpacity=0.15, gridDash=[4, 4])
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, grid=False, labelColor=INK_SOFT, titleColor=INK)
+    .configure_axisY(grid=True, gridDash=[4, 4], gridColor=INK, gridOpacity=0.15)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save and pad to exact 3200 × 1800
+TW, TH = 3200, 1800
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
