@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-growth-percentile
 created: '2026-06-20T09:34:02Z'
-updated: '2026-06-20T09:40:20Z'
+updated: '2026-06-20T09:51:38Z'
 generated_by: claude-sonnet
 workflow_run: 27866992012
 issue: 4555
@@ -12,43 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-grow
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Complete spec compliance: all 7 percentile curves, graduated band opacity (outer
-    darker, inner lighter), P50 emphasis, patient overlay, right-margin labels — nothing
-    missing.'
-  - 'Semantic color exception correctly applied: Imprint blue (#4467A3) for boys reference
-    framework with brand green (#009E73) for contrasting patient data; both from the
-    Imprint palette.'
-  - Fully deterministic data based on WHO z-score methodology — realistic and clinically
-    appropriate.
-  - 'Full theme-adaptive chrome: all six INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens correctly
-    threaded through every axis and legend property.'
-  - 'Perfect code quality: flat script, clean imports, no randomness needed.'
-  - 'Idiomatic Makie API usage: band!, scatterlines!, axislegend, RGBAf.'
+  - Graduated band opacity (outer=0.38, inner=0.16) creates excellent visual hierarchy
+    that matches clinical convention
+  - Semantic blue color (#4467A3, Imprint position 3) for boys is properly documented
+    and justified
+  - Patient trajectory in brand green (#009E73) contrasts clearly against blue bands
+    — strong focal point
+  - Percentile labels on right margin via xlims extension to 42 is clean and idiomatic
+  - 'Full theme-adaptive chrome: all text, spine, grid, legend colors correctly thread
+    INK/INK_SOFT tokens'
+  - 'Uses Makie-distinctive primitives: band!, scatterlines!, axislegend(), subtitle
+    in Axis constructor'
+  - P50 median emphasized with thicker line and dedicated legend entry — matches clinical
+    chart convention
+  - Y-grid only at alpha=0.12, spines removed, frameless legend — polished visual
+    refinement
   weaknesses:
-  - Inner bands (P25-P50, P50-P75) at alpha=0.13 are very subtle in dark mode — slightly
-    increasing to 0.16 would improve dark-theme graduation visibility without washing
-    out the light render.
-  - Legend framevisible=true with a visible box can feel heavy; consider framevisible=false
-    or reducing framecolor alpha for a lighter look.
-  - Percentile label fontsize (12pt) is slightly small; bumping to 13-14pt would improve
-    mobile readability at 400px width.
-  - Missing a descriptive title prefix (e.g. Boys Weight 0-36 Months) which would
-    add clinical context at zero spec cost.
+  - Subtitle at subtitlesize=13 is the same size as tick labels — for a clinical chart
+    with important context text, a subtitlesize of 15 would better differentiate it
+    from axis tick labels and improve mobile readability
+  - 'DE-02: Legend frame is explicitly set to framevisible=false but framecolor is
+    still passed — minor dead code; more importantly, the elevated background in dark
+    mode (ELEVATED_BG=#242420) is barely distinguishable from PAGE_BG (#1A1A17), making
+    the legend blend slightly into the dark background'
+  - 'DE-03: The bands and patient line tell the story well, but there is no annotation
+    marking where the patient currently sits (e.g., a label at the last data point
+    ''36 mo: 15.0 kg'') — clinical charts often call this out explicitly to guide
+    the clinician''s eye to the endpoint'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
-      Chrome: Title "line-growth-percentile · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Age (months)" and "Weight (kg)" in dark ink (xlabelsize=16, ylabelsize=16), readable. Tick labels in INK_SOFT (#4A4A44), readable. Right-margin percentile labels P3-P97 in INK_SOFT, readable (slightly small at 12pt).
-      Data: Six graduated blue (#4467A3) band areas — outer bands (P3-P10, P90-P97) at alpha 0.38, mid bands (P10-P25, P75-P90) at alpha 0.23, inner bands (P25-P50, P50-P75) at alpha 0.13. Six thin semi-transparent non-median curves outline boundaries. P50 median emphasized in solid opaque blue (linewidth 2.5). Patient trajectory in brand green (#009E73) with circle markers at 12 well-child visit points — clearly contrasting against blue reference framework.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "line-growth-percentile · julia · makie · anyplot.ai" at 20pt in dark ink, fully readable. Subtitle "Boys weight-for-age — WHO reference (0–36 months)" at 13pt in INK_SOFT — readable but small. X-axis label "Age (months)" and Y-axis label "Weight (kg)" at 16pt, clearly readable. Tick labels at 13pt in INK_SOFT, readable. Right-margin percentile labels P3–P97 in INK_SOFT (P50 in INK), all readable. Legend in upper-left with ELEVATED_BG background, frameless, labels readable.
+      Data: Six graduated blue (#4467A3) bands — outer pair at alpha=0.38 (dark), inner pairs at 0.16–0.23. P50 median shown as a solid blue line (linewidth=2.5). Patient trajectory in bright green (#009E73) with circle markers (markersize=12) and linewidth=2.5 — very prominent against the blue bands.
+      Legibility verdict: PASS — all text readable. First series (patient) correctly uses brand green #009E73.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
-      Chrome: Title in INK (#F0EFE8), clearly readable against dark background. Axis labels in INK (#F0EFE8), readable. Tick labels in INK_SOFT (#B8B7B0), readable. Percentile margin labels in INK_SOFT, readable. No dark-on-dark issues detected.
-      Data: Blue bands (#4467A3) maintain the same hex as light render — graduated opacity preserved but inner bands (alpha 0.13) are very subtle against near-black background. Outer bands remain distinguishable. Patient line in brand green (#009E73) is vivid and clearly visible. Data colors identical to light render — only chrome (background, text, ticks) flipped. #009E73 reads well on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title in light #F0EFE8, clearly readable against dark background. Subtitle in INK_SOFT (#B8B7B0), readable. Axis labels light, readable. Tick labels in INK_SOFT, readable. Percentile labels on right in INK_SOFT (P50 in INK), all readable against the dark background. Legend background ELEVATED_BG (#242420) is very close to PAGE_BG — legend is present but blends slightly. No dark-on-dark failures — all chrome correctly uses light tokens.
+      Data: Blue bands are richer/deeper against the dark surface — graduated opacity maintained. Patient green (#009E73) identical to light render, still clearly visible. Data colors are identical between renders — only chrome tokens flip. Brand green brand green reads well on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text failures. All elements readable.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,75 +64,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor deduction: right-margin
-          percentile labels at fontsize=12 are slightly small for mobile scaling.'
+        comment: All main text properly sized (title=20, labels=16, ticks=13). Subtitle
+          at 13pt same as tick labels — slight deduction for borderline mobile readability
+          of subtitle.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. Right-margin labels well-spaced.
+        comment: Legend upper-left avoids data area. Percentile labels on right margin
+          well-spaced. No element collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Patient markers (markersize=12) prominent; band graduation visible;
-          P50 distinctly thicker.
+        comment: Patient line prominently visible (markersize=12, linewidth=2.5) in
+          bright green. Bands graduated effectively. P50 median emphasized. All elements
+          clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green and Imprint blue are CVD-safe. No red-green sole-signal.
+        comment: Green (#009E73) + blue (#4467A3) pairing is CVD-safe. Not red-green
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions. X-axis extended
-          to 42 months to accommodate right-margin labels without clipping.
+        comment: Canvas gate passed (3200x1800). xlims extended to 42 to accommodate
+          right-margin labels — clever layout. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Age (months) and Weight (kg) descriptive with units.
+        comment: 'Title matches required format. X-axis: ''Age (months)'', Y-axis:
+          ''Weight (kg)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Patient data uses #009E73 (Imprint position 1). Bands use #4467A3
-          via valid semantic exception (boys=blue). Backgrounds #FAF8F1 / #1A1A17
-          correct.'
+        comment: 'PAGE_BG correctly #FAF8F1 (light) / #1A1A17 (dark). Patient series
+          uses #009E73 as first categorical series. BAND_COLOR = #4467A3 (Imprint
+          position 3, semantic blue for boys). Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Intentional design: semantic color exception for boys/blue, graduated
-          band opacity, contrasting patient color, P50 emphasis. Solid but lacks additional
-          polish.'
+        comment: Graduated band opacity (outer=0.38, inner=0.16) is intentional and
+          effective. Semantic blue for boys documented. Subtitle adds clinical context.
+          Professional polish above default.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, y-only grid at low opacity (0.12), INK_SOFT
-          for chrome. Basic refinement well-executed. Legend frame could be softened.
+        comment: Top/right spines removed. Y-grid only at alpha=0.12. Frameless legend.
+          INK vs INK_SOFT hierarchy. Multiple refinements clearly above default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear focal point: green patient pops against blue reference. Graduated
-          bands guide interpretation. Right-margin labels enable clinical reading.
-          No supplementary annotation for narrative depth.'
+        comment: 'Patient green line against blue bands creates clear focal point.
+          P50 emphasized with heavier line. Bands communicate ''safe zone'' intuitively.
+          Missing: no endpoint annotation for patient''s current measurement.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +147,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct WHO/CDC-style growth chart with filled percentile band areas
-          and overlaid patient scatterline.
+        comment: WHO/CDC-style growth chart with percentile bands. Correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 percentiles present; graduated opacity; P50 emphasized; patient
-          as scatterlines; right-margin labels; age x-axis with units.
+        comment: Filled bands between adjacent percentile curves, graduated color
+          intensity, P50 emphasized, right-margin labels P3-P97, patient as connected
+          markers, blue for boys.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=age in months, Y=weight in kg. Full 0-36 month range displayed.
+        comment: X=age in months (0-36), Y=weight in kg. WHO reference data approximated
+          accurately via z-score offsets.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches spec-id · julia · makie · anyplot.ai. Legend
-          identifies P50 median and patient.
+        comment: 'Title: ''line-growth-percentile · julia · makie · anyplot.ai''.
+          Legend: ''WHO P50 median'' and ''Patient (boy, age 0–36 mo)''.'
     data_quality:
       score: 15
       max: 15
@@ -168,22 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec-required features: bands, curves, P50 emphasis, patient
-          overlay, right-margin labels.'
+        comment: All 7 percentile curves shown (P3/P10/P25/P50/P75/P90/P97), bands
+          between adjacent pairs, patient overlay with connected scatter, right-margin
+          labels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: WHO weight-for-age for boys using z-score offsets. Patient near 65th
-          percentile — clinically realistic and neutral.
+        comment: WHO weight-for-age reference for boys 0-36 months. Values realistic
+          (newborn ~3.3 kg, 36mo ~14.3 kg). Patient tracking near 65th percentile.
+          Neutral clinical context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-36 months and 2-17 kg are correct pediatric ranges. Clinical tick
-          spacing (every 6 months, every 2 kg).
+        comment: 0-36 months appropriate for infant/toddler growth chart. Weight range
+          1.5-20 kg covers all percentiles. SD values realistic approximations.
     code_quality:
       score: 10
       max: 10
@@ -193,61 +206,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Clear section comments.
+        comment: Linear script, no functions or classes. Clear Data/Plot/Save sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: all data from hard-coded medians and SDs; no
-          random elements.'
+        comment: All data fully deterministic (formula-derived and hardcoded). No
+          random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported; both used.
+        comment: Only CairoMakie and Colors — both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean for loop for non-median curves; no fake interactivity; appropriate
-          complexity.
+        comment: Clean loop for non-median curves. Organized structure. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) correct.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22+ API). Correct.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!, lines!, scatterlines!, axislegend(), text!, xlims!, ylims!
+          — all idiomatic Makie patterns used correctly.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses band!, scatterlines!, axislegend, xlims!/ylims!, RGBAf, text!
-          — all idiomatic Makie patterns.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: band! and scatterlines! are Makie-distinctive recipes. RGBAf compositing
-          is Makie-native. Could further leverage Makie Label/Legend composition.
+        comment: band! (Makie ribbon primitive), scatterlines! (Makie-specific combined
+          geom), subtitle in Axis constructor, axislegend, RGBAf() with (color, alpha)
+          tuples — multiple Makie-distinctive features. Could leverage more unique
+          capabilities (e.g. Makie theming, deferred rendering).
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - Colors
+  dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending

@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-growth-percentile: Pediatric Growth Chart with Percentile Curves
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-06-20
+# Quality: 89/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors
