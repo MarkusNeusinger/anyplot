@@ -68,12 +68,12 @@ const rightLabel = (lbl, bold) => ({
 // Stacked area bands (fills only — no lines, no labels)
 const bandSeries = [
   { name: 'base',    data: dBase,  fill: PAGE_BG        },
-  { name: 'P3-P10',  data: d3_10,  fill: bandFill(0.13) },
-  { name: 'P10-P25', data: d10_25, fill: bandFill(0.20) },
-  { name: 'P25-P50', data: d25_50, fill: bandFill(0.26) },
-  { name: 'P50-P75', data: d50_75, fill: bandFill(0.20) },
-  { name: 'P75-P90', data: d75_90, fill: bandFill(0.13) },
-  { name: 'P90-P97', data: d90_97, fill: bandFill(0.09) },
+  { name: 'P3-P10',  data: d3_10,  fill: bandFill(0.38) },
+  { name: 'P10-P25', data: d10_25, fill: bandFill(0.25) },
+  { name: 'P25-P50', data: d25_50, fill: bandFill(0.13) },
+  { name: 'P50-P75', data: d50_75, fill: bandFill(0.13) },
+  { name: 'P75-P90', data: d75_90, fill: bandFill(0.25) },
+  { name: 'P90-P97', data: d90_97, fill: bandFill(0.38) },
 ].map(s => ({
   type: 'areaspline',
   name: s.name,
