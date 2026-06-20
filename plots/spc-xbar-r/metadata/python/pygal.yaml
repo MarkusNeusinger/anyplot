@@ -1,47 +1,57 @@
 library: pygal
+language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:49:31Z'
-updated: '2026-03-19T22:28:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318370480
+updated: '2026-06-20T13:11:47Z'
+generated_by: claude-sonnet
+workflow_run: 27871742237
 issue: 4551
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/pygal/plot.html
-quality_score: 84
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all SPC features implemented correctly using proper
-    control chart constants (A2, D3, D4)
-  - Realistic CNC shaft diameter manufacturing data with meaningful OOC scenarios
-    (tool wear, recalibration overshoot, material batch change)
-  - Thoughtful visual hierarchy with red OOC highlights and differentiated line styles
-    (solid, dashed, dot-dash)
-  - Clean well-structured code with proper pygal SVG-to-PNG compositing workaround
-    for subplot support
-  - Custom color palette with warm background and intentional typography hierarchy
+  - 'Perfect Imprint palette semantic mapping: brand green for in-control data, matte
+    red (semantic anchor) for out-of-control, blue (Imprint pos. 3) for statistical
+    control limits, amber (semantic anchor) for warning limits — exactly the right
+    color vocabulary for the domain'
+  - Correct SPC implementation with standard A2/D3/D4 constants, realistic CNC scenario,
+    and three distinct OOC injection scenarios that demonstrate the chart's detection
+    capability
+  - Pygal per-point dict syntax used masterfully to give OOC points both a different
+    color and larger size (redundant encoding), maximizing accessibility
+  - Full theme adaptation via pygal Style object — foreground/foreground_strong/foreground_subtle
+    correctly set for both light and dark surfaces; center line uses INK token so
+    it adapts to the surface
+  - HTML output with two interactive pygal SVGs stacked vertically, leveraging pygal's
+    native interactivity for the web gallery
   weaknesses:
-  - Red color reuse for both OOC points and UCL/LCL lines reduces visual clarity for
-    colorblind users
-  - Design excellence above defaults but not yet publication-ready level
-  - X-bar legend slightly crowded with 7 entries
-  image_description: 'The plot displays a vertically stacked pair of Statistical Process
-    Control charts for CNC shaft diameter measurements. The top chart (X-bar) shows
-    sample means plotted around 25.000 mm with blue connected dots on a warm off-white
-    background (#FAFAF8). Three out-of-control points are highlighted in red with
-    slightly larger markers: sample 8 (upward shift ~25.043), sample 19 (downward
-    shift ~24.930), and sample 25 (upward shift ~25.080). Horizontal reference lines
-    include a dark solid center line (CL = 25.001), red dashed UCL (25.027) and LCL
-    (24.974), and purple dot-dash warning limits at plus/minus 2 sigma. The bottom
-    chart (R chart) shows sample ranges in the same blue style, with a solid center
-    line (CL = 0.046), dashed UCL (0.098), LCL at 0.000, and a +2 sigma warning line.
-    A subtle gray divider separates the two charts. Both charts share x-axis sample
-    numbers 1-30. Legends are displayed at the bottom of each chart with labeled entries
-    for all series.'
+  - Amber warning limits (#DDCC77) against cream background (#FAF8F1) have inherently
+    low contrast (known Imprint tradeoff); consider adding a thin INK-colored stroke
+    around the warning limit lines to improve visibility on the light surface
+  - The R chart's empty OOC series (no ranges exceed UCL in synthetic data) creates
+    a legend entry with a red swatch but no corresponding data points in the chart
+    — not incorrect but slightly confusing; could suppress the legend entry when ooc_r_pts
+    is empty
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "spc-xbar-r · python · pygal · anyplot.ai" in dark ink, clearly readable. Axis labels "X̄ (mm)", "R (mm)", "Sample Number" in dark INK, clearly readable. Tick labels (1-30 on x-axis, numeric mm values on y-axis) in dark INK_MUTED, readable. Legend entries with colored swatches and dark text labels, readable.
+      Data: Brand green #009E73 line for sample means (top) and ranges (bottom). Three OOC points in matte red #AE3030 at larger size (samples 8, 19, 25 in X-bar chart). Dashed blue #4467A3 UCL/LCL lines. Solid near-black center line. Dashed amber #DDCC77 warning limits (slightly low contrast on cream bg, but visible).
+      Legibility verdict: PASS — all text elements readable; amber limits slightly subtle but within acceptable range
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title renders in light cream #F0EFE8 via foreground_strong=INK — clearly legible against dark background. Axis labels adapt to light foreground — readable. Tick labels rendered in muted-light #A8A79F via foreground_subtle=INK_MUTED — visible against dark background. No dark-on-dark text failures observed. Legend entries in light ink — readable.
+      Data: Data colors identical to light render — brand green #009E73 line, matte red #AE3030 OOC points, blue #4467A3 control limit lines, amber #DDCC77 warning limits. Center line correctly uses INK=#F0EFE8 in dark mode (cream/near-white) — distinguishable from dark background.
+      Legibility verdict: PASS — theme adaptation correctly implemented via pygal Style tokens; all major text elements readable against dark surface
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,42 +59,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=52, label=30, legend=26). All text
-          readable. Legend text slightly small relative to chart area.
+        comment: All text correctly sized and theme-adaptive; amber warning limit
+          labels have inherently lower contrast on cream bg (known Imprint tradeoff)
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlap. X-bar legend with 7 items slightly crowded
-          but readable.
+        comment: No overlapping elements in either render; 30 tick labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dots size 12, OOC dots size 14. Visible but could be slightly larger
-          at this canvas size.
+        comment: Green data line, red OOC dots (larger 17px), dashed UCL/LCL, dashed
+          amber warnings all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red distinction works but red used for both OOC points and control
-          limit lines could confuse colorblind users.
+        comment: OOC uses both color change AND size change (redundant encoding);
+          amber for warning, red for error — CVD-safe Imprint anchors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good stacked layout at 4800x2700. Charts fill most of canvas with
-          balanced margins.
+        comment: 3200x1800 canvas via composited 2x900px panels; generous margins;
+          divider line cleanly separates panels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-bar (mm), R (mm), Sample Number — all descriptive with units.
+        comment: X-bar (mm) and R (mm) with units; Sample Number on shared x-axis;
+          correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; OOC #AE3030 semantic anchor; control
+          limits #4467A3 Imprint pos. 3; warnings #DDCC77 amber anchor; correct backgrounds'
     design_excellence:
       score: 12
       max: 20
@@ -94,22 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, warm background, custom font family. Above defaults
-          but not publication-ready.
+        comment: Well-thought-out semantic color mapping, professional dual-panel
+          layout, clear typographic hierarchy; raised from default 4
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid color, x-guides disabled, custom margins. Some refinement
-          beyond defaults.
+        comment: Differentiated linestyles and dash patterns, rounded linecaps; limited
+          by pygal spine control constraints; raised from default 2
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: OOC points highlighted in red with larger markers creating visual
-          hierarchy. Viewer immediately sees process instability.
+        comment: OOC points create immediate focal points; dual-panel design tells
+          complete X-bar/R story; legend values include actual CL/UCL/LCL numbers;
+          raised from default 2
     spec_compliance:
       score: 15
       max: 15
@@ -119,28 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: X-bar on top, R on bottom, vertically stacked pair sharing x-axis.
+        comment: Correct SPC X-bar/R chart with X-bar on top, R on bottom, sharing
+          x-axis interpretation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: dashed UCL/LCL, solid CL, OOC highlights, warning
-          limits, 3 OOC points, standard constants.'
+        comment: UCL/LCL dashed and labeled; center line solid; +-2sigma warning limits
+          shown; OOC highlighted different color+size; 3 OOC scenarios injected; standard
+          SPC constants A2=0.577, D3=0.0, D4=2.114
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sample number, Y = X-bar/R values. All data visible with appropriate
-          padding.
+        comment: 'X: sample numbers 1-30; Y-top: means in mm; Y-bottom: ranges in
+          mm; all 30 samples visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels include series names with computed
-          values.
+        comment: Title spc-xbar-r · python · pygal · anyplot.ai correct; legend entries
+          include actual computed CL/UCL/LCL values
     data_quality:
       score: 15
       max: 15
@@ -150,20 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: OOC in both directions, varied ranges, in-control and out-of-control
-          states demonstrated.
+        comment: 'Demonstrates all SPC X-bar/R features: control limits computation
+          from A2/D3/D4, warning limits at +-2/3 sigma, OOC detection, realistic process
+          scenarios'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: CNC shaft diameter at 25mm target. Real-world manufacturing scenario.
+        comment: CNC shaft diameter measurements (25.00mm ± 0.02mm sigma) is an archetypal
+          SPC use case; OOC scenarios (tool wear, recalibration overshoot, material
+          batch change) are genuine manufacturing failure modes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25mm diameter with 0.02mm std dev realistic for CNC machining.
+        comment: 30 samples with subgroup size 5 is textbook SPC; measurement scale
+          and R values realistic for precision machining
     code_quality:
       score: 10
       max: 10
@@ -173,61 +197,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, constants, data, charts, render, composite,
-          save.'
+        comment: Flat top-level script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, cairosvg, numpy, pygal, PIL, pygal.style.Style.'
+        comment: All imports (io, os, sys, cairosvg, numpy, pygal, PIL) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Necessary repetition between X-bar and R chart.
+        comment: Color slot alignment documented inline; sys.path.pop(0) workaround
+          explained; per-point OOC dict syntax clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with 300 DPI. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent pygal idioms: XY chart type, Style object for all theming,
+          stroke_style dict, dots_size, explicit_size=True, legend_at_bottom with
+          columns, js=[] to disable default animations'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, custom Style, per-point dicts, stroke_style
-          with dasharray.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Per-point styling dicts, SVG-native rendering with cairosvg compositing,
-          stroke_style dasharray patterns.
-  verdict: REJECTED
+        comment: Per-point color override via dict values is pygal distinctive point-level
+          styling API; cairosvg compositing for panel layout; interactive SVG HTML
+          output; slightly below max as composite approach bypasses pygal native layout
+          engine
+  verdict: APPROVED
 impl_tags:
   dependencies:
-  - pillow
   - cairosvg
+  - pillow
   techniques:
-  - custom-legend
   - subplots
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
