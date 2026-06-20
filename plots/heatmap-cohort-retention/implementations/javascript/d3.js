@@ -30,8 +30,8 @@ cohortData.forEach((cohort, ci) => {
   });
 });
 
-// --- Layout ---
-const margin = { top: 90, right: 158, bottom: 76, left: 158 };
+// --- Layout (increased left margin to prevent y-axis label overlap with cohort labels) ---
+const margin = { top: 90, right: 158, bottom: 76, left: 200 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 const cellW = iw / maxPeriods;
@@ -46,8 +46,23 @@ const svg = d3
 
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-// --- Sequential color scale: Imprint seq (green→blue), low retention=lighter, high=darker ---
+// --- Sequential color scale: Imprint seq (green→blue), low=green, high=blue ---
 const colorScale = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain([0, 100]);
+
+// --- Shade empty upper-right triangle to emphasize the cohort format's shape ---
+const emptyFill =
+  window.ANYPLOT_THEME === "dark" ? "rgba(240,239,232,0.06)" : "rgba(26,26,23,0.05)";
+cohortData.forEach((cohort, ci) => {
+  const emptyStart = cohort.rates.length;
+  if (emptyStart < maxPeriods) {
+    g.append("rect")
+      .attr("x", emptyStart * cellW)
+      .attr("y", ci * cellH)
+      .attr("width", (maxPeriods - emptyStart) * cellW)
+      .attr("height", cellH)
+      .attr("fill", emptyFill);
+  }
+});
 
 // --- Heatmap cells (triangular: older cohorts have more periods) ---
 const gap = 2;
@@ -61,6 +76,34 @@ g.selectAll(".cell")
   .attr("height", cellH - gap)
   .attr("rx", 3)
   .attr("fill", (d) => colorScale(d.rate));
+
+// --- Best cohort highlight: Jul 2024 (68% wk-1, highest initial retention) ---
+const bestCi = 6;
+const bestPeriods = cohortData[bestCi].rates.length;
+g.append("rect")
+  .attr("x", -2)
+  .attr("y", bestCi * cellH - 2)
+  .attr("width", bestPeriods * cellW + 4)
+  .attr("height", cellH + 4)
+  .attr("rx", 4)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[0])
+  .attr("stroke-width", 2)
+  .attr("opacity", 0.55);
+
+// --- Worst cohort highlight: Jun 2024 (58% wk-1, lowest initial retention) ---
+const worstCi = 5;
+const worstPeriods = cohortData[worstCi].rates.length;
+g.append("rect")
+  .attr("x", -2)
+  .attr("y", worstCi * cellH - 2)
+  .attr("width", worstPeriods * cellW + 4)
+  .attr("height", cellH + 4)
+  .attr("rx", 4)
+  .attr("fill", "none")
+  .attr("stroke", t.palette[4])
+  .attr("stroke-width", 2)
+  .attr("opacity", 0.55);
 
 // --- Retention % labels inside each cell (dark text on lighter cells, light on darker) ---
 g.selectAll(".cell-label")
@@ -102,6 +145,39 @@ g.selectAll(".cohort-label")
   .style("font-size", "14px")
   .text((d) => `${d.label} (n=${d.size.toLocaleString()})`);
 
+// --- Cohort insight annotations (appear in the empty triangle area beside each row) ---
+g.append("text")
+  .attr("x", bestPeriods * cellW + 10)
+  .attr("y", bestCi * cellH + cellH / 2 - 7)
+  .attr("dominant-baseline", "central")
+  .attr("fill", t.palette[0])
+  .style("font-size", "11px")
+  .style("font-weight", "600")
+  .text("↑ Best week-1");
+g.append("text")
+  .attr("x", bestPeriods * cellW + 10)
+  .attr("y", bestCi * cellH + cellH / 2 + 9)
+  .attr("dominant-baseline", "central")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "10px")
+  .text("68% retention");
+
+g.append("text")
+  .attr("x", worstPeriods * cellW + 10)
+  .attr("y", worstCi * cellH + cellH / 2 - 7)
+  .attr("dominant-baseline", "central")
+  .attr("fill", t.palette[4])
+  .style("font-size", "11px")
+  .style("font-weight", "600")
+  .text("↓ Weakest wk-1");
+g.append("text")
+  .attr("x", worstPeriods * cellW + 10)
+  .attr("y", worstCi * cellH + cellH / 2 + 9)
+  .attr("dominant-baseline", "central")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "10px")
+  .text("58% retention");
+
 // --- Axis descriptor labels ---
 svg
   .append("text")
@@ -112,11 +188,12 @@ svg
   .style("font-size", "15px")
   .text("Weeks since signup");
 
+// Y-axis label moved to y=16 to avoid overlap with cohort row labels
 svg
   .append("text")
   .attr("transform", "rotate(-90)")
   .attr("x", -(margin.top + ih / 2))
-  .attr("y", 50)
+  .attr("y", 16)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "15px")
