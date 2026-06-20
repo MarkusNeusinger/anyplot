@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lightcurve-transit: Astronomical Light Curve
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-20
@@ -87,7 +87,7 @@ x_axis = alt.Axis(grid=True, gridOpacity=0.12, gridDash=[4, 4], tickCount=10)
 # Error bars — increased opacity (was 0.2) so they read clearly against the background
 error_bars = (
     alt.Chart(df_obs)
-    .mark_rule(strokeWidth=1, opacity=0.4, color=COLOR_OBS)
+    .mark_rule(strokeWidth=1, opacity=0.6, color=COLOR_OBS)
     .encode(
         x=alt.X("phase:Q", title="Orbital Phase", axis=x_axis),
         y=alt.Y("flux_lower:Q", scale=y_scale),
@@ -174,7 +174,7 @@ chart = (
             fontWeight="bold",
             color=INK,
             subtitle="Phase-folded Kepler photometry with limb-darkened transit model",
-            subtitleFontSize=11,
+            subtitleFontSize=12,
             subtitleColor=INK_SOFT,
             subtitlePadding=4,
             anchor="start",
