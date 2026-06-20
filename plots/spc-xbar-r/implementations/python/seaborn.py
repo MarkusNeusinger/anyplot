@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spc-xbar-r: Statistical Process Control Chart (X-bar/R)
-Library: seaborn | Python 3.14
-Quality: 89/100 | Updated: 2026-06-20
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-20
 """
 
 import os
