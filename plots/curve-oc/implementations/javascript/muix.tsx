@@ -30,16 +30,16 @@ function pAccept(n: number, c: number, p: number): number {
   return Math.min(1, Math.max(0, prob));
 }
 
-// x-axis: fraction defective 0 to 20%, 200 points for a smooth S-curve
+// x-axis: fraction defective 0–15%, 200 points for a smooth S-curve
 const N_POINTS = 200;
-const P_MAX = 0.2;
+const P_MAX = 0.15;
 const pValues = Array.from({ length: N_POINTS }, (_, i) => (i * P_MAX) / (N_POINTS - 1));
 
 // Three sampling plans to show discrimination power with increasing n
 const plans: [number, number, string][] = [
-  [50,  1, "n=50, c=1"],
-  [100, 2, "n=100, c=2"],
-  [200, 4, "n=200, c=4"],
+  [50,  1, "n=50 c=1"],
+  [100, 2, "n=100 c=2"],
+  [200, 4, "n=200 c=4"],
 ];
 
 const series = plans.map(([n, c, label]) => ({
@@ -93,6 +93,7 @@ export default function Chart() {
           label: "Fraction Defective (p)",
           min: 0,
           max: P_MAX,
+          tickInterval: [0, 0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14],
         }]}
         yAxis={[{
           label: "Probability of Acceptance",
