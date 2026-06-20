@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: curve-oc
 created: '2026-03-19T20:35:47Z'
-updated: '2026-06-20T11:17:31Z'
+updated: '2026-06-20T11:30:35Z'
 generated_by: claude-sonnet
 workflow_run: 27869247438
 issue: 4553
@@ -15,40 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/
 quality_score: 88
 review:
   strengths:
-  - All 4 OC curves correctly computed using binomial CDF with the exact formula specified
-    in the spec
-  - 'Semantic color choices are excellent: muted anchor for subordinate reference
-    lines, matte red for risk markers — both use the right semantic anchors rather
-    than burning ordinal palette slots'
-  - Hermite interpolation produces smooth S-shaped curves that faithfully represent
-    the mathematical form of OC curves
-  - Linestyle redundant encoding (solid/dashed/dotted + varying widths) ensures CVD-safe
-    differentiation even if colors are confused
-  - 'Both theme renders are fully correct: backgrounds, chrome tokens, and data colors
-    all adapt properly with no dark-on-dark or light-on-light failures'
-  - 'Outstanding data storytelling: AQL/LTPD reference lines + labeled risk markers
-    tell the complete acceptance sampling story the spec requires'
+  - Full spec compliance — all 4 required annotation layers (OC curves, AQL/LTPD lines,
+    alpha/beta risk points) implemented correctly
+  - 'Excellent theme adaptation — correct Imprint palette, correct backgrounds (#FAF8F1
+    / #1A1A17), data colors constant across themes, chrome adapts cleanly'
+  - 'Redundant encoding: distinct dasharray patterns (solid, dashed, dotted) plus
+    line-width hierarchy eliminates sole reliance on color for curve identification'
+  - SVG CSS injection to strip the plot-area border frame is an elegant, well-commented
+    workaround for a pygal limitation
+  - Hermite interpolation with cardinal parameters produces smooth S-curves appropriate
+    for the OC domain
   weaknesses:
-  - Top/right spines visible (standard pygal box frame not overridden) — removing
-    them would meaningfully improve aesthetic sophistication and visual refinement
-    (DE-01, DE-02)
-  - Both producer's risk (alpha) and consumer's risk (beta) markers share the same
-    matte red color in the legend — different marker shapes would add redundant encoding
-    to distinguish the two risk concepts
-  - Y-axis label wraps to two lines ('Probability of Acceptance / P(accept)') — minor
-    readability friction; a shorter label like 'P(accept)' with full text elsewhere
-    could help (VQ-01)
+  - 'DE-01: No direct annotations on the chart body — the AQL/LTPD crossings with
+    the reference OC curve and the risk labels would benefit from in-chart text callouts
+    rather than solely relying on the legend entries'
+  - 'DE-02: Legend box still renders with a slight default frame — pygal legend styling
+    could be further refined via Style or CSS override'
+  - 'LM-02: Custom tooltips could be richer (e.g., showing all 4 P(accept) values
+    at the hovered x fraction), which would leverage pygals distinctive interactive
+    SVG strength more fully'
+  - alpha and beta risk dots share the same color (#AE3030) — while contextually distinguishable
+    by position (1% vs 8%), different dot sizes or hollow vs filled treatment would
+    strengthen per-point identity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "curve-oc · python · pygal · anyplot.ai" clearly readable in dark ink at top. X-axis label "Fraction Defective (p)" and Y-axis label "Probability of Acceptance P(accept)" (wrapping to 2 lines) both readable. Tick labels in muted tone, percent-formatted on X-axis, decimal on Y-axis. Legend at bottom with 8 entries in 2 rows, all readable.
-      Data: Four OC curves — brand green #009E73 (n=50,c=1, dashed), lavender #C475FD (n=50,c=2, dotted), blue #4467A3 (n=100,c=2, thick solid), ochre #BD8233 (n=100,c=3, thin solid). AQL/LTPD vertical reference lines in muted gray. Two matte red (#AE3030) circular markers for producer's risk and consumer's risk.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "curve-oc · python · pygal · anyplot.ai" fully visible in dark ink at top; X-axis label "Fraction Defective (p)" and Y-axis label "P(accept)" both clearly readable; tick labels (0%–15% on x, 0–1.00 on y) in muted ink, all legible; bottom legend with 8 entries in 4 columns fully readable
+      Data: 4 S-shaped OC curves — dashed green (n=50,c=1 #009E73), dotted lavender (n=50,c=2 #C475FD), thick solid blue (n=100,c=2 #4467A3), thin solid ochre (n=100,c=3 #BD8233); muted dashed vertical lines for AQL@1% and LTPD@8%; two red filled dots (#AE3030) for producer and consumer risk points
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: All text switches to light-colored ink — title, axis labels, tick labels, legend all clearly visible against dark background. No dark-on-dark failures detected. Grid lines and reference line ticks visible with good contrast.
-      Data: Identical data colors to light render — green, lavender, blue, ochre curves; muted gray reference lines; matte red risk markers. All series clearly distinguishable on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title, axis labels, and tick labels rendered in light off-white tone; all clearly readable against dark background; no dark-on-dark failures detected; legend entries all visible in appropriate light color
+      Data: All 4 OC curve colors identical to light render — green, lavender, blue, ochre unchanged; reference lines and red risk dots retain same colors; brand green #009E73 clearly visible on dark surface
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -60,48 +59,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both renders; minor: Y-axis label wraps to
-          two lines'
+        comment: Font sizes explicitly set (title=66, label=56, tick=44, legend=44);
+          all text readable in both themes and at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data collisions
+        comment: No text or annotation collisions; legend at bottom clean and well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All curves visible with distinct linestyles; risk markers large and
-          unambiguous
+        comment: All 4 curves visible; redundant dasharray encoding; thick stroke
+          on reference plan; risk dots large and prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette + semantic anchors; linestyle redundant encoding
-          for CVD safety
+        comment: Imprint palette CVD-safe; redundant line-style encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape; nothing clipped; legend fits cleanly; title
-          proportions correct
+        comment: Canvas 3200x1800; title proportional; legend at bottom clean; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct % formatting on x-axis
+        comment: 'X: Fraction Defective (p); Y: P(accept); title follows required
+          format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; canonical Imprint order 1-4; muted anchor
-          for reference lines; #AE3030 for risk markers; correct backgrounds'
+        comment: 'First series #009E73; canonical Imprint positions 1-4 for OC curves;
+          muted anchor for reference lines; semantic red for risk markers; correct
+          backgrounds both themes'
     design_excellence:
       score: 12
       max: 20
@@ -111,22 +111,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional linestyle hierarchy and semantic color choices; limited
-          by standard box frame and no standout aesthetic innovation
+        comment: Custom Imprint palette; hermite interpolation; intentional line-width
+          hierarchy; above default but missing direct in-chart annotations at key
+          points
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-axis grid only; AQL/LTPD lines functional; full 4-sided box frame
-          not overridden is primary deduction
+        comment: CSS injection to remove border frame; y-axis only grid; legend box
+          not fully refined
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Strong storytelling with 4-curve comparison, AQL/LTPD context, risk
-          markers; thick/thin distinction highlights reference plan
+        comment: Thick reference plan stands out; muted reference lines subordinate;
+          risk dots draw eye to decision thresholds
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line plot with hermite interpolation for smooth OC curves
+        comment: XY line chart with correct S-shaped OC curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 4 OC curves; AQL/LTPD reference lines; alpha/beta risk markers; smooth
-          lines; x-range 0-0.15
+        comment: AQL/LTPD vertical lines; producer risk alpha at AQL; consumer risk
+          beta at LTPD; 4 plans compared
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=fraction_defective (0-15%); Y=probability_acceptance (0-1); correct
-          binomial CDF
+        comment: 'X: fraction defective 0-15%; Y: P(accept) 0-1; 200 points per curve'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'curve-oc · python · pygal · anyplot.ai'; legend labels
-          match series names
+        comment: Title follows required format; all 8 legend entries correctly labeled
     data_quality:
       score: 15
       max: 15
@@ -167,22 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple OC curves, AQL/LTPD levels, producer's and consumer's risk,
-          effect of n and c shown
+        comment: OC curve shapes, AQL/LTPD reference lines, alpha/beta risk points,
+          multi-plan comparison all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world sampling plans; AQL=1% and LTPD=8% are standard industrial
-          values; neutral domain
+        comment: Acceptance sampling quality inspection; realistic AQL=1%, LTPD=8%;
+          realistic sample sizes n=50/100; neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Practical x-range 0-15%; y-range 0-1.05; sensible domain for acceptance
-          sampling
+        comment: X range 0-15% per spec; Y range 0-1.05 with slight headroom
     code_quality:
       score: 10
       max: 10
@@ -192,33 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clear top-level script with organized sections
+        comment: No functions or classes; sequential top-level code; sys.path workaround
+          necessary and commented
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic via binomial CDF math.comb; no randomness
+        comment: Fully deterministic; all data from exact binomial formula
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, math.comb, numpy, pygal, pygal.style.Style'
+        comment: 'All imports used: os, sys, math.comb, cairosvg, numpy, pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean generator expression for OC computation; linestyles dict and
-          iteration appropriately structured
+        comment: Clean iteration over plans tuple; SVG post-processing appropriate
+          workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
-    library_mastery:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal 3.1.3
+          API
+    library_features:
       score: 7
       max: 10
       items:
@@ -227,18 +227,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct pygal.XY, Style object, list-of-tuples data format, formatter
-          lambdas; minor: explicit_size=True redundant'
+        comment: pygal.XY for coordinate data; Style object for theming; per-series
+          stroke_style; value formatters; hermite interpolation
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Hermite interpolation with cardinal c parameter, per-series stroke_style,
-          x_value_formatter, legend_at_bottom_columns, allow_interruptions
+        comment: Hermite/cardinal interpolation; SVG CSS injection for border removal;
+          per-series formatter lambdas; allow_interruptions; truncate_legend=-1
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - html-export
   - manual-ticks
@@ -246,4 +247,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - minimal-chrome
