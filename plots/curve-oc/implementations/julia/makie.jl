@@ -1,7 +1,7 @@
 # anyplot.ai
 # curve-oc: Operating Characteristic (OC) Curve
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-06-20
+# Quality: 89/100 | Created: 2026-06-20
 
 using CairoMakie
 using Colors
