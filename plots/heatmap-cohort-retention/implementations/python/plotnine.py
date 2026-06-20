@@ -1,6 +1,7 @@
-"""heatmap-cohort-retention — Cohort Retention Heatmap
-Library: plotnine | Python
-Imprint palette (imprint_seq: blue→green), theme-adaptive chrome
+""" anyplot.ai
+heatmap-cohort-retention: Cohort Retention Heatmap
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 # Remove script dir from sys.path first to prevent self-shadowing the 'plotnine' library import
