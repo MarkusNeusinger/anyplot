@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: plotly | Python
-Quality: 87 -> regen | 2026-06-20
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-20
 """
 
 import os
