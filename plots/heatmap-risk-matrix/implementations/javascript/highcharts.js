@@ -1,13 +1,9 @@
 // anyplot.ai
 // heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
-// Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-20
-//# anyplot-orientation: square
-// anyplot.ai
-// heatmap-risk-matrix: Risk Assessment Matrix (Probability vs Impact)
 // Library: Highcharts 12.6.0 | Node 22
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-06-20
+// Quality: 86/100 | Created: 2026-06-20
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -37,7 +33,7 @@ const risks = [
 
 // Deterministic jitter so overlapping risks in the same cell don't stack
 const JX = [0,  0.18, -0.18,  0.09, -0.09];
-const JY = [0,  0.14, -0.14,  0.18, -0.18];
+const JY = [0,  0.20, -0.20,  0.18, -0.18];
 const cellIdx = {};
 const scatterData = risks.map(function (r) {
   var key = r.likelihood + "," + r.impact;
@@ -77,7 +73,7 @@ function drawCells(chart) {
         .add(group);
 
       // Score label in bottom-right corner of cell
-      chart.renderer.text(String(score), rx + rw - 8, ry + rh - 8)
+      chart.renderer.text(String(score), rx + rw - 12, ry + rh - 12)
         .attr({ align: "right", zIndex: 2 })
         .css({ color: t.ink, fontSize: "12px", opacity: "0.5" })
         .add(group);
@@ -94,7 +90,7 @@ Highcharts.chart("container", {
     animation: false,
     style: { fontFamily: "inherit" },
     marginTop: 90,
-    marginBottom: 120,
+    marginBottom: 95,
     marginLeft: 145,
     marginRight: 50,
     events: {
