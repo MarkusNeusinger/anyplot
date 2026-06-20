@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-20
@@ -86,14 +86,14 @@ chart = pygal.Histogram(
     y_title="Frequency",
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=28,
+    legend_box_size=22,
     show_y_guides=True,
     show_x_guides=False,
     truncate_label=-1,
     truncate_legend=-1,
     margin_top=60,
-    margin_right=80,
-    margin_bottom=40,
+    margin_right=120,
+    margin_bottom=60,
     margin_left=30,
     x_value_formatter=lambda x: f"{x:.3f}",
     y_value_formatter=lambda y: f"{y:.0f}",
@@ -109,6 +109,8 @@ chart = pygal.Histogram(
         "inline:text.title { font-weight: 600 !important; }",
         "inline:text.plot_title { text-anchor: middle; }",
         f"inline:.legends text {{ fill: {INK} !important; }}",
+        "inline:.serie-2 { opacity: 0.6 !important; }",
+        "inline:.serie-3 { opacity: 0.6 !important; }",
     ],
     js=[],
 )
@@ -122,27 +124,27 @@ curve_data = [(float(y), float(x), float(x + dx_curve)) for x, y in zip(x_curve,
 chart.add("Normal fit", curve_data, stroke_style={"width": 3, "linecap": "round"})
 
 # Specification limit lines — very thin bars rendered as dashed vertical boundaries
-line_width = 0.0008
+spec_lw = 0.0008  # LSL/USL (thin, opacity 0.6 via CSS)
+target_lw = 0.0020  # Target wider so it stands apart from Mean despite near-identical x
+mean_lw = 0.0005  # Mean narrower for clear visual separation from Target
 chart.add(
-    "LSL (9.95)",
-    [(y_ceil, float(lsl - line_width), float(lsl + line_width))],
-    stroke_style={"width": 8, "dasharray": "18,8"},
+    "LSL (9.95)", [(y_ceil, float(lsl - spec_lw), float(lsl + spec_lw))], stroke_style={"width": 8, "dasharray": "18,8"}
 )
 chart.add(
     "USL (10.05)",
-    [(y_ceil, float(usl - line_width), float(usl + line_width))],
+    [(y_ceil, float(usl - spec_lw), float(usl + spec_lw))],
     stroke_style={"width": 8, "dasharray": "18,8"},
 )
 
-# Target and mean reference lines
+# Target and mean reference lines — different widths so they're distinguishable at x≈10.000
 chart.add(
     "Target (10.00)",
-    [(y_ceil, float(target - line_width), float(target + line_width))],
+    [(y_ceil, float(target - target_lw), float(target + target_lw))],
     stroke_style={"width": 6, "dasharray": "12,6"},
 )
 chart.add(
     f"Mean ({mean:.3f})",
-    [(y_ceil, float(mean - line_width / 2), float(mean + line_width / 2))],
+    [(y_ceil, float(mean - mean_lw), float(mean + mean_lw))],
     stroke_style={"width": 4, "dasharray": "4,8"},
 )
 
