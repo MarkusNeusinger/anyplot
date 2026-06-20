@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 line-parametric: Parametric Curve Plot
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-20
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-06-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,76 +13,77 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 
-# Data - Lissajous figure: x = sin(3t), y = sin(2t)
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "#E3E2DB" if THEME == "light" else "#2A2A27"
+
+# Imprint sequential colormap: brand green (t=0) → blue (t=max)
+GRAD_LOW = "#009E73"  # Imprint position 1 — first series / start
+GRAD_HIGH = "#4467A3"  # Imprint position 3 — end
+
+# Data — Lissajous figure: x = sin(3t), y = sin(2t), t ∈ [0, 2π]
 t_lissajous = np.linspace(0, 2 * np.pi, 1000)
-x_lissajous = np.sin(3 * t_lissajous)
-y_lissajous = np.sin(2 * t_lissajous)
+df_lissajous = pd.DataFrame({"x": np.sin(3 * t_lissajous), "y": np.sin(2 * t_lissajous), "t": t_lissajous})
 
-df_lissajous = pd.DataFrame({"x": x_lissajous, "y": y_lissajous, "t": t_lissajous})
-
-# Data - Spiral: x = t*cos(t), y = t*sin(t)
+# Data — Archimedean spiral: x = t·cos(t), y = t·sin(t), t ∈ [0, 4π]
 t_spiral = np.linspace(0, 4 * np.pi, 1000)
-x_spiral = t_spiral * np.cos(t_spiral)
-y_spiral = t_spiral * np.sin(t_spiral)
+df_spiral = pd.DataFrame({"x": t_spiral * np.cos(t_spiral), "y": t_spiral * np.sin(t_spiral), "t": t_spiral})
 
-df_spiral = pd.DataFrame({"x": x_spiral, "y": y_spiral, "t": t_spiral})
-
-# Refined theme - remove spines, subtle grid, generous whitespace
-refined_theme = theme(
-    axis_text=element_text(size=16, color="#555555"),
-    axis_title=element_text(size=20, color="#333333"),
-    plot_title=element_text(size=22, face="bold", color="#1a1a2e"),
-    legend_text=element_text(size=16),
-    legend_title=element_text(size=16, face="bold"),
-    panel_grid_major=element_line(color="#e8e8e8", size=0.5),
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_grid_major=element_line(color=GRID_COLOR, size=0.4),
     panel_grid_minor=element_blank(),
+    axis_title=element_text(size=12, color=INK),
+    axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_blank(),
     axis_ticks=element_blank(),
-    plot_background=element_rect(fill="white", color="white"),
-    panel_background=element_rect(fill="#fcfcfc", color="#e0e0e0", size=0.5),
-    legend_background=element_rect(fill="white", color="#e0e0e0", size=0.5),
+    plot_title=element_text(size=13, color=INK, face="bold"),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_title=element_text(size=10, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
 )
 
-# Colorblind-safe markers: dark blue (start) and orange (end)
-start_color = "#084C4C"
-end_color = "#C0392B"
-
-# Plot - Lissajous figure (closed, self-intersecting - the "complex" curve)
+# Plot — Lissajous figure (closed curve: start ≡ end at origin, show only start)
 plot_lissajous = (
     ggplot(df_lissajous, aes(x="x", y="y", color="t"))
-    + geom_path(size=2.0, alpha=0.85, tooltips=layer_tooltips().line("t = @t").format("t", ".2f"))
-    + geom_point(data=df_lissajous.iloc[[0]], mapping=aes(x="x", y="y"), color=start_color, size=8, shape=16)
-    + geom_point(data=df_lissajous.iloc[[-1]], mapping=aes(x="x", y="y"), color=end_color, size=8, shape=17)
-    + scale_color_gradient(low="#0D6E6E", high="#D4A017", name="t (rad)", format=".1f")
+    + geom_path(size=1.5, alpha=0.9, tooltips=layer_tooltips().line("t = @t").format("t", ".2f"))
+    + geom_point(data=df_lissajous.iloc[[0]], mapping=aes(x="x", y="y"), color=GRAD_LOW, size=5, shape=16)
+    + scale_color_gradient(low=GRAD_LOW, high=GRAD_HIGH, name="t (rad)", format=".1f")
     + coord_fixed()
-    + labs(x="x(t) = sin(3t)", y="y(t) = sin(2t)", title="Lissajous Figure  ·  closed, self-intersecting")
-    + refined_theme
+    + labs(x="x(t) = sin(3t)", y="y(t) = sin(2t)", title="Lissajous Figure  ·  3:2 frequency ratio, closed")
+    + anyplot_theme
 )
 
-# Plot - Archimedean spiral (open, expanding - the "growth" curve)
+# Plot — Archimedean spiral (open curve: show both start and end markers)
 plot_spiral = (
     ggplot(df_spiral, aes(x="x", y="y", color="t"))
-    + geom_path(size=1.8, alpha=0.85, tooltips=layer_tooltips().line("t = @t").format("t", ".2f"))
-    + geom_point(data=df_spiral.iloc[[0]], mapping=aes(x="x", y="y"), color=start_color, size=8, shape=16)
-    + geom_point(data=df_spiral.iloc[[-1]], mapping=aes(x="x", y="y"), color=end_color, size=8, shape=17)
-    + scale_color_gradient(low="#0D6E6E", high="#D4A017", name="t (rad)", format=".1f")
+    + geom_path(size=1.5, alpha=0.9, tooltips=layer_tooltips().line("t = @t").format("t", ".2f"))
+    + geom_point(data=df_spiral.iloc[[0]], mapping=aes(x="x", y="y"), color=GRAD_LOW, size=5, shape=16)
+    + geom_point(data=df_spiral.iloc[[-1]], mapping=aes(x="x", y="y"), color=GRAD_HIGH, size=5, shape=17)
+    + scale_color_gradient(low=GRAD_LOW, high=GRAD_HIGH, name="t (rad)", format=".1f")
     + coord_fixed()
-    + scale_x_continuous(limits=[-14, 14])
-    + scale_y_continuous(limits=[-14, 14])
     + labs(x="x(t) = t·cos(t)", y="y(t) = t·sin(t)", title="Archimedean Spiral  ·  expanding outward")
-    + refined_theme
+    + anyplot_theme
 )
 
-# Combine with gggrid - letsplot's distinctive multi-plot layout
+# Side-by-side layout with overall title
 grid_plot = gggrid([plot_lissajous, plot_spiral], ncol=2)
-
+title_str = "line-parametric · python · letsplot · anyplot.ai"
 final_plot = (
     grid_plot
-    + ggsize(1600, 900)
-    + ggtitle("line-parametric · letsplot · pyplots.ai")
-    + theme(plot_title=element_text(size=24, face="bold", color="#1a1a2e"))
+    + ggsize(800, 450)
+    + ggtitle(title_str)
+    + theme(
+        plot_title=element_text(size=16, color=INK, face="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    )
 )
 
-# Save
-ggsave(final_plot, "plot.png", path=".", scale=3)
-ggsave(final_plot, "plot.html", path=".")
+# Save PNG and interactive HTML
+ggsave(final_plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(final_plot, f"plot-{THEME}.html", path=".")
