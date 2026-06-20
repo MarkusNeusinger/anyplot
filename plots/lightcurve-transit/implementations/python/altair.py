@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lightcurve-transit: Astronomical Light Curve
-Library: altair | Python 3.14.3
-Quality: pending | Created: 2026-06-20
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-20
 """
 
 import os
