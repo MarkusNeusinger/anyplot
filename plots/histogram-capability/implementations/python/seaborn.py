@@ -1,92 +1,137 @@
-""" pyplots.ai
+""" anyplot.ai
 histogram-capability: Process Capability Plot with Specification Limits
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-19
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.lines import Line2D
+from scipy.stats import norm
 
 
-# Data
+# Theme tokens — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Imprint position 1 — histogram bars
+BLUE = "#4467A3"  # Imprint position 3 — theoretical normal fit
+CYAN = "#2ABCCD"  # Imprint position 6 — empirical KDE
+RED = "#AE3030"  # Imprint position 5 — semantic: spec limits / out-of-spec
+AMBER = "#DDCC77"  # Imprint semantic anchor — target / caution
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — pharmaceutical tablet weight QC (target 500 mg, n=200)
 np.random.seed(42)
-measurements = np.random.normal(loc=10.00, scale=0.015, size=200)
-lsl = 9.95
-usl = 10.05
-target = 10.00
+weights = np.random.normal(loc=500.2, scale=2.8, size=200)
+lsl = 490.0
+usl = 510.0
+target = 500.0
 
-mean = np.mean(measurements)
-sigma = np.std(measurements, ddof=1)
+mean = np.mean(weights)
+sigma = np.std(weights, ddof=1)
 cp = (usl - lsl) / (6 * sigma)
 cpk = min((usl - mean) / (3 * sigma), (mean - lsl) / (3 * sigma))
 
+# Fitted normal distribution curve (scipy — not KDE)
+x_fit = np.linspace(lsl - 4, usl + 4, 400)
+y_fit = norm.pdf(x_fit, mean, sigma)
+
 # Plot
-sns.set_style("whitegrid", {"grid.alpha": 0.15, "grid.linewidth": 0.8})
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+ax.set_facecolor(PAGE_BG)
 
-# Histogram with seaborn KDE overlay (leveraging seaborn's integrated density estimation)
-sns.histplot(
-    measurements,
-    bins=25,
-    stat="density",
-    color="#306998",
-    edgecolor="white",
-    linewidth=0.8,
-    alpha=0.7,
-    kde=True,
-    line_kws={"linewidth": 3, "color": "#1a3a5c", "label": "KDE Fit"},
-    ax=ax,
-)
+# Histogram bars
+sns.histplot(weights, bins=25, stat="density", color=BRAND, edgecolor=PAGE_BG, linewidth=0.6, alpha=0.70, ax=ax)
 
-# Specification lines - colorblind-safe palette (orange for limits, teal for target)
-ax.axvline(lsl, color="#e67e22", linestyle="--", linewidth=2.5, label=f"LSL = {lsl}")
-ax.axvline(usl, color="#e67e22", linestyle="--", linewidth=2.5, label=f"USL = {usl}")
-ax.axvline(target, color="#16a085", linestyle="-.", linewidth=2.5, label=f"Target = {target}")
+# Fitted normal distribution (parametric — theoretical)
+ax.plot(x_fit, y_fit, color=BLUE, linewidth=2.5, zorder=5)
 
-# Shaded capability zones (after data is plotted so axis limits are correct)
+# Empirical KDE (seaborn's non-parametric density estimation)
+sns.kdeplot(weights, color=CYAN, linewidth=2.0, linestyle=":", ax=ax, zorder=6)
+
+# Specification limit and target lines
+ax.axvline(lsl, color=RED, linestyle="--", linewidth=2.0, zorder=4)
+ax.axvline(usl, color=RED, linestyle="--", linewidth=2.0, zorder=4)
+ax.axvline(target, color=AMBER, linestyle="-.", linewidth=2.0, zorder=4)
+
+# Shaded capability zones
 xlim = ax.get_xlim()
-ax.axvspan(lsl, usl, alpha=0.05, color="#306998", zorder=0, label="_nolegend_")
-ax.axvspan(xlim[0], lsl, alpha=0.07, color="#e67e22", zorder=0, label="_nolegend_")
-ax.axvspan(usl, xlim[1], alpha=0.07, color="#e67e22", zorder=0, label="_nolegend_")
+ax.axvspan(lsl, usl, alpha=0.05, color=BRAND, zorder=0)
+ax.axvspan(xlim[0], lsl, alpha=0.07, color=RED, zorder=0)
+ax.axvspan(usl, xlim[1], alpha=0.07, color=RED, zorder=0)
 
-# Color-coded capability annotation
-cp_color = "#27ae60" if cpk >= 1.33 else "#e67e22" if cpk >= 1.0 else "#c0392b"
-annotation_text = f"Cp = {cp:.2f}\nCpk = {cpk:.2f}\n\u03bc = {mean:.4f}\n\u03c3 = {sigma:.4f}"
+# Capability status color and label
+status = "Capable" if cpk >= 1.33 else "Adequate" if cpk >= 1.0 else "Not Capable"
+cp_color = BRAND if cpk >= 1.33 else AMBER if cpk >= 1.0 else RED
+
+# Metrics annotation box — status integrated as 5th line
+annotation_text = (
+    f"Cp     = {cp:.2f}\nCpk   = {cpk:.2f}\nμ       = {mean:.2f} mg\nσ       = {sigma:.2f} mg\nStatus: {status}"
+)
 ax.text(
-    0.97,
-    0.95,
+    0.975,
+    0.96,
     annotation_text,
     transform=ax.transAxes,
-    fontsize=18,
+    fontsize=8,
     verticalalignment="top",
     horizontalalignment="right",
-    bbox={"boxstyle": "round,pad=0.5", "facecolor": "white", "edgecolor": cp_color, "linewidth": 2, "alpha": 0.95},
-    color="#2c3e50",
-)
-
-# Capability status label
-status = "Capable" if cpk >= 1.33 else "Adequate" if cpk >= 1.0 else "Not Capable"
-ax.text(
-    0.97,
-    0.72,
-    status,
-    transform=ax.transAxes,
-    fontsize=16,
-    fontweight="bold",
-    verticalalignment="top",
-    horizontalalignment="right",
-    color=cp_color,
+    family="monospace",
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": cp_color,
+        "linewidth": 1.5,
+        "alpha": 0.95,
+    },
+    color=INK,
 )
 
 # Style
-ax.set_xlabel("Shaft Diameter (mm)", fontsize=20)
-ax.set_ylabel("Density", fontsize=20)
-ax.set_title("histogram-capability \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper left", frameon=True, facecolor="white", edgecolor="#cccccc", framealpha=0.95)
+title = "histogram-capability · python · seaborn · anyplot.ai"
+ax.set_xlabel("Tablet Weight (mg)", fontsize=10, color=INK)
+ax.set_ylabel("Density", fontsize=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Legend
+legend_handles = [
+    Line2D([0], [0], color=BLUE, linewidth=2.5, label="Parametric Fit (Normal)"),
+    Line2D([0], [0], color=CYAN, linewidth=2.0, linestyle=":", label="Empirical KDE (seaborn)"),
+    Line2D([0], [0], color=RED, linestyle="--", linewidth=2.0, label=f"LSL = {lsl:.0f} mg"),
+    Line2D([0], [0], color=RED, linestyle="--", linewidth=2.0, label=f"USL = {usl:.0f} mg"),
+    Line2D([0], [0], color=AMBER, linestyle="-.", linewidth=2.0, label=f"Target = {target:.0f} mg"),
+]
+ax.legend(handles=legend_handles, fontsize=8, loc="upper left", frameon=True, framealpha=0.95)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
