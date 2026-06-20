@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-parametric
 created: '2026-03-20T10:38:12Z'
-updated: '2026-06-20T23:19:07Z'
+updated: '2026-06-20T23:28:42Z'
 generated_by: claude-sonnet
 workflow_run: 27886041160
 issue: 4424
@@ -12,53 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-para
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Correct parametric curve plot type with both a Lissajous figure and an Archimedean
-    spiral, satisfying all spec requirements
-  - Green-to-blue Imprint sequential gradient (imprint_seq) elegantly encodes traversal
-    direction as the spec mandates
-  - Distinctive start (ochre circle) and end (red triangle) markers with color-coded
-    labels clearly annotate direction
-  - 'Both themes render correctly: warm off-white (#FAF8F1) light background, warm
-    near-black (#1A1A17) dark background with properly adaptive chrome'
-  - 'Clever Altair-specific technique: invisible dummy chart carries the gradient
-    legend while layered mark_line segments simulate continuous gradient'
-  - 'Subtitle ''Color gradient encodes traversal direction: start (green) → end (blue)''
-    aids data storytelling'
-  - resolve_scale(color='independent') correctly gives each panel its own color domain
-  - Fully deterministic data (mathematical functions), all imports used, correct output
-    files (light/dark PNG + HTML)
+  - Creative 100-segment gradient workaround for Vega-Lite path gradient limitation
+    with smooth rendering
+  - Both themes render correctly with full chrome token adaptation — no dark-on-dark
+    or light-on-light failures
+  - Invisible dummy chart for gradient legend binding is an elegant Altair-specific
+    pattern
+  - Start/end markers use semantically appropriate Imprint palette colors (ochre=start,
+    matte red=end)
+  - Two contrasting curve types (closed Lissajous + open spiral) with equation annotations
+    in panel titles
   weaknesses:
-  - 'Segment-break artifact: 30 segments is too few — visible gaps between segment
-    endpoints make the curves appear dashed rather than solid. Increase N_SEG to 80–120
-    to close the gaps without changing the gradient approach.'
-  - 'CQ-01 complexity: the panel_configs dict + outer loop + inner N_SEG loop nests
-    three levels of iteration. Consider flattening or simplifying the panel config
-    structure.'
-  - 'DE-01: segment artifact prevents publication-ready status. Increasing N_SEG is
-    the primary fix; the rest of the aesthetic design is strong.'
-  - Dashed grid (gridDash=[3,3]) visually overlaps with the segment-break dashes on
-    the curves, creating confusing similarity between grid lines and data lines. Switch
-    to solid grid lines (remove gridDash) at gridOpacity=0.10 to distinguish them
-    from the gradient curve segments.
+  - Panel aspect ratio is not 1:1 — width=270 vs height=300 produces ~11% vertical
+    elongation; set width=300 to match height=300 for equal aspect ratio as required
+    by spec
+  - Helper function build_gradient_segments technically violates no-functions KISS
+    rule; could be inlined as a list comprehension
+  - Only two curve types shown; spec mentions cardioids/cycloids/epicycloids as potential
+    additional examples
+  - Start/end annotation labels at (0,0) on Lissajous panel are tightly stacked —
+    increase dy offsets to ±25 for better readability at smaller sizes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Main title "line-parametric · python · altair · anyplot.ai" in bold dark ink, centered, ~75% width. Subtitle "Color gradient encodes traversal direction: start (green) → end (blue)" in muted gray, smaller, fully readable. Panel titles "Lissajous · x = sin(3t), y = sin(2t)" and "Archimedean Spiral · x = t·cos(t), y = t·sin(t)" in INK_SOFT, readable. Axis labels "x(t)" / "y(t)" clear. Tick labels (−1.2 to 1.2) fully readable. Grid uses dashed lines at low opacity.
-      Data: Both panels use a green (#009E73) to blue (#4467A3) discrete gradient over 30 line segments. Start marker: ochre filled circle at t=0. End marker: matte-red filled triangle at t=2π / t=6π, with bold text labels in matching colors. Gradient legend ("Parameter t") sits between the two panels.
-      Notable artifact: the 30-segment discrete gradient creates visible breaks/gaps between segments, making the curves appear dashed rather than solid.
-      Legibility verdict: PASS — all text is readable against the light background; no near-white-on-white issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-parametric · python · altair · anyplot.ai" at fontSize=16, dark ink color #1A1A17. Subtitle in muted ink. Panel titles "Lissajous · x = sin(3t), y = sin(2t)" and "Archimedean Spiral · x = t·cos(t), y = t·sin(t)" in INK_SOFT (#4A4A44). Axis labels x(t)/y(t) at fontSize=12, tick labels at fontSize=10 — all clearly readable. Gradient legend "Parameter t" with light text labels.
+      Data: Green-to-blue gradient from #009E73 (brand green, t=0) to #4467A3 (Imprint blue, t=end). 100-segment layered lines render smoothly. Ochre (#BD8233) circle marks start, red triangle (#AE3030) marks end. Two panels: left Lissajous (closed self-intersecting curve), right Archimedean Spiral (open outward spiral). Grid at 10% opacity, very subtle.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and subtitle render in light cream/off-white, clearly readable. Panel titles in secondary gray (B8B7B0). Axis labels and tick labels in appropriate light tones. Legend box uses dark elevated fill (#242420) with light-colored text. No dark-on-dark failures detected anywhere.
-      Data: Gradient colors identical to light render — green start (#009E73) to blue end (#4467A3). Ochre start and red end markers remain vivid. Segment-break artifact identical to light render.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels flip to light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Legend background #242420 with light label text. Tick labels render as light-on-dark correctly. No dark-on-dark failures detected.
+      Data: Colors identical to light render — same green-to-blue gradient, same ochre start and red end markers. Imprint categorical positions 1, 3, 4, 5 used consistently across both themes. Brand green #009E73 distinctly visible.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -66,86 +57,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, subtitle=10, panel titles=12,
-          axis labels=10, tick labels=10, marker text=10). Readable in both themes.
-          Subtitle slightly small but acceptable. Proportions well-balanced.
+        comment: All text readable in both themes. Annotation labels at (0,0) on Lissajous
+          are small (10px) and tightly spaced but readable.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text or data elements. Start/end labels on Lissajous
-          panel are close but distinctly positioned (different dy offsets). Spiral
-          labels well-separated.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Curves visible with 3px stroke width, appropriate for the data density.
-          However, 30 segments create visible gaps/breaks making lines appear dashed.
-          Spiral start dot at center is small but present.
+        comment: No overlap detected. Lissajous start/end labels both at origin (0,0)
+          with dy offsets ±18 — tight but non-overlapping.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 100-segment gradient lines at strokeWidth=3 clearly visible. Size-160
+          start/end markers prominent and shape-distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential gradient is CVD-safe. Start/end markers use distinct
-          shapes (circle vs triangle) in addition to color. No red-green-only encoding.
+        comment: Green→blue Imprint sequential gradient CVD-safe. Ochre and matte-red
+          markers semantically distinct.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Two panels fill the canvas well with centered
-          padding. Gradient legend sits between panels naturally. Good use of horizontal
-          space.
+        comment: 'Canvas correct 3200×1800. Minor: panel width=270, height=300 gives
+          ~11% vertical stretch — not 1:1 aspect ratio.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled 'x(t)' and 'y(t)' — descriptive for parametric plots.
-          Main title follows correct format. Subtitle adds encoding explanation.
+        comment: 'x(t) and y(t) correct parametric labels. Title format matches exactly:
+          line-parametric · python · altair · anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Gradient uses #009E73 (green, slot 1) → #4467A3 (blue, slot 3) —
-          valid imprint_seq. Start marker #BD8233 (ochre, slot 4), end marker #AE3030
-          (red, slot 5). Both theme backgrounds correct. Chrome fully adaptive.'
+        comment: 'Gradient #009E73→#4467A3 (Imprint seq). Start #BD8233 (ochre), end
+          #AE3030 (matte red). Backgrounds #FAF8F1/#1A1A17. Full chrome adaptation.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: custom gradient, purposeful start/end marker shapes
-          with color-coded labels, informative subtitle, dual-panel layout. Segment-break
-          artifact prevents publication-ready rating.'
+        comment: Above default (4). 100-segment gradient workaround, distinct marker
+          shapes/colors, equation panel titles, single-panel legend placement.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Domain lines off, tick marks off, low-opacity dashed grid. Legend
-          styled with Imprint tokens. Dashed grid (gridDash=[3,3]) creates unfortunate
-          visual similarity to segment-break artifacts in the curves.
+        comment: Above default (2). View border removed (strokeWidth=0), 10% grid
+          opacity, marker stroke for definition, domain/ticks disabled.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient effectively narrates the traversal direction story.
-          Start/end markers reinforce directionality. Subtitle decodes the gradient.
-          Two complementary curve types (closed vs. expanding) show parametric curve
-          breadth.
+        comment: Above default (2). Gradient traversal story, two contrasting curve
+          types, explanatory subtitle, ochre/red semantic anchors.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -153,59 +135,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric line plot. Both curves use x(t)/y(t) parameterization.
-          Lissajous closes and self-intersects; spiral expands outward.
+        comment: Correct parametric curve plot with line marks and gradient color
+          encoding of parameter t.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: equal aspect (symmetric axis domains),
-          gradient direction encoding, two curves (Lissajous + spiral), start/end
-          point annotation with labels, 1200-point density for smooth rendering.'
+        comment: 'All features present: gradient, two curve types, start/end labels.
+          Deduction: aspect ratio not enforced (width=270 ≠ height=300) causing ~11%
+          vertical distortion.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x(t) on x-axis, y(t) on y-axis. Both curves fully within the symmetric
-          [-1.15, 1.15] domain.
+        comment: x→x(t), y→y(t), color→parameter t. All data displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-parametric · python · altair · anyplot.ai' matches exact
-          required format. Legend shows 'Parameter t' gradient. Start/end labels match
-          the parameter values.
+        comment: Title format exact. Parameter t legend with gradient bar in left
+          panel.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lissajous demonstrates closed curves with self-intersections; spiral
-          demonstrates open expanding curves. Together they show the full range of
-          parametric curve properties.
+        comment: Closed self-intersecting Lissajous + open Archimedean spiral. Could
+          add a third type (cardioid) to better cover spec examples.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic mathematical curves (Lissajous figures, Archimedean spiral)
-          — real-world use in physics, signal analysis, engineering. Neutral, educational
-          context.
+        comment: Classic physics/math curves from signal analysis and geometry. Neutral
+          educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lissajous t ∈ [0,2π], x/y ∈ [-1,1]. Spiral t ∈ [0,6π], normalized
-          to fit [-1,1]. Correct mathematical formulas. 1200 points ensures smooth
-          rendering near cusps and intersections.
+        comment: Lissajous [-1,1], spiral normalised to [-1,1] by dividing by 6π.
+          1200 points per curve within 200-2000 range.
     code_quality:
       score: 9
       max: 10
@@ -215,70 +192,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Panel_configs dict + outer loop + inner N_SEG segment loop creates
-          3 levels of nesting. The gradient approach inherently requires this loop
-          structure, but the panel config abstraction adds some overhead.
+        comment: Helper function build_gradient_segments violates no-functions rule,
+          though justified for the 100-segment gradient complexity used twice.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: data computed via np.linspace + trigonometric
-          functions, no random state.'
+        comment: Fully deterministic — pure mathematical curves, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: sys (path fix), os (env var), altair, numpy, pandas, PIL — all imported
-          and used.
+        comment: 'All imports used: sys (path fix), os, altair, numpy, pandas, PIL.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Creative and elegant workaround for Altair's gradient line limitation.
-          Dummy chart for legend is idiomatic. No over-engineering or fake functionality.
+        comment: No fake UI. Well-named variables. Gradient workaround documented
+          with comments explaining the Vega-Lite v6.4 limitation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
-          used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current API.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Altair usage: mark_line with encoding types, alt.layer()
-          composition, alt.hconcat() with spacing, resolve_scale(color=''independent''),
-          configure_* chain, alt.Title() with subtitle, alt.Order() for rendering.'
+        comment: Correct alt.layer(), alt.hconcat(), resolve_scale(color='independent'),
+          alt.Title with subtitle, alt.Color with Scale(range=[]). Property chaining
+          throughout.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Altair-specific patterns: invisible dummy chart to carry a gradient
-          legend (a distinctly Vega-Lite workaround), resolve_scale for independent
-          panel color domains, layered segment composition. Could further leverage
-          Altair''s interactive tooltips or selection for a richer implementation.'
-  verdict: REJECTED
+        comment: N-segment layering for path gradient, invisible dummy chart (opacity=0,
+          size=0) for legend binding, resolve_scale per panel — non-obvious Altair-specific
+          patterns.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
   - html-export
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
   - edge-highlighting
