@@ -1,87 +1,118 @@
 library: seaborn
+language: python
 specification_id: line-parametric
 created: '2026-03-20T10:36:49Z'
-updated: '2026-03-20T11:01:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339035297
+updated: '2026-06-20T23:00:47Z'
+generated_by: claude-sonnet
+workflow_run: 27885904000
 issue: 4424
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-parametric/seaborn/plot.png
-preview_html: null
-quality_score: 81
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance with all required features implemented correctly
-  - Excellent text legibility with all font sizes explicitly set
-  - Smart use of two distinct colorblind-safe colormaps (viridis, plasma) to differentiate
-    curves
-  - Start/end markers with both color and shape differentiation for accessibility
-  - Smooth rendering with 1000 points per curve and LineCollection for efficient color-mapping
+  - Correct parametric curve implementation with both Lissajous and Archimedean spiral
+    curves using LineCollection gradient — exactly as the spec requires
+  - 'imprint_seq colormap (#009E73 → #4467A3) used idiomatically for the color-direction
+    gradient, conveying traversal direction clearly'
+  - Equal aspect ratio preserved via set_aspect('equal') on both panels, preventing
+    geometric distortion
+  - π-symbol tick labels on colorbars (set_ticklabels(['0', 'π', '2π'])) add scientific
+    readability
+  - Theme-adaptive chrome fully implemented — all tokens (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, INK_MUTED) applied to every text and chrome element; both renders pass
+    the readability check
+  - 'Frequency ratio annotation ''3 : 2'' in the Lissajous panel adds scientific context
+    and light data storytelling'
+  - Start/end markers use both color (green/red) AND shape (circle/square) for redundant
+    encoding — CVD-safe
+  - 'Clean KISS code structure: linear flow, no functions/classes, deterministic data,
+    all imports used'
   weaknesses:
-  - Helper function make_segments() violates KISS flat structure requirement
-  - Library mastery is limited — seaborn mostly used for styling while matplotlib
-    does heavy lifting
-  - Marker loop with iterrows is verbose
-  - Data storytelling could be stronger with annotations at notable curve features
-  image_description: The plot displays two side-by-side panels on a white background
-    with the suptitle "line-parametric · seaborn · pyplots.ai" at the top. The left
-    panel shows a Lissajous figure (x = sin(3t), y = sin(2t)) — a self-intersecting
-    closed curve colored along a viridis gradient from dark purple (t=0) to yellow
-    (t=2π), with a colorbar on the right labeled "Parameter t (radians)". The right
-    panel shows an Archimedean spiral (x = t·cos(t), y = t·sin(t)) colored along a
-    plasma gradient from purple (t=0) to yellow (t=4π), also with its own colorbar.
-    Both panels have blue circle markers for start (t=0) and red square markers for
-    end points, with legends in the lower right. Axes are labeled "Horizontal position
-    x(t)" and "Vertical position y(t)". Top and right spines are removed. Grid is
-    subtle (alpha=0.15). Equal aspect ratio is maintained on both panels.
+  - Axis labels (x(t), y(t)) set at fontsize=9pt — style-guide default for seaborn
+    at 3200×1800 is 10pt; 1pt difference is minor but slightly undersized at mobile
+    widths
+  - 'LM-02 limited: the core gradient-line technique relies on matplotlib''s LineCollection
+    rather than a seaborn-native API — seaborn contributes set_theme, despine, and
+    scatterplot for the markers but not the primary visual element'
+  - 'DE-01 ceiling: design is polished and above defaults but not at FiveThirtyEight/publication
+    level — the colorbar placement leaves moderate wasted vertical space on both panels'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Main suptitle "line-parametric · python · seaborn · anyplot.ai" in dark ink at 12pt, fully visible. Panel subtitles "Lissajous: x = sin(3t), y = sin(2t)" and "Spiral: x = t·cos(t), y = t·sin(t)" at 10pt clearly readable. X/Y axis labels "x(t)" / "y(t)" at 9pt readable. Tick labels at 8pt readable. Colorbar labels "Parameter t" and π-symbol tick labels visible.
+      Data: Gradient line from #009E73 (green, t=0) to #4467A3 (blue, t_max) using imprint_seq cmap — gradient clearly visible in both panels. Lissajous closed figure with self-intersections visible. Spiral expanding outward. Green circle start marker and red square end marker clearly visible in spiral panel.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Suptitle in light #F0EFE8, all axis labels and tick labels in light colors, legend text readable, colorbar labels readable. No dark-on-dark text detected.
+      Data: Gradient colors identical to light render — #009E73 to #4467A3 imprint_seq gradient unchanged. Start/end markers same green/red colors. Only chrome (text, background, grid) flips for dark theme.
+      Legibility verdict: PASS — all text readable against the dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: suptitle 26pt, titles 24pt, labels
-          20pt, ticks 16pt, colorbar labels 18pt, legend 14pt'
+        comment: All font sizes explicitly set. Main title 12pt, panel titles 10pt,
+          axis labels 9pt (slightly under 10pt default), ticks 8pt, colorbar 8pt.
+          Readable in both themes at full and mobile scale. Minor 1pt deviation on
+          axis labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: No text overlaps data or other text in either render. Legends positioned
+          clear of curves.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines 3pt wide with smooth color gradients, markers s=300 with white
-          edges
+        comment: LineCollection with linewidth=3 clearly visible. Markers s=150 clearly
+          visible. 1000 points per curve ensures smooth gradient rendering.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green-to-blue) is CVD-safe. Start/end markers use both
+          color and shape for redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Viridis and plasma colormaps are colorblind-safe, markers differ
-          by color and shape
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good two-panel layout on 18x9 canvas, slight tightness on right colorbar
+        comment: Two-panel landscape layout fills canvas well. subplots_adjust margins
+          are balanced. No canvas gate triggered. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with function notation, no units needed for dimensionless
-          math curves
+        comment: Suptitle in correct format. Panel subtitles include equations. Axis
+          labels x(t)/y(t) are descriptive for parametric plots. Colorbar labeled
+          'Parameter t'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (#009E73→#4467A3) used for gradient. Start markers use
+          #009E73 (brand green). End marker #AE3030 (semantic red for terminus). Backgrounds
+          #FAF8F1/#1A1A17. Theme-adaptive chrome correct in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -89,22 +120,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Two distinct colormaps, custom fonts, edge-highlighted markers, above
-          defaults but not exceptional
+        comment: 'Clearly above library defaults: custom imprint_seq gradient, π-symbol
+          tick labels, frequency annotation, despine, elevated-background legends.
+          Not at FiveThirtyEight/publication level but strong design.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid alpha=0.15, good whitespace, colorbars
-          properly sized
+        comment: Despine applied, grid at alpha=0.12 linewidth=0.5, generous subplots_adjust
+          margins, legend with elevated background. Multiple refinements visible above
+          defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color gradient shows direction, start/end markers provide narrative,
-          but lacks annotations at notable features
+        passed: true
+        comment: Gradient shows traversal direction as a visual story. Start/end markers
+          guide the viewer. Frequency ratio annotation adds scientific context. Two
+          contrasting curve types (closed vs expanding) create visual comparison.
     spec_compliance:
       score: 15
       max: 15
@@ -114,115 +148,125 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct parametric curve plot with color-mapped lines
+        comment: Correct parametric curve plot using LineCollection gradient technique.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: equal aspect, color gradient, two curves, start/end
-          markers, 1000 points'
+        comment: Both required curves (Lissajous + spiral), color gradient along curve,
+          start/end markers, equal aspect ratio, 1000-point density all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly computed from parametric equations
+        comment: 'Lissajous: x=sin(3t), y=sin(2t); Spiral: x=t*cos(t), y=t*sin(t).
+          Correct ranges [0,2π] and [0,4π].'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and descriptive legend labels
+        comment: 'Title: ''line-parametric · python · seaborn · anyplot.ai'' — correct
+          format. Legend labels match data.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Two complementary curves: Lissajous (closed, self-intersecting)
-          and spiral (open, expanding)'
+        comment: 'Shows all features: two curve types, gradient direction, labeled
+          traversal, closed vs open curve, self-intersection in Lissajous.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Standard mathematical curves from physics/math education, neutral
-          and educational
+        comment: Real physics/mathematics context — Lissajous figures used in signal
+          analysis, Archimedean spirals in engineering. Frequency ratio annotation
+          adds scientific accuracy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard parameter ranges and frequency ratios
+        comment: Correct parameter ranges, proper frequency ratios, correct curve
+          equations. Values are mathematically accurate.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Contains helper function make_segments() which breaks flat script
-          structure
+        passed: true
+        comment: 'Linear flow: tokens → data → canvas → curves → markers → colorbars
+          → styling → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic trigonometric data
+        comment: Fully deterministic mathematical data generation — no random numbers.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 7 imports used: os, matplotlib.pyplot, numpy, seaborn, LineCollection,
+          LinearSegmentedColormap, GridSpec.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Helper function adds unnecessary abstraction, marker loop with iterrows
-          is verbose
+        passed: true
+        comment: Clean, Pythonic. Loop over axes for shared styling is elegant. No
+          over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Seaborn used primarily for styling and markers; main curves use matplotlib
-          LineCollection directly
+        passed: true
+        comment: sns.set_theme() with rc params for theme-adaptive chrome, sns.despine()
+          for spine removal, sns.scatterplot() for start/end markers. Good seaborn
+          patterns throughout.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses set_theme, set_context, despine which are seaborn-specific but
-          core viz is pure matplotlib
-  verdict: REJECTED
+        comment: Core gradient technique uses matplotlib LineCollection — not seaborn-native.
+          seaborn contributes theming, despine, and scatterplot markers. Some seaborn-specific
+          features present but the primary visual element is matplotlib.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - subplots
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
   - edge-highlighting
+  - grid-styling
