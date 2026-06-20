@@ -1,0 +1,262 @@
+library: muix
+language: javascript
+specification_id: heatmap-cohort-retention
+created: '2026-06-20T01:20:29Z'
+updated: '2026-06-20T01:52:31Z'
+generated_by: claude-sonnet
+workflow_run: 27855669087
+issue: 4570
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent use of MUI X useXScale/useYScale hooks to build a custom heatmap — demonstrates
+    genuine library mastery for a chart type not natively available in the community
+    edition
+  - 'Perfect spec compliance: triangular shape, cell percentages, cohort sizes, colorbar,
+    correct period-0 baseline at 100%'
+  - Fully deterministic data via LCG seed 42; clean focused React components each
+    with a single responsibility
+  - Theme-adaptive chrome throughout (tok.ink, tok.inkSoft); correct imprint_seq colormap
+    applied to sequential retention data
+  - Square orientation correctly chosen for the symmetric triangular heatmap layout
+  weaknesses:
+  - Cell text (12px CSS) and colorbar tick labels (11px CSS) are slightly below the
+    14px CSS floor for the 1200px mount — bump to 13-14px and 12px respectively for
+    sharper mobile readability
+  - 'Cell text hardcodes #FFFDF6 (light-theme elevated bg) rather than a theme-adaptive
+    token — currently works visually because cells are medium-dark fills, but fragile
+    if the palette changes'
+  - No visual emphasis on the most actionable insights (period-1 churn cliff, or relative
+    cohort quality comparison) — a single annotation or color highlight on a key pattern
+    would lift DE-03 to 4-5
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface.
+      Chrome: Title "heatmap-cohort-retention · javascript · muix · anyplot.ai" in dark ink at top (clearly readable). Cohort labels (Jan 2024–Oct 2024) with n=sizes in secondary dark ink on left. X-axis label "Months Since Signup" in dark ink at bottom. Colorbar "Retention" label and 0%/25%/50%/75%/100% ticks in secondary dark ink on right. All chrome text is clearly readable.
+      Data: Sequential colormap from teal-green (#009E73, low retention at period 9) to blue (#4467A3, high retention at period 0). Period-0 cells (100%) are the darkest blue. Triangular shape correctly formed — Jan 2024 row has 10 cells, Oct 2024 row has 1 cell. Cell text in cream (#FFFDF6) showing percentages (100%, 81%, 63%, etc.) is readable against medium-dark cell fills.
+      Legibility verdict: PASS — all text clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title and cohort labels render in light/cream tone (tok.ink dark = #F0EFE8). Cohort size labels in secondary light (tok.inkSoft dark = #B8B7B0). Colorbar labels similarly light. No dark-on-dark failures observed.
+      Data: Identical teal-green to blue gradient as light render — data colors unchanged between themes. Cell text (#FFFDF6 cream) remains readable on the medium-dark blue/teal cell fills.
+      Legibility verdict: PASS — all text clearly readable against dark background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 20px CSS, cohort labels 13/11px,
+          cell text 12px, colorbar 11/12px. All readable in both themes. Minor deduction:
+          cell and colorbar labels slightly below 14px CSS style-guide floor for 1200px
+          mount.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere; triangular layout gives each cell adequate
+          space.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible; color gradient distinguishes retention
+          levels well; subtle 1px cell gap creates clean definition.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq palette (green to blue) is colorblind-safe; cream cell
+          text has adequate contrast against medium-dark fills.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Square format ideal for triangular heatmap; generous margins; chart
+          fills 60-70% of canvas; no overflow; colorbar within canvas bounds. Canvas
+          gate: PASSED (file not found).'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled Months Since Signup; cohort labels with n=sizes serve
+          as Y-axis context; both descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential data uses imprint_seq (tok.seq[0] to tok.seq[1]); background
+          is theme-adaptive via pageBg; chrome uses tok.ink/tok.inkSoft; data colors
+          identical between themes.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: builds custom heatmap using ChartContainer
+          + band-scale hooks. Clean triangular layout with cell gaps, cohort size
+          annotations, matching colorbar. Not yet FiveThirtyEight-level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Only X-axis rendered; no grid within heatmap; generous whitespace;
+          subtle 1px cell gap adds definition. Good refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Triangular shape naturally communicates cohort retention; color intensity
+          reveals patterns; cohort sizes add context. No emphasis on standout cohorts
+          or period-1 churn cliff.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular cohort retention heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: triangular shape, retention % in cells, cohort
+          sizes next to labels, sequential colormap, colorbar, period-0 at 100%.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cohorts on Y-axis, periods on X-axis, retention as color intensity
+          — all correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is heatmap-cohort-retention · javascript · muix · anyplot.ai;
+          colorbar labeled Retention with 0-100% scale.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 cohorts x up to 10 periods; triangular shape; LCG noise creates
+          realistic variation; varying cohort sizes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly SaaS signup cohorts Jan-Oct 2024 with realistic cohort sizes
+          3821-6187; neutral business context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cohort sizes 4k-6k realistic for growing SaaS; retention 2-100% with
+          sensible exponential decay.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: React component paradigm is idiomatic for MUI X; five focused sub-components
+          each responsible for one element.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with seed 42 ensures fully deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All four imports (ChartContainer, ChartsXAxis, useDrawingArea, useXScale/useYScale)
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; no over-engineering; no fake interactive elements;
+          LCG implementation is concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS, square orientation
+          directive; current API patterns throughout.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ChartContainer as base primitive; uses ChartsXAxis;
+          skipAnimation set; hooks-based approach is exactly how MUI X is designed
+          to be extended.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses useXScale, useYScale, and useDrawingArea hooks to sync custom
+          SVG with chart internal band scales — distinctive MUI X extensibility feature.
+          Minor deduction: could demonstrate ChartsTooltip slot or ChartsReferenceLine.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
