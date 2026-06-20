@@ -49,7 +49,7 @@ x_curve          = range(LSL - 0.012, USL + 0.012, length = 400)
 pdf_vals         = @. exp(-0.5 * ((x_curve - mu) / sigma)^2) / (sigma * sqrt(2π))
 pdf_scaled       = pdf_vals .* N .* approx_bin_width
 
-y_ceil = maximum(pdf_scaled) * 1.8
+y_ceil = maximum(pdf_scaled) * 1.4
 
 # Plot
 fig = Figure(
@@ -85,6 +85,9 @@ ax = Axis(
     yminorgridvisible = false,
     xminorgridvisible = false,
 )
+
+# Shaded reject zones outside spec limits (vspan! — Makie-native region primitive)
+vspan!(ax, [LSL - 0.015, USL], [LSL, USL + 0.015]; color = (IMPRINT_PALETTE[5], 0.08f0))
 
 # Histogram bars — first Imprint series (brand green)
 hist!(ax, measurements;
@@ -144,7 +147,7 @@ cpk_rounded = round(cpk, digits = 2)
 text!(ax, USL - 0.003, y_ceil * 0.72;
     text     = "Cp  = $(cp_rounded)\nCpk = $(cpk_rounded)",
     align    = (:right, :top),
-    fontsize = 13,
+    fontsize = 14,
     color    = INK,
 )
 
