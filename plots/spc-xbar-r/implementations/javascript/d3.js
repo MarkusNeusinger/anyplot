@@ -52,8 +52,8 @@ samples.forEach(d => {
   d.rOOC = d.range > rUCL;
 });
 
-// Layout
-const margin = { top: 90, right: 90, bottom: 52, left: 90 };
+// Layout — increased top margin for proper legend-to-panel breathing room
+const margin = { top: 108, right: 90, bottom: 52, left: 90 };
 const gap    = 32;
 const panelH = Math.floor((height - margin.top - margin.bottom - gap) / 2);
 const iw     = width - margin.left - margin.right;
@@ -92,6 +92,13 @@ const legendItems = [
 const legStep  = 195;
 const legStart = (width - legendItems.length * legStep) / 2;
 const legY     = 70;
+
+// Elevated background behind legend row
+svg.append("rect")
+  .attr("x", legStart - 14).attr("y", legY - 18)
+  .attr("width", legendItems.length * legStep + 28).attr("height", 36)
+  .attr("fill", t.elevatedBg).attr("rx", 4);
+
 legendItems.forEach((item, i) => {
   const lx = legStart + i * legStep;
   if (item.type === "circle") {
@@ -103,7 +110,7 @@ legendItems.forEach((item, i) => {
   } else if (item.type === "solid") {
     svg.append("line").attr("x1", lx).attr("x2", lx + 22)
       .attr("y1", legY).attr("y2", legY)
-      .attr("stroke", item.color).attr("stroke-width", 2).attr("opacity", 0.55);
+      .attr("stroke", item.color).attr("stroke-width", 2).attr("opacity", 0.8);
   } else if (item.type === "dash") {
     svg.append("line").attr("x1", lx).attr("x2", lx + 22)
       .attr("y1", legY).attr("y2", legY)
@@ -138,7 +145,7 @@ function drawPanel(panelTop, yScale, getVal, isOOC, opts) {
       .attr("stroke", WARN_COLOR).attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "5,4").attr("opacity", 0.65);
     g.append("text").attr("x", iw + 6).attr("y", wy + 4)
-      .attr("fill", WARN_COLOR).style("font-size", "11px").text("+2σ");
+      .attr("fill", WARN_COLOR).style("font-size", "13px").text("+2σ");
   }
 
   // Lower warning limit
@@ -148,7 +155,7 @@ function drawPanel(panelTop, yScale, getVal, isOOC, opts) {
       .attr("stroke", WARN_COLOR).attr("stroke-width", 1.5)
       .attr("stroke-dasharray", "5,4").attr("opacity", 0.65);
     g.append("text").attr("x", iw + 6).attr("y", ly + 4)
-      .attr("fill", WARN_COLOR).style("font-size", "11px").text("-2σ");
+      .attr("fill", WARN_COLOR).style("font-size", "13px").text("-2σ");
   }
 
   // UCL
@@ -167,10 +174,10 @@ function drawPanel(panelTop, yScale, getVal, isOOC, opts) {
       .attr("fill", LIMIT_COLOR).style("font-size", "12px").style("font-weight", "600").text("LCL");
   }
 
-  // Center line
+  // Center line — increased opacity for legibility in dark theme
   const cy = yScale(opts.cl);
   g.append("line").attr("x1", 0).attr("x2", iw).attr("y1", cy).attr("y2", cy)
-    .attr("stroke", t.ink).attr("stroke-width", 2).attr("opacity", 0.55);
+    .attr("stroke", t.ink).attr("stroke-width", 2).attr("opacity", 0.8);
   g.append("text").attr("x", iw + 6).attr("y", cy + 4)
     .attr("fill", t.inkSoft).style("font-size", "12px").text("CL");
 
@@ -193,6 +200,18 @@ function drawPanel(panelTop, yScale, getVal, isOOC, opts) {
     .attr("cx", d => xScale(d.id)).attr("cy", d => yScale(getVal(d)))
     .attr("r", 7.5).attr("fill", OOC_COLOR)
     .attr("stroke", t.pageBg).attr("stroke-width", 2);
+
+  // OOC event annotations — label each violation with which limit was breached
+  samples.filter(d => isOOC(d)).forEach(d => {
+    const px = xScale(d.id);
+    const py = yScale(getVal(d));
+    const above = getVal(d) > opts.cl;
+    g.append("text")
+      .attr("x", px).attr("y", above ? py - 14 : py + 22)
+      .attr("text-anchor", "middle")
+      .attr("fill", OOC_COLOR).style("font-size", "12px").style("font-weight", "700")
+      .text(above ? "▲ UCL" : "▼ LCL");
+  });
 
   // Y axis
   const ax = g.append("g").call(
