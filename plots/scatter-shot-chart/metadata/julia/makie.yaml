@@ -1,0 +1,288 @@
+library: makie
+language: julia
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:11:42Z'
+updated: '2026-06-21T08:31:31Z'
+generated_by: claude-sonnet
+workflow_run: 27898070577
+issue: 4416
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Correct NBA half-court geometry with all required spec elements: three-point
+    arc (23.75 ft), corner straight lines, free-throw circle (dashed lower half),
+    restricted-area arc, paint/key, basket rim, and backboard'
+  - 'Semantic color exception correctly applied: #009E73 (Imprint pos 1) for made
+    shots and #AE3030 (Imprint pos 5) for missed shots — semantic made=success=green
+    / missed=loss=red mapping follows Imprint palette rules'
+  - 'CVD-accessible dual encoding: missed shots use :xcross marker, made shots use
+    :circle — a second encoding channel beyond color so deuteranopia/protanopia viewers
+    can distinguish outcomes'
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens applied
+    correctly to title, legend text, legend frame, and court lines — both renders
+    pass the legibility check with no dark-on-dark or light-on-light failures'
+  - DataAspect() correctly enforces 1:1 aspect ratio so the court is not distorted
+    — the appropriate Makie idiom for this constraint
+  - Square canvas (2400x2400) is the right format choice for a court diagram; canvas
+    gate passed
+  - Realistic shot percentages by zone (paint ~56%, mid-range ~40%, 3PT ~34%) and
+    total shot count (300) are within spec range and statistically authentic
+  - Alpha blending with strokecolor=PAGE_BG gives each marker subtle definition without
+    adding visual noise — a polished detail
+  weaknesses:
+  - 'Marker size (markersize=12) is slightly small for the 2400x2400 canvas: 300 shots
+    spread over a large court area result in individual markers that are hard to distinguish
+    at mobile widths (~400px). Increasing to markersize=15-18 for made shots and 13-16
+    for missed shots would improve visibility, especially for the :xcross shape which
+    needs more area to read clearly as an X'
+  - Shot type (2-pointer / 3-pointer) is not encoded as a visual channel despite being
+    a listed data field in the spec — an optional but valuable third dimension that
+    could be shown via a size or shape variation for the three zones (paint=2PT, mid-range=2PT,
+    3PT) to support richer zone analysis
+  - 'Design storytelling opportunity missed: the paint zone (high FG%) and three-point
+    arc zone (low FG%) have clearly different made/missed ratios that a viewer must
+    discover manually. A subtle zone shading or FG% annotation per region would elevate
+    this from a data display to a data story and improve DE-03'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-shot-chart · julia · makie · anyplot.ai" in dark ink, clearly readable. No axis tick labels or axis labels (intentionally hidden — court geometry provides spatial reference). Legend below court shows "Missed (183)" and "Made (117)" in dark text on warm elevated background (#FFFDF6) with INK_SOFT frame. All text readable.
+      Court: NBA half-court drawn in dark gray (INK_SOFT = #4A4A44) — boundary box, three-point arc + corner straight lines, paint/key rectangle, free-throw circle (solid top / dashed bottom), restricted-area arc, basket rim circle, backboard line. Court geometry clearly visible, neutral against the off-white surface.
+      Data: Green (#009E73, alpha 0.80) circle markers for made shots, muted red (#AE3030, alpha 0.65) xcross markers for missed shots. Dual encoding visible — :xcross shape distinguishable from :circle especially in denser regions. Spatial distribution realistic: more makes in the paint, more misses on the arc.
+      Legibility verdict: PASS — all text and data elements readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light off-white text, clearly readable against the dark background. Legend text visible in light colors on elevated dark background (#242420). Court lines rendered in light gray (INK_SOFT = #B8B7B0) — visually distinct from the dark background, no dark-on-dark issues.
+      Court: Same geometry as light render, but court lines flip to light gray on dark background — all court elements remain clearly visible.
+      Data: Data colors (#009E73 green for made, #AE3030 red for missed) are identical to the light render — only chrome flips. The Imprint palette is theme-invariant as required.
+      Legibility verdict: PASS — no dark-on-dark failures; all text, court lines, and shot markers are clearly readable against the near-black surface
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'titlesize=20 and legend labelsize=14 explicitly set; both themes
+          fully readable. Slight deduction: only two text elements to evaluate (title
+          + legend); markers at mobile scale could be more prominent with larger markersize.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Shot point overlap in paint area is expected and
+          appropriate for a shot chart.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 300 shots with markersize=12 (24 effective px) are visible. The :xcross
+          shape is subtle at this scale — larger markers (15-18) would make the dual
+          encoding more obvious and improve visibility at mobile widths.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Red/green combination addressed via dual encoding: missed=:xcross,
+          made=:circle. CVD-safe with shape + color.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas 2400x2400, gate passed. Court fills ~85% of plot area.
+          1:1 aspect ratio via DataAspect() correct.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels (correct — court geometry provides spatial reference).
+          Title matches required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Made=#009E73 (Imprint pos 1, semantic success green), missed=#AE3030
+          (Imprint pos 5, semantic loss/bad red) — valid semantic exception. Backgrounds
+          #FAF8F1/#1A1A17 correct. Data colors identical across themes. Chrome flips
+          correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: theme-adaptive chrome, dual CVD encoding,
+          dashed lower free-throw circle (tasteful detail), alpha blending with strokecolor=PAGE_BG.
+          Not quite strong design (6) — no custom typography or FiveThirtyEight-level
+          polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All 4 spines removed, no grid, tick labels hidden, all tick marks
+          hidden. Good refinement. Not 'every detail polished' (6) — the outer court
+          boundary box creates a prominent visual frame; whitespace distribution is
+          functional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The court diagram itself is the storytelling device — spatial distribution
+          of made vs missed shots gives immediate context. Viewer can see paint zone
+          bias and 3PT miss clustering. Above default (2) but no zone annotations
+          or emphasis to highlight efficiency patterns explicitly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basketball shot chart on NBA half-court.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required court elements present: three-point arc (23.75 ft),
+          corner straight lines (22 ft), free-throw circle (top solid / bottom dashed),
+          paint/key (16 ft wide), restricted-area arc (4 ft), basket rim, backboard.
+          Shot outcome encoding (green/red), 1:1 aspect ratio. Shot type encoding
+          is optional per spec notes.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=horizontal court position, Y=vertical court position, made/missed
+          encoded by color. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-shot-chart · julia · makie · anyplot.ai' matches required
+          format. Legend shows 'Missed (183)' and 'Made (117)' with counts — informative.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows all key aspects: spatial distribution across zones (paint,
+          mid-range, 3PT), made/missed outcomes, court context. Minor gap: shot_type
+          (2-pointer/3-pointer/free-throw) not explicitly labeled/encoded as a visual
+          channel.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball shot chart for an NBA player — widely understood real-world
+          scenario, neutral topic. 300 shots in spec range (200-500).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'NBA half-court dimensions accurate: 50 ft wide (±25), half-court
+          at 41.75 ft, 3PT arc 23.75 ft, key 16 ft wide (-8 to 8), FT line at y=13.75,
+          restricted area 4 ft. Realistic FG% by zone (paint 56%, mid 40%, 3PT 34%).'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: theme tokens → data generation → court geometry →
+          shot markers → legend → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plotting), Colors (colorant), Random (seed) — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity. Well-organized sections. Appropriate use of
+          vcat for merging zones. Efficient Makie primitives.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct output
+          pattern.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Native Makie API: scatter!, lines!, Legend, MarkerElement. Figure
+          layout grid (fig[1,1], fig[2,1]). DataAspect() for 1:1 ratio. Theme tokens
+          following Makie conventions with RGBAf for grid colors (though grids are
+          hidden here).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: DataAspect() is a Makie-specific way to maintain 1:1 aspect ratio.
+          MarkerElement in Legend is a Makie-specific API for custom legend symbols.
+          Multiple lines! calls building complex court geometry. These are distinctive
+          Makie idioms.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting

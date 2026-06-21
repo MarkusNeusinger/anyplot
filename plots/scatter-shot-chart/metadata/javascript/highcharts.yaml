@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:13:32Z'
+updated: '2026-06-21T08:35:55Z'
+generated_by: claude-sonnet
+workflow_run: 27897925505
+issue: 4416
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Accurate NBA half-court geometry with all required court elements (three-point
+    arc+corners, free-throw circle with dashed lower half, restricted area, backboard,
+    basket rim)
+  - Elegant CL template with spread operator for efficient court series definition
+    — minimal code duplication
+  - 'Correct semantic Imprint palette usage: palette[0] green for made (good), palette[4]
+    matte red for missed (bad/loss) — the canonical semantic exception'
+  - 'Dual encoding: color (outcome) + marker shape (shot type) makes the chart fully
+    CVD-accessible'
+  - Informative subtitle explaining shape encoding without needing a complex legend
+  - Realistic zone-specific FG% (78% FT, 65% under basket, ~42% mid-range, ~36% 3PT)
+    match NBA averages closely
+  - 1:1 aspect ratio preserved via square canvas + symmetric X/Y data range (52x52
+    ft)
+  - Fixed-seed LCG ensures fully deterministic data generation
+  weaknesses:
+  - Shot markers (radius=5) are slightly small for 400+ shots on the square canvas;
+    radius=6-7 would improve readability of individual shot positions
+  - Subtitle font (13px) is slightly below recommended 14px minimum for secondary
+    chrome; minor mobile readability concern
+  - Corner-3 shot generation uses cx=±22 which can place some shots slightly outside
+    the three-point line corner segments — clamping y to [BL+0.5, CY+1] would keep
+    corner shots in the proper zone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "scatter-shot-chart · javascript · highcharts · anyplot.ai" in dark ink at top, clearly readable. Subtitle "● 2-pointer · △ 3-pointer · ■ free-throw" in inkSoft below title. Legend "● Made · ● Missed" at bottom in inkSoft. All text readable against light background.
+      Data: Full NBA half-court drawn in taupe/gray inkSoft lines (outer boundary, 3PT arc with corners, paint/key rectangle, FT circle with dashed lower half, restricted area arc, backboard, basket rim). Made shots in brand green (#009E73): circles=2PT, triangles=3PT, squares=FT. Missed shots in matte red (#AE3030) with same shapes. Alpha=0.7–0.8 on shot markers. First series = #009E73 (brand green) confirmed.
+      Legibility verdict: PASS — all text elements readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and subtitle rendered in light ink (F0EFE8 range) — clearly readable against dark background. Legend text in light secondary ink. Court lines flip to light gray. No dark-on-dark text failures.
+      Data: Shot colors are identical to light render — brand green made shots and matte red missed shots unchanged. Court lines adapt to light gray on dark surface. Only chrome flips between themes.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 22px, subtitle 13px, legend 14px).
+          Subtitle at 13px borderline small on mobile but acceptable as secondary
+          text.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/legend overlap. Dense under-basket shot cluster shows expected
+          overlap managed by alpha=0.7-0.8.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers at radius=5 with alpha blending visible for 400+ shots. Density-appropriate
+          but could be radius=6-7 for improved readability.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape encoding (circle/triangle/square) provides full CVD redundancy
+          alongside green/red hue; CVD viewers distinguish by shape alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas (2400x2400) correct for 1:1 court requirement. Court
+          fills plot area well, no clipping, canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly suppressed (court geometry provides spatial reference
+          per spec). Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Made=palette[0] #009E73 (brand green), Missed=palette[4] #AE3030
+          (matte red semantic anchor). Valid semantic exception. Background transparent.
+          Data colors identical across both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: accurate NBA court geometry, dual encoding
+          (color+shape), informative subtitle, semantic Imprint palette. Strong design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Transparent background, axes suppressed, court lines in inkSoft,
+          alpha blending on shots, no grid. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Spatial clustering reveals zone tendencies and efficiency differentials.
+          Under-basket density, corner-3 clusters, low-efficiency mid-range visible.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball shot chart with scatter data on half-court diagram. Correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All court elements present. Made=green, missed=red. Shot type by
+          shape. 407 shots in 200-500 range. 1:1 aspect ratio.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=horizontal court position (feet), y=vertical court position (feet),
+          color=outcome, symbol=shot type.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-shot-chart · javascript · highcharts · anyplot.ai''
+          correct. Legend shows Made/Missed. Subtitle explains shape encoding.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All court zones covered: under-basket, mid-range (L/R), top-of-key,
+          corner-3s (L/R), above-break-3s (L/R), top-of-arc, free throws. All three
+          shot types shown.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NBA basketball analytics, neutral real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Standard NBA half-court (50x47 ft). Zone FG%: ~78% FT, ~65% under
+          basket, ~42-44% mid-range, ~35-38% 3PT — closely matches NBA averages.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (rnd, rn, arc, addShots) all genuinely necessary
+          for deterministic data generation and court geometry in browser JS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) ensures deterministic output. No Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all browser globals. Clean structure.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: CL template with spread operator is idiomatic and elegant. No fake
+          UI. addShots parameterization keeps zone definitions concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness produces plot-light.png + plot-dark.png + .html files. No
+          bare plot.png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Highcharts.chart call, animation:false on both, credits disabled,
+          colors:t.palette, enableMouseTracking:false on court lines.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Mixed line+scatter series, dashStyle:Dash for dashed FT circle, multiple
+          marker.symbol values, showInLegend:false for filtered legend — all Highcharts-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
