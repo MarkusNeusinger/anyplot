@@ -1,0 +1,270 @@
+library: ggplot2
+language: r
+specification_id: line-win-probability
+created: '2026-06-21T03:39:11Z'
+updated: '2026-06-21T03:46:39Z'
+generated_by: claude-sonnet
+workflow_run: 27892286895
+issue: 4418
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Excellent semantic color mapping: #009E73 (Imprint slot 1) for home win zone,
+    #AE3030 (Imprint slot 5) for away loss zone — semantically motivated and CVD-safe'
+  - 'Complete spec compliance: 50% reference line, dual ribbon fills, quarter dividers,
+    annotated key events, final score, zone labels — all required features present'
+  - Strong data storytelling with narrative event annotations (Wolves 10-0 run, Hawks
+    comeback, back-to-back 3-pointers) creating a compelling game arc
+  - Proper theme-adaptive chrome throughout — INK/INK_SOFT/INK_MUTED tokens applied
+    to all text, grid, and marker elements in both renders
+  - Idiomatic geom_ribbon usage for dual-fill approach above/below 50% threshold —
+    the correct ggplot2 technique for this chart type
+  weaknesses:
+  - 'Dark render ribbon fills barely visible: alpha=0.18 on #1A1A17 background renders
+    both the home (#009E73) and away (#AE3030) zone fills nearly invisible — consider
+    theme-adaptive alpha (e.g. 0.28 for dark, 0.18 for light) or a slightly higher
+    base alpha (~0.25) to ensure fills read as momentum indicators in both themes'
+  - 'Event annotation text sizes too small for mobile legibility: geom_text(size=2.4)
+    and annotate(size=2.6) translate to ~6.8–7.4 pt which becomes ~5 px at 400 px
+    display width — increase to size=3.0–3.5 for both'
+  - 'Upper-right corner is congested: Back-to-back 3-pointers event label, Q4 quarter
+    marker, and Final score annotation all cluster near x=36–48 y=0.75–0.96 — minor
+    risk of visual crowding on scaled views'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct Imprint light theme background.
+      Chrome: Title "line-win-probability · r · ggplot2 · anyplot.ai" in dark ink (~55% of canvas width) clearly readable. Y-axis label "Hawks Win Probability" and X-axis label "Game Time (minutes)" in dark INK text, readable. Tick labels (0%–100% and 0'–48') in INK_SOFT dark grey, readable. Quarter markers (Q1–Q4) in INK_MUTED grey, small but legible at full resolution. "Final: Hawks 108 – Wolves 101" annotation in upper-right corner readable.
+      Data: Win probability line in brand green #009E73 clearly drawn against light background. Green ribbon fill (above 50%) appears as a light translucent teal wash — visible and conveys home momentum. Red ribbon fill (below 50%, during Wolves 10-0 run) appears as a light pink wash — visible in the Q2 dip region. Three annotated events with open circles (ELEVATED_BG fill, INK outline) and text labels. "Hawks winning" zone label in brand green bold, "Wolves winning" in matte red bold — both prominent. 50% dashed reference line clearly visible in INK_SOFT.
+      Legibility verdict: PASS — all text elements readable against light background. Event annotation text (size=2.4–2.6, ~7pt) is small at full res but legible; at 400px mobile width it would become near-invisible (~5px).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct Imprint dark theme background.
+      Chrome: Title in #F0EFE8 light ink, clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark mode), clearly readable. Quarter labels in #A8A79F (INK_MUTED dark mode), readable. "Final: Hawks 108 – Wolves 101" in light grey, readable.
+      Data: Win probability line remains #009E73 (brand green) — identical to light render data color, clearly visible on dark background. Home zone ribbon fill (alpha=0.18 on #1A1A17) produces a very dark teal barely distinguishable from background — fill is technically present but momentum signal is weak in dark mode. Away zone ribbon fill produces a very dark burgundy — similarly subdued. Event point markers have #242420 fill (ELEVATED_BG dark) with #F0EFE8 (INK dark) outline, showing as light-outlined open circles. "Hawks winning" label in #009E73 brand green clearly visible. "Wolves winning" label in #AE3030 matte red, readable on dark background.
+      Data colors identical to light render: both HOME_COLOR (#009E73) and AWAY_COLOR (#AE3030) are theme-independent constants — only alpha-blended appearance on different backgrounds differs. This is expected behavior.
+      Legibility verdict: PASS for chrome — no dark-on-dark text failures. However, ribbon fills are significantly less visible in dark mode due to alpha=0.18 on near-black background — this is the main visual quality concern.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title (12pt), axis labels (10pt), and tick labels (8pt) all readable
+          in both themes. Event annotation text (size=2.4-2.6, ~7pt) is small and
+          would become near-invisible (~5px) at 400px mobile display width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements detected in either render. Upper-right
+          corner is dense but annotations remain distinct.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Win probability line (linewidth=1.0) and event markers clearly visible.
+          Ribbon fills with alpha=0.18 are clearly visible in light render but barely
+          distinguishable from the #1A1A17 dark background in dark render.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint slots 1 (#009E73) and 5 (#AE3030) are CVD-safe per palette
+          design. Zone text labels provide redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800px correct. Title occupies ~55% of width. Good proportions
+          throughout. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Hawks Win Probability'' descriptive. X-axis: ''Game Time
+          (minutes)'' with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'HOME_COLOR=#009E73 (first series, Imprint slot 1). AWAY_COLOR=#AE3030
+          (slot 5, semantic exception for loss/away zone). Backgrounds #FAF8F1/#1A1A17
+          correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Semantic color assignment (green/red for win/loss zones) is intentional
+          and domain-appropriate. Zone text labels replace legend cleanly. Intentional
+          hierarchy: line > fills > annotations. Above-default but not exceptional
+          artistically.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel.border=element_blank() with only axis.line.x/y creates clean
+          L-shape frame. Y-only grid at linewidth=0.2 using INK_MUTED is appropriately
+          subtle. Generous plot.margin. Dashed 50% reference line uses INK_SOFT.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong narrative arc: three annotated turning points tell a specific
+          game story (Wolves run → Hawks comeback → back-to-back 3-pointers → final
+          score). Zone labels provide immediate orientation. Quarter structure enables
+          temporal navigation.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct win probability line chart with area fills above/below 50%
+          threshold.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: 50% reference line, dual ribbon fills,
+          event annotations, final score display, quarter markers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=game time (0-48 min), Y=win probability (0-100%). Full range covered.
+          Natural spline with noise creates realistic play-by-play feel.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-win-probability · r · ggplot2 · anyplot.ai'' matches
+          required format. No legend needed; zone labels (Hawks/Wolves winning) serve
+          the same purpose clearly.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full game arc with momentum shifts in both directions. Dual
+          ribbon fills show both teams' advantage periods. Event annotations cover
+          both teams' key runs.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NBA basketball game (48-minute regulation) with Hawks vs Wolves.
+          Final score 108-101 is realistic. Team names are neutral sports franchises.
+          Game narrative (Wolves 10-0 run, Hawks 8-2 comeback) is plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Probability bounded to [0.03, 0.97] avoiding extreme endpoints. Time
+          range 0-48 correct for NBA. Spline control points create realistic momentum
+          swings.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes. Flat linear script. Easy to follow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top level.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: library(ggplot2), library(scales) [percent_format], library(ragg)
+          [agg_png device] — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean composition, no fake UI, appropriate complexity for the chart
+          type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Uses current linewidth= API
+          (not deprecated size=). device=ragg::agg_png explicitly set.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics layering with geom_ribbon + geom_line + geom_point
+          + geom_text + annotate is the canonical ggplot2 approach. scale_y_continuous
+          with percent_format, axis.line for L-frame spines, theme_minimal base —
+          all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_ribbon with pmin/pmax for conditional area fills is a distinctive
+          ggplot2 technique specific to this library. splinefun + approx from base
+          R integrated naturally. Could have used stat_* layers or coord_* for more
+          distinctive ggplot2 flair.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
