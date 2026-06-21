@@ -99,6 +99,13 @@ poly!(ax,
     color = PITCH_FILL, strokecolor = PITCH_LINE, strokewidth = 2.0,
 )
 
+# Subtle zone shading: very light red tint on the attacking third
+attack_zone_alpha = THEME == "light" ? 0.045f0 : 0.08f0
+poly!(ax,
+    [Point2f(70, 0), Point2f(PW, 0), Point2f(PW, PH), Point2f(70, PH)];
+    color = RGBAf(COL_SHOT.r, COL_SHOT.g, COL_SHOT.b, attack_zone_alpha), strokewidth = 0,
+)
+
 lw = 1.8  # line width for markings
 
 # Halfway line
@@ -181,6 +188,30 @@ lines!(ax, [PW + 2.0, PW + 2.0], [(PH - 7.32)/2, (PH + 7.32)/2]; color = PITCH_L
 lines!(ax, [PW, PW + 2.0], [(PH - 7.32)/2, (PH - 7.32)/2]; color = PITCH_LINE, linewidth = lw + 0.5)
 lines!(ax, [PW, PW + 2.0], [(PH + 7.32)/2, (PH + 7.32)/2]; color = PITCH_LINE, linewidth = lw + 0.5)
 
+# Pitch-third dividers (subtle dashed lines) and zone labels for tactical context
+divider_color = RGBAf(PITCH_LINE.r, PITCH_LINE.g, PITCH_LINE.b, 0.28)
+lines!(ax, [35.0, 35.0], [0.0, PH]; color = divider_color, linewidth = 1.1, linestyle = :dash)
+lines!(ax, [70.0, 70.0], [0.0, PH]; color = divider_color, linewidth = 1.1, linestyle = :dash)
+
+# Zone labels (inside pitch, near top edge)
+zone_label_color = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.55)
+for (xc, lbl) in [(17.5, "Defensive"), (52.5, "Midfield"), (87.5, "Attacking")]
+    text!(ax, xc, PH - 1.5;
+        text     = lbl,
+        color    = zone_label_color,
+        fontsize = 8,
+        align    = (:center, :top),
+    )
+end
+
+# "Shot Zone" annotation near the right penalty arc
+text!(ax, 97.5, 56.0;
+    text     = "Shot Zone",
+    color    = RGBAf(COL_SHOT.r, COL_SHOT.g, COL_SHOT.b, 0.60),
+    fontsize = 8,
+    align    = (:center, :center),
+)
+
 # --- Plot events ------------------------------------------------------------
 # Alpha for unsuccessful (lower opacity)
 pass_alpha   = [s ? 0.85f0 : 0.30f0 for s in pass_success]
@@ -196,14 +227,15 @@ scatter!(ax, pass_x, pass_y;
     strokewidth = 0.6,
     strokecolor = PITCH_LINE,
 )
-# Arrows for a subset of passes (every 3rd) to avoid clutter
+# Arrows for a subset of passes (every 3rd) — styled by outcome for visual refinement
 for i in 1:3:n_pass
+    is_succ = pass_success[i]
     arrows!(ax,
         [pass_x[i]], [pass_y[i]],
         [pass_dx[i] * 0.6], [pass_dy[i] * 0.6];
-        color     = RGBAf(COL_PASS.r, COL_PASS.g, COL_PASS.b, pass_alpha[i] * 0.7),
-        arrowsize = 7,
-        linewidth  = 1.0,
+        color     = RGBAf(COL_PASS.r, COL_PASS.g, COL_PASS.b, pass_alpha[i] * (is_succ ? 0.82 : 0.35)),
+        arrowsize = is_succ ? 8 : 5,
+        linewidth  = is_succ ? 1.3 : 0.5,
     )
 end
 
@@ -274,7 +306,7 @@ Legend(
 text!(ax, 52.5, -2.0;
     text      = "Filled = successful · Faded = unsuccessful",
     color     = INK_MUTED,
-    fontsize  = 10,
+    fontsize  = 12,
     align     = (:center, :top),
 )
 
