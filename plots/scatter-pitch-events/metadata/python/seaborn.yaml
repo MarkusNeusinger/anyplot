@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:31:48Z'
-updated: '2026-06-21T05:58:02Z'
+updated: '2026-06-21T06:08:08Z'
 generated_by: claude-sonnet
 workflow_run: 27894989682
 issue: 4417
@@ -15,37 +15,41 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Complete pitch diagram with all required FIFA markings (penalty areas, goal areas,
-    center circle, halfway line, corner arcs, goal posts)
-  - Four distinct event types with both color AND shape encoding for redundant CVD-safe
-    discrimination
-  - Opacity encoding for outcome (successful vs unsuccessful) is clean and intuitive
-    — large filled vs small faded markers
-  - Directional arrows for passes and shots add tactical context at appropriate density
-  - KDE density contours per event type (sns.kdeplot with clip) reveal spatial clustering
-    without cluttering
-  - 'Full theme adaptation: pitch background, title, legend all adapt correctly across
-    light and dark renders'
-  - Correct Imprint palette with brand green (#009E73) as Pass (first series)
+  - 'Correct Imprint palette with all four event types in canonical order (#009E73,
+    #C475FD, #4467A3, #BD8233)'
+  - Accurate FIFA-standard pitch drawing with penalty areas, goal areas, center circle,
+    penalty arcs, corner arcs, and goal posts using matplotlib patches
+  - 'Effective multi-layer visualization: scatter (opacity-encoded outcomes) + KDE
+    density contours + directional arrows'
+  - 'Theme-adaptive pitch surface colors (light: #EEF4E5 green, dark: #1C3828 dark
+    green) add domain-appropriate context'
+  - 'Complete spec compliance: all required features (markers by type, shape encoding,
+    opacity encoding, directional arrows) present'
+  - Clean KISS structure with reproducible seed, all imports used
+  - Legend title explicitly explains the opacity encoding (opaque = successful)
   weaknesses:
-  - Arrows are subtle (alpha=0.35) and may be hard to read when scaled to mobile (~400
-    px); consider raising to alpha=0.50
-  - Legend fontsize=8 and title_fontsize=7 are at the lower bound of readability when
-    scaled to small displays; consider 9/8 pt
-  - Shot markers (X-marks) are visually crowded in the x>75 attacking zone — consider
-    a mild alpha reduction for unsuccessful shots in that zone to reduce clutter
+  - Legend text at 8–9pt may be borderline readable at mobile viewport (~400 px) —
+    consider 9–10pt for legend entries
+  - Marker size s=110 for successful events slightly exceeds the 50–100 guideline
+    for 100–300 data points; minor but could cause slightly more visual clutter in
+    dense zones
+  - 'LM-02 (Distinctive Features): The KDE density overlay is the main seaborn-distinctive
+    feature; the bulk of the pitch drawing is matplotlib, leaving seaborn contribution
+    relatively thin'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) figure background — correct. Axes area uses a light sage green (#EEF4E5) as the pitch surface — appropriate semantic choice for a football pitch.
-      Chrome: Title "scatter-pitch-events · python · seaborn · anyplot.ai" at fontsize=12, centered, clearly readable in dark ink against light background. Legend at bottom (4 columns) with fontsize=8 shows Pass/Shot/Tackle/Interception with marker shapes; title explains opacity encoding.
-      Data: Four event types rendered with distinct Imprint palette colors and shapes: Pass (green squares #009E73), Shot (lavender X-marks #C475FD), Tackle (blue triangles #4467A3), Interception (ochre hexagons #BD8233). Successful events are opaque+larger (s=110, alpha=0.90); unsuccessful are smaller+faded (s=65, alpha=0.38). Directional arrows in matching palette colors at alpha=0.35 indicate pass/shot trajectories. KDE density contours (2 levels, alpha=0.18) overlay each event type. Pitch markings (penalty areas, goal areas, center circle, halfway line, corner arcs, goal posts) in dark green #3A5A40.
-      Legibility verdict: PASS — all text readable, data colors clear, pitch markings contrast well with pitch background.
+      Background: Warm off-white (#FAF8F1) page background with a light green (#EEF4E5) pitch surface — correctly themed, not pure white.
+      Chrome: Title "scatter-pitch-events · python · seaborn · anyplot.ai" in dark ink, clearly readable. No axis tick labels (axes hidden, appropriate for spatial pitch map). Legend in bottom-center with elevated off-white (#FFFDF6) box, dark text, readable at canvas size.
+      Data: Four event types in Imprint palette — green squares (Pass, #009E73), lavender X-marks (Shot, #C475FD), blue triangles (Tackle, #4467A3), ochre hexagons (Interception, #BD8233). KDE density contours per event type at alpha=0.18 (subtle). Directional arrows for passes and shots in matching event colors. Successful events large/opaque (s=110, alpha=0.90), unsuccessful smaller/faded (s=65, alpha=0.38).
+      Pitch markings: Dark green (#3A5A40) lines — halfway line, penalty areas, goal areas, center circle, penalty arcs, corner arcs, goal posts — all clearly visible against light green pitch surface.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) figure background — correct. Axes area uses dark forest green (#1C3828) as the pitch surface — well-adapted for dark theme.
-      Chrome: Title renders in light cream (#F0EFE8) against dark background — clearly readable. Legend has light text (INK token) on dark elevated background (#242420). No dark-on-dark text failures observed.
-      Data: Data colors are identical to light render (Pass #009E73, Shot #C475FD, Tackle #4467A3, Interception #BD8233) — only chrome flipped. Pitch markings use lighter color (#C8E6C4) against dark pitch background, providing good contrast. Markers, arrows, and KDE contours remain fully visible.
-      Legibility verdict: PASS — title and legend clearly readable against dark background; data colors identical to light; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) page background with dark green (#1C3828) pitch surface — correctly themed, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against near-black background. Legend box has elevated dark background (#242420) with light-colored text — readable. No dark-on-dark failures observed.
+      Data: Data colors IDENTICAL to light render — green squares, lavender X-marks, blue triangles, ochre hexagons — confirming only chrome flipped.
+      Pitch markings: Light green (#C8E6C4) lines clearly visible against dark green pitch surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues detected. Both themes fully functional.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -56,50 +60,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and legend readable in both themes; legend fontsize=8/title_fontsize=7
-          are at lower bound for small-display scaling
+        comment: 'All font sizes explicitly set (title 12pt, legend 9pt, legend title
+          8pt). Readable in both themes. Minor concern: legend at 8-9pt may be borderline
+          at 400px mobile width.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Some marker overlap in shot-dense attacking zone (x>75) but alpha
-          encoding and sampling reduce clutter
+        comment: Some marker-on-marker overlap in dense shot zone (right penalty area)
+          but no text overlap. Expected for scatter density at 200 events.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers appropriate for 200 events; arrows at alpha=0.35 are subtle
-          but visible; KDE contours clear
+        comment: s=110 for successful events slightly above guideline (50-100 for
+          100-300 pts) but effective for pitch context. Opacity encoding clearly distinguishes
+          outcomes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; redundant marker shape encoding ensures
-          distinguishability
+        comment: 'Imprint palette CVD-safe. Redundant encoding: shapes + colors +
+          alpha. No red-green sole signal.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; correct 105:68 pitch aspect ratio with equal
-          axis; no overflow or clipping
+        comment: Canvas gate passed (3200x1800). Pitch fills canvas well with careful
+          subplots_adjust. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis intentionally off for pitch map — no axis
-          labels needed
+        comment: Axis hidden (appropriate for spatial pitch map). Title correctly
+          formatted. Legend title explains encoding.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first (Pass), canonical Imprint order, correct PAGE_BG
-          backgrounds; pitch axes bg is a valid semantic exception
+        comment: 'First series #009E73 (Pass). All 4 event types use Imprint positions
+          1-4 in canonical order. Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors
+          identical across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -109,22 +116,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Beyond defaults: theme-adaptive pitch backgrounds, KDE density overlay,
-          directional arrows, custom legend with outcome explanation'
+        comment: Publication-quality pitch map with proper FIFA markings, theme-adaptive
+          pitch surface, multi-layer visualization. Clearly above configured defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis fully off, subtle KDE alpha=0.18, arrow alpha=0.35, edge highlighting
-          on markers, clean legend frame
+        comment: Axis off (clean for spatial map), careful layout margins, KDE at
+          alpha=0.18 (very subtle), arrows at alpha=0.45, elevated legend background.
+          Good attention to detail.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spatial clustering evident via KDE; outcome hierarchy via opacity;
-          directional encoding for passes/shots; clear focal point in attacking third
+        comment: 'Visual hierarchy works: shot clustering in right penalty area is
+          immediately visible, pass distribution across pitch, defensive tackles in
+          left half. KDE contours show density hotspots. Directional arrows add movement
+          context.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot on accurately scaled football pitch diagram
+        comment: Correct scatter plot on football pitch.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct marker shapes+colors per event type, outcome encoding via
-          opacity, directional arrows for passes/shots, complete pitch markings
+        comment: 'All spec features: pitch markings, distinct marker shapes+colors
+          per event type, opacity outcome encoding, directional arrows for passes+shots.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y coordinates correctly mapped to 105m×68m pitch dimensions; aspect
-          ratio maintained
+        comment: 'x: horizontal position (0-105m), y: vertical position (0-68m), event_type:
+          hue+style, outcome: alpha encoding.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exact required format; legend labels match event_labels
-          with outcome explanation
+        comment: 'Title: ''scatter-pitch-events · python · seaborn · anyplot.ai''
+          — correct. Legend shows all 4 types with correct markers/colors. Legend
+          title explains opacity encoding.'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All spec aspects shown: 4 event types, 2 outcomes, directional arrows,
-          spatial distribution, density overlay'
+        comment: All 4 event types, both outcomes, directional arrows, KDE density.
+          Spatial distributions are realistic (shots in attacking zone, tackles in
+          defensive half).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic football event distributions: passes spread across pitch,
-          shots concentrated in attacking third, tackles in defensive zones'
+        comment: Football/soccer match event data — neutral sports analytics domain.
+          Not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 events within spec range (50-500); realistic outcome split (65/35);
-          spatial bounds match pitch dimensions
+        comment: Correct FIFA 105x68m dimensions. 200 events in spec range (50-500).
+          Realistic probability distribution (50% pass, 15% shot, 20% tackle, 15%
+          interception) and zone distributions.
     code_quality:
       score: 10
       max: 10
@@ -190,32 +203,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary classes or functions
+        comment: Imports → tokens → data → plot → save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) at start.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, patches, plt, np, pd, sns, Line2D'
+        comment: 'All imports used: os, matplotlib.patches, matplotlib.pyplot, numpy,
+          pandas, seaborn, matplotlib.lines.Line2D.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, no fake interactivity, appropriate complexity for a pitch
-          map
+        comment: Clean Pythonic code. Pitch drawing verbosity is appropriate given
+          complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; bbox_inches not set (correct default)
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches='tight'. Correct.
     library_mastery:
       score: 7
       max: 10
@@ -225,15 +239,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot with hue+style+markers+hue_order+style_order, sns.kdeplot,
-          sns.set_theme with rc dict — all idiomatic seaborn
+        comment: sns.set_theme(), sns.kdeplot() with clip, sns.scatterplot() with
+          hue+style+markers+palette — idiomatic axes-level API. Slightly penalized
+          for the heavy matplotlib pitch drawing relegating seaborn to a thinner role.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.kdeplot with clip=((0,105),(0,68)) keeps density within pitch
-          bounds; dual scatterplot calls for outcome split — seaborn-specific technique
+        comment: KDE density contours per event type via sns.kdeplot() is a distinctive
+          seaborn feature well applied here. The combined hue+style scatter in one
+          call is seaborn-idiomatic.
   verdict: APPROVED
 impl_tags:
   dependencies: []
