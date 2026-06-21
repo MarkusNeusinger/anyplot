@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: ma-differential-expression
 created: '2026-06-21T01:23:10Z'
-updated: '2026-06-21T01:30:46Z'
+updated: '2026-06-21T01:57:15Z'
 generated_by: claude-sonnet
 workflow_run: 27889416834
 issue: 4420
@@ -15,36 +15,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 quality_score: 87
 review:
   strengths:
-  - Correct MA plot funnel shape with biologically accurate dispersion model
-  - Excellent semantic color application (brand green = up-regulated, matte red =
-    down-regulated, muted = background layer)
-  - Idiomatic MUI X ChartContainer multi-type composition (scatter + line, shared
-    y-axis)
-  - Deterministic LCG RNG (seed=42) ensures reproducible renders
-  - 'Full spec compliance: reference lines at 0/±1 with labels, LOESS-approximate
-    trend, and alpha transparency'
-  - Hidden xSmooth axis for trend series binding is a clean MUI X pattern
+  - 'Complete MA plot with all required features: M=0 reference line, ±1 fold-change
+    dashed lines, LOESS-like trend, transparency on non-significant genes'
+  - 'Excellent CVD safety via shape redundancy: triangles (pointing up/down for up/down-regulated)
+    drawn in addition to color coding, with explicit CVD comment in code'
+  - 'Idiomatic MUI X composition: ChartContainer with ScatterPlot, LinePlot, ChartsAxis,
+    ChartsLegend, ChartsReferenceLine, ChartsGrid — all from community @mui/x-charts'
+  - 'Semantically correct Imprint palette: brand green (#009E73) for up-regulated,
+    matte red (#AE3030) for down-regulated (semantic exception justified by biology),
+    inkSoft muted for non-significant'
+  - Deterministic LCG RNG (seed=42) ensures full reproducibility of the 10,000-gene
+    synthetic dataset
   weaknesses:
-  - Gene count (3,000) is well below the spec-typical 10,000-20,000; the MA funnel
-    is visible but density and biological realism are reduced — increase N_GENES to
-    ~10,000
-  - Local trend line (cyan) appears thin in the densest region of the scatter; consider
-    increasing line width for LinePlot via slotProps or series strokeWidth
-  - Red-green sole signal for up/down-regulation without redundant shape encoding
-    (CVD concern); consider adding distinct marker shapes (circle vs triangle) as
-    a second encoding channel
+  - Legend icons show circles for Up-regulated/Down-regulated (ScatterPlot series
+    icons) but the visually dominant markers are the SVG triangles drawn by SignificantMarks
+    — this symbol mismatch in the legend may confuse readers expecting triangles
+  - Local trend line (cyan, t.palette[5]) is very difficult to distinguish inside
+    the dense 10,000-point scatter cloud — consider a thicker stroke (2-3px) or drawing
+    the line on top of the scatter layers
+  - SignificantMarks draws SVG triangles on top of the ScatterPlot circles for significant
+    genes, resulting in double-rendered elements — the circles underneath are hidden
+    by triangles but still consume render budget unnecessarily; the chart would be
+    cleaner with significant genes only in the SVG layer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
-      Chrome: Title "ma-differential-expression · javascript · muix · anyplot.ai" centered at top in dark ink — readable. Axis labels "Mean Expression (log₂ A)" (x) and "Log₂ Fold Change (M)" (y) in dark ink — readable. Tick labels in secondary ink — readable. Legend at bottom center — readable.
-      Data: Classic MA funnel scatter with brand green (#009E73) up-regulated genes, matte red (#AE3030) down-regulated genes, semi-transparent muted grey non-significant genes, and cyan local trend line. Reference lines: solid at M=0, dashed at M=±1 with labels. Funnel dispersion pattern clearly visible.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface; no pure white.
+      Chrome: Title "ma-differential-expression · javascript · muix · anyplot.ai" clearly readable in dark ink at top. Y-axis label "Log₂ Fold Change (M)" and X-axis label "Mean Expression (log₂ A)" both readable in dark ink. Tick labels visible at appropriate size. Reference line labels "log₂FC = 1" and "log₂FC = −1" visible in inkSoft. Legend at bottom shows all four series legibly.
+      Data: Classic MA plot funnel — 10,000 genes with higher M-dispersion at low A (left) narrowing toward right. Non-significant genes rendered as small semi-transparent gray circles. Up-regulated genes shown as brand green (#009E73) upward-pointing triangles. Down-regulated shown as matte red (#AE3030) downward-pointing triangles. Horizontal reference line at M=0 (solid dark), dashed reference lines at M=±1. Thin cyan local trend line visible in center of cloud.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
-      Chrome: Title visible in light ink against dark background — readable. Axis labels in light ink — readable. Tick labels in lighter secondary ink — readable. Legend at bottom — readable. No dark-on-dark failures detected.
-      Data: Data colors are IDENTICAL to light render (brand green up-regulated, matte red down-regulated, cyan trend, muted grey non-significant) — only chrome flips as expected. Funnel pattern reads clearly.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues observed
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface; no pure black.
+      Chrome: Title visible in light cream text against dark background (ThemeProvider + explicit fill:t.ink). Axis labels and tick labels flip to light-on-dark via t.ink/t.inkSoft tokens. Legend text readable. No dark-on-dark text failures detected.
+      Data: Same MA funnel shape. Data colors are identical to light render — green (#009E73) up-regulated triangles, red (#AE3030) down-regulated triangles, same cyan trend line. Non-significant genes appear as semi-transparent light-gray blobs (t.inkSoft in dark mode ≈ #B8B7B0 at 40% opacity) against the dark background. Reference lines visible.
+      Legibility verdict: PASS — all text readable against dark background; explicit t.ink/t.inkSoft fill props correctly apply theme-adaptive colors to axis elements.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -55,54 +59,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (22px), axis labels (16px), tick labels (13px) all readable
-          in both themes. Legend text slightly small but legible.
+        comment: 'Title, axis labels, tick labels all readable in both themes. Minor:
+          legend icons show circles but visual markers are triangles — symbol mismatch.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; semi-transparent non-significant
-          genes prevent overplotting.
+        comment: Dense 10k scatter handled well by transparency. Reference line labels
+          positioned cleanly. Minor crowding in dense scatter region.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Significant gene markers (markerSize=5) prominent; non-significant
-          (2.5) appropriately muted. Cyan trend line slightly thin in densest scatter
-          region.
+        comment: Significant gene triangles clearly visible. Local trend line (cyan)
+          difficult to see inside dense scatter cloud.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Red-green sole signal for up/down-regulation without redundant shape
-          encoding. Imprint shades have reasonable CVD separation but protanopes/deuteranopes
-          at risk.
+        passed: true
+        comment: Shape redundancy (triangle up/down + color) explicitly added for
+          CVD safety. Green/red not sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Layout well-proportioned, generous margins, all
-          elements fit without crowding.
+        comment: 3200x1800 confirmed. Good proportions. Legend at bottom doesn't crowd
+          plot. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units. Title format correct.
+        comment: 'X: Mean Expression (log2 A), Y: Log2 Fold Change (M) — descriptive
+          with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'palette[0] (#009E73) for up-regulated (first prominent categorical);
-          t.inkSoft for non-significant (muted anchor); palette[4] (#AE3030) for down-regulated
-          (semantic exception). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Up-regulated uses t.palette[0]=#009E73. Down-regulated uses t.palette[4]=#AE3030
+          (semantic exception: down=red justified). Not-significant uses inkSoft muted
+          anchor. Trend uses t.palette[5]=#2ABCCD. Both backgrounds correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -110,22 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic: semantic palette, intentional foreground/background
-          layering, clean reference lines. Below exceptional due to MUI X chrome defaults.'
+        comment: Thoughtful CVD-safe design with shape redundancy, semantic color
+          mapping. Above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Horizontal-only grid, semi-transparent non-significant layer, clean
-          MUI X axis lines. Mostly leverages library defaults.
+        comment: Horizontal grid only (clean), semi-transparent non-significant genes.
+          Minimal chrome extras.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy, reference lines guide interpretation, LOESS
-          trend reveals expression-dependent bias. Effective MA plot narrative.
+        comment: Reference lines at M=0, ±1 directly support interpretation. Trend
+          line reveals systematic bias. Clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -135,87 +138,89 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: MA plot correctly rendered as scatter with A on x and M on y.
+        comment: 'Correct MA plot: scatter of M (log2 FC) vs A (mean expression).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Significant genes highlighted; reference line at M=0; dashed lines
-          at ±1 with labels; LOESS approximation; alpha transparency. Optional gene
-          labeling not implemented (spec says optional).
+        comment: 'All required: significant gene highlighting, M=0 ref line, ±1 dashed
+          lines, LOESS-like trend, alpha~40% for non-significant.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct; axis ranges appropriate.
+        comment: X=mean expression (A), Y=log2 fold change (M). 10,000 genes in spec
+          range. Dispersion funnel realistic.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend shows all four series.
+        comment: 'Title: ''ma-differential-expression · javascript · muix · anyplot.ai''
+          — correct. Legend: Not significant, Up-regulated, Down-regulated, Local
+          trend.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows MA funnel, up/down-regulation, reference thresholds, bias trend.
-          3,000 genes below spec-typical 10,000-20,000 reduces density and realism.
+        comment: 'Full MA plot features: funnel shape, both up/down regulated, non-significant
+          majority, trend, reference lines.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq MA plot context is plausible. Funnel-shaped dispersion (higher
-          variance at low expression) is biologically accurate.
+        comment: RNA-seq MA plot context is standard bioinformatics. 10,000 genes,
+          A range 0-6, M range ±8 all biologically plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A range 0-6 and M range -8 to 8 are realistic for RNA-seq data.
+        comment: 'A: 0-6 log2 expression appropriate. M: ±8 log2 fold change appropriate.
+          ~1-2% significant genes realistic.'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Top-level data generation + one default-exported component. rand()
-          LCG helper is minimal and necessary.
+        comment: SignificantMarks helper component is justified for useDrawingArea
+          hook requirement, but adds complexity. Could be inlined.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (_s = 42), fully deterministic.
+        comment: LCG RNG with seed=42 — fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; only from @mui/x-charts and @mui/material.
+        comment: All imports used. Community @mui/x-charts only.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI elements, clean structure, well-commented data sections.
+        comment: No fake UI. Clean JSX. Custom SVG overlay well-implemented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports component; harness handles screenshot; current MUI
-          X community API used.
+        comment: skipAnimation present. Default export. Harness handles file output.
     library_mastery:
       score: 9
       max: 10
@@ -225,24 +230,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ChartContainer composition with ScatterPlot + LinePlot is correct
-          MUI X idiom for multi-type charts. Proper skipAnimation, ChartsAxis, ChartsLegend,
-          ChartsGrid usage.
+        comment: ChartContainer composition, ScatterPlot+LinePlot sub-components,
+          ChartsAxis/Legend/Grid — the canonical MUI X multi-type chart pattern.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multi-type composition, ChartsReferenceLine for MA thresholds, hidden
-          xSmooth axis for trend series, 8-char hex alpha transparency. Cleverly idiomatic.
+        comment: useDrawingArea hook for coordinate-mapped SVG overlays, ChartsReferenceLine
+          with labels, ChartContainer composition — strong MUI X specifics.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
