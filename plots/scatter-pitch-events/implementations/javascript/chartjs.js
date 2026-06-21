@@ -231,8 +231,8 @@ new Chart(canvas, {
         pointStyle: 'circle',
         pointRadius: 6,
         backgroundColor: hexRgba(PASS_C, 0.85),
-        borderColor: 'rgba(255,255,255,0.55)',
-        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.70)',
+        borderWidth: 2,
       },
       {
         label: 'Pass (incomplete)',
@@ -316,7 +316,7 @@ new Chart(canvas, {
         position: 'bottom',
         labels: {
           color: t.ink,
-          font: { size: 13 },
+          font: { size: 16 },
           padding: 20,
           usePointStyle: true,
           pointStyleWidth: 16,
