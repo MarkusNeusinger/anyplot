@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-21
@@ -16,6 +16,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+# Win prob line: warm near-white in light gives contrast over dark-red Chiefs fill
+LINE_COLOR = "#FFFDF6" if THEME == "light" else INK
 
 # Semantic team color assignment from Imprint palette
 HOME_COLOR = "#009E73"  # CIN Bengals (home) — Imprint position 1, brand green
@@ -82,13 +84,13 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    # Series color order: Bengals green, Chiefs red, win-prob line (INK), baseline ochre, events cyan
-    colors=(HOME_COLOR, AWAY_COLOR, INK, "#BD8233", "#2ABCCD", "#C475FD"),
+    # Series order: Bengals green, Chiefs red, win-prob line (high-contrast neutral), baseline ochre, events cyan
+    colors=(HOME_COLOR, AWAY_COLOR, LINE_COLOR, "#BD8233", "#2ABCCD", "#C475FD"),
     font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
     title_font_size=title_font_size,
-    label_font_size=34,
-    major_label_font_size=44,
+    label_font_size=46,
+    major_label_font_size=40,
     value_font_size=36,
     legend_font_size=44,
     legend_font_family="DejaVu Sans, Helvetica, Arial, sans-serif",
@@ -125,14 +127,14 @@ chart = pygal.Line(
     range=(0, 100),
     min_scale=5,
     max_scale=10,
-    margin_bottom=80,
+    margin_bottom=200,
     margin_left=80,
-    margin_right=50,
+    margin_right=90,
     margin_top=50,
     spacing=10,
     tooltip_border_radius=8,
     tooltip_fancy_mode=True,
-    x_label_rotation=0,
+    x_label_rotation=45,
     show_minor_x_labels=False,
 )
 
@@ -156,10 +158,21 @@ for idx, label in scoring_events.items():
     event_series[idx] = {"value": bengals_wp_pct[idx], "label": label}
 chart.add("Key Events", event_series, fill=False, show_dots=True, dots_size=20, stroke=False)
 
-# X-axis: period markers only — no scoring event labels to avoid crowding
-label_map = {0: "Kickoff", 30: "Q2", 60: "Halftime", 90: "Q4", 120: "OT"}
+# X-axis: period markers combined with scoring event labels for static PNG annotation
+# Drop Q2/Q4 to avoid crowding with nearby scoring events at plays 33 and 95
+label_map = {
+    0: "Kickoff",
+    18: "KC FG 3-0",
+    33: "CIN TD 7-3",
+    50: "KC TD 13-7",
+    60: "Halftime",
+    72: "CIN TD 14-13",
+    95: "KC TD 20-14",
+    112: "CIN TD 20-20",
+    140: "KC FG 23-20",
+}
 chart.x_labels = [label_map.get(i, "") for i in range(plays + 1)]
-chart.x_labels_major = list(label_map.values())
+chart.x_labels_major = [label_map[k] for k in sorted(label_map.keys())]
 chart.truncate_label = -1
 
 # Save
