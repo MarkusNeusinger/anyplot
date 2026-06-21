@@ -95,7 +95,7 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.10),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.10),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
@@ -111,15 +111,17 @@ scatter!(ax, mean_expr[not_sig], lfc[not_sig];
 # Layer 2: significantly up-regulated genes (brand green — gain)
 scatter!(ax, mean_expr[sig_up], lfc[sig_up];
     color       = (BRAND_GREEN, 0.65),
-    markersize  = 7,
-    strokewidth = 0,
+    markersize  = 9,
+    strokewidth = 0.5,
+    strokecolor = INK_SOFT,
 )
 
 # Layer 3: significantly down-regulated genes (matte red — loss)
 scatter!(ax, mean_expr[sig_down], lfc[sig_down];
     color       = (MATTE_RED, 0.65),
-    markersize  = 7,
-    strokewidth = 0,
+    markersize  = 9,
+    strokewidth = 0.5,
+    strokecolor = INK_SOFT,
 )
 
 # Reference lines: zero line and ±1 log2 FC thresholds
@@ -151,7 +153,7 @@ Legend(
     framecolor      = INK_SOFT,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK,
-    labelsize       = 12,
+    labelsize       = 14,
 )
 
 colsize!(fig.layout, 1, Relative(0.78))
