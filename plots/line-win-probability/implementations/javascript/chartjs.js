@@ -44,7 +44,15 @@ const awayColor = t.palette[4]; // #AE3030
 const HOME_FILL = "rgba(0, 158, 115, 0.22)";
 const AWAY_FILL = "rgba(174, 48, 48, 0.22)";
 
-// Quarter boundary + annotation plugin
+// Key scoring events annotated on the probability line
+const EVENTS = [
+  { minute: 13, label: "Celtics Run" },   // Q2 start of big decline
+  { minute: 21, label: "Celtics +12" },   // deepest deficit, ~30%
+  { minute: 27, label: "LeBron 3-PTR" },  // comeback begins, ~40%
+  { minute: 39, label: "AD Putback" },    // decisive surge, ~68%
+];
+
+// Quarter boundary + event annotation plugin
 const quarterPlugin = {
   id: "quarters",
   afterDraw(chart) {
@@ -63,7 +71,7 @@ const quarterPlugin = {
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = t.inkSoft;
-      ctx.font = "bold 13px sans-serif";
+      ctx.font = "bold 14px sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(`Q${i + 2}`, x + 5, ca.top + 20);
     });
@@ -71,9 +79,45 @@ const quarterPlugin = {
     // Q1 label
     ctx.setLineDash([]);
     ctx.fillStyle = t.inkSoft;
-    ctx.font = "bold 13px sans-serif";
+    ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "left";
     ctx.fillText("Q1", scales.x.getPixelForValue(0) + 5, ca.top + 20);
+
+    // Scoring event annotations: dot + dashed connector + label
+    EVENTS.forEach(ev => {
+      const closest = points.reduce((best, p) =>
+        Math.abs(p.x - ev.minute) < Math.abs(best.x - ev.minute) ? p : best
+      );
+      const ex = scales.x.getPixelForValue(closest.x);
+      const ey = scales.y.getPixelForValue(closest.y);
+      const isAbove = closest.y >= 50;
+      const color = isAbove ? homeColor : awayColor;
+      const dir = isAbove ? -1 : 1;
+      const connLen = 24;
+
+      // Dot on data line
+      ctx.beginPath();
+      ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Dashed connector
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex, ey + dir * connLen);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Event label
+      ctx.fillStyle = color;
+      ctx.font = "11px sans-serif";
+      ctx.textAlign = "center";
+      const labelY = isAbove ? ey - connLen - 6 : ey + connLen + 12;
+      ctx.fillText(ev.label, ex, labelY);
+    });
 
     // HOME / AWAY directional labels
     ctx.font = "bold 14px sans-serif";
@@ -81,7 +125,7 @@ const quarterPlugin = {
     ctx.fillStyle = homeColor;
     ctx.fillText("HOME WINS ↑", ca.right - 10, ca.top + 22);
     ctx.fillStyle = awayColor;
-    ctx.fillText("AWAY WINS ↓", ca.right - 10, ca.bottom - 10);
+    ctx.fillText("AWAY WINS ↓", ca.right - 10, ca.bottom - 14);
 
     // Final score
     ctx.fillStyle = t.ink;
@@ -128,7 +172,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 30, right: 24, bottom: 10, left: 10 } },
+    layout: { padding: { top: 30, right: 32, bottom: 20, left: 10 } },
     plugins: {
       title: {
         display: true,
