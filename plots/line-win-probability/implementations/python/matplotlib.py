@@ -1,27 +1,48 @@
-""" pyplots.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Quality: 92/100 | Updated: 2026-06-21
 """
+
+import os as _os
+import sys
+
+
+# Remove this script's directory from sys.path so this file (matplotlib.py) does
+# not shadow the matplotlib package when invoked from inside this directory.
+_this_dir = _os.path.dirname(_os.path.abspath(__file__))
+sys.path = [p for p in sys.path if _os.path.abspath(p) != _this_dir]
+del _this_dir
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
+from matplotlib.collections import LineCollection
 
 
-# Data - simulated NFL game: Eagles vs Cowboys
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic mapping: Eagles → brand green, Cowboys → blue
+EAGLES_COLOR = "#009E73"  # Imprint position 1 — home team
+COWBOYS_COLOR = "#4467A3"  # Imprint position 3 — away team
+
+# Data — simulated NFL game: Eagles vs Cowboys
 np.random.seed(42)
 
-# Game plays (0 to ~120 plays)
 n_plays = 120
 plays = np.arange(n_plays + 1)
-
-# Build win probability with realistic scoring events
 win_prob = np.full(n_plays + 1, 0.50)
 
-# Scoring events: (play_number, probability_shift, label)
 scoring_events = [
     (8, 0.12, "PHI Field Goal (3-0)"),
     (22, -0.10, "DAL Touchdown (7-3)"),
@@ -34,7 +55,6 @@ scoring_events = [
     (110, -0.05, "DAL Field Goal (27-20)"),
 ]
 
-# Generate smooth probability curve with scoring jumps
 prob = 0.50
 noise = np.random.normal(0, 0.012, n_plays + 1)
 event_indices = {e[0]: (e[1], e[2]) for e in scoring_events}
@@ -43,47 +63,43 @@ for i in range(1, n_plays + 1):
     if i in event_indices:
         prob += event_indices[i][0]
     prob += noise[i]
-    # Mean reversion toward current level
     prob = np.clip(prob, 0.02, 0.98)
     win_prob[i] = prob
 
-# Force convergence to final outcome: Eagles win
+# Force convergence to Eagles win
 for i in range(105, n_plays + 1):
     t = (i - 105) / (n_plays - 105)
     win_prob[i] = win_prob[105] * (1 - t**2) + 1.0 * t**2
 
-# Quarter boundaries (roughly 30 plays each)
 quarter_boundaries = [0, 30, 60, 90, n_plays]
 quarter_labels = ["Q1", "Q2", "Q3", "Q4"]
 
-# Colors
-eagles_green = "#004C54"
-cowboys_navy = "#003594"
-baseline_color = "#444444"
-
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Fill above/below 50%
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=eagles_green, alpha=0.3, interpolate=True)
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=cowboys_navy, alpha=0.45, interpolate=True)
+# Fill above/below 50% — higher alpha on Cowboys regions for narrow-lead visibility
+ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=EAGLES_COLOR, alpha=0.22, interpolate=True)
+ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=COWBOYS_COLOR, alpha=0.55, interpolate=True)
 
-# Win probability line - color changes based on which team leads
-for i in range(len(plays) - 1):
-    color = eagles_green if win_prob[i] >= 0.5 else cowboys_navy
-    ax.plot(plays[i : i + 2], win_prob[i : i + 2], color=color, linewidth=3, zorder=3, solid_capstyle="round")
+# Win probability line via LineCollection — idiomatic and efficient
+points = np.array([plays, win_prob]).T.reshape(-1, 1, 2)
+segments = np.concatenate([points[:-1], points[1:]], axis=1)
+midpoints = (win_prob[:-1] + win_prob[1:]) / 2
+seg_colors = [EAGLES_COLOR if m >= 0.5 else COWBOYS_COLOR for m in midpoints]
+lc = LineCollection(segments, colors=seg_colors, linewidths=2.5, zorder=3, capstyle="round")
+ax.add_collection(lc)
 
 # 50% baseline
-ax.axhline(y=0.5, color=baseline_color, linewidth=1.5, linestyle="--", alpha=0.5, zorder=2)
+ax.axhline(y=0.5, color=INK_MUTED, linewidth=1.2, linestyle="--", alpha=0.6, zorder=2)
 
-# Quarter dividers
+# Quarter dividers and labels
 for qb in quarter_boundaries[1:-1]:
-    ax.axvline(x=qb, color="#999999", linewidth=1, linestyle=":", alpha=0.4)
+    ax.axvline(x=qb, color=INK_MUTED, linewidth=0.8, linestyle=":", alpha=0.4)
 
-# Quarter labels
 for i, label in enumerate(quarter_labels):
     mid = (quarter_boundaries[i] + quarter_boundaries[i + 1]) / 2
-    ax.text(mid, 0.03, label, ha="center", va="center", fontsize=16, color="#888888", fontweight="medium")
+    ax.text(mid, 0.03, label, ha="center", va="center", fontsize=7, color=INK_MUTED, fontweight="medium")
 
 # Annotate key scoring events
 annotation_events = [
@@ -97,56 +113,69 @@ annotation_events = [
 
 for play_idx, label in annotation_events:
     wp = win_prob[play_idx]
-    offset_y = 0.06 if wp >= 0.5 else -0.06
+    offset_y = 0.07 if wp >= 0.5 else -0.07
     txt = ax.annotate(
         label,
         xy=(play_idx, wp),
         xytext=(play_idx, wp + offset_y),
-        fontsize=12,
+        fontsize=7,
         fontweight="bold",
         ha="center",
         va="center",
-        color="#222222",
-        arrowprops={"arrowstyle": "-", "color": "#999999", "linewidth": 0.8},
+        color=INK,
+        arrowprops={"arrowstyle": "-", "color": INK_MUTED, "linewidth": 0.8},
         zorder=4,
     )
-    txt.set_path_effects([pe.withStroke(linewidth=3, foreground="white")])
+    txt.set_path_effects([pe.withStroke(linewidth=2.5, foreground=PAGE_BG)])
 
-# Scatter dots on scoring events for visibility
+# Scoring event dots on the curve
 for play_idx, _ in annotation_events:
+    color = EAGLES_COLOR if win_prob[play_idx] >= 0.5 else COWBOYS_COLOR
     ax.plot(
         play_idx,
         win_prob[play_idx],
         "o",
-        color=eagles_green if win_prob[play_idx] >= 0.5 else cowboys_navy,
-        markersize=7,
+        color=color,
+        markersize=5,
         zorder=5,
-        markeredgecolor="white",
-        markeredgewidth=1,
+        markeredgecolor=PAGE_BG,
+        markeredgewidth=0.8,
     )
 
-# Style
+# Axes
 ax.set_xlim(0, n_plays)
 ax.set_ylim(0, 1)
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0%}"))
 
-# Subtle y-axis gridlines for easier probability reading
-ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color="#888888")
+# Grid — subtle y-axis only
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
-ax.set_xlabel("Play Number", fontsize=20)
-ax.set_ylabel("Win Probability", fontsize=20)
-ax.set_title(
-    "Eagles 27 – Cowboys 20 · line-win-probability · matplotlib · pyplots.ai", fontsize=24, fontweight="medium"
-)
-ax.tick_params(axis="both", labelsize=16)
+
+# Labels and scaled title
+title = "Eagles 27 – Cowboys 20 · line-win-probability · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title)))
+ax.set_xlabel("Play Number", fontsize=10, color=INK)
+ax.set_ylabel("Win Probability", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+
+# Spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 # Legend
-eagles_patch = mpatches.Patch(color=eagles_green, alpha=0.4, label="Eagles")
-cowboys_patch = mpatches.Patch(color=cowboys_navy, alpha=0.5, label="Cowboys")
-ax.legend(handles=[eagles_patch, cowboys_patch], fontsize=16, loc="upper left", framealpha=0.8, edgecolor="none")
+eagles_patch = mpatches.Patch(color=EAGLES_COLOR, alpha=0.5, label="Eagles")
+cowboys_patch = mpatches.Patch(color=COWBOYS_COLOR, alpha=0.5, label="Cowboys")
+leg = ax.legend(handles=[eagles_patch, cowboys_patch], fontsize=8, loc="upper left", framealpha=0.9, edgecolor=INK_SOFT)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.12)
+
+# Save — no bbox_inches="tight" (would trim canvas from 3200×1800)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
