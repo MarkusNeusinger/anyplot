@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-21
@@ -139,7 +139,7 @@ for i in range(n_shots):
         "",
         xy=(shot_x[i] + shot_dx[i], shot_y[i] + shot_dy[i]),
         xytext=(shot_x[i], shot_y[i]),
-        arrowprops={"arrowstyle": "-|>", "color": c_shot, "lw": 1.5, "alpha": alpha, "mutation_scale": 12},
+        arrowprops={"arrowstyle": "-|>", "color": c_shot, "lw": 1.0, "alpha": alpha, "mutation_scale": 12},
     )
     ax.plot(
         shot_x[i],
@@ -221,7 +221,7 @@ leg = ax.legend(
     handles=legend_elements,
     loc="lower center",
     ncol=6,
-    fontsize=6,
+    fontsize=8,
     framealpha=0.85,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -230,6 +230,6 @@ leg = ax.legend(
 )
 
 # Save — no bbox_inches to preserve exact 3200×1800 canvas
-fig.subplots_adjust(top=0.92, bottom=0.10, left=0.01, right=0.99)
+fig.subplots_adjust(top=0.92, bottom=0.10, left=0.02, right=0.98)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
