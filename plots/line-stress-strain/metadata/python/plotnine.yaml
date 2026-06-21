@@ -1,114 +1,150 @@
 library: plotnine
+language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:22:28Z'
-updated: '2026-03-20T21:43:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23363004971
+updated: '2026-06-21T09:58:32Z'
+generated_by: claude-sonnet
+workflow_run: 27900085743
 issue: 4413
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent data storytelling through color-coded region shading that guides the
-    viewer through material behavior phases
-  - 'All spec-required features implemented: region labels, critical points, elastic
-    modulus annotation, 0.2% offset line'
-  - Realistic mild steel data with appropriate engineering values
-  - Clean, well-structured code following KISS principles
-  - Good use of plotnine grammar-of-graphics approach with layered composition
+  - 'Correct Imprint palette usage with #009E73 as main curve, theme-adaptive chrome
+    in both renders'
+  - 'Complete spec compliance: region shading, 0.2% offset line, all critical points
+    (yield, UTS, fracture) annotated, elastic modulus labeled'
+  - 'Accurate engineering data: E=210 GPa for mild steel, plausible yield/UTS/fracture
+    values'
+  - Clean plotnine grammar of graphics layering with annotate rect regions and geom_segment
+    for offset line
+  - KISS code structure with explicit sys.path workaround for naming conflict properly
+    handled
+  - Both light and dark renders are readable with no dark-on-dark text failures
   weaknesses:
-  - The elastic region is horizontally compressed, creating visual density with multiple
-    labels in a narrow space
-  - The 0.2% offset annotation text (size=11) is noticeably smaller than other text
-    elements
-  image_description: 'The plot displays an engineering stress-strain curve for mild
-    steel on a white background. The title "line-stress-strain · plotnine · pyplots.ai"
-    appears in bold dark text at the top. The x-axis is labeled "Engineering Strain"
-    (0.00–0.35) and the y-axis "Engineering Stress (MPa)" (0–450). A thick dark blue
-    line traces the characteristic stress-strain path from origin through elastic
-    deformation, yield plateau, strain hardening up to ~400 MPa at strain ~0.22 (UTS),
-    then necking down to ~320 MPa at fracture (strain ~0.35). Four color-shaded rectangular
-    regions mark the material behavior zones: light blue (Elastic), light green (Yield
-    Plateau), light yellow/orange (Strain Hardening), and light pink/red (Necking),
-    each with gray italic region labels. Three red dots mark critical points labeled
-    in bold: "Yield Point (0.2% offset)", "UTS", and "Fracture". A red dashed line
-    shows the 0.2% offset construction with a small red italic "0.2% offset" label
-    near the bottom. "E = 210 GPa" appears in bold blue text. The y-axis grid is subtle
-    light gray; x-axis grid is removed. Layout is 16:9 with good canvas utilization.'
+  - Secondary annotation texts (region labels, critical point annotations) use size=3.0
+    in geom_text (≈8.5pt), which are barely readable at 400px mobile width — consider
+    size=3.5–4.0 for these labels
+  - Full 4-sided panel border retained via panel_border=element_rect(...); style guide
+    recommends L-shaped frame (remove top/right spines) — would improve minimalism
+    and visual refinement
+  - DE-01 aesthetic sophistication is limited to spec-required elements; no additional
+    design choices like refined line weights, font weight hierarchy for annotations,
+    or intentional whitespace around key features
+  - LM-02 library distinctiveness is modest — annotate rect regions are idiomatic
+    ggplot2/plotnine but not uniquely leveraging plotnine capabilities beyond what
+    ggplot2 could do identically
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — clearly not pure white, matches the required surface.
+      Chrome: Title "line-stress-strain · python · plotnine · anyplot.ai" at bold 12pt is readable; Y-axis label "Engineering Stress (MPa)" and X-axis label "Engineering Strain" at 10pt are clear; tick labels at 8pt are readable. Horizontal grid only, subtle at alpha=0.15. Full 4-sided panel border in INK_SOFT.
+      Data: Main stress-strain curve in #009E73 (Imprint position 1 / brand green) — clearly visible. Three region shadings: elastic (blue #4467A3, very narrow left strip), strain hardening (ochre #BD8233, large middle region), necking (red #AE3030, right region). Critical point markers as red (#AE3030) dots at yield, UTS, fracture. Dashed red offset line at 0.2% offset. Blue text "E = 210 GPa" annotation. Region labels ("Elastic", "Strain Hardening", "Necking") in italic INK_SOFT. Critical point labels ("Yield Point (0.2% offset)", "UTS", "Fracture") in bold INK.
+      Legibility verdict: PASS for desktop. At 400px mobile width, secondary annotation texts (size=3.0 in geom_text ≈8.5pt) become barely readable — region labels and critical point labels are very small at mobile scale. Main axis labels and title remain readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light INK (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. Horizontal grid subtle (alpha=0.15 in light INK). Full panel border in INK_SOFT. No dark-on-dark text failures — all labels use the theme-adaptive INK and INK_SOFT tokens correctly.
+      Data: Main curve remains #009E73 (identical to light render). Region shadings identical hues (alpha=0.13 for dark, slightly lower than light's 0.18). Critical point markers and offset line retain the same colors. All data colors are theme-independent as required.
+      Legibility verdict: PASS. All primary text readable; secondary annotation texts small but no worse than light render. Brand green curve visible and distinct.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All major text sizes explicitly set (title=26, axis_title=22, axis_text=16).
-          The 0.2% offset annotation at size=11 is smaller than other text.
+        comment: Font sizes explicitly set (title=12, axis=10, ticks=8); all main
+          text readable at desktop. Secondary geom_text annotations at size=3.0mm
+          (≈8.5pt) are very small at 400px mobile width — region labels and critical
+          point labels borderline unreadable at small scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No actual text overlap, but elastic region is horizontally compressed
-          with multiple labels in a narrow band.
+        comment: No actual text overlaps. The left elastic region area (x=0 to 0.03)
+          is dense with the dashed line, yield point marker, and multiple annotation
+          labels at different y positions, creating a crowded but non-overlapping
+          layout.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Main curve at size=2.8 clearly visible, key points at size=6 are
-          prominent.
+        comment: Main curve and critical point markers are clearly visible. Region
+          shadings are appropriately subtle. Elastic region shading is inherently
+          narrow (0 to 0.001 strain = <0.3% of x-axis) but this is accurate to engineering
+          reality.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue curve with red accents, pastel region shading. Colorblind-safe,
-          no red-green dependency.
+        comment: Imprint palette is CVD-safe. Critical points use semantic red (#AE3030)
+          for failure markers. Region colors use blue, ochre, and red — distinguishable
+          under deuteranopia/protanopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions with plot filling the canvas well.
+        comment: 'Canvas is 3200x1800 (8x4.5in at 400dpi) — correct landscape format.
+          Margins are balanced. Minor concern: full 4-sided panel border and some
+          density in the left region. No text clipping or overflow.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Engineering Strain and Engineering
-          Stress (MPa).'
+        comment: 'Y-axis: ''Engineering Stress (MPa)'' with units. X-axis: ''Engineering
+          Strain'' (dimensionless, no unit needed). Title format correct: ''line-stress-strain
+          · python · plotnine · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (main curve) is #009E73 (brand green). Region shadings
+          use Imprint positions 3/4/5. Critical points use semantic red (#AE3030)
+          for fracture/failure markers. Backgrounds: #FAF8F1 light / #1A1A17 dark.
+          All chrome tokens are theme-adaptive. Data colors identical between themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Color-coded region shading, custom palette, intentional typographic
-          hierarchy. Above defaults.
+        comment: 'Above typical defaults: region shading with alpha, semantic color
+          choices, intentional annotation hierarchy. Not publication-ready exceptional
+          — limited beyond spec-required elements.'
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid is horizontal-only and subtle (good). Panel border uses full
+          4-sided frame (element_rect) instead of recommended L-shaped frame. Some
+          refinement visible but not fully minimal.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-only grid, clean white background. Minor
-          density in elastic region.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: Color-coded regions guide viewer through material behavior. Key points
-          create clear focal points.
+        comment: 'Strong storytelling: region shading guides viewer through material
+          behavior progression, labeled critical points tell the engineering story,
+          0.2% offset method illustrated. Viewer immediately understands the plot''s
+          narrative.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,26 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct engineering stress-strain curve as line plot.
+        comment: Correct engineering stress-strain line plot with all major curve
+          regions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: region labels, critical points, modulus
-          annotation, offset line.'
+        comment: 'All spec requirements met: region labels (elastic/strain hardening/necking),
+          critical points marked (yield/UTS/fracture), elastic modulus annotated (''E
+          = 210 GPa''), 0.2% offset line drawn. Multi-material overlay optional per
+          spec — not implemented, not penalized.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=strain, Y=stress correctly mapped with full data range.
+        comment: X=engineering strain (0-0.35), Y=engineering stress (0-460 MPa).
+          All data regions visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. No legend needed for single-series.
+        comment: Title is 'line-stress-strain · python · plotnine · anyplot.ai' —
+          correct mandatory format. No legend (single main curve + region labels in
+          text annotations).
     data_quality:
       score: 15
       max: 15
@@ -147,21 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all curve regions: elastic, yield plateau, strain hardening,
-          necking, fracture.'
+        comment: 'Shows all stages: elastic (linear), yield plateau, strain hardening
+          (power law), necking, fracture. 0.2% offset method correctly implemented
+          with proper slope.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mild steel tensile test - classic, neutral engineering scenario.
+        comment: Mild steel tensile test — real engineering scenario. Neutral, scientific
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values for mild steel: E=210 GPa, yield=250 MPa, UTS=400
-          MPa.'
+        comment: E=210 GPa (correct for steel), yield=250 MPa, UTS=400 MPa, fracture
+          at 35% strain — all factually accurate for mild steel.
     code_quality:
       score: 10
       max: 10
@@ -171,33 +215,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save. No functions or classes.'
+        comment: Clean Imports→Data→Plot→Save structure. sys.path manipulation is
+          a documented workaround for naming conflict, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) set. Data is largely deterministic from physics
+          equations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used. plotnine imports are comprehensive and all used
+          in the plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear sections. No fake UI.
+        comment: Clean, well-organized code. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300. Current plotnine API.
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -205,21 +252,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics with layered composition, aes mapping, identity
-          scales, theme customization.
+        comment: 'Good grammar of graphics approach: annotate+geom_line+geom_point+geom_segment+geom_text
+          layers. Uses scale_color_identity and scale_size_identity idiomatically.
+          coord_cartesian for axis limits is correct ggplot2 pattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses annotate rect for region shading, coord_cartesian, identity
-          scales, geom_segment.
+        passed: false
+        comment: annotate('rect', ...) for region shading is idiomatic ggplot2/plotnine.
+          Otherwise could be reproduced in matplotlib with similar effort. No uniquely
+          plotnine-exclusive feature exploited.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
