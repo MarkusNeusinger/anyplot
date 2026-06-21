@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-shot-chart: Basketball Shot Chart
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-06-21
+# Quality: 87/100 | Created: 2026-06-21
 
 using CairoMakie
 using Colors
