@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-21
@@ -24,6 +24,7 @@ from plotnine import (
     labs,
     scale_alpha_manual,
     scale_color_manual,
+    scale_shape_manual,
     scale_size_manual,
     stat_smooth,
     theme,
@@ -87,7 +88,7 @@ df_labels["label_y"] = df_labels["log_fold_change"] + nudge
 
 # Plot
 plot = (
-    ggplot(df, aes(x="mean_expression", y="log_fold_change", color="category"))
+    ggplot(df, aes(x="mean_expression", y="log_fold_change", color="category", shape="category"))
     + geom_point(aes(alpha="category", size="category"), stroke=0)
     + geom_hline(yintercept=0, color=INK, size=0.8, alpha=0.5)
     + geom_hline(yintercept=1, linetype="dashed", color=INK_SOFT, size=0.5)
@@ -110,21 +111,28 @@ plot = (
         aes(x="mean_expression", y="label_y", label="gene_name"),
         data=df_labels,
         color=INK,
-        size=3.0,
+        size=3.5,
         fontstyle="italic",
         inherit_aes=False,
         show_legend=False,
     )
     + scale_color_manual(values={"Upregulated": COLOR_UP, "Not significant": COLOR_NS, "Downregulated": COLOR_DOWN})
-    + scale_alpha_manual(values={"Upregulated": 0.8, "Not significant": 0.12, "Downregulated": 0.8})
-    + scale_size_manual(values={"Upregulated": 2.0, "Not significant": 0.8, "Downregulated": 2.0})
+    + scale_alpha_manual(values={"Upregulated": 0.8, "Not significant": 0.15, "Downregulated": 0.8})
+    + scale_shape_manual(values={"Upregulated": "^", "Not significant": "o", "Downregulated": "v"})
+    + scale_size_manual(values={"Upregulated": 2.0, "Not significant": 1.0, "Downregulated": 2.0})
     + labs(
         x="Mean Expression (A)",
         y="Log₂ Fold Change (M)",
         title="ma-differential-expression · python · plotnine · anyplot.ai",
         color="",
+        shape="",
     )
-    + guides(color=guide_legend(override_aes={"alpha": 1, "size": 3}), alpha="none", size="none")
+    + guides(
+        color=guide_legend(override_aes={"alpha": 1, "size": 3}),
+        shape=guide_legend(override_aes={"alpha": 1, "size": 3}),
+        alpha="none",
+        size="none",
+    )
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
