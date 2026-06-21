@@ -1,0 +1,245 @@
+library: chartjs
+language: javascript
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:36:50Z'
+updated: '2026-06-21T08:58:18Z'
+generated_by: claude-sonnet
+workflow_run: 27898117658
+issue: 4416
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Complete NBA court geometry with accurate dimensions (50x47 ft, 23.75 ft arc,
+    22 ft corners, 16 ft paint, restricted area)
+  - 'Excellent semantic palette use: green for made, matte-red for missed — both correct
+    Imprint palette members for their semantic roles'
+  - 'Three-level encoding: color (outcome) + shape (outcome) + size (shot type) creates
+    information density without clutter'
+  - Deterministic LCG with seeded RNG ensures reproducible shot data
+  - Legend filter cleanly hides all 12 court-line datasets while showing only Made/Missed
+  weaknesses:
+  - Missed shot X marks (transparent fill, border-only) appear slightly less prominent
+    than filled green circles in dense areas — consider a subtle rgba fill at ~0.2
+    opacity to improve visual parity
+  - Shot type size encoding (free-throw=4, 2-pointer=5.5, 3-pointer=7 CSS px) is not
+    represented in the legend — adding a size legend or annotation would complete
+    the third encoding dimension
+  - Paint area has no visual differentiation (e.g., subtle tinted fill) that could
+    help orient the viewer to the key zone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "scatter-shot-chart · javascript · chartjs · anyplot.ai" in dark text at top (22px); legend "Made" / "Missed" with green circle and red X point styles; no axis labels (hidden per spec); court lines in dark gray (t.inkSoft = #4A4A44)
+      Data: Made shots as filled green circles (#009E73) with semi-transparent fill; missed shots as red crossRot X marks (#AE3030, transparent fill); marker sizes vary by shot type (free-throw=4px, 2-pointer=5.5px, 3-pointer=7px radius); 350 shots distributed across half-court
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: Title and legend text appear in light cream/off-white (t.ink = #F0EFE8); court lines rendered in light gray (t.inkSoft = #B8B7B0 in dark theme) — clearly visible against dark background; no dark-on-dark failures
+      Data: Made shots still green (#009E73), missed shots still red (#AE3030) — identical to light render; data colors unchanged, only chrome flipped
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues detected
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22px) and legend (16px) explicitly set and readable in both
+          themes; no axis labels per spec
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; data-point overlap expected at 350 shots
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Made circles prominent; missed X marks slightly less prominent due
+          to transparent fill
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + shape redundancy (circle vs crossRot) makes encoding CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 maintains 1:1 court ratio; court fills canvas well
+          with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; no axis labels per spec (court geometry provides
+          spatial reference)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Made=#009E73 (palette[0]), Missed=#AE3030 (palette[4], semantic-red
+          for loss); background uses t.pageBg
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: accurate court geometry, dashed FT circle,
+          semi-transparent markers, per-point size encoding; not publication-polished'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, legend filtered, theme-adaptive court lines, background
+          plugin; no paint area fill
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shot chart reveals spatial tendencies; color+shape+size triple encoding;
+          viewer reads made-vs-missed distribution across zones
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basketball shot chart with scatter overlay on half-court
+          diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Three-point arc, corner segments, FT line, paint/key (16ft), restricted
+          area, basket ring, backboard all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y in feet from basket center; made=green circle, missed=red X;
+          shot_type encoded via marker radius
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-shot-chart · javascript · chartjs · anyplot.ai'; legend
+          shows Made/Missed; court datasets filtered
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All shot types (free-throw, 2-pointer, 3-pointer) across all court
+          zones; made and missed outcomes present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic NBA player shot chart; 350 attempts; modern shot selection
+          profile
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate NBA dimensions; plausible shooting percentages (78% FT,
+          63% at-rim, ~39% corner 3)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (arcPts, courtLine, genShots, lcg, randn) justified
+          by court-drawing complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) for deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only window.ANYPLOT_TOKENS and Chart globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean structure, no fake UI, courtDatasets.concat() pattern is idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Browser harness handles output; animation: false set; no savefig
+          calls'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed line+scatter, per-point pointRadius arrays, crossRot pointStyle,
+          legend filter callback, background plugin
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point radius arrays, legend filter function, crossRot built-in
+          style, background plugin API are Chart.js distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
