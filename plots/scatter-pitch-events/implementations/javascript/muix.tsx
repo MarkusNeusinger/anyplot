@@ -4,7 +4,6 @@
 // Quality: 87/100 | Created: 2026-06-21
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
-import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -73,48 +72,27 @@ const interceptions = Array.from({ length: 18 }, (_, i) => {
   return { id: `intercept-${i}`, x, y, successful };
 });
 
-// --- MUI X scatter series (8: 4 types × 2 outcomes) ---
-// Successful series carry legend labels; unsuccessful are visually faded, no legend entry.
+// --- MUI X scatter series (for legend and domain — markers drawn in EventMarkersLayer) ---
 const scatterSeries = [
   {
-    type: "scatter", id: "pass-ok", label: "Pass",
-    data: passes.filter(p => p.successful).map(p => ({ x: p.x, y: p.y, id: p.id })),
-    color: PASS_COLOR, markerSize: 8,
+    type: "scatter", id: "pass-series", label: "Pass",
+    data: passes.map(p => ({ x: p.x, y: p.y, id: p.id })),
+    color: PASS_COLOR,
   },
   {
-    type: "scatter", id: "pass-fail",
-    data: passes.filter(p => !p.successful).map(p => ({ x: p.x, y: p.y, id: p.id })),
-    color: hexToRgba(PASS_COLOR, 0.35), markerSize: 5,
+    type: "scatter", id: "shot-series", label: "Shot",
+    data: shots.map(s => ({ x: s.x, y: s.y, id: s.id })),
+    color: SHOT_COLOR,
   },
   {
-    type: "scatter", id: "shot-ok", label: "Shot",
-    data: shots.filter(s => s.successful).map(s => ({ x: s.x, y: s.y, id: s.id })),
-    color: SHOT_COLOR, markerSize: 12,
+    type: "scatter", id: "tackle-series", label: "Tackle",
+    data: tackles.map(tk => ({ x: tk.x, y: tk.y, id: tk.id })),
+    color: TACKLE_COLOR,
   },
   {
-    type: "scatter", id: "shot-fail",
-    data: shots.filter(s => !s.successful).map(s => ({ x: s.x, y: s.y, id: s.id })),
-    color: hexToRgba(SHOT_COLOR, 0.4), markerSize: 9,
-  },
-  {
-    type: "scatter", id: "tackle-ok", label: "Tackle",
-    data: tackles.filter(t => t.successful).map(t => ({ x: t.x, y: t.y, id: t.id })),
-    color: TACKLE_COLOR, markerSize: 8,
-  },
-  {
-    type: "scatter", id: "tackle-fail",
-    data: tackles.filter(t => !t.successful).map(t => ({ x: t.x, y: t.y, id: t.id })),
-    color: hexToRgba(TACKLE_COLOR, 0.35), markerSize: 5,
-  },
-  {
-    type: "scatter", id: "intercept-ok", label: "Interception",
-    data: interceptions.filter(i => i.successful).map(i => ({ x: i.x, y: i.y, id: i.id })),
-    color: INTERCEPT_COLOR, markerSize: 8,
-  },
-  {
-    type: "scatter", id: "intercept-fail",
-    data: interceptions.filter(i => !i.successful).map(i => ({ x: i.x, y: i.y, id: i.id })),
-    color: hexToRgba(INTERCEPT_COLOR, 0.35), markerSize: 5,
+    type: "scatter", id: "intercept-series", label: "Interception",
+    data: interceptions.map(ic => ({ x: ic.x, y: ic.y, id: ic.id })),
+    color: INTERCEPT_COLOR,
   },
 ];
 
@@ -133,6 +111,29 @@ function pitchArc(cx, cy, r, aFrom, aTo, X, Y) {
     pts.push(`${X(cx + r * Math.cos(a))},${Y(cy + r * Math.sin(a))}`);
   }
   return pts.join(" ");
+}
+
+// SVG shape helpers (cx/cy/r in SVG pixel space)
+function starPoints(cx, cy, r) {
+  const inner = r * 0.4;
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI) / 5 - Math.PI / 2;
+    const rad = i % 2 === 0 ? r : inner;
+    pts.push(`${cx + rad * Math.cos(angle)},${cy + rad * Math.sin(angle)}`);
+  }
+  return pts.join(" ");
+}
+
+function trianglePoints(cx, cy, r) {
+  const top = `${cx},${cy - r}`;
+  const bl = `${cx - r * 0.866},${cy + r * 0.5}`;
+  const br = `${cx + r * 0.866},${cy + r * 0.5}`;
+  return `${top} ${bl} ${br}`;
+}
+
+function diamondPoints(cx, cy, r) {
+  return `${cx},${cy - r} ${cx + r * 0.7},${cy} ${cx},${cy + r} ${cx - r * 0.7},${cy}`;
 }
 
 // --- Custom SVG layer: pitch markings ---
@@ -181,7 +182,7 @@ function PitchBackground() {
     h: Math.abs(Y(y2) - Y(y1)),
   });
 
-  const p = { fill: "none", stroke: LINE_W, strokeWidth: LW };
+  const lp = { fill: "none", stroke: LINE_W, strokeWidth: LW };
 
   return (
     <g>
@@ -189,28 +190,28 @@ function PitchBackground() {
       <rect x={left} y={top} width={width} height={height} fill={PITCH_GREEN} />
 
       {/* Pitch outline */}
-      {(() => { const r = R(0, 0, 105, 68); return <rect {...p} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
+      {(() => { const r = R(0, 0, 105, 68); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
 
       {/* Halfway line */}
-      <line {...p} x1={X(52.5)} y1={Y(0)} x2={X(52.5)} y2={Y(68)} />
+      <line {...lp} x1={X(52.5)} y1={Y(0)} x2={X(52.5)} y2={Y(68)} />
 
       {/* Center circle */}
-      <polyline {...p} points={pitchArc(52.5, 34, circleR, 0, 360, X, Y)} />
+      <polyline {...lp} points={pitchArc(52.5, 34, circleR, 0, 360, X, Y)} />
 
       {/* Center spot */}
       <circle cx={X(52.5)} cy={Y(34)} r={4} fill={LINE_W} />
 
       {/* Left penalty area */}
-      {(() => { const r = R(0, 34 - penHW, penDepth, 34 + penHW); return <rect {...p} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
+      {(() => { const r = R(0, 34 - penHW, penDepth, 34 + penHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
 
       {/* Right penalty area */}
-      {(() => { const r = R(105 - penDepth, 34 - penHW, 105, 34 + penHW); return <rect {...p} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
+      {(() => { const r = R(105 - penDepth, 34 - penHW, 105, 34 + penHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
 
       {/* Left goal area */}
-      {(() => { const r = R(0, 34 - goalHW, goalDepth, 34 + goalHW); return <rect {...p} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
+      {(() => { const r = R(0, 34 - goalHW, goalDepth, 34 + goalHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
 
       {/* Right goal area */}
-      {(() => { const r = R(105 - goalDepth, 34 - goalHW, 105, 34 + goalHW); return <rect {...p} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
+      {(() => { const r = R(105 - goalDepth, 34 - goalHW, 105, 34 + goalHW); return <rect {...lp} x={r.x} y={r.y} width={r.w} height={r.h} />; })()}
 
       {/* Left goal (extends outside pitch) */}
       <rect
@@ -231,14 +232,14 @@ function PitchBackground() {
       <circle cx={X(94)} cy={Y(34)} r={3} fill={LINE_W} />
 
       {/* Penalty arcs (portions visible outside penalty areas) */}
-      {leftPenArc && <polyline {...p} points={leftPenArc} />}
-      {rightPenArc && <polyline {...p} points={rightPenArc} />}
+      {leftPenArc && <polyline {...lp} points={leftPenArc} />}
+      {rightPenArc && <polyline {...lp} points={rightPenArc} />}
 
       {/* Corner arcs (radius 1m from each corner) */}
-      <polyline {...p} points={pitchArc(0, 0, 1, 0, 90, X, Y)} />
-      <polyline {...p} points={pitchArc(105, 0, 1, 90, 180, X, Y)} />
-      <polyline {...p} points={pitchArc(0, 68, 1, -90, 0, X, Y)} />
-      <polyline {...p} points={pitchArc(105, 68, 1, 180, 270, X, Y)} />
+      <polyline {...lp} points={pitchArc(0, 0, 1, 0, 90, X, Y)} />
+      <polyline {...lp} points={pitchArc(105, 0, 1, 90, 180, X, Y)} />
+      <polyline {...lp} points={pitchArc(0, 68, 1, -90, 0, X, Y)} />
+      <polyline {...lp} points={pitchArc(105, 68, 1, 180, 270, X, Y)} />
     </g>
   );
 }
@@ -303,6 +304,51 @@ function ArrowsLayer() {
   );
 }
 
+// --- Custom SVG layer: distinct marker shapes per event type ---
+// Passes=circles, Shots=stars, Tackles=triangles, Interceptions=diamonds
+function EventMarkersLayer() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const X = (m) => xScale(m);
+  const Y = (m) => yScale(m);
+
+  return (
+    <g>
+      {/* Passes: circles */}
+      {passes.map(p => {
+        const cx = X(p.x), cy = Y(p.y);
+        const r = p.successful ? 7 : 5;
+        const fill = p.successful ? PASS_COLOR : hexToRgba(PASS_COLOR, 0.35);
+        return <circle key={p.id} cx={cx} cy={cy} r={r} fill={fill} />;
+      })}
+
+      {/* Shots: 5-pointed stars */}
+      {shots.map(s => {
+        const cx = X(s.x), cy = Y(s.y);
+        const r = s.successful ? 10 : 7;
+        const fill = s.successful ? SHOT_COLOR : hexToRgba(SHOT_COLOR, 0.4);
+        return <polygon key={s.id} points={starPoints(cx, cy, r)} fill={fill} />;
+      })}
+
+      {/* Tackles: upward-pointing triangles */}
+      {tackles.map(tk => {
+        const cx = X(tk.x), cy = Y(tk.y);
+        const r = tk.successful ? 8 : 6;
+        const fill = tk.successful ? TACKLE_COLOR : hexToRgba(TACKLE_COLOR, 0.35);
+        return <polygon key={tk.id} points={trianglePoints(cx, cy, r)} fill={fill} />;
+      })}
+
+      {/* Interceptions: diamonds */}
+      {interceptions.map(ic => {
+        const cx = X(ic.x), cy = Y(ic.y);
+        const r = ic.successful ? 8 : 6;
+        const fill = ic.successful ? INTERCEPT_COLOR : hexToRgba(INTERCEPT_COLOR, 0.35);
+        return <polygon key={ic.id} points={diamondPoints(cx, cy, r)} fill={fill} />;
+      })}
+    </g>
+  );
+}
+
 // --- Root chart component ---
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -331,11 +377,11 @@ export default function Chart() {
       {/* 1. Pitch background and markings */}
       <PitchBackground />
 
-      {/* 2. Directional arrows (below dots so dots are always visible) */}
+      {/* 2. Directional arrows (below markers) */}
       <ArrowsLayer />
 
-      {/* 3. Scatter data points */}
-      <ScatterPlot />
+      {/* 3. Event markers — circles/stars/triangles/diamonds per event type */}
+      <EventMarkersLayer />
 
       {/* 4. Legend — row layout, centered below pitch */}
       <ChartsLegend
