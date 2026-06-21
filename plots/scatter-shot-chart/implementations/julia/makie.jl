@@ -119,16 +119,19 @@ lines!(ax, 0.75 .* cos.(θ_rim), 0.75 .* sin.(θ_rim); color = lc, linewidth = l
 lines!(ax, [-3.0, 3.0], [-1.25, -1.25]; color = lc, linewidth = lw + 1.0)
 
 # --- Shot markers -----------------------------------------------------------
+# Shape encoding adds a second channel for CVD accessibility (xcross = missed, circle = made)
 scatter!(ax, x_shots[missed_idx], y_shots[missed_idx];
-    color = (COLOR_MISSED, 0.62), markersize = 9,
-    strokewidth = 0.7, strokecolor = PAGE_BG)
+    color = (COLOR_MISSED, 0.65), markersize = 12,
+    marker = :xcross,
+    strokewidth = 0.5, strokecolor = PAGE_BG)
 
 scatter!(ax, x_shots[made_idx], y_shots[made_idx];
-    color = (COLOR_MADE, 0.78), markersize = 9,
+    color = (COLOR_MADE, 0.80), markersize = 12,
+    marker = :circle,
     strokewidth = 0.7, strokecolor = PAGE_BG)
 
 # --- Legend -----------------------------------------------------------------
-elem_missed = MarkerElement(; color = COLOR_MISSED, marker = :circle, markersize = 14)
+elem_missed = MarkerElement(; color = COLOR_MISSED, marker = :xcross, markersize = 14)
 elem_made   = MarkerElement(; color = COLOR_MADE,   marker = :circle, markersize = 14)
 
 Legend(
