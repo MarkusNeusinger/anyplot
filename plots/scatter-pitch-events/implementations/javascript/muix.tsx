@@ -1,8 +1,7 @@
 // anyplot.ai
 // scatter-pitch-events: Soccer Pitch Event Map
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-21
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-21
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
