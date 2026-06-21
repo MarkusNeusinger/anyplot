@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:40:25Z'
-updated: '2026-06-21T01:07:37Z'
+updated: '2026-06-21T01:16:26Z'
 generated_by: claude-sonnet
 workflow_run: 27888951511
 issue: 4420
@@ -12,47 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Sophisticated gradient coloring by -log10(p-value) via imprint_seq colormap —
-    more informative than binary red/gray approach
-  - 'All spec requirements implemented: M=0 reference line, ±1 dashed FC thresholds,
-    LOESS smoothing, transparency, top-gene annotations'
-  - 'Highly idiomatic Bokeh usage: ColumnDataSource, HoverTool, LinearColorMapper+transform(),
-    Span, Label, ColorBar — full library feature set'
-  - Full theme adaptation for all major elements (title, axis labels, ticks, grid,
-    legend, page/border background)
-  - Realistic RNA-seq simulation with biologically plausible gene names, expression
-    distribution (gamma), 8% DE rate, and p-value structure
-  - Summary annotation (upregulated/downregulated counts) adds at-a-glance context
-  - Clean reproducible code with np.random.seed(42), proper Selenium headless export,
-    and both HTML + PNG artifacts saved
+  - Complete and accurate MA plot with all required spec features (significant highlights,
+    reference lines, LOESS, gene annotations)
+  - Excellent use of imprint_seq continuous colormap to encode significance strength
+    as a gradient rather than binary color
+  - Principled top-gene selection using composite score (|LFC| × −log10p) avoiding
+    arbitrary cutoffs
+  - 'Full theme adaptation: all 5 chrome tokens applied to all text, axis, grid, legend,
+    and colorbar elements in both renders'
+  - LOESS approximation via binned moving average + convolution avoids scipy dependency
+    while producing smooth trend
   weaknesses:
-  - 'Title is missing the language token: ''ma-differential-expression · bokeh · anyplot.ai''
-    should be ''ma-differential-expression · python · bokeh · anyplot.ai'''
-  - ColorBar background not adapted for dark theme — color_bar.background_fill_color
-    and color_bar.bar_line_color are not set; add background_fill_color=PAGE_BG (or
-    ELEVATED_BG) and background_fill_alpha=1 to the ColorBar constructor so it blends
-    with the dark surface rather than showing as a light box
-  - Gene annotation labels cluster at the bottom-left quadrant (COL2168, SHH1305,
-    RBB441, etc.) and overlap each other — consider spreading labels with x/y offsets
-    or limiting to top 5 rather than 8
+  - 'Text overlap in lower-left quadrant: summary annotation (''▲ 599 upregulated
+    · ▼ 643 downregulated'') at screen coords (70, 70) overlaps with gene name labels
+    SHH1360 and COL1158 in data-space — relocate summary annotation to top-right or
+    bottom-right screen-space position to clear all gene annotations'
+  - 'Design headroom: tick marks could be removed for a cleaner look; axis_line_width
+    could be reduced'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme
-      Chrome: Title 'ma-differential-expression · bokeh · anyplot.ai' at 50pt in dark ink — readable. X-axis 'Mean Expression (log²)' and Y-axis 'Log² Fold Change (M)' at 42pt in dark ink. Tick labels at 34pt in INK_SOFT. All chrome text is dark and clearly readable against the light background.
-      Data: ~13,000 non-significant genes as muted gray scatter (alpha=0.12) form a background cloud. ~1,746 significant genes colored teal-to-blue via imprint_seq gradient encoding -log10(p-value) (alpha=0.7, size=9). LOESS trend in lavender (#C475FD) — clearly visible. Reference lines at M=0 (solid) and M=±1 (dashed). FC=2 and FC=-2 italic labels. Summary annotation at bottom-left. ColorBar on right side with proper teal-blue gradient.
-      Legibility verdict: PASS — all elements readable. Gene annotation labels (22pt) and summary annotation (24pt) are readable at full resolution but may be tight at small sizes.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "ma-differential-expression · python · bokeh · anyplot.ai" clearly visible in dark ink (#1A1A17); axis labels "Mean Expression (log₂)" and "Log₂ Fold Change (M)" readable; tick labels in INK_SOFT (#4A4A44) clearly readable; colorbar title and ticks legible; legend text readable; FC=2/FC=-2 annotation labels visible on right side
+      Data: Non-significant genes rendered as tiny muted dots (INK_MUTED, alpha=0.12) forming a dense gray cloud; significant genes colored green→blue via imprint_seq colormap encoding -log10(p-value) strength; LOESS trend line in lavender (#C475FD); reference lines at M=0 (solid) and M=±1 (dashed) visible; top-5 gene annotations (WNT2117, SHH1360, COL1158, COL5938, KRAS5524) in dark bold ink; summary annotation at bottom-left; colorbar on right
+      Legibility verdict: PASS — all text readable; minor crowding between summary annotation and gene labels (SHH1360, COL1158) in lower-left quadrant causes moderate overlap but text remains legible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme
-      Chrome: Title, axis labels, and tick labels rendered in light theme-adaptive colors (INK=#F0EFE8, INK_SOFT=#B8B7B0) — all clearly readable against the dark background. No dark-on-dark failures observed for text elements.
-      Data: Data colors are identical to the light render — same teal-to-blue gradient for significant genes, same muted color for non-significant. LOESS lavender line clearly visible. Reference lines and FC labels visible.
-      Legibility verdict: PASS for text. MINOR ISSUE: The ColorBar on the right side appears to have a lighter background inconsistent with the dark page background — color_bar.background_fill_color is not explicitly set to PAGE_BG or ELEVATED_BG, so Bokeh's default (likely near-white) is used, creating a visible light rectangle against the dark surface. This is a theme-chrome adaptation failure for the ColorBar widget specifically.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light cream (#F0EFE8) clearly readable against dark background; axis labels in INK (#F0EFE8) readable; tick labels in INK_SOFT (#B8B7B0) readable; colorbar title and ticks in appropriate light tones; legend text readable; no dark-on-dark failures detected
+      Data: Data colors identical to light render — imprint_seq colormap (green→blue) unchanged; lavender LOESS line identical; non-significant cloud identical; same gene annotations in light ink; all data elements clearly distinguishable from dark background
+      Legibility verdict: PASS — all text readable against dark background; same lower-left crowding as light render; brand green #009E73 visible at low-p-value end of colormap
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -60,83 +54,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (50/42/34pt canonical). All major text
-          readable in both themes. Gene labels (22pt) and summary (24pt) are slightly
-          small for mobile readability.
+        comment: All text readable in both themes; minor crowding in bottom-left where
+          gene labels and summary annotation are close
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: false
-        comment: Gene annotation labels cluster at bottom-left (COL2168, SHH1305,
-          RBB441, COL5838, KRAS5024, COL008) and overlap each other in that region.
+        comment: Moderate overlap in lower-left between gene name annotations (SHH1360,
+          COL1158) and summary count annotation at screen coords (70,70)
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'High-density scatter (15k points) handled well: non-sig alpha=0.12,
-          sig alpha=0.7 with size=9. LOESS line clearly visible. Reference lines readable.'
+        comment: Non-significant genes intentionally faint (alpha=0.12); significant
+          genes clearly visible with colormap gradient; LOESS line prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq for continuous coloring. Lavender LOESS distinct from
-          data. Gray non-sig layer distinct. CVD-safe.
+        comment: imprint_seq colormap is CVD-safe; alpha + color together distinguish
+          groups; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). min_border_* explicitly set. No overflow
-          observed. Title at ~50% of canvas width (short title relative to 67-char
-          standard). Good proportions.
+        comment: Canvas gate passed (3200x1800); proportions good; colorbar fits cleanly;
+          min_border reservations prevent edge clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Mean Expression (log²)'' Y: ''Log² Fold Change (M)'' — descriptive
-          with correct math notation.'
+        comment: Mean Expression (log2) and Log2 Fold Change (M) are descriptive with
+          units; correct title format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Plot backgrounds correct (#FAF8F1 / #1A1A17). imprint_seq used correctly
-          for continuous data. However, ColorBar background_fill_color not set — appears
-          as light rectangle in dark theme, breaking theme consistency.'
+        passed: true
+        comment: 'imprint_seq (#009E73 to #4467A3) used correctly for continuous significance
+          data; non-sig uses INK_MUTED anchor; backgrounds #FAF8F1/#1A1A17; both themes
+          correct'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Above-default: gradient coloring by significance strength, two-layer
-          scatter (background cloud + highlighted foreground), ColorBar, gene labels,
-          italic FC annotations. Slightly limited by ColorBar dark-mode issue.'
+        comment: Continuous colormap encoding significance strength is strong design;
+          two-tier scatter creates clear visual hierarchy; lavender LOESS line well-chosen
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: outline_line_color=None removes frame border. y-axis grid only at
-          alpha=0.15. Very subtle non-sig layer (alpha=0.12). FC labels in italic
-          muted style. Good refinement above default.
+        comment: Y-axis grid only; outline_line_color=None removes box border; minor
+          ticks disabled; clean legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: LOESS reveals expression-dependent bias (primary MA plot insight).
-          Gradient encodes confidence level. Summary counts context. Gene labels identify
-          outliers. FC thresholds guide interpretation. Strong storytelling.
+        comment: LOESS shows systematic bias; fold-change thresholds with labels;
+          principled top-gene selection; summary counts; text overlap weakens lower-left
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,32 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'MA plot correctly implemented: A (mean expression) on X, M (log
-          fold change) on Y.'
+        comment: Correct MA plot (M vs A scatter)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: significant gene highlighting, M=0 reference
-          line, ±1 dashed thresholds, LOESS curve (binned moving average), alpha transparency,
-          top gene labels.'
+        comment: Significant genes highlighted; M=0 solid reference line; M=+/-1 dashed
+          lines; LOESS trend; appropriate alpha; top-5 genes labeled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean_expression, Y=log_fold_change, significance binary correctly
-          applied. 15,000 genes — within spec range.
+        comment: X=mean_expression (A), Y=log_fold_change (M), color encodes significance
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title is ''ma-differential-expression · bokeh · anyplot.ai'' — missing
-          ''· python ·''. Required format: ''{spec-id} · {language} · {library} ·
-          anyplot.ai''. Legend labels are appropriate (Not Significant, Significant,
-          LOESS Trend).'
+        passed: true
+        comment: Title exactly ma-differential-expression · python · bokeh · anyplot.ai;
+          legend labels appropriate
     data_quality:
       score: 15
       max: 15
@@ -179,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all MA plot aspects: bulk of non-significant genes, significant
-          highlighted with gradient, LOESS bias, FC thresholds, gene annotations.'
+        comment: Shows scatter cloud, significance highlighting, LOESS bias curve,
+          fold-change thresholds, gene annotations, summary statistics, colorbar
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq DEG analysis with biologically realistic gene names (BRCA,
-          TP, MYC, EGFR, etc.), 8% DE rate, gamma-distributed expression, realistic
-          p-value structure.
+        comment: RNA-seq DESeq2-style data; 15000 genes; 8% DE rate; gamma-distributed
+          mean expression; realistic gene family names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean expression 0-15+ (log2 scale appropriate for RNA-seq), log FC
-          ±1-4 (biologically relevant), 15,000 genes (whole-transcriptome scale).
+        comment: Mean expression 0-20 (reasonable log-scale RNA-seq); LFC range -4
+          to +4; p-values 0-1
     code_quality:
       score: 10
       max: 10
@@ -205,35 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: _lerp_hex is a minimal 5-line helper required for the color interpolation,
-          not an abstraction violation. Flat script structure throughout.
+        comment: Flat script; _lerp_hex helper is in library guide template and acceptable
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, pathlib.Path, numpy, bokeh modules,
-          selenium.'
+        comment: All imports used; sys.path fix necessary to prevent self-shadowing
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Appropriate complexity for the visualization. Good Bokeh
-          patterns.
+        comment: Clean sequential flow; LOESS via binned moving average + convolution
+          is appropriate; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current Bokeh
-          API.
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png; current Bokeh API
     library_mastery:
       score: 9
       max: 10
@@ -243,16 +223,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, HoverTool, LinearColorMapper, transform(), Span,
-          Label, ColorBar, Range1d, output_file+save — full idiomatic Bokeh toolkit.
+        comment: ColumnDataSource split for two groups; transform for data-driven
+          color; Span for reference lines; Label for annotations; HoverTool; toolbar_location=None
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive HoverTool with formatted tooltips, on-the-fly color mapping
-          with transform(), Span reference lines, Label annotations — distinctly Bokeh.
-          Slight deduction as Whisker/Band and callback features not explored.
+        comment: ColorBar + LinearColorMapper with data transform; HoverTool with
+          custom tooltip fields; ColumnDataSource split enabling per-group rendering;
+          CDP viewport override for exact canvas dimensions
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -270,5 +250,5 @@ impl_tags:
   - binning
   - rolling-window
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
