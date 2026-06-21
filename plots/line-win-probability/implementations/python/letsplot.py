@@ -1,27 +1,44 @@
-""" pyplots.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403, F401
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data — simulated NFL game: Eagles vs Cowboys
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+# Theme-adaptive chrome tokens
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette — first series always #009E73
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Team fills — semantic: home team (Eagles) → Imprint green, away (Cowboys) → Imprint blue
+HOME_COLOR = IMPRINT_PALETTE[0]  # #009E73 — Eagles/home
+AWAY_COLOR = IMPRINT_PALETTE[2]  # #4467A3 — Cowboys/away
+
+# --- Data: simulated NFL game, Eagles vs Cowboys ---
 np.random.seed(42)
 total_plays = 120
 play_number = np.arange(total_plays)
 
-# Generate win probability with realistic momentum swings
 win_prob = np.zeros(total_plays)
 win_prob[0] = 0.50
 
-# Scoring events with play index, probability shift, and label
+# Scoring events: (play_index, probability_shift, label)
 events = [
     (8, 0.12, "Eagles FG 3-0"),
     (22, -0.15, "Cowboys TD 3-7"),
@@ -41,11 +58,10 @@ for i in range(1, total_plays):
     shift = event_plays.get(i, 0.0)
     win_prob[i] = np.clip(win_prob[i - 1] + shift + noise + drift, 0.02, 0.98)
 
-# Force final convergence to winner
+# Converge to Eagles win at the end
 win_prob[-5:] = np.linspace(win_prob[-6], 0.95, 5)
 win_prob[-1] = 0.97
 
-# Create main dataframe with helper columns for area fill
 df = pd.DataFrame(
     {
         "play": play_number,
@@ -56,9 +72,9 @@ df = pd.DataFrame(
     }
 )
 
-# Event annotations — select key swings only, with alternating positions
+# Key events — alternating label offsets to avoid overlap
 key_event_indices = [1, 2, 4, 5, 7]
-nudge_directions = [-0.08, 0.07, -0.08, 0.07, -0.08]  # alternate below/above
+nudge_directions = [-0.08, 0.07, -0.08, 0.07, -0.08]
 key_events = pd.DataFrame(
     {
         "play": [events[i][0] for i in key_event_indices],
@@ -68,62 +84,73 @@ key_events = pd.DataFrame(
     }
 )
 
-# Team colors
-eagles_green = "#004C54"
-cowboys_blue = "#869397"
+# --- Theme-adaptive chrome ---
+anyplot_theme = theme(  # noqa: F405
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+    panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+    panel_grid_major_y=element_line(color=INK_MUTED, size=0.2),  # noqa: F405
+    panel_grid_major_x=element_blank(),  # noqa: F405
+    panel_grid_minor=element_blank(),  # noqa: F405
+    axis_title=element_text(color=INK, size=12),  # noqa: F405
+    axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
+    axis_line=element_line(color=INK_SOFT),  # noqa: F405
+    panel_border=element_blank(),  # noqa: F405
+    plot_title=element_text(color=INK, size=16),  # noqa: F405
+    plot_subtitle=element_text(color=INK_SOFT, size=10),  # noqa: F405
+    plot_margin=[40, 60, 20, 20],
+)
 
-# Plot
+# --- Build plot ---
 plot = (
     ggplot(df, aes(x="play"))  # noqa: F405
-    # Area fill — home team above 50%
+    # Area fills — Imprint palette, theme-constant data colors
     + geom_ribbon(  # noqa: F405
         aes(ymin="baseline", ymax="above_50"),  # noqa: F405
-        fill=eagles_green,
-        alpha=0.35,
+        fill=HOME_COLOR,
+        alpha=0.28,
     )
-    # Area fill — away team below 50%
     + geom_ribbon(  # noqa: F405
         aes(ymin="below_50", ymax="baseline"),  # noqa: F405
-        fill=cowboys_blue,
-        alpha=0.35,
+        fill=AWAY_COLOR,
+        alpha=0.28,
     )
-    # Win probability line
+    # Win probability line — theme-adaptive ink
     + geom_line(  # noqa: F405
         aes(y="win_prob"),  # noqa: F405
-        color="#1a1a1a",
-        size=1.8,
+        color=INK,
+        size=1.0,
         tooltips=layer_tooltips()  # noqa: F405
         .line("Play @play")
         .format("win_prob", ".0%")
         .line("Win prob: @win_prob"),
     )
     # 50% reference line
-    + geom_hline(yintercept=0.5, color="#888888", size=0.8, linetype="dashed")  # noqa: F405
+    + geom_hline(yintercept=0.5, color=INK_SOFT, size=0.7, linetype="dashed")  # noqa: F405
     # Quarter dividers
-    + geom_vline(xintercept=30, color="#CCCCCC", size=0.6, linetype="dotted")  # noqa: F405
-    + geom_vline(xintercept=60, color="#CCCCCC", size=0.6, linetype="dotted")  # noqa: F405
-    + geom_vline(xintercept=90, color="#CCCCCC", size=0.6, linetype="dotted")  # noqa: F405
+    + geom_vline(xintercept=30, color=INK_MUTED, size=0.5, linetype="dotted")  # noqa: F405
+    + geom_vline(xintercept=60, color=INK_MUTED, size=0.5, linetype="dotted")  # noqa: F405
+    + geom_vline(xintercept=90, color=INK_MUTED, size=0.5, linetype="dotted")  # noqa: F405
     # Key event markers
     + geom_point(  # noqa: F405
         data=key_events,
         mapping=aes(x="play", y="win_prob"),  # noqa: F405
-        size=6,
-        color="#1a1a1a",
-        fill="white",
+        size=3.0,
+        color=INK,
+        fill=PAGE_BG,
         shape=21,
-        stroke=2.0,
+        stroke=1.5,
     )
-    # Key event labels with background fill (letsplot geom_label)
+    # Key event labels with elevated background
     + geom_label(  # noqa: F405
         data=key_events,
         mapping=aes(x="play", y="label_y", label="label"),  # noqa: F405
-        size=10,
-        color="#1a1a1a",
-        fill="white",
-        alpha=0.85,
-        label_padding=0.4,
-        label_r=0.2,
-        label_size=0.5,
+        size=4,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.92,
+        label_padding=0.3,
+        label_r=0.15,
+        label_size=0.3,
     )
     # Scales
     + scale_y_continuous(  # noqa: F405
@@ -133,28 +160,18 @@ plot = (
     + scale_x_continuous(  # noqa: F405
         breaks=[0, 30, 60, 90, 120], labels=["Q1", "Q2", "Q3", "Q4", "End"]
     )
-    # Labels
     + labs(  # noqa: F405
         x="Game Progress",
         y="Eagles Win Probability",
-        title="line-win-probability \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="Eagles 27 \u2013 Cowboys 17  \u00b7  Eagles recover from Q3 deficit for convincing finish",
+        title="line-win-probability · python · letsplot · anyplot.ai",
+        subtitle="Eagles 27 – Cowboys 17  ·  Eagles recover from Q3 deficit for convincing finish",
     )
-    + ggsize(1600, 900)  # noqa: F405
+    # Canvas: 800×450 × scale=4 → 3200×1800 px (landscape)
+    + ggsize(800, 450)  # noqa: F405
     + theme_minimal()  # noqa: F405
-    + flavor_high_contrast_light()  # noqa: F405
-    + theme(  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        plot_title=element_text(size=24),  # noqa: F405
-        plot_subtitle=element_text(size=16, color="#555555"),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        plot_margin=[40, 60, 20, 20],
-    )
+    + anyplot_theme
 )
 
-# Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+# --- Save PNG + HTML ---
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
