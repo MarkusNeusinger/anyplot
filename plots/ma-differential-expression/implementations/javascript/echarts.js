@@ -12,8 +12,8 @@ function randn() { return Math.sqrt(-2 * Math.log(rand() || 1e-15)) * Math.cos(2
 
 // Data — RNA-seq drug treatment vs. control, cancer cell line (n=2000 genes)
 const N = 2000;
-const GENE_NAMES = ['TP53','EGFR','KRAS','MYC','BRCA1','MDM2','CDK4','PTEN','RB1','VEGFA'];
-const meanArr = [], lfcArr = [], sigArr = [], labelArr = [];
+const GENE_NAMES = ['TP53', 'EGFR', 'KRAS', 'MYC', 'BRCA1', 'MDM2', 'CDK4', 'PTEN', 'RB1', 'VEGFA'];
+const meanArr = [], lfcArr = [], sigArr = [];
 
 for (let i = 0; i < N; i++) {
   // A: mean average expression (log2), bimodal — some lowly-expressed genes
@@ -28,18 +28,39 @@ for (let i = 0; i < N; i++) {
     : randn() * sigma + bias;
   // Significance: DE genes at adequate expression with |LFC| > 1
   const sig = isDE && a > 4 && Math.abs(m) > 1.0 && rand() < 0.80;
-  meanArr.push(a); lfcArr.push(m); sigArr.push(sig); labelArr.push('');
+  meanArr.push(a); lfcArr.push(m); sigArr.push(sig);
 }
 
-// Label top 10 significant genes by |LFC|
-const si = sigArr.map((s, i) => s ? i : -1).filter(i => i >= 0)
-                 .sort((a, b) => Math.abs(lfcArr[b]) - Math.abs(lfcArr[a]));
-si.slice(0, GENE_NAMES.length).forEach((gi, k) => { labelArr[gi] = GENE_NAMES[k]; });
+// Select 1 top gene per spatial quadrant to eliminate label collision
+const sigIdx = sigArr.map((s, i) => s ? i : -1).filter(i => i >= 0);
+const sigAVals = sigIdx.map(i => meanArr[i]).sort((a, b) => a - b);
+const medA = sigAVals[Math.floor(sigAVals.length / 2)];
+
+const quads = [
+  i => lfcArr[i] > 0 && meanArr[i] < medA,   // upper-left
+  i => lfcArr[i] > 0 && meanArr[i] >= medA,  // upper-right
+  i => lfcArr[i] < 0 && meanArr[i] < medA,   // lower-left
+  i => lfcArr[i] < 0 && meanArr[i] >= medA,  // lower-right
+];
+
+const labelMap = new Map();
+quads.forEach((pred, qi) => {
+  const best = sigIdx.filter(pred).sort((a, b) => Math.abs(lfcArr[b]) - Math.abs(lfcArr[a]))[0];
+  if (best !== undefined) labelMap.set(best, GENE_NAMES[qi]);
+});
+
+// Label position: away from the data cloud center to avoid obstructing points
+function labelPos(i) {
+  if (meanArr[i] >= medA * 1.5) return 'left';  // far-right genes label leftward
+  return lfcArr[i] > 0 ? 'top' : 'bottom';
+}
 
 // Partition into scatter series
 const nsData = [], upData = [], dnData = [];
 for (let i = 0; i < N; i++) {
-  const pt = { value: [+meanArr[i].toFixed(3), +lfcArr[i].toFixed(4)], name: labelArr[i] };
+  const name = labelMap.get(i) || '';
+  const pt = { value: [+meanArr[i].toFixed(3), +lfcArr[i].toFixed(4)], name };
+  if (name) pt.label = { show: true, position: labelPos(i) };
   if (!sigArr[i]) nsData.push(pt);
   else if (lfcArr[i] >= 0) upData.push(pt);
   else dnData.push(pt);
@@ -121,7 +142,7 @@ chart.setOption({
     axisLabel: { color: t.inkSoft, fontSize: 13 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
-    splitLine: { lineStyle: { color: t.grid } }
+    splitLine: { show: false }
   },
   yAxis: {
     type: 'value',
@@ -142,6 +163,7 @@ chart.setOption({
       symbolSize: 4,
       itemStyle: { color: MUTED, opacity: 0.4 },
       emphasis: { disabled: true },
+      label: { show: false },
       markLine: {
         silent: true,
         symbol: ['none', 'none'],
@@ -157,30 +179,28 @@ chart.setOption({
       name: 'Upregulated',
       type: 'scatter',
       data: upData,
-      symbolSize: 6,
+      symbolSize: 8,
       itemStyle: { color: t.palette[0], opacity: 0.75 }, // #009E73 — semantic: gain/up
       label: {
-        show: true,
+        show: false,
         formatter: p => p.data.name,
-        position: 'right',
         color: t.ink,
-        fontSize: 11,
-        distance: 5
+        fontSize: 13,
+        distance: 6
       }
     },
     {
       name: 'Downregulated',
       type: 'scatter',
       data: dnData,
-      symbolSize: 6,
+      symbolSize: 8,
       itemStyle: { color: t.palette[4], opacity: 0.75 }, // #AE3030 — semantic: loss/down
       label: {
-        show: true,
+        show: false,
         formatter: p => p.data.name,
-        position: 'right',
         color: t.ink,
-        fontSize: 11,
-        distance: 5
+        fontSize: 13,
+        distance: 6
       }
     },
     {
