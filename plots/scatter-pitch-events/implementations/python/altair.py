@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
@@ -63,7 +63,10 @@ for i, etype in enumerate(event_types):
 
 outcomes = np.where(np.random.random(n_events) < 0.65, "Successful", "Unsuccessful")
 df = pd.DataFrame({"x": x, "y": y, "end_x": end_x, "end_y": end_y, "event_type": event_types, "outcome": outcomes})
-df["marker_size"] = np.where(df["event_type"] == "Shot", 280, 160)
+
+# Per-type marker sizes: smaller passes reduce midfield congestion
+size_map = {"Pass": 110, "Shot": 260, "Tackle": 150, "Interception": 150}
+df["marker_size"] = df["event_type"].map(size_map)
 
 # Arrowhead positions at 85% along each trajectory
 arrows_df = df[df["event_type"].isin(["Pass", "Shot"])].copy()
@@ -73,6 +76,10 @@ arrows_df["arrow_y"] = arrows_df["y"] + arrow_frac * (arrows_df["end_y"] - arrow
 dx = arrows_df["end_x"] - arrows_df["x"]
 dy = arrows_df["end_y"] - arrows_df["y"]
 arrows_df["angle"] = np.degrees(np.arctan2(dy, dx))
+
+# Annotation: deepest shot in the attacking third
+key_shot = df[df["event_type"] == "Shot"].nlargest(1, "x").copy()
+key_shot["callout"] = "Key shot"
 
 # Pitch zones — green gradient with pronounced opacity to highlight attacking third
 zones_data = pd.DataFrame(
@@ -84,6 +91,11 @@ zones_data = pd.DataFrame(
         "fill": ["#1a472a", "#1f5432", "#2d6a3f"],
         "zone_opacity": [0.20, 0.34, 0.58],
     }
+)
+
+# Zone labels — typographic hierarchy that names each pitch third
+zone_labels_data = pd.DataFrame(
+    {"x": [17.5, 52.5, 87.5], "y": [64.8, 64.8, 64.8], "label": ["Defensive Third", "Middle Third", "Attacking Third"]}
 )
 
 # Pitch markings — standard FIFA dimensions (105m × 68m)
@@ -129,6 +141,9 @@ y_axis = alt.Y(
     axis=alt.Axis(title=None, labels=False, ticks=False, grid=False, domain=False),
 )
 
+# Interactive selection: click legend to filter event types (HTML export feature)
+event_select = alt.selection_point(fields=["event_type"], bind="legend")
+
 # Zone background layers — full-domain coverage for clean pitch look
 zone_layers = []
 for _, row in zones_data.iterrows():
@@ -137,6 +152,17 @@ for _, row in zones_data.iterrows():
         .mark_rect(color=row["fill"], opacity=row["zone_opacity"])
         .encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
     )
+
+# Zone label layer — italic white labels establish typographic hierarchy
+zone_label_layer = (
+    alt.Chart(zone_labels_data)
+    .mark_text(fontSize=8.5, fontStyle="italic", color="rgba(255,255,255,0.52)", align="center", baseline="top")
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[-1.5, 106.5])),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[-1.5, 69.5])),
+        text="label:N",
+    )
+)
 
 # Pitch structure — white lines on dark green
 pitch_lines = (
@@ -167,10 +193,11 @@ spot_layer = (
     alt.Chart(spots).mark_point(color="rgba(255,255,255,0.88)", size=45, filled=True).encode(x=x_axis, y=y_axis)
 )
 
-# Direction lines for passes and shots
+# Direction lines for passes and shots — filtered by interactive selection
 arrow_lines = (
     alt.Chart(arrows_df)
     .mark_rule(strokeWidth=1.1)
+    .transform_filter(event_select)
     .encode(
         x="x:Q",
         y="y:Q",
@@ -185,6 +212,7 @@ arrow_lines = (
 arrowheads = (
     alt.Chart(arrows_df)
     .mark_point(shape="triangle-right", filled=True, size=90, stroke=None)
+    .transform_filter(event_select)
     .encode(
         x=alt.X("arrow_x:Q", scale=alt.Scale(domain=[-1.5, 106.5]), axis=None),
         y=alt.Y("arrow_y:Q", scale=alt.Scale(domain=[-1.5, 69.5]), axis=None),
@@ -196,10 +224,12 @@ arrowheads = (
     )
 )
 
-# Event markers — shape + color + size + opacity encodings
+# Event markers — shape + color + size + opacity encodings with legend-bound selection
 event_points = (
     alt.Chart(df)
     .mark_point(filled=True, stroke="#ffffff", strokeWidth=1.0)
+    .add_params(event_select)
+    .transform_filter(event_select)
     .encode(
         x=x_axis,
         y=y_axis,
@@ -223,7 +253,7 @@ event_points = (
             ),
             legend=None,
         ),
-        size=alt.Size("marker_size:Q", scale=alt.Scale(domain=[160, 280], range=[160, 280]), legend=None),
+        size=alt.Size("marker_size:Q", scale=alt.Scale(domain=[110, 260], range=[110, 260]), legend=None),
         opacity=alt.Opacity(
             "outcome:N",
             scale=alt.Scale(domain=["Successful", "Unsuccessful"], range=[0.92, 0.42]),
@@ -245,11 +275,25 @@ event_points = (
     )
 )
 
+# Annotation callout — labels the deepest shot to anchor the attacking-third story
+callout_layer = (
+    alt.Chart(key_shot)
+    .mark_text(
+        align="center", baseline="bottom", fontSize=8.5, fontStyle="italic", fontWeight="bold", color="#C475FD", dy=-8
+    )
+    .encode(
+        x=alt.X("x:Q", scale=alt.Scale(domain=[-1.5, 106.5])),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[-1.5, 69.5])),
+        text="callout:N",
+    )
+)
+
 # Compose all layers — inner view sized to maintain FIFA 105:68 pitch proportions
 title_str = "scatter-pitch-events · python · altair · anyplot.ai"
 chart = (
     alt.layer(
         *zone_layers,
+        zone_label_layer,
         pitch_lines,
         circle_layer,
         left_arc_layer,
@@ -259,6 +303,7 @@ chart = (
         arrow_lines,
         arrowheads,
         event_points,
+        callout_layer,
     )
     .properties(
         width=480,
