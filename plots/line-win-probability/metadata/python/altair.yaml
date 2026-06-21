@@ -1,38 +1,53 @@
 library: altair
+language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:32:22Z'
-updated: '2026-03-20T12:47:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23342814454
+updated: '2026-06-21T03:37:44Z'
+generated_by: claude-sonnet
+workflow_run: 27892063761
 issue: 4418
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/altair/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/altair/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented
-  - Strong data storytelling with annotated scoring events and game narrative
-  - Thoughtful team color palette (teal/muted red) avoiding accessibility issues
-  - Good use of Altair interactive features (selection, conditional encoding) for
-    HTML output
-  - Manual label positioning shows care in avoiding text collisions
+  - Perfect spec compliance — all required features (dual-color area fills, 50% baseline,
+    event annotations, quarter markers, final score subtitle) implemented correctly
+  - Excellent semantic color assignment — brand green (#009E73) for Eagles home area,
+    Imprint blue (#4467A3) for Cowboys away area, with justified semantic exception;
+    amber anchor for event markers creates strong visual hierarchy
+  - Clean Altair-idiomatic layered composition with bounded area fills (y2=alt.datum(50))
+    — exactly the right pattern for this chart type
+  - Both themes fully adaptive — INK/INK_SOFT/INK_MUTED tokens correctly threaded
+    through all chrome elements; dark render has zero dark-on-dark failures
+  - PIL canvas padding correctly implements the altair.md hard rule; canvas gate passed
+    at 3200x1800
   weaknesses:
-  - TD Eagles 24-20 label positioned far from its data point creating visual disconnect
-  - Event annotation font size (15pt) could be slightly larger for better readability
-  image_description: 'The plot displays a win probability chart for an Eagles vs Cowboys
-    NFL game. The x-axis shows "Game Time (minutes)" from 0 to 60, and the y-axis
-    shows "Win Probability (%)" from 0 to 100. A dashed horizontal reference line
-    sits at 50%. The area above 50% is filled with a muted teal (Eagles) and below
-    50% with a muted brownish-red (Cowboys). A dark charcoal line traces the probability
-    over time. Gold/amber circle markers with dark outlines highlight 10 scoring events,
-    each labeled in bold text (e.g., "FG Cowboys 0-3", "TD Eagles 7-3"). Dashed vertical
-    lines mark quarter boundaries labeled "Kickoff", "Q2", "Q3", "Q4", "Final" at
-    the top. The title reads "Eagles vs Cowboys · line-win-probability · altair ·
-    pyplots.ai" with subtitle "Final Score: Eagles 27 - Cowboys 20". The chart tells
-    a story of a back-and-forth game with the Eagles ultimately pulling away in the
-    4th quarter.'
+  - Event labels in Q3-Q4 region (minutes 35-55) experience visual crowding — particularly
+    'TD Eagles 17-10' / 'TD Cowboys 17-17' and the cluster near minutes 48-58. Consider
+    reducing event label fontSize from 13 to 11, or adding a subtle semi-transparent
+    background rect behind each label for improved legibility against the colored
+    area fills.
+  - The main probability line uses color=INK (dark/light adaptive neutral) rather
+    than a distinct data color — while consistent with the neutral anchor semantic,
+    it can blend with event label text in dense regions; a slightly lighter gray or
+    explicit neutral fill would improve separation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "Eagles vs Cowboys · line-win-probability · python · altair · anyplot.ai" bold at fontSize=15, dark INK (#1A1A17). Subtitle "Final Score: Eagles 27 – Cowboys 20" at INK_SOFT. Y-axis label "Win Probability (%)", X-axis label "Game Time (minutes)" both in INK. Tick labels at INK_SOFT. Quarter labels (Kickoff/Q2/Q3/Q4/Final) at INK_MUTED at top. Event labels bold in INK. All text clearly readable against warm off-white background.
+      Data: Main line in dark INK (adaptive neutral), strokeWidth=3.5. Area above 50% filled with #009E73 (Imprint brand green) at opacity=0.4. Area below 50% filled with #4467A3 (Imprint blue) at opacity=0.4. Dashed 50% baseline in INK_SOFT. Ten amber (#DDCC77) event markers with dark stroke. Win probability climbs dramatically to 100% at game end.
+      Legibility verdict: PASS — all text readable; slight label crowding near Q3-Q4 but no hard overlap
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Same title/subtitle/axis labels now rendered in #F0EFE8 (INK on dark) and #B8B7B0 (INK_SOFT on dark). All text clearly light-on-dark. Quarter labels in INK_MUTED (#A8A79F). Event labels in near-white. No dark-on-dark failures anywhere — all chrome tokens correctly adapted.
+      Data: Main probability line now white (#F0EFE8), clearly visible on dark background. Area fills (#009E73 green, #4467A3 blue) identical in hue to light render — only chrome flips. Amber event markers (#DDCC77) unchanged, visible against both fills. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — no dark-on-dark issues; all chrome inverted correctly; data colors stable across themes
   criteria_checklist:
     visual_quality:
       score: 28
@@ -43,41 +58,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; event labels at 15pt slightly small
-          but readable
+        comment: All text readable in both themes. Event labels at fontSize=13 bold
+          create slight visual density in Q3-Q4 region but remain readable. Title
+          fontsize correctly scaled to 15px for 72-char title.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Manual nudges prevent most overlap; TD Eagles 24-20 label positioned
-          far from data point
+        comment: No hard text-on-text overlap, but minor visual crowding of event
+          labels near minutes 35-50. Nudge system mostly effective.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line 3.5px, area opacity 0.4, event markers size 220 with stroke
-          - all well adapted
+        comment: 200-point line at strokeWidth=3.5 appropriate for medium density.
+          Amber event markers (size=220) with dark stroke clearly stand out.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Teal vs brownish-red colorblind-safe, gold markers provide strong
-          contrast
+        comment: Imprint green/blue CVD-safe pair; amber event markers visually distinct;
+          no red-green sole-signal reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 canvas well-utilized with balanced margins
+        comment: Canvas gate passed (3200x1800). Title at ~75% width expected for
+          long mandated title. PIL padding correctly applied.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Game Time (minutes), Win Probability (%)'
+        comment: 'Y: Win Probability (%) with unit; X: Game Time (minutes) with unit.
+          Title format correct with descriptive prefix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'HOME_COLOR=#009E73 (Imprint pos 1) for Eagles; AWAY_COLOR=#4467A3
+          (Imprint pos 3) for Cowboys; EVENT_COLOR=#DDCC77 (amber anchor). Semantic
+          exception justified. Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
       score: 15
       max: 20
@@ -87,21 +113,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with team color palette, gold markers, dark charcoal
-          line
+        comment: Clear intentional color hierarchy with team-colored fills, amber
+          event markers, and neutral INK line. Interactive crosshair adds richness
+          to HTML. Above default, not maximal.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled, view stroke removed, subtle dashed lines
+        comment: All spines removed; grid disabled with dashed 50% baseline as sole
+          reference; quarter dividers at INK_MUTED are subtle; area fill opacity well-chosen.
+          Event labels over colored fills could use background for refinement.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Annotated events, quarter markers, and subtitle guide viewer through
-          game narrative
+        comment: 'Strong narrative arc: game story unfolds through fills, labels,
+          and final probability spike to 100%. Scoring events mark clear turning points.
+          Subtitle anchors the narrative. Minor dock for crowded label region diluting
+          the climax.'
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +142,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct win probability line chart with area fills
+        comment: Win probability chart with dual area fills above/below 50% and annotated
+          scoring events — precisely the required chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 50% line, team fills, annotations, final
-          score, quarter markers'
+        comment: Y-axis 0-100%, dashed 50% reference line, home team area fill (green
+          above 50%), away team area fill (blue below 50%), scoring event annotations,
+          final score subtitle, quarter markers — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=game time, Y=win probability, full 0-100% range
+        comment: game_time->x, win_probability->y, correct domain [0,60]x[0,100];
+          win_prob reaches 1.0 at game end; event win_prob correctly interpolated
+          via np.interp.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format with game context, no legend needed
+        comment: 'Title: Eagles vs Cowboys · line-win-probability · python · altair
+          · anyplot.ai (descriptive prefix + spec-id + language + library + domain).
+          No legend needed — fills semantically self-described.'
     data_quality:
       score: 15
       max: 15
@@ -140,20 +177,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Momentum swings both ways, multiple event types, lead changes, decisive
-          ending
+        comment: Full game arc with 10 scoring events, multiple lead changes, momentum
+          swings, and climactic finish. Both fill regions activated. Quarter structure
+          demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL game with realistic teams, scoring, and game flow
+        comment: Eagles vs Cowboys is a genuine NFL rivalry. Score progression follows
+          realistic NFL scoring patterns. Final 27-20 is a plausible NFL score. Neutral,
+          non-controversial sports context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Win probability 0-100%, 60-minute game, realistic scores
+        comment: 0-100% probability range correct; 60-minute game time correct for
+          NFL; 200 data points within spec's 50-300 range; probability swings (0.10-0.28)
+          plausible for NFL scoring plays.
     code_quality:
       score: 10
       max: 10
@@ -163,33 +205,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: No functions or classes; linear script flow; layer list is straightforward.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas - all used
+        comment: importlib pattern explained by script-name collision with altair.py;
+          all imported modules (alt, pd, np, Image) actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, interactive elements are native Altair features
+        comment: Appropriate complexity for the layered chart; left/right event label
+          split for alignment is clean; PIL padding block follows the canonical altair.md
+          pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html, current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Altair
+          5 API (alt.selection_point, alt.condition). No bare plot.png.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -197,23 +243,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert declarative grammar: layered composition, encoding types,
-          alt.datum, alt.Title'
+        comment: Declarative layer composition with + operator; alt.datum() for reference
+          lines; alt.condition() for interactive visibility; configure_axis/view/title
+          for global styling; interpolate=monotone for smooth fills; mark_area with
+          y2=alt.datum(50) for bounded fills — all idiomatic Altair patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: selection_point, alt.condition, voronoi hover - distinctive but only
-          visible in HTML
+        comment: 'Layered area fills with y2 baseline (distinctly Altair); interactive
+          crosshair with alt.selection_point(nearest=True); conditional opacity; HTML
+          export alongside PNG. One point withheld: interactive feature benefits not
+          visible in PNG review artifacts.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
