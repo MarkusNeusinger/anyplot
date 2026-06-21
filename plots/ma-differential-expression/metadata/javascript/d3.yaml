@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: ma-differential-expression
 created: '2026-06-21T01:19:25Z'
-updated: '2026-06-21T01:26:23Z'
+updated: '2026-06-21T01:37:08Z'
 generated_by: claude-sonnet
 workflow_run: 27889331114
 issue: 4420
@@ -15,47 +15,50 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 quality_score: 88
 review:
   strengths:
-  - 'Excellent semantic color usage: brand green (#009E73) for up-regulated, matte
-    red (#AE3030) for down-regulated — precisely the Imprint palette semantic exceptions
-    for positive/negative biological signal'
-  - Sophisticated LOESS approximation via 35-bin medians rendered as a Catmull-Rom
-    spline — visually clean trend curve that reveals expression-dependent bias without
-    true LOESS computation overhead
-  - Layered scatter rendering (non-significant background → down-regulated → up-regulated
-    foreground) creates strong visual hierarchy with appropriate transparency (0.2
-    for nonsig, 0.7 for significant)
-  - Deterministic LCG RNG with seed=42 generates biologically realistic heteroscedastic
-    data — variance decreases with expression level, mimicking real DESeq2 results
-  - Comprehensive 6-item legend with live gene counts; reference lines use distinct
-    visual encodings (solid for M=0, dashed for M=±1) conforming to spec
-  - Clip path properly contains scatter within plot area; theme-adaptive INK_MUTED
-    correctly branches on ANYPLOT_THEME for non-significant dot color
+  - 'Excellent semantic color mapping: up-regulated genes use brand green (#009E73),
+    down-regulated use semantic red (#AE3030) — biologically appropriate and Imprint-compliant'
+  - 'Intelligent layer ordering: non-significant genes rendered first as muted gray
+    background, significant DEGs layered on top for immediate visual pop'
+  - LOESS approximation via bin medians + Catmull-Rom spline reveals the characteristic
+    heteroscedastic variance funnel at low expression
+  - Deterministic LCG RNG with seed=42 ensures fully reproducible 12,000-gene dataset
+  - Clip path correctly contains all scatter points within the plot bounds — no overflow
+    artifacts
+  - Complete legend with gene counts dynamically embedded ('Up-regulated (1052)')
+    adds quantitative context
+  - 'Theme-adaptive chrome uses all correct tokens: t.ink for primary text, t.inkSoft
+    for secondary, t.grid for gridlines, INK_MUTED for non-significant genes'
+  - 'Full spec compliance: reference lines at M=0 (solid) and M=±1 (dashed), transparency
+    for overplotting (opacity 0.2 non-sig, 0.7 sig), and LOESS trend'
   weaknesses:
-  - 'Y-axis only grid on a scatter plot: the style guide specifies ''both axes for
-    scatter plots''. Add X-axis vertical grid lines using the same t.grid stroke so
-    both axes have subtle guidance lines.'
-  - N=8,000 genes is slightly below the spec's recommended 10,000-20,000 range for
-    whole-transcriptome experiments — increase to 12,000-15,000 for full spec compliance.
-  - Legend and gene-count annotation text both at 13px — slightly small for thumbnail
-    readability at 400px mobile width. Increase legend text to 14px and annotation
-    text to 14px to match tick label size.
-  - 'DE-02: Y-axis only grid for a scatter plot misses style-guide requirement for
-    both axes grid lines in scatter context.'
+  - 'VQ-04 (Color Accessibility): Green (#009E73) vs red (#AE3030) is the primary
+    visual signal distinguishing up- vs down-regulated DEGs — deuteranopia/protanopia
+    viewers may struggle. Redundant encoding (e.g. triangle up vs circle down marker
+    shapes) would resolve this while preserving the biologically conventional color
+    semantics'
+  - 'DE-01 (Aesthetic Sophistication): At 5/8, the design is above generic defaults
+    but lacks the typographic refinement or distinctive polish needed for 6+. Additional
+    differentiation — subtle font-weight variation for the gene count annotation,
+    or a thin separator line between legend groups — would elevate the aesthetic'
+  - 'LM-02 (Distinctive Features): Catmull-Rom spline and clip-path are D3-native
+    but straightforward. A more distinctive use of D3 (e.g. d3.contourDensity for
+    the non-significant gene cloud rather than individual circles, or a density-colored
+    background via 2D histogram) would showcase D3''s unique capabilities more forcefully'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "ma-differential-expression · javascript · d3 · anyplot.ai" centered at top in dark ink, bold 22px — clearly readable. X-axis label "Mean Average Expression (A)" and Y-axis label "Log₂ Fold Change (M)" in dark ink at 16px — readable. Tick labels at 14px in dark secondary text — readable. Gene count annotation "n = 8,000 genes | ..." in muted gray at 13px top-left — legible. 6-item right-side legend with 13px text — slightly small but readable.
-      Data: Dense scatter of ~6,600 muted gray semi-transparent dots (non-significant, alpha=0.2, r=2) forming the background cloud. ~723 brand-green (#009E73) dots (up-regulated, r=3, alpha=0.7) clearly visible above the cloud. ~681 matte-red (#AE3030) dots (down-regulated) clearly visible below. Blue Catmull-Rom LOESS curve (#4467A3) hugs M=0, revealing slight upward bias at low expression. Solid gray reference line at M=0, dashed lines at M=±1.
-      Legibility verdict: PASS — all text readable against the light background, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "ma-differential-expression · javascript · d3 · anyplot.ai" in dark ink (#1A1A17) at 22px CSS, positioned center-top — fully readable. X-axis label "Mean Average Expression (A)" and Y-axis label "Log₂ Fold Change (M)" in dark ink at 16px CSS, both clearly legible. Tick labels in inkSoft at 14px CSS — readable. Right-side legend with 6 entries in inkSoft — all entries readable.
+      Data: Non-significant genes as small gray dots (INK_MUTED #6B6A63 at opacity 0.2) forming a dense cloud. Up-regulated DEGs as larger green dots (#009E73 at opacity 0.7) concentrated above M=0, clearly distinguishable. Down-regulated DEGs as larger red dots (#AE3030 at opacity 0.7) concentrated below M=0. LOESS trend line in blue (#4467A3) runs through the scatter — shows slight downward trend at low expression, flattening toward high expression. Reference lines at M=0 (solid, subtle) and M=±1 (dashed) visible. Gene count annotation "n = 12,000 genes | 2077 DEGs..." top-left in muted ink.
+      Legibility verdict: PASS — all text readable on warm cream background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light near-white text — clearly readable. Axis labels and tick labels in light secondary text — readable. Gene count annotation in lighter muted gray — readable. Legend text in light secondary text — legible. All chrome elements adapted to dark theme.
-      Data: Data colors are identical to the light render — brand green up-regulated dots, matte red down-regulated dots, blue LOESS curve, muted gray non-significant dots (lighter gray in dark theme via INK_MUTED branch). Reference lines adapt via t.ink/t.inkSoft tokens.
-      Legibility verdict: PASS — no dark-on-dark failures observed, all text readable against the near-black background. Brand green #009E73 is clearly visible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — legible. Tick labels in inkSoft (light variant #B8B7B0) — readable. Legend text in inkSoft light — all entries legible. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — up-regulated genes remain #009E73 (brand green), down-regulated remain #AE3030 (matte red), LOESS curve remains #4467A3 (blue). Non-significant genes use INK_MUTED dark variant (#A8A79F at opacity 0.2) — correctly adapted. Grid lines use t.grid dark token — subtle.
+      Legibility verdict: PASS — all text readable on dark background, data colors correctly unchanged between themes
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -63,56 +66,64 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (22px), axis labels (16px), tick labels (14px) all readable
-          in both themes. Legend (13px) and annotation (13px) are slightly small for
-          mobile thumbnail readability.
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks/legend
+          14px CSS). Both renders fully readable. Well-proportioned, no overflow.
+          Minor reduction from 8: tick labels at 14px CSS are on the smaller end for
+          dense annotation.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Dense scatter is handled by transparency and layering.
-          Legend clear of data area with 210px right margin.
+        comment: No overlapping text or data elements. Legend placed right of plot
+          with ample margin. Gene count annotation in upper-left clear of scatter.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: '8000-gene density well managed: non-significant r=2 alpha=0.2 (background),
-          significant r=3 alpha=0.7 (foreground). LOESS curve at stroke-width=2.5
-          clearly visible.'
+        comment: 'Marker sizing appropriate for 12,000-gene density: r=2 with opacity
+          0.2 for non-sig (correct for high-density background), r=3 with opacity
+          0.7 for significant DEGs. LOESS at 2.5px stroke width clearly visible. Missing
+          1pt: non-sig opacity 0.2 makes the individual gray dots very faint at full
+          resolution.'
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Green/red semantic exception valid for up/down DEG (biological convention).
-          Spatial position (above/below M=0) provides redundant encoding beyond color.
+        comment: Green (#009E73) vs red (#AE3030) are the primary distinction between
+          up- and down-regulated DEGs. Spatial encoding (above/below M=0) and legend
+          text labels provide redundancy, but CVD viewers (deuteranopia/protanopia)
+          may struggle. Acceptable given bioinformatics convention and legend labels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good margins (80px all sides, 210px right for
-          legend). Title ~75-80% width at 22px — expected for 67-char mandated title.
-          No overflow detected.
+        comment: 'Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Layout well-proportioned:
+          1300x740px inner plot on 1600x900 CSS mount. Right margin 210px accommodates
+          legend cleanly. Balanced whitespace.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Mean Average Expression (A)'' and Y: ''Log₂ Fold Change (M)''
-          — descriptive with units. Title format correct.'
+        comment: 'X: ''Mean Average Expression (A)'' with A-value notation. Y: ''Log₂
+          Fold Change (M)'' with M-value notation and Unicode subscript. Both descriptive
+          with field-standard notation.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Up-regulated: palette[0]=#009E73,
-          Down: palette[4]=#AE3030 (semantic anchor), LOESS: palette[2]=#4467A3. Non-sig
-          uses theme-adaptive INK_MUTED. Data colors identical between themes.'
+        comment: 'Up-regulated: t.palette[0]=#009E73 (brand green, semantic gain).
+          Down-regulated: t.palette[4]=#AE3030 (semantic red for loss). LOESS: t.palette[2]=#4467A3
+          (blue). Non-sig: INK_MUTED anchor (theme-adaptive). Background managed by
+          harness via pageBg token. Chrome tokens correct in both renders. Semantic
+          exception for up/down is valid per style guide.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,24 +131,31 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Strong semantic color design, layered rendering, LOESS curve, reference
-          lines with distinct styles. Professional but not transcendent.
+        comment: 'Above generic defaults: intentional semantic color hierarchy, layered
+          rendering creates clear foreground/background distinction, multiple reference
+          elements add context without cluttering. Not quite 6+ level — lacks typographic
+          variation and the ultra-polished whitespace management of publication-grade
+          vis.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped frame (D3 default axisBottom+axisLeft) is correct. Grid
-          is Y-axis only — style guide requires both axes for scatter plots. Domain
-          lines present on both axes rather than being removed.
+        passed: true
+        comment: 'No top/right spines (D3 default axes only draw bottom-left). Grid
+          lines use t.grid token — appropriately subtle. Both X and Y grids drawn
+          per style guide for scatter. Generous margins. Missing 2pts: could remove
+          axis domain lines entirely for a cleaner look, and the clip path boundary
+          is slightly visible.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy (muted → significant), LOESS reveals expression-dependent
-          bias, reference lines guide interpretation, gene count annotation provides
-          statistical context.
+        comment: 'Clear visual hierarchy: gray cloud recedes, green/red significant
+          DEGs pop immediately. LOESS trend reveals variance funnel — analytical insight
+          visible without explanation. Reference lines frame interpretation. Viewer
+          immediately reads ''most genes unchanged, these are significant''. Above
+          default (2) but no annotations for top genes per spec optional feature.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +165,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot with M (log2FC) on Y and A (mean expression) on X.
+        comment: 'Correct MA plot: A (mean expression) on X, M (log fold change) on
+          Y. All required subtypes: significant gene highlighting, LOESS trend, reference
+          lines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: significant gene highlighting, M=0
-          solid + M=±1 dashed reference lines, LOESS smoothing curve, alpha~0.2-0.3
-          for overplotting. Optional gene labels not shown but optional per spec.'
+        comment: 'All required features present: significant gene highlighting (green
+          up, red down vs gray non-sig), M=0 reference line (solid), M=±1 dashed threshold
+          lines, LOESS trend (bin median + Catmull-Rom), transparency for overplotting.
+          Optional gene labels not implemented (correctly optional per spec).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean_expression, Y=log_fold_change, color=significant+direction
-          — all correct. N=8,000 is slightly below spec's 10,000-20,000 guideline
-          but mapping is correct.
+        comment: X-axis correctly maps mean expression, Y-axis maps log2 fold change.
+          All 12,000 genes visible (clipped to domain). Significance correctly computed
+          and encoded.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ma-differential-expression · javascript · d3 · anyplot.ai'
-          — correct format. Legend has 6 items with accurate gene counts.
+        comment: 'Title: ''ma-differential-expression · javascript · d3 · anyplot.ai''
+          — exact required format. Legend: 6 items covering all visual elements with
+          counts embedded.'
     data_quality:
       score: 15
       max: 15
@@ -180,24 +202,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all MA plot features: non-significant background cloud, up/down
-          significant genes separately, LOESS trend, reference lines, heteroscedasticity
-          visible.'
+        comment: 'Shows all MA plot aspects: variance funnel (heteroscedasticity at
+          low expression), both up- and down-regulated DEGs, bulk non-significant
+          genes centered at M=0, realistic DEG proportion (~17% of 12,000).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq DESeq2-style scenario, treatment vs control. Heteroscedastic
-          variance (low expression → high variance) is biologically realistic. Plausible
-          log2FC range and expression distribution.
+        comment: RNA-seq differential expression (treatment vs control) is a real,
+          common, neutral scientific scenario. DESeq2-style baseMean/log2FoldChange/padj
+          framing is authentic. 12,000 genes is realistic for whole-transcriptome.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean expression 1.5-15 (log2 CPM) and log fold change domain -6 to
-          +6 are realistic DESeq2 output ranges.
+        comment: Mean expression 1.5-15 log2 CPM — realistic RNA-seq range. LFC range
+          -6 to +6 — biologically plausible. Heteroscedasticity model (spread ∝ 1/(1+expr))
+          correctly reproduces low-expression noise amplification seen in real DESeq2
+          results.
     code_quality:
       score: 10
       max: 10
@@ -207,59 +231,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes. Two tiny helper functions (rand/randn) are necessary
-          for LCG deterministic RNG in JS — not an abstraction violation.
+        comment: 'Linear structure: RNG utilities → data generation → SVG mount →
+          scales → grid → reference lines → scatter layers → LOESS → axes → labels
+          → legend → annotation → title. No classes or unnecessary abstraction.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG RNG with seed=42 — fully deterministic.
+        comment: Deterministic LCG RNG with fixed seed=42. Browser has no seeded RNG;
+          LCG is the correct D3 pattern.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; d3 is global. Uses all declared window globals.
+        comment: No imports — d3 is a global per the harness contract. All referenced
+          globals (ANYPLOT_TOKENS, ANYPLOT_THEME, ANYPLOT_SIZE, d3) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean D3 idioms, logical flow, good naming. No fake UI elements.
+        comment: Clean, idiomatic D3. No fake UI, no over-engineering. The LCG + bin-median
+          LOESS approach is appropriately minimal for the task.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 is in INTERACTIVE_LIBRARIES; harness emits plot-{theme}.png and
-          plot-{theme}.html. No filesystem writes in snippet.
+        comment: 'D3 library — harness writes plot-{theme}.png and plot-{theme}.html.
+          Snippet correctly builds SVG into #container without any filesystem writes.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Modern selectAll/data/join pattern (D3 v7), proper margin convention,
-          scaleLinear, axisBottom/axisLeft, d3.line with curve — idiomatic throughout.
+        comment: 'Expert idiomatic D3 throughout: .join() pattern for data binding,
+          scaleLinear with .domain()/.range(), axisBottom/axisLeft, proper g element
+          transforms, line generator with curve, .datum() for single path. All recommended
+          D3 patterns used correctly.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Clip path (defs/clipPath) to contain scatter, curveCatmullRom for
-          LOESS smoothing, layered group rendering for visual hierarchy. These are
-          genuine D3 strengths used well.
+        comment: 'Uses D3-specific: d3.curveCatmullRom for smooth spline on LOESS
+          curve, clipPath to contain scatter within plot bounds, layered SVG group
+          ordering for z-index control. Solid D3 showcase but d3.contourDensity or
+          2D histogram for the non-sig cloud would be more distinctively D3.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
   - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -267,4 +298,3 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
