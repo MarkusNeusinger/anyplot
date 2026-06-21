@@ -1,42 +1,53 @@
 library: plotnine
+language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:33:27Z'
-updated: '2026-03-20T13:02:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23342848892
+updated: '2026-06-21T06:18:05Z'
+generated_by: claude-sonnet
+workflow_run: 27895159282
 issue: 4417
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent pitch rendering with all FIFA-standard markings including corner arcs,
-    penalty arcs, and goal posts
-  - 'Strong visual hierarchy: larger/bolder shot markers and arrows create a clear
-    focal point on attacking actions'
-  - Idiomatic plotnine usage with layered grammar of graphics composition
-  - 'Thoughtful design choices: custom color palette, cream canvas, semi-transparent
-    pitch lines, alpha-based outcome encoding'
-  - Realistic data with event-specific spatial distributions and plausible success
-    rates
+  - Comprehensive and accurate pitch rendering with all FIFA-standard elements (penalty
+    areas, goal areas, center circle, penalty arcs, corner arcs, goal posts, penalty
+    spots, center spot)
+  - 'Correct Imprint palette usage: Pass=#009E73 as first series, remaining event
+    types in canonical order (positions 1-4)'
+  - Both renders correctly theme-adapted with no dark-on-dark failures in the dark
+    render
+  - 'Effective multi-dimensional encoding: color + shape + alpha + size for event
+    type and outcome without overloading the legend'
+  - Shot arrows fanning toward goal area create an immediately readable attacking
+    pattern
+  - Reproducible with seed(42); clean flat script structure
   weaknesses:
-  - Minor congestion where shot arrows converge near the right goal area
-  - Slight vertical whitespace imbalance above/below the pitch
-  image_description: 'The plot displays a soccer pitch event map on a deep green (#1a6b30)
-    pitch background with semi-transparent white pitch markings. All standard FIFA
-    pitch elements are present: penalty areas, goal areas, center circle, penalty
-    arcs, corner arcs, halfway line, penalty spots, center spot, and goal posts on
-    both sides. The pitch sits on a cream (#f5f5f0) canvas. Four event types are plotted
-    with distinct markers and colors: blue circles for passes, red/coral stars for
-    shots, orange triangles for tackles, and teal diamonds for interceptions. Passes
-    have thin blue directional arrows mostly biased forward; shots have bolder red
-    arrows pointing toward the right goal. Successful events appear at ~92% opacity
-    while unsuccessful events are ~40% opacity, creating a clear visual distinction.
-    Shot markers are noticeably larger than other markers, creating a visual hierarchy.
-    The legend on the right shows Event Type and Outcome categories. The title reads
-    "scatter-pitch-events · plotnine · pyplots.ai" in bold 24pt, with an italic subtitle.'
+  - Shot arrows converge quite densely in the right penalty area (all endpoints concentrated
+    in y=27-41, x=98-105); could benefit from even wider spread or lower arrow opacity
+    (0.5-0.6) to reduce visual clutter in that zone
+  - The Outcome legend section uses override_aes with two alpha values producing a
+    combined stacked icon rather than two cleanly separated swatches — consider separate
+    guide entries or more explicit legend construction
+  - Slight lack of breathing room between pitch boundary and canvas edge (plot_margin=0.04
+    is tight for this composition) — increase to 0.07
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "scatter-pitch-events · python · plotnine · anyplot.ai" in dark #1A1A17 bold text, subtitle in #4A4A44, legend labels in dark ink — all clearly readable
+      Data: Deep green pitch (#1a6b30) with semi-transparent white line markings. Pass markers are #009E73 circles, Shot markers are #C475FD stars, Tackle markers are #4467A3 triangles, Interception markers are #BD8233 diamonds. Green pass arrows and bolder purple shot arrows visible with directional arrowheads.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle in light #F0EFE8 / #B8B7B0 text against dark background — clearly readable. Legend labels in light text on #242420 elevated panel. No dark-on-dark failures observed.
+      Data: Data marker colors identical to light render (Pass #009E73, Shot #C475FD, Tackle #4467A3, Interception #BD8233). Arrows same colors. Pitch green unchanged.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -44,44 +55,57 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, subtitle 16pt, legend
-          14-16pt'
+        comment: Title, subtitle, and legend text readable in both themes. Title fontsize
+          auto-scaled for 53-char title. No axis labels (correct for pitch map).
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Some congestion near right goal where shot arrows converge
+        comment: Minor congestion in shot zone right penalty area where ~18 shot arrows
+          converge, but alpha blending manages it. No text-on-text or text-on-data
+          collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good marker sizing with shots emphasized at size=8
+        comment: 120 events at medium density with appropriate marker sizes (4.5 for
+          most, 8 for shots). Alpha 0.92/0.40 clearly distinguishes successful/unsuccessful.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: 'Colorblind-safe palette: blue, red, orange, teal'
+        comment: Imprint palette positions 1-4 used; redundant shape encoding makes
+          categories distinguishable without color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout, minor vertical whitespace imbalance
+        comment: '3200x1800 canvas correct landscape. Pitch well-proportioned. Legend
+          placement works. Minor: pitch panel slightly left-heavy due to right legend.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for pitch diagram, title and subtitle provide
-          context
+        comment: Title matches required format. Axis labels/ticks correctly removed
+          for pitch map. Subtitle provides contextual info.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Pass) = #009E73. Multi-series uses Imprint positions
+          1-4 canonical order. Backgrounds correct (#FAF8F1 light / #1A1A17 dark).
+          Data colors identical across both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,21 +113,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, cream canvas, semi-transparent pitch lines, intentional
-          typography hierarchy
+        comment: Multiple distinct geom layers for pitch construction. Grass stripe
+          effect and goal posts beyond pitch boundary add realism. guide_legend(override_aes)
+          for refined legend. Outcome legend combined swatch slightly confusing.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed, spines removed, custom backgrounds, polished details
+        comment: Axes/spines/ticks fully removed. Pitch markings clean and correctly
+          scaled. Elevated legend background with theme-adaptive tokens. Loses 2 points
+          as composition has little breathing room at plot_margin=0.04.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy with larger shots, bolder arrows, alpha encoding
-          for outcomes
+        comment: 'Clear visual hierarchy: dominant green circles (passes), dramatic
+          purple fan of arrows toward goal (shots), scattered blue triangles and ochre
+          diamonds. Alpha encoding communicates success/failure effectively.'
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter/event map on pitched diagram
+        comment: Soccer pitch event map correctly implemented with all required pitch
+          elements.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: distinct markers, outcome encoding, directional
-          arrows, complete pitch markings'
+        comment: 'All required features present: pitch outline, penalty areas, goal
+          areas, center circle, halfway line, corner arcs, goal posts, distinct marker
+          shapes, directional arrows, outcome encoding via alpha.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapped to pitch coordinates correctly
+        comment: x/y pitch coordinates correct (0-105 / 0-68). coord_fixed(ratio=1)
+          maintains 105:68 aspect ratio. All four event types and both outcomes represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and clear legend
+        comment: Title is exactly 'scatter-pitch-events · python · plotnine · anyplot.ai'.
+          Legend labels match event types and outcomes.
     data_quality:
       score: 15
       max: 15
@@ -142,19 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 event types with realistic spatial distributions and both outcomes
+        comment: All four event types with realistic spatial distributions. Both outcomes
+          encoded. Arrows show directionality for passes and shots.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soccer match data with realistic proportions and success rates
+        comment: Soccer match events realistic, neutral, domain-appropriate. Success
+          rates plausible (passes 75%, shots 30%). 120 events reasonable for match
+          segment.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA-standard dimensions, 120 events realistic for match segment
+        comment: FIFA pitch dimensions (105m x 68m) correctly used. Coordinate ranges
+          match real-world values. Reproducible with seed(42).
     code_quality:
       score: 10
       max: 10
@@ -164,48 +200,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes
+        comment: No functions or classes; flat script with clear sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols used; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity
+        comment: Well-organized with grouped pitch element layers, separate arrow
+          dataframes, clear scale and theme configuration.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at 300 DPI
+        comment: Saves as plot-{THEME}.png with correct dpi=400, width=8, height=4.5
+          units=in. Uses current plotnine API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert grammar of graphics usage with layered composition
+        comment: Correct grammar of graphics approach with aes(), scale_*_manual(),
+          coord_fixed(), guides(). All plotnine conventions followed.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses inherit_aes, guide_legend override_aes, scale_alpha_manual,
-          coord_fixed
+        comment: Layered composition with annotate(), geom_path(), geom_segment(arrow=arrow()),
+          geom_point(). guide_legend(override_aes=) for custom legend appearance is
+          idiomatic plotnine.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -214,7 +254,8 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
