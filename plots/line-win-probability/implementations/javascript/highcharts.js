@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-win-probability: Win Probability Chart
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-21
+// Quality: 87/100 | Created: 2026-06-21
 
 //# anyplot-orientation: landscape
 

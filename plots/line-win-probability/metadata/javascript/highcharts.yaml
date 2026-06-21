@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-win-probability
 created: '2026-06-21T03:43:16Z'
-updated: '2026-06-21T03:51:10Z'
+updated: '2026-06-21T04:01:55Z'
 generated_by: claude-sonnet
 workflow_run: 27892197998
 issue: 4418
@@ -12,130 +12,136 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Semantic dual-color fill using Highcharts threshold + negativeColor perfectly
-    matches the spec: green above 50% (home leading), matte red below 50% (home trailing)
-    — uses Imprint palette positions 0 and 4 with correct semantic exception for loss/trailing'
-  - 'Full spec compliance: 50% reference line, annotated key events with dynamic y-positioning
-    (above/below threshold), final score subtitle, and quarter period markers all
-    present'
-  - 'Excellent data narrative: realistic NFL play-by-play with genuine momentum swings,
-    both teams leading at different points, and a dramatic game-winning TD spike at
-    the end creates a compelling visual story'
-  - LCG with seed 42 elegantly solves the browser reproducibility challenge; animation:false
-    on both chart and plotOptions ensures clean screenshots; idiomatic Highcharts
-    area threshold pattern
+  - 'Excellent use of Highcharts area series with threshold: 50 and negativeColor
+    — a distinctive library feature that perfectly satisfies the spec''s dual-fill
+    requirement with zero custom rendering code'
+  - 'Complete spec compliance: 50% reference line with label, dotted quarter markers,
+    per-point event annotations, subtitle with final score, and full 0–100% y-axis
+    range'
+  - Deterministic LCG seed-42 data generation produces a realistic NFL game arc (close
+    early, decisive late) with named key plays
+  - 'Proper theme-adaptive chrome: all colors sourced from window.ANYPLOT_TOKENS,
+    background transparent over pageBg, data colors identical between light and dark'
+  - 'Clean code with no unnecessary abstractions; animation: false correctly set in
+    both chart-level and plotOptions.series positions as required by the harness'
   weaknesses:
-  - Annotation data labels use fontSize 10px (CSS) — at 2x DPR this is 20px native
-    on the 3200x1800 canvas; increase to 12px for better mobile legibility
-  - Quarter plotLine labels (Q2/Q3/Q4 at top of chart, y:-6, 11px) are redundant with
-    the x-axis formatter labels that already show Q2/Q3/Q4 at the bottom — remove
-    the label property from quarterLines to reduce visual clutter at the top of the
-    chart
-  - The 0-25% probability band is permanently empty since game probability stays above
-    ~30%; lower canvas feels slightly sparse — consider setting yAxis.min:5 / yAxis.max:95
-    to zoom in on the active range, or keep 0-100 as-is (which is the convention for
-    this chart type)
+  - 'DE-01 MODERATE: Design is polished but not exceptional — adding a subtle fill
+    gradient from the line color to transparent (instead of flat fillOpacity) would
+    elevate the aesthetic; consider also a thin white/ink stroke on the probability
+    line itself to improve definition at small display sizes'
+  - 'DE-02 LOW: No explicit chart.plotBorderWidth: 0 — Highcharts may render a thin
+    frame around the plot area in some builds; add it to guarantee a clean, frameless
+    look'
+  - 'DE-03 MODERATE: Data storytelling is good but could be stronger — a small callout
+    box near the game-winning TD spike (e.g. ''Home clinches'') or a shaded region
+    for each quarter would add meaningful narrative layer'
+  - 'VQ-01 MINOR: Event annotation data labels at 12px are at the lower boundary of
+    readability when the chart is scaled to mobile widths (~400 px) — increasing to
+    13px would help; the 50% plotLine label is also small at 12px'
+  - 'LM-02 MODERATE: The negativeColor/threshold technique is well used, but per-point
+    marker placement could leverage Highcharts'' plotLines/plotBands more (e.g. plotBands
+    for each quarter background) to show even more library depth'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-win-probability · javascript · highcharts · anyplot.ai" in dark ink at 22px — clearly readable. Subtitle "Home 21 – Away 17 | NFL AFC Wild Card" at 14px in secondary ink — readable. Y-axis "Home Win Probability" at 16px, X-axis "Play Number" at 16px — both readable. Tick labels at 13px (0%/25%/50%/75%/100% on Y; Start/Q2/Q3/Q4/Final on X) — all readable. Annotation event labels at 10px CSS (Home TD, Away TD, Away FG, Home TD, Pick-six, Game-winning TD) — legible at full resolution but small. Quarter plotLine labels at top (Q2/Q3/Q4 at 11px) — very small but legible.
-      Data: Brand green (#009E73) area fill above 50% threshold (home leading). Matte red (#AE3030) area fill below 50% (home trailing). Fill opacity 0.38. Line width 2.5. Annotation markers: filled dark dots with pageBg-colored ring at radius 5. First series is #009E73 — correct.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-win-probability · javascript · highcharts · anyplot.ai" in dark ink, bold, clearly readable. Subtitle "Home 21 – Away 17 | NFL AFC Wild Card" in secondary ink, readable. Y-axis title "Home Win Probability" and X-axis title "Play Number" both readable in inkSoft. Tick labels at 0%/25%/50%/75%/100% and Start/Q2/Q3/Q4/Final clearly readable.
+      Data: Single area series showing win probability trajectory. Green (#009E73) fill above 50% (home team leading), salmon/rose fill (matte red #AE3030 at 38% opacity) below 50% (away team leading). The line fluctuates between ~40–75% through most of the game before spiking to 99.2% at the final play. Horizontal 50% reference line with "50%" label on right. Dotted vertical quarter-boundary lines at Q2/Q3/Q4. Six key event annotations (Home TD, Away TD, Away FG, Home TD, Pick-six, Game-winning TD) as small text above/below their respective markers. No legend (single series, appropriate).
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title and subtitle render in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Axis titles, tick labels, annotation labels all use light inkSoft tokens. No dark-on-dark failures observed. All text elements are light-colored and readable.
-      Data: Data colors are identical to light render — brand green (#009E73) above 50%, matte red (#AE3030) below 50%, fillOpacity reduced to 0.32 for dark theme. Annotation markers show white pageBg rings — well-defined against dark surface. Colors match light render exactly.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8 approximate), clearly readable against dark background. Subtitle in secondary light tone, readable. Y-axis and X-axis titles readable in lighter inkSoft. Tick labels readable in secondary light text. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — the green (#009E73) above-50% fill appears vibrant and saturated on the dark surface; the below-50% fill appears as a dark maroon (matte red at 32% opacity over #1A1A17) which is distinct from the background. The win probability line itself is clearly visible. Event annotation labels are legible in their inkSoft color. The 50% reference line is visible. Quarter markers are visible as subtle dotted lines.
+      Legibility verdict: PASS — all text readable against dark background. Data colors are identical to light render (only chrome flipped). No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 22px, axes 16px, ticks 13px). Annotation
-          labels at 10px CSS are small but legible at full res. Quarter plotLine labels
-          at 11px are very small.
+        comment: Title, axis labels, tick labels all readable in both themes. Event
+          annotation data labels at 12px are slightly small for mobile scaling.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Dynamic y-offset positioning (y:-16 above 50%, y:+18 below) prevents
-          annotation-to-line collisions. No overlaps observed.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Area fills clearly visible at 0.32-0.38 opacity. Line width 2.5 appropriate
-          for 120 plays. Annotation markers radius 5 well-sized. Steep spike at play
-          120 creates slightly thin fill.
+        comment: No significant overlaps. Event annotations are well-positioned above/below
+          markers based on probability level. Minor crowding possible at small display
+          sizes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line at 2.5px width clearly visible. Area fills clearly distinguishable
+          from background in both themes. Event markers at radius 5 are visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red are CVD-tested Imprint members. Redundant positional encoding
-          (above/below 50%) means hue is not sole distinguishing signal.
+        comment: Green/red semantic pair appropriate for win/loss sports context.
+          Positional encoding (above/below 50%) provides non-color differentiation.
+          Both colors from CVD-safe Imprint palette.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Balanced margins (marginTop:90, marginLeft:88). Plot fills canvas
-          well. Minor: 0-25% probability band permanently empty, creating slightly
-          sparse lower section.'
+        comment: Canvas gate passed (landscape 3200x1800). Good proportions with appropriate
+          margins. Title at ~65% width. Data area well-framed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Home Win Probability'' with % format. X: ''Play Number'' with
-          contextual labels. Title format correct.'
+        comment: Title follows spec-id format exactly. Y-axis 'Home Win Probability'
+          and X-axis 'Play Number' are descriptive. Subtitle includes final score.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series palette[0]=#009E73 (brand green). Negative fill palette[4]=#AE3030
-          (matte red) correct semantic exception. Background transparent/pageBg. Both
-          renders theme-correct.
+        comment: 'First series uses #009E73 (brand green) for home team winning —
+          correct. negativeColor uses palette[4] (#AE3030, matte red) for away team
+          winning — semantically correct for win/loss context. Background transparent
+          over pageBg. Chrome tokens all from ANYPLOT_TOKENS.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Clearly above defaults: semantic dual-color fill, annotated key
-          moments, final score subtitle, quarter markers. Professional sports-analytics
-          aesthetic. Strong but not quite publication-ready.'
+        comment: Above default. Elegant dual-fill area chart. Imprint palette used
+          correctly. Quarter markers and event annotations add intentional hierarchy.
+          Could be elevated with gradient fills or stronger focal point styling.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Transparent background, y-only grid, no legend for single series,
-          subtle dotted quarter lines. Minor: redundant quarter plotLine labels add
-          noise at top of chart.'
+        comment: 'Above default. Tooltip disabled, legend omitted (single series),
+          grid lines using token colors. Missing explicit plotBorderWidth: 0 and some
+          refinements to grid opacity.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear narrative: home team trailing, two comeback swings, dramatic
-          game-winning TD spike. Color-coded fills give instant momentum reads. Good
-          visual hierarchy with clear focal point at end.'
+        comment: Above default. Clear visual narrative from 50/50 start to decisive
+          win. Color flip at threshold shows momentum clearly. Key event annotations
+          tell the game story. 50% reference line is prominent focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +151,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Area chart with threshold + negativeColor dual-fill — correct win
-          probability chart type.
+        comment: Win probability chart correctly implemented as area series with threshold
+          fill.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-100%; 50% reference line; dual-color area fill; annotated
-          key events; final score in subtitle; quarter markers — all present.
+        comment: 'All required: 0–100% y-axis, 50% reference line, above/below fills,
+          event annotations, final score subtitle, quarter/period markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: play number (game progression). Y: home win probability 0-100%.
-          Correctly mapped.'
+        comment: X-axis is play number (game progression), Y-axis is win probability
+          0–100%. Correct and complete.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-win-probability · javascript · highcharts · anyplot.ai''.
-          No legend (single series — correct). Subtitle provides score context.'
+        comment: Title is exactly 'line-win-probability · javascript · highcharts
+          · anyplot.ai'. Legend correctly omitted for single series.
     data_quality:
       score: 15
       max: 15
@@ -177,23 +183,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full game arc: 50% start, early trailing, two momentum swings,
-          dramatic comeback. Both teams lead at different points. TD, FG, Pick-six
-          all represented.'
+        comment: 'Full feature coverage: area fills, threshold, event annotations,
+          quarter markers, reference line, final score, realistic play-by-play trajectory.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL AFC Wild Card game, 120 play-by-play records, final score 21-17.
-          Neutral sports topic, realistic and specific.
+        comment: NFL AFC Wild Card game. Realistic play types (TD, FG, Pick-six).
+          Final score Home 21 – Away 17 consistent with the probability arc. Realistic
+          probability swings.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 plays realistic for NFL. Score 21-17 plausible close game. Win
-          probability swings (TD ~20-22%, FG ~14%) match real model outputs.
+        comment: 0–100% probability range correct. 120 plays for NFL game is appropriate.
+          Quarter boundaries at every 30 plays are realistic.
     code_quality:
       score: 10
       max: 10
@@ -203,63 +209,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with tiny LCG helper (required by browser no-seeded-RNG
-          constraint). Data generation then single Highcharts.chart() call.
+        comment: Flat script. The LCG helper function is justified and minimal. No
+          unnecessary classes or abstractions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) ensures identical data across renders. No
-          Math.random().
+        comment: Deterministic LCG with seed 42. No Math.random() calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses harness globals only (window.ANYPLOT_TOKENS, ANYPLOT_THEME,
-          Highcharts).
+        comment: No imports — native JS using Highcharts global. All used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic. Key plays array with destructuring, dynamic per-point
-          marker configuration. No over-engineering.
+        comment: Clean and readable. Array.from for data generation. Per-point overrides
+          are idiomatic. No fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness saves plot-light.png + plot-dark.png + HTML. animation:false
-          in both chart and plotOptions.series. credits:{enabled:false}. No explicit
-          width/height.
+        comment: 'Uses Highcharts.chart(''container'', ...) correctly. Harness handles
+          all output files. animation: false in both required locations.'
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Native area chart threshold + negativeColor dual-fill. Per-point
-          marker and dataLabels. plotLines with dashStyle and zIndex. x-axis label
-          formatter. All idiomatic Highcharts.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: threshold:50 + negativeColor for automatic dual-color area fill is
-          Highcharts-specific. Per-point dataLabels y-offset positioning is Highcharts-native.
-          Deducted 1 pt — plotLines labels somewhat generic.
-  verdict: REJECTED
+        comment: 'Idiomatic: area series with threshold/negativeColor, plotLines for
+          reference and quarter markers, per-point marker/dataLabels overrides, custom
+          xAxis formatter. Above default.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses distinctive Highcharts features: negativeColor/threshold (not
+          available in all libraries), per-point data overrides, custom label formatters,
+          plotLines with dashStyle. Above default but could go further with plotBands
+          for quarters.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
   dataprep: []
