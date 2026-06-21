@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-21
@@ -104,7 +104,7 @@ p = figure(
     x_range=Range1d(-32.5, 137.5),
     y_range=Range1d(-10, 78),
     toolbar_location=None,
-    min_border_bottom=160,
+    min_border_bottom=220,
     min_border_left=180,
     min_border_top=110,
     min_border_right=50,
@@ -115,7 +115,7 @@ p.rect(x=52.5, y=34, width=105, height=68, fill_color=PITCH_FILL, fill_alpha=0.1
 
 # Mow-pattern stripes
 for stripe_x in range(0, 105, 10):
-    stripe_alpha = 0.05 if (stripe_x // 10) % 2 == 0 else 0.0
+    stripe_alpha = 0.08 if (stripe_x // 10) % 2 == 0 else 0.0
     p.rect(x=stripe_x + 5, y=34, width=10, height=68, fill_color=PITCH_LINE, fill_alpha=stripe_alpha, line_color=None)
 
 # Danger zone gradient (attacking third)
@@ -169,8 +169,13 @@ p.line([106.5, 106.5], [30.34, 37.66], line_color=GOAL_COLOR, line_width=6)
 arrow_data = df[df["event_type"].isin(["pass", "shot"])]
 for _, row in arrow_data.iterrows():
     color = event_colors[row["event_type"]]
-    alpha = 0.55 if row["outcome"] == "successful" else 0.25
-    lw = 2.5 if row["event_type"] == "shot" else 1.8
+    is_pass = row["event_type"] == "pass"
+    alpha = (
+        (0.35 if row["outcome"] == "successful" else 0.20)
+        if is_pass
+        else (0.55 if row["outcome"] == "successful" else 0.25)
+    )
+    lw = 2.5 if row["event_type"] == "shot" else 1.3
     head_size = 14 if row["event_type"] == "shot" else 10
     p.add_layout(
         Arrow(
@@ -194,7 +199,8 @@ for etype in ["pass", "tackle", "interception", "shot"]:
             continue
         color = event_colors[etype]
         fill_alpha = 0.90 if outcome == "successful" else 0.28
-        line_w = 4 if etype == "shot" else 2.5
+        border_color = "white" if etype == "shot" else color
+        line_w = 2 if etype == "shot" else 2.5
         source = ColumnDataSource(data={"x": subset["x"].values, "y": subset["y"].values})
         p.scatter(
             x="x",
@@ -204,7 +210,7 @@ for etype in ["pass", "tackle", "interception", "shot"]:
             size=event_sizes[etype],
             fill_color=color,
             fill_alpha=fill_alpha,
-            line_color=color,
+            line_color=border_color,
             line_width=line_w,
             line_alpha=0.95,
             legend_label=f"{etype.capitalize()} ({'success' if outcome == 'successful' else 'miss'})",
@@ -229,7 +235,7 @@ p.add_layout(
 # Legend — single row to reduce density
 p.legend.location = "bottom_center"
 p.legend.orientation = "horizontal"
-p.legend.label_text_font_size = "26pt"
+p.legend.label_text_font_size = "34pt"
 p.legend.label_text_color = INK_SOFT
 p.legend.glyph_width = 30
 p.legend.glyph_height = 30
@@ -239,7 +245,7 @@ p.legend.background_fill_alpha = 0.92
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.border_line_width = 1
-p.legend.ncols = 8
+p.legend.ncols = 4
 p.legend.click_policy = "hide"
 
 # Style
