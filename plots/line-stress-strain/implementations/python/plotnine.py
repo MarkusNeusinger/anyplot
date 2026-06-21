@@ -1,6 +1,7 @@
-"""
+""" anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
-Library: plotnine | Language: python
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 79/100 | Updated: 2026-06-21
 """
 
 import os
