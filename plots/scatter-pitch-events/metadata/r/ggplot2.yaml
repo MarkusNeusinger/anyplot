@@ -1,0 +1,246 @@
+library: ggplot2
+language: r
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:08:34Z'
+updated: '2026-06-21T06:25:31Z'
+generated_by: claude-sonnet
+workflow_run: 27895328570
+issue: 4417
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Complete FIFA-accurate pitch geometry including center circle, penalty arcs, corner
+    arcs, penalty spots, and goal rectangles
+  - Elegant triple aesthetic encoding (color + shape + alpha) with properly merged
+    Event type legend and separate Outcome legend
+  - Directional arrows for both passes and shots with distinct styling per event type
+  - Correct Imprint palette in canonical order; full theme-adaptive chrome switches
+    correctly between light and dark renders
+  - Realistic synthetic match data with event types distributed across tactically
+    appropriate pitch zones
+  weaknesses:
+  - Shot arrows in the attacking third form a dense fan that is hard to parse individually
+    — consider reducing arrow linewidth to 0.5 or alpha to 0.40 for cleaner readability
+  - 'Corner arc geometry for two corners (top-left at (0,68) and bottom-right at (105,0))
+    draws the arc outside the pitch boundary rather than inward; correct ranges: ca2
+    should use seq(-pi/2, 0) and ca4 should use seq(pi, 3*pi/2)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page background; pitch filled with dark green #3a7d2e — correct and visually distinct from page
+      Chrome: Title "scatter-pitch-events · r · ggplot2 · anyplot.ai" at size 12 in dark ink #1A1A17, clearly readable. Axis labels "Pitch length (m)" and "Pitch width (m)" in dark ink size 10. Tick labels (0, 30, 60, 90 on x; 0-, 20-, 40-, 60- on y) in secondary ink #4A4A44 size 8. Legend box with subtle border shows Event type (4 colored+shaped entries) and Outcome (alpha-differentiated grey circles). All chrome is dark on off-white — fully readable.
+      Data: Pass markers (green circles #009E73) with green arrow trajectories in midfield/attacking third; shot markers (lavender diamonds #C475FD) with lavender arrows converging on right goal; tackle markers (blue triangles #4467A3) in midfield; interception markers (ochre squares #BD8233) in defensive/middle third. Successful events alpha=0.90, unsuccessful alpha=0.35. First series is #009E73 (passes). Imprint palette canonical order used.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 page background; pitch switches to deeper forest green #1e4a18 with lighter pitch line color #C8C8B8 — correct theme adaptation
+      Chrome: Title and axis labels render in light ink #F0EFE8, clearly readable against dark background. Tick labels in #B8B7B0 (secondary dark theme ink). Legend box uses elevated dark background #242420 with subtle border. All chrome adapts correctly — no dark-on-dark failures detected.
+      Data: All four event type colors (green, lavender, blue, ochre) are identical to light render — only chrome flips. Brand green #009E73 remains clearly visible on the dark green pitch background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 12pt, axis 10pt, ticks 8pt, legend
+          8pt); readable in both themes. Legend text slightly compact but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Shot arrows cluster densely in attacking third causing partial overlap;
+          main content remains readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 220 events at size=2.8 with alpha outcome encoding well-adapted to
+          medium density; dense shot arrow area slightly hard to parse.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; shape encoding provides redundant discrimination.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 landscape; coord_fixed preserves 105:68 aspect
+          ratio; good margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Pitch length (m) and Pitch width (m) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (pass) uses #009E73; Imprint canonical order; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: accurate FIFA pitch geometry with all required markings,
+          dual arrow layers, three simultaneous aesthetic mappings — clearly above
+          defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid correctly omitted; theme_minimal with clean legend border; generous
+          margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Spatial event distribution across pitch zones tells tactical story;
+          alpha outcome encoding adds narrative layer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer pitch event map with scatter markers on accurate pitch diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: pitch outline, penalty areas, goal areas, center
+          circle, halfway line, corner arcs, goal posts, distinct marker shapes, outcome
+          via alpha, directional arrows, green pitch background, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=pitch length (0-105m), y=pitch width (0-68m); full range displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: scatter-pitch-events · r · ggplot2 · anyplot.ai. Separate
+          Event type and Outcome legends with correct labels.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four event types with realistic proportions; both outcome states;
+          arrows for both eligible types; all pitch zones covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic first-half attacking build-up data; tactically appropriate
+          zone distributions; neutral sports analytics context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA-standard 105x68m pitch; 220 events realistic for match segment;
+          70% pass success rate factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: imports → theme tokens → data → plot layers → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized idiomatic ggplot2 layering; no fake interactivity;
+          linewidth= used correctly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ragg::agg_png.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Extensive annotate() for geometric primitives; geom_segment() with
+          arrow=; triple scale_*_manual with shared names for combined legends; coord_fixed()
+          for aspect ratio.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'annotate(path) for circular arcs using trigonometry is distinctly
+          ggplot2''s layered approach. Small deduction: corner arc angle ranges incorrect
+          for two corners.'
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

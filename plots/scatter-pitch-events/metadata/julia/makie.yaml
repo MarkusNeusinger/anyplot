@@ -1,0 +1,305 @@
+library: makie
+language: julia
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:12:58Z'
+updated: '2026-06-21T06:32:57Z'
+generated_by: claude-sonnet
+workflow_run: 27895369557
+issue: 4417
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - 'Semantically meaningful Imprint palette mapping: green (#009E73) for passes (constructive),
+    matte red (#AE3030) for shots (aggressive/goal attempts), blue (#4467A3) for tackles
+    (defensive), ochre (#BD8233) for interceptions — each color intuitively matches
+    the action''s football role'
+  - 'Complete and accurate FIFA-standard pitch rendering: penalty areas, goal areas,
+    center circle, penalty arcs, corner arcs, goal posts, halfway line, dashed zone
+    dividers — all correctly dimensioned'
+  - DataAspect() enforces the 105:68 pitch proportion so the layout never distorts
+    regardless of figure size
+  - 'Meaningful size hierarchy: shots (markersize=18) > tackles/interceptions (12)
+    > passes (9) — emphasizes the most tactically critical events'
+  - Directional arrows for every shot and every 3rd pass cleanly encode ball trajectory;
+    arrow size and opacity also scale with outcome (thicker/larger for successful)
+  - Outcome encoded via per-marker alpha (0.85/0.90 for successful, 0.30/0.35 for
+    unsuccessful) using RGBAf, giving a natural filled-vs-faded visual contrast in
+    both themes
+  - Attacking third gets a subtle red zone shading that primes the viewer for shot
+    clustering without overwhelming the data
+  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT, INK_MUTED, PITCH_LINE, PITCH_FILL,
+    ELEVATED_BG all flip correctly; data colors remain identical between themes'
+  - Custom MarkerElement legend clearly maps shape, color, and event count in a compact,
+    well-spaced layout; legend title 'Event Type\n(filled = successful)' doubles as
+    a decoding key
+  - 'Idiomatic Makie throughout: poly!, lines!, scatter!, arrows!, text!, MarkerElement,
+    colsize! with Relative() — no workarounds or non-native primitives'
+  weaknesses:
+  - Zone labels ('Defensive', 'Midfield', 'Attacking') and the 'Shot Zone' annotation
+    are rendered at fontsize=8, which equates to ~16 source-px in the 3200×1800 PNG
+    and becomes barely legible when the image is scaled to ~400px mobile width — increase
+    to fontsize=10 or 11
+  - 'Arrow density for passes: every-3rd sampling (≈37 arrows for 110 passes) produces
+    a visually sparse arrow layer in the defensive third and a crowded cluster near
+    midfield; consider every-4th or threshold by pass length to distribute more evenly'
+  - Legend frame (framevisible=true with strokecolor=INK_SOFT) adds visual weight
+    that competes slightly with the pitch boundary lines; a frameless legend would
+    feel cleaner against the open pitch design
+  - 'DE-01/DE-02: design is solid but not exceptional — no typography weight variation
+    (bold title vs regular labels), no pitch texture or stripe pattern that would
+    elevate polish toward publication-ready'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) canvas — correct.
+      Pitch: Light green fill (rgba green ~10% alpha) covering the full 105×68 m area; dark pitch lines (strokecolor dark at ~55% opacity) delineate penalty areas, goal areas, center circle, penalty arcs, corner arcs, halfway line, goal posts, and dashed zone dividers.
+      Chrome: Title "scatter-pitch-events · julia · makie · anyplot.ai" centered in dark ink at top — clearly readable. Legend on the right with dark INK labels, warm elevated background (#FFFDF6), and soft-ink frame. Zone labels ("Defensive", "Midfield", "Attacking") in muted dark at fontsize=8 near pitch top edge — legible at full resolution, marginal at mobile scale. Outcome footnote at bottom in tertiary ink color.
+      Data: Green circles (#009E73) for passes with directional arrows; matte-red 5-point stars (#AE3030) for shots in attacking third with arrows; blue upward triangles (#4467A3) for tackles; ochre diamonds (#BD8233) for interceptions. Successful events are solid/vivid; unsuccessful events are faded (~30–35% opacity). Shot zone has a very subtle red tint overlay. Marker size hierarchy is clear: shots largest (18), tackles/interceptions medium (12), passes smallest (9).
+      Legibility verdict: PASS — all critical text (title, legend labels, outcome note) readable; zone labels and "Shot Zone" annotation are small but contextually acceptable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) canvas — correct.
+      Pitch: Deeper green fill (~18% alpha) on the dark surface; pitch lines appear in cream-white (rgba 0.9/0.9/0.85 at 70% opacity) giving strong contrast against the dark green pitch.
+      Chrome: Title in near-white (#F0EFE8 via INK token) — clearly readable against dark background. Legend labels in secondary light text (#B8B7B0 via INK_SOFT) on elevated dark background (#242420) — readable. Zone labels in muted light tone at fontsize=8 — small but no dark-on-dark failure. Outcome footnote in tertiary light (#A8A79F via INK_MUTED) — readable.
+      Data: All Imprint data colors identical to light render: green passes, matte-red shots, blue tackles, ochre interceptions. Alpha-based outcome encoding applies identically. No color shift between themes — only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements use theme-adaptive tokens and render in appropriately light colors against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and legend text are clearly readable in both themes. Zone labels
+          and Shot Zone annotation at fontsize=8 are legible at full resolution but
+          marginal at mobile scale (~400px).
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Dense clustering of shots and passes near the penalty area causes
+          some natural marker overlap, expected for this viz type. Shot arrows occasionally
+          cross pass markers in the attacking third, slightly reducing clarity.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four event types are clearly visible and distinguishable by both
+          color and shape. Outcome encoding (filled/faded) is unambiguous. Marker
+          size hierarchy correctly emphasizes shots over other events.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with CVD-safe hues; redundant shape encoding (circle/star/triangle/diamond)
+          eliminates reliance on color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800). DataAspect() maintains the 105:68
+          FIFA pitch ratio. No clipping of any element at canvas borders. Legend placement
+          in fig[1,2] with colsize! Relative(0.82) is well-proportioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Pitch map correctly omits numeric axis labels (spatial coordinates
+          are implicit). Title 'scatter-pitch-events · julia · makie · anyplot.ai'
+          is correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic Imprint mapping: pass=#009E73 (brand green, first series),
+          shot=#AE3030 (matte red semantic anchor for aggressive action), tackle=#4467A3,
+          interception=#BD8233. Both theme backgrounds correct (#FAF8F1 light, #1A1A17
+          dark). Data colors identical between themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color mapping is thoughtful and demonstrates design intent.
+          Size hierarchy (shots > tackles > passes) reinforces visual emphasis. Attack
+          zone shading and zone labels add tactical depth. However no bold/weight
+          variation in typography hierarchy, and the pitch lacks pitch stripe texture
+          that would add professional polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All four spines hidden, grid removed — appropriate open-field design
+          for a pitch map. Pitch line opacity and width are well-calibrated. Legend
+          frame is visible but adds some structural weight; frameless alternative
+          would be cleaner.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Attacking third shading creates a focal zone; shots are largest and
+          most vivid; arrows show direction and outcome; zone labels contextualize
+          the tactical divisions. Viewer attention is naturally drawn to the attacking
+          area where goals are scored. Slightly more emphasis on key moments (e.g.
+          on-target shots) could strengthen storytelling.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Soccer pitch event map with all required elements: pitch diagram
+          and positioned event markers.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: pitch outline with FIFA dimensions (105×68m),
+          penalty areas, goal areas, center circle, halfway line, corner arcs, goal
+          posts, distinct marker shapes per event type, outcome via opacity, directional
+          arrows for passes and shots, green pitch background, correct aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (0-105m), Y (0-68m) positions correctly mapped. All four event
+          types (pass, shot, tackle, interception) present. Outcome (successful/unsuccessful)
+          encoded via opacity.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-pitch-events · julia · makie · anyplot.ai' is exact
+          required format. Legend labels include event counts. Legend title explains
+          the fill/opacity encoding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four event types represented with their own markers, colors,
+          and counts. Outcome encoding applied consistently. Arrows show direction
+          for passes and shots. 220 total events provides comprehensive pitch coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pass distribution centered in attacking/midfield area (x~58) is realistic
+          for possession-heavy team. Shots clustered near right penalty area (x~88,
+          std=8) is accurate for goal attempts. Tackles in defensive/middle thirds.
+          75% pass success and ~28% shot-on-target rates match real football statistics.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 220 events within the spec's 50-500 range. FIFA-standard pitch dimensions
+          (105×68m). Event ratios (passes 50%, shots 10%, tackles 22%, interceptions
+          18%) are plausible for a match segment.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: no functions, no classes. Organized into clearly labeled
+          sections (theme tokens, data, figure, pitch, events, legend, save).'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all three are used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity. Corner arcs loop is clean. Per-marker alpha
+          via list comprehension is idiomatic. Title fontsize scaling formula handles
+          length edge cases.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2) is correct. Uses size=
+          (current Makie 0.21+ API, not deprecated resolution=). No bare plot.png.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: poly!, lines!, scatter!, arrows!, text! all used as appropriate Makie
+          primitives. DataAspect() for aspect enforcement. colsize!(fig.layout, 1,
+          Relative(0.82)) for layout. MarkerElement for manual legend. RGBAf for per-element
+          alpha. All idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'DataAspect(), MarkerElement, arrows! primitive, poly! for filled
+          polygons, colsize! with Relative() — all Makie-distinctive. Missing one
+          step toward exceptional: could use Makie''s linestyle=:dash for pitch zone
+          dividers (done), but a Makie-specific feature like clip_on_limits or a Recipe
+          pattern would further demonstrate mastery.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  - arrows
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

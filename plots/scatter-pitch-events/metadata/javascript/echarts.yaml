@@ -1,0 +1,287 @@
+library: echarts
+language: javascript
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:24:43Z'
+updated: '2026-06-21T06:33:16Z'
+generated_by: claude-sonnet
+workflow_run: 27895509628
+issue: 4417
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Perfect FIFA-standard pitch rendering with all required markings (penalty areas,
+    goal areas, center circle, halfway line, corner arcs, penalty arcs, penalty spots,
+    and goal posts)
+  - Elegant opacity-based outcome encoding (successful events bright, unsuccessful
+    faded) combined with distinct per-event-type marker shapes — passes as circles,
+    shots as diamonds, tackles as triangles, interceptions as squares
+  - Directional arrows implemented idiomatically via ECharts lines series with arrow
+    symbols, correctly pointing pass end-to-end and shots toward goal
+  - Correct 105:68 aspect ratio preserved through careful margin calculation (187px
+    left/right, 65px top/bottom)
+  - 'Theme-adaptive pitch color (#3D7A35 light / #2C5A27 dark) while Imprint palette
+    data colors stay constant across both themes'
+  - Seeded LCG RNG ensures fully reproducible data generation without browser Date/Math
+    dependency issues
+  - 'Clean ECharts composition: markArea for pitch background, line series for pitch
+    geometry, lines series for arrows, scatter series for event markers — all at correct
+    z-ordering'
+  weaknesses:
+  - 'Pass arrows use palette[0] #009E73 (brand green) over pitch green #3D7A35 — contrast
+    is limited in the light render, making pass direction lines subtler than ideal.
+    Consider using near-white (e.g. rgba(255,255,255,0.75)) or a lighter tint for
+    the pass arrow lines to differentiate them from the pitch surface without abandoning
+    the green encoding on the markers themselves'
+  - 'Subtitle text is fontSize: 13 CSS px on a 1600×900 mount — slightly small for
+    mobile-scaled reads. Increase to 14–15px to improve legibility at small viewports'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page background; pitch rendered in #3D7A35 grass green filling most of the canvas.
+      Chrome: Title "scatter-pitch-events · javascript · echarts · anyplot.ai" in dark ink, bold, centered at top — clearly readable. Subtitle "Opacity = outcome (bright: successful · faded: unsuccessful) · Arrows show event direction" in inkSoft, readable but small (13px). Legend at bottom showing all 4 event types with correct icon and label, clearly readable.
+      Data: Pass circles in #009E73 (brand green), Shot diamonds in lavender #C475FD, Tackle triangles in blue #4467A3, Interception squares in ochre #BD8233. All markers visible against green pitch. Directional arrows: pass arrows in green (#009E73) are present but somewhat subtle against the green pitch surface; shot arrows in dashed lavender clearly visible. Opacity encoding distinguishes successful (high alpha) from unsuccessful (low alpha) events. White pitch lines are clean and contrast well.
+      Legibility verdict: PASS — all chrome text clearly readable against warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 page background; pitch rendered in #2C5A27 (darker grass green), darker variant appropriate for dark theme.
+      Chrome: Title and subtitle both render in light-colored text (t.ink / t.inkSoft), clearly readable against dark background. Legend at bottom readable. No dark-on-dark issues observed.
+      Data: All data colors are identical to light render — #009E73 circles, lavender diamonds, blue triangles, ochre squares. Pass arrows are more visible in the dark render because the dark page background creates stronger visual context. White pitch lines remain high contrast on green pitch in dark mode. Opacity encoding still clearly distinguishes outcomes.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, subtitle 13px, legend
+          14px). Axes hidden appropriately for pitch visualization. All text readable
+          in both themes. Minor deduction: subtitle at 13px is slightly small for
+          mobile-scaled readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps data elements. Legend cleanly positioned at bottom.
+          Marker overlap inherent to 162-event scatter is acceptable and typical.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Markers sized appropriately (symbolSize 10-16) for 162 events. Opacity
+          encoding works. Minor deduction: pass arrows use #009E73 on #3D7A35 green
+          pitch — limited contrast in light render, arrows visible but subtle.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct marker shapes used per event type (circle, diamond, triangle,
+          square) providing redundant encoding alongside color. Imprint palette is
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Pitch fills ~70% of canvas. Correct aspect ratio
+          105:68 maintained via precise margin calculation. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes hidden (appropriate for pitch map — spatial coordinates are
+          self-evident from pitch markings). Title is descriptive. Subtitle explains
+          opacity encoding.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Pass) uses palette[0] #009E73. Subsequent types follow
+          canonical Imprint order: palette[1] lavender for shots, palette[2] blue
+          for tackles, palette[3] ochre for interceptions. Background #FAF8F1 light
+          / #1A1A17 dark via t.pageBg. Data colors identical across both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above well-configured defaults. Custom FIFA-standard pitch
+          geometry with penalty areas, goal areas, center circle, halfway line, corner
+          arcs, penalty arcs, penalty spots, and goal posts shows genuine attention
+          to detail. Theme-adaptive pitch color (#3D7A35 light / #2C5A27 dark). Opacity
+          encoding for outcomes is elegant.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes fully hidden (appropriate for pitch). No grid lines. Clean whitespace
+          around pitch. Consistent pitch line styling with PITCH_LINE rgba(255,255,255,0.88).
+          Legend cleanly placed. Refinement clearly above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Above baseline. Shot arrows pointing toward goal and clustering in
+          attacking third tell a tactical story. Interceptions concentrated in defensive
+          areas is meaningful. Opacity encoding communicates pass success rates. However,
+          no single clear focal point or emphasized insight — viewer must interpret
+          the spatial patterns themselves.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: soccer pitch event map with scatter markers
+          on accurate pitch diagram.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: (1) FIFA pitch outline with all standard
+          markings, (2) distinct marker shapes and colors per event type, (3) opacity-based
+          outcome encoding, (4) directional arrows for passes and shots, (5) green
+          pitch background with contrasting white lines, (6) correct 105:68 aspect
+          ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X maps to horizontal pitch position (0-105m), Y to vertical (0-68m).
+          All four event types correctly positioned. Data coordinates stay within
+          pitch bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'scatter-pitch-events · javascript · echarts · anyplot.ai'.
+          Legend shows all 4 event types (Pass, Shot, Tackle, Interception) with matching
+          labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 4 event types with realistic counts (80 passes, 22 shots,
+          35 tackles, 25 interceptions). Both successful and unsuccessful variants
+          of each event type represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Realistic soccer match event data. Shots generated in attacking
+          third (x: 62-105), interceptions biased toward defensive areas. Spatial
+          distribution is tactically plausible.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 162 total events is realistic for a match segment. FIFA-standard
+          105×68m dimensions. Event ratios (many passes, fewer shots) align with real
+          match statistics.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with justified helper functions for geometry (circlePts,
+          arcPts, mkLine). No unnecessary classes or abstraction layers.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with seed=42 ensures fully deterministic data generation without
+          browser Date/Math dependencies.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only window globals (ANYPLOT_TOKENS, ANYPLOT_THEME, echarts)
+          as documented by the harness. No unused references.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable JavaScript. No fake UI elements. Pitch geometry helpers
+          are concise and reusable. mkLine factory is a clean abstraction for the
+          many pitch marking lines.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'ECharts harness handles output files. Current ECharts 5.5.1 API
+          used. animation: false correctly set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ECharts idioms: cartesian2d coordinate system, lines
+          series for directional arrows, scatter for event markers, markArea for pitch
+          background fill, correct z-ordering across all series layers.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'ECharts lines series with symbol: [none, arrow] for directional
+          arrows is a highly distinctive ECharts feature. markArea usage for colored
+          background region is creative. Multi-series composition with different types
+          (line, lines, scatter) in a single chart is characteristic of ECharts. Minor
+          deduction: pitch line geometry drawing via custom line series data is somewhat
+          library-agnostic.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
