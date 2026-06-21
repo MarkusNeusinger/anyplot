@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: altair | Python
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-21
 """
 
 import os
