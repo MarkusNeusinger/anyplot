@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: ma-differential-expression
 created: '2026-06-21T01:17:50Z'
-updated: '2026-06-21T01:24:20Z'
+updated: '2026-06-21T01:39:30Z'
 generated_by: claude-sonnet
 workflow_run: 27889249042
 issue: 4420
@@ -15,49 +15,41 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented (horizontal reference
-    at M=0, dashed ±1 thresholds, LOESS-like smoothing via inline Gaussian kernel,
-    alpha transparency for density, three-class significance coloring)'
-  - 'Excellent data simulation: funnel-shaped variance (RNA-seq realistic), ~10% DE
-    injection with both up/down-regulated groups, normalization artifact (upward bias
-    at low expression) that the LOESS actually reveals'
-  - 'Semantically correct color assignment: non-significant → INK_MUTED (gray), up-regulated
-    → brand green (#009E73), down-regulated → matte red (#AE3030) — matches the gain/loss
-    semantic exception in the style guide'
-  - 'Full theme-adaptive chrome: all axis, tick, spine, grid, and legend colors correctly
-    keyed to INK / INK_SOFT / INK_MUTED tokens — dark render has no dark-on-dark failures'
-  - 'Clean Julia / CairoMakie code: no functions or classes, seed set, only used imports,
-    correct canvas (1600×900 × px_per_unit=2 = 3200×1800)'
-  - 'Idiomatic Makie layout: colsize!(fig.layout, 1, Relative(0.78)) and custom Legend
-    with MarkerElement/LineElement show solid command of the Makie layout API'
+  - 'Full spec compliance: all five required features (significant highlighting, M=0
+    reference, ±1 thresholds, LOESS curve, transparency) correctly implemented'
+  - 'Excellent semantic color mapping: brand green for up-regulated, matte red for
+    down-regulated, muted gray for non-significant — aligns with both Imprint palette
+    rules and biological convention'
+  - Biologically realistic data simulation with expression-variance funnel, normalization
+    bias artifact, and realistic DE gene rate (~10%)
+  - 'Complete theme-adaptive chrome: all tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) applied throughout — both renders pass legibility checks'
+  - Clean CairoMakie code with idiomatic primitives, no helper functions, and proper
+    layout control via colsize!
   weaknesses:
-  - Legend labelsize=12 is too small relative to the 3200×1800 canvas — at px_per_unit=2
-    this is only 24 source-px; raise to labelsize=14 or 15 to match the axis tick
-    labels
-  - 'DE-01/DE-02 limited by lack of visual polish beyond the basics: consider dropping
-    the x-grid entirely (only y-grid is needed for MA plots), increasing significant
-    gene markersize to 8-9 for stronger pop from the background cloud, and adding
-    a thin INK_SOFT stroke (strokewidth=0.5) on significant markers for definition'
-  - LM-02 score held back by generic multi-scatter approach — Makie's Observable/recipe
-    system or a density-overlay (e.g. using hexbin or density!) for the non-significant
-    background could showcase Makie's unique strengths more clearly
+  - Design excellence ceiling limited by absence of any callout annotation for top
+    DE genes (spec marks gene labeling as optional, but even 3–5 labeled outliers
+    would elevate storytelling significantly)
+  - Semi-transparent significant genes (alpha=0.65) produce slightly different visual
+    weights between light and dark renders due to alpha compositing — could be reduced
+    by using fully opaque fill + matching stroke instead
+  - DE-02 could be higher with more intentional whitespace tuning (legend is tightly
+    packed against the right edge) and a slightly softer grid opacity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS
-      Chrome: Title "ma-differential-expression · julia · makie · anyplot.ai" in dark INK color, clearly visible. X-axis label "Mean log₂ Expression" and Y-axis label "log₂ Fold Change" in dark INK, balanced in size. Tick labels in INK_SOFT (slightly muted dark), readable. Horizontal reference lines (solid at M=0, dashed at M=±1) in INK_SOFT. Top and right spines removed; L-frame clean. Grid at 10% opacity — very subtle.
-      Data: Non-significant genes rendered as tiny gray dots (INK_MUTED, alpha=0.18, markersize=4), forming a dense background cloud. Up-regulated significant genes in brand green (#009E73, alpha=0.65, markersize=7) — clearly visible above M=0. Down-regulated significant genes in matte red (#AE3030, alpha=0.65, markersize=7) — clearly visible below M=0. LOESS trend line in ochre (#BD8233, linewidth=3) traversing the cloud with a gentle upward curve at low expression. First categorical series uses #009E73. Funnel-shaped variance cloud is realistic.
-      Legend: Right column panel, frame with INK_SOFT border, elevated background (#FFFDF6), four entries with circle/line elements, all labels readable.
-      Legibility verdict: PASS — all text readable against the warm off-white background. Legend text is slightly small (24 source-px effective) but readable.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "ma-differential-expression · julia · makie · anyplot.ai" in dark ink — readable. X-axis "Mean log₂ Expression", Y-axis "log₂ Fold Change" in dark INK — readable. Tick labels in INK_SOFT — readable. Spines (left/bottom) in INK_SOFT. No dark-on-light issues.
+      Data: Non-significant genes as gray cloud (INK_MUTED, alpha=0.18). Up-regulated significant genes in brand green #009E73 (alpha=0.65). Down-regulated in matte red #AE3030 (alpha=0.65). Ochre LOESS trend line. Solid reference at M=0, dashed at M=±1. Legend with elevated warm background (#FFFDF6).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS
-      Chrome: Title in light #F0EFE8 (INK token, dark theme), clearly visible against near-black. Axis labels in light INK color, both readable. Tick labels in #B8B7B0 (INK_SOFT, dark theme) — light gray, clearly distinguishable from near-black background. No dark-on-dark failures observed. Grid at 10% opacity — subtle on dark surface, visible.
-      Data: Data colors are IDENTICAL to light render — green (#009E73) for up-regulated, matte red (#AE3030) for down-regulated, ochre (#BD8233) for LOESS curve, gray muted for non-significant. Only chrome has flipped.
-      Legend: Dark elevated background (#242420), light label text (INK, dark theme), frame in INK_SOFT — all readable.
-      Legibility verdict: PASS — all text readable against the warm near-black background. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all axis labels appear in light cream tones (INK token = #F0EFE8 in dark) — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. No dark-on-dark text failures.
+      Data: Green up-regulated and red/salmon down-regulated genes maintain their identity. Due to alpha=0.65 compositing over dark background, matte red appears slightly more salmon than on light render — expected alpha-blending behavior, underlying hex is unchanged. LOESS ochre line and reference lines remain visible. Legend readable on elevated dark background (#242420).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,60 +57,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
-          xticklabelsize=12, yticklabelsize=12). Both renders fully readable. Minor:
-          legend labelsize=12 is slightly small at px_per_unit=2 (24 source-px effective).
-          Proportions balanced.'
+        comment: 'All font sizes explicitly set; title, axis labels, tick labels readable
+          in both themes. Minor: axis label size could be slightly more prominent.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with data or other text. Legend placed in dedicated
-          column panel (colsize 22%). Clean layout.
+        comment: No collisions between text, legend, or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Good density adaptation: non-sig at markersize=4 alpha=0.18 forms
-          intentional background cloud; sig genes at markersize=7 alpha=0.65 clearly
-          pop. LOESS at linewidth=3 visible. Minor: significant gene markers could
-          be slightly larger (8-9) for stronger foreground presence in the dense cloud.'
+        comment: Dense scatter (15,000 points) handled well. Non-sig alpha=0.18 markersize=4;
+          significant alpha=0.65 markersize=9. LOESS and reference lines clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red used with semantic exception (gain/loss), redundant position
-          cue (above/below M=0 line). Non-sig in muted gray provides strong luminance
-          contrast. CVD-safe via style guide palette.
+        comment: Semantic green/red is the genomics convention and aligns with Imprint
+          semantic anchors. Non-significant gray provides separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'colsize!(fig.layout, 1, Relative(0.78)) produces well-proportioned
-          main axis with right legend column. No clipping. Good canvas utilization.
-          Canvas gate: PASS (1600x900 × px_per_unit=2 = 3200×1800).'
+        comment: Canvas gate passed (3200x1800). Title ~60% plot width. Legend column
+          properly constrained. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Mean log₂ Expression'', Y: ''log₂ Fold Change''. Both descriptive
-          and include log-subscript notation. Title format correct.'
+        comment: Descriptive labels with proper log2 notation. Title matches spec
+          format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception applied correctly: up-regulated=brand green (#009E73),
-          down-regulated=matte red (#AE3030), non-sig=INK_MUTED anchor (gray). Backgrounds
-          #FAF8F1 / #1A1A17. All chrome theme-adaptive. Data colors identical across
-          both renders.'
+        comment: 'Up-regulated = brand green #009E73; down-regulated = matte red #AE3030
+          (semantic anchor); LOESS = ochre #BD8233; non-sig = INK_MUTED; backgrounds
+          #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -126,27 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured defaults: Imprint palette with semantic exception,
-          three-layer visual approach (non-sig cloud → significant markers → LOESS
-          → reference lines), theme-adaptive chrome throughout. Not quite FiveThirtyEight
-          level — the overall composition is clean but not remarkable.'
+        comment: Deliberate semantic color mapping, proper visual layering, clean
+          palette use. Lacks exceptional polish (no top gene annotations, no bias
+          explanation callout).
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 'Top/right spines removed, grid at 10% opacity (very subtle), proportional
-          layout with colsize!, alpha-layered data rendering. Missing: x-grid could
-          be removed entirely for MA plots; significant marker stroke for definition.'
+        comment: Top/right spines removed; x-grid off, y-grid subtle; semi-transparent
+          markers appropriate to density. Solid refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: gray background cloud → green/red significant
-          genes → ochre LOESS → dashed threshold lines. The LOESS curve tells the
-          story of expression-dependent bias (upward shift at low expression). Reference
-          lines provide biological context. Good focal points.'
+        comment: Clear visual hierarchy with three-layer composition. LOESS curve
+          reveals expression-dependent bias. Reference lines frame thresholds. Effective
+          diagnostic storytelling.
     spec_compliance:
       score: 15
       max: 15
@@ -156,33 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot (M vs A scatter with significance highlighting).
-          Characteristic funnel-shaped variance cloud present.
+        comment: Correct MA plot with mean log2 expression on x-axis and log2 fold
+          change on y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: significant genes highlighted (green/red), non-sig
-          in gray, M=0 solid reference line, M=±1 dashed threshold lines, LOESS smoothing
-          curve (Gaussian kernel), alpha transparency (~0.18-0.65). Optional gene
-          labels: not included (spec says optional).'
+        comment: Significant gene highlighting, M=0 solid reference, M=±1 dashed thresholds,
+          LOESS curve, transparency — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis = A value (mean log₂ expression), Y-axis = M value (log₂ fold
-          change). Correct mapping with all 15,000 genes visible.
+        comment: A values on x, M values on y. All data within clamp range displayed
+          correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ma-differential-expression · julia · makie · anyplot.ai''
-          — correct format with centered dots. Legend: ''Not significant'', ''Up-regulated
-          (adj. p < 0.05)'', ''Down-regulated (adj. p < 0.05)'', ''LOESS trend'' —
-          all informative and match data.'
+        comment: 'Title: ''ma-differential-expression · julia · makie · anyplot.ai''.
+          Legend labels: Not significant, Up-regulated (adj. p < 0.05), Down-regulated
+          (adj. p < 0.05), LOESS trend.'
     data_quality:
       score: 15
       max: 15
@@ -192,27 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all MA plot aspects: funnel-shaped variance, both up- and
-          down-regulated groups, expression-dependent bias revealed by LOESS, three
-          significance classes, realistic non-sig background cloud. The injected DE
-          genes and Gaussian smoothing show all facets.'
+        comment: 'Demonstrates all MA plot aspects: expression-variance funnel, non-sig
+          cloud, up/down clusters, normalization bias, trend line.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'RNA-seq differential expression — real, comprehensible, neutral
-          scientific scenario. Data mimics actual DESeq2/edgeR output: funnel variance
-          (expression-dependent noise), ~10% DE rate, normalization artifact at low
-          expression.'
+        comment: 'Biologically realistic RNA-seq simulation: 15,000 genes, ~10% DE
+          rate, funnel-shaped LFC variance, normalization artifact at low expression.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A-values 0.05–14.5 (realistic log₂ expression range for RNA-seq),
-          M-values clamped ±7.5 (typical LFC range), 15,000 genes (within spec's 10,000–20,000),
-          ~10% DE rate (biologically realistic). All proportions factually correct.
+        comment: A-values 0–14.5 (realistic log2 expression); M-values clamped to
+          ±7.5 (reasonable LFC range for DE analysis).
     code_quality:
       score: 10
       max: 10
@@ -222,36 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data generation → figure/axis → scatter
-          layers → reference lines → LOESS → legend → save. No functions or classes.'
+        comment: No functions or classes. Linear, readable script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set at top.
+        comment: Random.seed!(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: using CairoMakie (plotting), using Colors (colorant macro), using
-          Random (seed/randn/randperm). All three actually used.
+        comment: CairoMakie, Colors, Random — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Julia. Inline Gaussian kernel loop is appropriate
-          complexity (no external packages needed). const tokens for palette and theme.
-          No over-engineering.
+        comment: Appropriate complexity. No fake UI elements. Inline Gaussian kernel
+          smoothing without helper functions.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save('plot-$(THEME).png', fig; px_per_unit = 2) — correct format
-          and API.
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2). Uses modern Makie
+          size= API correctly.
     library_mastery:
       score: 7
       max: 10
@@ -261,23 +231,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Figure/Axis layout, hlines! for reference lines, RGBAf for typed
-          alpha colors, colsize!(fig.layout, 1, Relative(...)) for proportional layout,
-          Legend with MarkerElement/LineElement for custom legend. Strong idiomatic
-          Makie usage.
+        comment: 'Idiomatic CairoMakie: scatter!, hlines!, lines!, colsize! layout
+          control, Figure/Axis composition.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Makie-specific: MarkerElement/LineElement for manual legend construction,
-          colsize! with Relative() for proportional grid sizing, RGBAf typed color
-          with alpha. The inline Gaussian kernel is Julia-idiomatic. Missing: could
-          use Makie-specific density/hexbin primitives for non-sig background to more
-          uniquely showcase Makie''s capabilities.'
-  verdict: REJECTED
+        comment: Custom legend with MarkerElement/LineElement; colsize!(fig.layout,
+          1, Relative(0.78)) demonstrates Makie layout grammar. Could use Band or
+          Density primitives for more distinctiveness.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - colors
   techniques:
   - custom-legend
   patterns:
@@ -286,3 +253,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
+  - edge-highlighting
