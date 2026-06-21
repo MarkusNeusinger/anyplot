@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:32:46Z'
-updated: '2026-06-21T06:07:20Z'
+updated: '2026-06-21T06:18:01Z'
 generated_by: claude-sonnet
 workflow_run: 27895075698
 issue: 4417
@@ -12,44 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Full FIFA-standard pitch drawing (105m x 68m) with goal posts, corner arcs, penalty
-    areas, center circle — accurate and detailed
-  - Semantic Imprint palette assignments (green for passes/first series, red for shots/danger)
-    with valid semantic exception justification
-  - 'Effective redundant encoding: color + marker shape + alpha for CVD safety and
-    outcome encoding'
-  - Shot annotation showing shots on target plus danger zone gradient creates a clear
-    data story
-  - Excellent spec compliance — all required features present (arrows, shapes, alpha
-    outcomes, pitch markings)
-  - 'Idiomatic Bokeh usage: Arrow/NormalHead, Range1d, ColumnDataSource, legend click_policy'
-  - Perfect theme adaptation in both renders — chrome flips correctly, data colors
-    stay constant
+  - Full spec compliance — all required FIFA pitch markings (penalty areas, goal areas,
+    center circle, halfway line, corner arcs, goal posts), all four event types with
+    distinct shapes/colors, directional arrows for passes and shots, and alpha-based
+    outcome encoding are all present
+  - 'Excellent palette compliance with justified semantic exception: shots in matte
+    red (#AE3030) correctly invokes the danger/goal semantic anchor; passes as brand
+    green (#009E73) per first-series rule'
+  - Perfect code quality — KISS flat structure, np.random.seed(42) for reproducibility,
+    clean imports, ColumnDataSource used idiomatically, and Selenium CDP override
+    for exact canvas sizing
+  - 'Genuine storytelling: danger-zone subtle red overlay, shot count annotation ("16
+    shots · 3 on target"), and shots rendered last for visual emphasis create a clear
+    focal point'
+  - 'Theme-adaptive chrome is complete — title, axis labels, tick labels, legend text,
+    and backgrounds all correctly flip between #FAF8F1/#1A1A17 surfaces; no dark-on-dark
+    failures in dark render'
+  - 'Bokeh-distinctive features used well: Arrow + NormalHead for directional markers,
+    Range1d for explicit coordinate control, legend click_policy="hide" for interactivity
+    in HTML artifact'
+  - Mow-pattern stripes and alternating-alpha design detail add realistic pitch texture
+    without visual noise
   weaknesses:
-  - Legend font size 26pt is below the recommended 34pt; increase to 30-34pt — even
-    if this requires switching to ncols=4 (two rows) to avoid overflow, the legibility
-    gain on mobile is worth it
-  - Pass arrow density in the central pitch area creates visual clutter; reduce arrow
-    line_width to 1.2-1.5 and alpha to 0.35/0.20 (successful/unsuccessful), or thin
-    out arrows by skipping every other pass event
-  - 'DE-01 push: increase mow stripe alpha from 0.05 to 0.08, add white border edge-highlighting
-    on shot star markers (line_color=white, line_width=2) to make them pop against
-    the cluttered arrow background'
+  - 'Pass arrows (#009E73 at alpha 0.20-0.35) have reduced contrast against the dark-green
+    pitch fill (#2a6030 in dark theme) — pass trajectory data is harder to read in
+    dark mode; consider increasing arrow alpha in dark theme or using a slightly lighter
+    arrow color (e.g. #00C490)'
+  - 'DE scores are functional but not exceptional — design shows clear intent (danger
+    zone, mow stripes) but missing elements that would elevate further: no hover tooltips
+    for event details in HTML, no per-zone density annotations, and the grid is fully
+    disabled which removes spatial reference for viewers unfamiliar with pitch coordinates'
+  - 'LM-02 partially missed: the Arrow layout loop iterates row-by-row (iterrows)
+    which is unavoidable for individual Arrow models, but a HoverTool on the scatter
+    glyphs would add meaningful library-distinctive interactivity to the HTML artifact
+    that the static review cannot fully credit'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-pitch-events · python · bokeh · anyplot.ai" in dark ink, clearly readable. Axis labels "Pitch Length (m)" / "Pitch Width (m)" dark and legible. Tick labels in INK_SOFT, readable.
-      Data: Green (#009E73) circles for passes (first series, brand green), red (#AE3030) stars for shots, blue (#4467A3) triangles for tackles, ochre (#BD8233) diamonds for interceptions. Alpha encoding shows successful (opaque) vs unsuccessful (transparent). Directional arrows for passes and shots.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Pitch: Drawn with green fill (#3d8b45, alpha 0.12) and darker green (#2E7D32) line markings; mow-pattern alternating stripes add subtle texture; a salmon/red danger-zone overlay appears in the attacking third (~87-105m range).
+      Chrome: Title "scatter-pitch-events · python · bokeh · anyplot.ai" is bold dark text, occupies roughly 60% of plot width — appropriate size. Axis labels "Pitch Length (m)" and "Pitch Width (m)" at 42pt are clearly readable. Tick labels (dark gray INK_SOFT) visible along both axes. All chrome is dark-on-light — no legibility failures.
+      Data: Pass circles (#009E73, brand green) distributed across pitch; shot stars (#AE3030, matte red) clustered in attacking third; tackle triangles (#4467A3, blue) spread across pitch; interception diamonds (#BD8233, ochre) visible throughout. Successful events are fully filled (alpha 0.90); unsuccessful are translucent (alpha 0.28). Directional arrows visible for passes (thin green) and shots (bolder red). "16 shots · 3 on target" annotation in red at top-right of danger zone. Legend at bottom center in 4-column, 2-row layout — all 8 entries readable.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and axis labels flip to light (#F0EFE8 / #B8B7B0) and remain clearly readable against dark surface. No dark-on-dark failures observed.
-      Data: Colors identical to light render — green passes, red shots, blue tackles, ochre interceptions. Chrome-only flip confirmed.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Pitch: Darker green fill (#2a6030) with lighter green (#4CAF50) markings; pitch markings are clearly visible against the dark surface. Danger-zone red overlay is subtle but present.
+      Chrome: Title renders as light text, clearly visible against near-black background. Axis labels "Pitch Length (m)" and "Pitch Width (m)" appear in light INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0) — visible against dark background. Legend background uses ELEVATED_BG (#242420) with light-colored text (INK_SOFT #B8B7B0) — entries are legible. No dark-on-dark failures.
+      Data: Data colors are identical to light render — brand green passes, matte red shots, blue tackles, ochre interceptions. Shot markers appear with white outlines (as coded), making them pop distinctly against the dark pitch. Pass arrows (#009E73 at low alpha 0.20-0.35) have reduced contrast against the dark green pitch fill (#2a6030), making pass trajectories harder to follow in dark mode — this is the only notable legibility concern for data elements. Shot arrows (matte red) remain clearly visible. "16 shots · 3 on target" annotation visible in red.
+      Legibility verdict: PASS overall (chrome elements all readable) with minor caveat — pass arrows in dark mode are low contrast against dark-green pitch background, reducing trajectory readability.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -60,53 +73,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          tick labels). Legend at 26pt is below recommended 34pt, reducing mobile
-          legibility.
+        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
+          labels 34pt, legend 34pt); both themes pass legibility; minor point deducted
+          for legend density (8 entries in 2-row horizontal layout at bottom occupies
+          significant vertical space)
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Generally clean. Pass arrow density in central pitch zone creates
-          some visual clutter.
+        comment: Text elements do not overlap; central pitch area has overlapping
+          pass arrows and markers inherent to 120 events at medium density — not severe
+          but notable
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker sizes 18-28pt well-adapted to 120-event medium density. Shape
-          + alpha encoding effective.
+        comment: 'All marker types clearly visible; alpha-encoded outcomes effective;
+          pass arrows have reduced visibility in dark mode against dark-green pitch
+          (low contrast between #009E73 and #2a6030)'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant encoding (color + shape + alpha) makes chart CVD-safe.
+        comment: Four Imprint palette colors used with CVD-safe selection; redundant
+          encoding via distinct marker shapes (circle/star/triangle/diamond) eliminates
+          reliance on color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well. Calibrated min_border settings. No content
-          cut off.
+        comment: 3200x1800 landscape correct; min_border settings appropriate for
+          font sizes; aspect ratio carefully tuned via Range1d to maintain ~1.94 pixel-per-meter
+          ratio; no canvas gate failure; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Pitch Length (m) and Pitch Width (m) with units. Title in correct
-          format.
+        comment: Title matches required format; axis labels 'Pitch Length (m)' and
+          'Pitch Width (m)' are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (passes) uses #009E73. Semantic exception valid for
-          shots (#AE3030). All from Imprint palette. Backgrounds and chrome theme-correct
-          in both renders.'
+        comment: 'First series (passes) = #009E73 brand green; shots use matte red
+          #AE3030 (justified semantic exception for danger/goal); backgrounds #FAF8F1
+          light / #1A1A17 dark; data colors identical between renders'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -114,23 +133,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: detailed FIFA pitch with goal posts, corner arcs,
-          mow stripes, danger zone gradient. Not yet publication-ready.'
+        comment: 'Above baseline: intentional semantic color mapping, mow-pattern
+          stripes, danger zone gradient overlay, alpha-based outcome encoding, shots
+          rendered last for emphasis. Not exceptional level: no per-event annotations,
+          no small-multiples for outcome comparison'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, outline spine suppressed, generous margins, legend
-          styled with elevated background. Some noise from overlapping pass arrows.
+        comment: Grid disabled (appropriate for pitch), outline_line_color=None for
+          clean look, theme-adaptive legend background. Grid-free is correct choice
+          here but removes spatial reference. Below top tier.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shot annotation tells a clear story. Danger zone highlight focuses
-          attention. Alpha encoding reveals success/failure rates. Shots drawn last
-          for emphasis.
+        comment: Danger zone annotation with shot count creates focal point; danger
+          zone overlay highlights attacking third; directional arrows convey event
+          flow. Good hierarchy but pass arrow low-contrast weakens the trajectory
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +163,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: scatter markers on drawn soccer pitch with FIFA-standard
-          dimensions.'
+        comment: Correct soccer pitch event map with accurately drawn FIFA pitch markings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: pitch markings, distinct marker shapes, alpha outcome
-          encoding, directional arrows, green pitch.'
+        comment: 'All spec features present: penalty areas, goal areas, center circle,
+          halfway line, corner arcs, goal posts; four event types with distinct shapes/colors;
+          outcome via fill alpha; directional arrows for passes and shots; correct
+          aspect ratio'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'x: horizontal 0-105m, y: vertical 0-68m. All event types correctly
-          distributed.'
+        comment: x (pitch length 0-105) and y (pitch width 0-68) correctly mapped;
+          event_type encoded via color+shape; outcome encoded via fill_alpha
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title correct format. Legend labels: Pass (success), Pass (miss),
-          Tackle (success), etc.'
+        comment: Title is exactly 'scatter-pitch-events · python · bokeh · anyplot.ai';
+          legend shows all 8 event×outcome combinations
     data_quality:
       score: 15
       max: 15
@@ -172,21 +196,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 event types with both outcome states. Realistic spatial distributions
-          per event type.
+        comment: 'All plot aspects covered: 4 event types, 2 outcomes, spatial distribution,
+          directional flow, pitch zone context'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic soccer match event data. Neutral sports domain.
+        comment: Soccer match event data is realistic and neutral; 120 events reasonable;
+          pass success rate 78%, shot on target 30% — both match real-world statistics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA 105x68m dimensions. Pass distances realistic. Shot locations
-          realistic. Outcome probabilities match real football.
+        comment: FIFA standard dimensions 105x68m; event counts per type match realistic
+          match distributions; coordinate ranges appropriate
     code_quality:
       score: 10
       max: 10
@@ -196,57 +221,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes.
+        comment: No functions or classes; flat procedural code; loops only where necessary
+          (per-row arrow color, per-event-type-outcome scatter groups)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys path manipulation necessary and documented.
+        comment: 'All imports used: os, sys, time, Path, numpy, pandas, bokeh models,
+          selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured. Self-import prevention thoughtful and documented.
+        comment: Event property dicts (colors, markers, sizes) are clean; CDP override
+          for exact viewport sizing is correct technique; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html. Current API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; uses current Bokeh
+          3.x API; Selenium used correctly per bokeh.md pattern
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource for scatter data; Range1d for coordinate control;
+          output_file+save for HTML; Selenium for PNG; legend configured via p.legend
+          accessor — all idiomatic Bokeh
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong Bokeh idioms: ColumnDataSource, Range1d, Arrow/NormalHead,
-          Label, legend.click_policy=hide.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Arrow/NormalHead glyphs, HTML output for interactivity, legend click-to-hide,
-          CDP viewport override. Could leverage HoverTool further.
-  verdict: REJECTED
+        comment: 'Arrow+NormalHead for directional markers; Label annotation; Range1d;
+          click_policy=hide for interactive legend in HTML. Missing: HoverTool on
+          scatter glyphs would be a high-value Bokeh-distinctive addition for the
+          HTML artifact'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - annotations
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
