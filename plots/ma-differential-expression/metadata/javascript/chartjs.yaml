@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: ma-differential-expression
 created: '2026-06-21T01:18:56Z'
-updated: '2026-06-21T01:26:19Z'
+updated: '2026-06-21T01:37:14Z'
 generated_by: claude-sonnet
 workflow_run: 27889288841
 issue: 4420
@@ -12,98 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set, no overlap, excellent
-    density management with alpha/radius, correct Imprint palette semantics'
-  - 'Complete spec compliance: all required features (reference lines, LOESS, significance
-    highlighting, transparency) implemented correctly'
-  - 'Scientifically authentic data: realistic expression-level variance increase at
-    low A, biologically plausible fold-change distributions'
-  - Seeded LCG ensures deterministic rendering without any random state
-  - In-place LOESS tricube kernel implementation avoids any external dependency
-  - Legend filter callback elegantly removes the duplicate ±1 reference line entry
+  - Complete spec compliance — reference lines at M=0, ±1 fold change (solid + dashed),
+    LOESS trend, significance highlighting, and alpha-blending for overplotting all
+    present
+  - 'Biologically realistic synthetic data: noise increases at low expression levels
+    and a small systematic negative bias at low A is baked in — matches real DESeq2/edgeR
+    output character'
+  - 'Correct semantic color assignment: brand green (#009E73) for up-regulated, matte
+    red (#AE3030) for down-regulated, muted ink for not-significant background — all
+    palette-compliant'
+  - Counts embedded in legend labels (e.g. 'Not significant (4006)') give quantitative
+    summary at a glance
+  - 'Clean visual hierarchy: faint background population (alpha ~18%) → colored DE
+    genes (alpha ~80%) → prominent LOESS trend (borderWidth 4)'
+  - Deterministic LCG + Box-Muller transform gives reproducible, normally-distributed
+    gene scatter without Math.random
+  - Legend filter (`item.text !== ''`) cleanly suppresses the unlabeled negative-1
+    reference line dataset — idiomatic Chart.js
   weaknesses:
-  - 'Chart.js default border (all four spines) is present in both renders. Remove
-    for cleaner look using scales.x.border = { display: false } and scales.y.border
-    = { display: false } (Chart.js 4.x API)'
-  - 'DE-02 deficit: remove horizontal gridlines on the x-axis (scales.x.grid = { display:
-    false }) and keep only y-axis grid, more appropriate for this scatter plot type'
-  - No top-gene labels for the most extreme differentially expressed genes — adding
-    5-8 text annotations (highest |M| at high A) would push DE-01 and DE-03 significantly
-    higher
-  - The LOESS trend line (palette[2] blue at borderWidth 3) is somewhat subtle in
-    the light render against the dense background cloud. Increase borderWidth to 4-5
-    to make it more visible
+  - Legend font size (14) and tick label font size (13) are slightly below the chartjs
+    guide's recommended defaults (16 and 14 respectively) — increase legend to 16
+    and ticks to 14 to match the canonical sizing
+  - Down-regulated color `#AE3030CC` is hardcoded instead of using `t.palette[4] +
+    'CC'` — use the Imprint token so the color source is consistent with all other
+    series
+  - 'Gene count (4500 total: 4000 background + 500 DE) is below the spec''s ''typical
+    10,000–20,000'' — consider increasing to ~10,000 background to better represent
+    whole-transcriptome density; the LOESS computation is O(n×51) so it remains fast
+    enough in the browser'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — PASS
-      Chrome: Title "ma-differential-expression · javascript · chartjs · anyplot.ai" in dark ink, fully readable. Legend row with 6 items all legible. Axis titles "A: Mean Average Expression (log₂)" and "M: Log₂ Fold Change" in dark ink. Tick labels in inkSoft gray, readable.
-      Data: Up-regulated genes in brand green #009E73 (radius 3.5, alpha ~80%). Down-regulated in matte red #AE3030 (radius 3.5, alpha ~80%). Non-significant background cloud in muted gray (radius 1.5, alpha ~18%). LOESS trend in blue #4467A3 (palette[2]). Reference lines at M=0 (solid) and M=±1 (dashed).
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct; no pure white.
+      Chrome: Title "ma-differential-expression · javascript · chartjs · anyplot.ai" in dark ink at top, spans ~80% of plot width (expected for the mandated title length). Axis labels "A: Mean Average Expression (log₂)" and "M: Log₂ Fold Change" in dark ink at size 16 — readable. Tick labels at size 13 in inkSoft — readable but slightly small. Legend at top with five visible entries (empty-label 6th filtered out).
+      Data: Not-significant cloud (~4006 points) rendered in very low-opacity dark ink (~18% alpha), forming a faint band centered near M=0. Up-regulated dots (271) in brand green (#009E73, ~80% alpha) cluster tightly above M=1.5. Down-regulated dots (223) in matte red (#AE3030, ~80% alpha) cluster below M=-1.5. M=0 solid reference line in ink at 60% alpha is clearly visible. ±1 dashed reference lines in inkSoft at ~47% alpha are subtle but distinguishable. LOESS trend (palette[2] = #4467A3 blue, borderWidth 4) hugs close to M=0, indicating minimal expression-level bias.
+      Legibility verdict: PASS — all text elements readable against the warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — PASS
-      Chrome: Title in light #F0EFE8 ink, fully readable against dark background. All legend labels, axis titles, and tick labels render in light-on-dark with no dark-on-dark failures detected.
-      Data: Colors are identical to light render — brand green #009E73 for up-regulated, matte red #AE3030 for down-regulated, muted gray for non-significant. LOESS blue line slightly more prominent on dark background. All data elements clearly distinguishable.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct; no pure black.
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8) — clearly visible against the dark surface. Tick labels in inkSoft (#B8B7B0) — readable. Legend labels in light ink — readable.
+      Data: Green up-regulated dots and red down-regulated dots are identical in color to the light render (Imprint palette positions are theme-invariant). The LOESS blue trend line (#4467A3) is visible on the dark background. M=0 reference line appears as a light cream line (~60% alpha) — clearly visible. ±1 dashed lines appear as faint lighter-gray dashed lines. The not-significant background cloud is visible as very faint off-white specks — appropriately de-emphasized. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text is light-on-dark, no elements hidden by dark background. Brand green visible. Data colors are identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title: 22, legend: 14, ticks: 13,
-          axis titles: 16). Well-proportioned in both themes. No overflow or clipping.'
+        comment: 'Font sizes explicitly set; title 22, axis labels 16, ticks 13, legend
+          14. All readable in both themes. Minor: legend (14) and tick (13) are slightly
+          below chartjs guide defaults (16 and 14).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-data or text-text overlap. Legend fits cleanly at top.
+        comment: No text or data collisions in either render. Legend entries well-spaced
+          with padding 20.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent density management: background genes at radius 1.5/18%
-          alpha, significant genes at radius 3.5/80% alpha. Significant genes pop
-          clearly above noise.'
+        comment: Not-significant at alpha ~18% is intentionally de-emphasized; up/down
+          at ~80% alpha clearly visible. LOESS at borderWidth 4 prominent. Reference
+          lines appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red encoding supplemented by spatial separation — redundant
-          encoding beyond hue alone. CVD-safe Imprint palette.
+        comment: Green/red dichotomy is standard for this bioinformatics domain; strong
+          redundant encoding via spatial position (up-regulated genes structurally
+          above M=1.5, down-regulated below M=-1.5) plus legend text labels mitigates
+          CVD concern.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions, balanced margins.
+        comment: Landscape 3200x1800 confirmed (canvas gate passed). Title spans ~80%
+          width — expected for mandated 56-char title. Balanced axis labels. No overflow
+          or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: A: Mean Average Expression (log2),
-          M: Log2 Fold Change.'
+        comment: 'Title correct format. X: ''A: Mean Average Expression (log₂)'' and
+          Y: ''M: Log₂ Fold Change'' — descriptive with domain notation.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First significant series uses palette[0] #009E73. Down-regulated
-          uses semantic anchor #AE3030. LOESS uses palette[2]. Backgrounds #FAF8F1/#1A1A17.
-          Theme-correct in both renders.'
+        comment: 'First data series (up-regulated) uses t.palette[0] (#009E73). Down-regulated
+          uses #AE3030 (Imprint semantic matte red — correct semantic role for down/loss).
+          LOESS uses t.palette[2]. Backgrounds managed by harness tokens. Both renders
+          theme-correct.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -111,22 +125,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured-default: thoughtful alpha layering, semantic color
-          mapping, LOESS from scratch. Not yet at strong-design level.'
+        comment: Intentional visual hierarchy through alpha levels. Reference line
+          differentiation (solid vs. dashed, varying opacity) is thoughtful. Above
+          default 4 for deliberate design choices.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Chart.js border (all four spines) present in both renders. Grid is
-          theme-adaptive but otherwise at defaults. Missing clean L-frame look.
+        passed: true
+        comment: 'Spines removed on both axes (border: {display: false}). Grid on
+          Y-axis only — good choice for scatter. Legend filter removes empty entry
+          cleanly. Above default 2.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Tricolor separation creates focal points. LOESS curve adds interpretive
-          value. No top-gene annotations would push this higher.
+        comment: 'Clear focal points: DE gene clusters stand out against background
+          noise. LOESS near M=0 communicates minimal systematic bias — itself a story.
+          Count labels in legend add quantitative information. Above default 2.'
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +153,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot as Chart.js mixed scatter+line chart.
+        comment: MA plot implemented correctly as scatter with mixed line datasets
+          for reference lines and LOESS.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All mandatory features: significance highlighting, M=0 reference,
-          M=±1 dashed lines, LOESS, transparency.'
+        comment: 'All required features present: significance highlighting, M=0 reference,
+          ±1 dashed lines, LOESS smooth, alpha for overplotting. Gene labeling is
+          optional per spec and not expected.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: A on x-axis, M on y-axis. Correct axis ranges.
+        comment: 'X: mean average expression (A value, 0–15), Y: log2 fold change
+          (M value, -7 to 7). Correct axes.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format. Legend labels informative
-          with counts.
+        comment: Title 'ma-differential-expression · javascript · chartjs · anyplot.ai'
+          is correct format. Legend has 5 visible entries with counts.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -166,24 +186,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: background noise cloud, up/down clusters, LOESS
-          bias trend, fold-change reference lines.'
+        comment: Shows background noise cloud, two significance groups, LOESS trend,
+          reference lines — covers all MA plot aspects.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: RNA-seq differential expression is a real, neutral scientific context.
-          Values representative of DESeq2/edgeR output.
+        comment: 'Biologically realistic data patterns (heteroscedastic noise at low
+          A, slight negative bias at low expression). Slightly below 5: total gene
+          count 4500 is below the spec''s ''typical 10,000–20,000''.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A range (0-15 log2) and M range (-7 to +7) are realistic. Expression-level
-          noise pattern biologically authentic.
+        comment: X range 0–15 log₂ expression units, Y range -7 to 7 log₂ fold change
+          — appropriate for RNA-seq data.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -191,33 +212,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat structure with minimal necessary helpers (lcg, randn).
+        comment: Helper functions lcg() and randn() are minimal and necessary for
+          deterministic RNG in the browser. Clean data → mount → chart structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG with fixed seeds (42, 7919). No Math.random() calls.
+        comment: Fixed-seed LCG (42 and 7919) with Box-Muller transform. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Chart and ANYPLOT_TOKENS are harness globals.
+        comment: No imports needed; Chart is already global. All ANYPLOT_TOKENS fields
+          used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean LOESS tricube kernel. Legend filter callback hides empty dataset.
-          No fake UI.
+        passed: false
+        comment: 'Minor: ''#AE3030CC'' is hardcoded instead of t.palette[4] + ''CC''.
+          All other series correctly use tokens.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'No file saving. animation: false, responsive: true, maintainAspectRatio:
-          false all set correctly.'
+        comment: 'Follows harness contract: appends canvas to #container, no filesystem
+          operations, uses Chart global.'
     library_mastery:
       score: 7
       max: 10
@@ -227,24 +250,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Mixed chart type with dataset-level type overrides is idiomatic Chart.js.
-          Correct use of pointRadius, fill, spanGaps, usePointStyle.
+        comment: Mixed chart type (scatter + line datasets) is idiomatic Chart.js.
+          responsive/maintainAspectRatio/animation flags set correctly. pointHoverRadius
+          for interactive HTML. Above default 3.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Legend filter callback, mixed dataset types within one Chart instance,
-          and tension on LOESS line are Chart.js-specific.
-  verdict: REJECTED
+        comment: 'Effective use of mixed dataset types, borderDash for dashed lines,
+          legend filter function to hide empty-label dataset, spanGaps: false on LOESS
+          line. Above default 1.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   dataprep:
-  - regression
+  - loess-smoothing
   styling:
   - alpha-blending
