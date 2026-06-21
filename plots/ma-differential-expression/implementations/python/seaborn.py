@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21
@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from statsmodels.nonparametric.smoothers_lowess import lowess as sm_lowess
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -124,10 +125,45 @@ status_palette = {
     "Down-regulated": DOWN_COLOR,
 }
 
+# --- Precompute LOESS + bootstrap CI (seaborn confidence-band pattern) ---
+x_all = df["Mean Expression (A)"].values
+y_all = df["Log₂ Fold Change (M)"].values
+sort_full = np.argsort(x_all)
+x_sorted, y_sorted = x_all[sort_full], y_all[sort_full]
+
+# Full-data LOESS for annotation placement
+loess_full = sm_lowess(y_sorted, x_sorted, frac=0.3, return_sorted=True)
+
+# Bootstrap CI on 2k subsample for speed (pattern mirrors seaborn's CI bands)
+rng_boot = np.random.default_rng(0)
+sub_idx = np.sort(rng_boot.choice(len(x_sorted), 2000, replace=False))
+xs_b, ys_b = x_sorted[sub_idx], y_sorted[sub_idx]
+x_grid = np.linspace(xs_b[0], xs_b[-1], 200)
+
+n_boot = 80
+boot_curves = np.empty((n_boot, len(x_grid)))
+for bi in range(n_boot):
+    ri = rng_boot.integers(0, len(xs_b), len(xs_b))
+    xr, yr = xs_b[ri], ys_b[ri]
+    s = np.argsort(xr)
+    lw = sm_lowess(yr[s], xr[s], frac=0.3, return_sorted=True)
+    boot_curves[bi] = np.interp(x_grid, lw[:, 0], lw[:, 1])
+
+ci_lo = np.percentile(boot_curves, 2.5, axis=0)
+ci_hi = np.percentile(boot_curves, 97.5, axis=0)
+
 # --- Plot ---
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 fig.patch.set_facecolor(PAGE_BG)
 ax.set_facecolor(PAGE_BG)
+
+# LOESS 95% CI band drawn first so data points render on top
+ax.fill_between(x_grid, ci_lo, ci_hi, color=LOESS_COLOR, alpha=0.12, zorder=1, label="95% CI")
+
+# Reference lines
+ax.axhline(y=0, color=INK_SOFT, linewidth=1.5, alpha=0.6, zorder=2)
+ax.axhline(y=1, color=THRESHOLD_COLOR, linewidth=1.2, linestyle="--", alpha=0.85, zorder=2)
+ax.axhline(y=-1, color=THRESHOLD_COLOR, linewidth=1.2, linestyle="--", alpha=0.85, zorder=2)
 
 # Background layer: all 15k genes, small + transparent for density
 sns.scatterplot(
@@ -162,39 +198,48 @@ sns.scatterplot(
     ax=ax,
 )
 
-# Reference lines
-ax.axhline(y=0, color=INK_SOFT, linewidth=1.5, alpha=0.6, zorder=1)
-ax.axhline(y=1, color=THRESHOLD_COLOR, linewidth=1.2, linestyle="--", alpha=0.85, zorder=1)
-ax.axhline(y=-1, color=THRESHOLD_COLOR, linewidth=1.2, linestyle="--", alpha=0.85, zorder=1)
-
-# Threshold annotations
+# Threshold annotations (raised to 8pt for mobile legibility)
 xlim = ax.get_xlim()
 x_lbl = xlim[1] * 0.97
-ax.text(x_lbl, 1.10, "2-fold ↑", fontsize=7, color=THRESHOLD_COLOR, ha="right", fontstyle="italic")
-ax.text(x_lbl, -1.24, "2-fold ↓", fontsize=7, color=THRESHOLD_COLOR, ha="right", fontstyle="italic")
+ax.text(x_lbl, 1.12, "2-fold ↑", fontsize=8, color=THRESHOLD_COLOR, ha="right", fontstyle="italic")
+ax.text(x_lbl, -1.28, "2-fold ↓", fontsize=8, color=THRESHOLD_COLOR, ha="right", fontstyle="italic")
 
-# LOESS smoothing curve to reveal expression-dependent bias
+# LOESS smoothing curve (seaborn-distinctive lowess via regplot)
 sns.regplot(
     data=df,
     x="Mean Expression (A)",
     y="Log₂ Fold Change (M)",
     lowess=True,
     scatter=False,
-    line_kws={"color": LOESS_COLOR, "linewidth": 2.0, "alpha": 0.85, "label": "LOESS trend"},
+    line_kws={"color": LOESS_COLOR, "linewidth": 2.0, "alpha": 0.9, "label": "LOESS trend"},
     ax=ax,
 )
 
-# Gene labels spread across expression range
+# In-plot annotation foregrounding the key finding: flat LOESS = no expression bias
+x_annot = float(np.percentile(x_all, 86))
+y_annot = float(np.interp(x_annot, loess_full[:, 0], loess_full[:, 1]))
+ax.text(
+    x_annot,
+    y_annot + 0.22,
+    "No expression bias",
+    fontsize=8,
+    fontstyle="italic",
+    color=INK_MUTED,
+    ha="right",
+    va="bottom",
+)
+
+# Gene labels spread across expression range with refined offsets and thinner arrowheads
 labeled = df[df["gene_name"].notna()].copy()
 label_positions = []
 for _, row in labeled.iterrows():
     x_val = row["Mean Expression (A)"]
     y_val = row["Log₂ Fold Change (M)"]
-    y_off = -22 if y_val > 0 else 22
-    x_off = 18 if x_val < df["Mean Expression (A)"].median() else -18
+    y_off = -24 if y_val > 0 else 24
+    x_off = 20 if x_val < df["Mean Expression (A)"].median() else -20
     for px, py in label_positions:
         if abs(x_val - px) < 2 and abs(y_val - py) < 1:
-            y_off = y_off + (28 if y_off > 0 else -28)
+            y_off = y_off + (30 if y_off > 0 else -30)
             break
     label_positions.append((x_val, y_val))
     ax.annotate(
@@ -202,16 +247,16 @@ for _, row in labeled.iterrows():
         xy=(x_val, y_val),
         xytext=(x_off, y_off),
         textcoords="offset points",
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
         color=INK,
-        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.9, "connectionstyle": "arc3,rad=0.2"},
+        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.6, "connectionstyle": "arc3,rad=0.15"},
         bbox={
             "boxstyle": "round,pad=0.2",
             "facecolor": ELEVATED_BG,
             "edgecolor": INK_SOFT,
             "alpha": 0.92,
-            "linewidth": 0.6,
+            "linewidth": 0.4,
         },
     )
 
@@ -227,6 +272,6 @@ ax.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
 sns.move_legend(ax, "upper right", fontsize=8, framealpha=0.92, title="Gene Status", title_fontsize=8)
 
-fig.subplots_adjust(left=0.10, right=0.97, top=0.91, bottom=0.12)
+fig.subplots_adjust(left=0.10, right=0.97, top=0.91, bottom=0.13)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
