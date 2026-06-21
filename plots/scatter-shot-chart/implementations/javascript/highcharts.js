@@ -68,27 +68,28 @@ const courtSeries = [
   { ...CL, lineWidth: 2, data: arc(0, 0, 0.75, 0, 360, 36) },
 ];
 
-// --- Shot data generation ---
-const made = [];
-const missed = [];
+// --- Shot data generation: type drives marker shape (● 2PT · △ 3PT · ■ FT) ---
+const shots = { made2: [], missed2: [], made3: [], missed3: [], madeFT: [], missedFT: [] };
 
-function addShots(n, cx, cy, sx, sy, pct) {
+function addShots(n, cx, cy, sx, sy, pct, type) {
   for (let i = 0; i < n; i++) {
     const x = Math.max(-24, Math.min(24, cx + rn() * sx));
     const y = Math.max(BL + 0.5, Math.min(41, cy + rn() * sy));
-    (rnd() < pct ? made : missed).push([+x.toFixed(2), +y.toFixed(2)]);
+    const key = (rnd() < pct ? 'made' : 'missed') + type;
+    shots[key].push([+x.toFixed(2), +y.toFixed(2)]);
   }
 }
 
-addShots(80,  0,    3,    2.5, 2,   0.65); // under basket
-addShots(45, -13,  12,   3,   3,   0.42); // left mid-range
-addShots(45,  13,  12,   3,   3,   0.42); // right mid-range
-addShots(30,  0,   17,   3.5, 2,   0.44); // top of key
-addShots(40, -22,   4,   1.5, 2.5, 0.38); // left corner three
-addShots(40,  22,   4,   1.5, 2.5, 0.38); // right corner three
-addShots(35, -18,  22,   2,   2,   0.36); // left above-break three
-addShots(35,  18,  22,   2,   2,   0.36); // right above-break three
-addShots(35,  0,   24,   4,   2,   0.35); // top-of-arc three
+addShots(80,  0,    3,    2.5, 2,   0.65, '2');  // under basket
+addShots(45, -13,  12,   3,   3,   0.42, '2');  // left mid-range
+addShots(45,  13,  12,   3,   3,   0.42, '2');  // right mid-range
+addShots(30,  0,   17,   3.5, 2,   0.44, '2');  // top of key
+addShots(40, -22,   4,   1.5, 2.5, 0.38, '3');  // left corner three
+addShots(40,  22,   4,   1.5, 2.5, 0.38, '3');  // right corner three
+addShots(35, -18,  22,   2,   2,   0.36, '3');  // left above-break three
+addShots(35,  18,  22,   2,   2,   0.36, '3');  // right above-break three
+addShots(35,  0,   24,   4,   2,   0.35, '3');  // top-of-arc three
+addShots(22,  0,   15,   0.4, 0.3, 0.78, 'FT'); // free throws (~78% NBA avg)
 
 // --- Chart ---
 Highcharts.chart("container", {
@@ -97,13 +98,17 @@ Highcharts.chart("container", {
     backgroundColor: 'transparent',
     animation: false,
     style: { fontFamily: 'inherit' },
-    margin: [70, 30, 50, 30],
+    margin: [90, 30, 55, 30],
   },
   credits: { enabled: false },
   colors: t.palette,
   title: {
     text: 'scatter-shot-chart · javascript · highcharts · anyplot.ai',
     style: { color: t.ink, fontSize: '22px', fontWeight: '600' },
+  },
+  subtitle: {
+    text: '● 2-pointer · △ 3-pointer · ■ free-throw',
+    style: { color: t.inkSoft, fontSize: '13px' },
   },
   xAxis: {
     min: -26, max: 26,
@@ -133,31 +138,42 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     scatter: {
-      marker: {
-        radius: 5,
-        symbol: 'circle',
-        lineWidth: 1,
-        lineColor: t.pageBg,
-      },
+      marker: { radius: 5, lineWidth: 1, lineColor: t.pageBg },
     },
   },
   series: [
     ...courtSeries,
+    // Made shots — brand green (#009E73); shape encodes shot type; only first shown in legend
     {
-      type: 'scatter',
-      name: 'Made',
-      data: made,
-      color: t.palette[0],       // #009E73 brand green — semantic: shot made
-      opacity: 0.80,
+      type: 'scatter', name: 'Made', data: shots.made2,
+      color: t.palette[0], opacity: 0.80,
       marker: { radius: 5, symbol: 'circle', lineWidth: 1, lineColor: t.pageBg },
     },
     {
-      type: 'scatter',
-      name: 'Missed',
-      data: missed,
-      color: t.palette[4],       // #AE3030 matte red — semantic: shot missed
-      opacity: 0.70,
+      type: 'scatter', name: 'Made 3PT', data: shots.made3,
+      color: t.palette[0], opacity: 0.80, showInLegend: false,
+      marker: { radius: 5, symbol: 'triangle', lineWidth: 1, lineColor: t.pageBg },
+    },
+    {
+      type: 'scatter', name: 'Made FT', data: shots.madeFT,
+      color: t.palette[0], opacity: 0.80, showInLegend: false,
+      marker: { radius: 5, symbol: 'square', lineWidth: 1, lineColor: t.pageBg },
+    },
+    // Missed shots — matte red (#AE3030); shape encodes shot type; only first shown in legend
+    {
+      type: 'scatter', name: 'Missed', data: shots.missed2,
+      color: t.palette[4], opacity: 0.70,
       marker: { radius: 5, symbol: 'circle', lineWidth: 1, lineColor: t.pageBg },
+    },
+    {
+      type: 'scatter', name: 'Missed 3PT', data: shots.missed3,
+      color: t.palette[4], opacity: 0.70, showInLegend: false,
+      marker: { radius: 5, symbol: 'triangle', lineWidth: 1, lineColor: t.pageBg },
+    },
+    {
+      type: 'scatter', name: 'Missed FT', data: shots.missedFT,
+      color: t.palette[4], opacity: 0.70, showInLegend: false,
+      marker: { radius: 5, symbol: 'square', lineWidth: 1, lineColor: t.pageBg },
     },
   ],
 });
