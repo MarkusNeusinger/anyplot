@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: plotly 6.8.0 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-21
+Quality: 89/100 | Updated: 2026-06-21 | Repair: 1/3
 """
 
 import os
@@ -136,19 +136,23 @@ fig.add_annotation(
 
 # Label top DE genes with arrow connectors to avoid overlap with data points
 label_indices = [sig_indices[i] for i in top_de]
-for gene_idx in label_indices:
-    # Offset upward for up-regulated, downward for down-regulated
-    ay = -28 if log_fold_change[gene_idx] > 0 else 28
+expr_mid = (mean_expression.max() + mean_expression.min()) / 2
+for i, gene_idx in enumerate(label_indices):
+    lfc = log_fold_change[gene_idx]
+    expr = mean_expression[gene_idx]
+    # Right-side genes point left; left-side genes alternate direction to reduce crowding
+    ax = -32 if expr > expr_mid else (28 if i % 2 == 0 else -28)
+    ay = -35 if lfc > 0 else 35
     fig.add_annotation(
-        x=mean_expression[gene_idx],
-        y=log_fold_change[gene_idx],
+        x=expr,
+        y=lfc,
         text=gene_names[gene_idx],
         showarrow=True,
         arrowhead=2,
         arrowsize=0.8,
         arrowwidth=1.2,
         arrowcolor=INK_SOFT,
-        ax=24,
+        ax=ax,
         ay=ay,
         font={"size": 10, "color": INK},
         bgcolor=ELEVATED_BG,
@@ -174,7 +178,7 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
-        "linecolor": INK_SOFT,
+        "showline": False,
     },
     yaxis={
         "title": {"text": "Log₂ Fold Change (M)", "font": {"size": 12, "color": INK}},
@@ -189,7 +193,7 @@ fig.update_layout(
     font={"color": INK},
     legend={
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.98,
+        "x": 0.86,
         "y": 0.98,
         "xanchor": "right",
         "bgcolor": ELEVATED_BG,
