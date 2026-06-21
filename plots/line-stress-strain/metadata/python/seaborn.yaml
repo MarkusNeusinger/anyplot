@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:23:55Z'
-updated: '2026-06-21T09:36:12Z'
+updated: '2026-06-21T09:55:53Z'
 generated_by: claude-sonnet
 workflow_run: 27899896592
 issue: 4413
@@ -12,96 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stre
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Physically accurate 6061-T6 Aluminum simulation with real material constants (E=69
-    GPa, yield=276 MPa, UTS=310 MPa)
-  - 'Semantic Imprint palette usage: green=elastic stability, blue=hardening, red=failure/necking
-    — immediately intuitive for material scientists'
-  - 'All four spec requirements implemented correctly: region labels, critical point
-    annotations, elastic modulus slope, and 0.2% offset line'
-  - Theme adaptation is flawless — INK token used for fracture marker correctly flips
-    between themes; all text readable in both light and dark renders with no dark-on-dark
-    failures
-  - Region shading (alpha=0.05) adds depth without distracting from data; clean despined
-    layout with y-axis-only grid
+  - Seaborn's statistical aggregation (errorbar='sd', err_style='band') used idiomatically
+    to show specimen-to-specimen material variability — the library's defining feature
+    deployed perfectly
+  - 'Perfect spec compliance: all required features (elastic modulus slope annotation,
+    0.2% offset line, yield point, UTS, fracture markers, region labels) present and
+    accurate'
+  - Factually accurate 6061-T6 aluminum properties with physically realistic noise
+    model (increasing variability through elastic→hardening→necking)
+  - Semantic Imprint palette assignment (green=elastic stability, blue=hardening transition,
+    matte red=failure/necking) with justified semantic exceptions
+  - Full theme adaptation across both renders — no dark-on-dark failures; chrome tokens
+    correctly applied to annotations, tick params, and legend
   weaknesses:
-  - 'Annotation cluster near the elastic region (x≈0–0.006): ''Yield Point (0.2% offset)'',
-    ''E = 69 GPa'', and ''Elastic'' inline labels converge in a narrow horizontal
-    band — spread vertically or reposition the ''Elastic'' label higher to reduce
-    density'
-  - Elastic region occupies only ~3% of x-axis width, making the steep slope visually
-    compressed relative to its engineering importance — consider a matplotlib inset
-    axes to zoom into the elastic region (strain 0–0.006)
-  - LM-02 score limited by matplotlib-heavy implementation; seaborn FacetGrid or more
-    central lineplot grouping idioms would better showcase seaborn-distinctive features
+  - Region shading at alpha=0.05 is so subtle it barely registers visually — alpha=0.07-0.08
+    would improve spatial zone delineation without adding visual noise
+  - The narrow elastic zone (x=0-0.004, ~2.7% of x-range) creates visual density with
+    the elastic curve, dashed offset line, 'Elastic' label, and E=69 GPa annotation
+    arrow all packed into a tight horizontal strip
+  - DE-01 ceiling at 6/8 — four arrow annotations + three inline italic region labels
+    creates some visual complexity/busyness in the elastic zone
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "6061-T6 Aluminum · line-stress-strain · python · seaborn · anyplot.ai" in dark text, fully readable; axis labels "Engineering Strain" and "Engineering Stress (MPa)" in dark ink at fontsize=10; tick labels at fontsize=8 clearly visible; legend in lower-right with dark text on ELEVATED_BG; four arrow annotations readable at fontsize=8
-      Data: green (#009E73) elastic segment (short, steep — physically accurate for aluminum E=69 GPa); blue (#4467A3) strain hardening arc; red (#AE3030) necking descent; dashed gray 0.2% offset line; subtle region shading (alpha=0.05); three critical point markers (green yield, red UTS, dark fracture)
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "6061-T6 Aluminum · line-stress-strain · python · seaborn · anyplot.ai" in dark medium-weight text (~75% width); axis labels "Engineering Strain" and "Engineering Stress (MPa)" in dark text at 10pt; tick labels in INK_SOFT dark at 8pt — all clearly readable
+      Data: Green (#009E73) elastic segment with SD band; blue (#4467A3) strain-hardening segment with SD band; matte red (#AE3030) necking segment with SD band; large critical-point markers; dashed grey offset line; pale alpha=0.05 region shading; 4 arrow annotations; 3 italic inline labels
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title and all axis labels/ticks render in light cream (#F0EFE8) — fully readable against dark background; legend text light-colored; annotation text adapts correctly (yield annotation in #009E73, UTS in #AE3030, fracture in #F0EFE8 cream); no dark-on-dark text failures
-      Data: green, blue, red data colors are identical to light render (Imprint palette preserved exactly); fracture marker adapts from near-black to near-white (correct INK token flip); grid lines subtle but visible on dark surface
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, brand green clearly visible
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and all axis/tick labels in light cream (#F0EFE8 / #B8B7B0) — clearly readable; no dark-on-dark failures detected; legend box uses elevated dark bg (#242420) with light text; annotation text adapts to INK_DARK (light cream) in dark mode
+      Data: Colors identical to light render — green elastic, blue hardening, matte red necking; SD bands and region shading consistent; Fracture marker adapts to INK_DARK (near-white) with dark edge — visible on dark bg; y-axis grid shows as subtle light lines
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; title uses character-count scaling;
-          all text readable in both themes; minor: 8pt annotation text is tight at
-          mobile scale'
+        comment: All font sizes explicitly set (title 12pt with length scaling, axis
+          labels 10pt, ticks 8pt, legend 8pt); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No collisions; slight annotation density in narrow elastic region
-          near x=0.002-0.030
+        comment: Elastic label raised to y=uts*0.62 to avoid crowding with E=69 GPa
+          annotation; no overlaps detected
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Critical markers s=200 clearly visible; linewidth=3.0 appropriate;
-          elastic segment physically narrow but accurate
+        comment: linewidth=3.0 for curves, s=200 for markers, SD bands at alpha=0.18
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Accessible via redundant encodings; annotations compensate for any
-          colorblind concern
+        comment: Imprint palette (green, blue, matte red) colorblind-safe; redundant
+          encoding via region shading and labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed 3200x1800; good proportions; no clipping; no AR-09
-          triggered
+        comment: Canvas gate passed (3200x1800); data fills ~75% of plot area; legend
+          well-positioned lower-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title includes material prefix
+        comment: Engineering Stress (MPa) with units; Engineering Strain appropriately
+          unit-free (dimensionless)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Imprint semantic ordering; backgrounds correct;
-          both renders theme-correct'
+        comment: 'First series #009E73; Imprint palette with semantic exception for
+          necking/failure (#AE3030); backgrounds #FAF8F1/#1A1A17; full theme-adaptive
+          chrome'
     design_excellence:
       score: 14
       max: 20
@@ -111,21 +111,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Semantic color mapping, region shading, italic inline labels, intentional
-          visual hierarchy
+        comment: 'Strong design: semantic color coding, statistical uncertainty bands,
+          multi-layer hierarchy, intentional typographic levels. Not quite FiveThirtyEight-level
+          due to annotation density.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: sns.despine(), y-axis-only grid, clean whitespace, legend framealpha=0.9
+        comment: sns.despine removes top/right spines; y-only grid alpha=0.15; region
+          shading alpha=0.05; good legend styling. Region shading borderline too subtle.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Region shading + annotations + offset line walk viewer through material
-          deformation story
+        comment: Color-coded regions communicate mechanical behavior stages; critical
+          point markers create focal anchors; uncertainty bands add insight about
+          material variability; 0.2% offset line teaches yield determination
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with coloured segments by deformation region
+        comment: Correct engineering stress-strain line chart with all mechanical
+          behavior regions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Region labels, critical points, elastic modulus annotation, 0.2%
-          offset line — all present
+        comment: Region labels, critical points (yield/UTS/fracture), E=69 GPa annotation,
+          0.2% offset line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Engineering Strain, y=Engineering Stress (MPa); axes span full
-          data range
+        comment: Strain on x, stress (MPa) on y; correct engineering conventions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
-          format; legend matches visual encoding
+        comment: Title uses valid optional-prefix format; legend labels are clear
+          and correct
     data_quality:
       score: 15
       max: 15
@@ -166,21 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three phases, all three critical points, elastic modulus, 0.2%
-          offset method
+        comment: All three mechanical stages; 5-specimen aggregation with SD; critical
+          points annotated; elastic modulus quantified
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 6061-T6 material properties (E=69 GPa, yield=276 MPa, UTS=310
-          MPa); neutral engineering content
+        comment: Aluminum alloy 6061-T6 tensile test — specific, real, neutral engineering
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strain 0-0.15, stress 0-375 MPa appropriate for aluminum alloy
+        comment: E=69 GPa, yield=276 MPa, UTS=310 MPa, fracture strain=12% — all factually
+          consistent with published 6061-T6 properties
     code_quality:
       score: 10
       max: 10
@@ -190,60 +194,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Imports → tokens → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All six imports actively used
+        comment: 'All 6 imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          matplotlib.lines.Line2D'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI or interactivity
+        comment: Clean, Pythonic; appropriate complexity for multi-annotation multi-region
+          plot; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; dpi=400
+        comment: Saves as plot-{THEME}.png; current seaborn 0.13 API; no bbox_inches='tight'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.lineplot with hue/hue_order/palette; errorbar=(sd,1) with err_style=band;
+          sns.scatterplot; sns.set_theme; sns.despine — fully idiomatic
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.lineplot() with hue, sns.scatterplot(), sns.set_theme() rc dict,
-          sns.despine(), correct manual legend pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Seaborn hue mapping used well but most complexity handled via matplotlib
-          API rather than seaborn-specific abstractions
+        comment: 'Statistical aggregation via errorbar=(sd,1)+err_style=band is seaborn''s
+          signature feature: long-format 5-specimen data auto-reduced to mean+SD band
+          — would require explicit numpy/scipy in any other library'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
