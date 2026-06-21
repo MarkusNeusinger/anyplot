@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:30:49Z'
-updated: '2026-06-21T03:29:23Z'
+updated: '2026-06-21T03:39:25Z'
 generated_by: claude-sonnet
 workflow_run: 27891888827
 issue: 4418
@@ -15,102 +15,89 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - LineCollection with per-segment coloring is an idiomatic, efficient matplotlib
-    technique that makes the line itself change color as the probability crosses 50%
-  - 'Full theme-adaptive chrome: both renders pass the readability check with no dark-on-dark
-    or light-on-light failures'
-  - Semantic palette mapping is correct and intentional — Eagles green (#009E73, Imprint
-    pos 1) and Cowboys blue (#4467A3, Imprint pos 3) match real-world team color expectations
-  - 'All spec requirements fulfilled: 50% reference line, fill-above/fill-below with
-    team colors, quarter period markers, event annotations with dots, and final score
-    in title'
-  - Path effects (withStroke) on annotation text ensure labels remain legible over
-    any fill color in both themes
-  - 'Code quality is exemplary: np.random.seed(42), no functions/classes, all imports
-    used, correct savefig without bbox_inches=''tight'''
+  - LineCollection with per-segment coloring is an elegant, distinctly matplotlib
+    technique that makes the win probability line itself a storytelling device — each
+    segment reveals which team is winning
+  - Dual fill_between layers (above/below 50%) with team colors create immediate visual
+    storytelling without requiring a legend to understand the narrative
+  - Path effects (pe.withStroke) on annotations prevent visual interference with both
+    the colored fills and the line — a professional production detail
+  - 'Full theme-adaptive chrome: both renders pass legibility checks with no dark-on-dark
+    or light-on-light failures; ELEVATED_BG applied to legend frame in dark render'
+  - Realistic NFL data with authentic play-by-play structure, final score in title,
+    annotated key moments, and quarter markers
   weaknesses:
-  - Annotation labels and quarter markers are at fontsize=7, which renders to ~39
-    source-px on the 3200px canvas — at mobile width (~400px) these shrink to ~5px
-    and become unreadable. Raise annotation fontsize to 8pt and quarter labels to
-    8pt.
-  - Asymmetric fill alphas (Eagles 0.22 vs Cowboys 0.55) makes the Cowboys (losing)
-    blue regions appear more visually dominant than the Eagles (winning) green regions.
-    Consider balancing to ~0.30 for both, or reversing the logic so the team ahead
-    gets the higher alpha.
-  - The lower 30% of the chart area (0%–35% win probability) is permanently empty,
-    making the filled area appear cramped into the top 65% of the plot. Consider setting
-    ylim to (0.1, 1.0) or using a tighter range to give data more vertical room while
-    keeping the 0%/100% anchors as reference ticks.
+  - Y-axis starts at ~10% (ax.set_ylim(0.10, 1.02)) rather than the spec-required
+    0–100% full range — fix by changing to ax.set_ylim(-0.02, 1.05) and updating yticks
+    to [0, 0.25, 0.5, 0.75, 1.0]
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as required — no pure white visible.
-      Chrome: Title "Eagles 27 – Cowboys 20 · line-win-probability · python · matplotlib · anyplot.ai" in dark ink, clearly readable at ~10pt computed fontsize. Y-axis label "Win Probability" and X-axis label "Play Number" both at 10pt in dark INK — clearly legible. Tick labels at 8pt in INK_SOFT (#4A4A44) — readable. Quarter labels (Q1–Q4) at 7pt muted — small but visible. Legend in upper-left with Eagles (green patch) and Cowboys (blue patch), text in INK_SOFT — readable.
-      Data: Win probability line in #009E73 (brand green) above 50% and #4467A3 (blue) below 50% via LineCollection. Green fill (alpha=0.22) above 50%, blue fill (alpha=0.55) below 50%. Six event annotation labels with bold text and path-effect stroke halos. Event dots on the curve with appropriate colors. Dashed 50% reference line in INK_MUTED. Dotted vertical quarter dividers.
-      Legibility verdict: PASS — all chrome elements are clearly readable against the warm off-white background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Eagles 27 – Cowboys 20 · line-win-probability · python · matplotlib · anyplot.ai" in dark ink, clearly readable at top (~85% width). Y-axis label "Win Probability" and X-axis label "Play Number" at 10pt — both readable. Tick labels at 8pt soft dark ink — readable. Quarter labels Q1–Q4 at 8pt muted ink — visible. Legend with Eagles/Cowboys swatches in upper-left, readable.
+      Data: Win probability line color-coded green (#009E73) above 50%, blue (#4467A3) below. Green fill above 50%, blue fill below (alpha=0.30). Six scoring event annotations (FG 3-0, TD 7-3, TD 10-7, TD 14-13, TD 20-14, TD 27-17) with white path-effect halos. Event dots in team color with white edge ring. 50% dashed reference line subtle grey.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as required — not pure black.
-      Chrome: Title in light (#F0EFE8 equivalent INK for dark theme) — clearly readable against dark background. Axis labels, tick labels, and legend text all use light-colored INK_SOFT (#B8B7B0) — no dark-on-dark failures. Quarter labels in INK_MUTED (#A8A79F) — visible. No dark text on dark background anywhere.
-      Data: Data colors are identical to the light render — same #009E73 green and #4467A3 blue for line segments and fill areas. Fill areas remain distinguishable against the dark background. Annotation path effects use #1A1A17 as background stroke, which blends with the dark surface and keeps text clear. Legend frame uses ELEVATED_BG (#242420) — slightly lighter than the page background, correct for dark theme.
-      Legibility verdict: PASS — all elements are readable; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light cream text — clearly readable. Axis labels and tick labels in light off-white — no dark-on-dark failures. Legend frame uses elevated dark surface (#242420), legend text in muted light grey — readable. Quarter labels visible in muted light grey.
+      Data: Eagles green (#009E73) and Cowboys blue (#4467A3) are IDENTICAL to light render — only chrome flips, data colors stay constant. Fills and line maintain same green/blue identity. Path effects on annotations keep them readable over dark fills.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Annotation
-          labels and quarter markers at fontsize=7 are small — readable at full size
-          but may be marginal at mobile scale (~400px).
+        comment: All font sizes explicitly set; quarter labels at 8pt muted ink and
+          annotation labels at bold 8pt are at minimum floor but readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Event annotations are offset vertically
-          with path effects preventing collision with the data line.
+        comment: Y-offsets and path effects keep all annotations clear of line and
+          fills; no element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Win probability line clearly visible in both themes. Fill areas visible.
-          Event dots have edge highlights for definition.
+        comment: linewidth=2.5 line, alpha=0.30 fills, markersize=5 event dots well-adapted
+          to 120-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) vs blue (#4467A3) — no red-green sole signal. Both
-          are Imprint palette members with adequate CVD separation.
+        comment: Imprint positions 1 and 3 (green/blue) are CVD-safe per Imprint palette
+          design
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800 (gate passed). Margins set via subplots_adjust.
-          No clipping. No bbox_inches='tight' — correct.
+        comment: 3200x1800 confirmed; subplots_adjust gives balanced whitespace; no
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Win Probability' with % formatting. X-axis 'Play Number'.
-          Title includes descriptive score prefix + mandatory anyplot format.
+        comment: Win Probability with % formatter and Play Number are descriptive;
+          title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Eagles=#009E73 (Imprint pos 1, brand green). Cowboys=#4467A3 (Imprint
-          pos 3, blue). Valid semantic exception — NFL team colors match palette members.
-          Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
+        comment: 'First series #009E73; Cowboys #4467A3 semantic exception justified;
+          backgrounds #FAF8F1/#1A1A17; chrome adapts correctly'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,27 +105,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). LineCollection for per-segment coloring is a deliberate
-          design choice. Path effects on annotations show care. Asymmetric alphas
-          are intentional but create visual imbalance. Not exceptional gallery-caliber.
+        comment: LineCollection color-coding and dual fills show genuine design thinking;
+          path effects professional; falls short of 6+ due to utilitarian annotation
+          styling
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Y-axis only grid at alpha=0.15. Dotted
-          quarter dividers. However, Cowboys fill at alpha=0.55 vs Eagles at alpha=0.22
-          creates a visual imbalance where the losing team's fill looks more prominent.
+        comment: Spines removed; y-axis-only grid at alpha=0.15; subtle dotted quarter
+          dividers; tasteful 50% reference line; elevated legend frame
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear narrative arc (Eagles maintain lead through Q3/Q4 with a strong
-          final surge). Events marked at key turning points. Color fills convey momentum
-          at a glance. Good visual hierarchy.
+        comment: Color-coded fill and line tells team momentum story immediately;
+          annotated events guide viewer; decisive Q4 convergence creates clear narrative
+          climax
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,30 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct win probability line chart with area fills for team momentum.
+        comment: Correct win probability chart with fill above/below 50% reference
+          line
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 50% reference line, fill above/below with team colors, quarter period
-          markers, scoring event annotations with dots, final score in title — all
-          present.
+        passed: false
+        comment: Fills, annotations, quarter markers, final score in title all present;
+          Y-axis starts at ~10% (ylim=0.10) instead of spec-required 0-100% range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis is play number (0-120). Y-axis is win probability (0%-100%).
-          Full range covered.
+        comment: X=play number 0-120, Y=win probability; home team fills above 50%,
+          away team below 50%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Eagles 27 – Cowboys 20 · line-win-probability · python
-          · matplotlib · anyplot.ai'' — correct descriptive prefix + mandatory format.
-          Legend labels: Eagles / Cowboys.'
+        comment: Title uses correct format with descriptive prefix; legend labels
+          Eagles and Cowboys correctly
     data_quality:
       score: 15
       max: 15
@@ -179,24 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows home/away team fills, scoring event annotations with dots,
-          quarter dividers, 50% baseline, probability convergence at game end.
+        comment: Shows probability swings in both directions, both teams leading,
+          annotated events, quarter divisions, end-game convergence
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Eagles vs Cowboys is a real NFL rivalry. Score 27-20 is realistic.
-          Play-by-play format with TDs and FGs is authentic. np.random.seed(42) for
-          reproducibility.
+        comment: NFL Eagles vs Cowboys is neutral, real-world, no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 plays appropriate for NFL. Win probability deltas (0.10-0.18
-          for TDs, 0.06-0.12 for FGs) are realistic. Probability clipped to [0.02,
-          0.98] — good.
+        comment: 120 plays realistic for NFL; probability range 0.02-0.98; score 27-20
+          plausible; noise magnitude appropriate
     code_quality:
       score: 10
       max: 10
@@ -206,68 +188,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear, readable code flow.
+        comment: 'Flat procedural: imports -> data -> plot -> save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib.patches, matplotlib.patheffects, matplotlib.pyplot,
-          matplotlib.ticker, numpy, matplotlib.collections.'
+        comment: 'All imports used: os, sys, mpatches, patheffects, plt, mticker,
+          np, LineCollection'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. sys.path guard to avoid self-shadowing is a good defensive
-          pattern. LineCollection usage is elegant.
+        comment: LineCollection approach is idiomatic and efficient; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. dpi=400. Correct.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout (not pyplot). LineCollection, fill_between
-          with where+interpolate, axhline/axvline, FuncFormatter — all idiomatic matplotlib
-          patterns.
+        comment: ax methods throughout, FuncFormatter for % ticks, fill_between with
+          interpolate=True, axhline/axvline — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LineCollection for per-segment colored lines and patheffects.withStroke
-          are genuinely matplotlib-specific features. fill_between with interpolate=True
-          is a less-used but powerful option. Implementation stays within well-known
-          matplotlib patterns rather than pushing into advanced territory.
+        comment: LineCollection with per-segment colors is distinctly matplotlib;
+          patheffects.withStroke for annotation halos; mpatches.Patch for custom legend
+          — three clearly matplotlib-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   - manual-ticks
-  - patches
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
