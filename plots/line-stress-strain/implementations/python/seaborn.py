@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21
@@ -28,7 +28,7 @@ COLOR_ELASTIC = IMPRINT_PALETTE[0]  # brand green — first series
 COLOR_HARDENING = IMPRINT_PALETTE[2]  # blue
 COLOR_NECKING = IMPRINT_PALETTE[4]  # matte red — semantic: fracture/failure
 
-# Data — Aluminum alloy 6061-T6 tensile test simulation
+# Data — Aluminum alloy 6061-T6 tensile test simulation (5 specimens)
 # Different from mild steel: lower E, no yield plateau, lower ductility
 np.random.seed(42)
 
@@ -40,29 +40,41 @@ fracture_strain = 0.12
 fracture_stress = 252  # MPa
 yield_strain = yield_stress / youngs_modulus  # ~0.004
 
-# Elastic region (linear)
-strain_elastic = np.linspace(0, yield_strain, 40)
-stress_elastic = youngs_modulus * strain_elastic
+# Shared strain grid across all specimens so seaborn can aggregate by (x, hue)
+strain_elastic_ref = np.linspace(0, yield_strain, 40)
+strain_hardening_ref = np.linspace(yield_strain, uts_strain, 150)
+strain_necking_ref = np.linspace(uts_strain, fracture_strain, 80)
 
-# Strain hardening — smooth rise to UTS (no yield plateau for 6061-T6)
-strain_hardening = np.linspace(yield_strain, uts_strain, 150)
-t_hard = (strain_hardening - yield_strain) / (uts_strain - yield_strain)
-stress_hardening = yield_stress + (uts - yield_stress) * (2 * t_hard - t_hard**2)
+t_hard = (strain_hardening_ref - yield_strain) / (uts_strain - yield_strain)
+t_neck = (strain_necking_ref - uts_strain) / (fracture_strain - uts_strain)
 
-# Necking — stress drops from UTS to fracture
-strain_necking = np.linspace(uts_strain, fracture_strain, 80)
-t_neck = (strain_necking - uts_strain) / (fracture_strain - uts_strain)
-stress_necking = uts - (uts - fracture_stress) * t_neck**1.5
+stress_elastic_base = youngs_modulus * strain_elastic_ref
+stress_hardening_base = yield_stress + (uts - yield_stress) * (2 * t_hard - t_hard**2)
+stress_necking_base = uts - (uts - fracture_stress) * t_neck**1.5
 
-# Build DataFrame for seaborn hue mapping
-df = pd.concat(
+strain_all = np.concatenate([strain_elastic_ref, strain_hardening_ref, strain_necking_ref])
+stress_all = np.concatenate([stress_elastic_base, stress_hardening_base, stress_necking_base])
+regions = ["Elastic"] * 40 + ["Strain Hardening"] * 150 + ["Necking"] * 80
+
+# Per-region noise scale: small in elastic (nearly deterministic linear response),
+# growing through hardening, largest in necking (localised plastic instability)
+noise_scale = np.concatenate(
     [
-        pd.DataFrame({"strain": strain_elastic, "stress": stress_elastic, "region": "Elastic"}),
-        pd.DataFrame({"strain": strain_hardening, "stress": stress_hardening, "region": "Strain Hardening"}),
-        pd.DataFrame({"strain": strain_necking, "stress": stress_necking, "region": "Necking"}),
-    ],
-    ignore_index=True,
+        np.full(40, 0.5),  # elastic: nearly deterministic
+        np.full(150, 4.0),  # hardening: specimen-to-specimen variability
+        np.full(80, 8.0),  # necking: most variable (localised deformation)
+    ]
 )
+
+# Build long-format DataFrame for seaborn's statistical estimation
+n_specimens = 5
+specimens = []
+for i in range(n_specimens):
+    noise = np.random.normal(0, noise_scale)
+    specimens.append(
+        pd.DataFrame({"strain": strain_all, "stress": stress_all + noise, "region": regions, "specimen": i})
+    )
+df = pd.concat(specimens, ignore_index=True)
 
 # 0.2% offset line (parallel to elastic slope, offset by 0.002 strain)
 offset = 0.002
@@ -95,18 +107,23 @@ fig.set_facecolor(PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 region_palette = {"Elastic": COLOR_ELASTIC, "Strain Hardening": COLOR_HARDENING, "Necking": COLOR_NECKING}
+region_order = ["Elastic", "Strain Hardening", "Necking"]
 
-# Stress-strain curve coloured by region
+# Stress-strain curve coloured by region — seaborn aggregates 5 specimens,
+# drawing mean line + ±1 SD band to show material-to-specimen variability
 sns.lineplot(
     data=df,
     x="strain",
     y="stress",
     hue="region",
+    hue_order=region_order,
     palette=region_palette,
     linewidth=3.0,
+    errorbar=("sd", 1),
+    err_style="band",
+    err_kws={"alpha": 0.18},
     ax=ax,
     legend=False,
-    sort=False,
 )
 
 # 0.2% offset dashed line
@@ -120,7 +137,7 @@ for x0, x1, col in [
 ]:
     ax.axvspan(x0, x1, alpha=0.05, color=col, zorder=0)
 
-# Critical point markers
+# Critical point markers (mean curve positions)
 critical = pd.DataFrame(
     {
         "strain": [yield_offset_strain, uts_strain, fracture_strain],
@@ -189,10 +206,11 @@ ax.annotate(
     va="center",
 )
 
-# Inline region labels
+# Inline region labels — "Elastic" placed high in the narrow elastic zone
+# (raised from 0.20 to 0.62 to reduce crowding with the E=69 GPa annotation)
 ax.text(
     yield_strain / 2,
-    uts * 0.20,
+    uts * 0.62,
     "Elastic",
     fontsize=8,
     color=COLOR_ELASTIC,
@@ -238,7 +256,7 @@ ratio = 67 / n if n > 67 else 1.0
 title_fontsize = max(8, round(12 * ratio))
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 
-# Manual legend (offset line + three regions)
+# Manual legend (three regions + offset line)
 legend_handles = [
     Line2D([0], [0], color=COLOR_ELASTIC, linewidth=3.0, label="Elastic"),
     Line2D([0], [0], color=COLOR_HARDENING, linewidth=3.0, label="Strain Hardening"),
