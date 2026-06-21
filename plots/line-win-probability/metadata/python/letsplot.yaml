@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:32:06Z'
-updated: '2026-06-21T03:40:34Z'
+updated: '2026-06-21T03:48:57Z'
 generated_by: claude-sonnet
 workflow_run: 27892240547
 issue: 4418
@@ -12,45 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Semantic color mapping is excellent: home (Eagles) uses Imprint green #009E73,
-    away (Cowboys) uses Imprint blue #4467A3 — both well-justified semantic exceptions
-    from the palette'
-  - 'Data storytelling is strong: ribbon fills, 50% dashed reference, quarter dividers,
-    and key event annotations combine to narrate the game clearly'
-  - Theme-adaptive chrome implemented correctly — all tokens (INK, INK_SOFT, PAGE_BG,
-    ELEVATED_BG) applied to every non-data element, passes both dark and light theme
-    readability checks
-  - 'Perfect data quality: realistic NFL Eagles vs Cowboys scenario with plausible
-    lead changes and final score 27-17'
-  - 'Flawless code quality: np.random.seed(42) for reproducibility, clean imports,
-    no functions/classes, correct save pattern with scale=4'
-  - Idiomatic letsplot usage with layer_tooltips() making the HTML export interactive
-    — a distinctive letsplot feature used appropriately
+  - 'Semantic Imprint palette usage: Eagles correctly mapped to brand green (#009E73)
+    and Cowboys to Imprint blue (#4467A3) — both a palette-rule win and a domain-expectation
+    win'
+  - 'Theme-adaptive chrome fully threaded: all text, backgrounds, and elevated label
+    fills use INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens, producing readable renders
+    in both light and dark themes'
+  - 'Layer composition shows clear design thinking: ribbon fills, probability line,
+    50% reference line, quarter dividers, event markers, and annotated labels all
+    work together without visual conflict'
+  - 'Spec fully satisfied: 0–100% y-axis, prominent 50% dashed reference line, ribbon
+    fills above/below baseline, key event annotations, quarter progression markers,
+    and final score in subtitle'
+  - layer_tooltips() provides genuine letsplot interactivity in the HTML output with
+    formatted win-probability values
+  - np.random.seed(42) ensures reproducibility; clean linear KISS structure with no
+    functions or classes
   weaknesses:
-  - Title is missing the python language component — should be 'line-win-probability
-    · python · letsplot · anyplot.ai' (add '· python' between spec-id and library
-    name in the labs() call)
-  - Full rectangular panel border (all 4 spines visible) instead of preferred L-shaped
-    frame — add panel_border=element_blank() to anyplot_theme definition to remove
-    top/right panel border
-  - Top and right spines not explicitly removed — theme_minimal() in letsplot may
-    not remove all panel borders; use panel_border=element_blank() explicitly in the
-    custom theme
+  - Event label size=4 (mm) is on the small side for a 3200px output — consider size=5
+    for slightly better legibility at scaled-down mobile widths
+  - Win probability main line uses size=1.0; with 120 plays rendered at 3200px width,
+    size=1.2–1.5 would give slightly more visual weight to the primary data series
+  - Only 5 of 8 scoring events are labelled — a design tradeoff that avoids clutter
+    but leaves 3 events (Eagles FG 3-0, Eagles FG 13-7, Cowboys FG 20-17) unmarked;
+    the alternating-nudge approach could accommodate the field-goal events at smaller
+    size or leader lines
+  - 'Design excellence ceiling: DE-01 and DE-03 are good but not exceptional — no
+    dominant focal emphasis (e.g., shading the ''comeback window'' in Q3–Q4 with a
+    highlighted band or stronger visual anchor at the peak Eagles deficit) that would
+    push it above a solid-but-standard sports chart'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "line-win-probability · letsplot · anyplot.ai" in large dark ink, subtitle in smaller secondary text; Y-axis label "Eagles Win Probability", X-axis label "Game Progress"; tick labels 0%/25%/50%/75%/100% and Q1/Q2/Q3/Q4/End — all clearly readable in dark text on light background
-      Data: Green (#009E73, alpha 0.28) ribbon fill above 50% (Eagles leading); blue (#4467A3, alpha 0.28) ribbon fill below 50% (Cowboys leading); dark ink win probability line; dashed 50% reference line; dotted quarter dividers; five event annotation boxes with open-circle markers
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct; no pure white.
+      Chrome: Title "line-win-probability · python · letsplot · anyplot.ai" in dark ink, clear and proportionate (~60% of canvas width). Subtitle "Eagles 27 – Cowboys 17 · Eagles recover from Q3 deficit for convincing finish" in INK_SOFT — readable. Y-axis label "Eagles Win Probability" and X-axis label "Game Progress" both dark, size 12 — legible. Tick labels (0%–100%, Q1–Q4/End) in INK_SOFT, size 10 — clear. Subtle y-only gridlines in muted ink.
+      Data: Green (#009E73) ribbon fill above 50% baseline (Eagles winning zone, alpha=0.28); blue (#4467A3) ribbon fill below 50% (Cowboys advantage zone, alpha=0.28). Probability line in dark INK. Dashed 50% reference line in INK_SOFT. Dotted quarter dividers at plays 30/60/90. Five hollow circle markers at key events with elevated-bg label boxes: "Eagles TD 10-7", "Cowboys TD 3-7", "Cowboys TD 13-14", "Eagles TD 20-14", "Eagles TD 27-17". Labels alternate above/below to avoid collision — all readable.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, subtitle, axis labels, and tick labels all rendered in near-white (INK token = #F0EFE8 in dark mode) — fully readable; event annotation boxes show elevated dark-gray fill (#242420) with light text; grid lines are subtle and visible; win probability line is near-white and clearly visible
-      Data: Data colors are identical to light render — green (#009E73) and blue (#4467A3) fills are the same Imprint hues (appear darker due to alpha=0.28 blending over dark surface, which is expected); no palette change between themes
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against dark background; brand green #009E73 is visible as expected
+      Background: Warm near-black (#1A1A17) — correct; no pure black.
+      Chrome: Title and subtitle in light ink (#F0EFE8-equivalent) — clearly visible. Axis labels and tick labels in B8B7B0-equivalent — readable against the dark surface. Y-only gridlines subtle. Event label boxes use elevated dark fill (#242420) with light text — readable.
+      Data: Green and blue ribbon colors are identical to the light render — only chrome elements flipped. Probability line rendered in near-white INK (#F0EFE8). Dashed reference line and dotted quarter dividers visible in muted light ink.
+      No dark-on-dark failures observed: tick labels, axis titles, and annotation text are all rendered in light/warm-cream tones, not dark-on-dark.
+      Legibility verdict: PASS — all text readable against the warm near-black background.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,53 +67,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=16, axis=12, ticks=10). All text
-          readable in both themes. Annotation labels size=4mm slightly small at mobile
-          widths but acceptable at full resolution.
+        comment: Title (16pt), axis labels (12pt), ticks (10pt) all legible in both
+          themes. Event labels size=4mm are readable but slightly small at mobile-scaled
+          widths.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Alternating label offsets keep event annotations spaced. Minor visual
-          density near Q2 but no hard overlaps.
+        comment: Alternating nudge directions prevent label collisions. Minor crowding
+          risk near play 92 label but no visible overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Win probability line clearly visible in both themes. Ribbon fills
-          readable. Alpha=0.28 is slightly muted on dark render but distinguishable.
-          Event markers visible.
+        comment: 120-play medium-density time series. Ribbon fills (alpha=0.28) and
+          line (size=1.0) visible; markers (size=3.0, stroke=1.5) clearly identifiable.
+          Line size could be slightly heavier for the primary data series.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Home green #009E73 and away blue #4467A3 are CVD-safe Imprint palette
-          choices. No red-green-only encoding.'
+        comment: Imprint green and blue are CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title fits ~65% width. Good margins.
-          No overflow or clipping.
+        comment: Canvas gate passed (3200x1800). ggsize(800,450) + scale=4 correct.
+          Margins generous (plot_margin=[40,60,20,20]). No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Eagles Win Probability' and X-axis 'Game Progress' are descriptive.
-          Subtitle provides final score context.
+        comment: 'Y: ''Eagles Win Probability'' (descriptive, team-specific). X: ''Game
+          Progress''. Title correct format. Subtitle includes final score as spec
+          requires.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Home color is Imprint position 1 (#009E73). Away is Imprint position
-          3 (#4467A3) — semantic exception appropriate (Cowboys blue association).
-          Backgrounds #FAF8F1/#1A1A17. Data colors theme-invariant.'
+        comment: 'Home team (Eagles) = #009E73 (Imprint brand green). Away team (Cowboys)
+          = #4467A3 (Imprint blue). Semantic exception correctly applied (Eagles=green,
+          Cowboys=blue). Backgrounds #FAF8F1/#1A1A17. Data colors identical across
+          themes.'
     design_excellence:
       score: 13
       max: 20
@@ -117,27 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Strong intentionality: semantic color mapping, ribbon fills with
-          alpha layering, annotated events with elevated-background label boxes, quarter
-          dividers, narrative subtitle. Held back by four-sided panel border.'
+        comment: Thoughtful semantic palette choices, layer composition with clear
+          visual hierarchy, elevated label backgrounds. Above default but not exceptional
+          — no strong focal emphasis technique.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Y-only grid at size=0.2 is commendably subtle. However full rectangular
-          panel border visible (all 4 spines) rather than preferred L-frame. Add panel_border=element_blank()
-          to theme.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent: color-coded momentum regions, critical play annotations,
-          50% reference threshold, quarter markers, narrative subtitle. Guides viewer
-          through game clearly.'
+        comment: X-grid removed, Y-only subtle gridlines (size=0.2), panel border
+          removed, generous margins. Clean separation of structural chrome from data.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chart clearly narrates Eagles comeback. Color fills immediately signal
+          game state. Quarter markers segment narrative. Event annotations at turning
+          points. Subtitle completes the story.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,30 +151,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct win probability chart: line with dual ribbon fills split
-          at 50%.'
+        comment: Win probability line chart with dual ribbon fills above/below 50%
+          baseline — correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-100%, 50% reference line, home fill above, away fill below,
-          key event annotations, final score in subtitle, quarter markers — all present.
+        comment: 0–100% y-axis with 50% dashed reference, home/away ribbon fills,
+          key event annotations, final score in subtitle, quarter/period markers.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: game plays 0-120 (labelled Q1-End); Y: win probability 0-1 (labelled
-          0%-100%). All data shown.'
+        comment: 'X: play number (game progression). Y: win probability 0–100%. All
+          120 plays plotted.'
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing language component. Actual: ''line-win-probability
-          · letsplot · anyplot.ai''. Required: ''line-win-probability · python · letsplot
-          · anyplot.ai''. Fix: insert ''· python'' between spec-id and library.'
+        passed: true
+        comment: 'Title: ''line-win-probability · python · letsplot · anyplot.ai''
+          — exact required format. No legend needed (fills self-explanatory via context
+          and annotations).'
     data_quality:
       score: 15
       max: 15
@@ -178,22 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all spec aspects: area fills, win probability line, event
-          annotations, reference line, quarter dividers, final score.'
+        comment: 'Covers all aspects: probability evolution, dual team fills, event
+          markers, quarter structure, score display. 5 of 8 events labelled — appropriate
+          editorial choice to avoid clutter.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Eagles vs Cowboys NFL game with plausible play-by-play trajectory,
-          multiple lead changes, realistic final score 27-17.
+        comment: NFL Eagles vs Cowboys game with realistic scoring events, play numbers,
+          and probability swings. Neutral sports context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 plays (appropriate NFL game), 0-100% probability scale, sensible
-          event shifts.
+        comment: 120 plays (realistic NFL play count). Probability bounded 0–1. Scoring
+          shifts (0.08–0.22) plausible for NFL scoring events.
     code_quality:
       score: 10
       max: 10
@@ -203,63 +210,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear, readable code.
+        comment: No functions or classes; linear script from data generation to save.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism.
+        comment: np.random.seed(42) set before all stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. ggsave import alongside * is explicit for linter
-          visibility.
+        comment: os, numpy, pandas, lets_plot.*  and ggsave — all used. noqa annotations
+          appropriate for wildcard import pattern.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured theme assembly, clear semantic variable names. No
-          fake UI.
+        comment: Clean layer composition; no fake UI. layer_tooltips() is genuine
+          letsplot interactivity for HTML output.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct API
+          usage.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Full ggplot grammar: multiple geom layers, aes mappings, scale functions,
-          coord_cartesian, labs, theme composition. Textbook idiomatic letsplot.'
+        comment: Grammar-of-graphics layering, ggsize + ggsave(scale=4), scale_x/y_continuous,
+          coord_cartesian, theme_minimal + custom theme override — all idiomatic letsplot.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() (letsplot-specific interactive tooltip API),
-          HTML export alongside PNG, ggsize() canvas control. Good use of letsplot
-          features.
+        comment: layer_tooltips() with formatted percentage output in HTML, geom_ribbon
+          for area fills, geom_label with label_r/label_size/label_padding parameters.
+          Good use of letsplot-specific capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
-  - html-export
   - layer-composition
   - annotations
+  - hover-tooltips
+  - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
