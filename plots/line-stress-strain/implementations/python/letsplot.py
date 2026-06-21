@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-21
@@ -87,8 +87,17 @@ df_points = pd.DataFrame(
 # Annotation labels
 df_annotations = pd.DataFrame(
     {
-        "x": [yield_point_strain + 0.012, uts_strain + 0.015, fracture_strain - 0.045, 0.008, 0.007, 0.005, 0.11, 0.29],
-        "y": [yield_strength + 15, uts + 10, fracture_stress - 30, 130, 60, 350, 350, 310],
+        "x": [
+            yield_point_strain + 0.025,
+            uts_strain + 0.015,
+            fracture_strain - 0.045,
+            0.002,
+            0.007,
+            0.0075,
+            0.11,
+            0.29,
+        ],
+        "y": [yield_strength + 15, uts + 10, fracture_stress - 30, 180, 60, 375, 350, 310],
         "label": [
             f"Yield Point\n({yield_strength} MPa)",
             f"UTS ({uts} MPa)",
@@ -108,7 +117,7 @@ df_segments = pd.DataFrame(
     {
         "x": [yield_point_strain, uts_strain, fracture_strain],
         "y": [yield_strength, uts, fracture_stress],
-        "xend": [yield_point_strain + 0.011, uts_strain + 0.014, fracture_strain - 0.035],
+        "xend": [yield_point_strain + 0.023, uts_strain + 0.014, fracture_strain - 0.035],
         "yend": [yield_strength + 12, uts + 8, fracture_stress - 22],
     }
 )
@@ -119,7 +128,7 @@ df_regions = pd.DataFrame(
         "xmin": [0, 0.015, uts_strain],
         "xmax": [0.015, uts_strain, fracture_strain],
         "ymin": [0, 0, 0],
-        "ymax": [460, 460, 460],
+        "ymax": [450, 450, 450],
         "region": ["Elastic", "Strain Hardening", "Necking"],
     }
 )
@@ -132,7 +141,7 @@ title = "line-stress-strain · python · letsplot · anyplot.ai"
 # Plot
 plot = (
     ggplot()
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="region"), data=df_regions)
+    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="region"), data=df_regions, alpha=0.2)
     + geom_line(
         aes(x="strain", y="stress"),
         data=df,
