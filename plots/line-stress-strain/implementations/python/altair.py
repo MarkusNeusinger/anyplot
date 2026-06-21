@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-21
@@ -83,9 +83,9 @@ point_scale = alt.Scale(
 # Label positions — displaced away from crowded elastic zone near the y-axis
 label_df = pd.DataFrame(
     {
-        "Strain": [0.055, kp.loc["UTS", "Strain"] + 0.02, kp.loc["Fracture", "Strain"] - 0.005],
+        "Strain": [0.09, kp.loc["UTS", "Strain"] + 0.02, kp.loc["Fracture", "Strain"] - 0.005],
         "Stress": [
-            kp.loc["Yield Point", "Stress"] + 40,
+            kp.loc["Yield Point", "Stress"] + 60,
             kp.loc["UTS", "Stress"] + 30,
             kp.loc["Fracture", "Stress"] + 35,
         ],
@@ -97,10 +97,10 @@ label_df = pd.DataFrame(
 # Connector lines from displaced labels to their key points
 connector_df = pd.DataFrame(
     {
-        "Strain": [kp.loc["Yield Point", "Strain"], 0.052, kp.loc["UTS", "Strain"], kp.loc["UTS", "Strain"] + 0.017],
+        "Strain": [kp.loc["Yield Point", "Strain"], 0.085, kp.loc["UTS", "Strain"], kp.loc["UTS", "Strain"] + 0.017],
         "Stress": [
             kp.loc["Yield Point", "Stress"],
-            kp.loc["Yield Point", "Stress"] + 32,
+            kp.loc["Yield Point", "Stress"] + 50,
             kp.loc["UTS", "Stress"],
             kp.loc["UTS", "Stress"] + 22,
         ],
@@ -122,7 +122,7 @@ modulus_conn_df = pd.DataFrame(
 )
 
 # Shared axis scales
-x_scale = alt.Scale(domain=[-0.01, 0.40])
+x_scale = alt.Scale(domain=[-0.01, 0.38])
 y_scale = alt.Scale(domain=[-10, 460])
 
 # Title — 49 chars, under the 67-char baseline (no font-size scaling needed)
