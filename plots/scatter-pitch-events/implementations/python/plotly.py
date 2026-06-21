@@ -1,5 +1,7 @@
-"""scatter-pitch-events: Soccer Pitch Event Map
-Library: plotly | Python
+""" anyplot.ai
+scatter-pitch-events: Soccer Pitch Event Map
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-21
 """
 
 import os
