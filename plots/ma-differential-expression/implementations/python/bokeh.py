@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-21
@@ -126,7 +126,7 @@ x_limit = np.percentile(mean_expression, 99)
 plot = figure(
     width=3200,
     height=1800,
-    title="ma-differential-expression · bokeh · anyplot.ai",
+    title="ma-differential-expression · python · bokeh · anyplot.ai",
     x_axis_label="Mean Expression (log₂)",
     y_axis_label="Log₂ Fold Change (M)",
     toolbar_location=None,
@@ -238,11 +238,12 @@ plot.add_layout(lower_label)
 sig_indices = np.where(sig_mask)[0]
 if len(sig_indices) > 0:
     de_score = np.abs(log_fold_change[sig_indices]) * neg_log10_p[sig_indices]
-    top_n = 8
+    top_n = 5
     top_local = np.argsort(de_score)[-top_n:]
     top_global = sig_indices[top_local]
 
-    for idx in top_global:
+    y_offsets = [6, 30, -18, 50, -40]
+    for rank, idx in enumerate(top_global):
         gx = mean_expression[idx]
         gy = log_fold_change[idx]
         if gx <= x_limit:
@@ -250,11 +251,11 @@ if len(sig_indices) > 0:
                 x=gx,
                 y=gy,
                 text=f" {gene_names[idx]}",
-                text_font_size="22pt",
+                text_font_size="24pt",
                 text_color=INK,
                 text_font_style="bold",
-                x_offset=8,
-                y_offset=6,
+                x_offset=10,
+                y_offset=y_offsets[rank % len(y_offsets)],
             )
             plot.add_layout(gene_label)
 
@@ -288,6 +289,8 @@ color_bar = ColorBar(
     width=30,
     location=(0, 0),
     padding=20,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=1,
 )
 plot.add_layout(color_bar, "right")
 
