@@ -27,8 +27,8 @@ function randn() {
 }
 
 // --- Gene expression data (RNA-seq differential expression scenario) ---
-// Treatment vs Control: 8000 genes, simulating DESeq2-style results
-const N = 8000;
+// Treatment vs Control: 12000 genes, simulating DESeq2-style results
+const N = 12000;
 const genes = [];
 for (let i = 0; i < N; i++) {
   const meanExpr = rand() * 13.5 + 1.5;        // baseMean: 1.5–15 (log2 CPM)
@@ -73,12 +73,19 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, 15]).range([0, iw]);
 const y = d3.scaleLinear().domain([-6, 6]).range([ih, 0]);
 
-// --- Y-axis grid lines ---
-g.append("g").selectAll("line")
+// --- Grid lines (both axes for scatter plots per style guide) ---
+g.append("g").selectAll(".grid-y")
   .data(y.ticks(8))
   .join("line")
   .attr("x1", 0).attr("x2", iw)
   .attr("y1", (d) => y(d)).attr("y2", (d) => y(d))
+  .attr("stroke", t.grid).attr("stroke-width", 1);
+
+g.append("g").selectAll(".grid-x")
+  .data(x.ticks(8))
+  .join("line")
+  .attr("x1", (d) => x(d)).attr("x2", (d) => x(d))
+  .attr("y1", 0).attr("y2", ih)
   .attr("stroke", t.grid).attr("stroke-width", 1);
 
 // --- Reference lines ---
@@ -187,14 +194,14 @@ legItems.forEach((item, i) => {
   }
   row.append("text")
     .attr("x", 22).attr("y", 14)
-    .attr("fill", t.inkSoft).style("font-size", "13px")
+    .attr("fill", t.inkSoft).style("font-size", "14px")
     .text(item.label);
 });
 
 // --- Gene count annotation ---
 svg.append("text")
   .attr("x", margin.left + 8).attr("y", margin.top + 22)
-  .attr("fill", INK_MUTED).style("font-size", "13px")
+  .attr("fill", INK_MUTED).style("font-size", "14px")
   .text(`n = ${N.toLocaleString()} genes | ${nSig} DEGs (|M| > 1, p_adj < 0.05)`);
 
 // --- Title ---
