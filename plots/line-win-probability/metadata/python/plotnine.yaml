@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:33:54Z'
-updated: '2026-06-21T03:45:11Z'
+updated: '2026-06-21T03:53:36Z'
 generated_by: claude-sonnet
 workflow_run: 27892108642
 issue: 4418
@@ -12,152 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data storytelling: golden highlight zone marks the decisive late-game
-    period, event annotations label key scoring plays, and a final score callout box
-    provides narrative closure — all working together to guide the viewer through
-    the game narrative'
-  - 'Complete spec compliance: all required features implemented — 50% reference line,
-    team-colored area fills above/below baseline, key event annotations (TD/FG labels),
-    quarter markers, final score display, and correct title format'
-  - 'Strong plotnine idiom: multi-layer ggplot2 grammar composition with geom_ribbon
-    for area fills, geom_hline for reference line, geom_text for annotations, and
-    geom_segment for quarter boundaries — idiomatic and well-structured'
-  - 'Full code quality: KISS structure, deterministic seed, clean imports, adaptive
-    theme tokens (PAGE_BG, INK, INK_SOFT) correctly applied across both light and
-    dark renders'
-  - 'Both themes render correctly — background adapts to #FAF8F1 (light) / #1A1A17
-    (dark), all chrome (text, grid, axis lines, legend) flips appropriately, and data
-    line color adapts via INK token'
+  - 'All required spec features implemented: area fills above/below 50%, 50% reference
+    line, event annotations, quarter markers, final score callout'
+  - Excellent theme adaptation — all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
+    applied consistently; win probability line correctly switches to near-white in
+    dark mode
+  - 'Palette compliance: Eagles (Home) = #009E73 brand green, Cowboys (Away) = #AE3030
+    semantic red — appropriate semantic exception for sports home/away framing'
+  - Smart annotation placement logic that alternates label offset direction for closely-spaced
+    events, avoiding most collisions
+  - 'Distinctive storytelling: amber highlight zone marks decisive late-game surge,
+    open-circle scoring event markers, and final score callout box create a compelling
+    sports narrative'
   weaknesses:
-  - 'VQ-07 PALETTE VIOLATION: Fill colors #004C54 (Eagles) and #8B1A1A (Cowboys) are
-    custom hex values NOT from the Imprint palette. Hard rule: ''Colors must come
-    from the Imprint palette or the 3 anchors (no custom hexes).'' For a semantic
-    exception with team colors, use the closest Imprint member: Eagles (Home, green
-    role) → #009E73 (brand green), Cowboys (Away, loss role) → #AE3030 (matte red
-    semantic anchor). The golden highlight also uses #DAA520 — replace with ANYPLOT_AMBER
-    = ''#DDCC77'' (the official amber anchor) or omit the rect fill.'
-  - 'VQ-02 ANNOTATION CROWDING: In the Q2-Halftime region, labels ''TD Home'' (play
-    42), ''FG Away'' (play 55), and ''TD Home'' (play 68) are close together with
-    moderate density; the alternating-offset logic helps but leaves some labels visually
-    crowded near the dotted quarter lines. Consider a slightly larger base offset
-    (0.12 instead of 0.09) or a minimum horizontal gap check to better spread the
-    annotations.'
-  - 'DE-01 DESIGN CEILING: The design is above generic defaults but falls short of
-    publication quality. The golden highlight and annotations add storytelling, but
-    the legend box frame and overall typography are still relatively plain. To push
-    toward 6-7/8: consider removing the legend box border, using a more refined annotation
-    style (hairline connector lines from label to marker), and ensuring the golden
-    highlight has the correct Imprint amber (#DDCC77) fill.'
-  - 'VQ-05 VERTICAL SPACE: The y-axis spans 0–100% but the data occupies roughly 30–78%,
-    leaving significant empty bands at the top and bottom. The chart would benefit
-    from tighter y-axis limits (e.g., coord_cartesian ylim=(0.0, 1.0) is correct,
-    but perhaps a larger margin is eaten by the legend — check if moving legend inside
-    reduces wasted vertical canvas space).'
+  - 'Amber highlight zone (geom_rect at alpha=0.06) is virtually invisible in dark
+    mode — at 6% opacity on #1A1A17 the amber barely registers; increase to alpha=0.10–0.12
+    or use a slightly higher value so the decisive-moment zone reads in both themes'
+  - Legend box (legend_background=element_rect) adds visual noise counter to the decoration-removal
+    principle; consider removing the border or making the legend frameless to increase
+    visual minimalism (DE-02 deduction)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — not pure white, clearly a cream tone. Correct.
-      Chrome: Title "line-win-probability · python · plotnine · anyplot.ai" bold, dark, readable at ~80% width (expected for this length). Axis labels "Game Progression" (x) and "Home Win Probability" (y) in dark ink, clearly visible. Tick labels "0%"/"25%"/"50%"/"75%"/"100%" and "Kickoff"/"Q2"/"Halftime"/"Q4"/"Final" in ink-soft, readable. Legend at top with filled boxes and team labels. Final score callout box in elevated-background cream.
-      Data: Eagles (Home) fill above 50% line in dark teal (#004C54). Cowboys (Away) fill below 50% in muted rose (#8B1A1A). Main win-probability line in dark INK color, weight 1.2. White open-circle markers at 9 scoring events. Dashed horizontal line at 50%. Dotted vertical quarter boundary lines. Golden (#DAA520) highlight zone in Q4 area. Event annotation labels in bold ink-soft.
-      Legibility verdict: PASS — all text readable against the light background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct surface.
+      Chrome: Title "line-win-probability · python · plotnine · anyplot.ai" is bold, dark (#1A1A17), fully readable. Y-axis label "Home Win Probability" and X-axis label "Game Progression" are dark text at 10pt, balanced. Tick labels (0%, 25%, 50%, 75%, 100% on Y; Kickoff/Q2/Halftime/Q4/Final on X) in #4A4A44 at 8pt, all clearly readable. Legend "Cowboys (Away)" / "Eagles (Home)" at top, readable. Final score callout box in lower-left: light elevated background (#FFFDF6) with dark text — readable.
+      Data: Eagles (Home) ribbon fill = #009E73 (brand green) above 50%; Cowboys (Away) ribbon fill = #AE3030 (matte red) below 50%. Win probability line in dark ink. Open-circle scoring event markers with white interior. Dashed 50% reference line. Dotted quarter-boundary vertical lines. Amber highlight zone in Q4 region is faintly visible (alpha=0.06).
+      Legibility verdict: PASS — all text readable, no dark-on-dark or light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — not pure black. Correct.
-      Chrome: Title in light (#F0EFE8) — clearly readable against dark background. Axis labels and ticks in light colors (INK_SOFT = #B8B7B0). Legend text visible. All chrome has flipped correctly to light-on-dark. No dark-on-dark failures observed.
-      Data: Eagles (Home) teal fill appears darker/more saturated against dark background but still distinguishable. Cowboys (Away) fill is now deep crimson, vivid against dark background. Main win-probability line is now white/light (INK in dark mode = #F0EFE8), clearly visible. Open-circle markers now appear with white fill against dark background — visible. Golden highlight zone appears as muted dark olive/brown (#DAA520 on dark bg), subtle but identifiable. Data colors are consistent across both themes.
-      Legibility verdict: PASS — all text readable against the dark background. No dark-on-dark failures.
+      Background: Near-black #1A1A17 — correct surface.
+      Chrome: Title is light (#F0EFE8), bold, fully readable against dark background. Axis labels in light ink, readable. Tick labels in #B8B7B0 (light gray), clearly visible. Event annotation labels in #B8B7B0, readable. Final score callout box uses #242420 elevated fill with light (#F0EFE8) text — readable.
+      Data: Eagles (Home) = #009E73 identical to light render ✓; Cowboys (Away) = #AE3030 identical ✓. Win probability line switches correctly to near-white (#F0EFE8) for visibility on dark. Scoring event markers use #242420 fill + light stroke. The amber highlight zone at alpha=0.06 is barely perceptible on the near-black background (composites to ~#262524), which is a weakness but not a failure.
+      Legibility verdict: PASS — no dark-on-dark failures; all primary text elements readable.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set in theme(). Title scaled by length
-          formula. All text readable in both themes at full and mobile size.
+        comment: All text explicitly sized and readable in both themes; event annotation
+          text (4mm) slightly small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean; alternating offset logic helps but slight crowding
-          near Q2-Halftime region with 3 labels in proximity (plays 42, 55, 68).
+        comment: Alternating-offset logic prevents most collisions; minor crowding
+          in late-game Q4 area with multiple events
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (size=1.2), circle markers (size=4), and area fills (alpha=0.35)
-          are all clearly visible and adapted to data density (130 points, medium
-          density).
+        comment: Line, ribbon fills, markers, annotations all clearly visible in both
+          renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Team fills are sufficiently distinct (dark teal vs muted rose/crimson).
-          Line in INK color contrasts well with fills. No red-green CVD issue (teal
-          vs dark red is not a CVD collision).
+        comment: Green/red pair supported by explicit legend labels and Imprint palette
+          CVD optimization
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800, gate passed. Good layout overall but notable empty
-          vertical bands at top (above ~80%) and bottom (below ~30%). Legend at top
-          is well-positioned.
+        comment: 3200x1800 canvas correct; no clipping; legend at top, callout bottom-left,
+          well-balanced layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'x-axis: ''Game Progression'', y-axis: ''Home Win Probability'' —
-          descriptive and contextual. Tick labels show % format.'
+        comment: Descriptive axis labels; Y-axis formatted as percentages; X-axis
+          uses period names; title format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'VIOLATION: Fill colors #004C54 (Eagles) and #8B1A1A (Cowboys) are
-          custom hex values not in the Imprint palette. Hard rule: no custom hexes.
-          Semantic exception still requires using the closest Imprint member (#009E73
-          for green/home, #AE3030 for loss/away). Golden highlight #DAA520 should
-          be ANYPLOT_AMBER #DDCC77.'
+        passed: true
+        comment: 'Eagles #009E73 (brand green first series), Cowboys #AE3030 (semantic
+          exception for away/negative); both renders theme-correct'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clearly above generic defaults: golden decisive-moment highlight
-          zone, event markers with open circles, annotated scoring plays, final score
-          callout box, and quarter boundaries all show real design intent. Not yet
-          publication-ready due to plain legend frame and relatively simple annotation
-          style.'
+        comment: 'Above default: amber highlight zone, open-circle markers, callout
+          box, alternating label placement, coherent sports palette story'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid at 15% opacity, axis lines present, no top/right spines
-          (theme_minimal), legend box with elevated background. Good refinement but
-          some standard elements remain.
+        comment: 'Above default: theme_minimal base, Y-only subtle grid, L-shaped
+          frame; legend box slightly against minimalism principles'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Excellent storytelling: golden highlight zones the decisive Q4 period,
-          event labels narrate the game, dashed 50% line creates clear visual reference,
-          final score annotation provides narrative closure. Very effective.'
+        comment: 'Above default: narrative arc from 50% to Eagles win, decisive moment
+          highlighted, scoring events annotated, final score anchors story'
     spec_compliance:
       score: 15
       max: 15
@@ -167,31 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: line + filled area chart showing win probability
-          over game progression with fills above/below 50% baseline.'
+        comment: Correct win probability chart with ribbon fills and probability line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: y-axis 0-100%, prominent 50% dashed reference
-          line, team-colored area fills (above=home, below=away), annotated scoring
-          events with labels, final score callout, quarter/period markers on x-axis.'
+        comment: 'All required: 0-100% Y-axis, 50% reference line, team-colored fills,
+          event annotations, final score, quarter markers'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: game time (play number 0-130), Y-axis: home win probability
-          (0%-100%). Correct mapping. Eagles area above 50%, Cowboys area below 50%.'
+        comment: X=play/game_time, Y=win_probability (0-1 as %), 130 data points within
+          50-300 spec range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-win-probability · python · plotnine · anyplot.ai''
-          — correct format. Legend labels ''Eagles (Home)'' and ''Cowboys (Away)''
-          clearly identify the two series.'
+        comment: Title format correct; legend labels descriptive (Eagles Home / Cowboys
+          Away)
     data_quality:
       score: 15
       max: 15
@@ -201,25 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all features: momentum swings in both directions, multiple
-          scoring events (TD and FG for both teams), late-game decisive run, and probability
-          oscillating around 50% throughout.'
+        comment: Shows full game arc, both team perspectives, key events, period structure,
+          decisive moments
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Eagles vs Cowboys NFL game — real team names, realistic scoring events
-          (TD=+0.15-0.22, FG=+0.08-0.12 shift), plausible final score Eagles 24 –
-          Cowboys 17. Neutral sports context.
+        comment: NFL Eagles vs Cowboys, final 24-17, realistic score shifts for TDs/FGs,
+          neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Win probability swings between ~32% and ~78% — realistic for a competitive
-          but not extreme NFL game. 130 plays is reasonable. Probability deltas for
-          TDs and FGs are proportionally appropriate.
+        comment: 130 plays in 50-300 range; probability clipped 0.04-0.96; shift magnitudes
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -229,57 +190,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data generation
-          → plot layers → save. No functions or classes.'
+        comment: No functions or classes; direct procedural flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at line 51. Fully reproducible.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used. No unused imports.
+        comment: All imports used; no redundant dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. The annotation offset logic is justified
-          by the dense annotation requirement. No over-engineering or fake UI.
+        comment: No fake interactivity; ribbon split into home/away DataFrames is
+          clean; annotation placement logic well-commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at 400 dpi, 8x4.5 inches. Current plotnine
-          API used.
+        comment: Saves as plot-{THEME}.png; current plotnine API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert use of plotnine''s grammar of graphics: geom_ribbon for area
-          fills, geom_hline for reference line, geom_segment for quarter boundaries,
-          geom_text for annotations, annotate() for callout box, scale functions for
-          custom breaks/labels. Fully idiomatic ggplot2-style composition.'
+        comment: 'Very idiomatic: geom_ribbon, geom_rect, coord_cartesian, scale_alpha_identity,
+          annotate(), scale_fill_manual all used correctly'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon for team-colored area fills above/below baseline is a
-          distinctively plotnine/ggplot2 feature. The layered geom composition is
-          characteristic of the grammar of graphics approach. Could be more distinctive
-          (e.g., using stat_function or custom stat for the probability interpolation).
-  verdict: REJECTED
+        comment: geom_ribbon is plotnine-distinctive; multi-layer composition (8+
+          geom layers) shows grammar-of-graphics mastery; scale_alpha_identity for
+          highlight alpha
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -291,4 +247,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
