@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-win-probability
 created: '2026-06-21T03:49:07Z'
-updated: '2026-06-21T03:55:25Z'
+updated: '2026-06-21T04:12:12Z'
 generated_by: claude-sonnet
 workflow_run: 27892370925
 issue: 4418
@@ -12,48 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Chart.js fill API with threshold target at 50% (above/below fill
-    for home/away momentum) — idiomatic and visually effective
-  - Custom afterDraw plugin elegantly handles quarter dividers, directional labels,
-    and final score annotation on the canvas
-  - 'Semantic Imprint palette choice: brand green for home team, matte red (#AE3030)
-    for away team — sports win/loss convention correctly triggers the semantic exception'
-  - Deterministic LCG seeded at 42 with a compelling game narrative (Lakers trail
-    in Q2, stage comeback, seal Q4 win)
-  - 'Full theme adaptation: both light (#FAF8F1 background) and dark (#1A1A17 background)
-    renders are legible with data colors unchanged'
-  - Legend filter correctly hides the _ref50 internal reference dataset from the legend
-  - 'Title format is exact per spec: ''line-win-probability · javascript · chartjs
-    · anyplot.ai'''
+  - 'Excellent spec compliance: all required features implemented correctly — 50%
+    reference line, dual-color fills above/below 50%, scoring event annotations with
+    dot+connector+label, quarter dividers (Q1–Q4), final score corner annotation'
+  - 'Strong data storytelling: the Lakers comeback narrative is immediately legible
+    through fill colors, HOME WINS/AWAY WINS directional labels, and annotated key
+    turning points'
+  - 'Idiomatic Chart.js: `fill: { target: { value: 50 }, above, below }` conditional
+    fill is the correct Chart.js v4 API; custom afterDraw plugin for quarter markers
+    and event annotations is proper Chart.js pattern'
+  - 'Semantic Imprint palette: brand green (#009E73) for home team win, matte red
+    (#AE3030) as semantic exception for away/loss — both are justified by Imprint
+    style guide semantic anchor rules'
+  - Deterministic LCG with fixed seed ensures 100% reproducible output across renders
+  - Theme-adaptive chrome correctly wired through ANYPLOT_TOKENS in both light and
+    dark renders — all text elements use t.ink / t.inkSoft, background comes from
+    pageBg
+  - Realistic NBA context (Lakers 112 – Celtics 101, 48-minute game) with plausible
+    win probability arc
   weaknesses:
-  - Missing specific scoring event annotations on the probability line — the spec
-    explicitly requires annotating key plays (touchdowns, field goals, etc.) that
-    cause significant probability swings; only quarter dividers are present, but no
-    point-specific event labels on the curve itself
-  - Lower quarter of the chart (0–25% range) is completely empty due to data only
-    dipping to ~28%; while the 0–100% axis range is spec-required, this large empty
-    zone creates visual imbalance in both renders
-  - Quarter labels (Q1–Q4) rendered at 13px bold are the smallest text on the chart;
-    acceptable but marginally tight — consider 14px for better readability at mobile
-    thumbnail sizes
-  - Right layout padding (24px) and bottom padding (10px) leave very little breathing
-    room for the corner annotations; AWAY WINS label sits at the very bottom edge
-    of the chart area
+  - Event annotation labels drawn at 11px CSS (22px native output pixels) — this is
+    below the legible floor for the 3200×1800 canvas; increase to 13px CSS minimum
+    for readability when the PNG is scaled to mobile viewport (~400px)
+  - 'Chart.js border/spines not removed — add `border: { display: false }` to both
+    x and y scale configs to achieve the L-shaped (or borderless) look required by
+    the Anyplot style guide; current implementation keeps all four plot-area borders
+    visible which adds visual clutter'
+  - 'CQ-01: two helper functions (trendAt, lcg) deviate from the KISS flat-script
+    pattern; the LCG seed can be inlined as a simple constant data array or moved
+    to a single flat expression to keep the code more linear'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "line-win-probability · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Y-axis label "Home Team Win Probability" and X-axis label "Game Time (minutes)" both readable. Tick labels show 0%/25%/50%/75%/100% and 0'/6'/12'/18'/24'/30'/36'/42'/48' — all readable. Quarter labels Q1–Q4 at 13px bold visible. In-chart annotations "HOME WINS ↑" (green) and "AWAY WINS ↓" (red) and "Final: Lakers 112 – Celtics 101" all fully visible.
-      Data: Brand green (#009E73) line tracing win probability from ~50% (game start), rising slightly in Q1, dipping to ~28% at Q2/Q3 midpoint, then recovering strongly through Q4 to ~85%. Green semi-transparent fill above 50% reference line; pink/red semi-transparent fill below 50% reference line. Dashed gray 50% reference line visible. Dashed vertical lines mark quarter boundaries.
-      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "line-win-probability · javascript · chartjs · anyplot.ai" renders in dark ink at 22px CSS — clearly readable. Axis title "Game Time (minutes)" on X and "Home Team Win Probability" on Y visible in dark ink at 15px. Tick labels (0'–48' and 0%–100%) in inkSoft at 13px — readable. Quarter labels Q1–Q4 drawn via custom plugin at 14px bold — visible. HOME WINS ↑ (green) and AWAY WINS ↓ (red) directional labels at 14px bold top-right — clearly readable. Final score "Final: Lakers 112 – Celtics 101" at 15px bold — readable.
+      Data: Brand green (#009E73) line at borderWidth 2.5. Green semi-transparent fill (rgba 0,158,115,0.22) above the 50% baseline shows periods when Lakers lead. Matte red fill (rgba 174,48,48,0.22) below 50% shows Celtics advantage period in Q2/Q3. Dashed white-ish reference line at 50%. Event dots (4px radius) with dashed connectors and text labels: "Celtics Run" (above, green text), "Celtics +12" (below, red text), "LeBron 3-PTR" (below, red text), "AD Putback" (above, green text). All visible.
+      Legibility verdict: PASS — all main chrome text is readable; event annotation labels at 11px CSS are small but visible at canvas size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels all visible in light ink against dark background. Quarter labels Q1–Q4 visible. "HOME WINS ↑" in brand green and "AWAY WINS ↓" in matte red both readable against dark. Final score annotation in light ink readable.
-      Data: Data colors identical to light render — brand green line and fills, matte red fill below 50%. Only chrome (text, background, grid) changes between themes. The red/dark fill area (when probability < 50%) blends slightly more into the dark background but the green line boundary remains visible. Both fills distinguishable.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly use light ink tokens on dark background
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title flips to light ink and is fully readable against dark background. Axis titles and tick labels render in light inkSoft — all clearly visible. Quarter labels Q1–Q4 visible. HOME WINS ↑ (brand green) and AWAY WINS ↓ (matte red) directional labels visible. Final score annotation in light ink is readable. No dark-on-dark failures detected for primary chrome elements.
+      Data: Green line (#009E73) identical to light render — correct Imprint rule (data colors unchanged). Green fill above 50% identical. Matte red fill below 50% appears darker on the dark background (expected — same rgba alpha, darker base surface). Event annotations: labels colored in homeColor (green) when above 50% or awayColor (#AE3030) when below 50% — the red text in the below-50% region on a dark red fill creates slightly reduced contrast, but labels remain distinguishable.
+      Legibility verdict: PASS — all primary chrome is readable; matte red (#AE3030) event annotation labels in the below-50% region have reduced (but acceptable) contrast against the dark fill; flagged as a minor weakness.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -64,57 +66,60 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes. Quarter labels (Q1-Q4) at 13px
-          bold are the smallest element — acceptable but marginally small for mobile
-          thumbnails.
+        comment: All font sizes explicitly set via CSS px; title 22px, axis labels
+          15px, ticks 13px, quarter labels 14px — all readable in both themes. Event
+          annotation labels at 11px CSS (22px native) are slightly small for mobile
+          viewport.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements. Legend, quarter markers, directional labels
-          and fill areas all well-separated.
+        comment: No direct overlaps; event annotation labels are small and positioned
+          above/below event dots with 24px connectors. Minimal crowding risk near
+          dense probability segments but no actual collision observed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Win probability line, area fills, reference line, and all annotations
-          are clearly visible in both themes.
+        comment: Green line at borderWidth 2.5 clearly visible; conditional fills
+          well-defined; dashed reference line at 50% appropriately subtle; no point
+          markers on dense 97-point line is correct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-green is CVD-risky but the semantic use (home/away win probability)
-          is correct per Imprint rules, and redundant text encoding (HOME WINS / AWAY
-          WINS labels) provides non-color disambiguation.
+        comment: Imprint palette used; green (#009E73) and matte red (#AE3030) are
+          CVD-safe. Green/red as home/away pairing is standard in sports visualization
+          with redundant labeling (HOME WINS/AWAY WINS) so not relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Layout generally good. Right padding (24px) and
-          bottom padding (10px) are thin, leaving corner annotations tight. Large
-          empty area below 25% is spec-required but creates visual imbalance.
+        comment: Canvas gate passed (no gate file). Layout padding specified (top:30,
+          right:32, bottom:20, left:10). Plot fills canvas well with proportional
+          margins. No AR-09 edge clipping detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly. Y-axis 'Home Team Win Probability'
-          and X-axis 'Game Time (minutes)' are descriptive. Tick labels include units
-          (% and ').
+        comment: 'X: ''Game Time (minutes)'' — descriptive with unit context. Y: ''Home
+          Team Win Probability'' — descriptive and unambiguous.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green (#009E73) for home team as first series. Matte red (#AE3030)
-          for away team via correct semantic exception. Backgrounds correct (#FAF8F1
-          light, #1A1A17 dark). Data colors identical across themes.'
+        comment: 'First series brand green #009E73 via t.palette[0]. Away fill uses
+          #AE3030 (palette[4]) as semantic exception for loss/away role — valid per
+          Imprint rules. Background #FAF8F1 light / #1A1A17 dark. Chrome tokens (t.ink,
+          t.inkSoft, t.grid) correctly applied in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -122,29 +127,31 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Custom annotations, semantic fill colors, and
-          in-chart directional labels show intentional design. Could push further
-          with more refined typography hierarchy or improved use of the large empty
-          lower region.
+        comment: 'Above a configured library default: semantic color choice, custom
+          annotation plugin with dots+connectors+labels, HOME/AWAY directional labels,
+          and final score annotation show design intent. Not yet FiveThirtyEight-level
+          — typography could be more refined, event label size is small.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Above default (2). Semi-transparent fills with alpha=0.22 are tasteful.
-          Grid uses t.grid token (subtle). Dashed quarter dividers are clean. Could
-          improve by reducing horizontal grid line weight.
+        comment: Grid color from t.grid token (correct), layout padding specified,
+          dashed reference line at 50% adds refinement. Chart.js plot-area border/spines
+          not removed — all four borders visible, deviating from the style guide L-shaped
+          or borderless recommendation.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good storytelling. Directional labels guide viewer interpretation.
-          Final score anchors the narrative. Quarter markers provide game context.
-          Compelling comeback arc visible. Missing specific play annotations would
-          elevate further.
+        comment: 'Clear narrative: Lakers trail badly in Q2 (below 30%), mount comeback
+          in Q3, seal win in Q4. Fill colors above/below 50% communicate home vs.
+          away advantage instantly. Event annotations mark four key turning points.
+          Quarter dividers orient viewer. HOME/AWAY labels plus final score complete
+          the story arc.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,126 +159,127 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with threshold-based area fill — exactly right for a win
-          probability chart.
+        comment: Win probability line chart with conditional fills — correct chart
+          type, all required subtypes present.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Has: 0-100% Y-axis, 50% reference line, area fills with team colors,
-          final score annotation, quarter markers. Missing: specific scoring event
-          annotations on the probability line (e.g., ''TD'', ''FG'' at key turning
-          points).'
+        comment: 'All spec features: 50% reference line, home team fill above 50%,
+          away team fill below 50%, event annotations (4 labeled), final score corner
+          annotation, quarter period markers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly maps game time 0-48 min, Y-axis maps win probability
-          0-100%. All data within range.
+        comment: 'X: game time 0–48 minutes; Y: win probability 0–100%. Correct assignment,
+          full range displayed.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title is exact match: ''line-win-probability · javascript · chartjs
-          · anyplot.ai''. Legend shows ''Home Win Probability'' only — reference line
-          correctly hidden via filter function.'
+        comment: 'Title: ''line-win-probability · javascript · chartjs · anyplot.ai''
+          — matches required format. Legend: ''Home Win Probability'' visible; _ref50
+          dataset correctly filtered from legend display.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows probability evolution, momentum shifts, team advantage areas,
-          quarter structure, final score. Missing specific play annotations that would
-          demonstrate full feature coverage.
+        comment: 'Shows all aspects: ~50% start, home lead, dramatic swing below 30%
+          (away advantage), comeback to above 50%, decisive win push above 80%. Full
+          range of win probability states represented.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NBA Lakers vs Celtics — two real franchise rivals. 48-minute game,
-          97 data points (~one per 30 sec), win probability 28-90%, final score Lakers
-          112-Celtics 101 all plausible and realistic. Neutral sports analysis context.
+        comment: Real NBA matchup (Lakers vs Celtics), 48-minute game, realistic probability
+          arc with meaningful turning points. Non-controversial sports context. Final
+          score 112–101 is plausible NBA result.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 48 minutes for NBA game, 97 points for appropriate density, probability
-          range realistic for competitive game.
+        comment: 48 minutes matches NBA game length. Probability bounded 0.02–0.98.
+          Noise level realistic for play-by-play model. Starting near 50% and finishing
+          near ~95% for home team win is factually consistent.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'No classes. Minimal helpers: trendAt() for game narrative, lcg()
-          for reproducible pseudo-randomness, quarterPlugin for custom rendering.
-          All necessary and clean.'
+        comment: Helper functions trendAt() and lcg() deviate from the strict flat-script
+          KISS pattern. Necessary for the complexity but could be inlined or expressed
+          as a simple array literal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG seeded at 42 — fully deterministic pseudo-random data generation.
+        comment: Deterministic LCG with fixed seed 42 — fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (Chart is a global, t = window.ANYPLOT_TOKENS). No unused
+        comment: No imports needed — Chart is global per harness contract. No stray
           globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable. Custom plugin pattern is well-structured. No
-          fake UI elements.
+        comment: Well-structured, appropriate complexity. Custom plugin is idiomatic
+          Chart.js. No fake UI elements. Legend filter via item.text.startsWith('_')
+          is a clean pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct Chart.js API usage. animation: false, responsive: true,
-          maintainAspectRatio: false all set. No filesystem calls (harness handles
-          output).'
+        comment: Correct — no savefig/save calls; harness produces plot-light/dark.png
+          and .html. Chart.js v4 API used correctly.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses Chart.js v4 high-level API throughout: conditional fill (fill.target,
+          fill.above/below), plugin system (afterDraw), legend filter callback, linear
+          scale configuration. All idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Above default (3). Uses Chart.js fill API with target:{value:50}
-          threshold fill — the idiomatic way to handle above/below fills in Chart.js
-          4.x. Plugin system correctly used. Legend filter function is idiomatic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Above default (1). Custom afterDraw plugin for canvas annotations
-          is a Chart.js-distinctive pattern. Threshold-based fill (above/below a y-value)
-          is a Chart.js-specific feature. Legend filter to exclude internal datasets
-          is also distinctively Chart.js.
+        comment: 'The `fill: { target: { value: 50 }, above, below }` conditional
+          fill is a distinctive Chart.js v4 feature; the afterDraw custom plugin for
+          quarter lines and event annotations is Chart.js-specific. Could push to
+          5 with additional Chart.js-only tricks (e.g., annotation plugin patterns),
+          but 4 is well-justified.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - html-export
   patterns:
   - data-generation
   dataprep: []
