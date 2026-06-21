@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 83/100 | Created: 2026-06-21
@@ -25,21 +25,20 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 COLOR_MADE = "#009E73"
 COLOR_MISSED = "#AE3030"
 
-# Court lines rendered in secondary ink so shot markers stand out
 COURT_COLOR = INK_SOFT
 
 # NBA half-court geometry (feet, origin at basket center, y-positive toward half-court)
 COURT_LEFT = -25.0
 COURT_RIGHT = 25.0
-COURT_BOTTOM = -5.25  # baseline (basket hangs 5.25 ft from baseline)
-COURT_TOP = 41.75  # half-court line (47 ft total depth)
+COURT_BOTTOM = -5.25
+COURT_TOP = 41.75
 
-FT_LINE_Y = 13.75  # free throw line from basket
-FT_RADIUS = 6.0  # free throw circle radius
-RA_RADIUS = 4.0  # restricted area arc radius
-THREE_RADIUS = 23.75  # three-point arc radius from basket
-THREE_CORNER_X = 22.0  # corner three-point sideline distance
-THREE_CORNER_Y = np.sqrt(THREE_RADIUS**2 - THREE_CORNER_X**2)  # ≈ 8.95
+FT_LINE_Y = 13.75
+FT_RADIUS = 6.0
+RA_RADIUS = 4.0
+THREE_RADIUS = 23.75
+THREE_CORNER_X = 22.0
+THREE_CORNER_Y = np.sqrt(THREE_RADIUS**2 - THREE_CORNER_X**2)
 
 # Data — synthetic shot chart for a versatile NBA wing player
 np.random.seed(42)
@@ -88,6 +87,10 @@ df = pd.DataFrame(
     }
 )
 
+n_made = int(made_all.sum())
+n_total = len(made_all)
+fg_pct = n_made / n_total
+
 # Plot — square canvas (2400 × 2400 px) matches the near-square half-court footprint
 sns.set_theme(
     style="ticks",
@@ -112,15 +115,14 @@ ax.set_facecolor(PAGE_BG)
 # Draw NBA half-court (standard 50 ft × 47 ft)
 lw = 1.6
 
-court_rect = mpatches.Rectangle(
-    (COURT_LEFT, COURT_BOTTOM), 50, 47, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=2
+ax.add_patch(
+    mpatches.Rectangle(
+        (COURT_LEFT, COURT_BOTTOM), 50, 47, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=3
+    )
 )
-ax.add_patch(court_rect)
-
-paint_rect = mpatches.Rectangle(
-    (-8, COURT_BOTTOM), 16, 19, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=2
+ax.add_patch(
+    mpatches.Rectangle((-8, COURT_BOTTOM), 16, 19, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=3)
 )
-ax.add_patch(paint_rect)
 
 # Free throw circle — upper arc solid, lower arc dashed
 ax.add_patch(
@@ -133,7 +135,7 @@ ax.add_patch(
         theta2=180,
         color=COURT_COLOR,
         linewidth=lw,
-        zorder=2,
+        zorder=3,
     )
 )
 ax.add_patch(
@@ -147,13 +149,13 @@ ax.add_patch(
         color=COURT_COLOR,
         linewidth=lw,
         linestyle="--",
-        zorder=2,
+        zorder=3,
     )
 )
 
 # Restricted area arc
 ax.add_patch(
-    Arc((0, 0), 2 * RA_RADIUS, 2 * RA_RADIUS, angle=0, theta1=0, theta2=180, color=COURT_COLOR, linewidth=lw, zorder=2)
+    Arc((0, 0), 2 * RA_RADIUS, 2 * RA_RADIUS, angle=0, theta1=0, theta2=180, color=COURT_COLOR, linewidth=lw, zorder=3)
 )
 
 # Three-point line: arc + corner straight sections
@@ -168,31 +170,52 @@ ax.add_patch(
         theta2=180 - theta1_three,
         color=COURT_COLOR,
         linewidth=lw,
-        zorder=2,
+        zorder=3,
     )
 )
-ax.plot([THREE_CORNER_X, THREE_CORNER_X], [COURT_BOTTOM, THREE_CORNER_Y], color=COURT_COLOR, linewidth=lw, zorder=2)
-ax.plot([-THREE_CORNER_X, -THREE_CORNER_X], [COURT_BOTTOM, THREE_CORNER_Y], color=COURT_COLOR, linewidth=lw, zorder=2)
+ax.plot([THREE_CORNER_X, THREE_CORNER_X], [COURT_BOTTOM, THREE_CORNER_Y], color=COURT_COLOR, linewidth=lw, zorder=3)
+ax.plot([-THREE_CORNER_X, -THREE_CORNER_X], [COURT_BOTTOM, THREE_CORNER_Y], color=COURT_COLOR, linewidth=lw, zorder=3)
 
-# Backboard (face sits 1.25 ft behind basket center, 6 ft wide)
-ax.plot([-3, 3], [-1.25, -1.25], color=COURT_COLOR, linewidth=lw * 1.5, zorder=2)
+# Backboard and basket
+ax.plot([-3, 3], [-1.25, -1.25], color=COURT_COLOR, linewidth=lw * 1.5, zorder=3)
+ax.add_patch(mpatches.Circle((0, 0), radius=0.75, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=3))
 
-# Basket (rim 18 in diameter ≈ 0.75 ft radius)
-ax.add_patch(mpatches.Circle((0, 0), radius=0.75, linewidth=lw, edgecolor=COURT_COLOR, facecolor="none", zorder=2))
+# KDE density fill — highlights made-shot hot zones (seaborn's signature statistical layer)
+made_df = df[df["Outcome"] == "Made"]
+sns.kdeplot(
+    data=made_df, x="x", y="y", fill=True, levels=5, color=COLOR_MADE, alpha=0.09, bw_adjust=0.8, ax=ax, zorder=1
+)
+# KDE contour lines over the fill
+sns.kdeplot(
+    data=made_df,
+    x="x",
+    y="y",
+    fill=False,
+    levels=5,
+    color=COLOR_MADE,
+    alpha=0.38,
+    linewidths=0.9,
+    bw_adjust=0.8,
+    ax=ax,
+    zorder=2,
+)
 
-# Shot markers
+# Shot markers with dual encoding: hue (color) + style (shape) for CVD accessibility
 palette = {"Made": COLOR_MADE, "Missed": COLOR_MISSED}
+markers = {"Made": "o", "Missed": "X"}
 sns.scatterplot(
     data=df,
     x="x",
     y="y",
     hue="Outcome",
+    style="Outcome",
+    markers=markers,
     palette=palette,
-    s=38,
-    alpha=0.70,
+    s=40,
+    alpha=0.55,
     edgecolors=PAGE_BG,
     linewidth=0.25,
-    zorder=3,
+    zorder=4,
     ax=ax,
 )
 
@@ -221,6 +244,20 @@ legend = ax.legend(
 legend.get_title().set_color(INK)
 for text in legend.get_texts():
     text.set_color(INK_SOFT)
+
+# Shooting stats — placed in the empty half-court area above the three-point arc
+stats_text = f"{n_made}/{n_total} FGM\n{fg_pct:.1%} FG%"
+ax.text(
+    COURT_RIGHT - 2,
+    COURT_TOP - 7,
+    stats_text,
+    ha="right",
+    va="top",
+    fontsize=8,
+    color=INK_SOFT,
+    zorder=5,
+    bbox={"boxstyle": "round,pad=0.4", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85},
+)
 
 title = "scatter-shot-chart · python · seaborn · anyplot.ai"
 ax.set_title(title, fontsize=11, fontweight="medium", color=INK, pad=10)
