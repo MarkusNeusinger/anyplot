@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-20
+Library: seaborn | Python
+Quality: pending | Created: 2026-06-21
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -11,149 +13,186 @@ import pandas as pd
 import seaborn as sns
 
 
-# Seaborn theme and context for global styling
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — semantic: green=Home (winning/positive), matte red=Away (opponent/loss)
+HOME_COLOR = "#009E73"  # Imprint position 1 — brand green
+AWAY_COLOR = "#AE3030"  # Imprint position 5 — matte red (semantic: loss / away team)
+
 sns.set_theme(
     style="ticks",
     rc={
-        "axes.facecolor": "#F7F9FC",
-        "figure.facecolor": "#FFFFFF",
-        "grid.color": "#D0D8E0",
-        "grid.alpha": 0.3,
-        "grid.linewidth": 0.6,
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
         "font.family": "sans-serif",
     },
 )
-sns.set_context("talk", font_scale=1.05, rc={"lines.linewidth": 2.8})
 
-# Palette from seaborn
-palette = sns.color_palette(["#306998", "#D4583B"])
-home_color = palette[0]
-away_color = palette[1]
-
-# Data
-np.random.seed(42)
-
+# Data — build multiple Monte Carlo runs so seaborn's native errorbar can show model uncertainty
 plays = np.arange(0, 121)
-win_prob = np.full(len(plays), 0.50)
 
-events = {
-    8: ("FG Home", 0.07),
-    22: ("TD Away", -0.15),
-    35: ("TD Home", 0.18),
-    48: ("INT Home", 0.10),
-    55: ("FG Away", -0.08),
-    65: ("TD Home", 0.16),
-    78: ("TD Away", -0.14),
-    85: ("FG Home", 0.09),
-    95: ("TD Away", -0.20),
-    105: ("TD Home", 0.22),
-    115: ("FG Home", 0.08),
+scoring_events = {
+    8: 0.07,
+    22: -0.15,
+    35: 0.18,
+    48: 0.10,
+    55: -0.08,
+    65: 0.16,
+    78: -0.14,
+    85: 0.09,
+    95: -0.20,
+    105: 0.22,
+    115: 0.08,
 }
 
-for i in range(1, len(plays)):
-    noise = np.random.normal(0, 0.015)
-    if i in events:
-        shift = events[i][1]
-    else:
-        shift = 0
-    win_prob[i] = np.clip(win_prob[i - 1] + shift + noise, 0.02, 0.98)
+runs = []
+for seed in range(42, 62):  # 20 simulations for stable CI band
+    rng = np.random.default_rng(seed)
+    wp = np.full(len(plays), 0.50)
+    for i in range(1, len(plays)):
+        noise = rng.normal(0, 0.015)
+        shift = scoring_events.get(i, 0.0)
+        wp[i] = np.clip(wp[i - 1] + shift + noise, 0.02, 0.98)
+    wp[-1] = 0.95  # game ends with home win
+    runs.append(pd.DataFrame({"play": plays, "win_probability": wp, "run": seed}))
 
-win_prob[-1] = 0.95
+df_sim = pd.concat(runs, ignore_index=True)
 
-df = pd.DataFrame({"play": plays, "win_probability": win_prob})
+# Mean line for fills and annotation anchors
+win_prob_mean = df_sim.groupby("play")["win_probability"].mean().values
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — landscape 3200×1800 px (figsize × dpi, no bbox_inches)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+fig.subplots_adjust(top=0.86)  # reserve headroom for title + subtitle
+ax.set_facecolor(PAGE_BG)
 
-sns.lineplot(data=df, x="play", y="win_probability", color=home_color, linewidth=2.8, ax=ax)
+# Seaborn lineplot with native errorbar — uses seaborn's statistical aggregation across 20 runs
+# to display the mean win-probability line with a ±1 SD uncertainty band
+sns.lineplot(
+    data=df_sim,
+    x="play",
+    y="win_probability",
+    color=HOME_COLOR,
+    linewidth=2.5,
+    errorbar="sd",
+    err_kws={"alpha": 0.07, "linewidth": 0},
+    ax=ax,
+)
 
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=home_color, alpha=0.2, interpolate=True)
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=away_color, alpha=0.2, interpolate=True)
+# Fills between mean line and 50% reference
+ax.fill_between(plays, win_prob_mean, 0.5, where=(win_prob_mean >= 0.5), color=HOME_COLOR, alpha=0.14, interpolate=True)
+ax.fill_between(plays, win_prob_mean, 0.5, where=(win_prob_mean < 0.5), color=AWAY_COLOR, alpha=0.14, interpolate=True)
 
-ax.axhline(y=0.5, color="#888888", linewidth=1.2, linestyle="--", alpha=0.5)
+# 50% reference line
+ax.axhline(y=0.5, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.45)
 
+# Key event annotations — scored on the mean trajectory
 key_events = {
-    22: ("TD Away\n7-3", away_color),
-    35: ("TD Home\n10-7", home_color),
-    65: ("TD Home\n20-14", home_color),
-    95: ("TD Away\n23-27", away_color),
-    105: ("TD Home\n30-27", home_color),
+    22: ("TD Away\n7–3", AWAY_COLOR),
+    35: ("TD Home\n10–7", HOME_COLOR),
+    65: ("TD Home\n20–14", HOME_COLOR),
+    95: ("TD Away\n23–27", AWAY_COLOR),
+    105: ("TD Home\n30–27", HOME_COLOR),
 }
-
-annotation_offsets = {22: (-8, 0.10), 35: (0, -0.10), 65: (8, 0.10), 95: (-12, 0.10), 105: (0, -0.12)}
+annotation_offsets = {22: (-9, 0.13), 35: (2, -0.13), 65: (9, 0.13), 95: (-12, 0.13), 105: (2, -0.15)}
 
 for play_num, (label, color) in key_events.items():
-    y_val = win_prob[play_num]
+    y_val = win_prob_mean[play_num]
     x_off, y_off = annotation_offsets[play_num]
     ax.annotate(
         label,
         xy=(play_num, y_val),
         xytext=(play_num + x_off, y_val + y_off),
-        fontsize=13,
+        fontsize=7,
         fontweight="bold",
         color=color,
         ha="center",
         va="center",
-        arrowprops={"arrowstyle": "->", "color": color, "lw": 1.5, "connectionstyle": "arc3,rad=0.1"},
+        arrowprops={"arrowstyle": "->", "color": color, "lw": 1.0, "connectionstyle": "arc3,rad=0.1"},
     )
 
+# Event marker dots via seaborn scatter
 sns.scatterplot(
     x=list(key_events),
-    y=[win_prob[p] for p in key_events],
+    y=[win_prob_mean[p] for p in key_events],
     color=[key_events[p][1] for p in key_events],
-    s=100,
+    s=55,
     zorder=5,
-    edgecolor="white",
-    linewidth=1.5,
+    edgecolor=PAGE_BG,
+    linewidth=1.0,
     ax=ax,
     legend=False,
 )
 
-# Quarter markers
+# Quarter boundary markers — Q4 label kept at bottom left of its quarter to avoid top-right clutter
 for q, label in [(30, "Q1"), (60, "Q2"), (90, "Q3"), (120, "Q4")]:
-    ax.axvline(x=q, color="#C0C8D0", linewidth=0.8, linestyle=":", alpha=0.6)
-    ax.text(q - 15, 0.025, label, fontsize=14, color="#8899AA", ha="center", fontweight="medium")
+    ax.axvline(x=q, color=INK_SOFT, linewidth=0.55, linestyle=":", alpha=0.4)
+    ax.text(q - 15, 0.03, label, fontsize=7.5, color=INK_MUTED, ha="center")
 
-# Style
-ax.set_xlabel("Play Number", fontsize=20)
-ax.set_ylabel("Home Win Probability", fontsize=20)
-ax.set_title("line-win-probability · seaborn · pyplots.ai\n", fontsize=24, fontweight="medium", pad=4)
+# Final score callout — top right, away from Q4 bottom label
 ax.text(
+    106,
+    0.90,
+    "Final: Home 30 – Away 27",
+    fontsize=7.5,
+    ha="left",
+    color=INK_SOFT,
+    fontweight="semibold",
+    fontstyle="italic",
+    bbox={"boxstyle": "round,pad=0.28", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
+)
+
+# Axes styling
+ax.set_xlabel("Play Number", fontsize=10, color=INK)
+ax.set_ylabel("Home Win Probability", fontsize=10, color=INK)
+ax.set_title("line-win-probability · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", pad=4, color=INK)
+# subtitle in figure coordinates — sits above the axes title without overlapping
+fig.text(
     0.5,
-    1.02,
-    "NFL Game — Home vs Away  |  Lead changes and momentum shifts across 120 plays",
-    transform=ax.transAxes,
+    0.945,
+    "NFL Game — Home vs Away  |  Shaded band shows win-probability model uncertainty across simulations",
     ha="center",
-    fontsize=14,
-    color="#667788",
+    fontsize=7.5,
+    color=INK_MUTED,
     fontstyle="italic",
 )
-ax.tick_params(axis="both", labelsize=16)
-
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.set_ylim(0, 1)
 ax.set_xlim(0, 120)
 ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
 ax.set_yticklabels(["0%", "25%", "50%", "75%", "100%"])
 
 sns.despine(ax=ax)
-ax.yaxis.grid(True, alpha=0.2, linewidth=0.6)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.6)
 
-home_patch = mpatches.Patch(color=home_color, alpha=0.4, label="Home")
-away_patch = mpatches.Patch(color=away_color, alpha=0.4, label="Away")
-ax.legend(handles=[home_patch, away_patch], fontsize=16, loc="upper left", frameon=False)
-
-ax.text(
-    118,
-    0.015,
-    "Final: Home 30 – Away 27",
-    fontsize=15,
-    ha="right",
-    color="#556677",
-    fontweight="semibold",
-    fontstyle="italic",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "#E8EEF4", "edgecolor": "#C0C8D0", "alpha": 0.8},
+# Legend — Home/Away fill patches
+home_patch = mpatches.Patch(facecolor=HOME_COLOR, alpha=0.55, label="Home", edgecolor="none")
+away_patch = mpatches.Patch(facecolor=AWAY_COLOR, alpha=0.55, label="Away", edgecolor="none")
+ax.legend(
+    handles=[home_patch, away_patch],
+    fontsize=8,
+    loc="upper left",
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+    framealpha=0.9,
 )
 
-# Save
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches so figsize × dpi gives exact 3200×1800 px
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
