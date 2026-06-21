@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 79/100 | Updated: 2026-06-21
@@ -47,7 +47,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-REGION_ALPHA = 0.18 if THEME == "light" else 0.28
+REGION_ALPHA = 0.18 if THEME == "light" else 0.13
 
 # Imprint palette — position 1 is always the first categorical series
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
@@ -104,7 +104,11 @@ df_points = pd.DataFrame(
 # Region labels: 3 regions per spec (elastic, strain hardening, necking)
 # Yield plateau is a critical point, not a separate shaded band
 df_regions = pd.DataFrame(
-    {"strain": [0.003, 0.13, 0.29], "stress": [430, 335, 385], "label": ["Elastic", "Strain\nHardening", "Necking"]}
+    {
+        "strain": [elastic_end / 2, 0.13, 0.29],
+        "stress": [350, 335, 385],
+        "label": ["Elastic", "Strain\nHardening", "Necking"],
+    }
 )
 
 plot = (
@@ -122,7 +126,7 @@ plot = (
         size=0.6,
         linetype="dashed",
     )
-    + annotate("text", x=0.011, y=52, label="0.2% offset", size=3.0, color=IMPRINT[4], fontstyle="italic")
+    + annotate("text", x=0.011, y=52, label="0.2% offset", size=3.5, color=INK_SOFT, fontstyle="italic")
     # Critical point markers
     + geom_point(df_points, aes(x="strain", y="stress", color="color", size="size"))
     + scale_color_identity()
@@ -153,7 +157,11 @@ plot = (
     + annotate(
         "text", x=0.028, y=145, label=f"E = {youngs_modulus // 1000} GPa", size=3.5, color=IMPRINT[2], fontweight="bold"
     )
-    + labs(x="Engineering Strain", y="Engineering Stress (MPa)", title="line-stress-strain · plotnine · pyplots.ai")
+    + labs(
+        x="Engineering Strain",
+        y="Engineering Stress (MPa)",
+        title="line-stress-strain · python · plotnine · anyplot.ai",
+    )
     + scale_x_continuous(breaks=np.arange(0, 0.40, 0.05))
     + scale_y_continuous(breaks=np.arange(0, 500, 50))
     + coord_cartesian(xlim=(0, 0.38), ylim=(0, 460))
