@@ -64,7 +64,7 @@ for (const [playNum, , label] of keyPlays) {
     format: label,
     style: {
       color: t.inkSoft,
-      fontSize: "10px",
+      fontSize: "12px",
       fontWeight: "normal",
       textOutline: "none",
     },
@@ -73,19 +73,12 @@ for (const [playNum, , label] of keyPlays) {
   };
 }
 
-// Quarter boundary dotted lines
-const quarterLines = [30, 60, 90].map((q, i) => ({
+// Quarter boundary dotted lines (no label — x-axis formatter already shows Q2/Q3/Q4)
+const quarterLines = [30, 60, 90].map((q) => ({
   value: q,
   color: t.grid,
   dashStyle: "dot",
   width: 1,
-  label: {
-    text: `Q${i + 2}`,
-    style: { color: t.inkSoft, fontSize: "11px" },
-    align: "left",
-    x: 4,
-    y: -6,
-  },
   zIndex: 2,
 }));
 
