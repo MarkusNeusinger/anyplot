@@ -1,12 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-20
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-21
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — selected positions for semantic roles
+BRAND = "#009E73"  # Imprint position 1 — main curve (Mild Steel)
+BLUE = "#4467A3"  # Imprint position 3 — 0.2% offset reference line
+OCHRE = "#BD8233"  # Imprint position 4 — UTS marker
+RED = "#AE3030"  # Imprint position 5 — fracture (semantic: failure)
+AMBER = "#DDCC77"  # semantic anchor — yield point (warning threshold)
 
 # Data — Mild steel tensile test simulation
 np.random.seed(42)
@@ -54,167 +72,213 @@ offset_line_stress = youngs_modulus * (offset_line_strain - 0.002)
 # Key point coordinates
 offset_yield_strain = yield_stress / youngs_modulus + 0.002
 offset_yield_stress = yield_stress
-
-# UTS at known position (use designed value, not noisy argmax)
 uts_plot_strain = uts_strain
 uts_plot_stress = uts
-
 fracture_plot_strain = strain[-1]
 fracture_plot_stress = stress[-1]
 
 # Plot
 fig = go.Figure()
 
-# Main stress-strain curve
+# Main stress-strain curve — Imprint position 1 (brand green)
 fig.add_trace(
     go.Scatter(
         x=strain,
         y=stress,
         mode="lines",
-        line={"color": "#306998", "width": 3.5},
+        line={"color": BRAND, "width": 3.5},
         name="Mild Steel",
         hovertemplate="Strain: %{x:.4f}<br>Stress: %{y:.1f} MPa<extra></extra>",
     )
 )
 
-# 0.2% offset line
+# 0.2% offset line — Imprint position 3 (blue reference line)
 fig.add_trace(
     go.Scatter(
         x=offset_line_strain,
         y=offset_line_stress,
         mode="lines",
-        line={"color": "#B85C38", "width": 2.5, "dash": "dash"},
+        line={"color": BLUE, "width": 2, "dash": "dash"},
         name="0.2% Offset Line",
         hoverinfo="skip",
     )
 )
 
-# Yield point marker
+# Yield point marker — amber (semantic: warning threshold)
 fig.add_trace(
     go.Scatter(
         x=[offset_yield_strain],
         y=[offset_yield_stress],
         mode="markers",
-        marker={"size": 14, "color": "#B85C38", "symbol": "diamond", "line": {"color": "white", "width": 1.5}},
+        marker={"size": 14, "color": AMBER, "symbol": "diamond", "line": {"color": INK, "width": 1.5}},
         name="Yield Point",
         hovertemplate="Yield Point<br>Strain: %{x:.4f}<br>Stress: %{y:.1f} MPa<extra></extra>",
     )
 )
 
-# UTS marker
+# UTS marker — Imprint position 4 (ochre)
 fig.add_trace(
     go.Scatter(
         x=[uts_plot_strain],
         y=[uts_plot_stress],
         mode="markers",
-        marker={"size": 14, "color": "#D4A017", "symbol": "star", "line": {"color": "white", "width": 1.5}},
+        marker={"size": 14, "color": OCHRE, "symbol": "star", "line": {"color": INK, "width": 1.5}},
         name="Ultimate Tensile Strength",
         hovertemplate="UTS<br>Strain: %{x:.4f}<br>Stress: %{y:.1f} MPa<extra></extra>",
     )
 )
 
-# Fracture point marker
+# Fracture point marker — Imprint position 5 / semantic red (failure)
 fig.add_trace(
     go.Scatter(
         x=[fracture_plot_strain],
         y=[fracture_plot_stress],
         mode="markers",
-        marker={"size": 14, "color": "#C62828", "symbol": "x", "line": {"color": "white", "width": 1.5}},
+        marker={"size": 14, "color": RED, "symbol": "x", "line": {"color": INK, "width": 2}},
         name="Fracture Point",
         hovertemplate="Fracture<br>Strain: %{x:.4f}<br>Stress: %{y:.1f} MPa<extra></extra>",
     )
 )
 
-# Annotations for key points
+# Young's modulus annotation — offset up-right to avoid crowding near origin
+fig.add_annotation(
+    x=yield_strain * 0.45,
+    y=youngs_modulus * yield_strain * 0.45,
+    text=f"E = {youngs_modulus // 1000} GPa",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=BRAND,
+    ax=60,
+    ay=-35,
+    font={"size": 12, "color": BRAND},
+    bgcolor=PAGE_BG,
+    borderpad=2,
+)
+
+# Yield point annotation — offset up-right to avoid overlap with E annotation
 fig.add_annotation(
     x=offset_yield_strain,
     y=offset_yield_stress,
     text="Yield Point<br>(0.2% offset)",
     showarrow=True,
     arrowhead=2,
-    arrowcolor="#B85C38",
+    arrowcolor=AMBER,
     ax=70,
-    ay=40,
-    font={"size": 17, "color": "#B85C38"},
+    ay=-50,
+    font={"size": 12, "color": AMBER},
+    bgcolor=PAGE_BG,
+    borderpad=2,
 )
 
+# UTS annotation
 fig.add_annotation(
     x=uts_plot_strain,
     y=uts_plot_stress,
     text=f"UTS = {uts} MPa",
     showarrow=True,
     arrowhead=2,
-    arrowcolor="#D4A017",
+    arrowcolor=OCHRE,
     ax=-50,
     ay=-35,
-    font={"size": 17, "color": "#D4A017"},
+    font={"size": 12, "color": OCHRE},
+    bgcolor=PAGE_BG,
+    borderpad=2,
 )
 
+# Fracture annotation
 fig.add_annotation(
     x=fracture_plot_strain,
     y=fracture_plot_stress,
     text="Fracture",
     showarrow=True,
     arrowhead=2,
-    arrowcolor="#C62828",
+    arrowcolor=RED,
     ax=-55,
     ay=30,
-    font={"size": 17, "color": "#C62828"},
+    font={"size": 12, "color": RED},
+    bgcolor=PAGE_BG,
+    borderpad=2,
 )
 
-# Region labels
-fig.add_annotation(x=0.008, y=100, text="Elastic", showarrow=False, font={"size": 16, "color": "#888888"})
+# Region labels — tertiary ink for structural readability
+fig.add_annotation(x=0.007, y=95, text="Elastic", showarrow=False, font={"size": 11, "color": INK_MUTED})
+fig.add_annotation(x=0.12, y=320, text="Strain Hardening", showarrow=False, font={"size": 11, "color": INK_MUTED})
+fig.add_annotation(x=0.295, y=430, text="Necking", showarrow=False, font={"size": 11, "color": INK_MUTED})
 
-fig.add_annotation(x=0.12, y=320, text="Strain Hardening", showarrow=False, font={"size": 16, "color": "#888888"})
+# Title — mandatory format with length-aware font scaling
+title = "Mild Steel Tensile Test · line-stress-strain · python · plotly · anyplot.ai"
+title_fontsize = round(16 * 67 / max(67, len(title)))
 
-fig.add_annotation(x=0.295, y=430, text="Necking", showarrow=False, font={"size": 16, "color": "#888888"})
-
-# Young's modulus annotation
-fig.add_annotation(
-    x=yield_strain * 0.5,
-    y=youngs_modulus * yield_strain * 0.5,
-    text=f"E = {youngs_modulus // 1000} GPa",
-    showarrow=True,
-    arrowhead=0,
-    arrowcolor="#306998",
-    ax=60,
-    ay=-25,
-    font={"size": 16, "color": "#306998"},
-)
-
-# Style
 fig.update_layout(
-    title={"text": "Mild Steel Tensile Test · line-stress-strain · plotly · pyplots.ai", "font": {"size": 28}},
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    title={"text": title, "font": {"size": title_fontsize, "color": INK}},
     xaxis={
-        "title": {"text": "Engineering Strain", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Engineering Strain", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
+        "showline": True,
+        "mirror": False,
+        "linecolor": INK_SOFT,
         "range": [-0.01, 0.38],
     },
     yaxis={
-        "title": {"text": "Engineering Stress (MPa)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Engineering Stress (MPa)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(0,0,0,0.08)",
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "showline": True,
+        "mirror": False,
+        "linecolor": INK_SOFT,
         "range": [-10, 460],
     },
-    template="plotly_white",
     legend={
-        "font": {"size": 16},
-        "x": 0.35,
-        "y": 0.20,
-        "bgcolor": "rgba(255,255,255,0.85)",
-        "bordercolor": "rgba(0,0,0,0.1)",
+        "font": {"size": 10, "color": INK_SOFT},
+        "x": 0.98,
+        "y": 0.05,
+        "xanchor": "right",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
-    width=1600,
-    height=900,
+    updatemenus=[
+        {
+            "type": "buttons",
+            "direction": "right",
+            "x": 0.0,
+            "y": 1.10,
+            "xanchor": "left",
+            "yanchor": "top",
+            "showactive": True,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+            "font": {"color": INK_SOFT, "size": 10},
+            "buttons": [
+                {
+                    "label": "Full Curve",
+                    "method": "relayout",
+                    "args": [{"xaxis.range": [-0.01, 0.38], "yaxis.range": [-10, 460]}],
+                },
+                {
+                    "label": "Elastic Detail",
+                    "method": "relayout",
+                    "args": [{"xaxis.range": [-0.0001, 0.0015], "yaxis.range": [-10, 300]}],
+                },
+            ],
+        }
+    ],
+    margin={"l": 80, "r": 40, "t": 100, "b": 60},
+    width=800,
+    height=450,
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — 3200×1800 px landscape (width=800 × scale=4, height=450 × scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
