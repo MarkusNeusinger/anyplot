@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
