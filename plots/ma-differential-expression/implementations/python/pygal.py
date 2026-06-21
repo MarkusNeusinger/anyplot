@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-21
@@ -163,7 +163,7 @@ chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
-    title="ma-differential-expression · pygal · pyplots.ai",
+    title="ma-differential-expression · python · pygal · anyplot.ai",
     x_title="Mean Expression (A)",
     y_title="Log₂ Fold Change (M)",
     show_legend=True,
@@ -185,11 +185,11 @@ chart = pygal.XY(
 # Non-significant genes — muted background cloud
 chart.add("Not Significant", nonsig_points, dots_size=3)
 
-# Upregulated significant — Imprint green
-chart.add("Upregulated (p<0.05)", sig_up_points, dots_size=7)
+# Upregulated significant — Imprint green; larger dots than downregulated for CVD redundancy
+chart.add("Upregulated (p<0.05)", sig_up_points, dots_size=10)
 
-# Downregulated significant — Imprint matte red
-chart.add("Downregulated (p<0.05)", sig_down_points, dots_size=7)
+# Downregulated significant — Imprint matte red; smaller to distinguish from upregulated
+chart.add("Downregulated (p<0.05)", sig_down_points, dots_size=5)
 
 # M = 0 reference line (no change)
 chart.add("M = 0", [(x_min, 0), (x_max, 0)], stroke=True, show_dots=False, stroke_style={"width": 5})
@@ -204,14 +204,13 @@ chart.add(
     "−2-fold", [(x_min, -1), (x_max, -1)], stroke=True, show_dots=False, stroke_style={"width": 4, "dasharray": "14, 8"}
 )
 
-# LOESS smoothing curve — Imprint lavender
+# LOESS smoothing curve — Imprint lavender; no dots so the curve stands out from scatter
 chart.add(
     "LOESS trend",
     [(round(x, 2), round(y, 3)) for x, y in zip(smooth_x, smooth_y, strict=False)],
     stroke=True,
-    show_dots=True,
-    dots_size=5,
-    stroke_style={"width": 7},
+    show_dots=False,
+    stroke_style={"width": 11},
 )
 
 # Top DE genes — Imprint blue, large prominent dots
