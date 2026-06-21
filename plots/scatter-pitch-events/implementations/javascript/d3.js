@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-pitch-events: Soccer Pitch Event Map
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-21
+// Quality: 91/100 | Created: 2026-06-21
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
