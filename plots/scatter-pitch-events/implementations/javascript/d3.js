@@ -86,12 +86,10 @@ const svg = d3.select("#container").append("svg")
 const g = svg.append("g")
   .attr("transform", `translate(${margin.left + offX},${margin.top + offY})`);
 
+// D3 line generator for pitch outlines — idiomatic D3 shape generator
+const lineGen = d3.line().x(d => px(d[0])).y(d => py(d[1]));
+
 // Pitch drawing helpers
-function pline(x1, y1, x2, y2) {
-  g.append("line")
-    .attr("x1", px(x1)).attr("y1", py(y1)).attr("x2", px(x2)).attr("y2", py(y2))
-    .attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 1.5);
-}
 function prect(x, y, w, h, fill) {
   g.append("rect")
     .attr("x", px(x)).attr("y", py(y))
@@ -118,9 +116,15 @@ g.append("path")
   .attr("d", `M${px(105)},${py(gy1)} L${px(107.44)},${py(gy1)} L${px(107.44)},${py(gy2)} L${px(105)},${py(gy2)}`)
   .attr("fill", GOAL_BG).attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 2);
 
-// Pitch outline and halfway line
-prect(0, 0, 105, 68);
-pline(52.5, 0, 52.5, 68);
+// Pitch outline via d3.line() — closed polygon from coordinate array
+g.append("path")
+  .attr("d", lineGen([[0, 0], [105, 0], [105, 68], [0, 68], [0, 0]]))
+  .attr("fill", "none").attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 1.5);
+
+// Halfway line via d3.line()
+g.append("path")
+  .attr("d", lineGen([[52.5, 0], [52.5, 68]]))
+  .attr("fill", "none").attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 1.5);
 
 // Centre circle and spot
 g.append("circle").attr("cx", px(52.5)).attr("cy", py(34)).attr("r", 9.15 * mPx)
@@ -138,14 +142,23 @@ prect(99.5, 24.85, 5.5, 18.3);
 g.append("circle").attr("cx", px(11)).attr("cy", py(34)).attr("r", 3).attr("fill", PITCH_LINE_CLR);
 g.append("circle").attr("cx", px(94)).attr("cy", py(34)).attr("r", 3).attr("fill", PITCH_LINE_CLR);
 
-// Penalty arcs (radius 9.15 m from spot, only the portion outside the penalty area)
-const ady = Math.sqrt(9.15 * 9.15 - 5.5 * 5.5) * mPx;
-const arR = 9.15 * mPx;
+// Penalty arcs via d3.arc() — shape generator with transform for positioning
+// d3.arc() angles are clockwise from north; for point (dx,dy) in SVG: angle = atan2(dx, -dy)
+const ady_m = Math.sqrt(9.15 * 9.15 - 5.5 * 5.5); // vertical reach at the penalty area edge
+const pArcGen = d3.arc().innerRadius(9.15 * mPx).outerRadius(9.15 * mPx);
+
+// Left arc: CW from upper-right intersection to lower-right (visible right of penalty spot)
 g.append("path")
-  .attr("d", `M${px(16.5)},${py(34) - ady} A${arR},${arR} 0 0,1 ${px(16.5)},${py(34) + ady}`)
+  .attr("d", pArcGen.startAngle(Math.atan2(5.5, ady_m)).endAngle(Math.atan2(5.5, -ady_m))())
+  .attr("transform", `translate(${px(11)},${py(34)})`)
   .attr("fill", "none").attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 1.5);
+
+// Right arc: CW from lower-left intersection to upper-left (visible left of penalty spot)
+const rArcStart = ((Math.atan2(-5.5, -ady_m) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+const rArcEnd   = ((Math.atan2(-5.5,  ady_m) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 g.append("path")
-  .attr("d", `M${px(88.5)},${py(34) - ady} A${arR},${arR} 0 0,0 ${px(88.5)},${py(34) + ady}`)
+  .attr("d", pArcGen.startAngle(rArcStart).endAngle(rArcEnd)())
+  .attr("transform", `translate(${px(94)},${py(34)})`)
   .attr("fill", "none").attr("stroke", PITCH_LINE_CLR).attr("stroke-width", 1.5);
 
 // Corner arcs (radius 1 m); sweep directions keep the arc inside the pitch
@@ -164,15 +177,15 @@ for (const tp of ["pass", "shot"]) {
     .attr("fill", EC[tp]).attr("opacity", 0.9);
 }
 
-// Arrow lines for passes and shots
+// Arrow lines — uniform 1.2px; wider opacity split (0.7/0.18) reduces shot-zone clutter
 g.selectAll(".ev-arr")
   .data(events.filter(e => e.type === "pass" || e.type === "shot"))
   .join("line").attr("class", "ev-arr")
   .attr("x1", d => px(d.x)).attr("y1", d => py(d.y))
   .attr("x2", d => px(d.ex)).attr("y2", d => py(d.ey))
   .attr("stroke", d => EC[d.type])
-  .attr("stroke-width", d => d.type === "shot" ? 1.8 : 1.2)
-  .attr("opacity", d => d.ok ? 0.6 : 0.25)
+  .attr("stroke-width", 1.2)
+  .attr("opacity", d => d.ok ? 0.7 : 0.18)
   .attr("marker-end", d => `url(#arr-${d.type})`);
 
 // Marker shape path builders
@@ -242,20 +255,20 @@ for (let i = 0; i < typeItems.length; i++) {
     lg.append("path").attr("d", diaP(lx, lgY1, LR)).attr("fill", col).attr("opacity", 0.9);
   }
   lg.append("text").attr("x", lx + LR + 7).attr("y", lgY1 + 5)
-    .attr("fill", t.ink).style("font-size", "13px").text(label);
+    .attr("fill", t.ink).style("font-size", "14px").text(label);
 }
 
-// Outcome row
+// Outcome row — filled circle uses palette[0] to communicate the encoding clearly
 const oSp = 220;
 const oX0 = pcX - oSp / 2;
 svg.append("circle").attr("cx", oX0).attr("cy", lgY2).attr("r", LR)
-  .attr("fill", t.inkSoft).attr("opacity", 0.9);
+  .attr("fill", t.palette[0]).attr("opacity", 0.9);
 svg.append("text").attr("x", oX0 + LR + 7).attr("y", lgY2 + 5)
-  .attr("fill", t.ink).style("font-size", "13px").text("Successful (filled)");
+  .attr("fill", t.ink).style("font-size", "14px").text("Successful (filled)");
 svg.append("circle").attr("cx", oX0 + oSp).attr("cy", lgY2).attr("r", LR)
   .attr("fill", "none").attr("stroke", t.inkSoft).attr("stroke-width", 1.8).attr("opacity", 0.9);
 svg.append("text").attr("x", oX0 + oSp + LR + 7).attr("y", lgY2 + 5)
-  .attr("fill", t.ink).style("font-size", "13px").text("Unsuccessful (hollow)");
+  .attr("fill", t.ink).style("font-size", "14px").text("Unsuccessful (hollow)");
 
 // Title
 svg.append("text").attr("x", width / 2).attr("y", 46)
