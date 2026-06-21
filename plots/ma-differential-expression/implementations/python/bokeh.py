@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: bokeh | Python
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-21
 """
 
 # Remove the script's own directory from sys.path so "bokeh.py" doesn't shadow the package
