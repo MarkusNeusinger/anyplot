@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-21
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -106,7 +105,7 @@ p <- ggplot(df, aes(x = mean_expression, y = log_fold_change)) +
     data          = top_genes,
     aes(label = gene_name),
     color         = INK,
-    size          = 2.5,
+    size          = 3.0,
     hjust         = -0.15,
     vjust         = 0.5,
     check_overlap = TRUE
@@ -126,9 +125,10 @@ p <- ggplot(df, aes(x = mean_expression, y = log_fold_change)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.25),
-    panel.grid.minor  = element_line(color = INK, linewidth = 0.15),
-    panel.border      = element_rect(color = INK_SOFT, fill = NA),
+    panel.grid.major  = element_line(color = INK_SOFT, linewidth = 0.25),
+    panel.grid.minor  = element_line(color = INK_SOFT, linewidth = 0.15),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK, size = 12),
