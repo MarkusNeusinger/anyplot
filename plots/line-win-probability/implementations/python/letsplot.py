@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-21
@@ -94,6 +94,7 @@ anyplot_theme = theme(  # noqa: F405
     axis_title=element_text(color=INK, size=12),  # noqa: F405
     axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
     axis_line=element_line(color=INK_SOFT),  # noqa: F405
+    panel_border=element_blank(),  # noqa: F405
     plot_title=element_text(color=INK, size=16),  # noqa: F405
     plot_subtitle=element_text(color=INK_SOFT, size=10),  # noqa: F405
     plot_margin=[40, 60, 20, 20],
@@ -162,7 +163,7 @@ plot = (
     + labs(  # noqa: F405
         x="Game Progress",
         y="Eagles Win Probability",
-        title="line-win-probability · letsplot · anyplot.ai",
+        title="line-win-probability · python · letsplot · anyplot.ai",
         subtitle="Eagles 27 – Cowboys 17  ·  Eagles recover from Q3 deficit for convincing finish",
     )
     # Canvas: 800×450 × scale=4 → 3200×1800 px (landscape)
