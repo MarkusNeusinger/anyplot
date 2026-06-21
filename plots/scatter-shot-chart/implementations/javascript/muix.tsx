@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-shot-chart: Basketball Shot Chart
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-21
 //# anyplot-orientation: square
 // anyplot.ai
 // scatter-shot-chart: Basketball Shot Chart
