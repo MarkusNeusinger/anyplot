@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21
@@ -208,7 +208,7 @@ for _, row in df_arr_sparse.iterrows():
         "",
         xy=(row["x"] + row["dx"], row["y"] + row["dy"]),
         xytext=(row["x"], row["y"]),
-        arrowprops={"arrowstyle": "->", "color": palette[row["Event Type"]], "lw": 0.8, "alpha": 0.35},
+        arrowprops={"arrowstyle": "->", "color": palette[row["Event Type"]], "lw": 0.8, "alpha": 0.45},
         zorder=4,
     )
 
@@ -241,7 +241,7 @@ legend = ax.legend(
     loc="lower center",
     bbox_to_anchor=(0.5, -0.06),
     ncol=4,
-    fontsize=8,
+    fontsize=9,
     frameon=True,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -249,7 +249,7 @@ legend = ax.legend(
     handletextpad=0.4,
     columnspacing=1.0,
     title="Event type  ·  opacity encodes outcome (opaque = successful)",
-    title_fontsize=7,
+    title_fontsize=8,
 )
 legend.get_title().set_color(INK_MUTED)
 
