@@ -1,28 +1,42 @@
-""" pyplots.ai
-scatter-pitch-events: Soccer Pitch Event Map
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 89/100 | Created: 2026-03-20
+"""scatter-pitch-events: Soccer Pitch Event Map
+Library: plotly | Python
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme-adaptive chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+
+# Imprint palette — event type colors (semantic assignment)
+PASS_COLOR = "#009E73"  # Imprint brand green — passes (first categorical series)
+TACKLE_COLOR = "#C475FD"  # Imprint lavender — tackles
+INTERCEPT_COLOR = "#4467A3"  # Imprint blue — interceptions
+SHOT_COLOR = "#AE3030"  # Imprint matte red — shots (semantic: danger/goal)
+
+# Pitch domain colors — always green (real-world field, not theme-chrome)
+PITCH_GRASS = "#3A9D5C"  # bright green playing surface
+PITCH_SURROUND = "#1B5E20"  # dark green out-of-bounds surround
+PITCH_LINE = "rgba(255,255,255,0.90)"
+lw = 2.5
+
 # Data
 np.random.seed(42)
-
 n_passes = 70
 n_shots = 16
 n_tackles = 28
 n_interceptions = 20
 
-# Passes — distributed across the pitch, biased toward attacking half
+# Passes — distributed across pitch, biased toward attacking half
 pass_x = np.random.beta(2, 1.5, n_passes) * 105
 pass_y = np.random.normal(34, 16, n_passes).clip(2, 66)
-pass_end_x = pass_x + np.random.normal(15, 8, n_passes)
-pass_end_y = pass_y + np.random.normal(0, 10, n_passes)
-pass_end_x = pass_end_x.clip(0, 105)
-pass_end_y = pass_end_y.clip(0, 68)
+pass_end_x = (pass_x + np.random.normal(15, 8, n_passes)).clip(0, 105)
+pass_end_y = (pass_y + np.random.normal(0, 10, n_passes)).clip(0, 68)
 pass_success = np.random.choice([True, False], n_passes, p=[0.78, 0.22])
 
 # Shots — concentrated in final third
@@ -42,35 +56,33 @@ interception_x = np.random.beta(1.2, 2.5, n_interceptions) * 70 + 5
 interception_y = np.random.uniform(8, 60, n_interceptions)
 interception_success = np.random.choice([True, False], n_interceptions, p=[0.85, 0.15])
 
-# Pitch
+# Figure
 fig = go.Figure()
 
-pitch_color = "#3A9D5C"
-line_color = "rgba(255,255,255,0.85)"
-lw = 2.5
+# --- Pitch markings (layer="below" so event traces render on top) ---
 
-# Pitch outline (layer="below" so traces render on top)
+# Playing surface fill
 fig.add_shape(
     type="rect",
     x0=0,
     y0=0,
     x1=105,
     y1=68,
-    line={"color": line_color, "width": lw},
-    fillcolor=pitch_color,
+    line={"color": PITCH_LINE, "width": lw},
+    fillcolor=PITCH_GRASS,
     layer="below",
 )
 
 # Halfway line
-fig.add_shape(type="line", x0=52.5, y0=0, x1=52.5, y1=68, line={"color": line_color, "width": lw}, layer="below")
+fig.add_shape(type="line", x0=52.5, y0=0, x1=52.5, y1=68, line={"color": PITCH_LINE, "width": lw}, layer="below")
 
 # Penalty areas
-fig.add_shape(type="rect", x0=0, y0=13.84, x1=16.5, y1=54.16, line={"color": line_color, "width": lw}, layer="below")
-fig.add_shape(type="rect", x0=88.5, y0=13.84, x1=105, y1=54.16, line={"color": line_color, "width": lw}, layer="below")
+fig.add_shape(type="rect", x0=0, y0=13.84, x1=16.5, y1=54.16, line={"color": PITCH_LINE, "width": lw}, layer="below")
+fig.add_shape(type="rect", x0=88.5, y0=13.84, x1=105, y1=54.16, line={"color": PITCH_LINE, "width": lw}, layer="below")
 
-# Goal areas
-fig.add_shape(type="rect", x0=0, y0=24.84, x1=5.5, y1=43.16, line={"color": line_color, "width": lw}, layer="below")
-fig.add_shape(type="rect", x0=99.5, y0=24.84, x1=105, y1=43.16, line={"color": line_color, "width": lw}, layer="below")
+# Goal areas (6-yard box)
+fig.add_shape(type="rect", x0=0, y0=24.84, x1=5.5, y1=43.16, line={"color": PITCH_LINE, "width": lw}, layer="below")
+fig.add_shape(type="rect", x0=99.5, y0=24.84, x1=105, y1=43.16, line={"color": PITCH_LINE, "width": lw}, layer="below")
 
 # Goal posts
 fig.add_shape(
@@ -79,7 +91,7 @@ fig.add_shape(
     y0=30.34,
     x1=0,
     y1=37.66,
-    line={"color": line_color, "width": 2},
+    line={"color": PITCH_LINE, "width": 2},
     fillcolor="rgba(255,255,255,0.25)",
     layer="below",
 )
@@ -89,7 +101,7 @@ fig.add_shape(
     y0=30.34,
     x1=107,
     y1=37.66,
-    line={"color": line_color, "width": 2},
+    line={"color": PITCH_LINE, "width": 2},
     fillcolor="rgba(255,255,255,0.25)",
     layer="below",
 )
@@ -101,7 +113,7 @@ fig.add_trace(
         x=52.5 + 9.15 * np.cos(theta),
         y=34 + 9.15 * np.sin(theta),
         mode="lines",
-        line={"color": line_color, "width": lw},
+        line={"color": PITCH_LINE, "width": lw},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -110,7 +122,7 @@ fig.add_trace(
 # Center spot
 fig.add_trace(
     go.Scatter(
-        x=[52.5], y=[34], mode="markers", marker={"size": 5, "color": line_color}, showlegend=False, hoverinfo="skip"
+        x=[52.5], y=[34], mode="markers", marker={"size": 5, "color": PITCH_LINE}, showlegend=False, hoverinfo="skip"
     )
 )
 
@@ -120,20 +132,20 @@ fig.add_trace(
         x=[11, 94],
         y=[34, 34],
         mode="markers",
-        marker={"size": 4, "color": line_color},
+        marker={"size": 4, "color": PITCH_LINE},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Penalty arcs
+# Penalty arcs (outside penalty area)
 la = np.linspace(-0.65, 0.65, 50)
 fig.add_trace(
     go.Scatter(
         x=11 + 9.15 * np.cos(la),
         y=34 + 9.15 * np.sin(la),
         mode="lines",
-        line={"color": line_color, "width": lw},
+        line={"color": PITCH_LINE, "width": lw},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -144,7 +156,7 @@ fig.add_trace(
         x=94 + 9.15 * np.cos(ra),
         y=34 + 9.15 * np.sin(ra),
         mode="lines",
-        line={"color": line_color, "width": lw},
+        line={"color": PITCH_LINE, "width": lw},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -165,20 +177,13 @@ for cx_pos, cy_pos in [(0, 0), (0, 68), (105, 0), (105, 68)]:
             x=cx_pos + 1.5 * np.cos(ct),
             y=cy_pos + 1.5 * np.sin(ct),
             mode="lines",
-            line={"color": line_color, "width": lw},
+            line={"color": PITCH_LINE, "width": lw},
             showlegend=False,
             hoverinfo="skip",
         )
     )
 
-# Event colors
-pass_color = "#4FC3F7"
-shot_color = "#FF7043"
-tackle_color = "#FFEE58"
-intercept_color = "#CE93D8"
-
-# Batch direction lines using None separators for efficiency
-# Successful pass lines
+# --- Pass direction lines (None-separator batching) ---
 pass_s_xs, pass_s_ys = [], []
 for i in np.where(pass_success)[0]:
     pass_s_xs.extend([pass_x[i], pass_end_x[i], None])
@@ -188,13 +193,12 @@ fig.add_trace(
         x=pass_s_xs,
         y=pass_s_ys,
         mode="lines",
-        line={"color": "rgba(79,195,247,0.18)", "width": 1},
+        line={"color": "rgba(0,158,115,0.22)", "width": 1},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Unsuccessful pass lines
 pass_u_xs, pass_u_ys = [], []
 for i in np.where(~pass_success)[0]:
     pass_u_xs.extend([pass_x[i], pass_end_x[i], None])
@@ -204,13 +208,14 @@ fig.add_trace(
         x=pass_u_xs,
         y=pass_u_ys,
         mode="lines",
-        line={"color": "rgba(79,195,247,0.08)", "width": 0.8, "dash": "dot"},
+        # raised from 0.08 → 0.18 so unsuccessful lines are visible in static render
+        line={"color": "rgba(0,158,115,0.18)", "width": 1, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Successful shot lines
+# --- Shot direction lines ---
 shot_s_xs, shot_s_ys = [], []
 for i in np.where(shot_success)[0]:
     shot_s_xs.extend([shot_x[i], shot_end_x[i], None])
@@ -220,13 +225,12 @@ fig.add_trace(
         x=shot_s_xs,
         y=shot_s_ys,
         mode="lines",
-        line={"color": "rgba(255,112,67,0.8)", "width": 2.5},
+        line={"color": "rgba(174,48,48,0.8)", "width": 2.5},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Unsuccessful shot lines
 shot_u_xs, shot_u_ys = [], []
 for i in np.where(~shot_success)[0]:
     shot_u_xs.extend([shot_x[i], shot_end_x[i], None])
@@ -236,13 +240,15 @@ fig.add_trace(
         x=shot_u_xs,
         y=shot_u_ys,
         mode="lines",
-        line={"color": "rgba(255,112,67,0.3)", "width": 2, "dash": "dot"},
+        line={"color": "rgba(174,48,48,0.35)", "width": 2, "dash": "dot"},
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Pass markers — circles
+# --- Event markers ---
+
+# Passes (circles)
 fig.add_trace(
     go.Scatter(
         x=pass_x[pass_success],
@@ -250,8 +256,8 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 11,
-            "color": pass_color,
-            "opacity": 0.9,
+            "color": PASS_COLOR,
+            "opacity": 0.92,
             "symbol": "circle",
             "line": {"width": 1.5, "color": "white"},
         },
@@ -259,7 +265,6 @@ fig.add_trace(
         hovertemplate="<b>Pass</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
-
 fig.add_trace(
     go.Scatter(
         x=pass_x[~pass_success],
@@ -267,17 +272,17 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 11,
-            "color": pass_color,
-            "opacity": 0.55,
+            "color": PASS_COLOR,
+            "opacity": 0.6,
             "symbol": "circle-open",
-            "line": {"width": 2, "color": pass_color},
+            "line": {"width": 2, "color": PASS_COLOR},
         },
         name="Pass (unsuccessful)",
         hovertemplate="<b>Pass (missed)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
 
-# Tackle markers — triangles
+# Tackles (triangles)
 fig.add_trace(
     go.Scatter(
         x=tackle_x[tackle_success],
@@ -285,7 +290,7 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 16,
-            "color": tackle_color,
+            "color": TACKLE_COLOR,
             "opacity": 0.95,
             "symbol": "triangle-up",
             "line": {"width": 1.5, "color": "white"},
@@ -294,7 +299,6 @@ fig.add_trace(
         hovertemplate="<b>Tackle</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
-
 fig.add_trace(
     go.Scatter(
         x=tackle_x[~tackle_success],
@@ -302,17 +306,17 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 16,
-            "color": tackle_color,
-            "opacity": 0.55,
+            "color": TACKLE_COLOR,
+            "opacity": 0.6,
             "symbol": "triangle-up-open",
-            "line": {"width": 2.5, "color": tackle_color},
+            "line": {"width": 2.5, "color": TACKLE_COLOR},
         },
         name="Tackle (unsuccessful)",
         hovertemplate="<b>Tackle (missed)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
 
-# Interception markers — diamonds
+# Interceptions (diamonds)
 fig.add_trace(
     go.Scatter(
         x=interception_x[interception_success],
@@ -320,7 +324,7 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 15,
-            "color": intercept_color,
+            "color": INTERCEPT_COLOR,
             "opacity": 0.95,
             "symbol": "diamond",
             "line": {"width": 1.5, "color": "white"},
@@ -329,7 +333,6 @@ fig.add_trace(
         hovertemplate="<b>Interception</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
-
 fig.add_trace(
     go.Scatter(
         x=interception_x[~interception_success],
@@ -337,17 +340,17 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 15,
-            "color": intercept_color,
-            "opacity": 0.55,
+            "color": INTERCEPT_COLOR,
+            "opacity": 0.6,
             "symbol": "diamond-open",
-            "line": {"width": 2.5, "color": intercept_color},
+            "line": {"width": 2.5, "color": INTERCEPT_COLOR},
         },
         name="Interception (unsuccessful)",
         hovertemplate="<b>Interception (missed)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
 
-# Shot markers — stars (drawn last, top layer)
+# Shots (stars — drawn last to sit above other event markers)
 fig.add_trace(
     go.Scatter(
         x=shot_x[shot_success],
@@ -355,7 +358,7 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 22,
-            "color": shot_color,
+            "color": SHOT_COLOR,
             "opacity": 0.95,
             "symbol": "star",
             "line": {"width": 2, "color": "white"},
@@ -364,7 +367,6 @@ fig.add_trace(
         hovertemplate="<b>Shot (on target)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
     )
 )
-
 fig.add_trace(
     go.Scatter(
         x=shot_x[~shot_success],
@@ -372,10 +374,10 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": 22,
-            "color": shot_color,
-            "opacity": 0.55,
+            "color": SHOT_COLOR,
+            "opacity": 0.6,
             "symbol": "star-open",
-            "line": {"width": 2.5, "color": shot_color},
+            "line": {"width": 2.5, "color": SHOT_COLOR},
         },
         name="Shot (off target)",
         hovertemplate="<b>Shot (off target)</b><br>x: %{x:.0f}m, y: %{y:.0f}m<extra></extra>",
@@ -391,21 +393,22 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1,
     arrowwidth=1.5,
-    arrowcolor="rgba(255,255,255,0.7)",
+    arrowcolor="rgba(255,255,255,0.75)",
     ax=0,
     ay=40,
-    font={"size": 14, "color": "white", "family": "Arial, sans-serif"},
-    bgcolor="rgba(0,0,0,0.45)",
-    bordercolor="rgba(255,255,255,0.4)",
+    font={"size": 13, "color": "white", "family": "Arial, sans-serif"},
+    bgcolor="rgba(27,27,23,0.82)",
+    bordercolor="rgba(255,255,255,0.45)",
     borderwidth=1,
     borderpad=6,
 )
 
 # Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "scatter-pitch-events · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "white", "family": "Arial Black, Arial, sans-serif"},
+        "text": "scatter-pitch-events · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK, "family": "Arial Black, Arial, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
@@ -428,24 +431,25 @@ fig.update_layout(
         "scaleanchor": "x",
         "scaleratio": 1,
     },
-    plot_bgcolor="#1B5E20",
-    paper_bgcolor="#1B5E20",
-    margin={"l": 20, "r": 20, "t": 60, "b": 20},
+    plot_bgcolor=PITCH_SURROUND,
+    paper_bgcolor=PAGE_BG,
+    margin={"l": 30, "r": 30, "t": 60, "b": 20},
     legend={
-        "font": {"size": 18, "color": "white"},
-        "bgcolor": "rgba(0,0,0,0.5)",
-        "bordercolor": "rgba(255,255,255,0.3)",
+        "font": {"size": 10, "color": "white", "family": "Arial, sans-serif"},
+        "bgcolor": "rgba(0,0,0,0.58)",
+        "bordercolor": "rgba(255,255,255,0.35)",
         "borderwidth": 1,
-        "x": 0.005,
+        # shifted right to sit clearly inside the pitch (avoids left-boundary overlap)
+        "x": 0.04,
         "y": 0.99,
         "xanchor": "left",
         "yanchor": "top",
         "itemsizing": "constant",
-        "tracegroupgap": 4,
+        "tracegroupgap": 3,
     },
     hoverlabel={"bgcolor": "white", "font_size": 14},
 )
 
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True)
+# Save — theme-suffixed filenames; 3200×1800 landscape target
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
