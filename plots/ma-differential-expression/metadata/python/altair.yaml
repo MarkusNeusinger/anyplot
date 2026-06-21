@@ -1,45 +1,55 @@
 library: altair
+language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:41:52Z'
-updated: '2026-03-20T10:55:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339077618
+updated: '2026-06-21T01:22:24Z'
+generated_by: claude-sonnet
+workflow_run: 27888994328
 issue: 4420
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/altair/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.2.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/altair/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent spec compliance with all required features (LOESS, reference lines,
-    gene labels, significance highlighting)
-  - Strong visual hierarchy with faded non-significant genes and colored/shaped significant
-    genes
-  - Good accessibility with redundant shape + color encoding and red-blue palette
-  - Fold-change background band elegantly contextualizes the ±1 thresholds
-  - Realistic RNA-seq data with real gene names and appropriate scales
-  - Clean well-structured Altair layer composition
+  - 'Complete spec compliance — all required MA plot features implemented: LOESS smoothing,
+    reference lines at 0 and ±1 FC, significant gene highlighting, and gene labeling'
+  - Semantic color assignment with shape redundancy (triangle-up/down) provides CVD-accessible
+    encoding without violating Imprint palette rules
+  - Realistic RNA-seq simulation with 15,000 genes and recognizable cancer gene names
+    (BRCA1, MYC, EGFR, PTEN, RB1, KRAS) adds scientific authenticity
+  - 'Idiomatic Altair: transform_loess built-in transform, selection_point hover interaction,
+    alt.condition for dynamic sizing, and layer composition via + operator'
+  - 'Both renders pass theme-adaptive chrome — correct warm backgrounds (#FAF8F1 light
+    / #1A1A17 dark) with fully legible text in both themes'
   weaknesses:
-  - MYC gene label may be partially hidden among dense data points
-  - Gene label font size (16pt) could be slightly larger for better readability
-  image_description: 'The plot displays an MA plot for differential gene expression
-    analysis. The title reads "ma-differential-expression · altair · pyplots.ai" in
-    dark text (~28pt) with a gray subtitle "RNA-seq differential expression: upregulated
-    (red) and downregulated (blue) genes". The x-axis is labeled "Mean Expression
-    (A)" (0-16) and the y-axis "Log₂ Fold Change (M)" (approximately -5 to 5). Non-significant
-    genes appear as very small, faint gray dots clustered around y=0. Upregulated
-    genes are shown as red triangles scattered above the y=1 dashed threshold line,
-    and downregulated genes as blue squares below the y=-1 dashed threshold. A light
-    blue-gray band shades the region between y=-1 and y=1. A solid dark line marks
-    y=0, and an orange LOESS smoothing curve runs nearly flat near y=0. Six genes
-    are labeled in italic bold: BRCA1 and EGFR among upregulated genes, and RB1, PTEN,
-    KRAS among downregulated genes. The legend in the upper right shows "Upregulated"
-    (red triangle) and "Downregulated" (blue square) with no border. The layout fills
-    the canvas well with balanced margins.'
+  - Gene labels use fontSize=10 which is small relative to the 3200×1800 canvas —
+    at mobile widths (~400px) the italic gene names (BRCA1, MYC, etc.) may become
+    difficult to read; consider fontSize=11–12
+  - PTEN and KRAS labels are visually close together in the downregulated zone (both
+    near x=5–7, y≈−4 to −5) — the collision-avoidance loop adjusts y but the labels
+    remain near each other, creating slight visual crowding
+  - Design excellence slightly below potential — the legend stroke border on an already
+    elevated-background legend adds visual weight; removing the stroke and using only
+    the fill difference would be cleaner (DE-02 refinement opportunity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "ma-differential-expression · python · altair · anyplot.ai" in dark ink (#1A1A17) at fontSize=16, fully visible. Subtitle "RNA-seq differential expression: upregulated (green) and downregulated (red) genes" in softer ink, readable. Axis labels "Mean Expression (A)" (x) and "Log₂ Fold Change (M)" (y) in dark ink at fontSize=12, clearly readable. Tick labels at fontSize=10, readable. Legend box top-right with elevated background, labeled "Upregulated" (green triangle-up) and "Downregulated" (red triangle-down) — text readable.
+      Data: 15,000 non-significant genes as tiny gray dots (opacity=0.2) forming the characteristic fan-shaped MA cloud. ~400 upregulated genes as green (#009E73) filled triangle-up markers. ~350 downregulated genes as red (#AE3030) filled triangle-down markers. Ochre (#BD8233) LOESS line nearly flat near y=0 showing good normalization. Horizontal solid rule at y=0 and dashed rules at y=±1. Subtle gray band between y=−1 and y=+1. Gene labels: BRCA1 (y≈4.2), MYC (y≈5.0), EGFR (y≈4.0) in upper half; RB1 (y≈−4.0), PTEN (y≈−4.5), KRAS (y≈−5.0) in lower half — italic bold, readable but small.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and subtitle rendered in light cream (#F0EFE8), fully visible. Axis labels in light ink, readable. Tick labels in softer light (#B8B7B0), readable. Legend text in light color, readable against elevated dark-charcoal (#242420) legend background. No dark-on-dark text failures detected.
+      Data: Data colors IDENTICAL to light render — upregulated genes remain #009E73 green (triangle-up), downregulated remain #AE3030 red (triangle-down), LOESS line remains ochre. Non-significant gray cloud adapts to slightly lighter muted tone against the dark background. Reference lines and ±1 band remain visible.
+      Legibility verdict: PASS — all text clearly readable against the dark background; brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -47,67 +57,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28, axes 22, ticks 18, labels
-          16). Gene labels at 16pt adequate but slightly small.
+        comment: Title, axis labels, tick labels all readable in both themes. Gene
+          labels at fontSize=10 are legible at full resolution but may be marginal
+          at mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean. MYC label may be partially obscured by surrounding
-          data points.
+        comment: No text-on-text overlap; PTEN and KRAS labels are close together
+          but do not overlap. Dense non-significant cloud handled with alpha.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Non-significant genes appropriately faded (size=20, opacity=0.25)
-          for 15K points. Significant genes visible at size=80 with shapes.
+        comment: 'Excellent density handling: small/faint non-sig markers (size=15,
+          opacity=0.2), prominent sig markers (size=50, shapes), LOESS and reference
+          lines all clearly visible.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red-blue palette avoids red-green issue. Shape encoding provides
-          redundant accessibility channel.
+        comment: Red-green pairing mitigated by redundant shape encoding (triangle-up
+          for upregulated, triangle-down for downregulated). CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins.
+        comment: 'Canvas gate passed. Good proportions: legend top-right, title centered,
+          axis labels balanced. No overflow or clipping detected.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Mean Expression (A), Log₂ Fold
-          Change (M).'
+        comment: 'X: ''Mean Expression (A)'', Y: ''Log₂ Fold Change (M)'' — both descriptive
+          with dimension notation. Subtitle adds domain context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Upregulated=#009E73 (pos 1), Downregulated=#AE3030 (pos 5 semantic
+          anchor for loss). Semantic exception correctly applied. LOESS=#BD8233 (pos
+          4). Backgrounds correct. Both renders theme-correct.
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, shape encoding, fold-change band, white stroke on
-          markers. Above configured defaults.
+        comment: 'Above default: semantic colors, shape redundancy, background FC
+          band, interactive hover with dynamic sizing, label collision avoidance.
+          Not maximally polished but meaningfully above generic.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Domains removed, view border removed, subtle dotted grid (opacity=0.12),
-          generous whitespace.
+        comment: 'Above default: transparent view stroke, grid opacity 0.15, low-alpha
+          non-sig cloud, elevated legend background. Legend border stroke adds minor
+          visual weight.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: 'Strong hierarchy: faded non-sig, colored/shaped sig, fold-change
-          band, LOESS curve, labeled top DE genes.'
+        comment: 'Above default: strong visual hierarchy between sig/non-sig genes,
+          LOESS curve reveals normalization quality, reference lines provide interpretive
+          anchors. Clear focal point on significant gene clusters.'
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +141,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot.
+        comment: 'Correct MA plot: mean expression (A) on x, log fold change (M) on
+          y, scatter format.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: highlighting, reference lines, LOESS,
-          transparency, gene labels.'
+        comment: 'All spec features present: significant gene highlighting, horizontal
+          reference line at 0, dashed lines at ±1, LOESS smoothing, alpha transparency
+          (~0.2), gene labeling (BRCA1, MYC, EGFR, PTEN, RB1, KRAS).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean expression, Y=log fold change, correctly mapped.
+        comment: X=mean_expression (A), Y=log_fold_change (M), color+shape=significance
+          status. All axes show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels match data.
+        comment: 'Title: ''ma-differential-expression · python · altair · anyplot.ai''
+          — correct format. Legend: ''Upregulated'' / ''Downregulated'' with correct
+          colors and shapes.'
     data_quality:
       score: 15
       max: 15
@@ -146,21 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows up/downregulated genes, varying expression levels, LOESS bias
-          pattern.
+        comment: 'All MA plot features shown: dense non-sig cloud, sig gene clusters,
+          LOESS trend, reference lines, gene labels, fan shape at low expression.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: RNA-seq context with real gene names. Scientific, neutral domain.
+        comment: 15,000 genes (typical whole-transcriptome), 750 significant (~5%
+          rate), realistic log FC range (±1 to ±4.5), real cancer gene names, fan-shaped
+          spread. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15K genes, log2 FC in ±5 range, mean expression 0-16. Realistic for
-          RNA-seq.
+        comment: Mean expression 0.1–16 (appropriate for normalized counts), log FC
+          axis −6 to +6, gene counts match DESeq2-typical output.
     code_quality:
       score: 10
       max: 10
@@ -170,33 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure.
+        comment: No functions or classes. Linear flat structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas — all used.
+        comment: os, altair, numpy, pandas, PIL — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean layer composition.
+        comment: Clean layer composition, appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with scale_factor=3.0. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Pillow padding to exact
+          3200×1800 target. altair 6.2.1 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -204,29 +236,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good declarative grammar usage, encoding channels, layer composition,
-          configure methods.
+        comment: 'Above default: layer composition (+), proper type suffixes (:Q/:N),
+          configure_* global theming, alt.Legend configuration, alt.condition for
+          interactive size.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: transform_loess, selection_point hover, tooltips, shape encoding,
-          layer composition.
+        comment: 'Above default: transform_loess (Vega built-in statistical transform),
+          selection_point for hover interaction, alt.condition for dynamic marker
+          sizing, HTML+PNG dual export.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
-  dataprep:
-  - loess
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting

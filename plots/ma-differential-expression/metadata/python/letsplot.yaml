@@ -1,87 +1,118 @@
 library: letsplot
+language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:40:13Z'
-updated: '2026-03-20T10:53:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339077546
+updated: '2026-06-21T01:17:22Z'
+generated_by: claude-sonnet
+workflow_run: 27889167805
 issue: 4420
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/letsplot/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent data storytelling with strong visual hierarchy (muted non-sig, colored
-    significant, labeled top genes)
-  - Realistic cancer biology context with real gene names and appropriate data scales
-  - All spec features fully implemented including LOESS curve and fold-change threshold
-    lines
-  - Good use of lets-plot specific features (layer_tooltips, HTML export)
-  - Clean, well-structured code with proper reproducibility
+  - 'Perfect spec compliance — all required features present: reference line at M=0,
+    dashed ±1 LFC thresholds, LOESS bias curve, transparency for overplotting, significance-coded
+    colors, and gene labels with leader segments'
+  - 'Excellent three-tier visual hierarchy: muted gray non-significant cloud (alpha=0.20),
+    vivid Imprint-colored significant genes (alpha=0.70), and amber LOESS diagnostic
+    curve — viewer immediately reads the story'
+  - 'Semantic color assignment is justified and on-palette: green (#009E73) for up-regulation,
+    matte red (#AE3030) for down-regulation, amber (#DDCC77) for the LOESS caution
+    indicator — all correct Imprint anchors'
+  - Realistic cancer biology context with real gene names (FOXM1, CDK1, MYC, EGFR,
+    CDKN1A, RB1, BRCA2, TP53) and biologically plausible distribution including funnel-shape
+    heteroscedasticity at low expression
+  - 'Theme-adaptive chrome fully implemented: PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    INK_MUTED all branch on ANYPLOT_THEME — both renders are clean and readable'
+  - Uses letsplot-specific layer_tooltips() for interactive HTML export with formatted
+    gene data — genuinely distinctive feature with dual PNG+HTML output
+  - 'Clean KISS code structure: seed set (np.random.seed(42)), no functions/classes,
+    all imports used, correct ggsave API with scale=4'
   weaknesses:
-  - Gene label placement could be slightly improved (FOXM1/MYC proximity)
-  - Could leverage lets-plot ggplot(df) single-data approach more idiomatically instead
-    of splitting into separate DataFrames
-  image_description: The plot displays an MA plot for differential gene expression
-    with Mean Expression (A) on the x-axis (0-16) and Log2 Fold Change (M) on the
-    y-axis (-7 to +7). Non-significant genes appear as small, light gray dots with
-    low opacity forming a characteristic funnel shape (wider variance at low expression).
-    Up-regulated significant genes are shown in coral/red and down-regulated in steel
-    blue, both with higher opacity and larger markers. A solid black horizontal line
-    marks M=0, with gray dashed lines at M=+/-1 (2-fold change thresholds). An amber/gold
-    LOESS smoothing curve runs nearly flat along M=0. Eight labeled genes (FOXM1,
-    MYC, CDK1, EGFR up-regulated; BRCA2, TP53, RB1, CDKN1A down-regulated) have white-background
-    label boxes connected to their data points by dotted leader lines. The legend
-    at the bottom shows Regulation with Up-regulated and Down-regulated categories.
-    The title reads ma-differential-expression · letsplot · pyplots.ai in bold.
+  - 'Gene labels slightly small (geom_label size=4 mm) — on the dark render, down-regulated
+    red labels (#AE3030 on #242420 elevated background) have borderline contrast (~3.2:1);
+    consider size=5 and adding INK border stroke to label boxes for the dark theme'
+  - 'LM-02: layer_tooltips is a good start but letsplot''s full distinctive feature
+    set is underused — consider adding geom_livemap / coord_flip / more interactive
+    aes mappings to push library mastery higher'
+  - 'DE-02: Minor refinement opportunity — the legend box border uses INK_SOFT which
+    is visible but could use a thinner stroke; legend title ''Regulation'' is redundant
+    given clear color semantics in the axis labels'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "ma-differential-expression · python · letsplot · anyplot.ai" is dark ink, readable at ~75% of canvas width. X-axis label "Mean Expression (A)" and Y-axis label "Log₂ Fold Change (M)" are dark ink, well-sized at 12pt. Tick labels in INK_SOFT (#4A4A44), clearly readable. Subtle horizontal-only grid in muted tone. Legend at bottom with "Regulation ● Up-regulated ● Down-regulated" — both labels clear.
+      Data: 14,200 non-significant genes as a dense muted gray cloud (alpha=0.20, INK_MUTED). 420 up-regulated genes in Imprint green (#009E73, alpha=0.70) fanning above the reference band. 380 down-regulated in Imprint matte red (#AE3030, alpha=0.70) below. LOESS curve in amber (#DDCC77) running horizontally near M=0 revealing near-zero systematic bias. Solid reference line at M=0, dashed lines at M=±1 visible. Eight gene labels (MYC, FOXM1, CDK1, EGFR, BRCA2, TP53, RB1, CDKN1A) with dotted leader segments — all readable.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text (#F0EFE8), clearly visible. Axis labels and tick labels in INK_SOFT (#B8B7B0 dark) — all readable. Grid lines subtle in dark mode. Legend text visible against dark elevated background (#242420).
+      Data: Data colors IDENTICAL to light render — green (#009E73) up-regulated, red (#AE3030) down-regulated, gray muted non-significant cloud. LOESS amber (#DDCC77) is notably more visually prominent on the dark surface (bright band effect) which is appropriate — it draws attention as a diagnostic indicator. Gene labels with colored text (green/red matching series) on dark elevated-bg label boxes; green labels read well, red labels (#AE3030 on #242420) are borderline but still readable at full resolution.
+      Legibility verdict: PASS — all chrome is light-on-dark, no dark-on-dark failures; minor note that red gene labels have lower contrast in dark mode (~3.2:1 on elevated bg)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          text 16pt, legend 15-16pt'
+        comment: All font sizes explicitly set (title=16, axis=12, tick=10, legend=10).
+          Gene labels (geom_label size=4mm) are on the small side but readable. All
+          text clear in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Custom per-label nudge with leader lines; FOXM1/MYC slightly close
-          but readable
+        comment: Gene labels nudged with offsets and connected via dotted segments
+          — no overlap. Dense scatter uses alpha to avoid visual collision.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Non-sig at size 1.2/alpha 0.25 handles 15K density well; sig points
-          clearly visible at size 2.5/alpha 0.65
+        comment: 'Excellent density adaptation: non-sig at size=1/alpha=0.20, sig
+          at size=2.5/alpha=0.70. Markers clearly distinguishable.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Red-blue diverging scheme is colorblind-safe with good contrast
+        comment: Imprint palette is CVD-optimized. Green/red distinction has sufficient
+          luminance delta. Amber LOESS provides additional visual channel.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: ggsize(1600,900) scaled 3x fills canvas well with balanced margins
+        comment: Canvas 3200×1800 correct. Plot fills canvas well, legend at bottom
+          close to data, generous margins via plot_margin=[30,20,10,20].
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with notation: Mean Expression (A), Log2 Fold
-          Change (M)'
+        comment: 'X: ''Mean Expression (A)'', Y: ''Log₂ Fold Change (M)'' — both descriptive
+          with notation. Title in correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series = #009E73 (up-regulated). Down-regulated
+          = #AE3030 (Imprint semantic red for loss). LOESS = amber anchor. Non-sig
+          = muted anchor. Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,22 +120,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Intentional color hierarchy, white-background gene labels with colored
-          text, amber LOESS curve
+        comment: 'Strong design: semantic Imprint colors, intentional three-tier hierarchy
+          (muted→significant→reference), warm backgrounds, gene labels with leader
+          segments. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal, removed x-grid and minor grid, bottom legend, good
-          whitespace
+        comment: 'Good refinement: x-grid suppressed, y-grid subtle (size=0.2, INK_SOFT),
+          theme_minimal removes top/right spines, generous margins. Legend box styled
+          with ELEVATED_BG fill.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong visual hierarchy: muted non-sig, colored significant, labeled
-          top cancer biology genes'
+        comment: Visual hierarchy guides reader from neutral gray cloud to vivid significant
+          genes. LOESS curve reveals near-zero bias. Reference lines at ±1 provide
+          biological threshold context. Gene labels contextualize key DEGs.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot with M vs A
+        comment: 'MA plot correctly implemented: M (log2FC) on Y, A (mean expression)
+          on X.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: significant highlighting, reference lines, LOESS,
-          alpha, gene labels'
+        comment: 'All features: significance coloring, M=0 reference line, ±1 dashed
+          thresholds, LOESS curve, alpha transparency, gene name labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Mean expression on x, log fold change on y, full data range shown
+        comment: X=mean_expression (A), Y=log_fold_change (M). Axes span full data
+          range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format and legend labels
+        comment: 'Title: ''ma-differential-expression · python · letsplot · anyplot.ai''
+          — correct format. Legend shows Regulation with Up-regulated/Down-regulated.'
     data_quality:
       score: 15
       max: 15
@@ -143,22 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows up/down/non-sig genes, expression-dependent variance, range
-          of fold changes
+        comment: 'Shows all aspects: non-significant cloud, up-regulated genes, down-regulated
+          genes, funnel shape at low expression, LOESS bias, gene labels, thresholds.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real cancer biology gene names, realistic RNA-seq scenario with 15K
-          genes
+        comment: Real cancer biology with authentic gene names (FOXM1, CDK1, MYC,
+          EGFR, CDKN1A, RB1, BRCA2, TP53). Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Expression 0.5-15, fold changes up to +/-5.5, ~800 significant out
-          of 15K
+        comment: Expression 0.5-15 and LFC ±6 are biologically plausible. ~800 DEGs
+          / 15,000 genes (~5.3%) is realistic for a typical RNA-seq experiment.
     code_quality:
       score: 10
       max: 10
@@ -168,55 +205,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports-Data-Plot-Save structure, no functions/classes
+        comment: Imports → Data → Plot → Save with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imported symbols are used in the implementation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized, custom nudge necessary for label placement
+        comment: Clean layered ggplot composition. layer_tooltips() is legitimate
+          (letsplot is interactive, exports HTML).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via export_ggsave with scale=3, also exports HTML
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
+          with scale=4.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Good ggplot grammar usage; minor: separate DataFrames instead of
-          single ggplot(df)'
+        comment: Expert ggplot/aes/geom_* composition, correct data-layer separation
+          (df_nonsig / df_sig), proper scale_color_manual and theme layering.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips() for interactive hover, HTML export alongside
-          PNG
+        comment: Uses layer_tooltips() for interactive HTML export with formatted
+          fields — a letsplot-specific feature. Dual PNG+HTML output leverages the
+          library's interactive nature. Could push further with faceting or coordinated
+          views.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -224,4 +265,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - minimal-chrome
