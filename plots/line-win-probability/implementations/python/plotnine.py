@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-21
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-21
 """
 
 import os
