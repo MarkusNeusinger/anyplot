@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:23:28Z'
-updated: '2026-06-21T09:44:40Z'
+updated: '2026-06-21T09:58:08Z'
 generated_by: claude-sonnet
 workflow_run: 27900038382
 issue: 4413
@@ -12,122 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stre
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Complete spec coverage: all four required annotations (region labels, critical
-    points, 0.2% offset line, Young''s modulus) are present and correct'
-  - 'Excellent semantic color use: lavender for yield, ochre for UTS, matte red for
-    fracture maps engineering meaning to Imprint palette positions intuitively'
-  - 'Strong theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED) correctly
-    wired to configure_axis/configure_title/configure_legend; no dark-on-dark failures'
-  - 'Idiomatic Altair: layer composition, selection_point hover, detail encoding for
-    grouped lines, interactive HTML output'
-  - 'Realistic engineering data: mild steel values are textbook-accurate'
+  - Perfect spec compliance — all required engineering annotations implemented correctly
+    (region labels, key points, E-modulus slope, 0.2% offset construction)
+  - Semantic Imprint palette assignment for key points (lavender/ochre/red = stable/peak/failure)
+    is an intuitive, informed design choice
+  - Both themes render cleanly with no chrome adaptation failures; all text readable
+    against both backgrounds
+  - Realistic mild steel material parameters (E=210,000 MPa, yield=250 MPa, UTS=400
+    MPa) — factually accurate
+  - 'Idiomatic Altair usage: nearest-point hover selection with alt.condition opacity,
+    proper declarative layer composition, connector grouping via detail encoding'
+  - Canvas-padding + overflow guard pattern correctly implemented
   weaknesses:
-  - '"Yield Point (0.2% offset)" displaced label at (Strain≈0.055, Stress≈290 MPa)
-    overlaps the stress-strain curve — move label to strain≈0.08 or increase y-offset
-    by ~20 MPa to clear the line'
-  - X-axis rightmost tick labels 0.38 and 0.40 are crowded/overlapping — reduce x_scale
-    domain end to 0.38 or increase chart width slightly to give ticks more room
-  - 'Elastic region is visually crowded: the dashed 0.2% offset line, dashed Young''s
-    modulus slope, yield point marker, displaced label, and connector lines all compete
-    in a narrow strain band (0–0.02); consider simplifying the connector from yield
-    point to its label'
+  - Key-point bold labels at fontSize=17 exceed the title at fontSize=16 — inverted
+    typographic hierarchy; reduce point labels to fontSize=14
+  - 'Elastic zone (strain 0–0.02) is visually dense: slope indicator, offset line,
+    yield marker, and two text labels all compressed into ~5% of chart width — consider
+    repositioning 0.2% offset label to strain ~0.015'
+  - 'LM-02 gap: data preparation uses imperative numpy/pandas rather than Altair declarative
+    transforms (transform_calculate, transform_fold)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-stress-strain · python · altair · anyplot.ai" in bold dark ink, readable. Subtitle in muted gray. Axis labels "Engineering Strain" and "Engineering Stress (MPa)" in dark ink. Tick labels in secondary dark (#4A4A44). All chrome elements clearly readable against light background.
-      Data: Main stress-strain curve in brand green (#009E73). Key points: Yield Point in lavender (#C475FD), UTS in ochre (#BD8233), Fracture in matte red (#AE3030). Dashed 0.2% offset line in muted gray. Young's modulus slope line in brand green (dashed). Region labels "Elastic", "Strain Hardening", "Necking" in italic muted text. All data colors from Imprint palette.
-      Issues: "Yield Point (0.2% offset)" label text at strain≈0.055 overlaps the stress-strain curve line. X-axis rightmost tick labels 0.38 and 0.40 are crowded/running together. "Elastic" text overlaps dashed vertical separator line visually.
-      Legibility verdict: PASS (overlaps are minor, all text is technically readable)
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-stress-strain · python · altair · anyplot.ai" in dark ink (#1A1A17) — readable. Subtitle in muted gray (#A8A79F) — readable. Axis titles "Engineering Strain" (x) and "Engineering Stress (MPa)" (y) in dark ink — readable. Tick labels at 10pt in #4A4A44 — readable. Region labels ("Elastic", "Strain Hardening", "Necking") in italic muted gray — readable. Key point bold labels in semantic Imprint colors (lavender/ochre/red) — readable. Modulus annotation "E = 210,000 MPa" in brand green bold — readable. "0.2% offset" in light gray italic — readable.
+      Data: Main stress-strain curve in #009E73 (brand green) at strokeWidth=3 — correctly first series. Key point markers: lavender (#C475FD) for yield, ochre (#BD8233) for UTS, matte red (#AE3030) for fracture. All with white strokes for definition. Imprint palette positions 1, 2, 4, 5 used with semantic justification.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels appear in near-white (#F0EFE8), tick labels in light secondary (#B8B7B0), "0.2% offset" annotation in muted silver (#B8B7B0). All text readable against dark background. No dark-on-dark failures detected.
-      Data: Data colors are IDENTICAL to light render — brand green curve (#009E73), lavender yield point (#C475FD), ochre UTS (#BD8233), matte red fracture (#AE3030). Imprint palette consistency confirmed.
-      Issues: Same overlap issues as light render (yield label vs curve, 0.38/0.40 tick crowding).
-      Legibility verdict: PASS — brand green #009E73 clearly visible on dark surface; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in cream #F0EFE8 (INK token dark) — readable. Subtitle in #A8A79F (INK_MUTED dark) — readable. Axis titles in #F0EFE8 — readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable. Region labels in #A8A79F — readable. Key point labels in semantic colors — readable. Modulus annotation in brand green — readable. Offset label in #B8B7B0 — readable. No dark-on-dark failures detected.
+      Data: Main curve still in #009E73 — identical to light render. Key point markers (lavender/ochre/matte red) — identical to light render. All Imprint data colors unchanged between themes.
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set; both themes readable. Minor: Yield Point
-          label overlaps curve at strain≈0.055; x-axis rightmost ticks 0.38/0.40 crowded.'
+        comment: 'All font sizes explicitly set; readable in both themes. Minor: key-point
+          labels at fontSize=17 exceed title at fontSize=16 (inverted hierarchy);
+          elastic zone annotations compressed into narrow horizontal band.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Yield Point (0.2% offset) label overlaps stress-strain curve line.
-          X-axis 0.38/0.40 tick labels overlap. Elastic label overlaps dashed separator.
+        comment: No hard text-on-text overlaps. Connector lines pass through data
+          area; elastic zone is moderately dense with multiple graphical elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All data elements clearly visible. Main curve strokeWidth=3, key
-          points size=450 are prominent in both themes.
+        comment: Main curve at strokeWidth=3 prominent. Key point markers at size=450
+          with white strokes clearly visible. All annotation elements visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint CVD-optimised palette; text labels provide redundant encoding
-          for key points.
+        comment: Imprint palette; lavender/ochre/matte-red are CVD-distinguishable
+          across 4 hue families. White stroke adds redundant contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Correct padded canvas approach. Title ~50% width.
-          Minor crowding in elastic region.
+        comment: Canvas gate passed. Good proportions. Title at ~53% of width (appropriate
+          for 49-char title). No text overflow or edge clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Engineering Strain (x) and Engineering Stress (MPa) (y) with units.
-          Mandated title format correct. Descriptive subtitle.
+        comment: 'X: Engineering Strain; Y: Engineering Stress (MPa) — both descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Primary curve #009E73. Semantic exceptions: lavender=Yield, ochre=UTS,
-          matte-red=Fracture. Background #FAF8F1/#1A1A17. Both renders theme-correct.'
+        comment: 'Brand green #009E73 first series. Imprint positions 2/4/5 for key
+          points with semantic justification. Correct backgrounds. Theme-adaptive
+          chrome.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: semantic color assignment, displaced labels with
-          connectors, subtitle, interactive hover. Elastic region slightly crowded
-          with competing elements.'
+        comment: Strong design — semantic Imprint color assignment for key points,
+          multi-layer composition (11 layers), typographic hierarchy (bold/italic/weight
+          variations), dashed connector lines styled as subtle leaders. Engineering-publication
+          quality; not FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid disabled; clean minimal look; no visible top/right spines; connector
-          lines in muted dashes.
+        comment: No grid (appropriate), no view frame (strokeWidth=0), white stroke
+          on markers, theme-adaptive chrome fully implemented. Elastic annotation
+          zone moderately cramped.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear left-to-right narrative through elastic→strain hardening→necking;
-          key mechanical properties highlighted; good focal point on curve shape.
+        comment: Clear material behavior narrative; semantic color progression conveys
+          stability-to-failure arc; region labels guide viewer through mechanical
+          stages. Most storytelling elements are spec-mandated.
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for engineering stress-strain curve.
+        comment: Line plot stress-strain curve — correct type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements: region labels (Elastic/Strain Hardening/Necking),
-          critical points (Yield/UTS/Fracture), Young''s modulus annotation, 0.2%
-          offset line.'
+        comment: 'All features: region labels, key points (yield/UTS/fracture), Young''s
+          modulus slope+label, 0.2% offset construction line+label.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: strain (0-0.40), Y: stress (0-460 MPa); all data visible within
-          domain.'
+        comment: X=strain, Y=stress(MPa). Full curve from 0 to fracture. All four
+          behavioral regions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Key points labeled directly with text
-          annotations (no redundant legend needed).
+        comment: 'Title: line-stress-strain · python · altair · anyplot.ai — exact
+          format. Direct bold labels used instead of legend — appropriate and cleaner.'
     data_quality:
       score: 15
       max: 15
@@ -169,22 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four curve regions shown; all three critical points; 0.2% offset
-          method illustrated; E annotated.
+        comment: 'All four regions: elastic (E=210k slope), yield plateau (near-flat
+          at 250 MPa), strain hardening (power-law curve to UTS), necking (power-law
+          decay to fracture). Three key engineering parameters explicitly marked.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Mild steel: E=210,000 MPa, yield=250 MPa, UTS=400 MPa, fracture
-          at ~0.35 strain — textbook-accurate values.'
+        comment: Mild steel tensile test — canonical, widely-recognized, neutral engineering
+          material.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Strain 0-0.40 and stress 0-400 MPa are correct for mild steel tensile
-          testing.
+        comment: E=210,000 MPa, yield=250 MPa, UTS=400 MPa, fracture strain=0.35 —
+          all correct for mild/low-carbon steel.
     code_quality:
       score: 10
       max: 10
@@ -194,53 +197,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-level script, no functions or classes.
+        comment: Pure top-level script. importlib workaround for altair.py filename
+          conflict is correct.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: importlib disambiguation technique is legitimate; PIL used for canvas
-          padding; all imports used.
+        comment: All imports actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; .interactive() and selection_point provide
-          real Altair HTML interactivity.
+        comment: Clean variable naming, logical structure. connector grouping via
+          detail encoding is idiomatic Altair. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API;
-          canvas raise/pad logic correct.
+        comment: Saves plot-{THEME}.png with PIL canvas-padding and plot-{THEME}.html.
+          Current Altair 6.2.1 API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: alt.layer() composition, proper Q/N encoding types, shared alt.Scale
+          across layers, alt.Title with subtitle, configure_* chain, detail encoding
+          for connector grouping — fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct layer composition, typed field notation (Q/N), configure_*
-          for theme, alt.Scale() for domain/range, alt.condition() for opacity.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: alt.layer() multi-layer composition, selection_point with nearest=True
-          for hover, detail='group:N' for connector line grouping — distinctively
-          Altairian patterns.
+        comment: 'alt.selection_point(nearest=True) hover selection, alt.condition
+          for reactive opacity, HTML export, 11-layer composition. Minor gap: data
+          prep in numpy/pandas rather than Altair declarative transforms.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -248,10 +252,11 @@ impl_tags:
   techniques:
   - layer-composition
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   dataprep: []
   styling:
   - edge-highlighting
+  - alpha-blending
