@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21

@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:40:53Z'
-updated: '2026-06-21T01:04:51Z'
+updated: '2026-06-21T01:20:14Z'
 generated_by: claude-sonnet
 workflow_run: 27888865638
 issue: 4420
@@ -15,42 +15,41 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all MA plot features present (reference lines, LOESS,
-    significance tiers, gene labels)'
-  - 'Semantic Imprint palette mapping is correct for this domain: up→green, down→red,
-    non-sig→muted, threshold lines→amber'
-  - Two-layer scatter strategy (alpha=0.3 background + alpha=0.6 emphasis) correctly
-    handles 15k-point density
-  - 'Complete theme adaptation: both renders pass all chrome checks, correct backgrounds,
-    zero dark-on-dark failures'
-  - Realistic RNA-seq data with real gene names and biologically plausible proportions
-    and DE rates
+  - 'Semantic color mapping: Up=green (#009E73/gain), Down=red (#AE3030/loss), Significant=lavender
+    (#C475FD), NSig=INK_MUTED — all semantically justified by biology and Imprint
+    palette anchors'
+  - Two-layer scatter (background noise at small alpha + emphasis layer for DE genes)
+    creates excellent visual hierarchy with clean composition
+  - Bootstrap CI for LOESS trend (80 iterations on 2k subsample) provides uncertainty
+    quantification matching seaborn own CI-band methodology
+  - Gene labels (BRCA1, TP53, MYC, EGFR, VEGFA, IL6) spatially distributed across
+    expression range with arrowhead annotations for biological context
+  - In-plot No expression bias annotation delivers the key MA plot conclusion directly
+    on the chart
+  - 'Perfect spec compliance: all required features (reference lines, LOESS, alpha,
+    gene labels) correctly implemented'
   weaknesses:
-  - 'DE-01 (5/8): Aesthetic polish is above defaults but not publication-ready. Gene
-    annotation boxes use basic round-corner bbox — refine offset strategy or thinner
-    arrowheads.'
-  - 'DE-02 (4/6): Whitespace could be more generous; annotation boxes could use thinner
-    linewidth (0.4) for a cleaner look.'
-  - 'DE-03 (4/6): LOESS flatness (≈ no expression-dependent bias) is the analytical
-    headline but is not called out visually — add a brief in-plot annotation next
-    to the LOESS line (e.g., "No expression bias" in INK_MUTED at 7.5-8pt italic).'
-  - 'VQ-01 (7/8): Gene annotation labels and threshold text at 7pt are at the lower
-    legibility boundary for 400px mobile thumbnails — raise to 7.5–8pt.'
-  - 'LM-02 (3/5): Only one seaborn-distinctive feature used (sns.regplot lowess=True);
-    explore adding a confidence band around the LOESS or a marginal sns.kdeplot to
-    differentiate from pure matplotlib.'
+  - LOESS trend line (blue) has no legend entry; the 95% CI label in the legend describes
+    the CI band but the trend line itself is not labeled there — viewers unfamiliar
+    with MA plots must infer its meaning from the floating No expression bias text
+    annotation
+  - Significant lavender dots (p<0.05 but |LFC|<1) merge into the gray background
+    cloud in dense low-expression region — slightly larger size or higher alpha for
+    this category would improve their visual distinctness
+  - DE-03 storytelling limited by unlabeled LOESS line; adding a small LOESS trend
+    label to the line (via ax.lines or custom legend handle) would complete the narrative
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ma-differential-expression · python · seaborn · anyplot.ai" at 12pt — clearly readable in dark ink; X-axis label "Mean Expression (A)" and Y-axis label "Log₂ Fold Change (M)" at 10pt — readable; tick labels at 8pt — readable; gene annotation labels at 7pt — readable at full resolution, marginal at 400px mobile; threshold labels "2-fold ↑"/"2-fold ↓" at 7pt — readable; legend in upper-right with "Gene Status" title
-      Data: Up-regulated in #009E73 (brand green); Down-regulated in #AE3030 (matte red); Significant (sub-threshold) in #C475FD (lavender); Not significant in INK_MUTED gray; LOESS trend line in #4467A3 (blue); threshold lines in #DDCC77 (amber dashed); reference line at M=0 in INK_SOFT
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "ma-differential-expression · python · seaborn · anyplot.ai" in dark medium-weight text, clearly readable. Axis labels "Mean Expression (A)" (x) and "Log₂ Fold Change (M)" (y) at 10pt in dark ink, balanced. Tick labels at 8pt in INK_SOFT (#4A4A44), clearly readable. Legend titled "Gene Status" with elevated-bg frame.
+      Data: Up-regulated dots in brand green #009E73 scattered above y=0; Down-regulated in matte red #AE3030 below y=0; Not-significant in INK_MUTED gray forming dense background cloud; Significant in lavender #C475FD mixed into gray cloud. Blue (#4467A3) LOESS line and subtle CI band near y=0. Amber (#DDCC77) dashed threshold lines at ±1 with "2-fold ↑/↓" annotations. Six gene annotation boxes (TP53, MYC, VEGFA, BRCA1, EGFR, IL6) distributed across expression range. First series #009E73 confirmed.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 range) — clearly readable against dark background; legend uses #242420 elevated dark frame; gene annotation boxes use dark elevated surface; NO dark-on-dark failures observed — all text elements are light-colored; annotation arrows in INK_SOFT (#B8B7B0) visible
-      Data: Data colors are IDENTICAL to light render — green up-regulated, matte red down-regulated, lavender significant, muted gray non-significant, blue LOESS, amber threshold lines; Imprint palette positions hold constant across both themes as required
-      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and all axis labels render in light cream/off-white (#F0EFE8), clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT for dark). Legend box in elevated-bg #242420 with light text — no dark-on-dark issues. Gene annotation boxes in #242420 with INK (#F0EFE8) text — readable.
+      Data: Data colors identical to light render — green up-regulated, red down-regulated, lavender significant, gray not-significant. Blue LOESS line and subtle CI band visible. Amber threshold lines clearly visible against dark background. No color drift between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -61,77 +60,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; 7pt annotation/threshold labels marginal
-          at mobile widths
+        comment: 'All text readable in both themes. Title 12pt, axis labels 10pt,
+          tick/annotation labels 8pt. Minor: 2-fold annotations at 8pt amber are small
+          at mobile scale; gene labels bold for compensation.'
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Gene labels spatially distributed with arrows; no text-on-text collision
-          in either render
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Good density adaptation for 15k points; Significant lavender at s=14+alpha=0.3
-          slightly subtle in dense regions
+        comment: 'Gene annotations well-spaced. Minor: Significant lavender dots difficult
+          to distinguish from gray cloud in dense low-expression region.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent density handling: 15k genes use alpha=0.3 + small markers
+          background layer, DE genes at alpha=0.6 size=20 emphasis layer. LOESS line
+          linewidth=2.0 prominent.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-optimised; redundant size encoding reduces hue-only
-          reliance
+        comment: Semantic green/red for up/down justified. Imprint palette is CVD-optimized.
+          Spatial separation (up above, down below y=0) provides redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced margins via subplots_adjust;
-          legend inside plot
+        comment: Canvas gate passed (3200x1800). figsize=(8,4.5) dpi=400. subplots_adjust
+          gives good proportions. No overflow. No bbox_inches=tight.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mean Expression (A) and Log2 Fold Change (M) are descriptive with
-          units
+        comment: Mean Expression (A) and Log2 Fold Change (M) descriptive with correct
+          notation. Title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Semantic exception correctly applied; all colors from Imprint palette
-          or semantic anchors; backgrounds correct in both themes
+        comment: 'First series (Up-regulated) uses #009E73. Semantic exception justified:
+          Up=green(gain), Down=red(loss). Backgrounds #FAF8F1/#1A1A17 correct in both
+          renders.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured default: semantic color assignment, dual-layer
-          rendering, theme-adaptive annotations; not yet at FiveThirtyEight polish
-          level'
+        comment: 'Genuine sophistication: semantic color mapping, two-layer scatter,
+          bootstrap CI for LOESS uncertainty, in-plot No expression bias annotation
+          as data storytelling, threshold annotations with directional context.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid alpha=0.15, explicit margin control;
-          annotation boxes could be slightly more refined
+        comment: sns.despine, y-axis grid subtle (alpha=0.15), elevated-bg annotation
+          boxes (linewidth=0.4 borders), thin arrowheads (lw=0.6), legend framealpha=0.92.
+          Good refinement above defaults but not exceptional.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: 3-tier visual hierarchy with size+color; LOESS reveals expression
-          bias insight; named gene labels add narrative; core LOESS finding not foregrounded
-          with annotation
+        comment: Clear focal points, No expression bias in-plot annotation, gene labels
+          with cancer gene names for biological context. Limited by LOESS trend line
+          not labeled in legend.
     spec_compliance:
       score: 15
       max: 15
@@ -141,27 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MA plot: M (log2 fold change) on Y vs A (mean expression)
-          on X'
+        comment: 'Correct MA plot: M (log2 fold change) vs A (mean expression) scatter.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All five spec features: significance highlighting, M=0 reference
-          line, dashed +/-1 thresholds, LOESS, gene labels'
+        comment: 'All spec features: significant gene highlighting (multi-tier), horizontal
+          reference at M=0, dashed lines at M=+-1, LOESS smoothing, alpha~0.3, top
+          gene labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all 15k genes visible
+        comment: 'X: mean expression (A), Y: log2 fold change (M), color: significance
+          status. All data visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; legend labels match status categories
+        comment: 'Title: ma-differential-expression · python · seaborn · anyplot.ai.
+          Legend titled Gene Status with all four categories + 95% CI.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four status categories shown; genes distributed across full expression
-          range
+        comment: 'Shows full MA plot feature set: background noise, three-tier significance,
+          LOESS bias assessment with CI, reference lines, gene labels.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real gene names (BRCA1, TP53, MYC, EGFR, VEGFA, IL6); neutral RNA-seq
-          scientific context
+        comment: 15k genes matches whole-transcriptome scale. ~8% DE rate realistic.
+          Real cancer gene names (BRCA1, TP53, MYC, EGFR, VEGFA, IL6). Expression
+          range and LFC distribution plausible for DESeq2 output. Neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15k genes, ~8% DE rate, LFC range +-5, mean expression 1-27 — realistic
-          whole-transcriptome DESeq2 results
+        comment: Mean expression 0-25 appropriate. Log2FC range -5 to +5 realistic
+          for differential expression experiments.
     code_quality:
       score: 10
       max: 10
@@ -196,31 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports->Data->Plot->Save; no functions or classes
+        comment: No functions or classes. Procedural top-to-bottom structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) and np.random.default_rng(0) for bootstrap. Fully
+          deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: 'All imports used: os/sys (path management), matplotlib, numpy, pandas,
+          seaborn, statsmodels.lowess (LOESS computation).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; expression-range binning for labels is justified
+        comment: No fake UI. Appropriate complexity for 15k-gene MA plot with LOESS
+          bootstrap CI. Variable naming clear and semantically descriptive.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API calls
+        comment: Saves as plot-{THEME}.png. No bare plot.png. Current seaborn 0.13
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -230,28 +240,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Strong: hue+size+palette dict, sns.regplot(lowess=True), sns.set_theme,
-          sns.despine, sns.move_legend; annotation placement falls back to matplotlib'
+        comment: 'sns.set_theme global theming, sns.scatterplot with hue+size encoding,
+          sns.regplot with lowess=True, sns.despine, sns.move_legend — idiomatic seaborn
+          patterns. Minor: bootstrap CI computed manually rather than using seaborn
+          built-in.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.regplot(lowess=True) is seaborn-distinctive; hue+size multi-encoding
-          is idiomatic; further seaborn-unique features (FacetGrid, confidence bands,
-          marginal KDE) unused
-  verdict: REJECTED
+        comment: seaborn-distinctive lowess via regplot, size-hue combination to encode
+          status by both color and marker size, sns.move_legend for precise placement.
+          Two-layer approach exploits seaborn composable axes-level API.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
