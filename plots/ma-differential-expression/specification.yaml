@@ -6,7 +6,7 @@ title: MA Plot for Differential Expression
 
 # Specification tracking
 created: "2026-02-25T21:32:21Z"
-updated: null
+updated: "2026-06-21T00:43:51Z"
 issue: 4420
 suggested: MarkusNeusinger
 
@@ -21,7 +21,9 @@ tags:
   domain:
     - science
     - research
+    - bioinformatics
   features:
     - color-mapped
     - annotated
     - comparison
+    - diagnostic
