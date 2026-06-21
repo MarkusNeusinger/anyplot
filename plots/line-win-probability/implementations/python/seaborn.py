@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: seaborn | Python
-Quality: pending | Created: 2026-06-21
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-21
 """
 
 import os
