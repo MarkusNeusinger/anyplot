@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:39:17Z'
-updated: '2026-06-21T01:06:03Z'
+updated: '2026-06-21T01:18:56Z'
 generated_by: claude-sonnet
 workflow_run: 27888907761
 issue: 4420
@@ -12,122 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: all required MA plot features implemented (reference
-    lines, LOESS curve, transparency, gene labels)'
-  - 'Excellent Imprint palette execution: brand green for significant genes, amber
-    for threshold caution, muted for background data — textbook semantic mapping'
-  - 'Full theme adaptability: all chrome tokens correctly wired, both light and dark
-    renders pass legibility checks with no dark-on-dark failures'
-  - Realistic, plausible RNA-seq data with real gene names (BRCA1, TP53, MYC, EGFR)
-    and biologically appropriate distributions
-  - Clean, reproducible code with explicit canvas sizing (3200x1800) and np.random.seed(42)
+  - 'Semantically correct Imprint palette assignment throughout: brand-green (#009E73)
+    for significant genes, muted anchor for non-significant background noise, Imprint
+    blue (#4467A3) for LOESS, amber (#DDCC77) for threshold markers — no arbitrary
+    color choices'
+  - 'Strong visual hierarchy following biological MA-plot conventions: receding gray
+    cloud, emerging green focal points, overlaid smoothing curve, amber threshold
+    anchors'
+  - 'Complete spec compliance: all required features present (M=0 reference line,
+    ±1 fold-change thresholds, LOESS-like smoothing curve, significance highlighting
+    with alpha, gene-level annotation)'
+  - 'Perfect code quality: np.random.seed(42) set, all imports used, no dead code,
+    linear structure, title fontsize auto-scales with length via formula'
+  - 'Theme adaptation correct in both renders: INK/INK_SOFT/INK_MUTED/GRID/PAGE_BG/ELEVATED_BG
+    all threaded through every element; no dark-on-dark failures detected'
   weaknesses:
-  - MYC gene annotation box overlaps with the legend box in the upper-right corner
-    — consider nudging the legend left (x=0.88) or moving the MYC annotation anchor
-    to avoid the collision
-  - Upper-left annotation cluster (BRCA1/TP53/STAT3 arrows) is crowded — offsetting
-    ax values or using ax=-24 for BRCA1 to spread arrows would reduce visual clutter
-  - 'DE-02 polish could be pushed further: consider removing or thinning the x-axis
-    spine linecolor/linewidth to match grid opacity for a cleaner data-forward look'
+  - 'Gene annotation boxes overlap in the upper-left quadrant: BRCA1 and TP53 labels
+    are positioned too close (showing ''TP53 1'' instead of two clean separate boxes);
+    VEGFA and IL6 labels also overlap (showing ''VE IL6'') — adjust annotation ax/ay
+    offsets to spread labels, or limit top-gene labels to fewer (top 7) with larger
+    offset values (ay: ±55) to prevent clustering in dense regions'
+  - MYC annotation (high expression, high LFC, rightmost data point) is positioned
+    partially behind the legend box — annotation at x~14-15 with ax=-32 places the
+    label near x=0.82 conflicting with legend at xanchor='right' x=0.86; fix by using
+    ax=-60 for genes with mean_expression > 13, or move legend to x=0.99/y=0.98
+  - Full plot border box visible in both renders (plotly default frame) instead of
+    cleaner L-shaped or minimal frame — add xaxis=dict(showline=False, mirror=False)
+    and yaxis=dict(showline=False, mirror=False), or use template='none' as base to
+    remove the default border box
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: title "ma-differential-expression · python · plotly · anyplot.ai" in dark ink, centered, ~65% width. Axis labels "Mean Expression (A)" and "Log₂ Fold Change (M)" both in dark ink at 12px. Tick labels in INK_SOFT at 10px — all readable.
-      Data: Non-significant genes in muted gray (opacity 0.3), significant genes in brand green #009E73 (opacity 0.65). LOESS line in Imprint blue #4467A3. Threshold lines in amber #DDCC77. Gene annotations with arrow connectors showing BRCA1, TP53, STAT3, TNF, VEGFA, IL6, CDK2, MYC, KRAS, EGFR. First series (significant) is correctly #009E73.
-      Minor issue: MYC annotation box touches legend in upper-right; BRCA1/TP53/STAT3 arrows are dense in upper-left.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "ma-differential-expression · python · plotly · anyplot.ai" centered and clearly readable (dark INK color). X-axis label "Mean Expression (A)" and Y-axis label "Log2 Fold Change (M)" both legible at 12px. Tick labels readable at 10px in INK_SOFT (#4A4A44).
+      Data: ~15,000 gene points — non-significant as small muted gray dots (size=5, alpha=0.3), significant genes as Imprint brand-green (#009E73) dots (size=8, alpha=0.65). Blue (#4467A3) Savitzky-Golay smoothing curve labeled "LOESS trend". Dotted horizontal at M=0, amber (#DDCC77) dashed lines at M=±1 with "2-fold up" / "2-fold down" labels.
+      Annotation issues: Upper-left cluster shows "TP53 1" (BRCA1 and TP53 label boxes overlapping), "VE IL6" (VEGFA and IL6 boxes overlapping). MYC annotation in upper-right partially overlaps legend box.
+      Legibility verdict: PARTIAL FAIL — axis labels, title, tick labels readable; gene annotation crowding reduces label legibility in upper-left cluster and MYC conflicts with legend.
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: title, axis labels, tick labels all flip to light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark surface. Gene annotation boxes use elevated dark fill (#242420) with light text. No dark-on-dark failures detected. Legend text readable.
-      Data: Colors identical to light render — significant genes #009E73, LOESS line #4467A3, amber threshold lines #DDCC77. Data-color identity between renders confirmed.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, axis labels, and tick labels rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0) respectively — all clearly visible against dark background. Legend uses ELEVATED_BG (#242420) with light-colored text. No dark-on-dark failures detected.
+      Data: Colors identical to light render — brand-green significant genes, muted gray non-significant, Imprint blue LOESS, amber thresholds. Theme-adaptive INK_MUTED correctly shifts from #6B6A63 (light) to #A8A79F (dark) for non-significant dots.
+      Annotation issues: Same crowding as light render — TP53/BRCA1 overlap, VEGFA/IL6 overlap, MYC near legend.
+      Legibility verdict: PARTIAL FAIL — same annotation overlaps as light render; all chrome and data elements otherwise correctly adapted to dark theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set at all levels (title 16px, axis labels
-          12px, ticks 10px, annotations 10px). Readable in both themes. Minor: annotation
-          text at 10px may be tight at extreme mobile scaling.'
+        comment: 'Title, axes, ticks readable in both themes. Annotation crowding
+          in upper-left cluster reduces legibility: ''TP53 1'' and ''VE IL6'' indicate
+          overlapping label boxes.'
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Multiple annotation overlaps: BRCA1/TP53 boxes overlap, VEGFA/IL6
+          boxes overlap, MYC annotation overlaps legend box in upper-right.'
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Minor crowding: MYC annotation box touches legend box in upper-right;
-          BRCA1/TP53/STAT3 arrows converge in tight upper-left cluster. No hard collision.'
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Non-significant genes recede appropriately (alpha 0.3, muted), significant
-          genes pop (alpha 0.65, brand green), LOESS line clearly visible, threshold
-          lines clear. Density handling excellent for 15,000 points.
+        comment: 'High-density handling appropriate: non-sig size=5/alpha=0.3, sig
+          size=8/alpha=0.65. Non-significant dots intentionally recede; slight deduction
+          for minimum visibility at size=5.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used throughout. Green/gray separation distinguishable
-          under CVD simulations. No red-green sole-signal issue.
+        comment: Green vs gray for significance; CVD-safe Imprint palette. LOESS in
+          Imprint blue adds third distinguishable channel. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Margins explicitly set (l=80, r=40,
-          t=80, b=60). Title ~65% width at 16px. No overflow.
+        comment: Canvas 3200x1800 gate passed. Margins adequate. MYC annotation overlaps
+          legend box — minor layout positioning failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Mean Expression (A) and Log2 Fold Change (M) are descriptive with
-          units. Title follows mandated format.
+          units. Unicode subscript for log2 is appropriate.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (significant genes) = #009E73. LOESS = Imprint position
-          3 (#4467A3). Thresholds = amber anchor (#DDCC77). Non-significant = theme-adaptive
-          muted. Backgrounds correct for both themes.'
+        comment: 'Significant genes = #009E73 (first series). Non-significant = INK_MUTED
+          (muted semantic anchor). LOESS = #4467A3 (Imprint position 3). Thresholds
+          = #DDCC77 (amber). Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong intentional color hierarchy. Professional gene annotation
-          style with arrow connectors, elevated background boxes, border styling.
-          Above-default execution.
+        comment: Above default (4). Semantically correct Imprint palette assignment,
+          intentional visual hierarchy, professional biological convention followed.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid with subtle opacity. Clean legend styling. Could
-          push further with more aggressive spine handling.
+        comment: Good alpha blending, Y-axis-only grid with correct subtle opacity.
+          Full box frame visible (not L-shaped) due to missing mirror=False / showline=False
+          on yaxis and no template reset.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear focal point on significant genes. LOESS curve narrates expression-bias
-          story. Gene labels call out narrative anchors. Good visual hierarchy.
+        comment: 'Above default (2). Strong narrative: receding gray cloud, green
+          signal emergence, LOESS bias detection, amber threshold anchors, gene-level
+          annotation for biological context.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,59 +150,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MA plot: M (log2 fold change) on Y, A (mean expression)
-          on X.'
+        comment: 'Correct MA plot: A-value (mean expression) on X, M-value (log fold
+          change) on Y.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: significant gene highlighting, M=0 reference
-          line, dashed ±1 threshold lines, LOESS smoothing curve, alpha transparency,
-          top DE gene labels.'
+        comment: 'All features present: significance highlighting, M=0 line, ±1 threshold
+          lines, smoothing curve, alpha transparency, gene labels. Savitzky-Golay
+          used instead of true LOESS but achieves same diagnostic purpose.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean expression, Y=log2 fold change, correct axes. Full data range
-          visible.
+        comment: X=mean_expression, Y=log_fold_change. 15,000 genes (within spec 10k-20k
+          range). All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ma-differential-expression · python · plotly · anyplot.ai.
-          Legend correctly labels Not significant, Significant (padj < 0.05), LOESS
-          trend.'
+        comment: 'Title: ''ma-differential-expression · python · plotly · anyplot.ai''.
+          Legend: ''Not significant'', ''Significant (padj < 0.05)'', ''LOESS trend''
+          — all correct.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows all key aspects: bimodal expression distribution, significant
-          vs non-significant stratification, LOESS bias curve, threshold context,
-          named gene annotations. Minor: significance criterion is simplified vs real
-          DESeq2 output.'
+        comment: 'Demonstrates all MA plot aspects: non-sig vs sig distribution, fold-change
+          trend, threshold visualization, bias detection via smoothing, gene-level
+          annotation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 15,000 genes, simulated RNA-seq differential expression. Named genes
-          (BRCA1, TP53, MYC, EGFR) are real well-known biology genes — neutral and
-          real-world plausible.
+        comment: Biologically plausible RNA-seq DE scenario. 1200/15000 genes significant
+          (~8%), realistic LFC distribution, biologically recognizable gene names
+          (BRCA1, TP53, MYC, EGFR, KRAS, etc.).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean expression 0.5-16, fold changes ±6 max, ~8% DE rate (1,200/15,000).
-          All values align with typical DESeq2 output.
+        comment: LFC range ~-8 to +8 realistic for DE. Mean expression 0.5-16 realistic
+          for normalized log-scale. Distribution matches expected DESeq2-like output.
     code_quality:
       score: 10
       max: 10
@@ -199,34 +211,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward sequential top-level script.
+        comment: No functions or classes; linear procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, plotly.graph_objects, scipy.signal.savgol_filter.'
+        comment: os, numpy, plotly.graph_objects, scipy.signal.savgol_filter — all
+          used, no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured, appropriate complexity. No fake interactive UI.
+        comment: Clean, appropriate complexity. Title fontsize auto-scales via length
+          formula. Good use of add_hline/add_annotation helpers.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Canvas width=800,
-          height=450, scale=4 → 3200x1800.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html at 3200x1800 (width=800,
+          height=450, scale=4). Correct Plotly 6.x API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,17 +248,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Figure, add_trace, add_hline, add_annotation, update_layout.
-          autosize=False with explicit dimensions. hoverinfo=skip for LOESS trace
-          is a clean touch.
+        comment: 'Proper graph_objects layering (add_trace), add_hline for reference
+          lines, add_annotation with arrowhead for gene labels, write_image + write_html.
+          Slight deduction: template not explicitly set.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Leverages plotly-specific capabilities: hovertemplate for rich interactive
-          hover, add_hline helper, add_annotation with arrow connectors (arrowhead,
-          arrowwidth, arrowcolor), bgcolor/bordercolor on annotation boxes, HTML export.'
+        comment: Uses hovertemplate for custom hover text, HTML export for interactive
+          use, Plotly native annotation system with configurable arrowhead/arrowsize/bgcolor.
+          Above default (1).
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -255,8 +269,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - smoothing
+  - iteration-over-groups
+  dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
