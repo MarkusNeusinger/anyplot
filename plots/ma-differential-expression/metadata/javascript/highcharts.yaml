@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: ma-differential-expression
+created: '2026-06-21T01:06:42Z'
+updated: '2026-06-21T01:23:44Z'
+generated_by: claude-sonnet
+workflow_run: 27889123922
+issue: 4420
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Excellent CVD-safe redundant encoding: color + marker shape (triangle-up green
+    for upregulated, triangle-down red for downregulated) immediately distinguishes
+    both groups without relying on hue alone'
+  - 'Biologically realistic synthetic data: LCG generates ~12,000 genes with characteristic
+    fan-shape variance (wider at low expression) and a subtle upward bias at low expression
+    — a real RNA-seq normalisation artifact'
+  - 'Semantic color choices follow both the Imprint palette and scientific conventions:
+    palette[0] (brand green) = upregulated, palette[4] (matte red) = downregulated,
+    amber = LOESS bias trend'
+  - 'All spec-required features implemented: M=0 solid reference line, ±1 dashed threshold
+    lines with labels, LOESS approximation curve, and transparency for the dense scatter'
+  - 'Idiomatic Highcharts usage: native plotLines with right-aligned labels, mixed
+    scatter+spline series types, series-level opacity, and correct animation:false
+    + credits:disabled'
+  - 'Perfect code quality: deterministic LCG seed, clean KISS structure, all Highcharts
+    tokens correctly mapped (t.ink, t.inkSoft, t.grid, t.palette, t.amber)'
+  weaknesses:
+  - 'Spines not explicitly removed: Highcharts default preserves the chart border
+    frame — set chart.plotBorderWidth:0 and consider axis lineWidth:0 to achieve a
+    cleaner L-frame look'
+  - marginRight:30 (CSS px) may be too tight for the right-aligned plotLine labels
+    '+1 (2× up)' and '−1 (2× down)' — increase to marginRight:60 to give the labels
+    breathing room against the canvas edge
+  - LOESS is approximated as a sliding-window bin average rather than true weighted
+    local regression — this is adequate for bias detection but the label 'LOESS bias
+    trend' slightly overstates the statistical rigor; 'Smoothed trend' or 'Sliding-window
+    trend' would be more accurate
+  - Optional gene-name labels for the top differentially expressed genes are not implemented
+    — the spec explicitly marks this optional so no deduction, but adding them would
+    lift DE-03 (data storytelling) meaningfully
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "ma-differential-expression · javascript · highcharts · anyplot.ai" in dark ink at 22px — clearly readable, spans ~80% of width as expected for the long mandated format. X-axis label "A — Mean Average Expression (log₂)" and Y-axis label "M — Log₂ Fold Change" in dark secondary ink at 16px — descriptive and readable. Tick labels at 14px — readable. Legend in top-right with background box and border — all items legible.
+      Data: ~12,000 gene scatter with non-significant genes in muted gray (radius 2, opacity 0.4), upregulated genes in brand green #009E73 (triangle-up, radius 4, opacity 0.85), downregulated in matte red #AE3030 (triangle-down, radius 4, opacity 0.85). Amber LOESS trend line visible near M=0. Solid reference line at M=0 and dashed lines at M=±1 with right-aligned labels.
+      Legibility verdict: PASS — all text clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title, axis labels, tick labels, and legend text all appear in light-colored ink (theme-adaptive). No dark-on-dark failures observed. Grid lines subtle.
+      Data: Data colors identical to light render — green upregulated, red downregulated, gray non-significant, amber LOESS. The brand green and amber contrast well against the dark background.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All fonts explicitly set (title 22px, axis 16px, ticks 14px, legend
+          15px). Readable in both themes. Minor: plotLine labels at right edge slightly
+          cramped with marginRight:30.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-text overlap. Dense scatter marker overlap is expected for
+          12K points and handled by opacity=0.40 for non-sig.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Marker sizes adapted to density: radius 2 + opacity 0.40 for non-sig
+          (12K points), radius 4 + opacity 0.85 for sig genes. LOESS amber line visible
+          in both renders.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CVD-safe dual encoding: color+shape distinguishes upregulated (green
+          triangle-up) from downregulated (red triangle-down). No red-green as sole
+          differentiator.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed. Good layout with appropriately sized plot area.
+          Minor: right margin slightly tight for plotLine labels.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with notation: ''A — Mean Average Expression (log₂)''
+          and ''M — Log₂ Fold Change''. Excellent.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Imprint tokens: palette[0]=#009E73 for upregulated (first
+          sig series), palette[4]=#AE3030 for downregulated (valid semantic exception
+          — scientific convention), amber for LOESS, muted for non-sig. Transparent
+          background inherits theme-correct page bg. Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: thoughtful dual encoding, semantic Imprint color
+          choices, reference lines with labels. Not quite publication-ready (no gene
+          name labels, spines still visible).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Some refinement: transparent background, subtle grid via tokens,
+          legend borderRadius+padding. Spines not explicitly removed (Highcharts default).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: fan-shape visible, LOESS reveals upward bias
+          at low expression (normalization artifact), color+shape hierarchy focuses
+          on significant genes. Guides viewer to biological insight.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct MA plot: M (log fold change) vs A (mean expression) scatter.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: M=0 solid line, ±1 dashed threshold lines,
+          LOESS smoothing curve, transparency for overplotting, significant genes
+          highlighted.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: A (mean expression) on X, M (log fold change) on Y — correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title ''ma-differential-expression · javascript · highcharts · anyplot.ai''
+          correct. Legend labels descriptive: ''Not significant'', ''Upregulated (padj
+          < 0.05)'', ''Downregulated (padj < 0.05)'', ''LOESS bias trend''.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Comprehensive: realistic fan-shape variance (higher at low expression),
+          both upregulated and downregulated genes, upward bias at low expression
+          (normalisation artifact), ~12K genes typical for whole-transcriptome.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic RNA-seq differential expression scenario. Neutral scientific
+          topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: A values 1-14 (realistic log2 expression range), M values ±4 (typical
+          log2FC range), 12K genes correct for whole-transcriptome RNA-seq.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean: LCG helpers + data generation + chart. No unnecessary abstraction.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed LCG (seed=42) for deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed — Highcharts is a browser global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Calls Highcharts.chart('container', ...) correctly. No explicit width/height.
+          animation:false. credits:disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert: plotLines for reference lines, mixed scatter+spline series,
+          series-level opacity, symbol enumeration (triangle/triangle-down/circle),
+          proper ANYPLOT_TOKENS mapping.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts-specific plotLines with right-aligned labels, triangle/triangle-down
+          symbols, mixed series types. Good Highcharts-distinctive usage but not reaching
+          the exceptional tier.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
