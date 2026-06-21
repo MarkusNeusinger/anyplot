@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 86/100 | Updated: 2026-06-21
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-21
 """
 
 import os
