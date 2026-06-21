@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-pitch-events: Soccer Pitch Event Map
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-21
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 90/100 | Created: 2026-06-21
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;
