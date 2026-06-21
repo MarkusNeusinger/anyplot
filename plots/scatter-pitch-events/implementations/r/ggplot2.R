@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-06-21
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -175,7 +174,7 @@ p <- ggplot() +
     data = pass_df,
     aes(x = x, y = y, xend = xend, yend = yend),
     arrow = arrow(length = unit(0.008, "npc"), type = "closed"),
-    color = IMPRINT_PALETTE[1], alpha = 0.45, linewidth = 0.5
+    color = IMPRINT_PALETTE[1], alpha = 0.55, linewidth = 0.7
   ) +
 
   # --- Shot arrows ---
@@ -244,7 +243,7 @@ p <- ggplot() +
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_line(color = INK_SOFT),
-    plot.title        = element_text(color = INK,      size = 11,
+    plot.title        = element_text(color = INK,      size = 12,
                                      margin = margin(b = 8)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                      linewidth = 0.4),
