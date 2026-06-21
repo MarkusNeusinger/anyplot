@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
@@ -26,6 +26,7 @@ from plotnine import (
     scale_alpha_manual,
     scale_color_manual,
     scale_shape_manual,
+    scale_size_manual,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -81,10 +82,10 @@ df = pd.DataFrame(
     }
 )
 
-df_shots = df[df["event_type"] == "Shot"].copy()
-df_other = df[df["event_type"] != "Shot"].copy()
 df_pass_arrows = df[df["event_type"] == "Pass"].copy()
 df_shot_arrows = df[df["event_type"] == "Shot"].copy()
+# Reorder so shots render on top (last drawn = topmost layer)
+df_ordered = pd.concat([df[df["event_type"] != "Shot"], df[df["event_type"] == "Shot"]], ignore_index=True)
 
 # Pitch styling — deep green with semi-transparent white lines
 pitch_color = "#1a6b30"
@@ -155,7 +156,7 @@ title_fontsize = max(8, round(12 * ratio))
 
 # Plot
 plot = (
-    ggplot(df, aes(x="x", y="y", color="event_type", shape="event_type", alpha="outcome"))
+    ggplot(df_ordered, aes(x="x", y="y", color="event_type", shape="event_type", alpha="outcome", size="event_type"))
     # Pitch background — extended to fill canvas edges
     + annotate("rect", xmin=-6, xmax=111, ymin=-6, ymax=74, fill=pitch_color, color=pitch_color)
     # Subtle grass stripe effect
@@ -205,16 +206,15 @@ plot = (
         arrow=arrow(length=0.18, type="open"),
         inherit_aes=False,
     )
-    # Non-shot markers
-    + geom_point(data=df_other, size=4.5, stroke=0.4)
-    # Shot markers — larger for focal emphasis on attacking actions
-    + geom_point(data=df_shots, size=8, stroke=0.4)
+    # All event markers — size driven by scale_size_manual (shots=8, others=4.5)
+    + geom_point(stroke=0.4)
     # Scales
     + scale_color_manual(values=event_colors, name="Event Type")
     + scale_shape_manual(values=event_shapes, name="Event Type")
     + scale_alpha_manual(values={"Successful": 0.92, "Unsuccessful": 0.40}, name="Outcome")
-    + scale_x_continuous(limits=(-6, 111), breaks=[])
-    + scale_y_continuous(limits=(-6, 74), breaks=[])
+    + scale_size_manual(values={"Pass": 4.5, "Shot": 8, "Tackle": 4.5, "Interception": 4.5}, name="Event Type")
+    + scale_x_continuous(limits=(-10, 115), breaks=[])
+    + scale_y_continuous(limits=(-8, 76), breaks=[])
     + coord_fixed(ratio=1)
     + labs(title=title, subtitle="120 match events: passes, shots, tackles & interceptions")
     + guides(
@@ -224,8 +224,8 @@ plot = (
     + theme(
         figure_size=(8, 4.5),
         plot_title=element_text(size=title_fontsize, weight="bold", color=INK, margin={"b": 4}),
-        plot_subtitle=element_text(size=8, color=INK_SOFT, style="italic", margin={"b": 8}),
-        panel_background=element_rect(fill=pitch_color, color="none"),
+        plot_subtitle=element_text(size=9, color=INK_SOFT, style="italic", margin={"b": 8}),
+        panel_background=element_rect(fill=PAGE_BG, color="none"),
         plot_background=element_rect(fill=PAGE_BG, color="none"),
         panel_border=element_blank(),
         panel_grid_major=element_blank(),
@@ -238,7 +238,7 @@ plot = (
         legend_position="right",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_key=element_rect(fill=ELEVATED_BG, color="none"),
-        plot_margin=0.02,
+        plot_margin=0.04,
     )
 )
 
