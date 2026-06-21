@@ -1,46 +1,60 @@
 library: plotly
+language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:39:22Z'
-updated: '2026-03-20T13:07:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23342848809
+updated: '2026-06-21T06:01:04Z'
+generated_by: claude-sonnet
+workflow_run: 27895032686
 issue: 4417
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/plotly/plot.html
-quality_score: 89
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Comprehensive pitch rendering with all FIFA-standard markings including penalty
-    arcs, corner arcs, and goal posts
-  - Excellent marker differentiation with 8 distinct symbol/fill combinations and
-    clear size hierarchy
-  - Danger Zone annotation adds tactical storytelling and creates a visual focal point
-  - Dual output (PNG + interactive HTML) maximizes Plotly strengths
-  - Perfect spec compliance with all required features implemented
-  - Realistic football analytics data with plausible success rates and spatial distributions
+  - Accurate FIFA-spec pitch layout with all required markings (penalty areas, goal
+    areas, center circle, halfway line, corner arcs, penalty arcs, goal posts)
+  - 'Strong Imprint palette compliance — passes use brand green #009E73, shots use
+    semantic matte red #AE3030, all four event types use distinct Imprint hues'
+  - Outcome encoding via filled vs open markers is immediately legible — clear visual
+    distinction without relying on color alone
+  - 'Idiomatic Plotly usage: layer=''below'' for pitch shapes, None-separator batching
+    for direction lines, custom hovertemplate, html-export alongside PNG'
+  - Correct aspect ratio preserved via scaleanchor='x' / scaleratio=1 — pitch proportions
+    match 105:68 field dimensions
+  - Tactical 'Danger Zone' annotation adds storytelling and guides the viewer's attention
+    to the shot-dense final third
+  - Canvas dimensions at 3200×1800 (width=800, height=450, scale=4) match the landscape
+    hard target
+  - 'Theme-adaptive paper background (#FAF8F1 light / #1A1A17 dark) correctly applied;
+    pitch grass and surround are semantic real-world green (not theme chrome), which
+    is the correct exception'
   weaknesses:
-  - Unsuccessful pass direction lines at opacity 0.08 are nearly invisible in the
-    static PNG render
-  - Annotation font size (14pt) is slightly small relative to the 4800x2700 output
-    resolution
-  - Legend slightly overlaps the left pitch boundary
-  image_description: 'The plot displays a soccer pitch event map on a medium green
-    field (#3A9D5C) set against a darker green surround (#1B5E20). White pitch markings
-    are clearly drawn including the outline, halfway line, penalty areas, goal areas,
-    center circle, penalty arcs, corner arcs, and goal posts (with semi-transparent
-    fill). Eight event categories are plotted with distinct markers: filled light-blue
-    circles for successful passes, open light-blue circles for unsuccessful passes,
-    filled yellow triangles for successful tackles, open yellow triangles for unsuccessful
-    tackles, filled pink/purple diamonds for successful interceptions, open pink/purple
-    diamonds for unsuccessful interceptions, filled orange-red stars for shots on
-    target, and open orange-red stars for shots off target. Faint blue directional
-    lines connect pass origins to endpoints, while more prominent orange-red lines
-    trace shot trajectories toward the right goal. A "Danger Zone" annotation in the
-    upper-right area highlights the shot cluster in the final third. The legend sits
-    in the upper-left on a semi-transparent dark background. The title "scatter-pitch-events
-    · plotly · pyplots.ai" appears centered at the top in white.'
+  - Pass direction lines are rendered at opacity 0.22 (successful) and 0.18 (unsuccessful)
+    — at these levels they are nearly invisible in the static PNG render; raise to
+    at least 0.45 / 0.30 so the directional component of passes reads clearly
+  - Event direction traces are lines only — no arrowheads; the spec explicitly requires
+    'directional arrows'. Consider using Plotly annotations (one per event, with arrow=True)
+    for at least the shot traces, or add small arrowhead markers at the endpoint via
+    a separate Scatter trace
+  - Legend occupies a large portion of the top-left pitch area (8 entries at 10px);
+    consider reducing tracegroupgap and splitting into two columns, or moving to an
+    outside-pitch position to free up playing-field readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 paper surround, dark green (#1B5E20) pitch perimeter, bright green (#3A9D5C) playing surface — all semantically correct for a football pitch.
+      Chrome: Title "scatter-pitch-events · python · plotly · anyplot.ai" in dark ink, clearly readable above the canvas. Legend sits top-left inside the pitch with a semi-transparent dark background and white text — all 8 entries (Pass successful/unsuccessful, Tackle successful/unsuccessful, Interception successful/unsuccessful, Shot on/off target) are legible. "Danger Zone" annotation box (dark bg, white text) in the final third is readable.
+      Data: Green circles (passes, #009E73), purple triangles (tackles, #C475FD), blue diamonds (interceptions, #4467A3), red stars (shots, #AE3030). Filled = successful, open = unsuccessful. Shot direction lines (red, ~0.8 opacity) are clearly visible. Pass direction lines (green, ~0.22 opacity) are very faint and barely perceptible in the static render.
+      Legibility verdict: PASS — title and annotation text are clearly readable; legend white-on-dark is legible; pass direction lines are a functional weakness but not a legibility failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 paper surround (correct), same green pitch surface. The dark paper border provides clear contrast with the pitch edges.
+      Chrome: Title text shifts to light cream (#F0EFE8 INK token) — clearly readable against the dark background. Legend retains its dark semi-transparent background with white text — readable in both themes since the legend always uses its own dark container. "Danger Zone" annotation remains readable.
+      Data: All four event-type colors (#009E73, #C475FD, #4467A3, #AE3030) are identical to the light render — only chrome (paper background) flips, consistent with Imprint palette rules. No dark-on-dark text failure observed.
+      Legibility verdict: PASS — no dark-on-dark issues; all text elements are readable against their respective backgrounds in both themes.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -51,44 +65,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, legend 18pt, annotation
-          14pt). Annotation slightly small for 4800x2700.
+        comment: Title, annotation, and legend text all readable in both themes. Legend
+          at fontsize=10 (40px at full res) is on the smaller side for mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend overlaps slightly with pitch left boundary but remains readable
-          due to dark background.
+        comment: Minor crowding in the shot-dense final third; shots (stars, size
+          22) overlap with some pass circles. No text-on-text collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Event markers well-sized. Unsuccessful pass lines at 0.08 opacity
-          nearly invisible in static render.
+        comment: Marker symbols are all clearly visible. Pass direction lines at opacity
+          0.18-0.22 are nearly invisible in the static render — directional component
+          of passes is weak.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, orange, yellow, purple palette avoids red-green confusion.
-          Good contrast against green.
+        comment: Imprint CVD-safe palette used. Redundant encoding via marker shapes
+          (circles, triangles, diamonds, stars) means colorblind users can distinguish
+          event types.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Pitch fills canvas well with proper aspect ratio via scaleanchor.
-          Balanced margins.
+        comment: Canvas gate passed (3200x1800). Correct aspect ratio via scaleanchor.
+          Title proportion fits comfortably. Goal posts extend to x=-2/x=107 within
+          the axis range [-4,109].
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately hidden for pitch map. Title present and descriptive.
+        comment: No axis tick labels or axis titles — appropriate for a pitch map
+          where spatial context is provided by the field markings. Title is correct
+          and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (passes) uses #009E73 brand green. Shots use semantic
+          matte red #AE3030 (appropriate danger/goal semantic exception). All colors
+          from Imprint palette. Paper backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -96,24 +123,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Two-tone green theme, custom event palette, semi-transparent overlays,
-          white-bordered markers. Professional tactical analysis aesthetic.
+        comment: Professional tactical board aesthetic with dark-surround pitch, layered
+          event symbols, and tactical annotation. Clearly above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes/grid hidden, edge highlighting, semi-transparent backgrounds.
-          Unsuccessful pass lines too faint.
+        comment: Axes completely hidden (appropriate for pitch map), no grid, clean
+          pitch surface. Legend has refined styling. Pitch surround provides natural
+          frame.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Danger Zone annotation creates focal point. Shot stars visually dominant.
-          Marker size hierarchy guides viewer.
+        comment: '''Danger Zone'' annotation effectively draws attention to shot clustering.
+          Multiple encodings (shape + color + fill) tell a layered tactical story.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -121,27 +149,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot on accurately scaled pitch diagram.
+        comment: Correct scatter/event map on accurately-drawn football pitch.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: pitch markings, distinct markers, outcome
-          encoding, directional lines, green background, correct aspect ratio.'
+        comment: All four event types present with distinct shapes. Outcome encoding
+          via fill/open is clear. Direction lines shown for passes and shots but WITHOUT
+          arrowheads — spec explicitly requires 'directional arrows'.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped to pitch coordinates (0-105 x 0-68).
+        comment: 'X/Y coordinates correctly mapped to pitch meters (0-105 x 0-68).
+          Correct zones: passes across pitch, shots in final third, tackles in midfield.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format. Legend labels identify all 8 event type/outcome
-          combinations.
+        comment: Title 'scatter-pitch-events · python · plotly · anyplot.ai' matches
+          required format. Legend labels all present and descriptive.
     data_quality:
       score: 15
       max: 15
@@ -151,21 +181,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 event types with both outcomes shown. Directional lines for
-          passes and shots.
+        comment: All four event types shown (passes, shots, tackles, interceptions).
+          Both outcomes (successful/unsuccessful) encoded. Direction lines present.
+          All pitch markings included.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic soccer match data with plausible success rates. Neutral
-          sports domain.
+        comment: '134 events total, realistic distribution: passes across pitch biased
+          attacking, shots in final third, tackles in midfield/defensive zones. No
+          controversial content.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA-standard dimensions. Realistic event counts and spatial distributions.
+        comment: 134 events within spec range (50-500). Event counts per type are
+          realistic (70 passes, 16 shots, 28 tackles, 20 interceptions). Coordinates
+          within pitch bounds.
     code_quality:
       score: 10
       max: 10
@@ -175,64 +209,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow with no functions or classes.
+        comment: Linear, top-level code. No functions or classes. Clear section comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at the top.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used.
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Efficient None-separator batching for direction lines. Well-organized.
+        comment: None-separator batching for direction lines is idiomatic Plotly.
+          Shape layer='below' correctly used. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png with correct dimensions. Also exports HTML. Current
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API
+          used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter, add_shape, add_annotation, update_layout,
-          hovertemplate.
+        comment: go.Figure() with add_trace/add_shape/add_annotation pattern. scaleanchor
+          for aspect ratio. Custom hovertemplate. All idiomatic Plotly.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses layer=below, hovertemplate, scaleanchor/scaleratio, fixedrange,
-          write_html, itemsizing=constant.
-  verdict: REJECTED
+        comment: 'Uses shape layer system (layer=''below''), symbol variety (circle-open,
+          triangle-up-open, diamond-open, star), HTML export, hover interactivity
+          — strong Plotly-specific feature usage. Missing: arrowhead annotations on
+          event direction lines would be a distinctive Plotly feature worth using.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - dark-theme
-  - minimal-chrome
   - alpha-blending
   - edge-highlighting
+  - minimal-chrome
