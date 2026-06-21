@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: ma-differential-expression
 created: '2026-06-21T01:12:30Z'
-updated: '2026-06-21T01:19:49Z'
+updated: '2026-06-21T01:28:21Z'
 generated_by: claude-sonnet
 workflow_run: 27889207461
 issue: 4420
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance — all required features implemented: reference lines
-    at M=0 and ±1, LOESS smoothing curve, transparency for overplotting, gene name
-    labels for top DEGs'
-  - Excellent data quality with realistic DESeq2-style RNA-seq simulation and real
-    biologically-meaningful gene names (MYC, TP53, EGFR, etc.)
-  - 'Correct Imprint palette usage: significant genes in #009E73 (first series), non-significant
-    in theme-adaptive muted — both themes fully readable with no dark-on-dark failures'
-  - 'Sophisticated layered rendering creates clear visual hierarchy: dense gray non-sig
-    cloud → teal sig points → ochre LOESS curve → labeled top genes'
-  - Density-appropriate marker sizes (size=0.4/alpha=0.18 for 12,000 non-sig; size=0.85/alpha=0.55
-    for sig) handle overplotting well
+  - 'Full Imprint palette compliance: significant genes in brand green (#009E73),
+    non-significant in the muted semantic anchor, LOESS curve in Imprint ochre — all
+    semantically motivated choices'
+  - 'Complete spec coverage: M=0 reference line, ±1 dashed threshold lines, LOESS
+    smoothing curve, transparency for overplotting, and top-10 gene labels all implemented
+    correctly'
+  - Layered geom rendering (non-significant behind significant) creates correct visual
+    depth without explicit Z-order hacks
+  - Realistic DESeq2-style synthetic data with gamma-distributed mean expression,
+    expression-dependent LFC heteroscedasticity, and recognisable gene names adds
+    genuine domain credibility
+  - 'Theme adaptation is correct in both renders: all chrome tokens flip appropriately,
+    data colors stay identical between light and dark'
+  - LOESS subsampled to 3000 points for performance — a thoughtful engineering decision
+    for 12k-point datasets
   weaknesses:
-  - panel.border retains all 4 spines — style guide default requires removing top
-    and right (L-shaped frame); replace panel.border with axis.line = element_line(color
-    = INK_SOFT) for the default minimal look
-  - library(dplyr) is imported but no explicit dplyr functions are called in the code
-    — remove unused import (CQ-03)
-  - Gene annotation labels at geom_text(size=2.5) are on the small side for a 3200x1800
-    canvas; increasing to size=3.0 would improve mobile readability
-  - 'Design lacks the final polish push: retaining all 4 spines and full-INK-color
-    grid (rather than lighter rule) prevents reaching publication-ready aesthetic
-    (DE-01/DE-02 opportunity)'
+  - 'Minor gene-label crowding: BRCA1, CD8A, and VEGFA labels cluster in the upper-left
+    dense region; despite check_overlap=TRUE, BRCA1 and CD8A are still very close
+    — consider nudging offsets (nudge_y or repel via ggrepel) or reducing the top-gene
+    count to 8'
+  - Grid lines use INK_SOFT at full opacity rather than the style-guide recommended
+    very-subtle rgba(26,26,23,0.15) value — the grid is visually slightly more prominent
+    than ideal for a dense scatter plot
+  - 'DE scores modest: no decorative flourishes or advanced ggplot2 theme polish (e.g.
+    custom legend key design, refined annotation frames for the top genes)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "ma-differential-expression · r · ggplot2 · anyplot.ai" in dark ink, fills ~50% of canvas width; X-axis label "Mean Average Expression (log₂)" and Y-axis label "Log₂ Fold Change" in dark ink at 10pt — clearly readable; tick labels at 8pt readable; all panel borders visible (all 4 spines retained); legend box positioned inside at top-right with filled background and border
-      Data: Non-significant genes rendered as dense gray cloud (INK_MUTED = #6B6A63) with alpha=0.18, size=0.4; significant genes as teal points (#009E73) at alpha=0.55, size=0.85; LOESS curve in ochre (#BD8233) clearly visible; horizontal solid reference line at M=0; dashed lines at M=±1; gene labels (MYC, TP53, EGFR, HIF1A, etc.) in dark ink at small size; grid lines visible but thin
-      Legibility verdict: PASS — all text clearly readable on the warm off-white background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "ma-differential-expression · r · ggplot2 · anyplot.ai" in dark #1A1A17 at 12pt is fully readable and spans ~70% of plot width. X-axis label "Mean Average Expression (log₂)" and Y-axis label "Log₂ Fold Change" at 10pt in dark ink are readable and balanced. Tick labels at 8pt in INK_SOFT (#4A4A44) are legible. Legend inside top-right with elevated #FFFDF6 background and INK_SOFT border shows "Non-significant" (muted gray dot) and "Significant" (green dot) clearly.
+      Data: Dense scatter of ~12,000 genes; non-significant genes in muted gray (INK_MUTED) with alpha=0.18 form a horizontal band, significant genes in brand green #009E73 with alpha=0.55 are visually prominent. LOESS curve in Imprint ochre #BD8233 runs through the cloud revealing slight low-expression bias. Horizontal solid reference line at M=0 in dark ink; dashed lines at ±1 in INK_SOFT. Ten gene labels (MYC, BRCA1, CD8A, VEGFA, TP53, HIF1A, EGFR, IL6, FOXP3, TNF) in dark ink — BRCA1 and CD8A are visually close together.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issue.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
-      Chrome: Same title, axis labels, and tick labels now rendered in cream/light ink (#F0EFE8 / #B8B7B0) — all clearly readable against the dark background; legend box has elevated dark background (#242420) with light text; no dark-on-dark failures observed
-      Data: Data colors are identical to the light render — significant genes remain #009E73 (teal), non-significant remain in muted gray tones, LOESS curve remains ochre (#BD8233); grid lines appear as light lines on dark background (thin linewidth but full light-INK color makes them slightly more visible than in light mode); gene labels appear in light ink, readable
-      Legibility verdict: PASS — all text readable on the warm near-black background; data colors are correctly identical between themes; only chrome flips as expected
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light tokens (#F0EFE8 / #B8B7B0) — fully readable against the dark surface. Legend has elevated #242420 background with INK_SOFT border, text in B8B7B0. No dark-on-dark failure detected anywhere.
+      Data: Data colors are identical to the light render — significant genes in same brand green #009E73, LOESS curve in same ochre #BD8233, reference/threshold lines in light INK/INK_SOFT tokens. Non-significant genes in light muted anchor (#A8A79F dark) — distinctly visible against near-black background.
+      Legibility verdict: PASS — all text readable against dark background; theme adaptation is correct throughout.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,86 +59,77 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=12pt, axis=10pt, ticks=8pt, legend=8pt);
-          all readable in both themes; gene annotation labels at size=2.5mm (~7pt)
-          are on the small side for the 3200x1800 canvas but readable
+        comment: All font sizes explicitly set; title 12pt, axis labels 10pt, tick
+          labels 8pt, gene labels 3mm — all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: check_overlap=TRUE in geom_text prevents gene label collisions; legend
-          does not overlap main data cloud; no overlap issues observed
+        comment: BRCA1 and CD8A labels are visually very close in the upper-left cluster
+          despite check_overlap=TRUE
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent density adaptation: non-sig at size=0.4/alpha=0.18 for
-          12,000 points forms readable cloud; sig at size=0.85/alpha=0.55 for ~840
-          points clearly distinguishable; LOESS curve prominent'
+        comment: 'Density-appropriate sizing: tiny alpha=0.18 markers for 11k non-sig
+          genes; larger alpha=0.55 for significant; LOESS clearly visible'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal vs gray has high luminance contrast and is CVD-safe (not red-green);
-          LOESS in ochre provides additional redundant encoding
+        comment: High contrast between brand green significant and muted gray non-significant;
+          CVD-safe palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 landscape); plot well-proportioned,
-          margins balanced, legend inside plot
+        comment: 3200x1800 canvas; no clipping; legend inside plot does not obscure
+          data; good whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Mean Average Expression (log₂)'' with units; Y: ''Log₂ Fold
-          Change'' descriptive with units'
+        comment: Both axes labelled with units; title follows mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Significant=#009E73 (first Imprint position); Non-significant=INK_MUTED
-          (theme-adaptive muted anchor); LOESS=IMPRINT_PALETTE[4]=#BD8233; backgrounds
-          #FAF8F1 light / #1A1A17 dark; data colors identical across themes; chrome
-          flips correctly'
+        comment: 'Significant series uses #009E73 (Imprint position 1); non-significant
+          uses INK_MUTED semantic anchor; LOESS uses Imprint ochre; backgrounds correct'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured for a scientific diagnostic plot; intentional layering
-          and color choices; correct palette; but not exceptional — retained all 4
-          spines and standard layout without the final polish push
+        comment: Thoughtful layered rendering, semantically motivated color choices,
+          gene annotations add value — above default but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Some refinement: legend inside plot, layered alpha, thin grid lines;
-          but all 4 panel borders retained (should remove top/right per style guide);
-          grid uses full INK color (following ggplot2 library guide) but results in
-          slightly more prominent lines in dark mode'
+        comment: Top/right spines removed, axis lines retained, legend elevated background
+          — good; grid uses full-opacity INK_SOFT rather than ultra-subtle rgba
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: dense gray mass → teal significant genes
-          → ochre LOESS curve → labeled top genes; dashed ±1 thresholds add interpretation
-          context; viewer immediately grasps the differential expression structure'
+        comment: LOESS curve reveals expression-dependent bias story; gene labels
+          identify key findings; clear visual hierarchy from layered rendering
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot (M-versus-A) with scatter points for all genes
+        comment: MA plot (log fold change vs mean average expression) correctly implemented
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: significant/non-sig coloring, geom_hline at
-          M=0, dashed lines at ±1, LOESS curve, alpha transparency, gene name labels
-          for top 10'
+        comment: 'All spec requirements met: significance coloring, M=0 reference
+          line, ±1 dashed lines, LOESS curve, transparency, gene labels'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean_expression (A value, baseMean), Y=log_fold_change (M value,
-          log2FC); 12,000 genes; significant threshold at ~7%
+        comment: X=mean_expression, Y=log_fold_change, correct; full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ma-differential-expression · r · ggplot2 · anyplot.ai''
-          exactly; legend labels ''Non-significant'' and ''Significant'' match data
-          categories'
+        comment: 'Title: ''ma-differential-expression · r · ggplot2 · anyplot.ai'';
+          legend: Non-significant / Significant'
     data_quality:
       score: 15
       max: 15
@@ -178,27 +169,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: majority non-significant (dense cloud), minority
-          significant (~7%), both up- and down-regulated, expression-dependent bias
-          via LOESS, top genes labeled'
+        comment: 'All plot aspects shown: dense scatter mass, significance coloring,
+          trend overlay, reference lines, gene annotations'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: DESeq2-style RNA-seq results with gamma-distributed baseMean, realistic
-          LFC spread, real gene names (MYC, TNF, TP53, IL6, VEGFA, EGFR, BRCA1, CD8A,
-          FOXP3, HIF1A)
+        comment: DESeq2-style simulation with gamma baseMean, expression-dependent
+          LFC heteroscedasticity, realistic gene names, ~7% significant rate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean expression 0.5-40 (log2 baseMean realistic for RNA-seq); LFC
-          ±10 for extreme genes plausible; ~7% significant rate realistic; gamma distribution
-          for expression appropriate
+        comment: LFC range ±10 for extremes, mean expression 0-40 log2 units — realistic
+          for whole-transcriptome
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -206,8 +194,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data generation → split subsets → build plot → save; no
-          functions or classes
+        comment: No unnecessary functions or classes; linear readable script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,47 +203,42 @@ review:
         comment: set.seed(42) at top
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but no explicit dplyr functions called anywhere
-          in the code; all data manipulation uses base R
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layered ggplot2 code; subsetting non-sig/sig for ordered rendering
-          is elegant; no over-engineering
+        comment: Appropriate complexity; data subsetting within geom layers is idiomatic;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf; device=ragg::agg_png; current
-          ggplot2 API (linewidth= not size=)
+        comment: Saves as plot-{THEME}.png via ragg::agg_png with correct canvas dimensions
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Proper grammar of graphics: layered geoms with per-geom data= and
-          aes(); scale_color_manual; guides(override.aes); legend.position.inside
-          with coordinate pair — idiomatic modern ggplot2'
+        comment: Grammar-of-graphics layers, scale_color_manual, data= filtering in
+          geoms, inherit.aes=FALSE — all idiomatic ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses check_overlap=TRUE (ggplot2-specific), inherit.aes=FALSE for
-          independent smooth layer, guide_legend(override.aes) for legend marker customization,
-          legend.position.inside (modern ggplot2 ≥3.5 feature); above default but
-          not exceptional
-  verdict: REJECTED
+        comment: Uses guide_legend(override.aes) for cleaner legend swatches, inherit.aes=FALSE
+          for independent LOESS layer — good but not exceptional
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
