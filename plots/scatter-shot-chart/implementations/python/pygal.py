@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-21
@@ -111,7 +111,7 @@ custom_style = Style(
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=PAGE_BG,  # hides stray guide text; labels disabled via show_*_labels=False
+    foreground_subtle=INK_MUTED,
     guide_stroke_color=PAGE_BG,  # guides off, colour matches bg for safety
     colors=(
         COURT_LINE,  # 1: baseline
@@ -222,28 +222,28 @@ missed_outside = [
 ]
 
 chart.add(
-    f"⬤ Made Inside — {inside_fg:.0f}% FG ({len(made_inside)}/{n_inside})",
+    f"Made Inside — {inside_fg:.0f}% FG ({len(made_inside)}/{n_inside})",
     made_inside,
     stroke=False,
     dots_size=15,
     formatter=lambda val: f"({val[0]:.1f}, {val[1]:.1f}) ft" if isinstance(val, (list, tuple)) else str(val),
 )
 chart.add(
-    f"• Made Perimeter — {perim_fg:.0f}% FG ({len(made_outside)}/{n_perim})",
+    f"Made Perimeter — {perim_fg:.0f}% FG ({len(made_outside)}/{n_perim})",
     made_outside,
     stroke=False,
     dots_size=10,
     formatter=lambda val: f"({val[0]:.1f}, {val[1]:.1f}) ft" if isinstance(val, (list, tuple)) else str(val),
 )
 chart.add(
-    f"⬤ Missed Inside ({len(missed_inside)})",
+    f"Missed Inside ({len(missed_inside)})",
     missed_inside,
     stroke=False,
     dots_size=15,
     formatter=lambda val: f"({val[0]:.1f}, {val[1]:.1f}) ft" if isinstance(val, (list, tuple)) else str(val),
 )
 chart.add(
-    f"• Missed Perimeter ({len(missed_outside)})",
+    f"Missed Perimeter ({len(missed_outside)})",
     missed_outside,
     stroke=False,
     dots_size=10,
