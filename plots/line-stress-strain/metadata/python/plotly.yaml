@@ -1,43 +1,55 @@
 library: plotly
+language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:26:01Z'
-updated: '2026-03-20T21:52:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23363004974
+updated: '2026-06-21T09:49:31Z'
+generated_by: claude-sonnet
+workflow_run: 27899943453
 issue: 4413
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/plotly/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent data modeling with physically accurate mild steel properties across
-    all deformation regions
-  - Strong data storytelling with labeled regions, annotated critical points, and
-    0.2% offset method visualization
-  - Clean intentional color palette with good accessibility and all font sizes explicitly
-    set
-  - Proper use of Plotly features including hover templates and HTML export
-  - Well-organized KISS code structure with clear section separation
+  - Correct Imprint palette with semantic color roles (amber=yield warning, red=fracture
+    failure, ochre=UTS, green=main curve)
+  - 'All four required spec annotations present: E=210 GPa, yield point with 0.2%
+    offset line, UTS value, fracture label'
+  - 'Perfect spec compliance: elastic/strain-hardening/necking region labels, key
+    point markers, Young’s modulus slope line'
+  - 'Plotly distinctive features used: updatemenus zoom buttons (Full Curve / Elastic
+    Detail) work in HTML output; hovertemplate with custom hover text'
+  - Clean KISS code structure with deterministic seed and idiomatic graph-objects
+    API
   weaknesses:
-  - Minor crowding in the elastic region area where multiple annotations cluster near
-    the origin
-  - Could push design further with more distinctive visual styling beyond plotly_white
-    template
-  image_description: 'The plot displays a mild steel tensile test stress-strain curve
-    on a clean white background. The main curve is drawn as a thick dark blue (#306998)
-    solid line spanning from strain 0 to ~0.35 and stress 0 to ~400 MPa. A dashed
-    brown/rust line represents the 0.2% offset line near the origin. Three distinct
-    markers highlight critical points: a brown diamond at the yield point (~250 MPa),
-    a gold star at UTS (400 MPa at strain ~0.22), and a red X at the fracture point
-    (~310 MPa at strain ~0.35). Each critical point has a colored annotation with
-    an arrow. Gray text labels identify the "Elastic", "Strain Hardening", and "Necking"
-    regions. A blue annotation "E = 210 GPa" marks the elastic modulus slope. The
-    legend is positioned in the lower-center area with a subtle border, listing all
-    five traces. The title reads "Mild Steel Tensile Test · line-stress-strain · plotly
-    · pyplots.ai". Y-axis has subtle horizontal gridlines; x-axis grid is removed.
-    Overall layout is well-proportioned with good use of canvas space.'
+  - 'VQ-01 minor: ‘Elastic’ region label at (0.007, 95) is positioned very close to
+    the left y-axis boundary, making it slightly cramped — shift right to x=0.015
+    or increase y to 120 for breathing room'
+  - 'DE-01 improvement: semantic color intent is clear but overall aesthetic polish
+    could be elevated — consider removing the legend box border, thinning the annotation
+    arrow strokes, and giving the region labels a slightly larger font'
+  - 'DE-02 improvement: spines (left+bottom via mirror=False) and subtle Y-grid are
+    good, but the top margin feels large relative to content — consider reducing t
+    from 100 to 80 to tighten layout'
+  - 'LM-02 improvement: the updatemenus zoom buttons add real interactive value in
+    HTML but are not visually present in the static PNG — consider whether that interactive
+    feature should be called out in a legend annotation or subtitle for PNG viewers'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Mild Steel Tensile Test · line-stress-strain · python · plotly · anyplot.ai" in dark ink at top-left, well-proportioned (~60% width). X-axis label "Engineering Strain" and Y-axis label "Engineering Stress (MPa)" both in dark INK at size 12. Tick labels (0, 0.05, 0.1 … on x; 0, 100, 200, 300, 400 on y) in INK_SOFT at size 10 — all fully readable. Subtle horizontal gridlines at 15% opacity on Y-axis only. Left and bottom spines visible; top/right spines absent (mirror=False).
+      Data: Main stress-strain curve in #009E73 (brand green, width 3.5) — dominant and clear. Blue dashed 0.2% offset line in #4467A3. Amber diamond (#DDCC77) at yield point (~strain=0.003, stress=250 MPa). Ochre star (#BD8233) at UTS (strain=0.22, stress=400 MPa). Matte-red X (#AE3030) at fracture (strain=0.35, stress~310 MPa). Annotations with colored arrows: "E = 210 GPa" in green, "Yield Point (0.2% offset)" in amber, "UTS = 400 MPa" in ochre, "Fracture" in red. Region labels "Elastic", "Strain Hardening", "Necking" in INK_MUTED. Legend box (ELEVATED_BG #FFFDF6, bordered) shows all 5 series correctly.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light INK (#F0EFE8), clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — all readable. Gridlines in rgba(240,239,232,0.15) — subtle and appropriate. Legend box in ELEVATED_BG (#242420) with INK_SOFT border — slightly elevated from background, legible.
+      Data: Imprint data colors are IDENTICAL to light render: main curve #009E73, offset line #4467A3, yield diamond #DDCC77, UTS star #BD8233, fracture X #AE3030. Annotation text colors (green/amber/ochre/red) match light render exactly. Region labels in INK_MUTED (#A8A79F) — visible but appropriately recessed. Annotation backgrounds blend into dark background (#1A1A17 = plot bg = annotation bgcolor in dark mode).
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text, labels, and annotations readable against the near-black background. Brand green #009E73 clearly visible on both surfaces.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -45,47 +57,62 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 16-17pt'
+        comment: 'All font sizes explicitly set (title scaled by length, axes 12px,
+          ticks 10px, annotations 11-12px). Both themes readable. Minor: ''Elastic''
+          region label at x=0.007 is slightly cramped near left axis.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Slight crowding in elastic region with multiple annotations, but
-          no actual text collision
+        comment: No text overlap observed. E=210 GPa and Yield Point annotations are
+          well-separated. Region labels placed in clear data-free zones. Legend in
+          lower-center area avoids data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve width 3.5, markers size 14 with white outlines, offset
-          line distinguishable with dash style
+        comment: Main line width 3.5px — prominent and clear. Markers size=14 with
+          bordered edges — clearly distinguishable. Both light and dark renders show
+          all elements well.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, brown, gold, red all distinguishable; no red-green only distinction
+        comment: Different marker symbols (diamond, star, X) provide redundant encoding
+          beyond color. Green/red distinction aided by line-vs-marker distinction.
+          CVD-safe Imprint palette used.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 1600x900 at scale 3 produces 4800x2700; balanced margins, good canvas
-          utilization
+        comment: 3200x1800 landscape canvas. Plot fills canvas well from left edge
+          to right (0 to 0.35 strain shown). Margins l=80, r=40, t=100, b=60 — appropriate.
+          No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Engineering Stress (MPa) includes units; Engineering Strain is correctly
-          dimensionless
+        comment: '''Engineering Strain'' (correct — strain is dimensionless), ''Engineering
+          Stress (MPa)'' with units. Descriptive and accurate.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Imprint positions used: blue
+          #4467A3 for offset line, ochre #BD8233 for UTS, red #AE3030 for fracture.
+          Amber #DDCC77 as semantic anchor for yield warning. Background #FAF8F1 (light)
+          / #1A1A17 (dark). Data colors identical between renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -93,22 +120,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color palette, clean template, intentional hierarchy;
-          above defaults but not showcase level
+        comment: 'Above defaults: semantic color hierarchy (amber=warning/yield, red=failure,
+          ochre=peak, green=main), distinct marker symbols with ink borders, muted
+          region labels. Not yet exceptional/publication-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid at 8% opacity, x-axis grid removed, legend with subtle
-          border, good whitespace
+        comment: Y-only subtle gridlines (15% opacity), no X-grid, L-shaped spines
+          (mirror=False), theme-adaptive annotation backgrounds, bordered elevated
+          legend. Good refinement above library defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Region labels guide viewer through deformation stages; color-coded
-          critical points create clear hierarchy
+        comment: 'Clear visual hierarchy: green main curve draws attention, semantic
+          colors guide to critical points, region labels educate the viewer, 0.2%
+          offset line shows measurement methodology. Annotations tell the engineering
+          story effectively.'
     spec_compliance:
       score: 15
       max: 15
@@ -118,27 +149,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot for stress-strain curve
+        comment: Correct engineering stress-strain curve as a line plot (go.Scatter
+          mode=lines). All curve regions present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: region labels, critical points, elastic modulus
-          annotation, 0.2% offset line'
+        comment: 'All required: region labels (Elastic/Strain Hardening/Necking),
+          critical point markers (yield, UTS, fracture), Young''s modulus annotation,
+          0.2% offset line. Optional multi-material overlay not implemented (acceptable
+          per spec).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=strain, Y=stress correctly assigned; axes cover all data
+        comment: X=Engineering Strain (0 to 0.35), Y=Engineering Stress MPa (0 to
+          460). All data visible, full curve shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format with descriptive prefix; legend labels are descriptive
-          and match data
+        comment: 'Title: ''Mild Steel Tensile Test · line-stress-strain · python ·
+          plotly · anyplot.ai'' — correct format with optional descriptive prefix.
+          Legend: Mild Steel, 0.2% Offset Line, Yield Point, Ultimate Tensile Strength,
+          Fracture Point — all correct.'
     data_quality:
       score: 15
       max: 15
@@ -148,21 +185,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all tensile test regions: elastic, yield plateau, strain hardening,
-          necking, fracture'
+        comment: 'Shows all features: elastic region, yield plateau, strain hardening,
+          necking. All four critical points annotated. 0.2% offset methodology illustrated.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mild steel tensile test is a classic neutral engineering scenario
+        comment: Mild steel tensile test — real engineering scenario, neutral, science-based.
+          Properties realistic (E=210 GPa, YS=250 MPa, UTS=400 MPa, fracture strain=0.35).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: E=210 GPa, yield=250 MPa, UTS=400 MPa, fracture strain=0.35 all accurate
-          for mild steel
+        comment: E=210 GPa (correct for steel), YS=250 MPa (low but plausible mild
+          steel), UTS=400 MPa (accurate range for mild steel), fracture strain=0.35
+          (realistic ductile). Curve shape (yield plateau for mild steel) is technically
+          accurate.
     code_quality:
       score: 10
       max: 10
@@ -172,33 +212,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions or classes
+        comment: 'Linear structure: imports → data → plot → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) set. Deterministic synthetic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, and plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear section comments; appropriate complexity
-          for multi-region curve
+        comment: Clean, appropriate complexity. updatemenus are real plotly interactive
+          features (not fake UI). Semantic variable names (BRAND, BLUE, OCHRE, RED,
+          AMBER).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions; also exports plot.html;
-          current API
+        comment: Saves plot-{THEME}.png (write_image) and plot-{THEME}.html (write_html).
+          Current plotly API used.
     library_mastery:
       score: 7
       max: 10
@@ -208,14 +250,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure, go.Scatter, add_trace, add_annotation, update_layout
+        comment: 'Idiomatic graph-objects approach: go.Figure(), add_trace(), add_annotation(),
+          update_layout(). Uses updatemenus and hovertemplate — beyond basic usage.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hovertemplate for custom tooltips, HTML export, interactive
-          annotation system
+        comment: updatemenus buttons (Full Curve / Elastic Detail zoom presets) —
+          distinctively plotly interactive feature working in HTML. hovertemplate
+          with per-trace custom hover text. Dual PNG+HTML output leverages plotly's
+          unique strength.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -227,4 +272,4 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - edge-highlighting
