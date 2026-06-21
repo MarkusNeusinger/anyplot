@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21
@@ -78,9 +78,9 @@ quarter_labels = ["Q1", "Q2", "Q3", "Q4"]
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Fill above/below 50% — higher alpha on Cowboys regions for narrow-lead visibility
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=EAGLES_COLOR, alpha=0.22, interpolate=True)
-ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=COWBOYS_COLOR, alpha=0.55, interpolate=True)
+# Fill above/below 50% — balanced alphas so neither team's fill dominates visually
+ax.fill_between(plays, win_prob, 0.5, where=(win_prob >= 0.5), color=EAGLES_COLOR, alpha=0.30, interpolate=True)
+ax.fill_between(plays, win_prob, 0.5, where=(win_prob < 0.5), color=COWBOYS_COLOR, alpha=0.30, interpolate=True)
 
 # Win probability line via LineCollection — idiomatic and efficient
 points = np.array([plays, win_prob]).T.reshape(-1, 1, 2)
@@ -99,7 +99,7 @@ for qb in quarter_boundaries[1:-1]:
 
 for i, label in enumerate(quarter_labels):
     mid = (quarter_boundaries[i] + quarter_boundaries[i + 1]) / 2
-    ax.text(mid, 0.03, label, ha="center", va="center", fontsize=7, color=INK_MUTED, fontweight="medium")
+    ax.text(mid, 0.13, label, ha="center", va="center", fontsize=8, color=INK_MUTED, fontweight="medium")
 
 # Annotate key scoring events
 annotation_events = [
@@ -118,7 +118,7 @@ for play_idx, label in annotation_events:
         label,
         xy=(play_idx, wp),
         xytext=(play_idx, wp + offset_y),
-        fontsize=7,
+        fontsize=8,
         fontweight="bold",
         ha="center",
         va="center",
@@ -144,8 +144,8 @@ for play_idx, _ in annotation_events:
 
 # Axes
 ax.set_xlim(0, n_plays)
-ax.set_ylim(0, 1)
-ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
+ax.set_ylim(0.10, 1.02)
+ax.set_yticks([0.25, 0.5, 0.75, 1.0])
 ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f"{x:.0%}"))
 
 # Grid — subtle y-axis only
