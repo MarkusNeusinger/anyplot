@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: matplotlib | Python 3.14
+Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 90/100 | Updated: 2026-06-21
 """
 
