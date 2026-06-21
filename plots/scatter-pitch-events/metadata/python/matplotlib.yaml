@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:32:48Z'
-updated: '2026-06-21T05:58:07Z'
+updated: '2026-06-21T06:06:53Z'
 generated_by: claude-sonnet
 workflow_run: 27894945513
 issue: 4417
@@ -12,127 +12,148 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Complete FIFA-standard pitch diagram with all required markings (penalty areas,
-    goal areas, center circle, halfway line, corner arcs, goal posts, penalty arcs)
-  - Correct Imprint palette in canonical order with strong redundant encoding (shape
-    + color per event type)
-  - Both light and dark renders correctly themed — no dark-on-dark failures, pitch
-    surface adapts appropriately
-  - Alpha-encoded outcome (successful = bright / unsuccessful = faded) elegantly communicates
-    match results without adding visual complexity
-  - Tactical 'Attacking Third' zone highlight creates strong focal point and demonstrates
-    domain-aware data storytelling
-  - Perfect spec compliance — all required features implemented correctly
-  - 'Excellent code quality: deterministic, clean imports, KISS structure, correct
-    canvas dimensions'
+  - Full FIFA-standard pitch markings including penalty areas, goal areas, center
+    circle, halfway line, corner arcs, penalty arcs, and goal posts — accurate 105×68m
+    layout
+  - Expert use of matplotlib.patches API (Rectangle, Circle, Arc, FancyBboxPatch)
+    for custom pitch drawing — this is idiomatic matplotlib for custom geometry
+  - Correct 105:68 aspect ratio enforced via set_aspect('equal') and xlim/ylim padding
+  - Theme-adaptive pitch colors (medium green light / dark green dark) with appropriate
+    pitch line contrast in both renders
+  - Path effects (pe.withStroke) applied to title and 'Attacking Third' label for
+    legibility on colored backgrounds
+  - Per-point RGBA alpha arrays via to_rgba() for vectorized successful/unsuccessful
+    differentiation — elegant matplotlib pattern
+  - Attacking Third zone highlight (amber FancyBboxPatch + text annotation) creates
+    a clear tactical focal point for storytelling
+  - 'Perfect Imprint palette compliance: passes #009E73, shots #C475FD, tackles #4467A3,
+    interceptions #BD8233 in canonical order; amber #DDCC77 correctly used for zone
+    annotation'
+  - Directional arrows via ax.annotate() for both passes and shots with per-event
+    alpha encoding
+  - Canvas exactly 3200×1800px (figsize=(8,4.5), dpi=400) with no bbox_inches='tight'
   weaknesses:
-  - Legend fontsize=6pt is below the 8pt recommended minimum; at mobile scale (~400px
-    wide) the legend text becomes very difficult to read — increase to 8pt to match
-    style-guide default
-  - 'Attacking third is visually cluttered: 25 shot stars and their bold arrows overlap
-    densely in the x=70-105 zone; consider reducing shot arrow lw from 1.5 to 1.0
-    or applying slight alpha (0.7) to shot arrows to reduce visual noise in the dense
-    zone'
-  - Side margins (left=0.01, right=0.99) leave minimal breathing room for the pitch
-    outline; a small increase (left=0.02, right=0.98) would avoid the pitch edges
-    feeling cramped
+  - Pass arrows (#009E73 brand green) have relatively low contrast against the light-theme
+    pitch background (#3a7d44 medium green) — white marker edges and alpha help but
+    arrows blend more than ideal; consider a thin white stroke on arrow lines or a
+    slightly different visual treatment
+  - Pass circle markers (markersize=4, ~100 events' worth of visual density) are somewhat
+    small on the 3200px canvas — increasing to markersize=5-6 would improve visibility
+    without crowding
+  - Code comment on title line says 'fontsize stays at 12pt' but the formula max(8,
+    round(12 * 67 / len(title))) gives ~15pt for a 54-char title — the comment is
+    misleading (formula is applied unconditionally rather than clamping at 12 for
+    titles shorter than 67 chars as the guide specifies)
+  - Corner arcs are very small (radius=1 in 105m coordinate space → effectively 1px
+    at the render scale) and may not be visible on the pitch; corner arc radius in
+    FIFA specs is 1m which maps to ~1 unit but renders as a barely-visible arc
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background with dark grass green (#3a7d44) pitch surface — correct theme tokens applied.
-      Chrome: Title "scatter-pitch-events · python · matplotlib · anyplot.ai" in dark INK (#1A1A17) — clearly readable. Legend at bottom in INK_SOFT (#4A4A44) at fontsize=6pt — readable at full 3200×1800 resolution, marginal at mobile scale. "Attacking Third" amber (#DDCC77) annotation visible with path-stroke backing.
-      Data: Passes as green (#009E73) circles with directional arrows; shots as lavender (#C475FD) stars with bold arrows; tackles as blue (#4467A3) triangles; interceptions as ochre (#BD8233) diamonds. Successful events at high alpha, unsuccessful at low alpha (~0.25-0.35). All four Imprint positions 1-4 in canonical order.
-      Legibility verdict: PASS (full resolution) / marginal for legend at mobile scale
+      Background: Warm off-white #FAF8F1 surrounds the plot area — correct page surface.
+      Pitch: Medium green (#3a7d44) field fills the plot with white/cream (#FAF8F1) pitch markings — outer boundary, penalty areas, goal areas, center circle, halfway line, penalty spots, penalty arcs, corner arcs, and goal posts all clearly drawn.
+      Chrome: Title "scatter-pitch-events · python · matplotlib · anyplot.ai" in dark #1A1A17 ink at ~15pt is clearly readable above the pitch. Legend bar at bottom shows Pass, Shot, Tackle, Interception, Successful (bright), Unsuccessful (faded) with #FFFDF6 elevated background and #4A4A44 text — all readable.
+      Data: Pass arrows and circles in #009E73 (brand green) — slightly low contrast against the medium-green pitch but white marker edges and high alpha for successful events keep them visible. Shot stars in #C475FD (lavender) at markersize=12 are very prominent in the attacking zone. Tackle triangles in #4467A3 (blue) at s=80 are clearly visible. Interception diamonds in #BD8233 (ochre) at s=60 are clearly visible. Amber #DDCC77 "Attacking Third" zone annotation with rounded-rectangle highlight in top-right quadrant provides strong focal point.
+      Legibility verdict: PASS — all text readable; data colors distinguishable; minor concern with pass-green-on-pitch-green contrast but still legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 with darker grass green (#1e4d2b) pitch — correct dark theme adaptation.
-      Chrome: Title in light cream INK (#F0EFE8) — clearly readable against dark background. Legend text in INK_SOFT (#B8B7B0). Pitch markings in #e0e0e0 (lighter than light render's #FAF8F1 — correct adaptation). No dark-on-dark failures detected. "Attacking Third" amber annotation remains visible.
-      Data: Colors identical to light render — green passes, lavender shots, blue tackles, ochre interceptions — only chrome/pitch surface elements flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 surrounds the plot — correct dark page surface.
+      Pitch: Dark green (#1e4d2b) field with light grey (#e0e0e0) pitch markings — all pitch elements remain clearly visible against the darker surface.
+      Chrome: Title in light #F0EFE8 ink clearly readable against the dark background. Legend bar uses #242420 elevated background with #B8B7B0 text — fully readable. No dark-on-dark failures detected anywhere.
+      Data: Pass arrows/circles (#009E73 brand green) are much more visible on the dark green pitch than in the light render — strong contrast. Shot stars (#C475FD lavender) remain highly prominent. Tackle triangles (#4467A3 blue) and interception diamonds (#BD8233 ochre) are identical in color to the light render. Amber "Attacking Third" annotation equally visible on the darker surface.
+      Legibility verdict: PASS — all text readable in light text on dark background; data colors identical to light render; chrome correctly adapted to dark theme.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Title correctly scaled at 15pt for 55-char string. Legend at fontsize=6pt
-          below recommended 8pt minimum — marginal at mobile scale.
+        comment: 'Title fontsize explicitly computed (~15pt for 54-char title); legend
+          at 8pt explicitly set; all text readable in both themes. Minor: code comment
+          says 12pt but formula yields 15pt for sub-67-char title (unconditional application).'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good overall separation but attacking third (x=70-105) cluttered
-          with 25 shot stars and bold arrows densely overlapping.
+        comment: Some event marker/arrow overlap is inherent to match-event plotting
+          at 170 events; no text overlaps text or legend. Legend is clean and unobstructed.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All four event types clearly distinguishable by shape and color.
-          Alpha encoding for outcomes effective. Minor docking for dense arrow tangle.
+        comment: Shot stars (markersize=12) and tackle triangles (s=80) are prominent.
+          Pass circles (markersize=4) are slightly small for 70 events on a dense
+          pitch. Alpha differentiation for success/failure is effective.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette with redundant marker shape encoding. No red-green
-          sole discriminator.
+        comment: Imprint palette is CVD-safe. White marker edges improve distinguishability.
+          Pass green vs pitch green is a minor concern but white edges mitigate it.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, correct 105:68 pitch aspect ratio. Slightly
-          tight side margins (left=0.01, right=0.99).
+        comment: Canvas exactly 3200x1800. subplots_adjust gives 8% for title, 10%
+          for legend. Equal aspect ratio leaves expected lateral padding with landscape
+          canvas. Good overall layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels appropriate for pitch visualization. Title correctly
-          formatted.
+        comment: 'Axis is off (correct for pitch map). Title format correct: ''scatter-pitch-events
+          · python · matplotlib · anyplot.ai''. No axis labels needed; pitch dimensions
+          are self-evident from the diagram.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Pass) = #009E73. Canonical order positions 1-4. Page
-          backgrounds correct. Both themes correct. Pitch surface colors are data
-          canvas not categorical colors.'
+        comment: 'Pass=#009E73 (position 1), shot=#C475FD (2), tackle=#4467A3 (3),
+          interception=#BD8233 (4) — canonical Imprint order. Amber #DDCC77 correctly
+          used for zone annotation. Page background #FAF8F1 light / #1A1A17 dark.
+          Data colors identical in both renders. Chrome correctly flips.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default. Professional pitch rendering, tactical zone highlight,
-          alpha-encoded outcomes, path effects on text elements. Intentional visual
-          hierarchy.
+        comment: 'Strong design: custom pitch colors per theme, path effects on labels,
+          amber zone annotation with rounded rectangle, alpha-encoded success states.
+          Clearly above well-configured defaults. Not quite publication-ready (corner
+          arcs barely visible, pass arrow contrast could be better).'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: ax.axis('off') cleanly removes axis chrome. Path effects on title
-          and zone label. White marker edges. Subtle zone highlight at alpha=0.07.
+        comment: ax.axis('off') removes all unnecessary chrome. Legend carefully styled
+          (framealpha, facecolor, edgecolor, labelcolor). subplots_adjust controls
+          margins precisely. Path effects on contextual text. Above the DE-02=2 default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Strong focal point via Attacking Third zone highlight. Alpha outcome
-          encoding provides tactical narrative. Directional arrows convey movement
-          intent.
+        comment: Attacking Third zone highlight creates clear tactical focal point.
+          Alpha encoding (bright=successful, faded=unsuccessful) tells match performance
+          story. Shot concentration in right third is spatially meaningful. Visual
+          hierarchy guides viewer to attacking action.
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +163,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-on-pitch chart type with all event types.
+        comment: Correct scatter/event map on pitch diagram. All required event types
+          present with distinct markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: pitch markings, distinct marker shapes, outcome
-          alpha, directional arrows, green pitch, correct aspect ratio.'
+        comment: 'All spec features present: FIFA-standard pitch (105x68m), penalty
+          areas, goal areas, center circle, halfway line, corner arcs, penalty arcs,
+          goals, distinct markers per event type, outcome encoding via alpha, directional
+          arrows for passes and shots, green pitch background.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 0-105m, Y: 0-68m. All four event types. Outcome encoding. 170
-          events in valid range.'
+        comment: x=horizontal pitch position (0-105m), y=vertical position (0-68m),
+          event_type encoded as marker shape and color, outcome encoded as alpha.
+          All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correctly formatted. Legend covers all 4 event types plus 2
-          outcome levels.
+        comment: 'Title: ''scatter-pitch-events · python · matplotlib · anyplot.ai''
+          — exact correct format. Legend: Pass, Shot, Tackle, Interception, Successful
+          (bright), Unsuccessful (faded) — all event types and outcome states represented.'
     data_quality:
       score: 15
       max: 15
@@ -173,21 +199,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four event types, both outcomes, directional arrows, pitch markings,
-          tactical zone — complete coverage.
+        comment: Shows all 4 event types (pass, shot, tackle, interception), both
+          outcomes (successful/unsuccessful), directional arrows for passes and shots,
+          events distributed across all pitch zones.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic soccer analytics rates. Tactically plausible spatial distributions.
-          Neutral domain.
+        comment: Football/soccer match event data is a real, neutral, widely understood
+          scenario. Event distributions make tactical sense (shots in attacking third,
+          tackles across defensive/midfield zones). No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FIFA dimensions correct. Realistic event counts for match segment.
+        comment: 'FIFA dimensions (105x68m) correct. Success rates realistic: passes
+          78%, shots on target 35%, tackles 65%, interceptions 80%. Shot positions
+          concentrated in x>70 zone. Arrow directions toward goal for shots.'
     code_quality:
       score: 10
       max: 10
@@ -197,61 +227,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no unnecessary functions or classes.
+        comment: 'Sequential: imports → theme tokens → palette → data generation →
+          figure → pitch markings → events → title → legend → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) used.
+        comment: np.random.seed(42) set before all data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: patches (pitch geometry), patheffects (text on
+          colored bg), pyplot, numpy, colors.to_rgba (vectorized RGBA). os/sys for
+          path/theme handling.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity. Appropriate complexity.
+        comment: Vectorized RGBA approach for scatter events (to_rgba with numpy.where)
+          is elegant. Loop-based approach for annotate arrows is appropriate for matplotlib's
+          per-element annotation API. No over-engineering or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, current API.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
+          3.11 API used throughout.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes-method API throughout. fig.subplots_adjust for layout control.
-          Per-library conventions followed.
+        comment: 'Expert use of matplotlib Axes API: add_patch() for geometry, annotate()
+          for arrows, scatter() with RGBA arrays, custom legend with Line2D handles.
+          Follows Axes-methods-over-pyplot pattern. patheffects used correctly.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: matplotlib.patches for pitch construction, patheffects for text stroke,
-          to_rgba for vectorized per-point alpha, annotate with arrowprops for directional
-          arrows.
+        comment: matplotlib.patches (Rectangle, Circle, Arc, FancyBboxPatch) for complete
+          pitch drawing is distinctively matplotlib — no other library offers this
+          level of custom geometry control in a static PNG workflow. patheffects.withStroke
+          for text legibility on colored backgrounds is also matplotlib-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
