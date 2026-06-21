@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
@@ -108,8 +108,8 @@ for z in zones:
     zone_stats[z] = (z_made, z_total, z_pct)
 
 # Canvas — 2400×2400 (square, canonical for symmetric shot chart).
-# y_range extended to (-12, 42) = 54 units, matching x_range = 54 units,
-# so match_aspect=True fills the square canvas uniformly with no wasted space.
+# y_range (-12, 42) = 54 units, matching x_range = 54 units so match_aspect=True
+# fills the square canvas uniformly. min_border_top trimmed to reduce chrome overhead.
 title = "scatter-shot-chart · python · bokeh · anyplot.ai"
 p = figure(
     width=2400,
@@ -121,7 +121,7 @@ p = figure(
     match_aspect=True,
     min_border_bottom=50,
     min_border_left=60,
-    min_border_top=220,
+    min_border_top=100,
     min_border_right=60,
 )
 
@@ -244,7 +244,7 @@ fg_pct = n_made / n_shots * 100
 p.add_layout(
     Label(
         x=0,
-        y=38,
+        y=32,
         text=f"FG: {fg_pct:.1f}%  ·  {n_shots} attempts",
         text_font_size="24pt",
         text_color=INK_MUTED,
@@ -255,11 +255,11 @@ p.add_layout(
 
 # Zone efficiency overlays with made/total counts
 zone_positions = {
-    "Paint": [(0, 6)],
+    "Paint": [(3, 6)],
     "Mid-Range": [(15, 14)],
     "Three-Point": [(0, 27)],
     "Corner 3": [(-21, 4), (21, 4)],
-    "Free Throw": [(-12, 17)],
+    "Free Throw": [(18, 16)],
 }
 for z, positions in zone_positions.items():
     z_made, z_total, z_pct = zone_stats[z]
