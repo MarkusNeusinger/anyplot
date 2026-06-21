@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-21

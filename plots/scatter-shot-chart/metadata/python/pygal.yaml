@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:27:33Z'
-updated: '2026-06-21T08:10:31Z'
+updated: '2026-06-21T08:20:01Z'
 generated_by: claude-sonnet
 workflow_run: 27897877520
 issue: 4416
@@ -15,46 +15,43 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-s
 quality_score: 86
 review:
   strengths:
-  - Accurate NBA half-court geometry with three-point arc, paint/key, free-throw circle
-    (dashed bottom half), restricted area arc, backboard, and rim drawn in theme-adaptive
-    warm-gray colors
-  - 'Semantic color mapping: Imprint green (#009E73) for made shots, Imprint matte
-    red (#AE3030) for missed shots — correct semantic exception for good/bad outcome'
-  - FG% statistics embedded in legend labels (e.g. Made Inside — 56% FG 48/85) add
-    immediate analytical value without clutter
-  - Marker size differentiation between inside (r=14) and perimeter (r=9) shots provides
-    redundant encoding for shot zone
-  - Theme-adaptive court lines (warm beige in light, darker warm-gray in dark) keep
-    structural lines from competing with data markers
-  - 2400x2400 square canvas enforces 1:1 aspect ratio as required for court geometry
-  - 'Clean code: np.random.seed(42) for reproducibility, no functions/classes, all
-    imports used, both PNG and HTML output'
+  - Accurate NBA half-court geometry with three-point arc, paint, free-throw circle
+    (with dashed bottom half), restricted area, backboard, and ochre rim
+  - 'Semantic Imprint palette: brand green (#009E73) for made shots, matte red (#AE3030)
+    for missed shots — both are correct semantic exceptions to canonical palette order'
+  - FG% statistics in legend labels add real analytical value (56% inside, 34% perimeter)
+  - Marker size differentiation (inside=r14, perimeter=r9) provides visual zone encoding
+    on top of color
+  - Warm neutral court-line colors adapt to theme — court blends gracefully in both
+    light and dark renders
+  - Both renders pass theme-readability checks; dark render uses correct light-on-dark
+    text
+  - Correct 2400x2400 square canvas for 1:1 aspect ratio court
+  - Clean code with no unnecessary abstractions; np.random.seed(42) ensures reproducibility
   weaknesses:
-  - 'Legend rendering artifact: the ⬤ emoji prefix in series labels collides with
-    pygals own colored swatch circle, producing a double-dot appearance in both renders
-    — the circle swatch from pygal renders alongside the Unicode bullet in the label
-    text, reducing legend polish'
-  - Red-green sole signal for made vs missed — no shape or symbol redundancy differentiates
-    the outcomes under deuteranopia or protanopia; adding marker shape variation (e.g.
-    circle for made, x/cross for missed) would make the chart fully CVD-safe per VQ-04
-    guidance
-  - foreground_subtle set to PAGE_BG (background color) as a suppression trick — while
-    functional, this unconventional setting hides the muted text slot entirely rather
-    than using INK_MUTED, which could cause unintended side effects in pygal internal
-    rendering paths
+  - 'VQ-04: Red (#AE3030) and green (#009E73) are the sole color signal for made/missed
+    — spec-mandated but colorblind viewers (deuteranopia/protanopia) cannot distinguish
+    them. Consider adding a redundant encoding: different marker shapes (circle=made,
+    x=missed) to complement the color signal'
+  - 'DQ-01: shot_type categorical dimension from spec (2-pointer / 3-pointer / free-throw)
+    appears only in tooltip labels but not as a distinct visual encoding. Free-throws
+    are merged into the inside zone rather than shown as a distinct category — the
+    legend partially compensates but the 3-category shot_type field is not fully visualized'
+  - 'LM-02: pygal-distinctive features like gauge charts, sparklines, or advanced
+    dot graph customization are not leveraged — the XY chart with custom series is
+    solid but leaves some pygal specialty features unexplored'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface, clearly visible
-      Chrome: Title "scatter-shot-chart · python · pygal · anyplot.ai" in dark ink at top, clearly readable at full size; approximately 60-65% of canvas width (good). No axis labels or ticks — appropriate since court geometry provides spatial reference. Legend at bottom in 2 columns with dark text on warm-off-white — readable.
-      Data: Made shots in #009E73 (brand green), missed shots in #AE3030 (matte red). Larger dots for paint/free-throw shots, smaller for midrange/three-point. Court lines in warm beige-gray, rim in Imprint ochre. Court structure clearly visible: three-point arc, paint rectangle, free-throw circle (dashed lower half), restricted area arc, backboard, and rim.
-      Legend artifact: Each legend entry shows both pygals colored swatch circle AND the ⬤/▪ emoji prefix in the label text, creating a double-dot appearance. Readable but slightly cluttered.
-      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, no pure white
+      Chrome: Title "scatter-shot-chart · python · pygal · anyplot.ai" is dark (#1A1A17) at top center, readable at ~60% plot width. No axis labels or tick labels shown (appropriate per spec — court geometry provides spatial reference). Legend at bottom in 2 columns with readable dark text on light background.
+      Data: Green (#009E73) dots for made shots, red (#AE3030) dots for missed shots. Inside shots use larger markers (r=14), perimeter shots use smaller markers (r=9). Court lines are warm sand-gray, clearly visible but not competing with shot data. Rim drawn in ochre (#BD8233). Dashed bottom of free-throw circle is visible. All court elements (three-point arc, paint, restricted area, backboard, rim) are present.
+      Legibility verdict: PASS — all text elements readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct Imprint dark surface, visibly warm near-black (not pure black).
-      Chrome: Title in light (#F0EFE8) ink — clearly readable against dark background. Legend text is light-colored and readable. Court lines adapted to darker warm-gray (#7A6A5A for lines, #9A8A7A for backboard) — visible but subtle.
-      Data: Made shots still #009E73 (brand green, identical to light render), missed shots still #AE3030 (matte red, identical to light render). Palette colors are preserved as required. In dark mode the legend swatch circles render with white outlines (pygals foreground=INK_SOFT adaptation) rather than black outlines, which is slightly more visible but creates the same double-dot artifact.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures detected. Brand green #009E73 is clearly visible in dark mode.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, no pure black
+      Chrome: Title text is light (#F0EFE8) and clearly readable against dark background. Legend text is also light-colored and readable. Court lines are in a slightly lighter warm gray, visible against the dark background.
+      Data: Green (#009E73) and red (#AE3030) data colors are IDENTICAL to the light render — only chrome (background, text) has flipped. Brand green remains clearly visible on dark surface. Shot markers retain their visual pop.
+      Legibility verdict: PASS — no dark-on-dark failures observed. Title, legend text all clearly readable. No black text on black background issues.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -62,91 +59,88 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Title and legend text readable in both renders at correct font sizes
-          (title=66, legend=44). Deduction for legend rendering artifact: Unicode
-          bullet emoji in label text collides with pygal swatch circle, producing
-          double-dot appearance that reduces clarity.'
+        comment: 'Title readable in both themes, legend text clear at bottom. No axis
+          labels (appropriate per spec). Minor: legend text is quite small relative
+          to canvas — readable at full res but marginal.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Expected shot clustering in paint area causes minor marker overlap
-          — inherent to 200-point shot chart in a dense zone. No text overlaps with
-          data. Legend clear of chart area.
+        comment: Some shot marker overlap in the paint area — realistic for 200 shots.
+          Opacity 0.82 provides partial transparency. Legend items are cleanly separated.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Green and red markers clearly visible against both backgrounds. Inside
-          markers (r=14) and perimeter markers (r=9) well-differentiated. Court lines
-          subtle but visible in both themes. Rim in Imprint ochre adds realism.
+        comment: Shot markers well-sized for 200 data points. Inside shots larger
+          than perimeter adds zone context. Court lines visible but subtle. All court
+          geometry elements identifiable.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Red-green sole signal for made vs missed — no shape/symbol redundancy.
-          Under deuteranopia/protanopia these two series become indistinguishable.
-          Spec convention is honored but marker shapes (circle vs cross) would make
-          this CVD-safe.
+        passed: false
+        comment: Red-green as sole color signal for made/missed is a CVD concern (deuteranopia/protanopia).
+          Spec mandates this mapping, but no redundant encoding (marker shapes) added
+          to compensate.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas passes gate. Court geometry fills the plot
-          area with minimal padding. Legend at bottom well-spaced. No text overflow
-          or clipping detected. 1:1 aspect ratio preserved correctly.
+        comment: 2400x2400 square canvas is correct for 1:1 court aspect ratio. Court
+          fills the plot area well. Legend at bottom does not intrude on court area.
+          No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title is exact required format. No axis labels/ticks appropriate
-          — spec says they are optional since court geometry provides spatial reference.
+        comment: Title correctly formatted as 'scatter-shot-chart · python · pygal
+          · anyplot.ai'. No axis labels shown, appropriate per spec (court geometry
+          provides spatial reference).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light bg #FAF8F1, dark bg #1A1A17 — both correct. Made=#009E73 (Imprint
-          position 1), Missed=#AE3030 (Imprint position 5) — valid semantic exception
-          (good/bad outcome). Court lines use structural contextual colors, not categorical
-          palette (correct). Palette identical across both renders.'
+        comment: 'Made=green (#009E73, Imprint pos 1) and missed=red (#AE3030, Imprint
+          pos 5 semantic anchor) are correct semantic exceptions. Backgrounds #FAF8F1
+          / #1A1A17 correct. Data colors identical across themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional basketball analytics look with semantic color choices.
-          FG% stats in legend labels show domain knowledge. Theme-adaptive court line
-          colors (warm beige light / warm gray dark) well-considered. Ochre rim adds
-          realism. Above default 4 but not extraordinary.
+        comment: Accurate NBA court geometry demonstrates domain expertise. Ochre
+          rim approximates real orange. Dashed free-throw circle bottom half follows
+          basketball convention. Warm neutral court lines blend with background. Semantic
+          color assignment is intentional and correct.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines, no grid — appropriate for a court-based spatial plot.
-          Dashed lower free-throw circle follows NBA convention. Marker size differentiation
-          (inside vs perimeter) adds depth. Above default 2.
+        comment: No axes or grid — appropriate for court chart. Court lines are subtle,
+          warm-toned, and theme-adaptive. Clean composition with generous whitespace.
+          Legend placement doesn't crowd the court.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Court structure provides immediate spatial context. FG% in legend
-          tells efficiency story. Marker size encodes shot zone. Shot clustering in
-          paint and three-point arc visible at a glance. Above default 2.
+        comment: FG% statistics in legend ('56% FG (48/85)') add genuine analytical
+          context. Inside/perimeter size differentiation adds a meaningful secondary
+          encoding. Court layout naturally guides zone interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -156,59 +150,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basketball shot chart scatter plot on half-court diagram.
+        comment: Basketball shot chart with accurate half-court diagram. Correct visualization
+          type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Three-point arc (23.75 ft, corner straight lines), paint/key area
-          (16x19 ft), free-throw circle (top solid, bottom dashed), restricted area
-          arc, backboard, rim — all present. 1:1 aspect ratio enforced. Legend for
-          made/missed included.
+        comment: NBA half-court with three-point arc, free-throw line, paint/key,
+          restricted area arc, basket and backboard. Made=green, missed=red. Court
+          lines in neutral gray. 1:1 aspect ratio.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=horizontal court position, y=vertical court position, made=boolean
-          color-coded, shot_type in data labels. 200 shots (within 200-500 range).
+        comment: X/Y court positions correctly mapped. Outcome (made/missed) encoded
+          by color. All 200 shots visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly scatter-shot-chart · python · pygal · anyplot.ai. Legend
-          distinguishes made/missed and inside/perimeter with FG% stats.
+        comment: Title matches required format. Legend shows all 4 series with descriptive
+          labels including FG%.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all shot zones: paint, midrange, three-pointer (including
-          corner threes), free-throw. Both made and missed outcomes. FG% by zone computed
-          and displayed.'
+        comment: Shot chart covers paint, midrange, three-point, and free-throw zones.
+          Inside/perimeter size encoding adds dimension. However, shot_type (2-pointer/3-pointer/free-throw)
+          from spec is only in tooltip labels, not visually encoded — free-throws
+          merged with inside shots.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic FG% by zone (55% paint, 40% midrange, 36% three-point,
-          80% free-throw) matching NBA averages. Neutral player — not a real individual.
-          Shot distribution proportions (30% paint, 25% mid, 35% three, 10% FT) are
-          realistic.
+        comment: NBA shot chart scenario is realistic and neutral. FG% values realistic
+          (56% inside, 34% perimeter). Data distribution follows real basketball patterns.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NBA court dimensions (50 ft wide, 23.75 ft arc radius, 19 ft paint
-          depth). 200 shots within spec range. Corner threes at ±22 ft horizontal
-          correctly placed.
+        comment: 200 shots (within spec range of 200-500). Court dimensions in NBA
+          standard feet. Realistic shot zone probabilities.
     code_quality:
       score: 10
       max: 10
@@ -218,33 +210,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat sequential code. Easy to follow.
+        comment: No functions or classes. Flat top-level script with clear sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: math (trig), os (theme env), numpy (data gen), pygal, pygal.style.Style
-          — all used.
+        comment: math, os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Zone-based data generation is clean. Court geometry construction
-          is well-organized. No fake UI.
+        comment: Well-organized with clear section comments. Mathematical court geometry
+          is correct. Custom formatters are appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (pygal interactive).
+          Correct API usage.
     library_mastery:
       score: 7
       max: 10
@@ -254,22 +246,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY for coordinate scatter, Style object for all theme tokens,
-          stroke=True/False to switch between court lines and data markers, legend_at_bottom
-          with columns. Strong idiomatic usage.
+        comment: pygal.XY is the correct chart type for scatter. Style object properly
+          used for all theming. Stroke series for court geometry lines is an idiomatic
+          pygal pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Per-point node radius via node: {r: ...} dict syntax (pygal-specific),
-          custom stroke_style per series including dasharray for dashed FT circle,
-          interactive HTML output with tooltip formatters.'
+        comment: Interactive HTML export, legend_at_bottom, custom tooltip formatters,
+          stroke_style with dasharray for dashed court lines, node-level radius control
+          per data point. Good use of pygal-specific features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - html-export
   patterns:
   - data-generation
