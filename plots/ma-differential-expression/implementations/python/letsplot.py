@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-06-21
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-21
 """
 
 import os
