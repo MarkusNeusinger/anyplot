@@ -19,7 +19,7 @@ const INK_MUTED   = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 
 # Imprint palette — home uses position 1 (brand green, first-series rule), away uses position 3
 const HOME_COLOR = colorant"#009E73"  # Imprint position 1 — Lakeside Wolves (home)
-const AWAY_COLOR = colorant"#4467A3"  # Imprint position 3 — Harbor Eagles (away)
+const AWAY_COLOR = colorant"#4467A3"  # Imprint position 3 — Harbor Eagles (away); skip pos 2 (lavender) — blue reads as adversarial contrast to home green
 
 # Data: NBA playoff game, 200 play-by-play win-probability snapshots over 48 minutes
 n_points   = 200
@@ -87,7 +87,8 @@ ax = Axis(
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
-    ygridvisible      = false,
+    ygridvisible      = true,
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.12),
     xticks            = ([0, 12, 24, 36, 48], ["0", "12", "24", "36", "48"]),
     yticks            = ([0.0, 0.25, 0.50, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"]),
 )
@@ -112,7 +113,7 @@ lines!(ax, game_time, win_prob; color = INK, linewidth = 2.0)
 # Q1 label at far left
 text!(ax, 0.5, 0.975;
     text     = "Q1",
-    fontsize = 11,
+    fontsize = 12,
     color    = INK_MUTED,
     align    = (:left, :top))
 
@@ -121,7 +122,7 @@ for (t, lbl) in zip(quarter_times, quarter_labels)
     vlines!(ax, [t]; color = (INK_SOFT, 0.45), linewidth = 1.0, linestyle = :dash)
     text!(ax, t + 0.4, 0.975;
         text     = lbl,
-        fontsize = 11,
+        fontsize = 12,
         color    = INK_MUTED,
         align    = (:left, :top))
 end
@@ -138,7 +139,7 @@ for (t, lbl, p) in zip(event_times, event_descs, event_probs)
     va    = p > 0.5 ? :bottom : :top
     text!(ax, t, y_pos;
         text     = lbl,
-        fontsize = 11,
+        fontsize = 12,
         color    = INK_MUTED,
         align    = (:center, va))
 end
@@ -159,7 +160,7 @@ text!(ax, 1.0, 0.12;
 # Final score annotation
 text!(ax, 47.5, 0.975;
     text     = "Final: Eagles 104  ·  Wolves 98",
-    fontsize = 11,
+    fontsize = 12,
     color    = INK_MUTED,
     align    = (:right, :top))
 
