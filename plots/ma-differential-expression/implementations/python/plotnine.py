@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-20
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ from plotnine import (
     labs,
     scale_alpha_manual,
     scale_color_manual,
+    scale_shape_manual,
     scale_size_manual,
     stat_smooth,
     theme,
@@ -29,13 +32,26 @@ from plotnine import (
 )
 
 
-# Data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Semantic Imprint palette: green=gain, matte-red=loss, muted=background noise
+COLOR_UP = "#009E73"  # Imprint position 1 — upregulation (positive/gain)
+COLOR_DOWN = "#AE3030"  # Imprint position 5 — downregulation (loss/error)
+COLOR_NS = INK_MUTED  # theme-adaptive muted — non-significant genes
+
+# Data — T-cell activation study (activated vs resting), immunology domain
 np.random.seed(42)
 n_genes = 15000
 
 mean_expression = np.random.uniform(0, 15, n_genes)
 log_fold_change = np.random.normal(0, 0.5, n_genes)
-log_fold_change += 0.15 * np.sin(mean_expression * 0.3)
+log_fold_change += 0.12 * np.sin(mean_expression * 0.25)
 
 n_sig = int(n_genes * 0.08)
 sig_indices = np.random.choice(n_genes, n_sig, replace=False)
@@ -44,14 +60,15 @@ log_fold_change[sig_indices] *= np.random.uniform(2.5, 5.0, n_sig)
 significant = np.abs(log_fold_change) > 1.0
 significant[sig_indices[: n_sig // 2]] = True
 
-# Categorize into up/down/not significant for richer storytelling
 category = np.where(~significant, "Not significant", np.where(log_fold_change > 0, "Upregulated", "Downregulated"))
 
+# Immunology genes — T-cell activation markers, ranked by p-value proxy (|LFC| × sqrt(baseMean))
 gene_names = [f"Gene{i}" for i in range(n_genes)]
-top_genes = ["BRCA1", "TP53", "MYC", "EGFR", "KRAS", "PTEN", "RB1", "APC"]
-top_idx = np.argsort(np.abs(log_fold_change))[-len(top_genes) :]
+pvalue_score = np.abs(log_fold_change) * np.sqrt(mean_expression + 1)
+immune_genes = ["IL2", "IFNG", "IL4", "FOXP3", "CD69", "TNF", "GATA3", "TBX21"]
+top_idx = np.argsort(pvalue_score)[-len(immune_genes) :]
 for i, idx in enumerate(top_idx):
-    gene_names[idx] = top_genes[i]
+    gene_names[idx] = immune_genes[i]
 
 df = pd.DataFrame(
     {
@@ -66,95 +83,72 @@ df = pd.DataFrame(
 )
 
 df_labels = df.loc[top_idx].copy()
-# Position labels offset from data points to avoid overlap
-nudge = np.where(df_labels["log_fold_change"] > 0, 0.8, -0.8)
-
-# Detect close labels within same direction and stagger them
-for direction in [1, -1]:
-    mask = (nudge * direction) > 0
-    subset = df_labels[mask].sort_values("mean_expression")
-    for j in range(1, len(subset)):
-        prev_x = subset.iloc[j - 1]["mean_expression"]
-        curr_x = subset.iloc[j]["mean_expression"]
-        if abs(curr_x - prev_x) < 2.0:
-            idx_curr = subset.index[j]
-            nudge[df_labels.index.get_loc(idx_curr)] *= 2.0
-
+nudge = np.where(df_labels["log_fold_change"] > 0, 0.7, -0.7)
 df_labels["label_y"] = df_labels["log_fold_change"] + nudge
-
-# Split labels by direction for separate geom_text layers
-df_labels_up = df_labels[df_labels["log_fold_change"] > 0].copy()
-df_labels_down = df_labels[df_labels["log_fold_change"] < 0].copy()
 
 # Plot
 plot = (
-    ggplot(df, aes(x="mean_expression", y="log_fold_change", color="category"))
+    ggplot(df, aes(x="mean_expression", y="log_fold_change", color="category", shape="category"))
     + geom_point(aes(alpha="category", size="category"), stroke=0)
-    + geom_hline(yintercept=0, color="#2C3E50", size=1.0, alpha=0.8)
-    + geom_hline(yintercept=1, linetype="dashed", color="#95A5A6", size=0.6)
-    + geom_hline(yintercept=-1, linetype="dashed", color="#95A5A6", size=0.6)
+    + geom_hline(yintercept=0, color=INK, size=0.8, alpha=0.5)
+    + geom_hline(yintercept=1, linetype="dashed", color=INK_SOFT, size=0.5)
+    + geom_hline(yintercept=-1, linetype="dashed", color=INK_SOFT, size=0.5)
     + annotate(
         "label",
         x=14.5,
         y=1.0,
         label=" ±2-fold threshold ",
-        size=11,
-        color="#555555",
-        fill="#FAFAFA",
+        size=3.0,
+        color=INK_SOFT,
+        fill=ELEVATED_BG,
         alpha=0.9,
         label_size=0,
         ha="right",
         va="center",
     )
-    + stat_smooth(aes(group=1), method="lowess", color="#306998", size=1.4, se=False, span=0.3, linetype="solid")
+    + stat_smooth(aes(group=1), method="lowess", color="#4467A3", size=1.2, se=False, span=0.3, linetype="solid")
     + geom_text(
         aes(x="mean_expression", y="label_y", label="gene_name"),
-        data=df_labels_up,
-        color="#1A1A2E",
-        size=14,
+        data=df_labels,
+        color=INK,
+        size=3.5,
         fontstyle="italic",
-        alpha=1,
         inherit_aes=False,
         show_legend=False,
     )
-    + geom_text(
-        aes(x="mean_expression", y="label_y", label="gene_name"),
-        data=df_labels_down,
-        color="#1A1A2E",
-        size=14,
-        fontstyle="italic",
-        alpha=1,
-        inherit_aes=False,
-        show_legend=False,
-    )
-    + scale_color_manual(values={"Upregulated": "#D45E00", "Not significant": "#C0C0C0", "Downregulated": "#306998"})
+    + scale_color_manual(values={"Upregulated": COLOR_UP, "Not significant": COLOR_NS, "Downregulated": COLOR_DOWN})
     + scale_alpha_manual(values={"Upregulated": 0.8, "Not significant": 0.15, "Downregulated": 0.8})
+    + scale_shape_manual(values={"Upregulated": "^", "Not significant": "o", "Downregulated": "v"})
     + scale_size_manual(values={"Upregulated": 2.0, "Not significant": 1.0, "Downregulated": 2.0})
     + labs(
         x="Mean Expression (A)",
         y="Log₂ Fold Change (M)",
-        title="ma-differential-expression · plotnine · pyplots.ai",
+        title="ma-differential-expression · python · plotnine · anyplot.ai",
         color="",
+        shape="",
     )
-    + guides(color=guide_legend(override_aes={"alpha": 1, "size": 4}), alpha="none", size="none")
+    + guides(
+        color=guide_legend(override_aes={"alpha": 1, "size": 3}),
+        shape=guide_legend(override_aes={"alpha": 1, "size": 3}),
+        alpha="none",
+        size="none",
+    )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold", color="#1A1A2E"),
-        plot_subtitle=element_text(size=16, color="#555555"),
-        axis_title=element_text(size=20, color="#2C3E50"),
-        axis_text=element_text(size=16, color="#555555"),
-        legend_text=element_text(size=16),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_blank(),
         legend_position="top",
-        legend_background=element_rect(fill="white", alpha=0.8),
-        panel_grid_major_x=element_blank(),
-        panel_grid_major_y=element_line(color="#ECECEC", size=0.3),
-        panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#FAFAFA", color="none"),
-        panel_background=element_rect(fill="#FAFAFA", color="none"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
