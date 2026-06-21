@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-06-21
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-21
 """
 
 import os
