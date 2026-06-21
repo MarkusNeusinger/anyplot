@@ -1,7 +1,7 @@
 // anyplot.ai
 // ma-differential-expression: MA Plot for Differential Expression
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 79/100 | Created: 2026-06-21
+// Quality: 83/100 | Created: 2026-06-21
 
 const t = window.ANYPLOT_TOKENS;
 

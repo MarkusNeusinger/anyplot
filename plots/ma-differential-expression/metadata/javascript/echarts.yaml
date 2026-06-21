@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: ma-differential-expression
 created: '2026-06-21T01:25:00Z'
-updated: '2026-06-21T01:31:25Z'
+updated: '2026-06-21T01:46:51Z'
 generated_by: claude-sonnet
 workflow_run: 27889373427
 issue: 4420
@@ -12,141 +12,146 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/javascript/echarts/plot-dark.html
-quality_score: 79
+quality_score: 83
 review:
   strengths:
-  - 'Full spec compliance: MA plot with correct axes, all three reference lines (M=0
-    solid, M=±1 dashed), LOESS trend, transparency, and gene name labels'
-  - 'Semantic color mapping perfectly aligned with biology domain conventions: #009E73
-    green=upregulated, #AE3030 red=downregulated, muted anchor=non-significant'
-  - In-browser LOESS implementation (tricube kernel, local linear regression, 25%
-    bandwidth, 60 query points) is technically impressive with no external dependencies
-  - Deterministic data generation via LCG (seed=42) correctly avoids Math.random()
-    browser seeding issues per ECharts requirements
-  - Both light and dark themes render correctly with full theme-adaptive chrome (ink,
-    inkSoft, grid tokens throughout)
-  - 'Realistic biologically meaningful synthetic data: cancer gene names (TP53, EGFR,
-    KRAS), plausible expression ranges, ~10% DE rate with low-expression bias modeled'
+  - Real LOESS smoother implemented from scratch using tricube kernel and local linear
+    regression — not a simple trendline, but a statistically correct smoother that
+    reveals expression-dependent bias
+  - Smart quadrant-based gene label selection picks one representative per spatial
+    quadrant, eliminating label collisions while still highlighting key DEGs
+  - 'Semantically correct Imprint palette usage: green (#009E73) for gain/upregulated,
+    muted red (#AE3030) for loss/downregulated, theme-adaptive muted gray for non-significant
+    — all per palette semantic rules'
+  - Reference lines at M=0 (solid), M=+1 and M=-1 (dashed) with inline labels correctly
+    implemented via ECharts markLine with mixed lineStyle
+  - 'Full theme-adaptive chrome: all text elements (title, axis labels, tick labels,
+    mark labels, legend) draw from ANYPLOT_TOKENS for both light and dark renders'
+  - Deterministic LCG RNG with fixed seed 42 ensures reproducible data generation
+    in the browser environment
   weaknesses:
-  - Gene labels for upregulated genes in upper-left (BRCA1/MDM2 cluster) and upper-right
-    (PTEN/VEGFA cluster) visually overlap each other — ECharts has no automatic label
-    deconfliction for scatter; consider offsetting labels or only labeling the single
-    top gene per quadrant to reduce collision
-  - Gene annotation labels use fontSize=11 CSS px (22px native) which is small at
-    400px mobile width; increase to 13px to match axis tick label size
-  - Grid lines are shown on both X and Y axes; Y-axis-only grid would reduce visual
-    noise and better follow minimal-chrome style guide guidance
-  - Significant gene markers at symbolSize=6 CSS (12px native) are modest for a 2000-point
-    scatter on a 3200×1800 canvas; bumping to 8 would improve visibility of highlighted
-    genes without overcrowding
+  - Gene count is only 2000 — spec states 10k–20k genes is typical for whole-transcriptome
+    experiments; a higher count (e.g. 12000) would better demonstrate overplotting
+    behavior and the value of alpha transparency
+  - Mark line labels (fontSize 11 for M=0, M=+1, M=−1) are the smallest text in the
+    chart and may be marginal at mobile scale (~400 px); consider fontSize 12–13 to
+    match axis tick labels
+  - Upregulated vs. downregulated distinguished only by color (green vs. muted red)
+    with no redundant shape encoding — affects CVD (red-green colorblind) users who
+    cannot distinguish the two significant categories
+  - Helper functions (rand, randn, bsearch, loessAt, labelPos) in top-level script
+    scope are a mild KISS violation; the LOESS complexity justifies them, but the
+    code length is higher than strictly necessary
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "ma-differential-expression · javascript · echarts · anyplot.ai" in dark ink (#1A1A17), centered, fontSize=22px, spans ~65% of canvas width. X-axis label "Mean Average Expression (log₂ A)" and Y-axis label "Log₂ Fold Change (M)" in dark ink, 14px — both readable. Tick labels in inkSoft (#4A4A44), 13px — readable. Legend at bottom shows four series in inkSoft text. MarkLine labels (M = 0, M = +1, M = −1) appear on the right margin in inkSoft — readable.
-      Data: ~1700 non-significant genes in muted gray (#6B6A63 @ opacity 0.4, size 4) as background mass. ~150 upregulated genes in brand green #009E73 (opacity 0.75, size 6) — clearly pop against gray mass. ~80 downregulated genes in matte red #AE3030 (opacity 0.75, size 6) — visible and distinct. LOESS trend line in ochre #BD8233, width 2.5 — subtle low-expression positive bias visible near x=1-3, trending to near-zero at high expression. Gene labels (TP53, BRCA1, MDM2, PTEN, VEGFA, KRAS, MYC, CDK4, EGFR, RB1) in dark ink, 11px — readable but some crowding (BRCA1/MDM2 and PTEN/VEGFA pairs overlap).
-      Legibility verdict: PASS — all structural text readable; minor annotation overlap noted.
+      Background: Warm off-white (#FAF8F1) — NOT pure white, correct anyplot surface color.
+      Chrome: Title "ma-differential-expression · javascript · echarts · anyplot.ai" is dark (#1A1A17), centered, ~70% of width — expected for the long mandated format. X-axis label "Mean Average Expression (log₂ A)" and Y-axis label "Log₂ Fold Change (M)" are dark, clearly readable. Tick labels are gray (t.inkSoft) and legible. Legend at bottom with four entries is visible. Mark line labels (M=0, M=+1, M=−1) on the right side are small (fontSize 11) but readable at full resolution.
+      Data: ~1750 non-significant genes rendered as small muted gray circles (size 4, opacity 0.4). ~200+ significant genes split into green (#009E73) upregulated dots (size 8, opacity 0.75) and muted red (#AE3030) downregulated dots (size 8, opacity 0.75). An ochre (#BD8233) LOESS trend line runs near y=0 revealing minimal systematic bias. Reference lines at M=0 (solid) and M=±1 (dashed) clearly visible. Gene labels TP53 (upper-left), EGFR (upper-right), KRAS (lower-left), MYC (lower-right) placed per quadrant with no collisions.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface.
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis names and tick labels in inkSoft (#B8B7B0) — readable, no dark-on-dark failure. Grid lines subtle (#rgba(240,239,232,0.15)). Legend text in light inkSoft — readable. MarkLine labels in inkSoft on right margin — readable.
-      Data: Non-significant genes now render as medium gray (#A8A79F, opacity 0.4) matching the dark muted anchor — still clearly subordinate to significant genes. Upregulated #009E73 green and downregulated #AE3030 red are identical to light render — data colors correctly unchanged. LOESS trend ochre #BD8233 unchanged. Gene labels switch to light ink for readability on dark background.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures; data colors correctly identical between themes; only chrome flips.
+      Background: Warm near-black (#1A1A17) — NOT pure black, correct anyplot dark surface.
+      Chrome: Title and all axis labels/tick labels render in light text (t.ink / t.inkSoft tokens for dark theme). Grid lines are subtle and visible against the dark background. Legend text is visible at bottom. Mark line labels are readable.
+      Data: Data colors are identical to the light render — green upregulated, muted red downregulated, muted gray non-significant, ochre LOESS trend. Only chrome (background, text, grid) flipped; data hues unchanged as required.
+      Legibility verdict: PASS — no dark-on-dark failures. All text (title, axis labels, tick labels, legend, gene labels, mark line labels) is clearly visible in light colors against the near-black surface. Brand green #009E73 remains clearly visible and distinguishable.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title (22px), axis names (14px), tick labels (13px) all readable
-          in both themes. Gene annotation labels at 11px CSS are slightly small for
-          mobile viewports; no dark-on-dark failure in dark render.
+        comment: Title, axis labels, tick labels all readable in both themes. Mark
+          line labels at fontSize 11 are slightly small and may be marginal at 400px
+          mobile width; otherwise legibility is strong.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: BRCA1/MDM2 gene labels overlap in upper-left region; PTEN/VEGFA labels
-          overlap in upper-right. ECharts has no automatic label deconfliction — 4
-          of 10 gene labels are partially obscured by each other.
+        passed: true
+        comment: Quadrant-based gene label selection eliminates label-to-label collisions.
+          Gene labels (TP53, EGFR, KRAS, MYC) are cleanly positioned above/below/left
+          of their anchor points. Minor risk of label-point overlap in dense central
+          region but well managed.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Density-appropriate: NS genes at opacity 0.4 size 4px recede correctly;
-          significant genes at opacity 0.75 size 6px clearly distinguished. LOESS
-          and reference lines visible. Significant markers could be slightly larger
-          (8px) at this canvas size.'
+        comment: NS genes at size 4 / opacity 0.4 appropriate for 2000-point density.
+          Significant genes at size 8 / opacity 0.75 stand out clearly. LOESS line
+          at width 2.5 is visible. Good density-adaptive approach; penalized lightly
+          for 2000 points being below spec's 10k-20k recommendation.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Green/red separation uses redundant encoding (position above/below
-          M=0 threshold); muted gray for NS provides clear three-tier hierarchy. Imprint
-          palette CVD-safe.
+        passed: false
+        comment: 'Semantic green/red pair (#009E73 up, #AE3030 down) is biologically
+          conventional and uses Imprint semantic anchors correctly, but provides no
+          redundant shape encoding for red-green CVD users who cannot distinguish
+          the two significant categories.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Grid (left=100, right=60, top=80, bottom=100)
-          provides reasonable margins. MarkLine labels in right=60 margin are snug
-          but not clipped. No AR-09 edge clipping detected.
+        comment: Canvas gate passed. Grid margins (left 100, right 60, top 80, bottom
+          100) are generous. Mark line label placement near right edge is slightly
+          tight. No text overflows. Legend is comfortably positioned at bottom with
+          adequate spacing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'X: ''Mean Average Expression (log₂ A)'' and Y: ''Log₂ Fold Change
-          (M)'' are descriptive with proper subscript notation. Title format matches
-          spec-id · javascript · echarts · anyplot.ai exactly.'
+          (M)'' are descriptive with correct units and mathematical notation. Title
+          follows mandated format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Upregulated = palette[0] (#009E73 brand green). Downregulated =
-          palette[4] (#AE3030 semantic red — correct for loss/down role). NS = muted
-          anchor (#6B6A63/#A8A79F adaptive). LOESS = palette[3] (#BD8233 ochre). Background
-          transparent→inherits #FAF8F1/#1A1A17. Both themes correct.'
+        comment: 'backgroundColor: transparent lets pageBg show (#FAF8F1 light / #1A1A17
+          dark). Data colors: palette[0]=#009E73 for upregulated, palette[4]=#AE3030
+          for downregulated, MUTED anchor for NS — all theme-adaptive correctly. palette[3]=#BD8233
+          for LOESS trend. Colors identical between renders; only chrome flips.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Semantic color mapping elevates the design meaningfully. Custom
-          LOESS implementation shows intentional craft. In-browser scatter with 2000
-          points and custom trend line is non-trivial. Deducted: grid on both axes,
-          no spine removal, standard ECharts chrome.'
+        comment: Above the default 4. Semantic palette mapping is intentional and
+          biologically meaningful. LOESS computation adds real analytical value. Quadrant
+          label strategy shows design thought. Slightly below top marks as typography
+          could be more refined.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: markLine for reference lines with correct dashes/solid distinction
-          is refined. Legend placement at bottom is clean. Both axes show grid which
-          adds visual noise versus Y-only. Spines not removed (ECharts default keeps
-          all four sides).
+        comment: Above the default 2. X-axis splitLine disabled (cleaner), Y-axis
+          splitLine with grid token (subtle). No unnecessary box around legend. Semi-transparent
+          NS points create visual depth. Generous whitespace in grid margins.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy works: gray NS background mass → colored significant
-          genes → labeled top genes creates clear focal progression. LOESS curve reveals
-          the low-expression bias narrative. Reference lines contextualize 2-fold
-          change thresholds effectively.'
+        comment: 'Above the default 2. Clear visual hierarchy: NS (small/muted) recedes,
+          significant (larger/vivid) advances. Reference lines at ±1 LFC create biological
+          context. LOESS curve makes the ''no systematic bias'' story visible. Gene
+          label selection at extremes guides the viewer.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -154,34 +159,35 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MA plot: A (mean expression) on X-axis, M (log₂ fold change)
-          on Y-axis, scatter with significant/non-significant categorization.'
+        comment: 'Correct MA plot: log2FC (M) on Y-axis vs mean average expression
+          (A) on X-axis, scatter representation.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: significant gene highlighting, M=0
-          reference line (solid), M=±1 dashed lines, LOESS smoothing curve, alpha
-          transparency (~0.3-0.4 for NS, 0.75 for sig), top gene name labels.'
+        comment: 'All spec features present: significant genes highlighted (up=green,
+          down=muted red), NS in gray, M=0 horizontal line (solid), M=±1 dashed lines,
+          LOESS smoother (tricube kernel), transparency (~0.4 NS / 0.75 significant),
+          gene labels for top DEGs per quadrant.'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'X=mean_expression (A), Y=log_fold_change (M), significant boolean
-          used for category assignment. Data range (A: 0-18, M: -6 to +6) biologically
-          plausible.'
+        comment: 'X=mean expression, Y=log2FC, significance coloring — all correct.
+          Minor deduction: 2000 genes vs. spec''s stated typical range of 10,000–20,000
+          for whole-transcriptome experiments.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''ma-differential-expression · javascript · echarts · anyplot.ai''
-          — exact format. Legend: Not Significant, Upregulated, Downregulated, LOESS
-          Trend — accurate and complete.'
+        comment: Title 'ma-differential-expression · javascript · echarts · anyplot.ai'
+          matches required format. Legend entries 'Not Significant', 'Upregulated',
+          'Downregulated', 'LOESS Trend' are descriptive and complete.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -189,27 +195,27 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Shows all key MA plot aspects: bimodal expression distribution (25%
-          low-expression genes), expression-dependent variance (sigma decreasing with
-          A), systematic low-expression bias (bias = 0.35 * exp(-a*0.25)), significance
-          threshold filtering. Minor: n=2000 is below spec''s 10k-20k range.'
+        comment: 'Covers all MA plot aspects: scatter distribution, significance groups,
+          LOESS trend, fold-change thresholds, gene labels. Bimodal expression distribution
+          (25% low-expr genes) adds realism. Slight deduction for 2000 vs. 10k-20k
+          gene count.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cancer cell line RNA-seq context is realistic and neutral. Real cancer
-          gene names (TP53, EGFR, KRAS, MYC, BRCA1, MDM2, CDK4, PTEN, RB1, VEGFA)
-          are plausible top DE genes. ~10% DE rate and 80% significance among DE genes
-          are biologically reasonable.
+        comment: RNA-seq drug treatment vs. control in cancer cell line is a standard
+          and neutral DE context. ~10% DE gene rate is realistic. Expression-dependent
+          variance (higher variance at low A) is biologically accurate. Low-expression
+          bias is a known RNA-seq artifact included correctly.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Expression range (0-18 log₂ A) and LFC range (-6 to +6) are appropriate
-          for RNA-seq. n=2000 is below the spec's stated 10k-20k typical range, reducing
-          overplotting demonstration somewhat.
+        comment: Mean expression range ~1–18 in log2 is realistic for RNA-seq. LFC
+          range ~-6 to +6 is realistic for drug response. Significance threshold and
+          fold-change pattern are biologically plausible.
     code_quality:
       score: 9
       max: 10
@@ -219,38 +225,40 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (rand, randn, bsearch, loessAt) needed for
-          in-browser LOESS. Justified by spec requirement and browser constraint (no
-          scipy/numpy). Slight over-complexity vs minimal flat script ideal.
+        comment: Five helper functions (rand, randn, bsearch, loessAt, labelPos) at
+          top-level script scope are a mild KISS violation. The LOESS computation
+          genuinely requires them, but the code is longer and more complex than the
+          criterion prefers.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with seed=42 produces deterministic output — correct approach
-          for browser environment where Math.random() cannot be seeded.
+        comment: LCG RNG seeded at 42 — fully deterministic in browser environment.
+          Correct approach for ECharts (no Math.random seeding available in browser).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; echarts global used correctly. All variables used. No
-          dead code.
+        comment: No imports. Uses only window.ANYPLOT_TOKENS, window.ANYPLOT_THEME,
+          and echarts global — all expected by the harness.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Well-structured data pipeline: generate → partition → loess → render.
-          No fake UI. Appropriate complexity for the LOESS requirement.'
+        comment: Well-structured, descriptive variable names, no fake UI elements.
+          Comments explain biological context and algorithm choices. Appropriate complexity
+          given LOESS requirement.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false present. echarts.init called on #container with
-          no explicit size or devicePixelRatio. Harness produces plot-{theme}.png
-          and plot-{theme}.html correctly.'
+        comment: 'ECharts harness handles file output. animation: false present. init
+          called without explicit size or devicePixelRatio. Current ECharts 5.5.1
+          API used throughout.'
     library_mastery:
       score: 7
       max: 10
@@ -260,30 +268,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: markLine for reference lines is idiomatic ECharts. Scatter series
-          with custom itemStyle, opacity, and symbolSize. Tooltip formatter returning
-          empty string for LOESS series is a correct ECharts pattern. Proper use of
-          t.pageBg via transparent backgroundColor.
+        comment: 'Above default 3. Multiple scatter series for categorical grouping,
+          markLine for reference lines, tooltip trigger: ''item'' with custom formatter,
+          legend with data binding, animation: false, grid config — all idiomatic
+          ECharts patterns used correctly.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: markLine with mixed solid/dashed styles for M=0/±1 reference lines
-          leverages ECharts' per-line styling distinctively. Tooltip with per-series
-          custom formatter. However, the chart doesn't use more advanced ECharts features
-          like visualMap, brush selection, or dataZoom that would further distinguish
-          the library.
+        comment: Above default 1. markLine with mixed lineStyles (solid/dashed), per-point
+          label overrides on scatter data items, and multi-series categorical scatter
+          are distinctive ECharts features. The sophisticated LOESS is pure JS math
+          rather than an ECharts feature, limiting the ceiling.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
-  - html-export
   - custom-legend
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - regression
   styling:
