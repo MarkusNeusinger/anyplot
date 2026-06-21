@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 83/100 | Created: 2026-06-21
+Quality: 89/100 | Created: 2026-06-21
 """
 
 import os

@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-shot-chart
 created: '2026-06-21T07:51:32Z'
-updated: '2026-06-21T07:59:52Z'
+updated: '2026-06-21T08:12:49Z'
 generated_by: claude-sonnet
 workflow_run: 27897636160
 issue: 4416
@@ -12,49 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - 'Accurate NBA half-court geometry with all required elements: three-point arc
-    (23.75 ft top, 22 ft corners), free-throw line, paint/key (16 ft wide), restricted
-    area arc, basket, and backboard — precise dimensions'
-  - 'Semantically correct Imprint palette: Made=#009E73 (brand green) and Missed=#AE3030
-    (matte red semantic anchor) — proper exception for made/missed outcome encoding'
-  - 'Perfect theme adaptation in both renders: warm off-white (#FAF8F1) light background
-    and warm near-black (#1A1A17) dark background, all chrome tokens correctly flipped'
-  - Realistic basketball analytics data with zone-accurate make rates (68% at-rim,
-    42% mid-range, 36% arc three, 40% corner three) and 330 shot attempts within the
-    200-500 spec range
-  - 'Clean minimal aesthetic: all four spines removed, no axis labels or ticks (appropriate
-    per spec), no grid — court geometry provides the spatial reference'
+  - Perfect spec compliance with all NBA court elements accurately drawn to standard
+    dimensions
+  - Dual-layer seaborn KDE (fill + contour at separate alphas) provides a genuinely
+    distinctive hot-zone analytical layer — the right seaborn-specific feature for
+    a shot chart
+  - Semantic dual encoding (color + marker shape) provides CVD safety without sacrificing
+    the semantically correct green/red outcome colors
+  - 'Correct Imprint palette usage throughout: #009E73 for Made, #AE3030 (semantic
+    anchor) for Missed'
+  - Perfect theme adaptation in both renders — no dark-on-dark or light-on-light failures
   weaknesses:
-  - 'LM-02 LOW (1/5): Seaborn contributes only basic sns.scatterplot() with hue —
-    the entire court drawing is matplotlib patches/arcs. No distinctive seaborn features
-    (KDE overlay for shot density, statistical annotations, or FacetGrid for shot_type
-    breakdown) are used.'
-  - 'VQ-04 PARTIAL (1/2): Made/Missed distinguished only by color (red-green pair)
-    with no redundant marker-shape encoding. Adding marker=''o'' for Made and marker=''X''
-    for Missed would improve CVD accessibility for dichromats.'
-  - 'VQ-03 SUBOPTIMAL (5/6): alpha=0.70 is above the 0.30-0.50 guideline for ~330
-    data points. The rim cluster (80 at-rim shots) shows noticeable stacking. Reduce
-    alpha to ~0.55.'
-  - 'DE-03 LOW (3/6): The plot displays shot locations but provides no visual hierarchy
-    or emphasis to guide the viewer to key insights. Zone boundaries, hex-bin density
-    overlay, or efficiency-by-zone annotations would create a clear focal point.'
-  - 'DE-01 MODERATE (5/8): Clean and professional but lacks the polish of publication-ready
-    sports analytics graphics. No deliberate emphasis strategy beyond color coding.'
+  - Title fontsize=11 is slightly below the style-guide default of 12pt for no clear
+    reason (the title is only 47 characters and does not require shrinkage); increase
+    to 12pt
+  - Stats annotation text (fontsize=8) is very small at 2400px canvas resolution and
+    may not be legible when scaled to ~400px mobile width; increase to 9-10pt
+  - alpha=0.55 is slightly above the recommended upper bound of 0.5 for 330-point
+    scatter density; reduce to ~0.45 to improve rim-cluster readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "scatter-shot-chart · python · seaborn · anyplot.ai" in dark ink at fontsize=11pt, clearly readable at top. No axis labels or tick labels (intentionally removed per spec). Legend "Shot Outcome" with Made/Missed entries in upper-right corner, legible text in INK_SOFT color.
-      Data: Made shots rendered in #009E73 (teal green, Imprint position 1), Missed shots in #AE3030 (matte red, semantic anchor). Court lines in INK_SOFT gray. Shot markers s=38, alpha=0.70 — moderately transparent, some overlap at rim cluster.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-shot-chart · python · seaborn · anyplot.ai" at fontsize=11 in dark ink (#1A1A17) — readable; Shot Outcome legend (Made/Missed) in upper-right with dark text on elevated #FFFDF6 background — readable; stats annotation box with "196/330 FGM / 59.4% FG%" at fontsize=8 — readable but small
+      Data: Green circles (#009E73) for Made, red X-markers (#AE3030) for Missed; faint green KDE density fill+contour overlay around rim cluster; court lines in #4A4A44 neutral gray
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark surface.
-      Chrome: Title rendered in light ink (#F0EFE8 equivalent), clearly readable against dark background. Legend "Shot Outcome" with light text labels. Court lines rendered in lighter INK_SOFT (#B8B7B0 equivalent) — excellent contrast against dark background.
-      Data: Shot colors IDENTICAL to light render (#009E73 Made, #AE3030 Missed) — data colors preserved, only chrome flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures detected. Title, legend, and court lines all legible against near-black background. Brand green #009E73 remains visible.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) clearly readable on dark background; legend text in light gray (#B8B7B0) on elevated dark (#242420) background — readable; no dark-on-dark failures observed; court lines in #B8B7B0 clearly visible
+      Data: Data marker colors identical to light render — #009E73 green for Made, #AE3030 red for Missed; brand green visible and clear on dark surface
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 27
@@ -62,56 +52,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=11pt, legend=9pt), readable in both
-          themes, well-proportioned. Slight deviation from 12pt guide default for
-          title (11pt used).
+        comment: Font sizes explicitly set; title fontsize=11 slightly below 12pt
+          default for a 47-char title; stats annotation at fontsize=8 may be too small
+          at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Legend positioned in upper-right corner above the
-          court arc area without conflict.
+        comment: No text-on-text or text-on-data collisions; legend and stats box
+          in separate visual zones
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers visible but alpha=0.70 is above 0.30-0.50 guideline for 330
-          data points. Rim cluster shows stacking.
+        comment: s=40 appropriate for 330 points; alpha=0.55 slightly above 0.5 upper
+          bound for this density; rim cluster dense
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: 'Made/Missed distinguished by color only (no marker shape redundancy).
-          #009E73 vs #AE3030 have luminance difference which helps CVD, but no shape
-          encoding provided.'
+        comment: Dual encoding (color + marker shape) provides CVD safety; green/red
+          semantic exception correctly applied
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas (2400x2400) appropriate for basketball court. Court
-          fills ~85% of canvas. Balanced margins with subplots_adjust.
+        comment: Square 2400x2400 canvas correct for 1:1 half-court; court fills axis
+          area appropriately; open space above arc is inherent to half-court diagram
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (intentionally removed per spec — court geometry provides
-          spatial reference). Title format correct.
+        comment: Axis labels intentionally omitted per spec; title correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Made=#009E73 (Imprint position 1). Missed=#AE3030 (semantic
-          red anchor — correct exception for bad/loss role). Backgrounds #FAF8F1/#1A1A17.
-          All chrome theme-adaptive.'
+        comment: '#009E73 for Made (position 1), #AE3030 for Missed (semantic anchor);
+          correct backgrounds; data colors identical across themes'
     design_excellence:
       score: 13
       max: 20
@@ -121,22 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean professional aesthetic above library defaults — court drawing
-          shows significant domain expertise. Lacks publication-quality emphasis strategy.
+        comment: 'Above defaults: semantic dual encoding, KDE hot-zone layer, stats
+          box, full spine removal. Functional rather than artistically refined.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no grid, generous whitespace, subtle marker edge
-          highlighting (edgecolors=PAGE_BG). Very refined for a first attempt.
+        comment: All spines removed, no grid, white marker edges, alpha blending,
+          elevated backgrounds. Well-refined but not every-detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed spatially but no visual hierarchy or emphasis. Shot
-          distribution tells an implicit story but viewer must discover it themselves.
+        passed: true
+        comment: KDE hot zones create focal point; stats box adds context; visual
+          hierarchy from rim outward. Above the bare-data-display default.
     spec_compliance:
       score: 15
       max: 15
@@ -146,57 +133,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basketball shot chart overlaying scatter data on accurate NBA half-court
-          diagram. Correct chart type.
+        comment: Full basketball shot chart with all required court elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required court elements present: three-point arc, free-throw
-          line, paint/key, restricted area arc, basket, backboard. Made/missed coloring.
-          Shot_type visualization is optional per spec.'
+        comment: All features present; shot-type omission acceptable per spec ('optionally
+          include')
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=horizontal court position, y=vertical court position, outcome=hue
-          color. All data within court bounds.
+        comment: x/y in feet from basket center; made/missed correctly encoded
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-shot-chart · python · seaborn · anyplot.ai' correct.
-          Legend 'Shot Outcome' with Made/Missed labels.
+        comment: Title format correct; legend labels match data categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows at-rim shots, mid-range, three-point arc, and corner three-pointers
-          with different make rates per zone. Shot_type dimension not visualized (excluded
-          as optional).
+        comment: 'All shot zones covered: at-rim, mid-range, arc three, corner three
+          with distinct realistic make rates'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Basketball analytics — neutral, real-world sports context. Shot rates
-          realistic for a versatile NBA wing player.
+        comment: NBA wing player shot chart — neutral sports analytics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NBA court dimensions factually accurate (50x47 ft half-court, 23.75
-          ft three-point arc at top, 22 ft corners, 16 ft paint). Make rates align
-          with real NBA shooting percentages.
+        comment: NBA standard dimensions, 330 attempts within spec range, realistic
+          zone make rates
     code_quality:
       score: 10
       max: 10
@@ -206,65 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: constants → data generation → plot → save. No functions
-          or classes.'
+        comment: Clean linear structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set before all random operations
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. matplotlib.patches as mpatches + Arc direct import
-          is practical (avoids mpatches.Arc).
+        comment: 'All imports used: os, mpatches, plt, np, pd, sns, Arc'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured code. Numpy trigonometry for arc geometry
-          is appropriate. No over-engineering.
+        comment: Appropriate complexity for court-drawing task; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400. No bbox_inches='tight' (correct
-          per seaborn guide). Current API.
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Uses sns.scatterplot() axes-level API correctly with hue/palette.
-          sns.set_theme() RC configuration is idiomatic. Court drawing necessarily
-          uses matplotlib.
+        comment: sns.scatterplot with hue+style dual encoding; sns.set_theme for theme
+          config; high-level API throughout
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Seaborn contributes only basic scatterplot with hue. No seaborn-distinctive
-          features (KDE, statistical layers, FacetGrid). The distinctive visual work
-          is entirely matplotlib patches.
-  verdict: REJECTED
+        passed: true
+        comment: sns.kdeplot with dual-layer rendering (fill+contour) is genuinely
+          seaborn-distinctive hot-zone analysis
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - alpha-blending
-  - minimal-chrome
   - edge-highlighting
