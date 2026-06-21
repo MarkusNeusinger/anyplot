@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-stress-strain: Engineering Stress-Strain Curve
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-21
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 80/100 | Created: 2026-06-21
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
