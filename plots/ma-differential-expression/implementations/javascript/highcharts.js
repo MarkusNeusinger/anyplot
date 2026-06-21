@@ -20,8 +20,8 @@ function normal() {
     return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * lcg());
 }
 
-// Generate RNA-seq MA plot data (~5 000 genes)
-const N = 5000;
+// Generate RNA-seq MA plot data (~12 000 genes, typical whole-transcriptome)
+const N = 12000;
 const genes = [];
 for (let i = 0; i < N; i++) {
     // Mean expression A: skewed so more genes land at moderate values
@@ -45,8 +45,8 @@ const downReg = genes.filter(g =>  g.significant && g.M < 0).map(g => [g.A, g.M]
 
 // LOESS-like smoothed trend: sliding window average over sorted genes
 const sorted = [...genes].sort((a, b) => a.A - b.A);
-const WIN = 480;
-const STEP = 45;
+const WIN = 700;
+const STEP = 70;
 const loess = [];
 for (let i = 0; i + WIN <= sorted.length; i += STEP) {
     const chunk = sorted.slice(i, i + WIN);
@@ -54,9 +54,6 @@ for (let i = 0; i + WIN <= sorted.length; i += STEP) {
     const avgM = +(chunk.reduce((s, g) => s + g.M, 0) / WIN).toFixed(3);
     loess.push([avgA, avgM]);
 }
-
-// Title length = 65 chars — under 67, no scaling needed
-const TITLE_SIZE = "22px";
 
 Highcharts.chart("container", {
     chart: {
@@ -70,7 +67,7 @@ Highcharts.chart("container", {
     colors: t.palette,
     title: {
         text: "ma-differential-expression · javascript · highcharts · anyplot.ai",
-        style: { color: t.ink, fontSize: TITLE_SIZE, fontWeight: "600" },
+        style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
     },
     xAxis: {
         title: {
@@ -131,7 +128,7 @@ Highcharts.chart("container", {
         enabled: true,
         align: "right",
         verticalAlign: "top",
-        itemStyle: { color: t.inkSoft, fontSize: "14px" },
+        itemStyle: { color: t.inkSoft, fontSize: "15px" },
         itemHoverStyle: { color: t.ink },
         backgroundColor: t.elevatedBg,
         borderColor: t.grid,
@@ -142,9 +139,6 @@ Highcharts.chart("container", {
     tooltip: { enabled: false },
     plotOptions: {
         series: { animation: false },
-        scatter: {
-            marker: { symbol: "circle" },
-        },
     },
     series: [
         {
@@ -152,26 +146,28 @@ Highcharts.chart("container", {
             type: "scatter",
             data: nonSig,
             color: MUTED,
-            opacity: 0.45,
-            marker: { radius: 2 },
+            opacity: 0.40,
+            marker: { radius: 2, symbol: "circle" },
             enableMouseTracking: false,
         },
         {
+            // Triangle-up + brand green: color AND shape encode upregulation (CVD-safe)
             name: "Upregulated (padj < 0.05)",
             type: "scatter",
             data: upReg,
             color: t.palette[0],
             opacity: 0.85,
-            marker: { radius: 3 },
+            marker: { radius: 4, symbol: "triangle" },
             enableMouseTracking: false,
         },
         {
+            // Triangle-down + matte red: color AND shape encode downregulation (CVD-safe)
             name: "Downregulated (padj < 0.05)",
             type: "scatter",
             data: downReg,
             color: t.palette[4],
             opacity: 0.85,
-            marker: { radius: 3 },
+            marker: { radius: 4, symbol: "triangle-down" },
             enableMouseTracking: false,
         },
         {
