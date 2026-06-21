@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:32:19Z'
-updated: '2026-06-21T03:28:16Z'
+updated: '2026-06-21T03:37:32Z'
 generated_by: claude-sonnet
 workflow_run: 27891978325
 issue: 4418
@@ -12,43 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Home/away team color fills (green above 50%, blue below) immediately communicates
-    team momentum at a glance
-  - All 8 scoring events annotated with score callout boxes, arrows, and colored markers
-  - Quarter dividers with Q1–Q4 labels provide game structure context
-  - Final score annotation in upper right is clear and well-placed
-  - 'Perfect theme adaptation: INK color flips to near-white in dark mode, fill areas
-    stay visually consistent'
-  - 'Imprint palette used correctly: Eagles = brand green (#009E73), Cowboys = Imprint
-    blue (#4467A3) — well-justified semantic exception'
-  - Subtle 50% reference line with dashed style clearly marks the advantage threshold
-  - spline smoothing on the win probability line is natural and readable
-  - HTML output alongside PNG for interactivity
+  - 'Full spec compliance: all required features implemented (50% reference line,
+    dual area fills above/below 50%, scoring event annotations, quarter markers, final
+    score annotation)'
+  - 'Semantic color exception well-executed: Eagles → #009E73 (Imprint position 1)
+    and Cowboys → #4467A3 (Imprint position 3) both justified by real-world team color
+    identity, documented in code comments'
+  - 'Theme-adaptive chrome is complete: all six chrome tokens (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT, INK_MUTED, GRID/GRID_RULE) correctly defined and applied throughout
+    — both renders fully readable'
+  - 'Strong data storytelling: dual area fills create immediate team dominance read-at-a-glance,
+    quarter dividers give temporal context, event annotations with colored callout
+    boxes narrate the game arc'
+  - 'Plotly interactive features leveraged well: custom hovertemplate per trace, unified
+    x hover mode, spike crosshair, plus HTML export'
+  - 'Canvas and output: correct 3200×1800 landscape (width=800, height=450, scale=4),
+    autosize=False, both PNG and HTML saved per theme'
+  - 'Clean reproducibility: np.random.seed(42), no functions or classes, only used
+    imports (os, numpy, plotly.graph_objects)'
   weaknesses:
-  - First Eagles TD annotation (play 10) partially overlaps with the PHI Eagles legend
-    box in the upper-left — the annotation text box for 'Eagles TD / 7-0' is partially
-    hidden behind the team legend, reducing readability for that event
-  - Team legend boxes (PHI Eagles, DAL Cowboys) are positioned via paper coordinates
-    but the first event annotation does not account for this offset — consider shifting
-    the legend or the annotation ax/ay offsets to avoid collision
+  - 'Annotation crowding in late-game: ''Eagles TD 24-17'' (play 98, ax_offset=45)
+    and ''Eagles FG 27-17'' (play 112, ax_offset=55) are close together at the right
+    edge; the ax_offset=55 on play 112 pushes the callout very close to the right
+    canvas boundary — consider a negative offset (ax_offset=-55) to steer it left
+    and avoid tight margins'
+  - Annotation text at font size=10 (40 source-px at scale=4) is on the small side
+    for multi-line callout labels; bumping to font size=11 would improve readability
+    at mobile widths without causing overlap
+  - Minor crowding between 'Eagles TD 7-0' annotation (ax_offset=60, ay_offset=-60)
+    and the 'PHI Eagles' legend box in the upper-left — both occupy the same visual
+    zone; consider ax_offset=80 or shifting the legend box to avoid proximity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
-      Chrome: Title "line-win-probability · python · plotly · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis label "Win Probability (%)" and X-axis label "Play Number" in dark ink, properly sized. Tick labels in INK_SOFT muted gray, readable. Quarter labels (Q1–Q4) above the plot area in tertiary gray. All chrome text is fully legible.
-      Data: Win probability line in dark INK color traces game progression. Green fill (#009E73 at 22% alpha) above 50% for Eagles; blue fill (#4467A3 at 22% alpha) below 50% for Cowboys. 8 scoring event markers with colored circles (green for Eagles, blue for Cowboys). Annotation callout boxes with colored borders and elevated-bg fills clearly label each event. 50% dashed reference line in muted gray. Dotted quarter dividers. PHI Eagles team legend (green, upper-left) and DAL Cowboys legend (blue, lower-left). Final score annotation (upper-right).
-      Legibility verdict: PASS — all text readable. One overlap: the Eagles TD 7-0 annotation box (play 10) is partially obscured behind the PHI Eagles team legend in the upper-left area; "7-0" text is visible but "Eagles TD" portion is hidden. Minor VQ-02 deduction.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "line-win-probability · python · plotly · anyplot.ai" centered at top in dark ink, fully readable. Y-axis label "Win Probability (%)" and X-axis label "Play Number" in dark ink at appropriate sizes. Tick labels (0%–100%, 0–120) in INK_SOFT dark gray, clearly readable. Quarter labels Q1–Q4 in INK_MUTED above the plot boundary. Final score annotation in INK_SOFT upper-right.
+      Data: Win probability line in black (INK=#1A1A17), thick and prominent. Eagles (home) area above 50% filled with semi-transparent green (rgba(0,158,115,0.22)). Cowboys (away) area below 50% filled with semi-transparent blue (rgba(68,103,163,0.22)). 8 scoring event markers in team colors with PAGE_BG outline rings. Annotation callout boxes with colored borders (green=Eagles, blue=Cowboys). 50% dashed reference line visible. First data color is #009E73 (Imprint position 1). PHI Eagles and DAL Cowboys legend boxes in upper-left and lower-left.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
-      Chrome: Title renders in near-white (#F0EFE8 via INK token), clearly readable against dark background. Axis labels and tick labels use INK_SOFT (#B8B7B0) — legible. Quarter labels in muted gray, readable. No dark-on-dark failures observed.
-      Data: Win probability line becomes white/near-white (INK flips correctly for dark theme), providing strong contrast against the dark background. Fill colors are identical to light render — same green and blue alpha fills at same hex values, confirming Imprint data-color invariance. Annotation boxes use ELEVATED_BG (#242420) with colored borders — legible against dark background. Final score and team legend annotations all readable.
-      Legibility verdict: PASS — all text readable in dark theme. Data colors preserved identically from light render. Theme adaptation is complete and correct.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8), fully readable against dark background. Y-axis and X-axis labels in light ink, tick labels in INK_SOFT (#B8B7B0 light gray). Quarter labels visible. Final score annotation readable in secondary ink. All chrome tokens correctly flipped for dark theme — no dark-on-dark failures detected.
+      Data: Win probability line in near-white (#F0EFE8, INK for dark), clearly visible. Eagles fill area (green) appears as a darker saturated green over the dark bg; Cowboys fill area as dark blue-gray — both readable and distinguishable. Event markers retain the same team colors (#009E73 and #4467A3) — identical to light render as required. Annotation callout boxes use ELEVATED_BG=#242420 with team-colored borders and text — clearly readable. 50% dashed reference line visible.
+      Legibility verdict: PASS — all text readable on dark background. Data colors identical between light and dark renders. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -56,55 +67,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text clearly readable in both themes at correct font sizes (title
-          16px, axis 12px, ticks 10px). Minor deduction for partial annotation readability
-          near legend overlap.
+        comment: Title (16px), axis labels (12px), tick labels (10px) all correctly
+          sized and readable in both themes. Annotation callout text at font=10 is
+          slightly small for multi-line content at mobile widths.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: First Eagles TD annotation at play 10 is partially hidden behind
-          the PHI Eagles team legend box in the upper-left. 'Eagles TD' text obscured;
-          only '7-0' visible below legend.
+        comment: 'Most annotations well-separated via custom ax/ay offsets. Minor
+          crowding: Eagles TD 7-0 callout is close to PHI Eagles legend box; Eagles
+          TD 24-17 and Eagles FG 27-17 callouts tight in late-game right zone.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements clearly visible. Win probability line, area fills, markers,
-          and annotation boxes are all at appropriate size and opacity for 120-point
-          dataset.
+        comment: Win probability line (2.5px) clearly visible. Event markers (size=10)
+          with PAGE_BG outline well-defined. Fill areas at 22% alpha appropriate —
+          visible momentum cues without drowning the line.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1 (#009E73) and 3 (#4467A3) — both CVD-safe, adequate
-          contrast on cream and near-black backgrounds.
+        comment: '#009E73 and #4467A3 are Imprint palette entries optimized for CVD
+          safety. Win probability line uses theme-adaptive INK for maximum contrast.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (width=800, height=450, scale=4), autosize=False.
-          Margins l=80, r=40, t=100, b=70. Nothing clipped. No overflow detected.
+        comment: 3200×1800 landscape correct. Margins l=80/r=40/t=100/b=70 appropriate
+          — extra top margin accommodates title at y=0.97 plus quarter labels with
+          yshift=14. No overflow detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches mandated format. 'Play Number' and 'Win Probability
-          (%)' are descriptive with units.
+        comment: 'Title: exact required format. Y-axis: ''Win Probability (%)'' with
+          explicit tick text at 0%/25%/50%/75%/100%. X-axis: ''Play Number'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Eagles = #009E73 (Imprint brand green, position 1). Cowboys = #4467A3
-          (Imprint blue, position 3). Valid semantic exception — real-world sports
-          team color identity. Backgrounds correct: #FAF8F1 light / #1A1A17 dark.
-          Data colors identical across themes.'
+        comment: 'HOME_COLOR=#009E73 (Imprint pos 1), AWAY_COLOR=#4467A3 (Imprint
+          pos 3). Semantic exception documented in code comments (Eagles green / Cowboys
+          blue real-world identity). Light bg #FAF8F1, dark bg #1A1A17. All chrome
+          tokens properly adaptive.'
     design_excellence:
       score: 15
       max: 20
@@ -114,28 +126,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Well above default (4). Intentional design: semantic team color
-          coding, fill areas for momentum, annotated events, 50% baseline, quarter
-          dividers, final score callout. Clear compositional intent.'
+        comment: Dual fill areas encode team momentum at a glance. Annotation callout
+          boxes with team-colored borders and arrows. Team legend badges with colored
+          borders in corners. Quarter dividers with dotted vlines. Final score corner
+          annotation. Intentional visual hierarchy throughout.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Y-axis grid only with subtle opacity, no X-axis
-          grid, axis lines preserved. Annotation boxes with elevated bg and colored
-          borders. Spline smoothing adds polish. Top/right spines not explicitly removed
-          via plotly API but visual result is clean.
+        comment: L-shaped frame (only x/y axis lines via showline=True, no top/right
+          spines). Y-axis-only grid at 15% opacity — subtle and correct. Smooth spline
+          probability line. GRID_RULE at 30% opacity for quarter dividers distinguishes
+          them from data grid. Spike crosshair on hover adds polish. Annotation boxes
+          add minor visual noise when crowded.
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: 'Above default (2). Strong narrative: fill color instantly shows
-          who leads at each moment; annotated events tell the story beat-by-beat;
-          quarter markers provide context; final score closes the narrative. The visual
-          hierarchy (line > fills > markers > annotations > legends) guides the eye
-          effectively.'
+        comment: 50% baseline creates clear 'advantage' axis. Dual-colored fills give
+          immediate who's-winning read. Scoring events annotated with running scores.
+          Quarter markers frame the game timeline. Final score resolves the narrative.
+          Clear focal points at each major probability swing.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +158,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Win probability chart with dual-fill areas above/below 50% baseline
-          — exactly the required type.
+        comment: 'Correct: line chart with dual fill areas above/below 50% baseline
+          showing win probability evolution over game time.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-100% with 50% reference line, area fills for both teams,
-          8 annotated scoring events, final score annotation, quarter markers.
+        comment: Y-axis 0-100% ✓, 50% reference line ✓, fill areas for both teams
+          ✓, key event annotations with scores ✓, final score annotation ✓, quarter
+          period markers ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = play number (game progression), Y = win probability 0-100%, full
-          range displayed.
+        comment: X=Play Number (0-119, 120 plays), Y=Win Probability (0-100%). Home
+          fill above 50%, away fill below 50%. All data visible within range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'line-win-probability · python · plotly · anyplot.ai'.
-          Team legends as styled annotation boxes with team colors.
+        comment: 'Title: ''line-win-probability · python · plotly · anyplot.ai'' —
+          exact required format. Team identities labeled via PHI Eagles and DAL Cowboys
+          legend annotation boxes.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +192,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full game arc shown with momentum shifts, 8 scoring events, quarter
-          structure, home/away distinction.
+        comment: Shows full probability arc from 50% start to 100% end. 8 scoring
+          events cover TDs and FGs for both teams. Quarter structure represented.
+          Both team fills demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NFL Eagles vs Cowboys — plausible game scenario. Final score 27-17
-          realistic. Win probability swings match score deltas. Neutral sporting context.
+        comment: Eagles vs Cowboys NFL game — a real and neutral matchup. Score progression
+          (7-0, 7-3, 14-3, 14-10, 17-10, 17-17, 24-17, 27-17) is plausible. Probability
+          swings correspond to score shifts logically.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 plays appropriate for NFL game. Win probability 0.03-0.97 clipped
-          range realistic. Score deltas 0.10-0.22 plausible for touchdowns/field goals.
+        comment: 120 plays is realistic for NFL play count. Probability range 0-100%
+          appropriate. Probability values clipped to [0.03, 0.97] during game, reaching
+          1.0 at end — realistic.
     code_quality:
       score: 10
       max: 10
@@ -202,34 +220,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear script.
+        comment: 'Top-level script, no unnecessary functions or classes. Clear linear
+          flow: theme setup → data → traces → annotations → layout → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data generation.
+        comment: np.random.seed(42) set before any random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects — all used.
+        comment: Only os, numpy, and plotly.graph_objects imported — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex code. Event loop is efficient. No fake
-          UI.
+        comment: Event loop for annotation placement is clean. Custom offset handling
+          for collision avoidance is clear. No fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. write_image
+          with correct width/height/scale. write_html with include_plotlyjs='cdn'.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -237,17 +257,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with fill='tonexty', add_hline, add_vline, add_annotation
-          — idiomatic plotly. update_layout with full configuration. Above default
-          (3).
+        comment: go.Figure() with add_trace(), add_hline(), add_vline(), add_annotation()
+          — idiomatic graph objects API. update_layout() and update_xaxes() used correctly.
+          fill='tonexty' is the proper Plotly area-fill pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: fill='tonexty' for dual-fill area chart, hovertemplate with custom
-          formatting, shape='spline' smoothing, hovermode='x unified', showspikes
-          for crosshair. Above default (1).
+        comment: hovertemplate per trace for rich hover text, hovermode='x unified'
+          for combined crosshair, showspikes=True for spike lines, write_html for
+          interactive output. Multiple distinctive Plotly interactive capabilities
+          leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -257,6 +278,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
