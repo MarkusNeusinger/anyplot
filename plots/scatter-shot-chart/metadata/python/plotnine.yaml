@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: scatter-shot-chart
 created: '2026-06-21T08:10:28Z'
-updated: '2026-06-21T08:17:26Z'
+updated: '2026-06-21T08:36:28Z'
 generated_by: claude-sonnet
 workflow_run: 27897828979
 issue: 4416
@@ -15,96 +15,104 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - Geometrically accurate NBA half-court with all required elements (three-point
-    arc with corner break at 22 ft, free-throw circle both halves, restricted area
-    arc, basket rim, backboard, half-court center circle)
-  - 'Correct Imprint palette semantic assignment: brand green for made (success),
-    matte red for missed (failure) — follows both spec and style guide'
-  - 'Fully theme-adaptive: background, court lines, title, and legend text respond
-    to ANYPLOT_THEME; data colors constant across both renders'
-  - coord_fixed(ratio=1) ensures court geometry is never distorted — correct plotnine
-    idiom
-  - Clean reproducible code with zone-realistic FG% (higher near basket, lower from
-    three)
+  - Accurate NBA half-court geometry with all required elements (three-point arc at
+    23.75 ft, free-throw circle, paint/key, restricted area arc, basket rim, backboard,
+    center circle)
+  - Semantic Imprint palette assignment — Made=#009E73 (brand green for success) and
+    Missed=#AE3030 (matte red for error/loss) is textbook semantic use of the palette
+    anchors
+  - 'Redundant encoding (color + shape: circle vs. X) ensures CVD accessibility beyond
+    color alone'
+  - Per-zone FG% callouts via geom_label() add genuine analytical value to the shot
+    chart
+  - Subtle amber paint tint (#DDCC77 at 12% alpha) provides zone context without competing
+    with data
+  - 'Theme-adaptive chrome correct in both renders: title and labels light on dark,
+    dark on light; no dark-on-dark failures'
+  - Square canvas (2400×2400) with coord_fixed(ratio=1) preserves 1:1 court proportions
+    exactly
+  - 'Clean flat structure: no functions or classes, seed=42 ensures reproducibility,
+    all imports used'
   weaknesses:
-  - shot_type (2-pointer, 3-pointer, free-throw) is a listed data field in the spec
-    but missing from the dataset — add it and encode via marker shape so CVD users
-    can distinguish outcome independent of color
-  - 'No redundant encoding for made/missed: red-green binary is the only signal —
-    deuteranopes cannot distinguish the two series; add shape encoding via aes(shape=outcome)'
-  - 'DE-03 low: no focal point or storytelling emphasis — add per-zone FG% text annotations,
-    hexbin density underlay, or highlighted zones to guide the viewer'
-  - 'DE-01: court is functional but aesthetically plain — consider subtle paint area
-    background tint or slightly bolder court lines'
-  - Marker size=2.2 with alpha=0.75 causes noticeable overplotting in the paint zone
-    (~90 shots); lower alpha to 0.6 or reduce size slightly
+  - FG% zone annotations are small (geom_label size=3.0mm ≈ 8.5pt) — at thumbnail
+    sizes these percentage labels become hard to read; increase to size=4.0–4.5 for
+    better legibility
+  - Shot markers at size=2.0 with alpha=0.70 are appropriately sized for ~360 shots
+    but could be slightly larger (size=2.5) in the lower-density zones like corners
+    where only ~25 shots appear
+  - Design storytelling lacks a focal point — no hot-zone emphasis or highlighted
+    insight guides the viewer's eye; consider using slightly larger markers or slightly
+    higher alpha for the player's most frequent shooting zones to create visual hierarchy
+  - DE-01 is at the 'well-configured default' level — the design is functional and
+    correct but doesn't achieve the polished aesthetic of a publication-ready basketball
+    shot chart
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-shot-chart · python · plotnine · anyplot.ai" visible in dark ink at top; legend "Made / Missed" at bottom in INK_SOFT — all clearly readable
-      Data: Green (#009E73) dots for made shots, matte red (#AE3030) dots for missed shots; court lines in muted gray (INK_MUTED); shots distributed across paint, elbows, corner threes, wing threes, above-the-break area
-      Legibility verdict: PASS — all text readable against light background
+      Chrome: Title "scatter-shot-chart · python · plotnine · anyplot.ai" renders in dark ink (#1A1A17) at the top, spanning ~70% of the canvas width. No axis labels or ticks (intentionally hidden per spec). Legend at bottom shows "Made ● Missed ×" in muted dark text on an elevated box.
+      Data: Green circles (#009E73) mark made shots; red X marks (#AE3030) mark missed shots. Court lines are drawn in muted gray. Paint area has a very subtle amber tint (#DDCC77 at 12% alpha). Per-zone FG% labels appear as small boxed annotations (36%–62% range across zones).
+      Legibility verdict: PASS — all text readable against light background; annotation labels are small but visible at full resolution.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and legend text appear in off-white / light gray, clearly readable against the dark background; court lines shift to lighter muted color appropriate for dark surface; no dark-on-dark issues
-      Data: Green (#009E73) and red (#AE3030) shot dots identical to light render — Imprint palette data colors unchanged across themes
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Chrome: Title renders in near-white text (#F0EFE8) — clearly visible. Court lines appear in lighter gray/white against the dark surface. Legend box uses elevated dark fill (#242420) with light-colored text. FG% annotation boxes use dark elevated fill with light text — readable, no dark-on-dark failures detected.
+      Data: Green circles (#009E73) and red X marks (#AE3030) are identical to light render — Imprint palette data colors correctly unchanged between themes. Paint tint is barely visible (amber at 12% alpha over near-black) but present.
+      Legibility verdict: PASS — all chrome correctly flipped; no dark-on-dark text failures; all labels readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12pt, legend=8pt). Readable
-          in both themes. Slight deduction: title feels a touch small at 12pt on the
-          full 2400px square canvas.'
+        comment: Title size=13pt and legend size=8pt explicitly set; annotation size=3.0mm
+          (≈8.5pt) readable at full res but small at thumbnail sizes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps with court lines, markers, or legend.
+        comment: Some marker overlap in paint cluster area, but alpha=0.70 manages
+          it; no text overlaps
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: size=2.2, alpha=0.75 appropriate for ~345 shots. Slight overplotting
-          in paint zone would benefit from smaller markers or lower alpha.
+        comment: size=2.0 alpha=0.70 appropriate for ~360 shots spread across large
+          court; could be slightly larger for sparse corner zones
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Semantic green/red follows spec and Imprint palette, but lacks redundant
-          shape encoding — a deuteranope cannot distinguish made from missed.
+        passed: true
+        comment: 'Redundant encoding (color + shape: circle vs X) ensures CVD safety
+          beyond green/red alone'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas matches 1:1 court aspect ratio perfectly.
-          Canvas gate passed.
+        comment: Square canvas 2400x2400, coord_fixed(ratio=1), court fills plot area
+          correctly, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Axis labels intentionally omitted per spec
-          (court geometry provides spatial reference).
+        comment: Title in correct format; axis labels intentionally empty per spec
+          (court geometry provides spatial reference)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Made=#009E73 (Imprint pos 1), Missed=#AE3030 (Imprint pos 5 semantic
-          anchor). Backgrounds #FAF8F1/#1A1A17. Theme-adaptive chrome correct in both
-          renders.'
+        comment: 'Made=#009E73 (brand green), Missed=#AE3030 (semantic red anchor
+          for error/loss); paint tint uses amber anchor; backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive'
     design_excellence:
       score: 12
       max: 20
@@ -113,27 +121,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Correct semantic colors, detailed court geometry, no grid, clean
-          look. Above defaults due to custom court drawing, but not publication-ready
-          — no zone shading, density overlay, or make-rate annotation.
+        passed: true
+        comment: 'Above default: semantic palette assignment, redundant encoding,
+          per-zone FG% callouts, paint tint. Functional and intentional but not publication-ready
+          polish level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, no grid, axis ticks hidden, legend styled with ELEVATED_BG
-          fill and INK_SOFT border. Good polish.
+        passed: true
+        comment: All grids, axes, spines removed; legend styled with appropriate tokens;
+          paint tint subtle; alpha on markers. Genuine refinement above default.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: 'Spatial distribution naturally communicates shooting patterns, but
-          no explicit emphasis: no zone shading, no hot/cold callouts, no FG% annotations
-          to guide the viewer to the key insight.'
+        passed: true
+        comment: FG% annotations and color encoding tell a story but no focal point
+          or highlighted insight; small annotation text reduces narrative impact
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,55 +148,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basketball shot chart with full half-court overlay. Correct.
+        comment: Correct basketball shot chart with all required court elements
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'All court elements present and geometrically accurate. Missing:
-          shot_type (2-pointer, 3-pointer, free-throw) is a listed data field but
-          entirely absent from dataset and visualization.'
+        passed: true
+        comment: Three-point arc, free-throw line/circle, paint/key, restricted area,
+          basket rim, backboard, corner straights all present; shot markers color-coded
+          by outcome
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y in feet from basket center, color encodes outcome. All ~345 shots
-          within court bounds.
+        comment: x/y correctly map to court coordinates; made maps to color and shape;
+          data filtered to court bounds
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. Legend labels Made/Missed
-          correct.
+        comment: Title 'scatter-shot-chart · python · plotnine · anyplot.ai' correct;
+          legend shows Made/Missed with correct color+shape encoding
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: 'Shots distributed across all zones with realistic FG%. Both made
-          and missed represented. Missing: shot_type categorization not in data model.'
+        passed: true
+        comment: Shows made/missed distinction, multiple court zones (paint, elbow,
+          corners, wings, top), shot types in data, FG% variation across zones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NBA player shot chart, neutral sports analytics context, realistic
-          zone-based shot selection patterns.
+        comment: NBA player shot chart; realistic FG% by zone (62% paint, 34-42% three-pointers);
+          modern NBA shot distribution (paint and three-heavy); neutral sports context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: NBA court dimensions accurate (50ft x 47ft half-court). Three-point
-          arc at 23.75ft. FG% by zone realistic (62% paint, 41% elbow, 37% above-break
-          three, 42% corner three).
+        comment: NBA standard dimensions (50ft wide, three-point arc 23.75ft, paint
+          16ft wide); 365 shots within spec 200-500 range; zone FG% values factually
+          correct for NBA context
     code_quality:
       score: 10
       max: 10
@@ -199,36 +206,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> court geometry -> shot data -> plot -> save.
-          No functions or classes.'
+        comment: 'Flat structure: tokens → geometry → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set before all random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine imports used. sys.path manipulation is a legitimate
-          workaround for naming collision.
+        comment: All imports used; sys path manipulation necessary for module shadowing
+          prevention
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized segment-by-segment court construction. No over-engineering,
-          no fake functionality.
+        comment: Clean, Pythonic; zone specs as list of tuples is well-structured;
+          no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current API.
+        comment: Saves as plot-{THEME}.png with dpi=400, width=6, height=6, units='in'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -236,24 +243,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct grammar of graphics: geom_path with group aesthetic for
-          court segments, geom_point for shots, scale_color_manual, coord_fixed for
-          1:1 ratio. Good plotnine idioms.'
+        comment: Proper ggplot() layer composition, coord_fixed() for aspect ratio,
+          group aesthetic in geom_path() for multi-segment court lines, scale_color_manual
+          + scale_shape_manual pairing
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: coord_fixed(ratio=1) and geom_path with grouped segments are idiomatic.
-          However, no plotnine-exclusive capability exploited beyond what basic ggplot2
-          would do.
-  verdict: REJECTED
+        passed: true
+        comment: geom_label() with native fill attribute (plotnine-native background
+          box without matplotlib patches hack); coord_fixed() is plotnine idiomatic
+          but available in most ggplot-family libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

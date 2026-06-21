@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-shot-chart: Basketball Shot Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 84/100 | Created: 2026-06-21
