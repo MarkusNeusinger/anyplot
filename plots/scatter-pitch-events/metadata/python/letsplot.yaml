@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-pitch-events
 created: '2026-03-20T12:36:54Z'
-updated: '2026-06-21T06:12:52Z'
+updated: '2026-06-21T06:21:21Z'
 generated_by: claude-sonnet
 workflow_run: 27895286582
 issue: 4417
@@ -12,53 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-p
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Accurate FIFA-standard pitch with penalty areas, goal areas, center circle, penalty
-    arcs, corner arcs, and goal posts drawn correctly
-  - Imprint palette applied in canonical order (Pass=#009E73, Shot=#C475FD, Tackle=#4467A3,
-    Interception=#BD8233) with redundant shape encoding for accessibility
-  - Clever in-coordinate custom legend below the pitch using coordinate extension
-    (ylim to -20), keeping layout clean without needing a separate legend box
-  - Alpha encoding (1.0 vs 0.42) clearly distinguishes successful from unsuccessful
-    events while keeping all markers visible
-  - Zone highlights (attacking third / defensive third) with subtle alpha add tactical
-    context beyond the bare spec requirements
-  - Directional arrows with open arrowheads for passes and shots correctly implement
-    trajectory visualization
-  - scale_*_identity() chain correctly handles pre-mapped color, fill, shape, size,
-    alpha aesthetics — idiomatic letsplot pattern
-  - coord_fixed(ratio=1) combined with xlim/ylim correctly maintains 105:68 pitch
-    proportions
-  - 'Theme-adaptive chrome correctly applied: PAGE_BG, INK, INK_SOFT, INK_MUTED all
-    flip between light and dark; data colors remain constant across themes'
+  - Correct Imprint palette in canonical order (Pass=#009E73, Shot=#C475FD, Tackle=#4467A3,
+    Interception=#BD8233)
+  - 'Accurate FIFA-spec pitch geometry: penalty areas, goal areas, center circle,
+    halfway line, corner arcs, goal posts'
+  - Directional arrows via geom_segment + arrow() for passes and shots — tactically
+    meaningful
+  - Dual-outcome encoding using fill (colored vs white) and alpha (1.0 vs 0.42) is
+    clear and spec-compliant
+  - 'Correct canvas: ggsize(800, 450) + scale=4 = 3200×1800, both themes render correctly'
+  - Interactive HTML tooltips via layer_tooltips() leverage letsplot-specific feature
+  - coord_fixed(ratio=1) maintains the 105:68 pitch aspect ratio precisely
+  - Custom legend below the pitch with markers + labels + outcome key is well-organised
+  - Dual-zone highlights (attacking/defensive thirds) add tactical context without
+    dominating
+  - Flat, KISS code structure with np.random.seed(42) for reproducibility
   weaknesses:
-  - Subtitle runs very close to canvas edges in dark render — subtitle 'hjust=0.5'
-    at size=12 spans nearly the full canvas width with minimal margins; consider reducing
-    subtitle fontsize to ~10 or shortening the subtitle text to add breathing room
-  - Zone annotation labels (geom_text size=4) and outcome description text ('Colored
-    fill = Successful', size=4) are on the small side relative to the plot — increasing
-    to size=5 would improve mobile readability
-  - Attacking third is visually congested with overlapping shots, interceptions, and
-    arrows — consider increasing marker alpha contrast (e.g. unsuccessful alpha from
-    0.42 to 0.30) to better separate event layers in dense areas
-  - 'LM-02: arrow() function and in-coordinate legend are distinctive but the implementation
-    doesn''t exploit letsplot''s built-in interactive features (tooltips, HTML output)
-    to differentiate from static-library alternatives — the HTML is saved but tooltips
-    are not configured'
+  - Shot marker shape is a diamond (shape=23) instead of a star/asterisk — spec suggests
+    stars for shots; while spec says "e.g.", a star would be more distinctive from
+    other polygon shapes
+  - Clustering of shot arrows in the attacking third creates a dense visual tangle
+    in the right side of the pitch — minor overplotting is not avoidable but could
+    use a slightly higher alpha contrast between series
+  - Zone label geom_text at size=5 (≈14pt pre-scale) is on the small end when the
+    pitch occupies ~60% of the canvas area — at mobile scale (~400px) the zone annotations
+    may be slightly hard to read
+  - The pitch green (#1A5C2A) is outside the Imprint palette — justified by the spec
+    requirement for a green pitch surface, but worth noting as a deviation from the
+    strict palette rule
+  - 'DE-02 refinement: the zone highlights use pure white and pure black overlays
+    at low alpha; a warmer tint (e.g., a very faint Imprint green/blue) would feel
+    more on-brand than pure #FFFFFF/#000000 overlays'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) fills the entire canvas — correct theme surface.
-      Chrome: Title "scatter-pitch-events · python · letsplot · anyplot.ai" in bold dark (#1A1A17) text, centered, readable. Subtitle "100 match events — passes, shots, tackles & interceptions with outcome encoding" in INK_SOFT (#4A4A44), centered, spans ~85% of canvas width with visible margin on both sides. Custom legend below the pitch: event-type labels ("Pass", "Shot", "Tackle", "Interception") in bold INK_SOFT, outcome text in INK_MUTED — all legible.
-      Data: Dark forest green pitch (#1A5C2A) with white (#FFFFFF) standard FIFA markings. Four Imprint colors in canonical order: green circles (Pass), lavender diamonds (Shot), blue triangles (Tackle), ochre squares (Interception). Transparent markers (alpha=0.42) and white fills encode unsuccessful events. Teal/lavender directional arrows with open arrowheads for passes and shots. Zone highlights (attacking/defensive thirds) with subtle white/black overlay (alpha 0.15/0.12). Zone italic labels in white at top corners.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 surrounding the pitch — correct theme surface.
+      Chrome: Title "scatter-pitch-events · python · letsplot · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT gray, readable. Custom legend below the pitch uses INK_SOFT for event labels and INK_MUTED for the outcome key — all readable against the warm off-white background.
+      Pitch: Dark forest green (#1A5C2A) with white markings (pitch outline, penalty areas, goal areas, center circle, halfway line, corner arcs, goal posts). Zone highlights (attacking third: faint white overlay; defensive third: faint dark overlay) are subtle and legible. "Defensive Third" and "Attacking Third" labels in italic white are visible against the green pitch surface.
+      Data: Pass events in brand green #009E73 (circles), Shot events in lavender #C475FD (diamonds), Tackle events in blue #4467A3 (triangles), Interception events in ochre #BD8233 (squares). Directional arrows for passes and shots clearly visible. Successful events filled (opaque, alpha=1.0), unsuccessful events have white fill with lower alpha (0.42) — distinction is clear.
+      Legibility verdict: PASS — all chrome text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the entire canvas — correct dark surface.
-      Chrome: Title clearly readable in light (#F0EFE8) bold text. Subtitle in lighter INK_SOFT (#B8B7B0) — very close to both canvas edges (subtitle runs nearly full canvas width with minimal margin), but pixels appear intact, not clipped. Legend text and outcome descriptions remain readable in dark-theme tokens.
-      Data: Pitch colors (green, white markings) and all four Imprint data colors are identical to light render — green circles, lavender diamonds, blue triangles, ochre squares, consistent with palette rule that data colors do not flip between themes. Zone highlights and labels appear at same positions.
-      Legibility verdict: PASS (with minor concern about tight subtitle margins in dark render — no actual pixel clipping observed but breathing room is very limited).
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0) clearly visible against the near-black background. Legend event labels in INK_SOFT (#B8B7B0), outcome labels in INK_MUTED (#A8A79F) — both readable. No dark-on-dark failures detected.
+      Pitch: Same dark green pitch with white markings — pitch colors are data context (constant across themes). Zone labels remain white italic on green, clearly readable. Data marker colors identical to light render: same #009E73, #C475FD, #4467A3, #BD8233 per event type — Imprint palette is theme-independent as required.
+      Data: Data colors visually identical to light render. Arrows and markers maintain the same visual clarity. Shot cluster in attacking third has the same dense-but-readable pattern as in light mode.
+      Legibility verdict: PASS — all chrome adapts correctly to dark theme; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -69,82 +70,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and subtitle readable in both themes; zone annotation labels
-          (size=4mm) and outcome text are slightly small; subtitle runs very close
-          to canvas edges in dark render
+        comment: Title, subtitle, legend text all readable in both themes. Zone labels
+          at size=5 (geom_text mm) are visible but slightly small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Expected crowding in attacking third with 100 events; alpha encoding
-          mitigates but dense arrow/marker overlap remains; legend does not overlap
-          pitch
+        comment: Minor clustering in attacking third where shot arrows converge at
+          goal. Managed well via alpha encoding but not fully eliminated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker sizes 3.0/4.5 above default 2.5 — good for ~100 events; alpha=0.42
-          keeps unsuccessful events visible; arrows with open arrowheads clear
+        comment: All marker shapes visible. Unsuccessful events at alpha=0.42 with
+          white fill are distinguishable but slightly faint on green pitch surface.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette (CVD-safe) used with redundant shape encoding for
-          all four event types
+        comment: Imprint palette is CVD-safe. Redundant shape encoding adds an extra
+          discrimination layer beyond color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); coord_fixed(ratio=1) maintains 105:68
-          pitch proportions; coordinate extension (ylim=-20) cleanly accommodates
-          inline legend
+        comment: Canvas correct at 3200x1800. Pitch well-proportioned within frame.
+          Custom legend below pitch fits within canvas. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Required title format; subtitle provides useful context about event
-          count and types; theme_void appropriate — no traditional axis labels needed
+        comment: Title in correct format. theme_void() removes axes appropriately
+          for pitch map. Subtitle is descriptive and informative.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Pass=#009E73 first; Shot=#C475FD, Tackle=#4467A3, Interception=#BD8233
-          in canonical order; PAGE_BG #FAF8F1 light / #1A1A17 dark correct; data colors
-          identical across themes'
+        comment: 'Imprint palette in canonical order. Backgrounds #FAF8F1/#1A1A17
+          correct. Pitch green is domain-justified non-palette color (spec requires
+          green pitch). Chrome tokens adapt correctly between themes.'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Custom pitch background (#1A5C2A chosen to keep #009E73 markers
-          distinct), zone highlights, detailed pitch geometry, in-coordinate legend
-          — genuine design sophistication above defaults'
+        comment: Zone highlights, tactical zone annotations, directional arrows, and
+          fill+alpha dual-outcome encoding show design thought above baseline. Not
+          exceptional but deliberately crafted.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_void appropriate; subtle zone alpha; detailed pitch markings
-          including corner arcs and penalty arcs; PITCH_LINE=#FFFFFF crisp on green
-          surface
+        comment: 'theme_void() eliminates unnecessary chrome. Clean pitch markings.
+          Custom legend layout. Zone highlight overlays use pure #FFFFFF/#000000 rather
+          than warmer palette-aligned tints — minor refinement gap.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Zone labels create tactical narrative; shot arrows converge on goal;
-          alpha outcome encoding creates immediate success/failure story; pitch zones
-          guide viewer attention
+        comment: Tactical thirds labelled. Shot trajectories toward goal visible.
+          Outcome encoding adds analytical layer. Subtitle explains context. Adequate
+          storytelling but not compelling focal point design.
     spec_compliance:
       score: 15
       max: 15
@@ -154,28 +152,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct soccer pitch event map with all required FIFA-standard markings
+        comment: 'Correct: soccer pitch event map with markers on accurately scaled
+          pitch diagram.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct shapes+colors per event type, outcome encoding via fill+alpha,
-          directional arrows for passes and shots, green pitch background, correct
-          aspect ratio
+        comment: 'All spec features present: pitch markings, 4 event types, distinct
+          shapes+colors, outcome encoding, directional arrows.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y in meters (0-105, 0-68), event_type->color+shape, outcome->alpha+fill
+        comment: x/y coordinates on 0-105/0-68m range. coord_fixed maintains aspect
+          ratio. Shots correctly concentrated in attacking zone.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; custom legend correctly labels
-          all four event types and both outcome states
+        comment: 'Title: ''scatter-pitch-events · python · letsplot · anyplot.ai''
+          correct. Custom legend clearly labels all 4 event types and both outcomes.'
     data_quality:
       score: 15
       max: 15
@@ -185,22 +184,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four event types, outcome encoding, directions for passes/shots,
-          realistic spatial distribution, zone highlighting
+        comment: All 4 event types, outcome encoding, directional arrows, zone annotations,
+          and pitch markings are present and functional.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Football/soccer is neutral domain; pass success 78%, shot success
-          30%, tackle 60% — realistic rates; spatial distributions plausible
+        comment: 'Realistic match distributions: 45% passes, 15% shots, 22% tackles,
+          18% interceptions. Success rates per event type reflect real football (78%
+          pass, 30% shot conversion, 60% tackle).'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 100 events within spec range (50-500); pitch dimensions 105x68 FIFA
-          standard; positions within bounds
+        comment: 100 events for a match segment is realistic. Standard FIFA 105x68m
+          dimensions. Pitch coordinate system correctly respected.
     code_quality:
       score: 10
       max: 10
@@ -210,65 +210,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes, logically organized sections
+        comment: Flat script, no functions or classes. Linear execution flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All letsplot imports are used; os/numpy/pandas all used
+        comment: All imported symbols are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for this visualization type
+        comment: Identity scale pattern (scale_color_identity, scale_fill_identity,
+          etc.) is the correct approach for pre-computed aesthetics in lets_plot.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; ggsave with
-          scale=4
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct output
+          filenames and paths.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot grammar used correctly. coord_fixed for aspect ratio. theme_void()
+          appropriate. Identity scales for manual aesthetic mapping. Proper ggsize
+          + ggsave with scale=4.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar of graphics layering; scale_*_identity() for pre-mapped
-          aesthetics; coord_fixed() for aspect ratio; theme_void() for pitch; geom_path
-          for circles/arcs
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: arrow() function, in-coordinate legend via coordinate extension,
-          scale_size_identity() — distinctive letsplot patterns used; HTML output
-          saved but tooltips not configured to leverage interactivity
+        comment: layer_tooltips() for interactive HTML. arrow() function for segment
+          arrowheads. geom_path() for circles/arcs. Multiple identity scales for complex
+          pre-mapped aesthetics — all letsplot-specific strengths.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
-  - custom-legend
-  - html-export
   - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
-  - edge-highlighting
+  - alpha-blending
