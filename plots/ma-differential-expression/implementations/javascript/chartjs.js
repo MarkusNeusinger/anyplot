@@ -1,7 +1,7 @@
 // anyplot.ai
 // ma-differential-expression: MA Plot for Differential Expression
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-21
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 88/100 | Created: 2026-06-21
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
