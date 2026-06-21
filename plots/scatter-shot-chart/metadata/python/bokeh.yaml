@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-shot-chart
 created: '2026-03-20T20:30:00Z'
-updated: '2026-06-21T08:12:07Z'
+updated: '2026-06-21T08:28:37Z'
 generated_by: claude-sonnet
 workflow_run: 27897732888
 issue: 4416
@@ -12,50 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 86
 review:
   strengths:
-  - 'Semantic Imprint palette applied correctly: green (#009E73, made=pass) and red
-    (#AE3030, missed=fail) from Imprint canonical positions with correct semantic
-    exception'
-  - 'All required NBA court elements accurately rendered: 23.75 ft three-point arc,
-    22 ft corner cutoffs, 16 ft paint, 4 ft restricted area arc, free-throw circle
-    (solid/dashed), basket'
-  - Redundant shape encoding (circle for made, X for missed) makes made/missed distinction
-    colorblind-safe beyond the color signal alone
-  - Zone efficiency overlays (percentage + made/total counts) add genuine analytics
-    depth across all 5 shooting zones
-  - 'Full theme adaptation: court floor, backgrounds, court lines, and all chrome
-    correctly flip between light (#FAF8F1) and dark (#1A1A17) with no dark-on-dark
-    failures'
-  - 'Clean idiomatic Bokeh: ColumnDataSource for dual data sources, HoverTool with
-    snap_to_data, LegendItem programmatic legend, Label annotations, CDP viewport
-    override for exact 2400x2400 output'
+  - 'Accurate NBA half-court geometry drawn from scratch: three-point arc at 23.75
+    ft / 22 ft corners, restricted area arc, free-throw circle with solid top / dashed
+    bottom, corner three-point straight lines, hoop circle and backboard — all fully
+    implemented in Bokeh native geometry'
+  - Zone efficiency overlays (FG% + made/total per zone) placed on the court give
+    the viewer immediate analytic insight into shooting efficiency by zone — good
+    data storytelling
+  - 'Semantic color exception correctly applied and documented: #009E73 (brand green)
+    for Made, #AE3030 (matte red) for Missed, with different marker shapes (circle
+    vs X) providing redundant CVD-safe encoding'
+  - 'Full Bokeh interactive HTML output alongside the static PNG: HoverTool with multi-field
+    tooltips (Result, Zone, Shot Type, Distance) leverages Bokeh''s core differentiator'
+  - 'Immaculate theme adaptation: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED,
+    COURT_FLOOR, COURT_LINE all flip correctly between light (#FAF8F1) and dark (#1A1A17)
+    renders — no dark-on-dark failures'
+  - All text sizes explicitly set at appropriate values (title 50pt, legend 28pt,
+    zone labels 22pt/18pt, FG% annotation 24pt), matching style-guide defaults for
+    the 2400×2400 bokeh canvas
+  - Clean code structure — linear KISS pattern, np.random.seed(42) for reproducibility,
+    ColumnDataSource for each outcome group enabling targeted HoverTool binding
+  - 2400×2400 square canvas with match_aspect=True correctly enforces 1:1 court proportions
+    as required by spec
   weaknesses:
-  - 'Dead space at top of canvas: gap between FG% stat (at y=38 data units) and the
-    title/legend accounts for ~15-20% of canvas height; reduce min_border_top from
-    220 to ~100 and/or shrink y_range upper bound from 42 to 35 to tighten composition'
-  - Free Throw zone efficiency label placed at (-12, 17) in empty left-of-key area
-    far from actual free throw shots at (0, 15); reposition to (0, 17) or (18, 16)
-    so the label sits near its zone
-  - Zone labels in the paint ('56%', '54/97') visually collide with dense shot clusters;
-    shift Paint label to (3, 6) or increase background_fill_alpha to reduce collision
+  - Free Throw zone efficiency label is placed at (18, 16) — in the right midrange
+    area — rather than near the actual free throw lane (x≈0, y≈15). Viewers will associate
+    the 67% figure with the midrange zone to the right of the paint instead of the
+    free throw line. Relocate to e.g. (10, 17) or add a directional cue to avoid geographic
+    mismatch.
+  - y_range = (-12, 42) reserves 12 units (22% of vertical data range) of empty court
+    floor below the baseline, creating visible dead space at the bottom of the plot.
+    Tighten to y_range = (-4, 42) or (-6, 42) to reduce wasted space while still giving
+    breathing room to the baseline.
+  - Paint area (~87 shots in 16×12 ft) shows unavoidable overplotting; alpha=0.60
+    helps but could be reduced to 0.45 to further differentiate the dense cluster
+    and improve individual shot visibility in that zone.
+  - Sidelines are drawn only to y=35, not to the full NBA half-court depth of y=47
+    ft. For a spec that explicitly calls for standard dimensions (50×47 ft), extending
+    the sidelines to y=47 (even if no shots appear there) would be more accurate.
+  - Legend font size 28pt is below the style-guide default of 34pt for the bokeh 2400×2400
+    canvas — minor but noticeable at thumbnail resolution; increasing to 32–34pt would
+    improve mobile readability.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Court floor: Beige #EDE8DC — distinctly lighter than page, makes court surface visible
-      Chrome: Title "scatter-shot-chart · python · bokeh · anyplot.ai" bold centered in dark ink (#1A1A17) — fully readable; legend text "Made (164) / Missed (186)" in INK_SOFT (#4A4A44) — readable; FG% stat "FG: 46.9% · 350 attempts" in INK_MUTED (#6B6A63) — readable but subtle; zone percentage labels (29%, 36%, 44%, 56%, 67%) in INK (#1A1A17) bold — clearly readable; zone sub-labels (made/total) in INK_SOFT — readable but small; court lines in INK_SOFT gray — visible
-      Data: Made shots = filled teal-green circles (#009E73, alpha=0.60) on court floor — clearly visible; Missed shots = red X markers (#AE3030, line_width=3.5) — clearly visible; both sets stand out against the beige court floor
-      Notable issue: ~20% of the vertical canvas above the court is empty page background due to y_range extending to 42 and min_border_top=220
-      Legibility verdict: PASS — all text readable; no light-on-light failures
+      Background: Warm off-white #FAF8F1 throughout — both the page background and the court floor (slightly darker #EDE8DC tan) are clearly distinguishable from each other, giving the court a natural wood-floor feel.
+      Chrome: Title "scatter-shot-chart · python · bokeh · anyplot.ai" rendered in dark INK (#1A1A17) at 50pt, centered, fully visible without clipping. Legend above the plot area shows filled green circle "Made (164)" and red X "Missed (186)" in dark INK_SOFT (#4A4A44) at 28pt — readable. No axis labels or tick labels (intentionally hidden; the court provides spatial reference). Zone efficiency labels (percentage in 22pt, made/total in 18pt) appear at: Paint 56%/54/97, Mid-Range 44%/27/61, Three-Point 29%/27/92, Corner-3 left 36%/13/36, Corner-3 right 36%/13/36, and Free Throw at (18,16) showing values in bold dark ink with light elevated-background fill. FG% annotation "FG: 46.9% · 350 attempts" in INK_MUTED at 24pt at top of court area — readable. All text is clearly readable against the warm off-white background.
+      Data: Made shots rendered as filled green circles (#009E73) at alpha=0.60 size=16; missed shots as hollow red X markers (#AE3030) at line_width=3.5. First data series is #009E73 brand green ✓. Court lines drawn in INK_SOFT (medium gray). Hoop in orange-red #C44E2B. Shot distribution realistic across all zones.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Court floor: #242420 (ELEVATED_BG dark) — slightly lighter than page background, court surface subtly visible
-      Chrome: Title in warm cream (#F0EFE8 / INK dark) — fully readable against dark background; legend text in #B8B7B0 (INK_SOFT dark) — readable; FG% stat in #A8A79F (INK_MUTED dark) — readable; zone percentage labels in #F0EFE8 — readable; zone sub-labels in #B8B7B0 — readable; court lines in #B8B7B0 — visible against dark court floor
-      Data: Made shots remain #009E73 (brand green) — identical to light render, clearly visible on dark; Missed shots remain #AE3030 (matte red) — identical to light render, visible on dark; no color change between themes (only chrome flips)
-      No dark-on-dark failures detected: all text uses light tokens, no element is black-on-dark
-      Legibility verdict: PASS — all text readable; chrome correctly adapted to dark theme
+      Background: Warm near-black #1A1A17 — correct dark surface. Court floor #242420 is subtly lighter than the background, maintaining the court structure visual.
+      Chrome: Title renders in light #F0EFE8 (INK_DARK) — clearly readable against near-black. Legend text in light #B8B7B0 (INK_SOFT_DARK) — readable. Zone efficiency labels in bold light INK_DARK with elevated background #242420 fill — all readable. FG% annotation in muted #A8A79F — lower contrast as intended for tertiary annotation, still readable. Court lines rendered in #B8B7B0 (lighter than background). No dark-on-dark failure detected.
+      Data: Made shots (#009E73 green) and Missed shots (#AE3030 red) are IDENTICAL to the light render — only chrome flipped ✓. Both colors are clearly visible against the near-black background. The green (#009E73) reads particularly well on dark; the red (#AE3030) remains distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 26
@@ -66,78 +78,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, zone percentages all readable in both themes; zone
-          sub-labels at 18pt are small for 2400px canvas but legible
+        comment: 'All font sizes explicitly set (title 50pt, legend 28pt, zone labels
+          22pt/18pt, FG% 24pt). All readable in both renders. Minor: legend at 28pt
+          is below the 34pt style-guide default for this canvas size.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Zone efficiency labels in paint and three-point area overlap with
-          dense shot clusters; background fill helps but doesn't fully eliminate collision
+        comment: No text overlap. Natural overplotting in the paint area (~87 shots
+          in a small zone) but alpha=0.60 mitigates it. Shot marker clusters are inherent
+          to shot-chart plots.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Made circles (fill_alpha=0.60, size=16) and missed X markers (size=16)
-          clearly distinguishable from court and each other; 350-shot density well-handled
+        comment: size=16 markers at alpha=0.60 (made) and line_width=3.5 X markers
+          (missed) appropriate for 350 data points. Paint cluster dense but readable.
+          Slightly above threshold for 300+ point density guidance.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant shape encoding (circle vs X) makes made/missed CVD-safe
-          beyond red/green color alone
+        comment: Semantic green/red justified by spec. Redundant shape encoding (circle
+          vs X) provides CVD-safe distinguishability beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: ~20% dead space at top of canvas between legend/FG-stat and court;
-          y_range upper bound at 42 with no data beyond y≈30 leaves noticeable empty
-          area
+        passed: true
+        comment: 2400x2400 square canvas correct for 1:1 court aspect ratio. y_range=(-12,
+          42) reserves 12 units (22%) of empty space below baseline — visible dead
+          zone at the bottom of the rendered plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes hidden appropriately (court provides spatial reference); title
-          format correct; zone labels serve as contextual annotation
+        comment: Axes intentionally hidden; court geometry provides spatial reference
+          per spec. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'Made=#009E73 (Imprint pos 1, semantic good/pass), Missed=#AE3030
-          (Imprint pos 5, semantic bad/fail); semantic exception correctly applied;
-          backgrounds #FAF8F1/#1A1A17 correct'
+          (Imprint pos 5, semantic bad/fail). Semantic exception well-documented in
+          code. Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical across
+          themes. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Semantic colors, distinct marker shapes, court floor tinted separately,
-          zone efficiency overlays; missing focal-point emphasis and shot density
-          gradient
+        comment: 'Above library defaults: custom court geometry, zone efficiency overlays,
+          semantic color coding, theme-adaptive court floor. Not yet publication-ready
+          but clearly above a generic scatter plot.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes/grid (appropriate); background fills on zone labels; orange
-          hoop; Free Throw zone label at (-12,17) is misplaced in empty court area
+        comment: Grid removed, axes hidden, frame outline removed, legend borderless
+          and transparent. Thoughtful chrome removal appropriate for court diagram.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Zone efficiency stats create analytical context; no visual hierarchy
-          between zones; FG% stat is subtle; no clear focal point
+        comment: 'Zone efficiency overlays (FG% + made/total per zone) guide the viewer
+          to the key insight immediately. Deduction: Free Throw zone label placed
+          at (18,16) — in the right midrange area — is geographically misleading.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,32 +164,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basketball shot chart with accurate NBA half-court; green/made, red/missed
-          correctly applied
+        comment: Correct basketball shot chart with half-court diagram and shot scatter
+          overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Three-point arc (23.75 ft top, 22 ft corners), corner lines, FT circle
-          (solid/dashed), paint (16 ft wide), restricted area arc (4 ft), basket all
-          present
+        comment: Three-point arc (23.75ft top, 22ft corners), free-throw circle, paint/key,
+          restricted area arc, basket/backboard all present. HoverTool provides shot
+          type information.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y in feet from basket center; shot coordinates realistic; made/missed
-          encoded by color and shape
+        comment: x/y spatial coordinates correctly mapped. All 350 shots visible within
+          x_range and y_range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'scatter-shot-chart · python · bokeh · anyplot.ai'; legend
-          shows Made/Missed with glyph renderers and counts
+        comment: Title is 'scatter-shot-chart · python · bokeh · anyplot.ai'. Legend
+          shows Made (164) and Missed (186) with correct visual encoding.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -180,22 +197,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 zones (Paint, Mid-Range, Three-Point, Corner 3, Free Throw);
-          350 shots within 200-500 spec; zone efficiency stats add depth
+        comment: All shot zones covered (paint, midrange, three-point, corner 3, free
+          throw). Both made and missed shown. Zone efficiency varies realistically.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'NBA-realistic FG% by zone: paint ~55%, mid-range ~42%, three-point
-          ~36%, corner 3 ~39%, free throw ~78%; overall 46.9% FG plausible'
+        comment: NBA basketball shot chart — clear, real-world, neutral sports analytics
+          context.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Court dimensions match NBA spec; shot coordinates stay within legal
-          court bounds
+        comment: 'Shooting percentages (paint 55%, mid-range 42%, three-point 36%,
+          corner-3 39%, free-throw 78%) align with real NBA averages. Minor geometry
+          inaccuracy: basket at y=1.5 (should be ~5.25ft from baseline) and sidelines
+          only to y=35 (spec says 47ft half-court depth).'
     code_quality:
       score: 10
       max: 10
@@ -205,61 +224,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; linear flow; zone stats computed inline
+        comment: Linear imports→data→plot→save structure, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path fix for self-import correctly guarded
+        comment: All imports used. Sys.path fix for self-import shadowing is justified
+          and documented.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable and well-organized; theme tokens cleanly defined; zone geometry
-          computed mathematically
+        comment: Clean, Pythonic. Zone overlay loop slightly verbose but not over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html (Bokeh interactive) + plot-{THEME}.png (Selenium
-          screenshot); current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.9.1
+          API. Selenium screenshot pattern correct per library guide.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for both data groups; figure() with Range1d and
-          match_aspect; HoverTool with renderers=[]; Legend/LegendItem programmatic;
-          Label for annotations; Selenium CDP override
+        comment: ColumnDataSource, HoverTool, Legend/LegendItem, Label, output_file+save
+          all used idiomatically per Bokeh recommended patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool (Bokeh's signature interactive) with zone/type/distance
-          tooltips; HTML output; CDP viewport override; dual ColumnDataSource; no
-          advanced Bokeh features (callbacks, widgets, tabs)
+        comment: HoverTool with multi-field tooltips (Result, Zone, Shot Type, Distance)
+          is a Bokeh-distinctive feature. Interactive HTML alongside static PNG leverages
+          Bokeh's core strength. ColumnDataSource enables per-series tool binding.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   - custom-legend
   patterns:
   - data-generation
@@ -268,5 +286,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - minimal-chrome
+  - edge-highlighting
