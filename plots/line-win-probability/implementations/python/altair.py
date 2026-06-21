@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-06-21
+Library: altair 6.2.1 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-06-21
 """
 
 import importlib
