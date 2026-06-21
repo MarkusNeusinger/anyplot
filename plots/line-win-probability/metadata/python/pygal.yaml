@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-win-probability
 created: '2026-03-20T12:34:27Z'
-updated: '2026-06-21T03:50:51Z'
+updated: '2026-06-21T04:08:07Z'
 generated_by: claude-sonnet
 workflow_run: 27892153266
 issue: 4418
@@ -12,99 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - Semantic colour assignment (home=green/brand, away=red/matte) is well-justified
-    as a semantic exception and instantly readable
-  - Real 2022 AFC Championship game data with authentic scoring waypoints adds narrative
-    authenticity
-  - Layered fill technique (100% green background, red overlay) creates a clean momentum
-    metaphor
-  - Title-length-scaled font size (max(44, round(66 * 67 / len(title)))) is good defensive
-    practice
-  - Theme tokens applied correctly across all chrome elements; dark render has zero
-    dark-on-dark failures
+  - Creative dual-fill technique (Bengals green background, Chiefs red overlay) makes
+    team momentum immediately intuitive
+  - Real, historically accurate 2022 AFC Championship game data with a compelling
+    narrative arc — KC wins 23-20 OT
+  - Title includes actual game score (20-23 OT) making the plot self-contained and
+    informative at a glance
+  - Title font-size scales gracefully with the long mandated title string using a
+    linear formula
+  - 'Perfect code quality: KISS structure, reproducible seed (np.random.seed(42)),
+    clean imports'
+  - Both themes fully functional with correct Imprint palette, semantic team-color
+    exception, and theme-adaptive chrome
   weaknesses:
-  - label_font_size=34 is below the style-guide reference of 56 for pygal minor axis
-    labels — Y-axis percentage tick labels are smaller than ideal at thumbnail viewing
-    sizes; raise to 44-50
-  - Key scoring event text labels (KC FG 3-0, CIN TD 7-3, etc.) are only visible in
-    the interactive HTML tooltip, not in the static PNG — the spec explicitly says
-    annotate key scoring events; add visible text annotations or callout labels near
-    the dots in the static render
-  - 'The INK-coloured win-probability line (#1A1A17 in light mode) has low contrast
-    against the dark-red Chiefs fill area — consider using a lighter neutral or #FFFDF6
-    stroke so the line remains legible over both fill colours in light mode'
-  - Green/red fills without secondary encoding for CVD users — adding a marker shape
-    or hatching to one fill would improve accessibility without changing the colour
-    scheme
+  - Scoring event text annotations are missing in the static PNG — cyan dots mark
+    event positions but are unlabeled; only the HTML version has hover labels. The
+    spec says to annotate key scoring events.
+  - The 50% reference line (#BD8233 ochre dashed) is too faint — barely distinguishable
+    from the background fills in both renders. Increase stroke width or use a more
+    contrasting color (e.g. INK_MUTED).
+  - Red-green fill encoding has no CVD fallback — deuteranopia/protanopia viewers
+    cannot distinguish team dominance areas. Add a thin ink outline between fills
+    or text labels near the fill areas.
+  - The near-white win-probability line (#FFFDF6 in light mode) is somewhat subtle
+    against the green fill; thicker stroke or a slightly more contrasting color would
+    improve traceability.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Title "Bengals vs Chiefs (20-23 OT) · line-win-probability · python · pygal · anyplot.ai" in dark INK, fully readable; Y-axis label "Win Probability (%)" readable; X-axis label "Game Progression (Play Number)" readable; Y-axis ticks (0%–100%) readable though slightly small (label_font_size=34); X-axis major labels (Kickoff, Q2, Halftime, Q4, OT) readable at major_label_font_size=44
-      Data: Brand green (#009E73) fill for Bengals lead region (above win prob line), matte red (#AE3030) fill for Chiefs lead region (below); first series correctly uses Imprint position 1 (#009E73); thin dark INK win-probability line; ochre dashed 50% reference line; cyan event dots at key plays
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "Bengals vs Chiefs (20-23 OT) · line-win-probability · python · pygal · anyplot.ai" is clearly readable in dark ink. Y-axis label "Win Probability (%)" and X-axis label "Game Progression (Play Number)" both readable. Tick labels (0%-100% y-axis, event labels x-axis) are clear. Legend at bottom (CIN Bengals, KC Chiefs, 50% Line, Key Events) is legible.
+      Data: Brand green (#009E73) fills the full 0-100% background for Bengals; matte red (#AE3030) overlay fills from bottom to chiefs_wp creating the dual-fill momentum visualization. Near-white (#FFFDF6) win probability line is traceable but subtle against the green fill. Ochre (#BD8233) dashed 50% reference line is very faint. Cyan (#2ABCCD) event dots (size=20) are prominent at 7 scoring events. First series is #009E73 confirmed.
+      Legibility verdict: PASS — all text is readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels, and legend text all render in off-white ink (#F0EFE8 range); clearly readable against the dark surface; no dark-on-dark failures detected anywhere; brand green (#009E73) in legend swatch remains clearly visible on dark background
-      Data: Fill colours (brand green and matte red) are identical to the light render — only chrome flips; win-probability line switches to off-white stroke, which contrasts well against both fill colours; ochre 50% baseline and cyan event dots unchanged
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels, and legend are all rendered in light-colored ink (#F0EFE8) and are clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Colors are IDENTICAL to the light render — brand green (#009E73) and matte red (#AE3030) fills, cyan (#2ABCCD) event dots. Win probability line is near-white (#F0EFE8, same as INK in dark theme) and is more prominently visible against the colored fills compared to light mode. Ochre 50% line remains faint.
+      Legibility verdict: PASS — all text is readable against the dark background; no chrome failures detected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title and major labels clear in both themes; label_font_size=34 (minor
-          ticks) is below style-guide reference of 56, making Y-axis percentage labels
-          smaller than ideal at thumbnail sizes
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor deduction: only 5 of 9 intended major x-axis event labels are visible
+          due to pygal spacing constraints.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data overlaps in either render
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Fills, win-probability line, and event dots all visible; INK line
-          over dark-red area slightly low-contrast in light render
+        comment: 'Cyan event dots prominent (size=20). Win-prob line traceable but
+          subtle in light mode (#FFFDF6 on green fill). 50% reference line (ochre
+          #BD8233 dashed) is very faint against fills in both renders.'
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Green/red fill pair without redundant encoding for CVD users (~8%
-          of males)
+        comment: Red/green fills are the sole signal distinguishing team dominance.
+          No redundant encoding for CVD viewers (deuteranopia/protanopia).
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); proportions good; right-side margin
-          slightly tight
+        comment: Canvas exactly 3200x1800. Generous margins, legend at bottom, title
+          proportion appropriate. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labelled with units; title uses correct format with descriptive
-          prefix
+        comment: 'Y: ''Win Probability (%)'' with units. X: ''Game Progression (Play
+          Number)'' descriptive. Both correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; red semantic exception justified; INK neutral
-          for line; backgrounds correct; chrome flips correctly'
+        comment: 'First series #009E73. Semantic exception justified for team colors
+          (home=green brand, away=matte red). Backgrounds #FAF8F1/#1A1A17. Chrome
+          flips correctly between themes.'
     design_excellence:
       score: 12
       max: 20
@@ -114,22 +117,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic colour assignment, layered fills create effective
-          momentum metaphor, descriptive title prefix adds real-world context
+        comment: Layered dual-fill is creative and distinctive. Semantic team-color
+          assignment, game score in title, and font-size scaling show above-default
+          design thinking. Not yet publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid is subtle; legend clean at bottom; pygal SVG border frame visible,
-          spines cannot be removed idiomatically
+        comment: Dashed 50% line, muted grid (INK_MUTED), opacity=0.88 on fills, legend-at-bottom.
+          Some refinement visible but pygal's full-border default limits further polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green/red fills guide viewer through game momentum; 50% line provides
-          threshold; event dots punctuate narrative
+        comment: Green/red fills tell the AFC Championship story clearly. Multiple
+          momentum swings, comeback to tie, dramatic OT red surge. Viewer grasps narrative
+          immediately.
     spec_compliance:
       score: 14
       max: 15
@@ -139,52 +144,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct win probability chart with filled line
+        comment: Line chart with area fills — correct chart type for win probability.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Y-axis 0-100%, 50% reference line, home/away fills, period markers,
-          final score in title all present; key event text labels only in HTML tooltips
-          not static PNG
+        comment: 'Y-axis 0-100%, 50% baseline, team-colored fills, event markers (cyan
+          dots), period markers, final score in title all present. Missing: text annotations
+          for events in static PNG (only HTML tooltip hover labels).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Play number on X, win probability on Y, all 141 data points covered
+        comment: X = play number (0-140), Y = win probability 0-100%. Correct mapping
+          throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format {Descriptive} · {spec-id} · python · pygal · anyplot.ai;
-          legend labels match series
+        comment: Title follows {Descriptive Title} · {spec-id} · python · pygal ·
+          anyplot.ai format. Legend labels clear and appropriate.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Probability line, fills, reference line, event markers, and period
-          markers all present; event text labels only in hover state
+        comment: Shows win probability evolution, team momentum fills, event markers,
+          baseline reference, OT period, multiple bidirectional swings. All aspects
+          covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real 2022 AFC Championship game (CIN Bengals vs KC Chiefs, KC wins
-          23-20 OT); accurate scoring events; neutral sports context
+        comment: Real 2022 AFC Championship game (CIN Bengals vs KC Chiefs, 23-20
+          OT KC win). Historically accurate score and scoring sequence. Neutral sports
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% Y-axis, 141 plays, realistic probability values at each waypoint
+        comment: 141 plays within spec's 50-300 range. Win probabilities 0.04-0.98,
+          avoiding impossible extremes. Scoring sequence matches documented events.
     code_quality:
       score: 10
       max: 10
@@ -194,31 +203,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: 'Linear: imports -> theme tokens -> data -> chart config -> save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, pygal.style.Style; all used
+        comment: os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear comments, well-structured series ordering
+        comment: Layered fill approach is clever. S-curve interpolation adds smooth
+          data. Title font-size formula is elegant. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -228,26 +239,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.Line(), Style object, fill=True for area fills,
-          x_labels_major/show_minor_x_labels for label control; title-length-scaled
-          font size
+        comment: pygal.Line(), Style() with full theme tokens, fill=True for areas,
+          x_labels/x_labels_major for axis control, label-dict series entries for
+          event annotations. Good idiomatic usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output (pygal native), tooltip-based event labels,
-          value_formatter for %-display, dots_size for event markers, stroke override
-          per-series
+        comment: HTML interactive output with render_to_file(), tooltip_fancy_mode=True,
+          label-dict entries ({value, label}) for hover events, layered fill composition
+          — distinctly pygal capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
