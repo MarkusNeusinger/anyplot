@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: bokeh | Python 3.13
-Quality: 92/100 | Updated: 2026-06-21
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-21
 """
 
 import sys
