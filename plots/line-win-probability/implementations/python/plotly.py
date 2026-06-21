@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
@@ -144,7 +144,10 @@ for play_idx, _, label in events:
 
     ay_offset = -55 if y_val > 55 else 55
     ax_offset = 0
-    if play_idx == 68:
+    if play_idx == 10:
+        ax_offset = 60  # steer right to avoid PHI Eagles legend in upper-left
+        ay_offset = -60
+    elif play_idx == 68:
         ax_offset = 55
         ay_offset = -45
     elif play_idx == 80:
