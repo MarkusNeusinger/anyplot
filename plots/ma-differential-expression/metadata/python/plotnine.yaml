@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:38:20Z'
-updated: '2026-06-21T01:10:22Z'
+updated: '2026-06-21T01:20:36Z'
 generated_by: claude-sonnet
 workflow_run: 27889036249
 issue: 4420
@@ -12,44 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Semantically correct Imprint palette exception: green (#009E73) for upregulated
-    and matte-red (#AE3030) for downregulated follow bioinformatics convention and
-    match the style guide semantic exception rule'
-  - Full spec compliance — all required features present (LOESS curve via stat_smooth,
-    M=0 solid reference line, ±1 dashed threshold lines, alpha=0.12 transparency for
-    non-sig genes, top gene labels in italic)
-  - 'Sophisticated multi-layer plotnine composition: coordinated scale_color_manual/scale_alpha_manual/scale_size_manual
-    creating distinct visual hierarchy between significant and non-significant genes'
-  - Realistic T-cell activation immunology data with genuine marker genes (IL2, IFNG,
-    FOXP3, CD69, TNF, TBX21, etc.) and plausible DEG proportions (~8%)
-  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with proper chrome
-    token adaptation throughout
+  - 'Semantically correct Imprint palette: brand green (#009E73) for upregulation,
+    matte red (#AE3030) for downregulation, muted anchor for NS — all three semantically
+    justified and palette-compliant'
+  - Redundant encoding (color + shape + alpha + size) provides CVD safety for the
+    red-green distinction while also adding visual hierarchy
+  - Perfect spec compliance — all five required features (M=0 reference line, M=±1
+    dashed thresholds, LOESS smoothing, alpha transparency, gene labels) implemented
+    correctly
+  - Realistic immunogenomics domain with real T-cell activation gene names (IL2, IFNG,
+    FOXP3, CD69, TNF, GATA3, TBX21) and biologically plausible data distribution
+  - Both themes pass readability checks; theme-adaptive chrome fully threaded through
+    all elements with no dark-on-dark or light-on-light failures
   weaknesses:
-  - 'CVD accessibility gap: upregulated (green) vs downregulated (red) are distinguished
-    by color alone with no shape redundancy — colorblind users (deuteranopia/protanopia)
-    may struggle to tell the two significant groups apart; adding distinct marker
-    shapes (e.g. triangle_up/triangle_down) would fix this'
-  - Gene labels (size=3.0 mm ≈ 8.5pt) are small — barely readable when the plot is
-    scaled to mobile width (~400px); increase to size=3.5–4.0 for better legibility
-  - Non-significant genes at alpha=0.12 and size=0.8 are nearly invisible individually
-    — while the mass effect is intentional for dense scatter, the combination is at
-    the boundary of element visibility; alpha=0.15 and size=1.0 would improve the
-    aggregate impression without losing hierarchy
+  - Gene label cluster around x=7-10 (FOXP3, CD69, IL2, TNF) is crowded; reduce labeled
+    gene set to the 4-5 most extreme genes by |LFC|*sqrt(baseMean) to improve readability
+  - 'LOESS curve (#4467A3) loses visibility in the dense NS band near M=0 — increase
+    size from 1.2 to ~1.8 or use a higher-contrast Imprint color (e.g., #BD8233 ochre)
+    for better legibility'
+  - Missing explicit axis_line in theme() — adding element_line(color=INK_SOFT) for
+    axis_line ensures consistent axis borders across plotnine versions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white
-      Chrome: Title "ma-differential-expression · python · plotnine · anyplot.ai" in bold dark ink, clearly readable. X-axis label "Mean Expression (A)" and Y-axis label "Log₂ Fold Change (M)" both in dark ink at matching sizes. Tick labels on both axes readable in INK_SOFT (#4A4A44). Legend at top shows three categories with correct swatch colors and dark text — fully readable.
-      Data: Dense scatter of ~15,000 genes. Non-significant genes appear as a faint gray cloud (alpha=0.12, size=0.8 — near-transparent but visible as a mass). Upregulated genes in brand green (#009E73) and downregulated in matte-red (#AE3030) — both at alpha=0.8, size=2.0 — clearly pop against the gray cloud. Solid dark horizontal line at M=0. Dashed INK_SOFT lines at M=±1 with a "±2-fold threshold" annotation box. Blue LOESS curve (#4467A3) tracks the data trend near M=0. Eight top gene labels in italic dark text (IL2, IFNG, IL4, FOXP3, CD69, TNF, GATA3, TBX21) with nudge offsets — small but legible at full resolution.
-      Legibility verdict: PASS — all chrome elements readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "ma-differential-expression · python · plotnine · anyplot.ai" bold dark at 12pt, fills ~75% width. Axis labels "Mean Expression (A)" and "Log₂ Fold Change (M)" at 10pt dark, clear. Tick labels at 8pt in INK_SOFT, all readable. Legend at top-center with elevated background (#FFFDF6).
+      Data: Dense scatter of ~15,000 points. Upregulated: green upward triangles (#009E73, alpha=0.8). Downregulated: dark-red downward triangles (#AE3030, alpha=0.8). Not significant: muted gray circles (INK_MUTED, alpha=0.15). Solid M=0 reference line, dashed M=±1 threshold lines, blue (#4467A3) LOESS curve through center. Eight italic gene labels placed with nudge. "±2-fold threshold" callout annotation.
+      Legibility verdict: PASS — all text readable, no element conflicts.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — readable against the near-black background. Legend text readable. No dark-on-dark failure observed.
-      Data: Data colors identical to the light render — green upregulated, red downregulated, muted gray for non-significant (INK_MUTED adapts to #A8A79F in dark, clearly visible against #1A1A17). The LOESS curve in #4467A3 blue remains visible. Reference lines and annotation box (using ELEVATED_BG #242420) all visible. Gene labels in light ink — readable.
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against the warm near-black background.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in near-white (#F0EFE8 / #B8B7B0 family), clearly visible against dark background. Legend background adapts to #242420. No dark-on-dark failures anywhere.
+      Data: Data colors identical to light render — green (#009E73) upward triangles, matte red (#AE3030) downward triangles, muted gray NS dots. LOESS curve and reference lines visible. Gene labels rendered in INK token (near-white) and readable.
+      Legibility verdict: PASS — all text readable in dark theme, chrome adapts correctly.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -60,57 +57,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=12pt, axis=10pt, tick=8pt, legend=8pt).
-          All text readable in both themes. Gene labels at size=3mm (≈8.5pt) are marginally
-          small at mobile scale.
+        comment: Title, axis labels, tick labels sharp in both themes. Gene labels
+          (size=3.5mm) readable at full resolution but marginal at mobile scale; nudge
+          placement crowds a few labels near x=7-10.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Gene labels nudged with ±0.7 offsets, mostly no collisions. Some
-          labels sit within the dense data cloud but no serious text-on-text overlap.
+        comment: Gene-label cluster in center-right (FOXP3, CD69, TNF) shows crowding.
+          No label completely unreadable but requires effort to parse.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 15k-point dense scatter correctly uses alpha=0.12/size=0.8 for non-sig
-          (visible as mass), alpha=0.8/size=2 for significant. Non-sig nearly invisible
-          individually — aggregate cloud effect is at the boundary.
+        comment: Significant points (alpha=0.8, size=2.0) and muted NS background
+          (alpha=0.15, size=1.0) well-calibrated for 15k-point density. Blue LOESS
+          curve partially obscured in dense NS band near M=0.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green vs red distinguished by color alone for up/down; no marker
-          shape redundancy. CVD users (deuteranopia/protanopia) may confuse the two
-          significant categories.
+        passed: true
+        comment: Red/green encoding compensated by redundant shape encoding (upward
+          vs. downward triangles), satisfying CVD safety.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (8×4.5in @400dpi) confirmed by gate pass. Title
-          fills ~70% width. Axis labels balanced. No overflow or clipping.
+        comment: Canvas gate passed. Title proportion, axis label balance, and margins
+          appropriate.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Mean Expression (A)'', Y: ''Log₂ Fold Change (M)'' — descriptive
-          with units. Title matches mandated format.'
+        comment: Mean Expression (A) and Log2 Fold Change (M) descriptive with units.
+          Title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: green #009E73 (gain/up) and
-          matte-red #AE3030 (loss/down) from Imprint positions 1 and 5. Muted anchor
-          for non-sig. LOESS in #4467A3 (position 3). Backgrounds #FAF8F1/#1A1A17
-          correct.'
+        comment: 'Upregulated: #009E73 (Imprint pos 1, gain role); Downregulated:
+          #AE3030 (Imprint pos 5, loss anchor); NS: INK_MUTED (muted anchor). LOESS:
+          #4467A3. Backgrounds: #FAF8F1 light / #1A1A17 dark.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,24 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional semantic color hierarchy, coordinated alpha+size+color
-          scales, italic gene labels, threshold annotation box — above generic defaults
-          but not maximally polished.
+        comment: Multi-channel encoding (color+shape+alpha+size) intentional and domain-appropriate.
+          Real immunology gene names elevate realism. Callout annotation and italic
+          gene labels show design thought.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() base, panel_grid_minor removed, legend at top with
-          elevated background, no unnecessary chrome. Clean but not exceptional.
+        comment: theme_minimal() with custom backgrounds, no minor grid, subtle major
+          grid at alpha=0.15, top legend with elevated background.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy clear: sig genes pop over gray cloud, LOESS reveals
-          systematic bias, reference lines frame the fold-change context, top gene
-          names anchor biological interpretation.'
+        comment: 'Clear hierarchy: significant genes over NS background. LOESS provides
+          analytical insight. Gene labels give biological context. Missing LOESS label/annotation
+          to guide reader.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct MA plot: mean expression (A) on x-axis, log2 fold change
-          (M) on y-axis.'
+        comment: 'Correct MA plot: log fold change (M) on Y vs. mean expression (A)
+          on X.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: significant gene highlighting, gray non-sig,
-          M=0 solid line, ±1 dashed lines, LOESS curve, alpha transparency, top gene
-          labels.'
+        comment: 'All required features: significance highlighting, M=0 reference,
+          M=+-1 dashed lines, LOESS smoothing, alpha transparency, gene labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: mean_expression → x (A), log_fold_change → y (M). Full range 0–15
-          visible on x-axis.
+        comment: Axes correctly mapped; full 15k-gene dataset represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title ''ma-differential-expression · python · plotnine · anyplot.ai''
-          matches mandated format. Legend: Downregulated / Not significant / Upregulated.'
+        comment: 'Title: ma-differential-expression · python · plotnine · anyplot.ai.
+          Legend: Downregulated/Not significant/Upregulated with matching color+shape.'
     data_quality:
       score: 15
       max: 15
@@ -178,22 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers full MA plot feature set: scatter, color encoding, reference
-          lines, smoother, gene labels.'
+        comment: Scatter, significance layers, reference lines, LOESS curve, gene
+          labels all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: T-cell activation study with real immunology markers (IL2, IFNG,
-          FOXP3, CD69, etc.) — scientifically plausible and neutral.
+        comment: T-cell activation study with authentic immunology markers (IL2, IFNG,
+          FOXP3, CD69, TNF, GATA3, TBX21). 15k genes, 8% significant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15,000 genes (spec range 10k–20k), expression 0–15, LFC ±5 with ~8%
-          significant — all realistic for RNA-seq.
+        comment: 'A: 0-15 (typical log-expression range); M: +-5 (realistic fold change);
+          8% significant rate matches real RNA-seq outcomes.'
     code_quality:
       score: 10
       max: 10
@@ -203,33 +196,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat sequential script.
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names verifiably used in the plot composition.
+        comment: All imported plotnine components are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean ggplot grammar composition, no fake UI, appropriate complexity
-          for the feature set.
+        comment: Clean grammar-of-graphics chain. No fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', ...) — correct output naming, current
-          API.
+        comment: Saves as plot-{THEME}.png correctly.
     library_mastery:
       score: 7
       max: 10
@@ -239,17 +230,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic plotnine: pd.Categorical with ordered categories for legend
-          order, guide_legend with override_aes, coordinated manual scales, stat_smooth
-          with method=''lowess'', geom_text with custom data frame.'
+        comment: 'Proper grammar-of-graphics layers: stat_smooth() for LOESS, scale_*_manual()
+          for all four encodings, guides(override_aes) for legend marker correction,
+          annotate(''label'') for callout box.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: stat_smooth (ggplot2-style smoother), annotate('label') geometry,
-          guides() override_aes for legend swatch correction — plotnine-distinctive
-          patterns, but room for more library-specific polish.
+        comment: Coordinated multi-scale encoding (color+shape+alpha+size all from
+          same category aes) and guide_legend(override_aes) are distinctive plotnine
+          strengths.
   verdict: APPROVED
 impl_tags:
   dependencies: []
