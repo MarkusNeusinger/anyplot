@@ -1,44 +1,56 @@
 library: matplotlib
+language: python
 specification_id: ma-differential-expression
 created: '2026-03-20T10:39:52Z'
-updated: '2026-03-20T10:58:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23339077508
+updated: '2026-06-21T01:04:59Z'
+generated_by: claude-sonnet
+workflow_run: 27888825004
 issue: 4420
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ma-differential-expression/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - 'Excellent color accessibility: orange/blue scheme for up/downregulated genes
-    is colorblind-friendly and visually harmonious'
-  - Perfect spec compliance with all required features implemented
-  - Strong data storytelling through color-coded directional expression and labeled
-    top genes
-  - Clean well-structured code with appropriate complexity
-  - Professional bioinformatics aesthetic with italic gene labels and threshold annotations
+  - Perfect spec compliance — all five required features (significant highlighting,
+    M=0 reference, ±1 dashed thresholds, LOESS, gene labels) implemented correctly
+  - Excellent data quality — realistic RNA-seq statistics, appropriate gene count,
+    real cancer gene names (BRCA1, TP53, MYC, EGFR, PTEN, RB1, APC, KRAS), biologically
+    plausible fold-change magnitudes
+  - Correct semantic color exception — upregulated=green (gain), downregulated=red
+    (loss) is exactly the right application of the Imprint palette's semantic anchor
+    rule, matching genomics domain convention
+  - Complete theme adaptation — every chrome element flips correctly between light
+    and dark; data colors stay identical; no dark-on-dark failures in the dark render
+  - Performance-aware implementation — rasterized=True prevents vector-rendering overhead
+    for 15k scatter points
+  - 'Three-tier visual hierarchy is textbook MA plot storytelling: grey cloud (non-significant)
+    → colored significant → named outliers'
   weaknesses:
-  - Gene labels show minor crowding in upper-left (EGFR/TP53/MYC) and lower-left (KRAS/PTEN/RB1/APC)
-    areas
-  - Library mastery could be improved with matplotlib-specific features like PathEffects
-    and arrowprops
-  image_description: 'The plot displays an MA plot for differential gene expression
-    analysis. The x-axis shows "Mean Expression (A)" ranging from 0 to ~27, and the
-    y-axis shows "Log₂ Fold Change (M)" ranging from about -5 to +5. Non-significant
-    genes are rendered as small, faint gray dots (alpha ~0.15), providing a dense
-    background cloud of ~14,000+ points. Upregulated significant genes appear as orange/amber
-    dots, and downregulated significant genes appear as cornflower blue dots — both
-    larger and more opaque than the non-significant background. A solid dark horizontal
-    line marks M=0 (no change), with dashed gray lines at M=±1 labeled "2-fold change"
-    on the right margin. A blue LOESS trend line runs nearly flat near y=0 across
-    the expression range. Gene labels in bold italic identify 8 top differentially
-    expressed genes: EGFR, TP53, MYC, and BRCA1 (upregulated, top area), and KRAS,
-    PTEN, RB1, APC (downregulated, bottom-left area). Title reads "ma-differential-expression
-    · matplotlib · pyplots.ai". Top and right spines are removed, with a subtle y-axis
-    grid. Legend is in the lower right with entries for Not significant, Upregulated,
-    Downregulated, and LOESS trend.'
+  - Minor annotation crowding in the lower-left region — KRAS, RB1, and PTEN labels
+    and their connector arrows compete in a small area at low mean expression / strongly
+    negative fold change; consider increasing vertical spread in label offsets for
+    the downregulated cluster
+  - Gene annotation labels at fontsize=7pt are slightly small; increasing to 7.5–8pt
+    would improve readability at mobile-scaled views without causing layout issues
+  - The LOESS computation uses a binned spline approximation (UnivariateSpline) rather
+    than true weighted local regression; the label 'LOESS trend' is slightly misleading
+    — 'smoothed trend' would be more accurate
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ma-differential-expression · python · matplotlib · anyplot.ai" at fontsize 12 fully visible in dark ink; X-axis "Mean Expression (A)" and Y-axis "Log₂ Fold Change (M)" at fontsize 10 in dark ink; tick labels at fontsize 8 in INK_SOFT; all readable
+      Data: ~14,250 non-significant genes as grey cloud (s=7, alpha=0.10); 400 upregulated genes in brand green #009E73 (s=22, alpha=0.55); 350 downregulated genes in matte red #AE3030 (s=22, alpha=0.55); LOESS trend in blue #4467A3 (linewidth=2.5); solid M=0 reference line; dashed M=±1 threshold lines; 8 gene annotations (BRCA1, TP53, MYC, EGFR, KRAS, RB1, APC, PTEN) with connector arrows and elevated-background text boxes
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light ink #F0EFE8 visible; axis labels in light ink; tick labels in INK_SOFT (#B8B7B0) clearly readable; legend frame uses elevated dark bg #242420; annotation boxes use dark elevated fill with light text — NO dark-on-dark failures observed
+      Data: Data colors are identical to light render — upregulated green #009E73, downregulated red #AE3030, LOESS blue #4467A3 unchanged; brand green visibly distinct on dark surface
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 28
@@ -46,70 +58,85 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt, annotations 11pt'
+        comment: All text theme-adaptive and readable in both renders; gene labels
+          at 7pt and legend at 7.5pt are slightly small but acceptable for 3200x1800
+          canvas with dense data
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Gene labels show minor crowding in upper-left and lower-left clusters
-          but all text is readable
+        comment: Minor crowding in lower-left annotation cluster (KRAS, RB1, PTEN)
+          where three labels and connector arrows compete in a small area
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good density adaptation for 15K points. Non-significant appropriately
-          faint, significant stand out well
+        comment: Non-significant cloud at s=7/alpha=0.10 ideal for 14k+ background;
+          significant at s=22/alpha=0.55 clearly distinguishable; LOESS at linewidth=2.5
+          prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Orange/blue scheme is excellent for colorblind users, gray non-significant
-          provides good contrast
+        comment: Green/red semantic exception is standard genomics convention; legend
+          text labels provide redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figure with tight_layout, data fills canvas well with balanced
-          margins
+        comment: Exact 3200x1800 canvas (8x4.5 at dpi=400); subplots_adjust for margins;
+          no bbox_inches='tight'; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with standard MA plot notation
+        comment: Mean Expression (A) and Log2 Fold Change (M) are descriptive with
+          proper biological notation; title follows mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Upregulated=#009E73 (position 1); downregulated=#AE3030 (position
+          5, correct semantic exception for loss); LOESS=#4467A3 (position 3); backgrounds
+          #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Orange/blue/gray palette is harmonious, white edge highlights, italic
-          gene labels, clearly above defaults
+        comment: Professional design with correct semantic color exception, rounded
+          annotation boxes, LOESS in contrasting palette color, rasterized scatter.
+          Clear intent but stays in functional territory.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle y-grid, 2-fold change annotations, generous
-          whitespace, rasterized scatter
+        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; legend
+          frame styled with elevated background; annotation boxes with rounded corners;
+          connector lines use INK_SOFT
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Color-coded up/downregulated genes convey biological direction, threshold
-          lines provide context, labeled top genes
+        comment: 'Strong three-tier visual hierarchy: grey cloud > colored significant
+          > named outliers. LOESS near y=0 confirms good normalization. Reference
+          lines at ±1 guide biological interpretation. Cancer gene names add real-world
+          context.'
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct MA plot with M on y-axis, A on x-axis
+        comment: Correct MA plot (M vs A scatter) with all required structural elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: significance highlighting, reference
-          lines, LOESS curve, transparency, gene labels'
+        comment: Significant highlighting, M=0 solid reference, M=±1 dashed thresholds,
+          LOESS curve, transparency for overplotting, gene annotations all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=mean expression, Y=log2 fold change, correctly mapped
+        comment: X=mean_expression (A), Y=log_fold_change (M), significant boolean
+          to color, gene_name to annotation; all data ranges visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows exact format, legend entries are clear and descriptive
+        comment: Title matches mandated pattern exactly; legend has Not significant
+          / Downregulated (n=350) / Upregulated (n=400) / LOESS trend
     data_quality:
       score: 15
       max: 15
@@ -148,22 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows upregulated and downregulated genes with distinct treatment,
-          good expression range, LOESS near zero
+        comment: 'All aspects covered: background cloud, directional significant genes,
+          bias-detection trend, fold-change threshold references, top gene annotations'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real gene names from cancer genomics, realistic RNA-seq differential
-          expression context
+        comment: 15000 genes realistic for whole-transcriptome; exponential mean expression
+          matches RNA-seq baseMean; log2FC ±2.5 biologically plausible; real cancer
+          gene names; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15K genes within spec range, realistic fold changes and expression
-          values for RNA-seq
+        comment: Mean expression 0.5-30 realistic for RNA-seq; log2FC ±2.5 for significant
+          and ±0.4 SD for background are appropriate magnitudes
     code_quality:
       score: 10
       max: 10
@@ -173,33 +203,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: Flat script, no functions or classes, logically sectioned
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: matplotlib, numpy, scipy.interpolate'
+        comment: 'All imports used: os, sys, matplotlib.pyplot, numpy, scipy.interpolate.UnivariateSpline'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, binned spline approach for LOESS is practical
+        comment: Well-organized with systematic zorder layering; no fake interactivity;
+          rasterized=True is correct performance choice for 15k points
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches='tight'; current
+          matplotlib API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -207,14 +239,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ax-level API, rasterized=True for large datasets, tight_layout
+        comment: Axes methods throughout; subplots_adjust over bbox_inches; plt.setp
+          for batch text styling; fancybox=False for legend
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: rasterized and edgecolors are matplotlib-specific but smoothing relies
-          on scipy. No PathEffects or arrowprops
+        passed: true
+        comment: rasterized=True for dense scatter (matplotlib-specific performance
+          optimization); arrowprops with shrinkA/shrinkB; 5-level zorder control;
+          binned spline LOESS approximation
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -223,9 +257,10 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
+  - binning
   - interpolation
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
