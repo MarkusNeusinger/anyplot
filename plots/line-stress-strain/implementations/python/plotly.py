@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-21
@@ -220,6 +220,8 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "zeroline": False,
+        "showline": True,
+        "mirror": False,
         "linecolor": INK_SOFT,
         "range": [-0.01, 0.38],
     },
@@ -230,18 +232,49 @@ fig.update_layout(
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "showline": True,
+        "mirror": False,
         "linecolor": INK_SOFT,
         "range": [-10, 460],
     },
     legend={
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.35,
-        "y": 0.20,
+        "x": 0.98,
+        "y": 0.05,
+        "xanchor": "right",
+        "yanchor": "bottom",
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    updatemenus=[
+        {
+            "type": "buttons",
+            "direction": "right",
+            "x": 0.0,
+            "y": 1.10,
+            "xanchor": "left",
+            "yanchor": "top",
+            "showactive": True,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+            "font": {"color": INK_SOFT, "size": 10},
+            "buttons": [
+                {
+                    "label": "Full Curve",
+                    "method": "relayout",
+                    "args": [{"xaxis.range": [-0.01, 0.38], "yaxis.range": [-10, 460]}],
+                },
+                {
+                    "label": "Elastic Detail",
+                    "method": "relayout",
+                    "args": [{"xaxis.range": [-0.0001, 0.0015], "yaxis.range": [-10, 300]}],
+                },
+            ],
+        }
+    ],
+    margin={"l": 80, "r": 40, "t": 100, "b": 60},
     width=800,
     height=450,
 )
