@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-21
@@ -104,11 +104,12 @@ ax.plot(
 ax.annotate(
     "Yield Point\n(0.2% Offset)",
     xy=(offset_yield_strain, offset_yield_stress),
-    xytext=(0.04, yield_stress + 40),
+    xytext=(0.06, yield_stress + 70),
     fontsize=7,
     color=LAVENDER,
     fontweight="bold",
     arrowprops={"arrowstyle": "->", "color": LAVENDER, "lw": 1.2},
+    bbox={"boxstyle": "round,pad=0.25", "facecolor": ELEVATED_BG, "edgecolor": LAVENDER, "alpha": 0.85},
 )
 
 # UTS marker and annotation
@@ -164,7 +165,7 @@ ax.annotate(
     fontweight="semibold",
     arrowprops={"arrowstyle": "->", "color": BRAND, "lw": 0.8, "connectionstyle": "arc3,rad=0.2"},
 )
-ax.text(0.011, 50, "Yield\nPlateau", fontsize=6, ha="center", color=LAVENDER, fontstyle="italic", alpha=0.9)
+ax.text(0.011, 50, "Yield\nPlateau", fontsize=7, ha="center", color=LAVENDER, fontstyle="italic", alpha=0.9)
 ax.text(0.12, 30, "Strain Hardening", fontsize=7, ha="center", color=BRAND, fontstyle="italic", alpha=0.9)
 ax.text(0.29, 30, "Necking", fontsize=7, ha="center", color=BLUE, fontstyle="italic", alpha=0.9)
 
