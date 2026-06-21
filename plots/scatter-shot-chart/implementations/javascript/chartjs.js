@@ -85,36 +85,49 @@ const courtDatasets = [
 ];
 
 // --- Shot Data (350 attempts) ---------------------------------------------
+// Marker radius encodes shot type: free-throw=4, 2-pointer=5.5, 3-pointer=7
+const TYPE_RADIUS = { 'free-throw': 4, '2-pointer': 5.5, '3-pointer': 7 };
+
 function genShots(n) {
   const shots = [];
   for (let i = 0; i < n; i++) {
     const z = lcg();
-    let x, y, made;
-    if (z < 0.28) {
-      // At rim / paint
+    let x, y, made, shot_type;
+    if (z < 0.07) {
+      // Free throw — clustered at FT line
+      x = BX + randn(0, 0.25);
+      y = FT_Y + randn(0, 0.25);
+      made = lcg() < 0.78;
+      shot_type = 'free-throw';
+    } else if (z < 0.30) {
+      // At rim / paint → 2-pointer
       const d = lcg() * 7, a = lcg() * 2 * Math.PI;
       x = BX + d * Math.cos(a);
       y = Math.max(0.3, BY + d * Math.sin(a));
       made = lcg() < 0.63;
-    } else if (z < 0.38) {
+      shot_type = '2-pointer';
+    } else if (z < 0.40) {
       // Left corner 3
       x = -(C3X + lcg() * 2.5);
       y = 0.5 + lcg() * 10;
       made = lcg() < 0.39;
-    } else if (z < 0.48) {
+      shot_type = '3-pointer';
+    } else if (z < 0.50) {
       // Right corner 3
       x = C3X + lcg() * 2.5;
       y = 0.5 + lcg() * 10;
       made = lcg() < 0.39;
+      shot_type = '3-pointer';
     } else if (z < 0.63) {
       // Above-the-break 3
       const a = Math.PI * 0.10 + lcg() * Math.PI * 0.80;
       const d = TP_R + randn(0, 0.8);
       x = Math.max(-24.5, Math.min(24.5, BX + d * Math.cos(a)));
-      y = Math.max(0.3, Math.min(46, BY + d * Math.sin(a)));
+      y = Math.max(0.3, Math.min(32, BY + d * Math.sin(a)));
       made = lcg() < 0.35;
+      shot_type = '3-pointer';
     } else {
-      // Mid-range
+      // Mid-range → 2-pointer
       let tries = 0, x2, y2;
       do {
         const a = Math.PI * 0.08 + lcg() * Math.PI * 0.84;
@@ -124,17 +137,22 @@ function genShots(n) {
         tries++;
       } while (tries < 20 && (Math.abs(x2) < 8.5 && y2 < FT_Y + 1));
       x = Math.max(-24.5, Math.min(24.5, x2));
-      y = Math.max(0.3, Math.min(46, y2));
+      y = Math.max(0.3, Math.min(32, y2));
       made = lcg() < 0.43;
+      shot_type = '2-pointer';
     }
-    shots.push({ x: x, y: y, made: made });
+    shots.push({ x: x, y: y, made: made, shot_type: shot_type });
   }
   return shots;
 }
 
 const shots = genShots(350);
-const madeData   = shots.filter(function(s) { return  s.made; }).map(function(s) { return { x: s.x, y: s.y }; });
-const missedData = shots.filter(function(s) { return !s.made; }).map(function(s) { return { x: s.x, y: s.y }; });
+const madeShots    = shots.filter(function(s) { return  s.made; });
+const missedShots  = shots.filter(function(s) { return !s.made; });
+const madeData     = madeShots.map(function(s) { return { x: s.x, y: s.y }; });
+const missedData   = missedShots.map(function(s) { return { x: s.x, y: s.y }; });
+const madeRadius   = madeShots.map(function(s) { return TYPE_RADIUS[s.shot_type]; });
+const missedRadius = missedShots.map(function(s) { return TYPE_RADIUS[s.shot_type]; });
 
 // --- Mount ----------------------------------------------------------------
 const canvas = document.createElement('canvas');
@@ -151,8 +169,8 @@ new Chart(canvas, {
         backgroundColor: t.palette[0] + 'cc',
         borderColor: t.palette[0],
         borderWidth: 1,
-        pointRadius: 6,
-        pointHoverRadius: 6,
+        pointRadius: madeRadius,
+        pointHoverRadius: madeRadius,
         pointStyle: 'circle',
         order: 1,
       },
@@ -162,8 +180,8 @@ new Chart(canvas, {
         backgroundColor: 'transparent',
         borderColor: t.palette[4],
         borderWidth: 2,
-        pointRadius: 6,
-        pointHoverRadius: 6,
+        pointRadius: missedRadius,
+        pointHoverRadius: missedRadius,
         pointStyle: 'crossRot',
         order: 2,
       },
@@ -202,7 +220,7 @@ new Chart(canvas, {
       y: {
         type: 'linear',
         min: -2,
-        max: 52,
+        max: 34,
         display: false,
         grid: { display: false },
       },
