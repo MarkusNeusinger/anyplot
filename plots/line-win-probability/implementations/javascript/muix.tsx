@@ -16,7 +16,7 @@ import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
 
-// Deterministic LCG for reproducible match simulation
+// Deterministic LCG — no Math.random(), fully reproducible
 function lcg(seed: number): () => number {
   let s = seed | 0;
   return () => {
@@ -32,14 +32,12 @@ function clamp(v: number, lo: number, hi: number): number {
 const rand = lcg(42);
 const TOTAL_MINUTES = 90;
 
-// Key event times
 const AWAY_GOAL = 19;
 const HALF_TIME = 45;
 const HOME_GOAL_EQ = 58;
 const HOME_GOAL_WIN = 84;
 
-// Generate match win probability: Forest Green FC (home) vs City Blue FC (away)
-// Scenario: Away scores early, home fights back with two second-half goals
+// Forest Green FC (home) vs City Blue FC (away) — away scores early, home fights back
 const minutes: number[] = Array.from({ length: TOTAL_MINUTES + 1 }, (_, i) => i);
 
 let wp = 0.50;
@@ -47,38 +45,39 @@ const winProb: number[] = [0.50];
 
 for (let i = 1; i <= TOTAL_MINUTES; i++) {
   if (i === AWAY_GOAL) {
-    wp = 0.26; // sharp drop — away goal
+    wp = 0.26;
   } else if (i === HOME_GOAL_EQ) {
-    wp = 0.54; // equaliser — back to level
+    wp = 0.54;
   } else if (i === HOME_GOAL_WIN) {
-    wp = 0.88; // winner — home dominant
+    wp = 0.88;
   } else {
     const noise = (rand() - 0.5) * 0.055;
     const revert = (0.5 - wp) * 0.018;
     wp = clamp(wp + noise + revert, 0.05, 0.95);
-    // Phase-specific range constraints
     if (i > AWAY_GOAL && i < HOME_GOAL_EQ) {
-      wp = clamp(wp, 0.11, 0.50); // away leading phase
+      wp = clamp(wp, 0.11, 0.50);
     } else if (i > HOME_GOAL_EQ && i < HOME_GOAL_WIN) {
-      wp = clamp(wp, 0.42, 0.67); // closely contested phase
+      wp = clamp(wp, 0.42, 0.67);
     } else if (i > HOME_GOAL_WIN) {
-      wp = clamp(wp, 0.81, 0.97); // home sealing the win
+      wp = clamp(wp, 0.81, 0.97);
     }
   }
   winProb.push(Math.round(wp * 1000) / 1000);
 }
 
-// Away win probability is the complement — stacked together they sum to 1
-const awayProb: number[] = winProb.map(v => Math.round((1 - v) * 1000) / 1000);
+// Spec fill semantics: fill area above 50% with home color, below 50% with away color.
+// baseline=0.5 makes each series fill only the band between the probability line and
+// the 50% baseline — home green fills upward from 50% when home leads, away blue
+// fills downward from 50% when away leads.
+const homeArea: number[] = winProb.map(v => Math.max(v, 0.5));
+const awayArea: number[] = winProb.map(v => Math.min(v, 0.5));
 
-// Imprint palette — first series is always #009E73 (home/brand green)
-const HOME_COLOR = t.palette[0]; // #009E73
-const AWAY_COLOR = t.palette[2]; // #4467A3
+const HOME_COLOR = t.palette[0]; // #009E73 brand green
+const AWAY_COLOR = t.palette[2]; // #4467A3 Imprint blue — semantic match for "City Blue FC"
 
 const TITLE = "line-win-probability · javascript · muix · anyplot.ai";
 const SUBTITLE = "Forest Green FC 2 – 1 City Blue FC · 90 minutes";
-
-const TITLE_HEIGHT = 68; // CSS px reserved for title + subtitle
+const TITLE_HEIGHT = 70;
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -94,10 +93,9 @@ export default function Chart() {
         bgcolor: t.pageBg,
       }}
     >
-      {/* Title block */}
       <Box sx={{ textAlign: "center", pt: 1.5 }}>
         <Typography
-          sx={{ fontSize: 18, fontWeight: 500, color: t.ink, lineHeight: 1.3 }}
+          sx={{ fontSize: 22, fontWeight: 600, color: t.ink, lineHeight: 1.3 }}
         >
           {TITLE}
         </Typography>
@@ -106,7 +104,6 @@ export default function Chart() {
         </Typography>
       </Box>
 
-      {/* Stacked area chart: home probability (bottom) + away probability (top) */}
       <LineChart
         width={width}
         height={chartHeight}
@@ -121,6 +118,7 @@ export default function Chart() {
             valueFormatter: (v: number) => `${v}'`,
             labelStyle: { fontSize: 14, fill: t.inkSoft },
             tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
+            disableTicks: true,
           },
         ]}
         yAxis={[
@@ -132,24 +130,25 @@ export default function Chart() {
             label: "Home Win Probability",
             labelStyle: { fontSize: 14, fill: t.inkSoft },
             tickLabelStyle: { fontSize: 12, fill: t.inkSoft },
+            disableTicks: true,
           },
         ]}
         series={[
           {
             id: "home",
-            data: winProb,
+            data: homeArea,
             label: "Home Win — Forest Green FC",
             area: true,
-            stack: "prob",
+            baseline: 0.5,
             showMark: false,
             color: HOME_COLOR,
           },
           {
             id: "away",
-            data: awayProb,
+            data: awayArea,
             label: "Away Win — City Blue FC",
             area: true,
-            stack: "prob",
+            baseline: 0.5,
             showMark: false,
             color: AWAY_COLOR,
           },
@@ -157,24 +156,24 @@ export default function Chart() {
         margin={{ top: 16, bottom: 64, left: 96, right: 48 }}
         sx={{
           bgcolor: "transparent",
-          // Hide the constant y=1 line that sits at the top of the stacked away series
-          "& .MuiLineElement-series-away": { display: "none" },
           "& .MuiAreaElement-series-home": { fillOpacity: 0.82 },
           "& .MuiAreaElement-series-away": { fillOpacity: 0.82 },
-          // Win-probability boundary line (series-home) — make it prominent
+          // Home line traces max(wp, 0.5): probability cursor when home leads
           "& .MuiLineElement-series-home": { strokeWidth: 2.5 },
+          // Away line traces min(wp, 0.5): probability cursor when away leads
+          "& .MuiLineElement-series-away": { strokeWidth: 2.5 },
         }}
         slotProps={{
           legend: {
             position: { vertical: "top", horizontal: "right" },
-            padding: { top: 8, right: 12 },
+            padding: { top: 8, right: 28 },
             itemMarkWidth: 14,
             itemMarkHeight: 14,
             labelStyle: { fontSize: 12, fill: t.inkSoft },
           },
         }}
       >
-        {/* 50% neutral baseline — marks "even odds" */}
+        {/* 50% neutral baseline */}
         <ChartsReferenceLine
           y={0.5}
           label="50% — even odds"
@@ -185,7 +184,7 @@ export default function Chart() {
             strokeDasharray: "8 4",
             opacity: 0.45,
           }}
-          labelStyle={{ fontSize: 11, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
         />
 
         {/* Away goal — probability falls */}
@@ -199,10 +198,10 @@ export default function Chart() {
             strokeDasharray: "5 3",
             opacity: 0.75,
           }}
-          labelStyle={{ fontSize: 10, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
         />
 
-        {/* Half time marker */}
+        {/* Half time */}
         <ChartsReferenceLine
           x={HALF_TIME}
           label="Half Time"
@@ -213,7 +212,7 @@ export default function Chart() {
             strokeDasharray: "4 3",
             opacity: 0.3,
           }}
-          labelStyle={{ fontSize: 10, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
         />
 
         {/* Home equaliser */}
@@ -227,7 +226,7 @@ export default function Chart() {
             strokeDasharray: "5 3",
             opacity: 0.75,
           }}
-          labelStyle={{ fontSize: 10, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
         />
 
         {/* Home winner */}
@@ -241,7 +240,7 @@ export default function Chart() {
             strokeDasharray: "5 3",
             opacity: 0.75,
           }}
-          labelStyle={{ fontSize: 10, fill: t.inkSoft }}
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
         />
       </LineChart>
     </Box>
