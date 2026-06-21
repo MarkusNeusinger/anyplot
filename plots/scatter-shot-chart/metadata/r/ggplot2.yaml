@@ -1,0 +1,283 @@
+library: ggplot2
+language: r
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:11:32Z'
+updated: '2026-06-21T08:32:17Z'
+generated_by: claude-sonnet
+workflow_run: 27898020160
+issue: 4416
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
+review:
+  strengths:
+  - Accurate NBA half-court geometry with all required elements (three-point arc with
+    corner straights, dashed lower free-throw circle, restricted area arc, basket
+    rim, backboard)
+  - 'Correct semantic color mapping: Made = brand green (#009E73), Missed = matte
+    red (#AE3030), with redundant shape encoding (filled circle vs X cross) for CVD
+    accessibility'
+  - Zone efficiency annotations (Paint, Mid-Range, 3-Pt Arc, Corner) with elevated-background
+    label boxes add meaningful data storytelling
+  - Flawless theme adaptation — all chrome tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG,
+    COURT_LINE) flip correctly between light and dark renders
+  - 1:1 aspect ratio via coord_fixed() prevents court distortion; square 2400×2400
+    canvas is the correct choice for this symmetric plot type
+  weaknesses:
+  - Zone efficiency label text (size=2.5, ~7pt) and corner percentage text (size=2.2,
+    ~6pt) are slightly small on the 2400×2400 canvas — increase zone label size to
+    3.2 and corner text to 2.8 for better readability at mobile widths
+  - Shot type (2-pointer/3-pointer/free throw) is generated and used for spatial placement
+    but is not visually encoded in the plot — the spec lists it as a data field and
+    mentions a legend for shot type; consider a third scale (e.g. scale_shape_manual
+    with 3 shapes) or faceting to expose it
+  - Minor visual overlap between the Mid-Range and Paint zone efficiency label boxes
+    and nearby shot markers — slightly more vertical offset or a larger fill box padding
+    would help separation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct Imprint surface, not pure white.
+      Chrome: Bold title "scatter-shot-chart · r · ggplot2 · anyplot.ai" readable in dark ink at top-center; subtitle "51% FG overall | 300 shots | Hypothetical Season" readable in INK_SOFT beneath. No axis tick labels or axis titles (correctly suppressed — court geometry provides spatial reference per spec). Legend in upper-right with elevated #FFFDF6 background shows "Outcome: Made (green circle), Missed (red X)".
+      Court lines drawn in adaptive soft gray (COURT_LINE=#8A8880): outer baseline, three-point arc with corner straight lines, paint/key rectangle, dashed lower free-throw circle half, restricted area arc, basket rim circle, backboard segment.
+      Data: Green filled circles (#009E73) for made shots, matte-red X marks (#AE3030) for missed shots. 300 total shots distributed across paint, mid-range, three-point arc, and corners. Zone efficiency label boxes with elevated fills: "3-Pt Arc 28%", "Mid-Range 58%", "Paint 45%"; rotated "62%" text on both corner zones. Data colors are clear against the off-white background.
+      Legibility verdict: PASS — all text readable; zone label text (size=2.5) is slightly small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
+      Chrome: Title and subtitle now rendered in light ink (#F0EFE8 / #B8B7B0) — fully readable against the dark background. Legend with elevated #242420 fill and soft border clearly legible. Court lines in darker adaptive gray (COURT_LINE=#6A6960), still distinguishable against the near-black background. Zone efficiency label boxes use ELEVATED_BG #242420 fill — visible with INK_SOFT (#B8B7B0) text.
+      Data: Green dots and red X marks are identical in color to the light render (#009E73 and #AE3030) — data colors unchanged as required. Both marker types are clearly distinguishable against the dark background.
+      No dark-on-dark failures: all text elements use light ink tokens (#F0EFE8 or #B8B7B0), not the dark INK token.
+      Legibility verdict: PASS — all text readable in dark theme; no chrome reversal failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title (12pt bold) and legend (8-9pt) clearly readable in both themes.
+          Zone label text (size=2.5, ~7pt) and corner percentage text (size=2.2, ~6pt)
+          are slightly small for the 2400x2400 canvas — readable but borderline at
+          mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Zone efficiency label boxes have elevated fills that partially shield
+          overlap, but Mid-Range and Paint labels sit in shot-dense areas with minor
+          visual crowding from nearby shot markers.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Green filled circles and red X marks are clearly visible against
+          both light and dark backgrounds. alpha=0.75 appropriate for 300-shot density.
+          Redundant shape encoding aids distinguishability.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-green used for Made/Missed — CVD risk mitigated by redundant
+          shape encoding (circle=Made, X=Missed) explicitly noted in code.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct for symmetric court geometry. coord_fixed(ratio=1)
+          prevents distortion. Margins generous. Legend positioned inside plot at
+          upper-right. No overflow or clipping observed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title in correct format: ''scatter-shot-chart · r · ggplot2 · anyplot.ai''.
+          Subtitle provides FG%, shot count, and season context. Axis labels/ticks
+          suppressed — correct per spec (court geometry provides spatial reference).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light bg #FAF8F1, dark bg #1A1A17 — both correct. Made=#009E73 (brand
+          green, position 1). Missed=#AE3030 (matte red semantic anchor for negative
+          outcome). Semantic exception correctly applied. Data colors identical across
+          both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semantic color/shape dual encoding reflects deliberate design thought.
+          Zone efficiency callouts with styled label boxes show intentional hierarchy.
+          Court geometry is precise and complete. Above the default of 4 due to clear
+          design intent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: All grids, axes, ticks suppressed cleanly. Court lines in theme-adaptive
+          soft gray. Dashed lower free-throw circle half matches real NBA court markings.
+          Elevated-fill legend box looks polished. Above default of 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Zone efficiency labels guide the viewer to read shooting patterns
+          by area (28% three-pointers, 62% corners, 58% mid-range, 45% paint). Missed
+          shots drawn first so made shots layer on top. Above default of 2, but single
+          focal insight could be stronger.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct basketball shot chart type. NBA half-court geometry accurately
+          drawn with all required elements: three-point arc, corner straights, free-throw
+          line, paint/key rectangle, restricted area arc, basket rim, backboard.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Made/missed outcomes encoded by color+shape. Court geometry complete.
+          1:1 aspect ratio enforced. 300 shots (within 200-500 range). Shot type (2-pointer/3-pointer/free
+          throw) drives spatial placement but is not visually encoded or shown in
+          the legend — spec mentions this as a legend candidate.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'x/y court positions correctly mapped. FG% per shot type realistic
+          (47% 2pt, 37% 3pt, 78% FT). NBA half-court dimensions accurate: 50ft wide,
+          47ft deep, three-point arc at 23.75ft with 22ft corners.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'scatter-shot-chart · r · ggplot2 · anyplot.ai'. Legend
+          shows Made/Missed with matching colors and shapes.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All shot zones covered (paint, mid-range, above-break three, corner
+          three, free throw). All court elements drawn. Zone efficiency annotations
+          show full analytical coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Hypothetical player/season — no real person named. Field goal percentages
+          are realistic for NBA play (47% 2pt, 37% 3pt, 78% FT). Shot distribution
+          proportions realistic (60% 2pt, 30% 3pt, 10% FT).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NBA standard dimensions used. 300 shots appropriate for a season
+          sample. Zone FG% values fall within plausible NBA ranges.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One small helper function zone_fg() defined — technically violates
+          no-functions rule but is 3 lines and avoids repeating the same zone FG%
+          calculation 5 times. Minor KISS deviation.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Clean top-to-bottom structure: tokens → data generation → court
+          geometry data frames → plot layers → save. No fake UI or interactivity.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png with THEME variable using ragg::agg_png device.
+          Correct.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered geom_path() for court geometry, geom_point() for shots, annotate()
+          for zone labels and segments — correct grammar of graphics approach. scale_color_manual()
+          + scale_shape_manual() with same name parameter to produce a merged legend
+          is idiomatic ggplot2. coord_fixed() for aspect ratio lock is the correct
+          idiom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Merged dual-scale legend (color+shape both named 'Outcome' → single
+          legend entry per outcome). legend.position='inside' + legend.position.inside
+          (modern ggplot2 ≥3.4 API). Dashed vs solid linetype for free-throw circle
+          halves shows ggplot2 linetype control in practice. Above default of 1.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
