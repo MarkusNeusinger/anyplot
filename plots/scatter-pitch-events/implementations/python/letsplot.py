@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-21
@@ -24,6 +24,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_alpha_identity,
     scale_color_identity,
     scale_fill_identity,
@@ -221,12 +222,13 @@ plot = (
         data=df,
         mapping=aes(x="x", y="y", color="color", fill="fill", shape="shape", alpha="alpha", size="marker_size"),
         stroke=1.2,
+        tooltips=layer_tooltips().line("@event_type").line("Outcome: @outcome").line("x=@x, y=@y"),
     )
     # Zone annotation labels
     + geom_text(
         data=pd.DataFrame({"x": [87.5], "y": [65.5], "label": ["Attacking Third"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=4,
+        size=5,
         color="#FFFFFF",
         alpha=0.7,
         fontface="italic",
@@ -234,7 +236,7 @@ plot = (
     + geom_text(
         data=pd.DataFrame({"x": [17.5], "y": [65.5], "label": ["Defensive Third"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=4,
+        size=5,
         color="#FFFFFF",
         alpha=0.65,
         fontface="italic",
@@ -249,7 +251,7 @@ plot = (
     + geom_text(
         data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), size=5, color=INK_SOFT, fontface="bold"
     )
-    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=4, color=INK_MUTED)
+    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=5, color=INK_MUTED)
     + scale_color_identity()
     + scale_fill_identity()
     + scale_shape_identity()
@@ -265,7 +267,7 @@ plot = (
     + theme_void()
     + theme(
         plot_title=element_text(size=16, hjust=0.5, color=INK, face="bold"),
-        plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
+        plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         plot_margin=[25, 15, 10, 15],
     )
