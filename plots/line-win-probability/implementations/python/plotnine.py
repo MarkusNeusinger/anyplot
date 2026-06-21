@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 line-win-probability: Win Probability Chart
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-06-21
 """
 
 import os
@@ -46,6 +45,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ANYPLOT_AMBER = "#DDCC77"
 
 # Data
 np.random.seed(42)
@@ -101,7 +101,7 @@ sorted_plays = sorted(events.keys())
 y_offsets = {}
 for i, play in enumerate(sorted_plays):
     prob = win_prob[play]
-    base = 0.09 if prob > 0.5 else -0.09
+    base = 0.12 if prob > 0.5 else -0.12
     if i > 0:
         prev_play = sorted_plays[i - 1]
         if abs(play - prev_play) < 22:
@@ -127,7 +127,7 @@ plot = (
     + geom_rect(
         aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", alpha="alpha"),
         data=highlight_df,
-        fill="#DAA520",
+        fill=ANYPLOT_AMBER,
         inherit_aes=False,
     )
     + scale_alpha_identity()
@@ -151,7 +151,7 @@ plot = (
     # Event annotation labels (size in mm; 4mm ≈ 11pt — visibly larger than tick labels)
     + geom_text(aes(x="play", y="label_y", label="label"), data=event_df, size=4, fontweight="bold", color=INK_SOFT)
     # Scales
-    + scale_fill_manual(values={"Eagles (Home)": "#004C54", "Cowboys (Away)": "#8B1A1A"})
+    + scale_fill_manual(values={"Eagles (Home)": "#009E73", "Cowboys (Away)": "#AE3030"})
     + scale_x_continuous(breaks=quarter_breaks, labels=quarter_labels, expand=(0.03, 2))
     + scale_y_continuous(
         labels=lambda lst: [f"{int(v * 100)}%" for v in lst], limits=(0, 1), breaks=[0, 0.25, 0.5, 0.75, 1.0]
