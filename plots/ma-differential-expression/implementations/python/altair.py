@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ma-differential-expression: MA Plot for Differential Expression
 Library: altair 6.2.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-21
@@ -84,14 +84,14 @@ df_labels["label_y"] = df_labels["log_fold_change"].values
 for i in range(1, len(df_labels)):
     if abs(df_labels.loc[i, "label_x"] - df_labels.loc[i - 1, "label_x"]) < 1.5:
         if abs(df_labels.loc[i, "label_y"] - df_labels.loc[i - 1, "label_y"]) < 0.8:
-            df_labels.loc[i, "label_y"] += 0.5 * (1 if df_labels.loc[i, "log_fold_change"] > 0 else -1)
+            df_labels.loc[i, "label_y"] += 0.9 * (1 if df_labels.loc[i, "log_fold_change"] > 0 else -1)
 
 df_nonsig = df[~df["significant"]].copy()
 df_sig = df[df["significant"]].copy()
 
 # Background shading for ±1 FC region
 fc_band_data = pd.DataFrame({"y": [-1], "y2": [1]})
-fc_band = alt.Chart(fc_band_data).mark_rect(color=INK_SOFT, opacity=0.07).encode(y="y:Q", y2="y2:Q")
+fc_band = alt.Chart(fc_band_data).mark_rect(color=INK_SOFT, opacity=0.11).encode(y="y:Q", y2="y2:Q")
 
 # Non-significant points — small, faint, muted
 points_nonsig = (
@@ -194,7 +194,6 @@ chart = (
         grid=True,
         gridOpacity=0.15,
         gridColor=INK,
-        gridDash=[3, 3],
     )
     .configure_title(color=INK)
     .configure_legend(
