@@ -1,6 +1,7 @@
-"""
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: letsplot | Python
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-21
 """
 
 import os
