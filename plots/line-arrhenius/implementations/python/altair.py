@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -82,7 +82,7 @@ points = (
 
 # Annotations: Ea and R²
 ea_kj = Ea_fit / 1000
-annotation_text = f"Eₐ = {ea_kj:.1f} kJ/mol   R² = {r_squared:.4f}"
+annotation_text = f"Eₐ = {ea_kj:.1f} kJ/mol  ·  R² = {r_squared:.4f}"
 slope_text = f"slope = −Eₐ/R = {slope_fit:.0f} K"
 
 annotation_df = pd.DataFrame(
@@ -129,9 +129,16 @@ temp_axis_label = (
     .encode(x=alt.X("inv_T:Q", scale=x_scale), y=alt.Y("ln_k:Q", scale=y_scale), text="text:N")
 )
 
+# Reference rule at ln(k) = 0 (rate constant = 1 s⁻¹ boundary)
+zero_rule = (
+    alt.Chart(pd.DataFrame({"y": [0]}))
+    .mark_rule(strokeDash=[4, 4], color=INK_MUTED, opacity=0.35, strokeWidth=0.8)
+    .encode(y=alt.Y("y:Q", scale=y_scale))
+)
+
 # Combine all layers
 chart = (
-    alt.layer(reg_line, points, ea_label, slope_label, temp_tick_labels, temp_axis_label)
+    alt.layer(zero_rule, reg_line, points, ea_label, slope_label, temp_tick_labels, temp_axis_label)
     .properties(
         width=620,
         height=320,
@@ -161,6 +168,7 @@ chart = (
         tickSize=5,
         tickWidth=0.6,
     )
+    .configure_axisY(grid=True, gridColor=INK_MUTED, gridOpacity=0.15, gridWidth=0.5)
     .configure_title(font="Helvetica Neue, Arial, sans-serif", color=INK)
     .interactive()
 )
