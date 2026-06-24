@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:47:52Z'
-updated: '2026-06-24T07:42:18Z'
+updated: '2026-06-24T07:52:45Z'
 generated_by: claude-sonnet
 workflow_run: 28082565712
 issue: 4409
@@ -12,134 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Full spec compliance: smooth energy curve with all required features — Ea arrow,
-    ΔH arrow, dashed reference lines, direct labels for reactants/products/transition
-    state'
-  - 'Excellent palette use: BRAND green (#009E73) for main curve, semantic matte red
-    (#AE3030) for activation barrier (Ea), Imprint blue (#4467A3) for thermodynamic
-    ΔH — semantically justified and CVD-safe'
-  - 'Clean scientific style: top/right spines removed, subtle y-axis-only grid (alpha=0.15),
-    no x-axis tick marks (appropriate for a continuous pathway), themed chrome tokens
-    throughout'
-  - FancyArrowPatch used correctly for double-headed scientific arrows — idiomatic
-    matplotlib for this use case
-  - 'Perfect theme adaptation: both renders fully readable, data colors identical,
-    chrome elements correctly flip between light (#FAF8F1) and dark (#1A1A17) surfaces'
+  - 'All spec requirements fully implemented: labeled reactants/products/transition
+    state, double-headed Ea and ΔH arrows, smooth Gaussian energy curve, horizontal
+    dashed reference lines at each energy level'
+  - Semantic Imprint palette use is correct — brand green (#009E73) for the main pathway
+    curve, matte red (#AE3030) for the activation energy barrier, blue (#4467A3) for
+    the thermodynamic ΔH annotation
+  - FancyArrowPatch provides clean, professional bidirectional arrows that would not
+    be possible with simpler arrow APIs
+  - LaTeX math rendering for $E_a$ and $\Delta H$ is idiomatic matplotlib and adds
+    scientific polish
+  - Theme-adaptive chrome is correctly wired throughout — INK, INK_SOFT, INK_MUTED,
+    ELEVATED_BG all flip correctly between light and dark renders, both pass the legibility
+    check
+  - Rounded annotation boxes (boxstyle='round,pad=0.25', facecolor=ELEVATED_BG) add
+    professional polish without visual clutter
+  - The sys.path.pop(0) workaround is necessary and correctly prevents the script-file
+    name collision with the matplotlib package
+  - No bbox_inches='tight' on savefig — follows the library rule to avoid canvas drift
   weaknesses:
-  - 'Minor crowding: Ea arrow at x=0.13 visually intersects the rising green curve
-    around 60–70 kJ/mol — different colors make them distinguishable but a slight
-    horizontal offset of the arrow to x=0.10 would eliminate the overlap'
-  - 'Design excellence has room to grow: the current design is clean and functional
-    but could reach higher polish with a subtle filled area under the energy curve
-    (alpha ~0.08–0.12 in BRAND green) to emphasize the energy well shape and create
-    more visual depth'
+  - 'DE-02: Grid uses color=INK with alpha=0.15 which is correct, but the overall
+    refinement stops short of ''every detail polished'' — the left-side reactant dashed
+    hline extends to x=-0.05 (beyond the y-axis spine), which causes it to poke slightly
+    into the left margin area'
+  - 'DE-01: The design is strong and above defaults but not yet at the rare ''publication-ready''
+    tier — the fill area (alpha=0.09) is elegant but subtle enough to be almost imperceptible
+    on smaller viewports'
+  - 'DE-03: The storytelling through annotations is good but follows a textbook-standard
+    reaction coordinate format without a distinguishing creative emphasis — e.g.,
+    no contrast-driven focal point that draws the eye first to the transition state
+    before the viewer reads the labels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "line-reaction-coordinate · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" in dark ink at fontsize 10pt — both readable. Y-axis tick labels (0, 20, 40, ..., 140) in INK_SOFT (#4A4A44) — clearly visible. X-axis has no tick marks (set_xticks([]) — appropriate for continuous coordinate).
-      Data: Smooth bright green (#009E73) energy curve (500 pts, linewidth=3.5) from reactant plateau through Gaussian peak down to product level. Semantic red (#AE3030) double-headed FancyArrowPatch from y=50 to y=122 (Ea arrow) with rounded bbox label "Ea = 72 kJ/mol". Imprint blue (#4467A3) double-headed FancyArrowPatch on right from y=50 to y=20 (ΔH arrow) with label "ΔH = -30 kJ/mol". Red dot scatter marker at transition state peak. Dashed gray reference lines at y=50 and y=20. Direct text labels for Reactants, Products, Transition State. First series is #009E73. All annotation bboxes use ELEVATED_BG (#FFFDF6) — correct.
-      Legibility verdict: PASS — all elements readable; minor crowding where Ea arrow intersects rising green curve but different colors keep them distinguishable.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "line-reaction-coordinate · python · matplotlib · anyplot.ai" at fontsize=12 is fully visible in dark ink (#1A1A17), spanning ~65% of canvas width. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" are dark and clearly readable at fontsize=10. Y-axis tick labels (0, 20, 40, ..., 140) rendered in INK_SOFT (#4A4A44). No x-tick labels (intentionally omitted for reaction coordinate style). Top and right spines removed; left and bottom spines in INK_SOFT. Subtle y-grid at alpha=0.15.
+      Data: Main energy curve in brand green (#009E73), linewidth=3.5, with a very subtle fill area underneath (alpha=0.09). Transition state marked with a red dot (#AE3030) at the peak (~x=0.45, y≈122 kJ/mol). Red bidirectional Ea arrow with label "Ea = 72 kJ/mol" in a rounded annotation box. Blue bidirectional ΔH arrow with "ΔH = -30 kJ/mol" on the right. Direct labels "Reactants (50 kJ/mol)", "Products (20 kJ/mol)", "Transition State" in appropriate colors (INK and EA_COLOR). Horizontal dashed reference lines at reactant (y=50) and product (y=20) energy levels.
+      Legibility verdict: PASS — all text is clearly readable against the light background with no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all in light tones (INK=#F0EFE8, INK_SOFT=#B8B7B0) — clearly readable against dark background. No dark-on-dark failure observed. Grid lines visible as subtle light traces. Remaining spines (left, bottom) rendered in INK_SOFT — visible and correct.
-      Data: Data colors are IDENTICAL to light render — green (#009E73) curve, red (#AE3030) Ea arrow, blue (#4467A3) ΔH arrow, red dot at transition state. Annotation bboxes use ELEVATED_BG (#242420) — theme-correct. Dashed reference lines render in dark-adapted INK_MUTED (#A8A79F) — subtle but visible.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; data colors unchanged from light render.
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title, axis labels, and tick labels rendered in light cream (#F0EFE8 / #B8B7B0) and all clearly visible against the dark background. No dark-on-dark failures observed. Annotation box backgrounds correctly use ELEVATED_BG (#242420) which is slightly lighter than the page background, ensuring the box labels remain legible.
+      Data: Main curve remains brand green (#009E73) — identical to light render. Transition state red dot identical. Ea arrow red, ΔH arrow blue — both unchanged from light render. The fill area under the curve is slightly less visible on dark (expected behavior with the very low alpha=0.09) but the curve itself stands out clearly. All direct labels appear in light INK (#F0EFE8) and are readable.
+      Legibility verdict: PASS — all text is readable against the dark background; data colors are identical to the light render; chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (title=12pt, labels=10pt, ticks=8pt). Readable
-          in both themes. Slight concern at mobile scale-down but within normal range
-          for mandated title format.
+        comment: All font sizes explicitly set (title=12, axis labels=10, ticks=8,
+          annotations=8). Well-proportioned in both themes. No overflow.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ea arrow at x=0.13 visually crosses the rising energy curve at ~60-70
-          kJ/mol; different colors (red vs green) keep them distinguishable. Minor
-          crowding but no unreadable text.
+        comment: Reactants label, Ea annotation box, Transition State label, Products
+          label, and ΔH annotation are all spatially separated with no overlaps.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Smooth green curve (linewidth=3.5) very prominent. Red dot marker
-          at transition state clearly visible. FancyArrowPatch arrows prominent and
-          legible. Dashed reference lines appropriately subtle.
+        comment: Line at linewidth=3.5 is prominent; scatter marker at s=120 is clearly
+          visible; arrows are well-sized; fill is appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three Imprint palette members used with distinct hue families (green/red/blue).
-          CVD-safe combination. No red-green ambiguity as sole signal — all elements
-          are also labeled with text.
+        comment: Green curve and red/blue arrows are distinguishable by shape and
+          position, not color alone. CVD-safe within Imprint palette.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (figsize=(8,4.5) dpi=400). subplots_adjust(left=0.10,
-          right=0.97, top=0.91, bottom=0.11) provides good margins. Title spans ~60%
-          of width. No clipping or overflow. ΔH annotation at x=1.04 well within xlim=(-0.05,
-          1.22).
+        comment: Landscape 3200x1800 canvas, well-balanced margins (subplots_adjust),
+          no clipping. ΔH annotation fits within xlim=1.22.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Reaction Coordinate'', Y: ''Potential Energy (kJ/mol)'' with
-          units. Title matches required format exactly.'
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units. X-axis: ''Reaction
+          Coordinate''. Title: correct anyplot.ai format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Main curve uses BRAND #009E73 (Imprint position 1). Red (#AE3030)
-          is semantic matte-red anchor for activation energy barrier — justified semantic
-          exception. Blue (#4467A3) is Imprint position 3. Backgrounds correct: #FAF8F1
-          light / #1A1A17 dark. Data colors identical across both renders.'
+        comment: 'Brand green #009E73 for main curve. Semantic red #AE3030 for Ea
+          barrier (documented Imprint anchor for bad/loss). Blue #4467A3 for ΔH. Both
+          themes: correct PAGE_BG (#FAF8F1 / #1A1A17), theme-adaptive chrome throughout.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional three-color semantic system (green=pathway, red=cost/barrier,
-          blue=thermodynamics). FancyArrowPatch arrows and rounded bbox annotations
-          add scientific polish. Transition state marker with PAGE_BG edge creates
-          clear focal point. Solid above defaults, not gallery-standout.
+        comment: 'Strong design: semantic color assignments, FancyArrowPatch bidirectional
+          arrows, rounded annotation boxes, subtle fill. Clearly above configured
+          defaults. Not quite at the rare publication-ready 8.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Y-axis-only grid (alpha=0.15). X-axis ticks
-          suppressed (appropriate for continuous path). Spines colored INK_SOFT. Generous
-          margins via subplots_adjust. Well-refined.
+        comment: Top/right spines removed, subtle y-grid (alpha=0.15), clean annotation
+          boxes. Good refinement, short of 'every detail polished' (left dashed line
+          extends to x=-0.05 past y-axis spine).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: green curve as primary narrative, red Ea
-          annotation highlights the kinetic cost, blue ΔH shows thermodynamic result.
-          Transition state red dot creates focal point. Direct labeling eliminates
-          legend clutter. The story of a chemical reaction is clearly told.'
+        comment: Clear chemical narrative through semantic colors and annotations.
+          Viewer immediately reads reactant→barrier→product story. Standard textbook
+          format — visual hierarchy guides but doesn't add a distinctive focal emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -149,30 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram with smooth curve.
+        comment: 'Correct reaction coordinate energy diagram: smooth curve from reactants
+          through transition state to products.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: Ea double-headed arrow, ΔH double-headed
-          arrow, dashed reference lines at reactant/product levels, direct labels
-          for reactants/products/transition state, smooth Gaussian peak.'
+        comment: 'All spec notes implemented: direct labels for reactants/products/TS,
+          double-headed Ea arrow, double-headed ΔH arrow, smooth curve, dashed reference
+          lines, clean minimal style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate (0-1), Y=potential energy (kJ/mol). Reactants
-          at 50, TS at ~122, products at 20 kJ/mol — matches spec example exactly.
+        comment: X=Reaction Coordinate, Y=Potential Energy (kJ/mol). Spec example
+          values (50/120/20 kJ/mol) exactly matched.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-reaction-coordinate · python · matplotlib · anyplot.ai'
-          — correct format. No legend needed (direct labeling used, single series
-          curve).
+        comment: Title is 'line-reaction-coordinate · python · matplotlib · anyplot.ai'.
+          No legend (single-series, correctly omitted).
     data_quality:
       score: 15
       max: 15
@@ -182,23 +182,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: energy landscape curve, activation energy barrier,
-          enthalpy change, transition state, reactant/product levels with reference
-          lines.'
+        comment: 'Shows all reaction coordinate diagram features: activation energy
+          barrier, transition state peak, exothermic enthalpy change, energy levels
+          for all species.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Single-step exothermic reaction is canonical and widely used in chemistry
-          education. Values (Ea=72, ΔH=-30 kJ/mol) are realistic and neutral.
+        comment: Single-step exothermic chemical reaction — realistic chemistry educational
+          context, neutral topic (general chemistry).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-142 kJ/mol appropriate. X-axis 0-1 arbitrary units standard
-          for reaction coordinate. 500 points produces smooth curve.
+        comment: 'Ea=72 kJ/mol (room-temperature reaction range: 40-100 kJ/mol), ΔH=-30
+          kJ/mol (moderately exothermic). Values are chemically accurate and realistic.'
     code_quality:
       score: 10
       max: 10
@@ -208,33 +208,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear imperative structure.
+        comment: 'Linear: imports → theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — mathematical formulas, no random state.
+        comment: 'Fully deterministic: energy curve generated by mathematical formula,
+          no randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All 5 imports used: os, sys, matplotlib.pyplot, numpy, FancyArrowPatch.'
+        comment: 'All imports used: os (ANYPLOT_THEME), sys (path fix), matplotlib.pyplot,
+          numpy, FancyArrowPatch.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI. Clean variable naming with semantic
-          color constants.
+        comment: Clean, well-organized, no fake functionality. Appropriate complexity
+          for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
-          API throughout.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current matplotlib
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -244,28 +247,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout. FancyArrowPatch is the idiomatic matplotlib
-          approach for double-headed scientific arrows. ax.hlines for efficient horizontal
-          lines. subplots_adjust for precise margin control.
+        comment: Correct OO API throughout (ax.* methods), FancyArrowPatch, hlines,
+          fill_between, subplots_adjust. Above the default 3.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FancyArrowPatch with arrowstyle='<->' and mutation_scale. ax.hlines.
-          scatter with edgecolors=PAGE_BG. bbox dict with boxstyle='round,pad=0.25'.
-          Distinctly matplotlib features used meaningfully.
+        comment: FancyArrowPatch for bidirectional arrows and LaTeX math rendering
+          ($E_a$, $\Delta H$) are distinctive matplotlib features not easily replicated
+          in other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - patches
-  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
