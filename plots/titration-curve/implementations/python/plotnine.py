@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 titration-curve: Acid-Base Titration Curve
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
@@ -110,7 +110,7 @@ title = "titration-curve · python · plotnine · anyplot.ai"
 plot = (
     ggplot()
     # Transition region shading around equivalence point
-    + geom_ribbon(aes(x="volume_ml", ymin="ymin", ymax="ymax"), data=df_ribbon, fill=COLOR_PH, alpha=0.15)
+    + geom_ribbon(aes(x="volume_ml", ymin="ymin", ymax="ymax"), data=df_ribbon, fill=COLOR_PH, alpha=0.25)
     # Derivative area fill — more visible than default
     + geom_area(aes(x="volume_ml", y="value"), data=df_area, fill=COLOR_DERIV, alpha=0.18)
     # Equivalence point vertical dashed reference line
@@ -132,7 +132,7 @@ plot = (
     + geom_text(
         aes(x="volume_ml", y="value", label="label"),
         data=df_peak_label,
-        size=2.5,
+        size=3.5,
         ha="left",
         color=COLOR_DERIV,
         fontweight="bold",
