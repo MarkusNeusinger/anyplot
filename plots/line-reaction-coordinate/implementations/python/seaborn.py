@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -25,6 +25,7 @@ EA_COLOR = "#AE3030"  # Imprint position 5 — semantic red for activation barri
 DH_COLOR = "#4467A3"  # Imprint position 3 — blue for enthalpy change
 
 sns.set_theme(
+    context="notebook",
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
@@ -68,12 +69,36 @@ energy = spline(reaction_coord)
 
 df = pd.DataFrame({"Reaction Coordinate": reaction_coord, "Potential Energy (kJ/mol)": energy})
 
-# Plot
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+# Key state markers evaluated on the spline
+key_x = np.array([0.10, 0.47, 0.88])
+key_states = pd.DataFrame({"Reaction Coordinate": key_x, "Potential Energy (kJ/mol)": spline(key_x)})
+
+# Figure-level seaborn API — relplot for consistent figure layout management
+g = sns.relplot(
+    data=df,
+    x="Reaction Coordinate",
+    y="Potential Energy (kJ/mol)",
+    kind="line",
+    color=BRAND,
+    linewidth=2.5,
+    height=4.5,
+    aspect=16 / 9,
+)
+g.figure.set_dpi(400)
+g.figure.set_facecolor(PAGE_BG)
+ax = g.axes.flat[0]
 ax.set_facecolor(PAGE_BG)
 
-sns.lineplot(
-    data=df, x="Reaction Coordinate", y="Potential Energy (kJ/mol)", color=BRAND, linewidth=2.5, ax=ax, zorder=3
+# Seaborn scatter layer marking reactant, transition state, and product positions
+sns.scatterplot(
+    data=key_states,
+    x="Reaction Coordinate",
+    y="Potential Energy (kJ/mol)",
+    color=BRAND,
+    s=80,
+    zorder=5,
+    legend=False,
+    ax=ax,
 )
 
 ax.fill_between(reaction_coord, energy, alpha=0.08, color=BRAND, zorder=2)
@@ -153,5 +178,5 @@ ax.set_xticks([])
 ax.xaxis.grid(False)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-plt.tight_layout()
+g.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
