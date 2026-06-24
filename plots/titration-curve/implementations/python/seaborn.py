@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 titration-curve: Acid-Base Titration Curve
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-06-24
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 85/100 | Created: 2026-06-24
 """
 
 import os
