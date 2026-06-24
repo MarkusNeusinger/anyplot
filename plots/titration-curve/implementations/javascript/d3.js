@@ -11,18 +11,14 @@ const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
 // --- Data: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH (strong acid / strong base) ---
-function calcPH(v) {
-  const mHCl = 0.0025;                   // mol (25 mL × 0.1 M)
-  const mNaOH = 0.1 * v * 0.001;         // mol (v in mL)
-  const totalVol = (25 + v) * 0.001;     // L
-  const excess = mNaOH - mHCl;
-  if (Math.abs(excess) < 1e-12) return 7.0;
-  if (excess < 0) return -Math.log10(-excess / totalVol);
-  return 14 + Math.log10(excess / totalVol);
-}
-
 // 501 points: 0.0, 0.1, 0.2, … 50.0 mL
-const curveData = Array.from({ length: 501 }, (_, i) => ({ v: i * 0.1, ph: calcPH(i * 0.1) }));
+const curveData = Array.from({ length: 501 }, (_, i) => {
+  const v = i * 0.1;
+  const mHCl = 0.0025, mNaOH = 0.1 * v * 0.001, totalVol = (25 + v) * 0.001;
+  const excess = mNaOH - mHCl;
+  const ph = Math.abs(excess) < 1e-12 ? 7.0 : excess < 0 ? -Math.log10(-excess / totalVol) : 14 + Math.log10(excess / totalVol);
+  return { v, ph };
+});
 
 // Central-difference numerical derivative dpH/dV (floor at 0 to suppress float noise at edges)
 const derivData = curveData.slice(1, -1).map((_, i) => ({
@@ -56,10 +52,16 @@ g.append("line")
   .attr("stroke-dasharray", "4,4").attr("opacity", 0.4);
 
 // --- Steep transition zone highlight (equivalence region) ---
+const shadeX = xSc(23), shadeW = xSc(27) - xSc(23);
 g.append("rect")
-  .attr("x", xSc(23)).attr("y", 0)
-  .attr("width", xSc(27) - xSc(23)).attr("height", ih)
+  .attr("x", shadeX).attr("y", 0)
+  .attr("width", shadeW).attr("height", ih)
   .attr("fill", t.palette[0]).attr("opacity", 0.07);
+g.append("text")
+  .attr("x", shadeX + shadeW / 2).attr("y", ih - 10)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "11px").attr("opacity", 0.75)
+  .text("Steep transition zone");
 
 // --- Derivative curve (dpH/dV) on secondary right axis ---
 g.append("path")
@@ -116,13 +118,13 @@ const xAx = g.append("g")
   .call(d3.axisBottom(xSc).ticks(10).tickSize(6));
 xAx.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 xAx.selectAll("line").attr("stroke", t.inkSoft);
-xAx.select(".domain").attr("stroke", t.inkSoft);
+xAx.select(".domain").attr("stroke", "none");
 
 // --- Left y-axis (pH) ---
 const yAxL = g.append("g").call(d3.axisLeft(ySc).ticks(7).tickSize(6));
 yAxL.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 yAxL.selectAll("line").attr("stroke", t.inkSoft);
-yAxL.select(".domain").attr("stroke", t.inkSoft);
+yAxL.select(".domain").attr("stroke", "none");
 
 // --- Right y-axis (dpH/dV) — styled in derivative color ---
 const yAxR = g.append("g")
