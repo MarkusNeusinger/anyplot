@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-24
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -56,6 +55,11 @@ p <- ggplot(df, aes(x = x, y = energy)) +
              color = INK_MUTED, linewidth = 0.5) +
   # Main energy curve
   geom_line(color = IMPRINT_PALETTE[1], linewidth = 1.4) +
+  # Transition state peak marker
+  annotate("point",
+           x = x_ts, y = e_ts,
+           color = IMPRINT_PALETTE[1], size = 3, shape = 21,
+           fill = PAGE_BG, stroke = 1.2) +
   # Activation energy arrow (Ea): vertical from reactant level to TS peak
   annotate("segment",
            x = x_ts + 0.06, xend = x_ts + 0.06,
@@ -109,7 +113,7 @@ p <- ggplot(df, aes(x = x, y = energy)) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major  = element_line(color = INK, linewidth = 0.15),
+    panel.grid.major  = element_line(color = INK, linewidth = 0.10),
     panel.grid.minor  = element_blank(),
     panel.border      = element_blank(),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
