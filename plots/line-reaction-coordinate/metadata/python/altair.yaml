@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:48:15Z'
-updated: '2026-06-24T07:51:49Z'
+updated: '2026-06-24T08:03:43Z'
 generated_by: claude-sonnet
 workflow_run: 28082979260
 issue: 4409
@@ -12,127 +12,141 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (Ea arrow, ΔH arrow, dashed reference
-    lines, direct species labels) present and correctly placed'
-  - 'Semantic color usage is exemplary: red for activation barrier, blue for enthalpy
-    change, green for energy path — each color earns its place'
-  - Two-tier annotation system (bold species names + italic value labels) creates
-    clear typographic hierarchy appropriate for scientific/educational context
-  - Altair alt.layer() composition used correctly with shared axis scales — proper
-    pattern for multi-layer Altair charts
-  - 'Theme adaptation complete: background, title, axis labels, tick labels, and annotations
-    all use theme-adaptive tokens correctly in both light and dark renders'
-  - Deterministic data generation via sigmoid + Gaussian produces a realistic, smooth
-    reaction coordinate curve
-  - PIL canvas padding correctly applied to reach exact 3200x1800 target
+  - 'Excellent semantic color coding: green for reaction path (#009E73), red for Ea
+    barrier (#AE3030), blue for ΔH (#4467A3) — Imprint palette used with clear semantic-exception
+    rationale'
+  - 'Complete spec compliance: smooth curve, double-headed arrows with value labels
+    (Ea=70 kJ/mol, ΔH=−30 kJ/mol), dashed energy-level reference lines, bold species
+    labels at all three key positions'
+  - 'Perfect theme adaptation: all chrome (title, axis labels, tick labels, background,
+    view border) correctly flips between light and dark; data colors are identical
+    across both renders'
+  - 'Strong Altair layer composition: 9 layers combined with alt.layer(), detail encoding
+    for grouped reference lines, shape encoding for distinct arrowhead directions,
+    scale=None for direct hex color mapping from data'
+  - Physically realistic energy values (reactants 50 kJ/mol → TS 120 kJ/mol → products
+    20 kJ/mol); correct deterministic data with smooth Gaussian+sigmoid construction
   weaknesses:
-  - '"Transition State ‡" bold label (x≈0.40, y≈125) and "120 kJ/mol" italic annotation
-    (x≈0.49, y≈122) are very close together near the transition state peak — offset
-    the energy value annotation to x=peak_x+0.14, y=actual_peak_energy+6 to eliminate
-    the crowding risk'
-  - Arrowhead implementation via mark_point(shape='triangle-up/down') produces boxy,
-    low-fidelity arrowheads — consider larger size=250 or strokeCap-based approach
-    for crisper heads
-  - 'DE-01/DE-02 headroom: clean and functional but lacks the final layer of polish
-    — slightly more generous padding between the plot area and the bottom x-axis label
-    would breathe better'
+  - '"Transition State ‡" bold label (x≈0.40, y≈125 kJ/mol) and "120 kJ/mol" italic
+    annotation (x≈0.62, y≈124 kJ/mol) are at nearly identical y-positions and close
+    in x — potential visual crowding at the peak. Consider nudging the italic label
+    to y=129 or repositioning to avoid near-overlap.'
+  - 'DE-01 limited to 6/8: the arrow-head markers (triangle-up/down, size=250) appear
+    slightly oversized relative to the arrow line thickness (strokeWidth=2.5), creating
+    a visual imbalance. Reducing marker size to ~150–180 would improve proportionality.'
+  - 'DE-03 limited to 4/6: the Ea and ΔH annotations convey magnitude but the chart
+    lacks a single clear narrative focal point that immediately tells the exothermic
+    story. Consider adding a subtle shaded fill between the reactant and product energy
+    levels to visualise the net ΔH = −30 kJ/mol directly on the curve.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "line-reaction-coordinate · python · altair · anyplot.ai" bold centered, clearly readable in dark ink. Subtitle "Exothermic Reaction · Single-Step Energy Profile" in secondary ink-soft tone, readable. Axis labels "Energy (kJ/mol)" and "Reaction Coordinate" in dark ink, readable. Tick labels in ink-soft, readable. Species labels "Reactants", "Transition State ‡", "Products" in bold dark ink, clearly visible. Arrow labels "Ea = 70 kJ/mol" in red, "ΔH = −30 kJ/mol" in blue, both readable. Italic value annotations "50 kJ/mol", "120 kJ/mol", "20 kJ/mol" in ink-muted, readable but subtle.
-      Data: Main curve is brand green #009E73 (Imprint position 1), thick smooth bell-shaped line. Ea arrow in matte red #AE3030, ΔH arrow in blue #4467A3. Dashed reference lines in ink-soft at 50%, opacity 45% — subtle but visible. Triangle arrowhead markers in matching colors.
-      Notable issue: "Transition State ‡" (bold 15px at x≈0.40) and "120 kJ/mol" (italic 12px at x≈0.49) are very close together near the peak — minor crowding.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, clearly not pure white.
+      Chrome: Title "line-reaction-coordinate · python · altair · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. Subtitle "Exothermic Reaction · Single-Step Energy Profile" in secondary ink (#4A4A44). Y-axis label "Energy (kJ/mol)" and X-axis label "Reaction Coordinate" both in dark ink at matching font sizes. Tick labels in INK_SOFT, clearly readable. No grid lines (grid=False).
+      Data: Smooth green (#009E73, strokeWidth=4) bell-shaped curve from reactants (~50 kJ/mol) through transition state peak (~120 kJ/mol) down to products (~20 kJ/mol). Red (#AE3030) double-headed Ea arrow at x≈0.16 with "Ea = 70 kJ/mol" label. Blue (#4467A3) double-headed ΔH arrow at x≈0.82 with "ΔH = −30 kJ/mol" label. Three dashed horizontal reference lines at 50/120/20 kJ/mol in muted ink. Bold labels "Reactants", "Transition State ‡", "Products" at key positions. Italic energy-level annotations "50 kJ/mol", "120 kJ/mol", "20 kJ/mol" in tertiary ink.
+      Legibility verdict: PASS — all text elements clearly readable against the warm cream background. Minor crowding between "Transition State ‡" and "120 kJ/mol" at the peak (same y-level, close x) but both remain readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and subtitle adapt to near-white light ink (#F0EFE8 range), clearly readable against dark surface. Axis labels, tick labels adapt to light secondary tones, all readable. Species labels render in light ink, fully legible. No dark-on-dark failures detected anywhere. Arrow labels remain in their semantic colors (red Ea, blue ΔH) — both remain visible against dark background.
-      Data: Green curve #009E73, red Ea arrow, blue ΔH arrow — all identical to light render. Dashed reference lines adapted to light-on-dark tone, still visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
+      Chrome: Title and all text elements are in light-colored ink (#F0EFE8 / #B8B7B0 / #A8A79F). All axis labels, tick labels, title, and subtitle are clearly visible against the dark background. No dark-on-dark failures detected. The dashed reference lines (INK_SOFT at opacity=0.45) remain visible as subtle guides.
+      Data: Energy curve remains #009E73 (identical to light render). Ea arrow remains #AE3030, ΔH arrow remains #4467A3 — all data colors are theme-independent and visually consistent across both renders.
+      Legibility verdict: PASS — all text readable on dark surface. No "dark-on-dark" failures. Species labels in INK (#F0EFE8) stand out clearly. Arrow value labels in their semantic colors (red/blue) remain legible on the dark background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; minor crowding near transition
-          state peak where Transition State label and 120 kJ/mol annotation are very
-          close together
+        comment: All font sizes explicitly set (16px title, 15px species labels, 13px
+          arrow labels, 12px energy annotations, 12px axis titles, 10px tick labels).
+          Well-proportioned, readable in both themes at full and mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Near-overlap between Transition State label and 120 kJ/mol annotation
-          at the peak; all other elements well-spaced
+        comment: 'All text readable. Minor crowding: ''Transition State ‡'' (x≈0.40,
+          y≈125) and ''120 kJ/mol'' (x≈0.62, y≈124) are at nearly identical y-positions,
+          creating near-overlap at the peak area. Both remain readable.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Smooth green curve prominent, Ea and ΔH arrows clearly visible, all
-          markers and text legible
+        comment: 'Energy curve clearly visible (strokeWidth=4, #009E73). Arrow lines
+          and triangle arrowheads prominent. All annotation text visible. Dashed reference
+          lines visible in both themes.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic colors all text-labeled so info not color-alone; Imprint
-          palette CVD-safe
+        comment: Three-color scheme from Imprint palette (green/red/blue). CVD-safe
+          with sufficient luminance contrast. Arrow direction also encodes information
+          redundantly.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed 3200x1800, proportions correct, title ~65% width,
-          axis labels balanced, no overflow
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Chart fills
+          ~60-70% of 3200x1800 canvas with appropriate padding. Good margins. No clipping
+          at canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Energy (kJ/mol) and Reaction Coordinate with units; title matches
-          required format
+        comment: 'X: ''Reaction Coordinate'' (descriptive). Y: ''Energy (kJ/mol)''
+          (descriptive with units). Both clear.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Curve is #009E73 Imprint position 1; Ea uses #AE3030 semantic red
-          (valid semantic exception for barrier/cost); ΔH uses #4467A3 Imprint position
-          3; backgrounds correct for both themes'
+        comment: 'curve_color=#009E73 (Imprint pos 1, first/only data series). ea_color=#AE3030
+          (semantic red for activation barrier, Imprint pos 5 used with semantic exception).
+          dh_color=#4467A3 (Imprint pos 3). Backgrounds #FAF8F1 light / #1A1A17 dark.
+          All chrome theme-adaptive. Both renders correct.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Strong semantic color mapping and two-tier annotation system; arrowhead
-          implementation via triangle markers is functional but basic
+        comment: 'Strong design: intentional semantic color coding across Imprint
+          palette, clean subtitle framing, layered annotation system with typographic
+          hierarchy (bold labels > bold colored arrow values > italic energy annotations).
+          Clearly above defaults. Not quite 8/8 due to slight visual imbalance in
+          arrowhead size relative to line thickness.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Grid off, L-frame spines, dashed reference lines subtle at 45% opacity,
-          subtitle adds polish; headroom for more refinement
+        comment: Grid explicitly disabled. View border removed (strokeWidth=0). Dashed
+          reference lines at energy levels replace grid elegantly. Background and
+          all chrome theme-adaptive. Generous whitespace. Subtle opacity on reference
+          lines (0.45). Good but not perfectly polished in every detail.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual narrative from Reactants to Products; red Ea arrow draws
-          attention to activation energy barrier; ΔH provides thermodynamic context
+        comment: 'Visual hierarchy guides viewer: green curve is the path, red marks
+          the cost (Ea), blue marks the thermodynamic outcome (ΔH). Direct labeling
+          removes ambiguity. Missing a strong single narrative focal point (e.g.,
+          a shaded ΔH region or highlighted exothermic arrow) that would immediately
+          communicate the reaction''s exothermic nature at a glance.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +156,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram with smooth curve
+        comment: Correct reaction coordinate energy diagram with smooth curve showing
+          reactant → transition state → product energy profile.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Direct species labels, Ea arrow, ΔH arrow, dashed reference lines,
-          smooth curve with clear maximum — all present
+        comment: 'All spec features present: direct labels for reactants/products/TS,
+          Ea double-headed arrow, ΔH double-headed arrow, horizontal dashed lines
+          at all energy levels, smooth curve with clear maximum, clean minimal style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Reaction Coordinate 0-1, Y: Energy kJ/mol, all ranges shown correctly'
+        comment: 'X: reaction coordinate (0 to 1 range). Y: energy in kJ/mol. All
+          data visible within scale domain.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; direct labels used instead of legend
-          (better UX)
+        comment: 'Title: ''line-reaction-coordinate · python · altair · anyplot.ai''
+          — correct format. No legend needed (semantic color explanations provided
+          via arrow value labels directly on chart).'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +190,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All key diagram features present: transition state peak, energy
-          levels, Ea, ΔH, reference lines'
+        comment: 'Covers all aspects: activation energy barrier, enthalpy change,
+          transition state, reactant and product energy levels, exothermic profile.
+          Both kinetic (Ea) and thermodynamic (ΔH) information displayed.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ea=70 kJ/mol moderate barrier, ΔH=-30 kJ/mol exothermic — realistic
-          general chemistry values; neutral educational context
+        comment: Single-step exothermic chemical reaction — fundamental neutral scientific
+          topic. Real chemistry context with ‡ symbol for transition state.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-135 kJ/mol with headroom; X-axis 0-1 arbitrary units; 300
-          points produces smooth curve
+        comment: Ea=70 kJ/mol and ΔH=−30 kJ/mol are physically realistic values for
+          an exothermic reaction. Energy values (20–120 kJ/mol) match real-world activation
+          energies and reaction enthalpies.
     code_quality:
       score: 10
       max: 10
@@ -197,33 +217,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, each layer clearly named
+        comment: 'Clean linear structure: imports → tokens → data → chart layers →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Mathematically deterministic data generation, no random seed needed
+        comment: 'Fully deterministic: no random data, all energy values explicitly
+          defined, numpy linspace for smooth curve.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, PIL.Image'
+        comment: 'All imports used: os (THEME env), altair (charts), numpy (curve
+          generation), pandas (DataFrames), PIL (canvas padding).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized layered composition, no redundancy, .interactive()
-          appropriate for Altair
+        comment: Clean, idiomatic Altair. Multiple layers logically ordered. Arrow
+          construction (line + heads separately) is the correct Altair pattern. No
+          over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Altair
-          API; PIL padding applied correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses Altair 6.2.2 current
+          API. Padding-only canvas logic (no crop).
     library_mastery:
       score: 9
       max: 10
@@ -233,26 +257,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: alt.layer() with shared scales; alt.Title with subtitle and theme-adaptive
-          colors; configure_axis/view/title for chrome adaptation; alt.Shape encoding
-          with custom scale
+        comment: Expert layered chart composition with alt.layer() across 9 sub-charts.
+          Correct use of alt.Scale for shared axis domains, configure_* for global
+          styling, alt.Title for title+subtitle, shared x/y scales across all layers.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 9 distinct layers in alt.layer(); color=alt.Color with scale=None
-          for per-row coloring; shared scale declarations; interactive tooltips; HTML
-          export — real Altair expertise; minor gap in declarative reuse
+        comment: 'Uses Altair-distinctive features: detail:N encoding for grouped
+          reference lines without legend, shape:N encoding with custom scale for bidirectional
+          arrowheads, color:N with scale=None for direct hex mapping from data column,
+          interactive() + tooltip encoding, HTML export alongside PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
