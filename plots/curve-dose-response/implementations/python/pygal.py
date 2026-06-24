@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -22,6 +22,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Imprint palette — first two categorical positions
 C_A = "#009E73"  # Compound A — Imprint brand green
 C_B = "#C475FD"  # Compound B — Imprint lavender
+# 95% CI band color-coded to Compound A using RGBA CSS color (pygal SVG feature)
+CI_A = "rgba(0, 158, 115, 0.40)"
 
 # Palette tuple matches series add order (11 series total)
 CHART_COLORS = (
@@ -29,8 +31,8 @@ CHART_COLORS = (
     C_B,  # 2: Compound B fitted curve
     C_A,  # 3: Data points A
     C_B,  # 4: Data points B
-    INK_MUTED,  # 5: 95% CI upper (structural, not data)
-    INK_MUTED,  # 6: 95% CI lower (None label)
+    CI_A,  # 5: 95% CI upper (color-coded to Compound A, semi-transparent)
+    CI_A,  # 6: 95% CI lower (None label)
     C_A,  # 7: EC50 reference A
     C_B,  # 8: EC50 reference B (None label)
     INK_MUTED,  # 9: Asymptotes (structural, very subtle)
@@ -41,6 +43,16 @@ CHART_COLORS = (
 
 def four_pl(x, bottom, top, ec50, hill):
     return bottom + (top - bottom) / (1 + (ec50 / x) ** hill)
+
+
+def fmt_concentration(log_val):
+    """Format log10 concentration to human-readable units for interactive tooltips."""
+    val = 10 ** float(log_val)
+    if val >= 1e-6:
+        return f"{val * 1e6:.1f} µM"
+    if val >= 1e-9:
+        return f"{val * 1e9:.1f} nM"
+    return f"{val * 1e12:.1f} pM"
 
 
 # Data
@@ -124,7 +136,12 @@ chart = pygal.XY(
     allow_interruptions=True,
     js=[],
     print_values=False,
+    value_formatter=lambda y: f"{y:.1f}%",
+    x_value_formatter=fmt_concentration,
 )
+
+# Restrict y-axis ticks to 5 clean quartile levels — reduces grid clutter
+chart.y_labels = [0, 25, 50, 75, 100]
 
 # Fitted curves (solid, prominent — primary data layer)
 chart.add(
@@ -156,18 +173,18 @@ chart.add(
     dots_size=14,
 )
 
-# 95% CI bounds for Compound A (subtle dashed — structural layer)
+# 95% CI bounds for Compound A — color-coded to Compound A via RGBA semi-transparent stroke
 chart.add(
     "95% CI (A)",
     list(zip(log_smooth.tolist(), ci_upper.tolist(), strict=True)),
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "6, 6"},
+    stroke_style={"width": 3, "dasharray": "8, 5"},
 )
 chart.add(
     None,
     list(zip(log_smooth.tolist(), ci_lower.tolist(), strict=True)),
     show_dots=False,
-    stroke_style={"width": 2, "dasharray": "6, 6"},
+    stroke_style={"width": 3, "dasharray": "8, 5"},
 )
 
 # EC50 reference lines — vertical + horizontal crosshair per compound
