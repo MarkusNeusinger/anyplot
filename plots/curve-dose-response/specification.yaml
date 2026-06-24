@@ -6,7 +6,7 @@ title: Pharmacological Dose-Response Curve
 
 # Specification tracking
 created: "2026-03-06T19:52:15Z"
-updated: null
+updated: "2026-06-24T00:00:00Z"
 issue: 4556
 suggested: MarkusNeusinger
 
@@ -27,3 +27,4 @@ tags:
     - annotated
     - comparison
     - color-mapped
+    - confidence-interval
