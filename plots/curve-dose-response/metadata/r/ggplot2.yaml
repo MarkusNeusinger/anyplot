@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: curve-dose-response
 created: '2026-06-24T15:34:19Z'
-updated: '2026-06-24T15:41:52Z'
+updated: '2026-06-24T15:55:08Z'
 generated_by: claude-sonnet
 workflow_run: 28109707489
 issue: 4556
@@ -12,108 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Full spec compliance: all 4PL sigmoid features present — EC50 crosshairs, 95%
-    CI ribbon, error bars (SEM), top/bottom asymptote dashed lines, and 2-compound
-    comparison'
-  - 'Excellent theme adaptation: shape=21 hollow circles with fill=PAGE_BG elegantly
-    adapt to both light and dark themes while maintaining compound identity'
-  - 'Sophisticated statistical implementation: proper nls() nonlinear regression with
-    delta-method CI via vcov(), producing mathematically correct confidence bands'
-  - Color-coded EC50 annotations in italic at matching compound colors create clear
-    pharmacological storytelling — viewer immediately identifies which compound is
-    more potent
-  - Correct Imprint palette usage with named scale_color_manual vector; data colors
-    identical across themes, chrome adapts correctly in both renders
+  - 'All 8 spec requirements fully implemented: log x-axis, 4PL NLS fit, EC50 crosshairs,
+    SEM error bars, top/bottom asymptote lines, 2 compounds, legend, and 95% CI ribbon
+    for Compound A'
+  - Sophisticated delta-method CI computation producing accurate confidence bands
+    — a distinctively R/NLS technique
+  - 'Theme-adaptive chrome correctly implemented: PAGE_BG, INK, INK_SOFT, INK_MUTED
+    tokens applied to all non-data elements; both renders fully legible'
+  - Open-circle markers (shape=21, fill=PAGE_BG) adapt to theme background, providing
+    excellent readability on both light and dark surfaces
+  - EC50 annotation label boxes use ELEVATED_BG fill — subtle but visually effective;
+    potency ratio annotation adds quantitative insight beyond basic EC50 marking
+  - All font sizes explicitly set (plot.title=12, axis.title=10, axis.text=8, legend.text=8)
+    with balanced proportions
+  - Very subtle grid (linewidth=0.15 in INK_MUTED) and disabled minor grid keeps the
+    visual clean
+  - 'Imprint palette correctly used: Compound A = #009E73 (brand green), Compound
+    B = #C475FD (lavender) in canonical order'
   weaknesses:
-  - 'Unused `scales` import: library(scales) is loaded but no scales:: functions are
-    called explicitly — all labels are character vectors and scale_x_log10() is a
-    ggplot2 native function. Remove to satisfy CQ-03.'
-  - Helper functions (f4pl, grad_4pl) break the pure KISS 'Imports → Data → Plot →
-    Save' linear structure; while mathematically justified, inlining them or moving
-    to a comment would satisfy CQ-01 strictly.
-  - 'Design Excellence gap: DE-01 and DE-02 need elevation to push past the 90-point
-    threshold. Consider adding a secondary annotation highlighting the EC50 ratio
-    between compounds, or using geom_label for the EC50 annotations instead of plain
-    annotate text for more visual weight. The grid at INK_MUTED/0.2 linewidth is good
-    but the overall aesthetic reads as a well-configured default rather than publication-ready.'
-  - The asymptote dashed lines (top ~96%, bottom ~5%) are unlabeled — adding a small
-    text annotation like 'Top' / 'Bottom' in INK_MUTED would improve readability for
-    viewers unfamiliar with dose-response conventions without cluttering the plot.
+  - 'DQ-02: Compound names ''Compound A'' / ''Compound B'' are generic placeholder
+    labels — using realistic drug names (e.g., common inhibitor names or IUPAC-style
+    identifiers) would elevate data realism to 5/5'
+  - 'DE-01: Design is strong but stops short of publication-ready polish — consider
+    refining typography (e.g., slightly bolder axis titles) or adding a descriptive
+    subtitle to push from ''well-configured'' to ''FiveThirtyEight-level'''
+  - 'LM-02: The delta method CI is a sophisticated R technique but the NLS fitting
+    setup (nls() with manual gradient derivation) could be made even more distinctive
+    by leveraging drc package or dose-response-specific R idioms if available; however
+    this is a minor point'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
-      Chrome: Title "curve-dose-response · r · ggplot2 · anyplot.ai" centered at top in dark ink, clearly readable (~75% width, appropriate for the mandated title length). Y-axis label "Response (%)" and X-axis label "Concentration (nM)" in dark text at size 10pt — readable. Tick labels in INK_SOFT gray at 8pt — legible. Log10 x-axis tick labels ("0.1", "1", "10", "100", "1k", "10k", "100k") all visible. Subtle major grid lines in muted gray, no minor grid. L-shaped axis frame (no top/right spines).
-      Data: Two sigmoidal 4PL curves — Compound A in #009E73 (brand green) and Compound B in #C475FD (lavender), correct Imprint positions 1 and 2. Hollow circle markers (shape=21) with warm off-white fill, error bars in matching compound colors. Green CI ribbon at alpha=0.15 around Compound A visible but subtle. EC50 crosshair dashed segments in compound colors: green vertical+horizontal lines meeting at ~(20 nM, 49%), purple at ~(1137 nM, 47%). Italic green annotation "EC50 = 20 nM", italic purple "EC50 = 1137 nM". Gray dashed horizontal lines at top (~96%) and bottom (~5%) asymptotes. Inside legend (upper-left) with elevated #FFFDF6 background and INK_SOFT border showing "Compound A" and "Compound B" with colored circle swatches.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background, no light-on-light issues.
+      Background: Warm off-white consistent with #FAF8F1 — passes theme check.
+      Chrome: Title "curve-dose-response · r · ggplot2 · anyplot.ai" centered in dark ink, fills ~75% of width. X-axis label "Concentration (nM)" and Y-axis label "Response (%)" visible in dark ink (size 10pt). Tick labels (size 8pt) fully readable in dark INK_SOFT color. Legend box with subtle INK_MUTED border positioned inside at upper-left showing Compound A (green circle) and Compound B (purple circle) — text legible.
+      Data: Compound A sigmoid in #009E73 (brand green) rising steeply around x=10–100 nM. Compound B sigmoid in #C475FD (lavender) rising around x=100–10k nM. Open-circle markers (shape=21, fill=PAGE_BG) with error bars. Green CI ribbon (alpha=0.18) for Compound A. Dashed crosshair lines in respective compound colors pointing to EC50 values. EC50 annotation boxes: "EC50 = 20 nM" (green) and "EC50 = 1137 nM" (purple). Potency ratio "57×" annotation in INK_MUTED. Top and bottom asymptote dashed lines in INK_SOFT with italic "Top"/"Bottom" labels at right margin.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
-      Chrome: Title text is light (#F0EFE8) against dark background — clearly visible. Axis labels and tick labels rendered in #B8B7B0 (INK_SOFT dark) — readable against the dark surface. Grid lines faintly visible (slightly lighter than background). Legend box uses elevated dark #242420 with INK_SOFT (#B8B7B0) border — clearly defined.
-      Data: Compound A (#009E73 green) and Compound B (#C475FD lavender) data colors are IDENTICAL to the light render — only chrome flipped. Hollow circles retain theme-adaptive fill (now dark #1A1A17), which makes them read as outlined circles on the dark surface — effective contrast. EC50 crosshair colors (green/lavender) unchanged. CI ribbon visible as dark green area. EC50 annotations in green and lavender italic — readable.
-      Legibility verdict: PASS — no dark-on-dark failures. All axis labels, tick labels, title, and legend text clearly readable against #1A1A17 background. Brand green #009E73 is distinctly visible on the dark surface.
+      Background: Warm near-black consistent with #1A1A17 — passes theme check.
+      Chrome: Title in light off-white (#F0EFE8), clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — all legible. Legend box with dark elevated background (#242420) and light text. EC50 annotation boxes with #242420 fill correctly adapt to dark theme.
+      Data: Compound A color #009E73 (brand green) identical to light render — PASS. Compound B color #C475FD (lavender) identical to light render — PASS. Open-circle markers now have dark PAGE_BG fill (#1A1A17), maintaining the open-circle style on dark background. Grid lines subtle in dark theme. All crosshairs and annotations visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored on dark background; brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, annotations=3.2mm).
-          Readable in both themes. Minor: EC50 annotation size could be slightly larger
-          for mobile readability.'
+        comment: 'All font sizes explicitly set: title=12pt, axis.title=10pt, axis.text=8pt,
+          legend.text=8pt. Proportions balanced, readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. EC50 annotations well-positioned relative
-          to crosshairs. Legend inside upper-left does not clash with data.
+        comment: EC50 boxes, legend, potency ratio annotation, and asymptote labels
+          all clearly separated. No overlapping text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 data points per compound with visible error bars. Hollow circle
-          markers (size=2.5, stroke=1.2) clearly distinguishable. CI ribbon at alpha=0.15
-          visible but appropriately subtle. Curves at linewidth=1.4.
+        comment: Sparse data (10 pts/compound); size=2.5 markers with error bars well
+          visible. Curve linewidth=1.4, CI ribbon alpha=0.18.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and lavender have sufficient CVD-safe contrast. No red-green
-          as sole signal.
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-distinguishable hue
+          families. No red-green confusion.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas correct at 3200x1800 (width=8, height=4.5, dpi=400). No edge
-          clipping. Good proportions, balanced margins (t=10, r=15, b=10, l=10).
+        comment: 3200x1800 landscape canvas. Good margins, legend inside, plot fills
+          canvas well. No canvas gate failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Concentration (nM)'', Y: ''Response (%)'' — both descriptive
-          with units. Title follows mandatory format.'
+        comment: 'X: ''Concentration (nM)'' with units. Y: ''Response (%)'' with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green) for Compound A. Second series
-          #C475FD (lavender) for Compound B — correct Imprint positions 1 and 2. Backgrounds
-          #FAF8F1 / #1A1A17 correct. Data colors identical across themes; chrome adapts
-          correctly.'
+        comment: 'Compound A = #009E73 (position 1), Compound B = #C475FD (position
+          2). Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,27 +117,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: color-coded EC50 crosshairs in compound colors, hollow
-          markers with theme-adaptive fill, italic annotation text, inside legend
-          with elevated background. Clearly above defaults. Not yet FiveThirtyEight-level
-          — asymptote lines unlabeled, CI ribbon quite faint.'
+        comment: 'Strong design: EC50 crosshairs, CI ribbon, annotation label boxes
+          with ELEVATED_BG fill, open-circle markers with PAGE_BG fill. Clearly above
+          defaults but not FiveThirtyEight publication level.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Panel border removed, L-shaped axis lines, major-only grid at INK_MUTED/0.2
-          linewidth, no minor grid, generous margins. Good refinement — not perfect
-          (legend border slightly prominent, grid could be even subtler).
+        comment: Panel border removed, very subtle grid (linewidth=0.15 in INK_MUTED),
+          minor grid disabled, L-shaped axis lines. Legend has subtle border. Well-refined
+          overall.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: EC50 crosshairs create focal points guiding the viewer to the key
-          pharmacological parameters. Color-coded annotations quantify potency difference.
-          Compound A (green) vs B (lavender) comparison is visually clear. CI band
-          shows model uncertainty. Good storytelling for a scientific plot.
+        comment: EC50 crosshairs guide viewer to key potency metric, annotation boxes
+          give exact values, potency ratio annotation quantifies comparison. Active
+          data storytelling beyond mere display.
     spec_compliance:
       score: 15
       max: 15
@@ -151,32 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL model fit. Smooth
-          S-shaped curves clearly rendered.
+        comment: Correct sigmoidal dose-response curves with log x-axis and 4PL model.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log10 x-axis, 4PL fit (nls), EC50 crosshair
-          dashed lines, error bars (SEM), top/bottom asymptote dashed lines, 2 compounds,
-          legend, 95% CI ribbon around Compound A.'
+        comment: 'All features: log x-axis, 4PL NLS fit, EC50 crosshairs, SEM error
+          bars, top/bottom asymptote dashed lines, 2 compounds, legend, 95% CI ribbon.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: concentration in nM (log10), Y: response %, both compounds mapped
-          correctly across all layers.'
+        comment: X=concentration (nM) log scale, Y=response (%), full range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'curve-dose-response · r · ggplot2 · anyplot.ai' matches mandatory
-          format. Legend 'Compound A' / 'Compound B' with correct Imprint colors.
+        comment: 'Title: ''curve-dose-response · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend: Compound A/B with correct colors.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -184,88 +175,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dose-response aspects: sigmoid shape, asymptotes, EC50
-          markers, Hill slope variation (A steeper than B), error in measurements,
-          CI uncertainty, multi-compound comparison.'
+        comment: Full sigmoid range shown (bottom to top asymptote), EC50 crosshairs,
+          CI band, error bars, two compounds with 57× potency difference.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Pharmacological dose-response with nM concentrations. Compound A
-          (EC50=20 nM) vs Compound B (EC50~1137 nM) — realistic potency difference.
-          Neutral scientific context.
+        comment: Pharmacological context is real and domain-appropriate (nM concentrations,
+          proper EC50 values 20 nM vs 1137 nM, 4PL fitting). Names 'Compound A/B'
+          are slightly generic placeholders.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Concentration range 0.1-100k nM spans 6 decades — appropriate for
-          pharmacology. Response 0-100% is standard. EC50 values and Hill slopes are
-          pharmacologically realistic.
+        comment: Concentrations 0.1–100k nM spanning 6 decades appropriate for pharmacology.
+          EC50 values physiologically realistic. Response 4%–94% realistic assay range.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Code has two helper functions (f4pl, grad_4pl) which departs from
-          the pure 'Imports → Data → Plot → Save' linear structure. Functions are
-          mathematically justified but break strict KISS.
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → fitting → CI → plot
+          → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) at top.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(scales) imported but not explicitly used — labels are character
-          vectors and scale functions are ggplot2-native. library(scales) should be
-          removed.
+        passed: true
+        comment: ggplot2, dplyr (filter), tibble (tibble()), ragg (agg_png) — all
+          used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R code. No over-engineering. Delta-method CI is
-          appropriate complexity for the task.
+        comment: Delta method CI computation is appropriately complex for the visualization.
+          No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as 'plot-{THEME}.png' using sprintf(). Uses ragg::agg_png device.
-          Uses linewidth= (modern ggplot2 >= 3.4, not size=).
+        comment: ggsave with sprintf('plot-%s.png', THEME), ragg::agg_png, modern
+          linewidth= API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2 grammar: geom_ribbon, geom_line, geom_errorbar, geom_point
+          layered correctly. scale_x_log10, scale_color_manual, annotate(''label'')
+          all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Highly idiomatic ggplot2: layer composition with geom_ribbon + geom_line
-          + geom_errorbar + geom_point, scale_color_manual with named vector, annotate(''segment'')
-          for crosshairs, theme_minimal as base with layered theme() customization.
-          Modern API (linewidth=).'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: shape=21 (filled circle with editable fill/stroke) with fill=PAGE_BG
-          is a distinctive ggplot2 pattern that other libraries don't expose cleanly.
-          legend.position='inside' with legend.position.inside coordinates. geom_ribbon
-          for CI band. These are ggplot2-idiomatic features.
-  verdict: REJECTED
+        comment: NLS 4PL fitting with nls(), delta method gradient CI computation,
+          shape=21 with PAGE_BG fill for theme-adaptive open circles, annotate('label')
+          with ELEVATED_BG for styled annotation boxes.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
