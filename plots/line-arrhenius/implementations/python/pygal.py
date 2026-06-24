@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-24
 """
 
 import os
+import re
 import sys
 
 
@@ -12,6 +13,7 @@ import sys
 # dropping the script directory from sys.path lets the real package resolve.
 sys.path.pop(0)
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -24,11 +26,16 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Imprint palette — first series always #009E73
+# Imprint palette — canonical positions 1→8, first series always #009E73
 IMPRINT_PALETTE = (
-    "#009E73",  # brand green  — Linear Fit (first series)
-    "#BD8233",  # ochre        — Experimental Data
-    "#4467A3",  # blue         — Ea annotation entry
+    "#009E73",  # brand green  — position 1
+    "#C475FD",  # lavender     — position 2
+    "#4467A3",  # blue         — position 3
+    "#BD8233",  # ochre        — position 4
+    "#AE3030",  # matte red    — position 5
+    "#2ABCCD",  # cyan         — position 6
+    "#954477",  # rose         — position 7
+    "#99B314",  # lime         — position 8
 )
 
 # Data — first-order decomposition reaction rate constants spanning 300–600 K
@@ -75,7 +82,6 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT_PALETTE,
-    guide_stroke_dasharray="6,3",
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
@@ -160,24 +166,34 @@ data_points = [
 ]
 chart.add("Experimental Data", data_points, stroke=False, dots_size=16)
 
-# Activation energy — zero-opacity anchor on the fit line, appears in legend
+# Activation energy — visible dot + label at regression line midpoint
 mid_x = float(np.median(inv_T))
 mid_y = float(slope * mid_x + intercept)
+ea_r = -slope * 1000  # Ea/R in K (accounts for 1000/T axis scaling)
 chart.add(
-    f"Eₐ = {Ea_extracted / 1000:.1f} kJ/mol  (−Eₐ/R = {slope:.1f} K⁻¹)",
-    [
-        {
-            "value": (mid_x, mid_y),
-            "label": (
-                f"Activation Energy: Eₐ = {Ea_extracted / 1000:.1f} kJ/mol\n"
-                f"Slope = {slope:.2f} · −Eₐ/R = {slope * 1000:.0f} K"
-            ),
-        }
-    ],
-    dots_size=0,
+    f"Eₐ = {Ea_extracted / 1000:.1f} kJ/mol  (Eₐ/R = {ea_r:.0f} K)",
+    [{"value": (mid_x, mid_y), "label": f"Eₐ/R = {ea_r:.0f} K"}],
+    dots_size=8,
     stroke=False,
+    print_labels=True,
 )
 
-# Save — PNG + interactive HTML (pygal outputs SVG-based interactive charts)
-chart.render_to_png(f"plot-{THEME}.png")
+# Render SVG and inject Ea/R slope annotation as a text element on the chart
+svg_bytes = chart.render()
+svg_str = svg_bytes.decode("utf-8")
+
+# Locate the annotation dot (dots_size=8 → r="8") and place label next to it
+dot_match = re.search(r'<circle cx="([^"]+)" cy="([^"]+)" r="8"', svg_str)
+if dot_match:
+    cx, cy = float(dot_match.group(1)), float(dot_match.group(2))
+    annotation = (
+        f'<text x="{cx + 70:.0f}" y="{cy - 90:.0f}" '
+        f'font-family="sans-serif" font-size="44" '
+        f'fill="{INK}" font-weight="500">'
+        f"Eₐ/R = {ea_r:.0f} K</text>"
+    )
+    svg_str = svg_str.replace("</svg>", annotation + "\n</svg>")
+
+annotated_svg = svg_str.encode("utf-8")
+cairosvg.svg2png(bytestring=annotated_svg, write_to=f"plot-{THEME}.png")
 chart.render_to_file(f"plot-{THEME}.html")
