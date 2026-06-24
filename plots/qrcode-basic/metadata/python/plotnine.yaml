@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: qrcode-basic
 created: '2026-06-24T17:12:25Z'
-updated: '2026-06-24T17:18:28Z'
+updated: '2026-06-24T17:28:01Z'
 generated_by: claude-sonnet
 workflow_run: 28115792181
 issue: 3184
@@ -12,49 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct use of qrcode library (primary spec recommendation) with ERROR_CORRECT_M
-    as spec-recommended default
-  - Theme-adaptive module colors — dark-on-light in light theme, light-on-dark in
-    dark theme — both high-contrast and visually coherent
-  - Excellent choice of theme_void() which removes all axis clutter, appropriate for
-    a matrix barcode visualization
-  - coord_fixed() ensures pixel-perfect square aspect ratio
-  - width=1.02 height=1.02 on geom_tile prevents hairline gaps between QR modules
-  - Title format correct and clearly readable in both renders
-  - Square canvas (2400×2400) is the right format choice for a symmetric matrix visualization
-  - Code is clean, linear, and fully reproducible (QR generation is deterministic
-    for a fixed URL)
-  - sys.path guard prevents accidental shadowing of the qrcode package by local files
-    — good defensive practice
+  - 'Theme-adaptive QR module color inversion is elegant: dark module on light bg
+    / light module on dark bg — QR code remains high-contrast and scannable in both
+    renders'
+  - All three finder patterns correctly rendered; proper QR orientation achieved via
+    y = n-1-r coordinate flip
+  - Uses the qrcode library (primary spec recommendation) with error_correction=M
+    as specified
+  - geom_tile(width=1.02, height=1.02) prevents inter-module rendering gaps — polished
+    detail
+  - 'Perfect spec compliance: all required QR features present, correct title format,
+    no legend clutter'
+  - Deterministic, clean KISS code structure
   weaknesses:
-  - Dark-theme render is an inverted QR code (light modules on dark background) —
-    spec says "Use high contrast black on white for maximum readability"; most modern
-    readers handle inverted QR codes, but it deviates from spec intent
-  - Title sits very close to the top canvas edge with minimal top-margin breathing
-    room
-  - 'DQ-01: The encoded URL (anyplot.ai) is shown only in the title — a subtitle or
-    annotation showing the encoded content would add informational value'
-  - 'DE-03: No visual hierarchy or storytelling beyond the raw QR matrix — a URL label
-    or brief annotation would ground the visualization'
+  - Subtitle font size (9pt) is readable but on the small side for the 2400x2400 canvas;
+    could be nudged to 10pt for better balance with the 12pt title
+  - More whitespace below the QR code than above creates slight vertical imbalance;
+    the QR code sits slightly high on the canvas — adding modest bottom padding or
+    reducing top margin would improve balance
+  - Top title margin is very tight (title nearly touches the canvas top border); increasing
+    plot margin top slightly would improve breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "qrcode-basic · python · plotnine · anyplot.ai" in dark near-black ink at top center, clearly readable; no axis labels, ticks, or grid lines (theme_void — appropriate for QR visualization)
-      Data: QR code rendered as near-black (#1A1A17) modules on the off-white background — high contrast binary representation; all three finder patterns (square corner markers) clearly visible; quiet zone (4-module border) present; data area fills roughly 70% of canvas height centered
-      Legibility verdict: PASS — title fully readable, QR modules crisp, no element overlap or clipping; title sits tight to top edge but all pixels visible
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "qrcode-basic · python · plotnine · anyplot.ai" in dark ink (#1A1A17) at 12pt, fully readable; subtitle "https://anyplot.ai" in softer ink (#4A4A44) at 9pt, readable; no axes/tick labels (theme_void); title sits close to top canvas edge but no clipping detected
+      Data: QR code rendered as near-black (#1A1A17) modules on off-white background; all three finder patterns visible in top-left, top-right, bottom-left corners; high contrast binary pattern
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title "qrcode-basic · python · plotnine · anyplot.ai" in light off-white (#F0EFE8) ink at top center, clearly readable against dark background — NO dark-on-dark failure
-      Data: QR code inverted — off-white (#F0EFE8) modules on near-black background; module color changes between themes (light↔dark) but contrast remains high; all three finder patterns visible; quiet zone matches the dark background
-      Note: Data colors (module on/off) flip between themes (theme-adaptive neutral anchor) — this differs from the Imprint categorical palette rule (positions 1-8 stay constant) but is correct for a binary QR visualization that requires high contrast in both themes; the inverted dark-render QR is scannable by modern readers
-      Legibility verdict: PASS — title readable with correct light-on-dark contrast; no dark-on-dark failures observed
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8) at 12pt, clearly readable against dark background; subtitle in muted light (#B8B7B0) at 9pt, readable; no dark-on-dark failures detected; all text light-colored on dark surface
+      Data: QR module colors inverted — light (#F0EFE8) modules on dark (#1A1A17) background; same bit pattern as light render, only palette inverted; maintains high contrast for scanning
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,48 +57,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title readable in both themes; title sits close to top edge with
-          minimal breathing room (-1)
+        comment: Title (12pt) and subtitle (9pt) explicitly set; both readable in
+          both themes. Subtitle at 9pt is legible but on the small side. Title sits
+          very close to top canvas edge (minimal top margin) though no pixels are
+          clipped.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere in either render
+        comment: QR code and title/subtitle are cleanly separated; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules highly visible in both themes; all finder patterns clearly
-          distinct
+        comment: QR modules clearly visible and high-contrast in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Binary high-contrast colors; CVD-safe (near-black / near-white)
+        comment: Binary high-contrast pattern; CVD-safe by design
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); QR code centered with quiet zone;
-          no overflow
+        comment: QR code well-centered on square canvas; slight imbalance with more
+          whitespace below QR code than above
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Mandatory title format correct; no axis labels needed for QR visualization
+        comment: No traditional axes (theme_void is correct for this type); subtitle
+          contextualizes what is encoded
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Backgrounds correct (#FAF8F1/#1A1A17); QR uses theme-adaptive neutral
-          anchor — appropriate for binary visualization; Imprint categorical palette
-          not applicable to binary QR matrix
+        comment: 'Background is #FAF8F1 (light) / #1A1A17 (dark); text uses theme-adaptive
+          INK/INK_SOFT tokens correctly; QR modules use the neutral semantic anchor
+          appropriately for a binary plot'
     design_excellence:
       score: 12
       max: 20
@@ -113,23 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): theme-adaptive module colors is a deliberate
-          design choice; void theme is elegant; clean minimal composition'
+        comment: Theme-adaptive QR module color inversion in dark mode is an elegant,
+          thoughtful design choice above library defaults; clean void theme is intentional,
+          not lazy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): coord_fixed() ensures correct aspect ratio, width=1.02
-          prevents tile gaps, legend hidden, theme_void removes all clutter'
+        comment: theme_void() removes all chrome; geom_tile(width=1.02, height=1.02)
+          prevents inter-module gaps (polished detail); generous whitespace around
+          the code
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): URL choice (anyplot.ai) is contextually meaningful;
-          QR is functional; no subtitle or annotation showing encoded content limits
-          narrative'
+        comment: Subtitle showing the encoded URL provides useful context; limited
+          storytelling potential for this plot type, but the choice of anyplot.ai
+          URL as content is contextually meaningful
     spec_compliance:
       score: 15
       max: 15
@@ -139,53 +138,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code using the qrcode library (spec's primary recommendation)
+        comment: Correct QR code matrix visualization using proper qrcode library
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone (border=4) present; finder patterns visible; ERROR_CORRECT_M
-          (15%) as spec-recommended default; URL encoded correctly
+        comment: Error correction M (15%), quiet zone (border=4), finder patterns
+          visible in three corners, high-contrast modules, uses qrcode (primary recommended
+          library), 400 DPI exceeds 300 DPI spec requirement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Matrix mapped to x/y grid correctly; y-axis flipped (n-1-r) to orient
-          QR code right-side up
+        comment: Matrix correctly mapped to x/y tile coordinates; y = n-1-r flip ensures
+          correct QR orientation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''qrcode-basic · python · plotnine · anyplot.ai'' — correct
-          mandatory format; no legend (appropriate for binary data)'
+        comment: Title matches required format; legend suppressed correctly for binary
+          single-series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Complete QR code with finder patterns, timing patterns, quiet zone;
-          encoded URL not surfaced as subtitle/annotation (-1)
+        comment: 'Shows all QR code structural features: finder patterns, timing patterns,
+          data modules, quiet zone, error correction'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://anyplot.ai — the project's own URL; highly relevant,
-          neutral, real-world plausible
+        comment: Encodes https://anyplot.ai — the actual product URL, real and directly
+          relevant
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QR fills canvas well; module size appropriate; error correction M
-          is spec-recommended balance
+        comment: box_size=1, border=4, error_correction=M are standard QR parameters;
+          dpi=400 exceeds 300 DPI requirement
     code_quality:
       score: 10
       max: 10
@@ -195,51 +195,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear top-to-bottom flow
+        comment: 'Flat structure: imports -> QR generation -> DataFrame construction
+          -> plot -> save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR generation is deterministic for fixed URL + parameters; no random
-          seed needed
+        comment: QR encoding is deterministic; no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: All imported symbols are used; sys.path manipulation is a necessary
+          workaround for module shadowing
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path guard prevents qrcode module shadowing — appropriate defensive
-          practice; clean DataFrame construction
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=400 and square dimensions
+        comment: Saves as plot-{THEME}.png; current plotnine API throughout
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: ggplot + geom_tile + scale_fill_manual
-          + coord_fixed + labs + theme_void + theme; aes fill mapping correct'
+        comment: geom_tile() + scale_fill_manual() + coord_fixed() is the canonical
+          grammar-of-graphics approach for a binary raster; theme_void() is the idiomatic
+          choice for a frameless tile plot
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses coord_fixed(), theme_void(), scale_fill_manual with named categories
-          — plotnine/ggplot2-specific features used appropriately
+        comment: coord_fixed() ensures square aspect ratio (essential for QR codes);
+          geom_tile width/height=1.02 to eliminate inter-tile gaps is a plotnine-specific
+          tuning detail; but overall approach is the natural ggplot2-style mapping
+          without particularly advanced features
   verdict: APPROVED
 impl_tags:
   dependencies:
