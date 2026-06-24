@@ -1,7 +1,7 @@
 # anyplot.ai
 # scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-# Library: Makie.jl | Julia 1.11
-# Quality: pending | Created: 2026-06-24
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 89/100 | Created: 2026-06-24
 
 using CairoMakie
 using Colors
