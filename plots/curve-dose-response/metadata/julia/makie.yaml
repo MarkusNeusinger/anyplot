@@ -1,0 +1,267 @@
+library: makie
+language: julia
+specification_id: curve-dose-response
+created: '2026-06-24T15:37:13Z'
+updated: '2026-06-24T15:46:46Z'
+generated_by: claude-sonnet
+workflow_run: 28109837759
+issue: 4556
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct 4PL sigmoidal curves with smooth 300-point fit for both compounds
+  - 'All spec requirements met: EC50 reference lines, 95% CI band, error bars, top/bottom
+    asymptote lines, 2 compounds, logarithmic x-axis'
+  - 'Perfect Imprint palette compliance — first series #009E73 (brand green), second
+    series #C475FD (lavender), both identical across themes'
+  - 'Full theme adaptation: all chrome tokens (title, labels, ticks, grid, spines,
+    legend bg) flip correctly between light and dark'
+  - Explicit font size hierarchy throughout (titlesize, xlabelsize, ylabelsize, xticklabelsize,
+    yticklabelsize all set)
+  - Elegant superscript tick labels (10⁻⁹ ... 10⁻⁴) using manual Unicode notation
+    rather than numeric raw values
+  - White marker stroke (strokecolor = PAGE_BG) provides clean definition against
+    both light and dark backgrounds
+  - Alpha-blended CI band and reference lines create clear visual hierarchy without
+    cluttering the data
+  - Greek letters (α, β) in legend labels add scientific sophistication
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface, not pure white.
+      Chrome: Title "Drug Potency Comparison · curve-dose-response · julia · makie · anyplot.ai" is dark and clearly readable, occupying ~72% of canvas width at dynamically scaled 18pt. Y-axis label "Response (%)" and x-axis label "Concentration (M)" are dark, proportional, and readable. Tick labels in Unicode superscript notation (10⁻⁹ through 10⁻⁴) are cleanly rendered at 12pt. Left and bottom spines are INK_SOFT; top and right spines removed (L-frame). Subtle dashed grid at 0.12 alpha. Legend in upper left with ELEVATED_BG (#FFFDF6) frame shows "Compound α (EC50 = 50 nM)" and "Compound β (EC50 = 500 nM)" — both readable.
+      Data: Compound α in #009E73 (brand green) shows a steep sigmoid (Hill=1.8, EC50=50 nM). Compound β in #C475FD (lavender) shows a shallower sigmoid (Hill=1.2, EC50=500 nM). Green CI band (band!) at 0.15 alpha surrounds Compound α. Dashed vertical/horizontal EC50 reference lines at 0.55 alpha mark the half-maximal intersections. Dashed asymptote lines at 0.25 alpha mark top/bottom plateaus. 9 data points per compound with error bars and white-stroked scatter markers (markersize=10, strokecolor=PAGE_BG).
+      Legibility verdict: PASS — all text elements readable, no light-on-light issues, balanced proportions.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot surface, not pure black.
+      Chrome: Title text is #F0EFE8 (light cream) — clearly readable against the dark background. Axis labels and tick labels use INK_SOFT (#B8B7B0) — light grey, visible. Legend box uses ELEVATED_BG (#242420) with light label text. Grid lines are subtle rgba(INK, 0.12) on dark background — visible but not competing. Left/bottom spines in INK_SOFT — visible.
+      Data: Compound α remains #009E73 (identical to light render) — the brand green reads well on dark. Compound β remains #C475FD (identical to light render). CI band, reference lines, and asymptote lines all use the same alpha values as the light render. White marker stroke adapts as PAGE_BG = #1A1A17 in dark theme, effectively removing the stroke — this is subtle but not a failure since the markers remain visible by color.
+      Legibility verdict: PASS — no dark-on-dark failures; all text elements use light-valued tokens and are readable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=18 dynamic, xlabelsize=14,
+          ylabelsize=14, xticklabelsize=12, yticklabelsize=12). Superscript Unicode
+          tick labels clean. Both themes fully readable. Title dynamically scaled
+          for long descriptive prefix.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlaps in either render. Legend
+          positioned upper-left away from data transition zone. Tick labels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 data points per compound (sparse), markersize=10 appropriate. linewidth=2.5
+          for sigmoid curves gives good prominence. Error bars clearly visible with
+          whiskerwidth=8. CI band at 0.15 alpha reads as subtle but clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe pair with good
+          perceptual separation. Not relying on red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 landscape). Good margins, plot fills
+          canvas well. xlims/ylims set with appropriate padding. Nothing cut off.
+          Canvas dimension gate file absent.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Concentration (M) and Response (%) both have units. Title follows
+          {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai format correctly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 confirmed in both renders. Second series #C475FD
+          (Imprint position 2). Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors
+          identical across themes. All chrome tokens theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: white marker stroke (strokecolor=PAGE_BG) shows attention
+          to detail, Greek letters in compound names add scientific sophistication,
+          alpha-blended reference lines and CI band create depth. Not yet ''strong
+          design'' — lacks text annotations at EC50 intersection points that would
+          elevate to FiveThirtyEight tier.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid at 0.12 alpha, clean legend
+          with ELEVATED_BG and thin frame (framewidth=0.5), white marker stroke. Clearly
+          above minimal defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EC50 dashed crosshairs create explicit focal points guiding viewer
+          to the half-maximal potency parameter. CI band emphasizes uncertainty asymmetry
+          between compounds. Two sigmoids horizontally offset communicate 10x potency
+          difference immediately. Visual hierarchy present even if no text annotation
+          reinforces the insight directly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal dose-response curve with logarithmic x-axis. Both
+          compounds shown as smooth 4PL sigmoids.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4PL sigmoid fit, EC50 dashed reference lines (vertical+horizontal),
+          error bars (SEM), top/bottom asymptote dashed lines, 2 compounds, 95% CI
+          band (Compound α), legend. All spec requirements present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: concentration on log scale (10⁻⁹ to 10⁻⁴ M). Y-axis: response
+          (%). All data visible in range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Drug Potency Comparison · curve-dose-response · julia · makie
+          · anyplot.ai' follows optional descriptive prefix format. Legend labels
+          include EC50 values for each compound.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: sigmoidal shape, two different Hill slopes (1.8
+          vs 1.2), different EC50 values (50 nM vs 500 nM), EC50 marking, asymptotes,
+          CI band, error bars. Comprehensive coverage.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pharmacological dose-response for drug potency comparison — real,
+          neutral, scientifically accurate scenario. EC50 values (50 nM and 500 nM)
+          are realistic pharmaceutical range.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentration 10⁻⁹ to 10⁻⁴ M spans 5 orders of magnitude — typical
+          pharmacological range. Response 0-100% is correct. Hill slopes 1.2-1.8 are
+          physiologically plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: four_pl() helper is minimal (5 lines), used in 6 places — justified
+          DRY usage. Flat script otherwise. No classes or unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors (for colorant""), Random — all used and necessary.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic Julia/Makie code. No over-engineering. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct format.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses band!, errorbars!, vlines!, hlines!, scatter!, lines!, axislegend
+          — high-level CairoMakie API throughout. RGBAf() for alpha colors. colorant""
+          for hex colors. Well above the generic 3/5 default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for CI (Makie-native primitive), errorbars! (Makie-specific),
+          axislegend with custom styling. Layer composition with 7 different primitives.
+          Uses some Makie-distinctive features but doesn't push to Makie-only territory
+          (no text! annotations, no Observables, no recipe usage).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
