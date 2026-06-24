@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 titration-curve: Acid-Base Titration Curve
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-24
+Quality: 93/100 | Updated: 2026-06-24
 """
 
 import os
