@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -93,7 +93,7 @@ for i in range(len(chords)):
 
     fig.add_annotation(
         x=mid_time,
-        y=1.08,
+        y=1.12,
         yref="paper",
         text=f"<b>{chord_names[i]}</b>",
         showarrow=False,
