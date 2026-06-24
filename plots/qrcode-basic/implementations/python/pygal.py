@@ -1,15 +1,15 @@
-""" pyplots.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 85/100 | Updated: 2026-04-07
+Library: pygal | Python
 """
 
+import os
 import sys
 
 import qrcode
 
 
-# Avoid name collision: this file is named pygal.py, which shadows the package
+# Avoid name collision: pygal.py filename shadows the pygal package
 _cwd = sys.path[0] if sys.path[0] else "."
 if _cwd in sys.path:
     sys.path.remove(_cwd)
@@ -20,133 +20,114 @@ from pygal.style import Style  # noqa: E402
 
 sys.path.insert(0, _cwd)
 
-# --- Data ---
-qr_content = "https://pyplots.ai"
+# --- Theme ---
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+MODULE_DARK = INK  # high-contrast QR dark modules, theme-adaptive
+MODULE_LIGHT = PAGE_BG  # QR light modules match page background
+FRAME_ACCENT = "#009E73"  # Imprint brand green — quiet-zone frame annotation
+
+# --- Data ---
+qr_content = "https://anyplot.ai"
 qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=0)
 qr.add_data(qr_content)
 qr.make(fit=True)
 qr_matrix = qr.get_matrix()
 matrix_size = len(qr_matrix)
-quiet_zone = 4
-total_cols = matrix_size + 2 * quiet_zone
 
-# --- Color palette for QR structural elements ---
-FINDER_DARK = "#1a237e"  # Deep indigo — finder patterns
-TIMING_DARK = "#6a1b9a"  # Purple — timing strips
-ALIGN_DARK = "#00695c"  # Teal — alignment pattern
-DATA_DARK = "#212121"  # Near-black — data modules
-WHITE = "#FFFFFF"
+# 4-cell ISO-spec quiet zone + 1-cell brand-green frame annotation
+inner_quiet = 4
+outer_frame = 1
+total_cells = matrix_size + 2 * (inner_quiet + outer_frame)
 
-# --- Identify structural elements inline (KISS: no helper functions) ---
-finder_cells = set()
-for r in range(7):
-    for c in range(7):
-        finder_cells.add((r, c))  # Top-left
-        finder_cells.add((r, matrix_size - 7 + c))  # Top-right
-        finder_cells.add((matrix_size - 7 + r, c))  # Bottom-left
+# Slight oversize per cell closes SVG sub-pixel rendering gaps between rows
+CELL = 1.05
 
-timing_cells = set()
-for i in range(7, matrix_size - 7):
-    timing_cells.add((6, i))  # Horizontal timing strip
-    timing_cells.add((i, 6))  # Vertical timing strip
-
-align_cells = set()
-if matrix_size >= 25:
-    ax, ay = matrix_size - 7, matrix_size - 7
-    for dr in range(-2, 3):
-        for dc in range(-2, 3):
-            align_cells.add((ax + dr, ay + dc))
-
-# --- Style ---
+# --- Style (2400×2400 square canvas — Imprint palette sizing) ---
 custom_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#666666",
-    colors=("#000000",),
-    title_font_size=64,
-    label_font_size=36,
-    major_label_font_size=36,
-    legend_font_size=0,
-    value_font_size=0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(MODULE_DARK, MODULE_LIGHT, FRAME_ACCENT),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     font_family="'Helvetica Neue', Helvetica, Arial, sans-serif",
     opacity=1.0,
     opacity_hover=1.0,
     transition="0s",
+    stroke_width=0,
 )
 
-# --- Chart ---
-# CSS: remove bar strokes for seamless pixel grid; add subtle border to plot area
 custom_css = (
     "inline:"
     "rect { stroke-width: 0 !important; stroke: none !important;"
     " shape-rendering: crispEdges !important; }"
-    " .plot_background { stroke: #bdbdbd !important; stroke-width: 2 !important;"
-    " rx: 6 !important; ry: 6 !important; }"
-    " .title { font-weight: 600 !important; letter-spacing: 1px !important; }"
+    " .title { font-weight: 600 !important; }"
 )
 
 chart = pygal.StackedBar(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="qrcode-basic · pygal · pyplots.ai",
+    title="qrcode-basic · python · pygal · anyplot.ai",
     show_legend=False,
     show_x_labels=False,
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
     spacing=0,
-    margin=100,
-    margin_top=160,
-    margin_bottom=300,
+    margin=80,
+    margin_top=150,
+    margin_bottom=220,
     print_values=False,
-    range=(0, total_cols),
-    x_title=(
-        f"{qr_content}  ·  Error Correction: M (15%)"
-        f"  ·  {matrix_size}×{matrix_size} modules\n"
-        f"■ Finder (indigo)   ■ Timing (purple)"
-        f"   ■ Alignment (teal)   ■ Data (black)"
-    ),
+    range=(0, total_cells * CELL),
+    x_title=(f"{qr_content}  ·  Error Correction: M (15%)  ·  {matrix_size}×{matrix_size} modules"),
     css=["file://style.css", "file://graph.css", custom_css],
 )
 
-# --- Build rows ---
-# Slight oversize (1.03) ensures rows overlap, eliminating SVG rendering seams
-CELL = 1.03
-white_row = [{"value": CELL, "color": WHITE} for _ in range(total_cols)]
+# --- Build rows (StackedBar stacks bottom-to-top) ---
+full_frame = [FRAME_ACCENT] * total_cells
+side_frame = (
+    [FRAME_ACCENT] * outer_frame + [MODULE_LIGHT] * (total_cells - 2 * outer_frame) + [FRAME_ACCENT] * outer_frame
+)
 
-# Bottom quiet zone
-for _ in range(quiet_zone):
-    chart.add("", white_row)
 
-# QR matrix rows (bottom to top for StackedBar stacking)
+def to_bar_row(colors):
+    return [{"value": CELL, "color": c} for c in colors]
+
+
+# Bottom outer frame then quiet zone
+for _ in range(outer_frame):
+    chart.add("", to_bar_row(full_frame))
+for _ in range(inner_quiet):
+    chart.add("", to_bar_row(side_frame))
+
+# QR matrix rows (reversed so matrix row 0 ends up at the top)
 for row_idx in reversed(range(matrix_size)):
-    row_data = []
-    for col_idx in range(-quiet_zone, matrix_size + quiet_zone):
-        if col_idx < 0 or col_idx >= matrix_size:
-            row_data.append({"value": CELL, "color": WHITE})
-        elif qr_matrix[row_idx][col_idx]:
-            pos = (row_idx, col_idx)
-            if pos in finder_cells:
-                color = FINDER_DARK
-            elif pos in align_cells:
-                color = ALIGN_DARK
-            elif pos in timing_cells:
-                color = TIMING_DARK
-            else:
-                color = DATA_DARK
-            row_data.append({"value": CELL, "color": color})
-        else:
-            row_data.append({"value": CELL, "color": WHITE})
-    chart.add("", row_data)
+    row = (
+        [FRAME_ACCENT] * outer_frame
+        + [MODULE_LIGHT] * inner_quiet
+        + [MODULE_DARK if qr_matrix[row_idx][c] else MODULE_LIGHT for c in range(matrix_size)]
+        + [MODULE_LIGHT] * inner_quiet
+        + [FRAME_ACCENT] * outer_frame
+    )
+    chart.add("", to_bar_row(row))
 
-# Top quiet zone
-for _ in range(quiet_zone):
-    chart.add("", white_row)
+# Top quiet zone then outer frame
+for _ in range(inner_quiet):
+    chart.add("", to_bar_row(side_frame))
+for _ in range(outer_frame):
+    chart.add("", to_bar_row(full_frame))
 
 # --- Save ---
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
