@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:08:23Z'
-updated: '2026-06-24T09:46:52Z'
+updated: '2026-06-24T09:59:56Z'
 generated_by: claude-sonnet
 workflow_run: 28089240264
 issue: 4408
@@ -12,43 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Both light and dark themes render correctly with proper #FAF8F1 / #1A1A17 backgrounds
-    and all chrome adapts cleanly.'
-  - 'All spec features present: linear regression, R² quality indicator, Ea extraction,
-    and secondary temperature x-axis labels.'
-  - Data is physically realistic (Ea=75 kJ/mol, pre-exponential=1e12 s⁻¹) with reproducible
-    seed.
-  - Code is clean, flat, and well-organized.
-  - Interactive HTML output leverages pygal strengths; rich tooltip strings provide
-    per-point details.
-  - Custom x_value_formatter shows dual-axis temperature reference elegantly without
-    a true secondary axis.
+  - Perfect spec compliance — all five required Arrhenius plot features present (regression
+    line, R², Ea/R annotation, temperature secondary labels, visible data markers)
+  - 'Imprint palette applied correctly: #009E73 as first series, canonical order,
+    correct backgrounds for both themes, data colors identical across light/dark'
+  - Physically realistic dataset generated directly from the Arrhenius equation with
+    proper Ea=75 kJ/mol and Gaussian measurement noise
+  - Both renders pass readability checks with no dark-on-dark or light-on-light failures
+  - 'Perfect code quality score: flat script, seed, clean imports, clean output'
   weaknesses:
-  - 'Second series color is #BD8233 (ochre, palette position 4) instead of canonical
-    Imprint position 2 (#C475FD lavender); IMPRINT_PALETTE tuple should follow canonical
-    order 1→N.'
-  - Grid lines are dashed (guide_stroke_dasharray="6,3") — style guide specifies solid
-    thin lines at 15-25% opacity, not dashed.
-  - Ea/R is shown only in the legend text, not annotated directly on the regression
-    line — spec requests a slope annotation on the chart itself.
+  - 'DE-01 modest: no emphasis technique creates a visual focal point beyond the inline
+    text annotation — consider a subtle highlighted confidence band in IMPRINT_MUTED
+    alpha along the regression line'
+  - SVG regex injection for Ea/R annotation (lines 186-195) relies on matching r="8"
+    as an internal pygal implementation detail — fragile if pygal updates its SVG
+    output
+  - 'LM-02 could be higher: pygal interactive HTML tooltip richness is the main differentiator
+    and could be exploited further beyond per-point labels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "line-arrhenius · python · pygal · anyplot.ai" bold and clear (~65% width); Y-axis label "ln(k)" rotated left, readable; X-axis label "1000/T (K⁻¹)" bold, centered; tick labels include secondary temperature references (e.g. "1.67 (600 K)", "3.33 (300 K)"); Y-axis ticks span -3 to 13 in steps of 2; legend entries at bottom clearly readable
-      Data: Brand green #009E73 regression line from upper-left to lower-right; 9 ochre #BD8233 circular markers at data points; dashed horizontal grid lines subtle
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-arrhenius · python · pygal · anyplot.ai" bold dark ink, fully readable. X-axis label "1000/T (K⁻¹)" and Y-axis label "ln(k)" clear. X-axis tick labels combine 1000/T values with temperature in Kelvin (e.g. "1.67 (600 K)"). Y-axis tick labels from -3 to 13 in steps of 2, all readable. Legend at bottom shows 3 entries in readable dark text.
+      Data: Regression line in #009E73 (brand green) — first series correct. Experimental data points in #C475FD (lavender) — second Imprint color. Ea midpoint dot in #4467A3 (blue) — third Imprint color. All markers prominent (dots_size=16). Ea/R = 9012 K annotation text visible in chart area.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: All text renders in off-white/light color against dark surface; title, axis labels, tick labels, and legend all clearly readable; no dark-on-dark failures detected
-      Data: Regression line green #009E73 and data markers ochre #BD8233 — identical to light render; colors consistent across themes
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels all render in light/cream text — clearly readable against dark background. No dark-on-dark failures detected. Legend entries at bottom are fully readable in light text.
+      Data: Colors identical to light render — green fit line (#009E73), lavender data points (#C475FD), blue Ea marker (#4467A3). Ea/R = 9012 K annotation visible in light ink. Grid lines subtle but present.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,51 +54,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title, axis labels, tick labels,
-          and legend clearly sized
+        comment: All text readable in both themes; inline Ea/R annotation slightly
+          smaller than tick labels but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; data points, regression line, and labels
-          well-separated
+        comment: 9 data points spread cleanly; annotation does not collide with data
+          or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 9 ochre markers clearly visible at size=16; green regression line
-          crisp and prominent
+        comment: dots_size=16 for data, width=4 fit line; all elements distinctly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; green and ochre have adequate contrast
-          on both backgrounds
+        comment: Green fit line and lavender markers perceptually distinct under CVD;
+          Imprint palette CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); good proportions; legend well-organized
-          at bottom
+        comment: 3200x1800 landscape; canvas gate passed; title proportion appropriate;
+          bottom legend well-balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 1000/T (K⁻¹) and ln(k) are descriptive with units; secondary temperature
-          values in x-axis tick labels
+        comment: 'X: 1000/T (K⁻¹), Y: ln(k); descriptive with units; title matches
+          required format'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73. Second series uses ochre (#BD8233,
-          position 4) instead of canonical position 2 lavender (#C475FD). No semantic
-          reason justifies reordering.'
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; backgrounds #FAF8F1/#1A1A17;
+          colors identical across themes'
     design_excellence:
       score: 11
       max: 20
@@ -110,24 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint Style applied with theme tokens; clean visual hierarchy;
-          above default but not exceptional
+        comment: Imprint palette, theme-adaptive chrome, CSS rounded background, SVG
+          annotation injection show craft; above default but no bold focal-point design
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Dashed grid lines (guide_stroke_dasharray=6,3) deviate from style
-          guide solid thin lines recommendation; otherwise clean proportions
+        passed: true
+        comment: Y-only grid, CSS spine removal, legend font-weight 500; above default
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Descending trend prominent; R² and Ea in legend provide quantitative
-          takeaway; Ea lives only in legend not as chart annotation
+        passed: true
+        comment: Ea/R annotation in chart area guides to key result; temperature secondary
+          labels add domain context; above default
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,53 +131,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.XY() used correctly for Arrhenius scatter + regression
+        comment: 'Correct Arrhenius plot: ln(k) vs 1000/T'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'R² in legend, Ea in legend, secondary temp labels in ticks, data
-          points on top of line all present. Deduction: spec requests slope annotation
-          on chart; using legend entry is less direct.'
+        passed: true
+        comment: Regression line, R² in legend, Ea/R annotation, secondary temperature
+          labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1000/T, Y=ln(k); all 9 data points displayed
+        comment: 1000/T and ln(k) computed correctly; all 9 data points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'line-arrhenius · python · pygal · anyplot.ai' — correct
-          format; legend labels descriptive and accurate
+        comment: Title matches required format; legend labels informative and match
+          series roles
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers scatter, regression, R², Ea extraction, secondary temperature
-          reference; on-chart slope annotation would complete the feature set
+        comment: 'All Arrhenius features: scatter markers, regression line, R², Ea
+          annotation, dual-unit X-axis'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition with Ea=75 kJ/mol, A=1e12 s⁻¹, 300-600
-          K — physically realistic and neutral
+        comment: First-order decomposition at 75 kJ/mol, 300-600 K, Arrhenius equation
+          with Gaussian noise
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ln(k) from ~-2.5 to ~13; x-axis 1.67-3.33 for 300-600 K range — appropriate
-          for Arrhenius kinetics
+        comment: ln(k) range -3 to 13, 1000/T range 1.67-3.33 physically accurate
     code_quality:
       score: 10
       max: 10
@@ -191,7 +185,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,19 +197,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation is documented necessary workaround
+        comment: All imports actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-structured; no fake UI; appropriate complexity
+        comment: Well-structured; sys.path.pop(0) workaround documented; SVG injection
+          narrow in scope
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png via cairosvg + plot-{THEME}.html via pygal
+          interactive render
     library_mastery:
       score: 7
       max: 10
@@ -225,25 +221,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY() proper; Style object carries all theme tokens; x_labels_major
-          + x_value_formatter for secondary tick content; per-series show_dots and
-          stroke overrides
+        comment: 'pygal.XY() correct type; Style carries all tokens; per-series show_dots/stroke
+          overrides idiomatic; CSS injection supported. Minor: SVG r=8 regex match
+          fragile'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Interactive tooltip system (tooltip_fancy_mode, rich label strings),
-          PNG + HTML output, legend_at_bottom_columns. Could leverage more pygal-specific
-          features.
+        passed: true
+        comment: HTML/JS interactive output, inline CSS injection, per-point rich
+          tooltip labels — three pygal-distinctive capabilities leveraged
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - annotations
   - html-export
   - hover-tooltips
-  - manual-ticks
   patterns:
   - data-generation
   dataprep:
