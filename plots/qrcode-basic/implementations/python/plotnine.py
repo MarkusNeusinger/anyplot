@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Created: 2026-06-24
 """
 
 import os
