@@ -3,7 +3,7 @@ title: "Music Chromagram (Pitch Class Distribution over Time)"
 
 # Specification tracking
 created: "2026-03-06T19:52:49Z"
-updated: null
+updated: "2026-06-24T12:58:12Z"
 issue: 4564
 suggested: MarkusNeusinger
 
@@ -18,6 +18,7 @@ tags:
   domain:
     - science
     - education
+    - music
   features:
     - color-mapped
     - temporal
