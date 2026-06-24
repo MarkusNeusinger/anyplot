@@ -1,0 +1,265 @@
+library: highcharts
+language: javascript
+specification_id: line-stress-strain
+created: '2026-06-21T09:47:58Z'
+updated: '2026-06-21T09:57:40Z'
+generated_by: claude-sonnet
+workflow_run: 27900187827
+issue: 4413
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: all required regions, critical points, offset line,
+    and Young''s modulus annotation present'
+  - Excellent data quality with factually accurate mild steel mechanical properties
+    (E=200 GPa, yield at 250 MPa, UTS at 400 MPa)
+  - 'Strong data storytelling: region labels guide the viewer through material behavior,
+    key point markers identify mechanical properties at a glance'
+  - 'Idiomatic Highcharts usage: render-event annotation pattern, plotLines API, renderer
+    SVG overlay'
+  - 'Perfect code quality: deterministic data, clean structure, correct harness integration'
+  - Both light and dark themes render correctly with fully theme-adaptive chrome
+  weaknesses:
+  - 'Second series (0.2% Offset Line) uses t.palette[2] (blue #4467A3) instead of
+    canonical t.palette[1] (lavender #C475FD) — use Imprint palette in 1→N canonical
+    order'
+  - The 0.2% offset line covers only ~1–2% of the x-axis width at the current chart
+    scale, making the construction visually almost invisible; consider marking the
+    intersection point more prominently or increasing line visibility
+  - 'DE-02 limited: the chart lacks deliberate visual simplification — consider removing
+    the full chart frame (chart.plotBorderWidth: 0) and tuning grid opacity explicitly'
+  - The E = 200 GPa annotation at 11px CSS is at the boundary of legibility; increase
+    to 13px
+  - 'Minor annotation crowding in the elastic region (x < 0.01): Yield Point label,
+    E=200 GPa text, and vertical boundary line converge — shift E=200 GPa annotation
+    to a higher x-position'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title "line-stress-strain · javascript · highcharts · anyplot.ai" in bold dark text at 22px, filling ~65-70% of canvas width (expected). X-axis label "Engineering Strain, ε (dimensionless)" and Y-axis label "Engineering Stress, σ (MPa)" both at 16px, readable. Tick labels at 14px, readable. Region labels ("Elastic", "Strain Hardening", "Necking") in italic inkSoft text above plot area — readable. Key-point annotation labels at 12px ("Yield Point", "UTS", "Fracture" with stress values) — readable. "E = 200 GPa" at 11px — borderline but readable. Reference plotLine labels ("σₙ = 250 MPa", "UTS = 400 MPa") at 11px on right margin — readable.
+      Data: First series (Mild Steel) in brand green #009E73 at lineWidth=3 — correct first-series color. Second series (0.2% Offset Line) in blue #4467A3 (palette[2]) at lineWidth=1.5 dashed — NOTE: skips palette[1] (lavender). Ochre key-point circles (palette[3]) at Yield Point, UTS, Fracture. Horizontal reference dashed lines at 250 MPa and 400 MPa. Vertical dashed boundary lines at yield plateau start (ε=0.00125) and UTS (ε=0.22).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct dark surface
+      Chrome: Title and all axis/tick labels flip to light off-white (#F0EFE8 / #B8B7B0 range) — fully readable against dark background. No dark-on-dark failures detected. Region labels appear in muted off-white — readable. Annotation text at 11-12px readable against dark background. plotLine labels ("σₙ = 250 MPa", "UTS = 400 MPa") appear in inkSoft light tone — readable.
+      Data: Colors identical to light render — Mild Steel curve is same #009E73 green, 0.2% Offset Line is same blue #4467A3, ochre key-point circles are same color. Data color identity between themes confirmed.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks, 12px annotations, 11px E=200GPa). Both themes readable. 11px annotation
+          slightly small.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor visual crowding in elastic region near y-axis (Yield Point
+          label, E=200 GPa annotation, vertical boundary line). No pixel-level text
+          overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve at lineWidth=3 and dashed offset line at 1.5 well-sized.
+          Ochre key-point circles prominent and distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette provides CVD-safe contrast between green curve and
+          blue offset line. Ochre markers distinct from both.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Layout appropriate for stress-strain curve data
+          geometry. Lower-right empty space is inherent to the chart type.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering Strain, ε (dimensionless) and Engineering Stress, σ (MPa)
+          — both descriptive with units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly uses palette[0] (#009E73). Second series
+          uses palette[2] (blue #4467A3) instead of canonical palette[1] (lavender
+          #C475FD) — canonical order violation. Backgrounds correct (#FAF8F1 light
+          / #1A1A17 dark). Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Comprehensive annotation system (region labels, renderer circles/text,
+          reference plotLines) elevates above defaults. Professional and purposeful
+          but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Legend has styled background, padding, border radius. Grid uses token
+          colors. No deliberate spine/frame removal. No explicit grid opacity tuning.
+          Functional but not polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong storytelling: three labeled behavioral regions, three annotated
+          critical points with stress values, horizontal reference lines at yield
+          and UTS, 0.2% offset method illustrated.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart of engineering stress vs. engineering strain.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features: region labels (elastic, strain hardening,
+          necking), critical points (yield, UTS, fracture), E=200 GPa annotation,
+          0.2% offset line. Offset line visually compressed but technically correct.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on x-axis (0–0.30), stress on y-axis (0–450 MPa). All data
+          regions visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-stress-strain · javascript · highcharts · anyplot.ai''.
+          Legend: Mild Steel and 0.2% Offset Line. Correct format and labels.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All stress-strain curve features: linear elastic, Lüders band yield
+          plateau (~245-250 MPa from ε=0.0015 to 0.015), strain hardening (250→400
+          MPa), necking (400→310 MPa to fracture).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mild steel under uniaxial tensile loading — standard neutral engineering
+          materials science scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Factually accurate: E=200 GPa, yield ~250 MPa (typical 200-300),
+          UTS ~400 MPa (typical 400-500), total elongation ~30% (typical 20-30). Lüders
+          band behavior correctly modeled.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean sequential: header → data definitions → chart config. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded (deterministic inline arrays). No randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Only uses window.ANYPLOT_TOKENS and Highcharts globals
+          per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: chart.events.render with _annotated guard is idiomatic Highcharts
+          pattern. Well-commented with region boundaries and mechanical property references.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart() call. animation:false set at both levels.
+          credits disabled. No explicit width/height.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert use of chart.events.render for synchronized annotations, yAxis.plotLines
+          for threshold references, renderer.text/path/circle for SVG overlay.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: yAxis.plotLines API with label/dashStyle/zIndex is distinctly Highcharts.
+          chart.renderer SVG API for custom boundary lines and circle markers is Highcharts-specific.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
