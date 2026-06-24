@@ -1,30 +1,53 @@
 library: letsplot
+language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:30:13Z'
-updated: '2026-03-17T22:43:36Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23219179482
+updated: '2026-06-24T13:49:40Z'
+generated_by: claude-sonnet
+workflow_run: 28101454223
 issue: 4564
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/letsplot/plot-dark.html
+quality_score: 84
 review:
-  strengths: []
-  weaknesses: []
-  image_description: 'The plot displays a chromagram heatmap using the inferno colormap
-    on a light gray background. The y-axis shows all 12 pitch classes (C through B)
-    with bold labels, and the x-axis shows time in seconds from 0 to 9. A vertical
-    colorbar on the right indicates the Energy scale from 0 to 1. Four distinct chord
-    segments are clearly visible: C major (C, E, G lit up approximately 0-2.5s), G
-    major (G, B, D lit up approximately 2.5-5s), A minor (A, C, E lit up approximately
-    5-7.5s), and F major (F, A, C lit up approximately 7.5-10s). Smooth transitions
-    between chords are visible at segment boundaries. The title reads "heatmap-chromagram
-    · letsplot · pyplots.ai" in bold dark text at the top.'
+  strengths:
+  - All 12 pitch classes labeled C–B with correct chord progression patterns (C→G→Am→F)
+    clearly visible as distinct teal/blue energy bands
+  - 'Imprint sequential gradient (PAGE_BG → #009E73 → #4467A3) correctly applied for
+    single-polarity energy continuous data'
+  - Fully theme-adaptive chrome with explicit INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens
+    applied to every text and background element
+  - letsplot-native layer_tooltips() enables rich interactive hover in HTML export
+    — a library-distinctive feature not available in ggplot2/plotnine
+  - 'Clean minimal design: panel_grid, axis_ticks, axis_line all removed; subtitle
+    adds chord progression storytelling context'
+  weaknesses:
+  - 'Light render outer canvas is pure black (#000000) instead of #FAF8F1: _fix_canvas_margin
+    only flood-fills near-white corners (all c>=245), but letsplot headless export
+    renders outer canvas bands as black so the threshold never fires. Fix: add `or
+    all(c <= 10 for c in img.getpixel(corner))` to also replace pure-black corners.'
+  - Inner plot content occupies approximately 55% of canvas width with lopsided black
+    outer bands (left wider than right) in the light render, creating an unbalanced
+    visual appearance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Inner plot area is warm cream (#FAF8F1) — CORRECT. Outer canvas has large pure-black (#000000) bands on left (~25% width) and right (~20% width) — WRONG for light theme. The _fix_canvas_margin function fails to replace them because letsplot renders the outer margins as black (not near-white).
+      Chrome: Title "heatmap-chromagram · python · letsplot · anyplot.ai" in bold dark INK text, readable. "· anyplot.ai" appears slightly lighter at right edge near outer black canvas boundary. Italic subtitle in INK_SOFT. Axis labels (Time (seconds), Pitch Class) and tick labels all readable in appropriate dark colors.
+      Data: Imprint sequential gradient (PAGE_BG cream → #009E73 teal → #4467A3 blue) for energy. 12 pitch classes C–B visible. Chord segments (C major 0–2.5s, G major 2.5–5s, A minor 5–7.5s, F major 7.5–10s) clearly visible as bright teal/blue bands. Colorbar (Energy 0–1) on right side.
+      Legibility verdict: PASS for inner plot content; FAIL for outer canvas chrome (pure black instead of warm cream).
+
+    Dark render (plot-dark.png):
+      Background: Entire canvas is uniformly very dark/near-black. Inner panel background is dark, outer canvas bands are also black (#000000) which is cosmetically acceptable since it's close to the expected #1A1A17.
+      Chrome: Title in bold light/white text, fully and clearly readable against dark background. No dark-on-dark failures. Axis labels and tick labels in warm light muted (INK_SOFT equivalent) colors, all readable. Colorbar labels (0.2, 0.4, 0.6, 0.8, 1) in light text.
+      Data: Same Imprint gradient data colors as light render — #009E73 teal → #4467A3 blue. Identical chord patterns visible. Low-energy cells blend into dark background (by design — fade from background effect).
+      Legibility verdict: PASS — all text readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -32,40 +55,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set; x-axis ticks at 14pt slightly below 16pt
-          guideline
+        comment: 'All font sizes explicitly set (title 16pt, axis labels 12pt, ticks
+          10pt). All text readable. Minor: ''· anyplot.ai'' appears slightly lighter
+          at title right edge in light render near outer black canvas boundary.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raster tiles perfectly sized with excellent contrast
+        comment: Chromagram raster cells clearly visible; chord patterns easily distinguished
+          by teal/blue intensity.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Inferno is perceptually uniform and colorblind-safe
+        comment: Imprint sequential gradient is CVD-safe; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good canvas use, slight imbalance from colorbar
+        passed: false
+        comment: Inner content fills ~55% of canvas width (acceptable range). Deduction
+          for unbalanced pure-black outer bands (left wider than right) in light render
+          creating jarring visual asymmetry.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: '''Time (seconds)'' and ''Pitch Class'' are descriptive with contextual
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'MANDATORY DROP: Light render outer canvas is pure black (#000000)
+          instead of #FAF8F1. _fix_canvas_margin only checks all(c>=245) for near-white
+          corners; letsplot renders outer canvas as black so fix never fires. Imprint
+          gradient and theme tokens are otherwise correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -73,20 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom inferno palette, custom text colors, above defaults but not
-          publication-level
+        comment: 'Above-default: PAGE_BG as gradient start creates elegant fade-from-background
+          effect; informative subtitle; fine nbin=256 colorbar; proper INK/INK_SOFT
+          hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, theme_minimal, custom background, good margins
+        comment: 'Strong: panel_grid, axis_ticks, axis_line all blanked. Small deduction
+          for visible legend box border.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Chord progression creates clear musical narrative with visible transitions
+        comment: 'Subtitle ''Chord progression: C maj → G maj → A min → F maj'' provides
+          storytelling context. Chord transition timing clearly visible. No explicit
+          focal emphasis technique.'
     spec_compliance:
       score: 15
       max: 15
@@ -96,25 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap using geom_raster
+        comment: Correct heatmap/chromagram using geom_raster with fill=energy.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present
+        comment: All 12 pitch classes on Y-axis; Imprint sequential colormap; colorbar
+          included; time axis in seconds; realistic chord data with C/G/Am/F progression.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, fill=energy all correct
+        comment: X=time (0–10s), Y=pitch_idx with pitch_class labels, fill=energy.
+          Full data range covered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, colorbar labeled Energy
+        comment: 'Title: ''heatmap-chromagram · python · letsplot · anyplot.ai'' —
+          correct format. Colorbar labeled ''Energy''.'
     data_quality:
       score: 15
       max: 15
@@ -124,19 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 4 chords with smooth transitions and background noise
+        comment: All 12 chromatic pitch classes; energy 0–1; 200 frames with 4 distinct
+          chord segments; realistic harmonic overlap.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real chord progression commonly found in popular music
+        comment: Genuine chord progressions (C major, G major, A minor, F major) with
+          musically accurate note membership. Plausible short musical passage.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0-1, 200 frames at 0.05s, 12 pitch classes all realistic
+        comment: 10-second passage (200 frames × 0.05s), energy normalized 0–1, temporal
+          smoothing (np.convolve kernel) mimics real chroma extraction.
     code_quality:
       score: 10
       max: 10
@@ -146,31 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: 'Linear flow: imports → tokens → data → plot → save. _fix_canvas_margin
+          helper is minimal and justified.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean chord definitions, elegant convolution smoothing
+        comment: Clean, Pythonic; no over-engineering; no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current ggsave
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -180,18 +229,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar with geom_raster, scale_fill_gradientn, theme
-          composition
+        comment: geom_raster (ggplot2-idiomatic for raster heatmaps), scale_fill_gradientn,
+          scale_y_continuous with custom labels, guide_colorbar — all idiomatic letsplot
+          patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips for interactive hover, guide_colorbar with nbin=256,
-          HTML export
-  verdict: REJECTED
+        comment: layer_tooltips() is letsplot-specific (not in ggplot2/plotnine),
+          enabling rich interactive hover in HTML output. HTML export alongside PNG
+          is a letsplot library advantage.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - colorbar
   - hover-tooltips
@@ -201,5 +253,7 @@ impl_tags:
   - matrix-construction
   dataprep:
   - normalization
+  - rolling-window
   styling:
   - custom-colormap
+  - minimal-chrome
