@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-06-24
+Quality: 88/100 | Updated: 2026-06-24
 """
 
 import os
