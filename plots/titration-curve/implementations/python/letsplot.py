@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 titration-curve: Acid-Base Titration Curve
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -85,14 +85,14 @@ anyplot_theme = theme(  # noqa: F405
     panel_grid_major_x=element_blank(),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
     panel_border=element_blank(),  # noqa: F405
-    axis_line=element_line(color=INK_SOFT, size=0.5),  # noqa: F405
-    axis_title=element_text(color=INK, size=15, face="bold"),  # noqa: F405
-    axis_text=element_text(color=INK_SOFT, size=12),  # noqa: F405
-    plot_title=element_text(color=INK, size=20, hjust=0.5, face="bold"),  # noqa: F405
-    plot_subtitle=element_text(color=INK_SOFT, size=13, hjust=0.5),  # noqa: F405
-    legend_text=element_text(color=INK_SOFT, size=12),  # noqa: F405
+    axis_line=element_blank(),  # noqa: F405
+    axis_title=element_text(color=INK, size=12, face="bold"),  # noqa: F405
+    axis_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
+    plot_title=element_text(color=INK, size=16, hjust=0.5, face="bold"),  # noqa: F405
+    plot_subtitle=element_text(color=INK_SOFT, size=12, hjust=0.5),  # noqa: F405
+    legend_text=element_text(color=INK_SOFT, size=10),  # noqa: F405
     legend_title=element_text(color=INK),  # noqa: F405
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),  # noqa: F405
+    legend_background=element_rect(fill=ELEVATED_BG),  # noqa: F405
     legend_position=[0.85, 0.15],
     legend_justification=[0.5, 0.5],
     plot_margin=[20, 20, 10, 20],
@@ -167,6 +167,7 @@ plot = (
         data=df_ph,
         size=2.0,
         tooltips=layer_tooltips()  # noqa: F405
+        .title("pH Curve")
         .format("volume_ml", ".1f")
         .format("y", ".2f")
         .line("Volume: @volume_ml mL")
