@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Created: 2026-06-24
@@ -32,14 +32,16 @@ from plotnine import (
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # QR module colors — dark on light bg / light on dark bg for scannability
 MODULE_ON = "#1A1A17" if THEME == "light" else "#F0EFE8"
 MODULE_OFF = PAGE_BG  # quiet zone matches page background
 
 # Data — encode anyplot.ai URL with error correction level M (15%)
+URL = "https://anyplot.ai"
 qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
-qr.add_data("https://anyplot.ai")
+qr.add_data(URL)
 qr.make(fit=True)
 
 matrix = qr.get_matrix()
@@ -59,13 +61,14 @@ plot = (
     + geom_tile(width=1.02, height=1.02)
     + scale_fill_manual(values={"on": MODULE_ON, "off": MODULE_OFF})
     + coord_fixed()
-    + labs(title=title)
+    + labs(title=title, subtitle=URL)
     + theme_void()
     + theme(
         figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         plot_title=element_text(color=INK, size=12, ha="center"),
+        plot_subtitle=element_text(color=INK_SOFT, size=9, ha="center"),
         legend_position="none",
     )
 )
