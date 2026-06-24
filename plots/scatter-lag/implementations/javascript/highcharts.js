@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-24
+// Quality: 91/100 | Created: 2026-06-24
 
 //# anyplot-orientation: landscape
 
