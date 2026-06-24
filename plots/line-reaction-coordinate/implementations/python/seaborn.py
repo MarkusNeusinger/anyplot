@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-21
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-24
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,11 +13,36 @@ import seaborn as sns
 from scipy.interpolate import PchipInterpolator
 
 
-# Seaborn styling
-sns.set_style("whitegrid", {"grid.alpha": 0.15, "grid.linewidth": 0.8, "axes.grid.axis": "y"})
-sns.set_context("talk", font_scale=1.1)
+# Theme tokens — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data
+BRAND = "#009E73"  # Imprint position 1 — first (and only) data series
+EA_COLOR = "#AE3030"  # Imprint position 5 — semantic red for activation barrier
+DH_COLOR = "#4467A3"  # Imprint position 3 — blue for enthalpy change
+
+sns.set_theme(
+    context="notebook",
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — single-step exothermic reaction: Ea = 70 kJ/mol, ΔH = −30 kJ/mol
 reactant_energy = 50.0
 transition_energy = 120.0
 product_energy = 20.0
@@ -40,45 +67,58 @@ reaction_coord = np.linspace(0, 1, 500)
 spline = PchipInterpolator(control_x, control_y)
 energy = spline(reaction_coord)
 
-# Create DataFrame for seaborn
 df = pd.DataFrame({"Reaction Coordinate": reaction_coord, "Potential Energy (kJ/mol)": energy})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Key state markers evaluated on the spline
+key_x = np.array([0.10, 0.47, 0.88])
+key_states = pd.DataFrame({"Reaction Coordinate": key_x, "Potential Energy (kJ/mol)": spline(key_x)})
 
-# Use sns.lineplot for the main curve
-sns.lineplot(
-    data=df, x="Reaction Coordinate", y="Potential Energy (kJ/mol)", color="#306998", linewidth=3.5, ax=ax, zorder=3
+# Figure-level seaborn API — relplot for consistent figure layout management
+g = sns.relplot(
+    data=df,
+    x="Reaction Coordinate",
+    y="Potential Energy (kJ/mol)",
+    kind="line",
+    color=BRAND,
+    linewidth=2.5,
+    height=4.5,
+    aspect=16 / 9,
+)
+g.figure.set_dpi(400)
+g.figure.set_facecolor(PAGE_BG)
+ax = g.axes.flat[0]
+ax.set_facecolor(PAGE_BG)
+
+# Seaborn scatter layer marking reactant, transition state, and product positions
+sns.scatterplot(
+    data=key_states,
+    x="Reaction Coordinate",
+    y="Potential Energy (kJ/mol)",
+    color=BRAND,
+    s=80,
+    zorder=5,
+    legend=False,
+    ax=ax,
 )
 
-# Subtle fill under the curve for polish
-ax.fill_between(reaction_coord, energy, alpha=0.06, color="#306998", zorder=2)
+ax.fill_between(reaction_coord, energy, alpha=0.08, color=BRAND, zorder=2)
 
-# Horizontal dashed lines at reactant and product energy levels
-ax.hlines(y=reactant_energy, xmin=-0.02, xmax=0.18, color="#888888", linestyle="--", linewidth=1.5, alpha=0.5)
-ax.hlines(y=product_energy, xmin=0.82, xmax=1.02, color="#888888", linestyle="--", linewidth=1.5, alpha=0.5)
+# Horizontal dashed reference lines at reactant and product energy levels
+ax.hlines(reactant_energy, xmin=-0.02, xmax=0.18, color=INK_SOFT, linestyle="--", linewidth=1.2, alpha=0.6)
+ax.hlines(product_energy, xmin=0.82, xmax=1.02, color=INK_SOFT, linestyle="--", linewidth=1.2, alpha=0.6)
 
-# Labels for reactants, products, transition state
+# Species labels — direct annotation on chart
+ax.text(0.02, reactant_energy + 3, "Reactants\n(50 kJ/mol)", fontsize=9, fontweight="bold", color=INK, va="bottom")
 ax.text(
-    0.02, reactant_energy + 3, "Reactants\n(50 kJ/mol)", fontsize=16, fontweight="bold", color="#333333", va="bottom"
-)
-ax.text(
-    0.98,
-    product_energy - 4,
-    "Products\n(20 kJ/mol)",
-    fontsize=16,
-    fontweight="bold",
-    color="#333333",
-    va="top",
-    ha="right",
+    0.98, product_energy - 3, "Products\n(20 kJ/mol)", fontsize=9, fontweight="bold", color=INK, va="top", ha="right"
 )
 ax.text(
     0.47,
-    transition_energy + 3,
+    transition_energy + 2,
     "Transition State\n(120 kJ/mol)",
-    fontsize=16,
+    fontsize=9,
     fontweight="bold",
-    color="#333333",
+    color=INK,
     va="bottom",
     ha="center",
 )
@@ -89,50 +129,54 @@ ax.annotate(
     "",
     xy=(ea_x, transition_energy),
     xytext=(ea_x, reactant_energy),
-    arrowprops={"arrowstyle": "<->", "color": "#C0392B", "lw": 2.5, "shrinkA": 0, "shrinkB": 0},
+    arrowprops={"arrowstyle": "<->", "color": EA_COLOR, "lw": 2.0, "shrinkA": 0, "shrinkB": 0},
 )
 ax.text(
     ea_x - 0.02,
     (reactant_energy + transition_energy) / 2,
     f"$E_a$ = {transition_energy - reactant_energy:.0f} kJ/mol",
-    fontsize=15,
-    color="#C0392B",
+    fontsize=8,
+    color=EA_COLOR,
     fontweight="bold",
     ha="right",
     va="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.9},
 )
 
-# Enthalpy change arrow (ΔH) — shifted left to avoid crowding with Products label
+# Enthalpy change arrow (ΔH)
 dh_x = 0.82
 ax.annotate(
     "",
     xy=(dh_x, product_energy),
     xytext=(dh_x, reactant_energy),
-    arrowprops={"arrowstyle": "<->", "color": "#2E86C1", "lw": 2.5, "shrinkA": 0, "shrinkB": 0},
+    arrowprops={"arrowstyle": "<->", "color": DH_COLOR, "lw": 2.0, "shrinkA": 0, "shrinkB": 0},
 )
 ax.text(
     dh_x - 0.02,
     (reactant_energy + product_energy) / 2,
     f"$\\Delta H$ = {product_energy - reactant_energy:.0f} kJ/mol",
-    fontsize=15,
-    color="#2E86C1",
+    fontsize=8,
+    color=DH_COLOR,
     fontweight="bold",
     ha="right",
     va="center",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": "none", "alpha": 0.9},
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.9},
 )
 
 # Style
-ax.set_xlabel("Reaction Coordinate", fontsize=20)
-ax.set_ylabel("Potential Energy (kJ/mol)", fontsize=20)
-ax.set_title("line-reaction-coordinate · seaborn · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+title = "line-reaction-coordinate · python · seaborn · anyplot.ai"
+ax.set_xlabel("Reaction Coordinate", fontsize=10, color=INK)
+ax.set_ylabel("Potential Energy (kJ/mol)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 ax.set_xlim(-0.02, 1.02)
 ax.set_ylim(0, 145)
 ax.set_xticks([])
 ax.xaxis.grid(False)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+g.tight_layout()
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
