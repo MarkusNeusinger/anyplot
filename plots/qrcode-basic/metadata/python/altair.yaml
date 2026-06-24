@@ -1,38 +1,52 @@
 library: altair
+language: python
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:24Z'
-updated: '2026-04-07T18:24:36Z'
-generated_by: claude-opus-4-6
-workflow_run: 20788384689
+updated: '2026-06-24T17:31:37Z'
+generated_by: claude-sonnet
+workflow_run: 28115668715
 issue: 3184
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/altair/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.2.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Color-coded structural regions transform a basic QR code into an educational visualization
-  - Uses the qrcode library for real, scannable QR codes as recommended by the spec
-  - Clean Altair-idiomatic code with proper declarative encoding
-  - Interactive tooltips in HTML export add genuine value beyond the static PNG
-  - Subtitle provides excellent context for understanding the color scheme
+  - 'Perfect spec compliance: real scannable QR code using the recommended qrcode
+    library with all required structural elements'
+  - Creative and informative color-coding of QR structural regions using Imprint palette
+    in exact canonical order
+  - Flawless theme adaptation — all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    correctly applied to title, subtitle, legend, and background
+  - 'Perfect code quality: KISS structure, deterministic, clean imports, correct PAD-only
+    canvas correction'
+  - Descriptive subtitle effectively guides viewers through the color coding
   weaknesses:
-  - Navy (#1B3A5C) and blue (#306998) finder/data colors are somewhat close in hue
-    — slightly more contrast between these two would improve accessibility
-  image_description: 'The plot displays a QR code rendered as a grid of colored squares
-    on a white background. Three finder patterns (large concentric square patterns)
-    are visible in the top-left, bottom-left, and bottom-right corners in dark navy
-    (#1B3A5C). Timing patterns appear as green (#2A7F62) modules along row and column
-    6. Data modules are rendered in medium blue (#306998). White squares form both
-    the background within the QR code and the quiet zone border. The title "qrcode-basic
-    · altair · pyplots.ai" is displayed prominently at the top in large bold text,
-    with a descriptive subtitle explaining each color''s meaning. A horizontal legend
-    at the bottom shows three categories: Finder Pattern, Timing Pattern, and Data.
-    The chart is square (800×800 at scale_factor=4.5) producing high-resolution output.'
+  - In the dark render, background cells (module=0) use PAGE_BG (#1A1A17), making
+    the finder pattern inner white square dark-on-dark — the nested ring+fill structure
+    visible in the light render is lost in dark mode; consider using ELEVATED_BG (#242420)
+    for background cells in dark mode to preserve structural contrast
+  - Design sophistication is moderate — the large empty whitespace area below the
+    QR code before the legend could be tightened, and the legend frame could be more
+    refined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "qrcode-basic · python · altair · anyplot.ai" in dark bold text, fully readable. Subtitle in muted gray, readable. Legend labels ("Finder Pattern", "Timing Pattern", "Data") in INK_SOFT, readable. No axis labels or ticks (hidden, appropriate for grid plot).
+      Data: Finder Patterns (#009E73 brand green) at three corners with clearly visible nested square structure (ring + light interior). Timing Pattern (#C475FD lavender) visible as scattered cells along timing row/column. Data modules (#4467A3 blue) throughout encoded area. Background/quiet-zone cells show as off-white PAGE_BG providing excellent contrast.
+      Legibility verdict: PASS — all text fully readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text, fully readable. Subtitle in muted light gray (#B8B7B0), readable. Legend labels in light muted text, readable. No dark-on-dark text failures.
+      Data: Data colors IDENTICAL to light render — Finder (#009E73), Timing (#C475FD), Data (#4467A3). Trade-off: background cells use PAGE_BG (#1A1A17) same as canvas, so finder pattern "inner white squares" appear dark-on-dark, losing the nested ring+fill two-tone structure visible in light mode. Finder patterns appear as solid green squares rather than nested squares.
+      Legibility verdict: PASS for text — all title/subtitle/legend text readable. Minor visual concern with finder pattern interior structure in dark mode (not a text legibility failure).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -40,68 +54,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (28pt), subtitle (16pt), legend title (16pt), legend labels
-          (14pt) all explicitly set and readable. Subtitle and legend labels slightly
-          on the smaller side.
+        comment: 'Title (16pt), subtitle (11pt), legend (12/10pt) readable in both
+          themes; minor: subtitle may be near lower bound at 400px mobile scale'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. QR code, title, and legend are well-separated.
+        comment: No text-text or text-data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All QR code modules clearly visible as distinct squares. Finder,
-          timing, and data modules all distinguishable.
+        comment: All three region types clearly distinguishable in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Navy and blue are somewhat close in hue though they differ in lightness.
-          Green provides good contrast. Not a red-green issue.
+        comment: Three perceptually distinct Imprint hue families, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: QR code fills canvas well with appropriate quiet zone. Some excess
-          whitespace below QR code before legend.
+        comment: 2400x2400 square canvas appropriate; canvas gate passed; no overflow
+          or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes correctly hidden for QR code chart type. Title properly formatted.
+        comment: Correct title format; axes hidden appropriately; descriptive subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint canonical order (green/purple/blue); correct theme backgrounds;
+          colors identical across themes
     design_excellence:
-      score: 16
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom color palette with navy/green/blue for structural regions.
-          Professional appearance with intentional visual hierarchy. Clearly above
-          defaults.
+        comment: Color-coding QR regions is clever and educational; refined legend
+          styling; above default but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: View stroke removed, axes hidden, grid disabled, legend padding configured.
-          Clean, uncluttered presentation.
+        comment: Grid disabled, axes hidden, strokeWidth=0 on rects; generous whitespace;
+          solid but limited beyond basics
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Color-coding of QR code structural regions transforms simple barcode
-          into educational visualization. Subtitle narrates meaning of each color.
+        comment: Subtitle decodes color coding for viewers; natural focal point at
+          corners; moderate depth
     spec_compliance:
       score: 15
       max: 15
@@ -111,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using qrcode library for real, scannable
-          codes.
+        comment: Correct QR code visualization using mark_rect grid; real scannable
+          QR code
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone, high contrast, finder patterns, error correction M, qrcode
-          library all present.
+        comment: Quiet zone (4 cells), finder patterns, error correction M, qrcode
+          library, high-contrast light render all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: QR matrix correctly mapped to x/y grid with proper coordinate inversion
-          and region classification.
+        comment: X->column, Y->row (inverted for correct orientation), color->region;
+          all data within view
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend accurately labels region types.
+        comment: qrcode-basic · python · altair · anyplot.ai exact match; legend labels
+          correct
     data_quality:
       score: 15
       max: 15
@@ -142,21 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all QR code structural elements: finder patterns, timing patterns,
-          data modules, quiet zone.'
+        comment: 'All QR structural regions shown: finder patterns, timing patterns,
+          data modules, quiet zone'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://pyplots.ai — a real, relevant URL. Neutral content.
+        comment: Real URL https://anyplot.ai, actual qrcode library, error correction
+          M (spec-recommended)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: QR code version 1 with error correction M is appropriate for a short
-          URL.
+        comment: Version 1 QR (21x21 modules + 4-cell quiet zone), appropriate scale
     code_quality:
       score: 10
       max: 10
@@ -166,34 +184,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save flow. No functions or classes.
+        comment: No functions or classes; linear procedural flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR code generation is deterministic. No randomness involved.
+        comment: Fully deterministic; fixed URL always produces identical QR encoding
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas, qrcode — all used.
+        comment: All imports used; sys.path manipulation is documented necessary workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Region classification logic is clear and readable. Data construction
-          is straightforward.
+        comment: Clean region classification logic; strict=True for zip; well-sectioned
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Uses current Altair API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API;
+          PAD-only canvas correction correct
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -201,27 +219,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Altair declarative grammar: mark_rect, ordinal encoding,
-          color scale with custom legend.'
+        comment: Ordinal :O encoding for discrete grid, alt.Scale with explicit domain/range,
+          configure chaining, legend values= filter to exclude Background — all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive tooltips in HTML export, declarative color encoding with
-          filtered legend, dual PNG+HTML output.
+        comment: alt.Title with structured subtitle, horizontal bottom legend, alt.Tooltip
+          interactive hover, HTML export; no layer composition or selection interactions
   verdict: APPROVED
 impl_tags:
   dependencies:
+  - pillow
   - qrcode
   techniques:
   - hover-tooltips
-  - custom-legend
   - html-export
   patterns:
-  - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
