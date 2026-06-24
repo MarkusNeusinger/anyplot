@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: titration-curve
 created: '2026-06-24T11:48:10Z'
-updated: '2026-06-24T11:55:19Z'
+updated: '2026-06-24T12:06:54Z'
 generated_by: claude-sonnet
 workflow_run: 28095812570
 issue: 4407
@@ -12,41 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Accurate chemistry with correct strong acid titration formula; equivalence point
-    at pH 7 is physically correct for HCl + NaOH system
-  - Elegant dual-axis implementation with color-coded axis lines matching each series
-    (pH in green, dpH/dV in blue)
-  - 'Three-layer equivalence point marking (dashed vertical line + annotation ''EP:
-    25 mL, pH 7'' + circle marker with pageBg halo) creates clear focal point'
-  - Deterministic data generation via closed-form mathematical chemistry model — no
-    seeded RNG needed
-  - 'Full spec compliance: correct S-shaped plot type, all required features present,
-    proper axis labels with units, exact mandated title format'
+  - Full Imprint palette compliance with correct theme-adaptive chrome in both light
+    and dark renders — data colors identical, only chrome flips
+  - 'Precise titration chemistry: central-difference derivative calculation, dense
+    0.1 mL sampling around the equivalence point, and correct pH formula for both
+    acid and base excess regions produce a smooth, chemically accurate curve'
+  - Color-coded y-axis lines (axisLine colors matching t.palette[0] and t.palette[1])
+    elegantly communicates the dual-axis assignment without requiring extra labels
+  - Idiomatic use of ECharts markLine, markPoint, and areaStyle to annotate the equivalence
+    point and highlight the derivative peak
   weaknesses:
-  - Second series (dpH/dV) uses palette[2] (#4467A3, blue) instead of canonical palette[1]
-    (#C475FD, lavender) — violates canonical color order without semantic justification;
-    replace all t.palette[2] references for the derivative series with t.palette[1]
-    in lineStyle, itemStyle, nameTextStyle, axisLine, and areaStyle
-  - Tick label fontSize 13px is 1px below the recommended 14px per echarts.md library
-    guide — update axisLabel fontSize to 14 on both xAxis and yAxis objects
+  - Buffer region shading is absent — the spec explicitly requests a semi-transparent
+    fill for the buffer/transition zone; for this strong acid/strong base system,
+    the steep transition region (e.g. 22–28 mL) should be shaded with a low-opacity
+    markArea; the existing dpH/dV areaStyle at 8% opacity is too faint and covers
+    only the spike geometry
+  - Named function calcPH(v) helper violates the KISS 'no functions' structure criterion;
+    could be restructured as an inline arrow function within the .map() call
+  - ECharts frame borders remain on all four sides — top and right axis borders/spines
+    are not removed, leaving a full box border around the chart; removing the top
+    border would improve visual refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "titration-curve · javascript · echarts · anyplot.ai" in bold dark text (fontSize 22), centered, ~60% width. Left y-axis label "pH" in brand green (#009E73), right y-axis label "dpH/dV" in blue (#4467A3), x-axis label "Volume of NaOH added (mL)" in inkSoft. All tick labels at 13px, all clearly readable against the light background. Annotation "EP: 25 mL, pH 7" in inkSoft above the equivalence dashed line.
-      Data: pH curve in #009E73 (first Imprint palette color, brand green) — S-shaped sigmoid from pH ~1 to ~12.5. dpH/dV curve in #4467A3 (blue) with sharp spike at 25 mL. Subtle blue area fill at 0.08 opacity. Green circle marker with pageBg halo at (25, 7). Vertical dashed line at 25 mL in inkSoft.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "titration-curve · javascript · echarts · anyplot.ai" in dark ink (#1A1A17), centered, fully readable. X-axis label "Volume of NaOH added (mL)" visible at bottom. Left y-axis label "pH" in brand green, right y-axis label "dpH/dV" in lavender — both readable. Tick labels (0–14 pH, 0–50 mL, 0–40 dpH/dV) all readable. Legend "pH" and "dpH/dV" in upper-right, readable. Grid lines are horizontal-only, subtle.
+      Data: S-shaped pH curve in #009E73 (brand green, first Imprint palette position); dpH/dV spike in #C475FD (lavender, second Imprint palette position) with 8% opacity area fill. Dashed vertical line at x=25, "EP: 25 mL, pH 7" label at top. Green circle marker (size 14) at equivalence point (25, 7).
+      Legibility verdict: PASS — all text elements readable against the warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title uses cream/light text clearly readable against dark background. Axis labels, tick labels, legend text all adapt to light colors. No dark-on-dark failures observed. "EP: 25 mL, pH 7" annotation in light inkSoft color is readable. Axis line for pH in green and dpH/dV in blue both visible.
-      Data: Colors identical to light render — pH curve in #009E73, dpH/dV in #4467A3 with area fill. Brand green (#009E73) reads well on dark background. Equivalence point circle marker with dark pageBg halo adapts correctly.
-      Legibility verdict: PASS — all chrome flipped correctly, no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light text (#F0EFE8), fully readable against dark background. Axis labels and tick labels in light soft ink (#B8B7B0). No dark-on-dark failures detected — all text elements flip correctly to light colors. Legend text readable. Color-coded axis labels (green for pH axis, lavender for dpH/dV axis) remain visible.
+      Data: pH curve identical #009E73 (brand green) — confirmed same as light render. dpH/dV identical #C475FD (lavender) — same as light render. EP annotation, circle marker, and dashed line all visible.
+      Legibility verdict: PASS — all text readable against dark background; chrome correctly inverted; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,53 +57,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title (22px), axis labels (14px),
-          tick labels (13px), legend (14px) all pass; proportions within acceptable
-          range
+        comment: All font sizes explicitly set (title=22, nameTextStyle=14, axisLabel=14,
+          legend=14); readable in both themes; no overflow; proportions balanced
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotation, legend, axis labels, and data
-          curves are clean
+        comment: No text overlap; EP label positioned at end of markLine away from
+          data; legend in empty upper-right corner
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: pH curve (3.5 width) and dpH/dV (2.5 width) both clearly visible;
-          spike at equivalence identifies inflection; marker visible
+        comment: pH curve (width=3.5) and dpH/dV (width=2.5) clearly visible; circle
+          marker at EP prominent at size=14
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette (#009E73, #4467A3) CVD-safe; no red-green-only encoding'
+        comment: Green and lavender are well-separated and CVD-distinguishable; not
+          red-green only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; dual-axis margins (left 90, right 115, top 105,
-          bottom 90) provide adequate whitespace; nothing clipped
+        comment: Grid margins (left=90, right=115, top=105, bottom=90) accommodate
+          dual y-axis cleanly; plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Volume of NaOH added (mL)'' with units; Left Y: ''pH'' (unitless);
-          Right Y: ''dpH/dV''; title format correct'
+        comment: 'X: ''Volume of NaOH added (mL)'' with units; Y-left: ''pH'' (unitless
+          by convention); Y-right: ''dpH/dV'' correct notation'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correctly uses palette[0] (#009E73) and backgrounds
-          correct (#FAF8F1/#1A1A17), but second series uses palette[2] (#4467A3) instead
-          of canonical palette[1] (#C475FD/lavender)
+        passed: true
+        comment: 'First series #009E73 (t.palette[0]); second #C475FD (t.palette[1]);
+          option.color = t.palette; backgrounds #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -108,25 +111,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): color-coded axis lines, 0.08-opacity derivative
-          area fill, pageBg-border halo on equivalence marker'
+        comment: 'Above defaults: color-coded y-axis lines matching series palette,
+          markPoint circle marker with pageBg border, area fill at 8% for secondary
+          series. Deliberate scientific visualization hierarchy. Not quite FiveThirtyEight
+          publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: 'Above default (2): ticks explicitly removed, only left y-axis has
-          grid lines, legend icon type set to ''line'''
+        passed: false
+        comment: 'Axis ticks hidden, horizontal-only grid, subtle area fill — good
+          refinements. Missing: ECharts chart frame/borders still visible on all four
+          sides; top and right axis borders remain.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): three-layer equivalence point marking creates
-          focal point; dual-axis layout guides viewer from pH jump to derivative peak;
-          clear primary/secondary hierarchy'
+        comment: EP annotation (dashed line + label + circle marker) + derivative
+          spike naturally guide viewer to equivalence point; clear visual hierarchy
+          between primary pH curve and secondary derivative
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -134,30 +140,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped sigmoidal titration curve; smooth with dense sampling
-          around equivalence
+        comment: Correct S-shaped titration curve with dual-axis dpH/dV overlay
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'Equivalence point: dashed line + annotation + marker all present;
-          derivative on secondary y-axis; pH 0-14; correct axis labels. Buffer region
-          N/A for strong acid system'
+        passed: false
+        comment: 'EP dashed line + annotation + circle marker ✓; dpH/dV secondary
+          y-axis ✓; HCl+NaOH data ✓; correct axis labels ✓; y-axis 0-14 ✓. Missing:
+          explicit buffer region shading — spec requests semi-transparent fill for
+          transition zone; the dpH/dV areaStyle at 8% is too faint and geometrically
+          wrong for a buffer band'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume (0-50 mL), Left Y=pH (0-14), Right Y=dpH/dV (0-40); equivalence
-          at (25, 7) chemically correct
+        comment: 'X: volume 0-50 mL; Y-left: pH 0-14; Y-right: dpH/dV 0-40; all data
+          visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'titration-curve · javascript · echarts · anyplot.ai';
-          legend shows 'pH' and 'dpH/dV'
+        comment: Title is exactly 'titration-curve · javascript · echarts · anyplot.ai';
+          legend labels 'pH' and 'dpH/dV' match series names
     data_quality:
       score: 15
       max: 15
@@ -167,78 +174,81 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full S-curve; derivative overlay; equivalence point; full pH 0-14
-          scale; dense sampling at inflection region
+        comment: S-shaped curve, acidic plateau, steep equivalence transition, basic
+          plateau, EP marking, derivative overlay — all key aspects present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Accurate chemistry: 25 mL 0.1 M HCl + 0.1 M NaOH; pH 7 at equivalence
-          is physically correct; neutral topic'
+        comment: HCl + NaOH titration is the canonical strong acid/base system; 0.1
+          M concentrations and 25 mL acid volume are standard laboratory values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Volume 0-50 mL appropriate; pH 0-14 as specified; central-difference
-          derivative is mathematically sound; dpH/dV range 0-40 fits the spike
+        comment: pH 0-14 (full scale); equivalence at pH 7 (chemically correct); 25
+          mL EP (stoichiometrically correct for equal concentrations); dpH/dV scale
+          0-40 appropriate; dense 0.1 mL sampling around EP
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear top-down structure; calcPH is pure mathematical helper; no
-          unnecessary abstractions
+        passed: false
+        comment: Has named function calcPH(v) helper; KISS criterion prefers no functions;
+          could be inlined as arrow function in .map()
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic via closed-form chemistry formula
+        comment: Fully deterministic; calcPH is pure math with no randomness; volume
+          arrays constructed from fixed loops
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only provided globals (echarts, window.ANYPLOT_TOKENS)
+        comment: No imports; uses only harness globals; no extraneous references
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code; no fake UI; central-difference derivative is correct
-          numerical method
+        comment: Clean ECharts option structure; data generation appropriately complex
+          for chemistry involved; no over-engineering or fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false; echarts.init without explicit size; no devicePixelRatio
-          override; harness handles output'
+        comment: 'animation: false; echarts.init on #container with no explicit size
+          or devicePixelRatio; ECharts interactive library — HTML output expected'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses dual yAxis array with yAxisIndex mapping, markLine
+          with symbol/label config, markPoint with coord-based placement, areaStyle
+          for secondary fill, nameTextStyle for color-coded axis labels
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: markLine for vertical dashed line, markPoint for equivalence circle,
-          dual yAxis array, areaStyle for fill, legend icon type — all idiomatic ECharts
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: markLine with custom label formatter, markPoint with pageBg-border
-          halo, color-coded dual y-axes with nameTextStyle — ECharts-specific features
-          leveraged beyond basics
+        comment: Uses ECharts-specific markLine for EP line with end-positioned label,
+          markPoint at specific coordinate, dual yAxis with color-coded axisLine styling
+          per series, areaStyle with low opacity — genuinely ECharts-specific
   verdict: APPROVED
 impl_tags:
   dependencies: []

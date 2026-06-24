@@ -1,7 +1,7 @@
 // anyplot.ai
 // titration-curve: Acid-Base Titration Curve
 // Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-24
+// Quality: 89/100 | Created: 2026-06-24
 
 const t = window.ANYPLOT_TOKENS;
 
