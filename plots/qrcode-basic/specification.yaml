@@ -6,7 +6,7 @@ title: Basic QR Code Generator
 
 # Specification tracking
 created: 2026-01-07T16:13:24Z
-updated: 2026-04-07T17:30:00Z
+updated: 2026-06-24T16:53:08Z
 issue: 3184
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - qrcode
     - barcode
   data_type:
     - text

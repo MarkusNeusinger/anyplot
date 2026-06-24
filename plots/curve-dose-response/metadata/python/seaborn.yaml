@@ -1,43 +1,56 @@
 library: seaborn
+language: python
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:15Z'
-updated: '2026-03-18T23:03:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23270129125
+updated: '2026-06-24T15:36:09Z'
+generated_by: claude-sonnet
+workflow_run: 28108638436
 issue: 4556
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - 'Complete spec compliance: every required feature (4PL fit, EC50 lines, asymptotes,
-    CI band, error bars, 2 compounds) is implemented'
-  - Excellent data quality with real drug names (Imatinib, Erlotinib) and realistic
-    pharmacological parameters
-  - 'Strong visual refinement: despined axes, subtle grid, custom palette, white marker
-    edges'
-  - Clean, well-structured code with proper reproducibility seed
-  - Good visual hierarchy enabling immediate comparison of compound potencies
+  - 'Correct Imprint palette: Imatinib=#009E73 (brand green) as first series, Erlotinib=#C475FD
+    (lavender); both data colors identical across light/dark renders'
+  - 'All spec required features present: 4PL fit, EC50 crosshair reference lines,
+    SEM error bars, asymptote dashed lines, 95% CI bootstrap band, 2 compounds with
+    legend'
+  - 'Theme-adaptive chrome correctly wired: INK/INK_SOFT tokens applied to all text/tick/label
+    elements; both light (#FAF8F1) and dark (#1A1A17) backgrounds correct'
+  - 'Idiomatic seaborn usage: long-format DataFrames fed to sns.lineplot/scatterplot
+    with hue+style encoding, sns.set_theme rc params, sns.despine'
+  - 'Professional pharmacological context: Imatinib and Erlotinib are real kinase
+    inhibitors; EC50 values (299 nM vs 6.8 μM) are plausible and create a clear potency-comparison
+    story'
+  - 'Code is clean KISS: Imports → Data → Fit → Plot → Save; seed set; all imports
+    used; scipy curve_fit used correctly'
   weaknesses:
-  - Bootstrap-to-lineplot approach for CI is somewhat verbose; could be simplified
-  - Four asymptote lines (2 per compound) create minor visual clutter at the bottom
-    of the chart
-  - No EC50 value annotations on the plot to quantify the comparison
-  image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M) versus Response (%) on the y-axis. Imatinib is shown
-    in dark blue (#306998) with circle markers and a light blue 95% CI shaded band
-    around its fitted curve. Erlotinib is shown in orange (#D4763A) with square markers.
-    Both compounds have error bars (SEM) at each data point. Dashed horizontal and
-    vertical reference lines mark the EC50/half-maximal response for each compound
-    — Imatinib's EC50 is around 3e-7 M (~48% response) and Erlotinib's around 5e-6
-    M (~45% response). Faint horizontal dashed lines indicate top and bottom asymptotes
-    for both compounds, with distinct dash patterns per compound. The title reads
-    "curve-dose-response · seaborn · pyplots.ai". Top and right spines are removed.
-    A subtle y-axis grid (alpha=0.2) provides reference. The legend in the upper left
-    lists fit lines, data markers, and CI band. The layout is clean with good canvas
-    utilization.
+  - 'DE-01/DE-02: Design is strong but not publication-exceptional — the CI band is
+    very subtle (alpha=0.15, nearly invisible) and the asymptote lines at alpha=0.35
+    are faint; boosting CI band alpha to 0.25 and adding a subtle label to the asymptote
+    lines would raise visual sophistication'
+  - 'LM-02: seaborn-distinctive features limited to set_theme rc + hue/style encoding;
+    the core curve fitting and CI bootstrap are matplotlib/scipy work that any static
+    library would do the same way'
+  - 'Minor: lambda with noqa: E731 for logistic4pl is acceptable but a def would be
+    more idiomatic Python for a reused function'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "curve-dose-response · python · seaborn · anyplot.ai" dark ink, clearly readable, spans ~75% width. X-axis label "Concentration (M)" and Y-axis label "Response (%)" both readable with units. Tick labels (10^-9 through 10^-4, 0–100) in secondary ink (INK_SOFT), well-proportioned.
+      Data: Imatinib curve in #009E73 (brand green) with circular markers and 95% CI band (very subtle green fill). Erlotinib in #C475FD (lavender) with square markers. EC50 crosshair dashed lines color-coded per compound. Asymptote dashed lines for both top and bottom plateaus. Error bars on all data points. Legend in upper-left with 5 entries.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and all axis labels render in light text (#F0EFE8 / #B8B7B0 range), clearly visible against dark background. Tick labels bright enough to read. Grid lines subtle (visible but not competing with data). Legend box uses elevated dark (#242420) with light text.
+      Data: Imatinib #009E73 and Erlotinib #C475FD are identical to light render — only chrome flipped. EC50 annotations and reference lines retain same colors. CI band and asymptote lines consistent.
+      Legibility verdict: PASS — no dark-on-dark text failures; all chrome correctly themed for dark surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,38 +61,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 14pt'
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8,
+          annotations=7.5). Both renders fully readable. No overflow or clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions, legend doesn't overlap data
+        comment: No text/data overlap. EC50 annotations offset from crosshairs. Legend
+          clear of sigmoid curves.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers s=180 appropriate for 16 points, lines linewidth=3 visible
+        comment: 8 points/compound; s=120 markers clearly visible. Fitted curves at
+          linewidth=2.5. Error bars with capsize=4 clearly readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange colorblind-safe with strong luminance contrast
+        comment: 'Green/lavender pair is CVD-safe with good hue+lightness separation.
+          Redundant encoding: different marker shapes (circle vs square).'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 figsize with tight_layout, balanced margins
+        comment: Canvas gate passed. Plot fills canvas well. Balanced margins. Legend
+          inside plot area. Nothing cut off or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) with units
+        comment: 'X: ''Concentration (M)'', Y: ''Response (%)'' — both descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Imatinib). Second series #C475FD (Erlotinib).
+          Imprint positions 1-2 in canonical order. Backgrounds #FAF8F1/#1A1A17. All
+          chrome theme-adaptive.'
     design_excellence:
       score: 15
       max: 20
@@ -89,22 +115,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, different marker shapes, CI band
-          adds depth
+        comment: 'Strong design — clearly above defaults. Intentional hierarchy: CI
+          band on primary compound, color-coded EC50 text annotations, redundant shape
+          encoding. Not FiveThirtyEight-level but publication-adjacent.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Despined axes, subtle y-axis grid, good whitespace, minor clutter
-          from asymptote lines
+        comment: 'Spines despined, y-axis grid only at alpha=0.15, marker edges set
+          to PAGE_BG for clean look, well-proportioned whitespace. Minor: CI band
+          is very faint (alpha=0.15) — slightly more opacity would improve visibility.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two compounds with different potencies tell comparison story, EC50
-          lines guide viewer
+        comment: EC50 crosshair annotations create clear focal points and tell the
+          potency-comparison story (Imatinib ~23x more potent). CI band on Imatinib
+          signals it as primary compound. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
+        comment: Correct sigmoidal dose-response curve with log x-axis and 4PL fit.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: log x, 4PL fit, EC50 lines, error bars, asymptotes,
-          2 compounds, legend, CI band'
+        comment: 'All spec features: log x-axis, 4PL sigmoid, EC50 crosshairs, SEM
+          error bars, top/bottom asymptote lines, 2 compounds, legend, 95% CI band.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log), Y=response (%). All data visible
+        comment: X=concentration (M) on log scale 1e-9 to 1e-4. Y=response (%) 0-100.
+          All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend labels descriptive with compound names
+        comment: 'Title: ''curve-dose-response · python · seaborn · anyplot.ai''.
+          Legend has all 5 entries including 95% CI Imatinib patch.'
     data_quality:
       score: 15
       max: 15
@@ -143,20 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50, Hill slopes, and asymptotes
+        comment: 'Shows all aspects: different EC50s, different Hill slopes (1.2 vs
+          0.9), different top asymptotes (~95% vs ~80%), error bars, CI band, potency
+          comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real drug names (Imatinib, Erlotinib), authentic pharmacological
-          context
+        comment: Imatinib and Erlotinib are real FDA-approved kinase inhibitors. Pharmacological
+          context is accurate and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1nM-100uM standard pharmacological range, response 0-100%
+        comment: Concentration 1e-9 to 1e-4 M standard for in vitro pharmacology.
+          EC50 values (299 nM, 6.8 uM) plausible. Response 0-100% correct for % inhibition.
     code_quality:
       score: 10
       max: 10
@@ -166,56 +200,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, function only for curve_fit requirement
+        comment: Clean Imports → Data → Fit → Plot → Save flow. No classes or top-level
+          functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set at top of data section.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 8 imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          Line2D, Patch, scipy.optimize.curve_fit.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: 'Clean and Pythonic. Bootstrap CI calculation concise. Minor: lambda+noqa
+          for logistic4pl acceptable for a mathematical formula used throughout.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png, dpi=300, no deprecated API
+        comment: Saves plot-{THEME}.png at dpi=400. No bbox_inches=tight. Current
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of sns.lineplot, scatterplot, set_theme, despine. Bootstrap-to-lineplot
-          slightly non-standard.
+        comment: 'Expert seaborn idioms: sns.set_theme rc params for full theme control,
+          sns.lineplot/scatterplot with hue+style on long-format DataFrames, sns.despine,
+          legend=False then manual legend handles.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Seaborn errorbar aggregation for CI, style mapping for markers, set_theme.
-          Still relies on matplotlib for error bars and reference lines.
+        comment: Uses seaborn's hue+style compound encoding (circle vs square markers
+          automatic via style=) and set_theme integration. Core dose-response curve
+          fitting is scipy/matplotlib work not seaborn-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - annotations
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -225,4 +265,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
