@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -53,6 +53,7 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 ax.plot(reaction_coord, energy, color=BRAND, linewidth=3.5, zorder=3)
+ax.fill_between(reaction_coord, 0, energy, color=BRAND, alpha=0.09, zorder=2)
 
 # Dashed reference lines at reactant and product energy levels
 ax.hlines(reactant_energy, -0.05, 0.20, colors=INK_MUTED, linestyles="--", linewidth=1.2, alpha=0.7)
@@ -77,7 +78,7 @@ ax.text(
 )
 
 # Activation energy arrow (Ea) — vertical double-headed arrow from reactant level to TS
-ea_x = 0.13
+ea_x = 0.10
 arrow_ea = FancyArrowPatch(
     (ea_x, reactant_energy),
     (ea_x, actual_peak),
