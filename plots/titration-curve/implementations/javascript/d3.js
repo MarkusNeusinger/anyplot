@@ -1,7 +1,7 @@
 // anyplot.ai
 // titration-curve: Acid-Base Titration Curve
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-24
+// Library: d3 7.9.0 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
