@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24

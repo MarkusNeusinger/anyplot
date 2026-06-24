@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: qrcode-basic
 created: '2026-01-07T16:30:49Z'
-updated: '2026-06-24T17:23:55Z'
+updated: '2026-06-24T17:32:23Z'
 generated_by: claude-sonnet
 workflow_run: 28115907430
 issue: 3184
@@ -15,123 +15,112 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-ba
 quality_score: 88
 review:
   strengths:
-  - Excellent spec compliance — quiet zone (4 cells), brand green frame, and all three
-    QR finder patterns correctly present
-  - 'Perfect theme-adaptive chrome: warm off-white (#FAF8F1) in light, warm near-black
-    (#1A1A17) in dark — both title and x-axis label readable in both renders'
-  - Clever use of CELL=1.05 overlap to close SVG sub-pixel rendering gaps between
-    bar segments
-  - Informative x-axis label encodes URL, error correction level, and module count
-    — rich context without cluttering the chart
-  - 'Real-world data: encoding the actual anyplot.ai URL with standard M-level error
-    correction is a realistic, neutral use case'
-  - Deterministic output — no random data, same QR matrix every run
+  - Theme-adaptive QR modules (dark ↔ light flipping) correctly adapts to both surfaces
+  - Brand-green (#009E73) quiet-zone frame is a tasteful branded design choice
+  - All font sizes explicitly set via pygal Style; title and x_title readable in both
+    renders
+  - Per-datapoint color customization using pygal StackedBar is creative and technically
+    correct
+  - 'Complete spec compliance: quiet zone, EC:M, proper qrcode library, high contrast'
   weaknesses:
-  - Helper function `to_bar_row()` breaks the KISS flat-script structure; inline the
-    list comprehension directly at the call sites to eliminate the function
-  - 'DE-01/DE-02: The segmented-cell green frame (individual 1.05-cell bars) produces
-    a dashed/pixelated border rather than a solid rectangular frame — consider post-processing
-    or adjusting the outer frame to look more solid'
-  - 'LM-01/LM-02: Using pygal.StackedBar as a pixel-grid renderer is creative but
-    unconventional; explore whether pygal.CustomDict or direct SVG rect injection
-    (via pygal.graph.base internals) could produce a cleaner, more idiomatic pixel-art
-    output'
-  - The x_title string wraps to two lines due to its length — if possible, shorten
-    to fit a single line or adjust font size so it reads cleanly on one row
+  - Design space for a QR code is inherently constrained — aesthetic sophistication
+    ceiling is lower than for a data chart, limiting DE-01 headroom
+  - sys.path manipulation to avoid pygal.py filename collision is functional but slightly
+    brittle — a rename of the output file would eliminate the concern entirely
+  - The segmented/striped green frame (cell boundaries visible as thin lines) is an
+    artifact of StackedBar rendering; CrispEdges CSS partially mitigates but does
+    not fully close
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
-      Chrome: Title "qrcode-basic · python · pygal · anyplot.ai" is bold, dark (#1A1A17), centered at the top, occupying ~70% of canvas width — expected for the mandated title length. X-axis label "https://anyplot.ai · Error Correction: M (15%) · 25×25 modules" wraps to two lines below the QR area; both lines are dark and clearly readable.
-      Data: A 25×25-module QR code is centered on the warm off-white background. Dark modules (#1A1A17 near-black) on off-white background provide excellent high contrast. A 1-cell-wide frame of brand green (#009E73) with a segmented/cellular texture (dashed appearance due to StackedBar cell rasterization) surrounds a 4-cell quiet zone. The QR finder patterns in all three corners are fully visible.
-      Legibility verdict: PASS — all text clearly readable; dark text on warm off-white with no contrast failures.
+      Background: Warm off-white (~#FAF8F1) — correct light surface
+      Chrome: Title "qrcode-basic · python · pygal · anyplot.ai" in dark ink at top, clearly readable. Bottom x_title "https://anyplot.ai · EC: M · 25×25" in dark bold text, readable. No axes, ticks, legend, or grid (all intentionally hidden).
+      Data: QR code modules rendered in near-black (#1A1A17) on warm off-white background — classic high-contrast QR appearance. Brand-green (#009E73) decorative frame surrounds the QR with quiet zone. Frame shows subtle segmentation from StackedBar cell rendering, slightly textured rather than solid.
+      Legibility verdict: PASS — all text elements fully readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface, no pure black.
-      Chrome: Title "qrcode-basic · python · pygal · anyplot.ai" is light-colored (off-white #F0EFE8) on the dark background — clearly readable. X-axis label "https://anyplot.ai · Error Correction: M (15%) · 25×25 modules" appears in the same light color and wraps to two lines; both lines are readable. No dark-on-dark failure detected.
-      Data: The QR code inverts correctly for dark theme: light modules (#F0EFE8 off-white) on dark (#1A1A17) background. The module pattern is identical in structure to the light render — only the ink/background swap. The brand green frame (#009E73) is identical to the light render and clearly visible. The QR finder patterns are fully visible.
-      Legibility verdict: PASS — all text clearly readable; light text on warm near-black with no dark-on-dark failures.
+      Background: Near-black (~#1A1A17) — correct dark surface
+      Chrome: Title in warm off-white/cream light text at top, clearly readable. Bottom x_title also in light text, readable. No dark-on-dark failures observed.
+      Data: QR code modules rendered in warm off-white (#F0EFE8) on near-black background — inverted for dark theme, maintaining high contrast. Brand-green (#009E73) frame is identical to light render — vibrant and clearly visible.
+      Legibility verdict: PASS — all text readable against dark background. Data colors (brand green frame) are identical to light render; only the QR module colors and backgrounds flip with theme.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36); title ~70% width as expected; x_title wraps to two
-          lines but both lines readable in both themes
+        comment: All font sizes explicitly set via Style object; title and x_title
+          readable in both themes at correct proportions
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Title, QR code, and x-axis label fully separated; no overlaps
+        comment: No overlapping elements; clean composition with QR code as sole data
+          element
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules are large and high-contrast in both themes; finder patterns
-          clearly visible
+        comment: QR modules clearly visible in both light and dark themes; high-contrast
+          rendering
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Near-maximum contrast for QR modules in both themes; brand green
-          frame visible on both surfaces
+        comment: Near-black on off-white (light) and off-white on near-black (dark)
+          — maximum contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas is correct for QR code; canvas gate not triggered;
-          QR with frame fills ~75% of canvas with balanced margins
+        comment: Square 2400x2400 canvas appropriate for QR code; QR occupies ~70%
+          with generous margins; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x_title encodes URL, error correction level, and module count — richly
-          descriptive; title follows mandated format
+        comment: Title correct format; x_title provides URL + EC level + matrix size
+          as informative metadata
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1 light / #1A1A17 dark correct; brand green #009E73
-          frame consistent in both themes; QR modules use semantic neutral anchor
-          (INK / PAGE_BG) — appropriate for binary data encoding'
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct; brand green #009E73 as frame
+          accent; theme-adaptive module colors using INK/PAGE_BG tokens'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: brand green frame creates visual identity; clean
-          composition; intentional theme-adaptive contrast; above library defaults
-          but not publication-ready level'
+        comment: 'Above default: creative repurposing of StackedBar as pixel renderer
+          + branded frame; QR format inherently constrains design space'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid, no ticks, generous margins; segmented-cell green frame is
-          a minor visual compromise (dashed appearance) due to StackedBar cell rasterization
+        comment: All chart chrome explicitly removed (axes, ticks, legend, grid);
+          clean minimal composition with intentional quiet zone
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Green frame creates focal point; x-axis label provides rich context
-          (URL + error correction + module count); clear purpose, good emphasis for
-          the plot type
+        comment: URL + EC level + matrix size in x_title creates informative context;
+          green frame reinforces anyplot.ai brand identity
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using proper qrcode library for encoding
-          and pygal StackedBar for rendering
+        comment: Correct QR code visualization using qrcode library for proper encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone (4 cells), finder patterns (via qrcode library), error
-          correction M (15%), high contrast, proper QR encoding library used
+        comment: Quiet zone (4+2 cells), high contrast, qrcode library, EC:M, URL
+          content all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: QR matrix correctly mapped row-by-row; rows reversed so top of matrix
-          appears at top of chart
+        comment: Full 25x25 QR matrix correctly rendered via StackedBar row-by-row
+          construction
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'qrcode-basic · python · pygal · anyplot.ai' is exactly correct;
-          no legend needed (single-purpose visualization, correctly disabled)
+        comment: Title is 'qrcode-basic · python · pygal · anyplot.ai' — correct format;
+          no legend needed
     data_quality:
       score: 15
       max: 15
@@ -173,82 +161,76 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete QR code with all structural elements: finder patterns (3
-          corners), alignment patterns, timing patterns, format info'
+        comment: Complete QR code with finder patterns, timing patterns, data modules,
+          quiet zone, error correction
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes https://anyplot.ai — the actual project URL, a real and neutral
-          use case for URL-based QR codes
+        comment: Real URL (https://anyplot.ai), neutral content, EC level M specified
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 25×25 modules is the correct version for encoding a short HTTPS URL
-          at error correction M; consistent and factually correct
+        comment: 25x25 matrix is the correct size for encoding a short URL with EC:M
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Defines helper function to_bar_row() which breaks the flat KISS structure;
-          the list comprehension could be inlined
+        passed: true
+        comment: Imports → Theme → Data → Style → Build → Save pattern; no unnecessary
+          abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR code generation is fully deterministic for the same URL input;
-          no random data
+        comment: QR code generation is fully deterministic for a given URL input
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (THEME), sys (path hack), qrcode (QR generation),
-          pygal + Style (chart)'
+        comment: os, sys, qrcode, pygal, pygal.style.Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant sys.path manipulation to avoid pygal.py name collision with
-          the pygal package; CELL=1.05 sub-pixel gap fix is a clean hack; comments
-          explain non-obvious design choices
+        comment: sys.path manipulation is necessary and documented; cell rendering
+          logic is clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; no deprecated
-          API usage
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Style object, StackedBar, render_to_png, and custom CSS — correct
-          pygal patterns; but StackedBar as pixel-grid renderer is unconventional
+        comment: Creative use of StackedBar with per-cell color dict values; Style
+          object used correctly; custom CSS inline injection
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Inline CSS injection (css=['inline:...']) for SVG crisp rendering
-          is a pygal-specific feature; custom style theming; render HTML output alongside
-          PNG
-  verdict: REJECTED
+        comment: 'Per-datapoint color dict ({"value": CELL, "color": c}) is pygal-specific;
+          inline custom CSS (crispEdges, stroke-width:0) leverages pygal SVG injection;
+          HTML output alongside PNG'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - qrcode
