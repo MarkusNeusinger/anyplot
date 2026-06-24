@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: titration-curve
 created: '2026-06-24T11:42:03Z'
-updated: '2026-06-24T11:48:24Z'
+updated: '2026-06-24T11:58:43Z'
 generated_by: claude-sonnet
 workflow_run: 28095385774
 issue: 4407
@@ -12,99 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: equivalence point annotation, derivative dpH/dV secondary
-    axis, transition zone shading, full pH 0-14 scale - all required features present'
-  - 'Strong data quality: physically accurate HCl+NaOH chemistry with correct pH calculation
-    and stoichiometry'
-  - Idiomatic ggplot2 dual-axis implementation using sec.axis with proper inverse
-    transform
-  - Imprint palette correctly applied (green titration curve, lavender derivative)
-    with full theme-adaptive chrome
-  - Right-axis label and tick colors match the derivative data series - a polished
-    UX detail
+  - Implements correct S-shaped titration curve with accurate chemistry for strong
+    acid/strong base (HCl + NaOH)
+  - Derivative overlay (dpH/dV) on secondary y-axis with color-coded axis label —
+    distinctive and informative
+  - Equivalence point clearly marked with dashed vertical line, filled dot, and text
+    annotation
+  - 'Imprint palette used correctly: green (#009E73) for main curve, lavender (#C475FD)
+    for derivative; redundant linetype encoding adds CVD safety'
+  - Full theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders are
+    clean and readable
+  - All font sizes explicitly set; inside legend with elevated background adds polish
+  - 'Idiomatic ggplot2: grammar-of-graphics layering, sec_axis(), guide_legend() override,
+    annotate() for geometric elements'
+  - Deterministic data generation (pure mathematics, no random seed needed)
+  - Clean KISS structure and minimal imports
   weaknesses:
-  - X-axis grid lines should be removed for this line chart; style guide calls for
-    Y-axis-only grid on line/bar charts - use panel.grid.major.x = element_blank()
-  - library(dplyr) is imported but never used - no dplyr functions (mutate, filter,
-    select, etc.) appear anywhere in the script
-  - Annotation text sizes (2.6mm and 2.3mm for EP and Transition zone labels) are
-    borderline small for mobile readability - increase EP annotation to size=3.0 and
-    Transition zone to size=2.8
-  - The dpH/dV spike visually merges with the vertical dashed equivalence line - consider
-    constraining the dashed line to ymax=11 via geom_segment so the spike has visible
-    breathing room
-  - The ph_at_vol helper function adds structural complexity that could be replaced
-    with vectorized base-R operations for cleaner KISS structure
+  - 'SC-02 partial: spec notes buffer region shading for weak acid/base titrations;
+    implementation adapts to strong acid/strong base by shading pH 4–10 as a ‘Transition
+    zone’ — reasonable but not exactly what the spec requested'
+  - 'VQ-03 minor: derivative curve (dpH/dV) is near-zero for most of the x-range (0–20
+    mL and 30–50 mL), making the dotted lavender line barely distinguishable from
+    the x-axis baseline except at the equivalence spike'
+  - 'DE-01 ceiling: overall aesthetic is polished and well above defaults, but not
+    yet at FiveThirtyEight/publication-ready level — could benefit from slightly more
+    whitespace above the plateau region or a descriptive subtitle'
+  - 'LM-02 ceiling: sec_axis and guide_legend override are distinctive ggplot2 features,
+    but could further showcase ggplot2 uniqueness (e.g. coord_cartesian clip control,
+    plot.margin fine-tuning)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "titration-curve · r · ggplot2 · anyplot.ai" in bold dark ink, ~55% plot width. X-axis label "Volume of NaOH added (mL)" dark, Y-left "pH" dark, Y-right "dpH/dV (pH/mL)" in lavender (#C475FD). Tick labels in INK_SOFT (dark-gray) on left/bottom, lavender on right. All readable.
-      Data: S-shaped titration curve in brand green (#009E73), prominent. Dotted lavender derivative line near-flat at baseline with spike at x=25 mL EP. Semi-transparent blue-gray rect shades pH 4-10 transition zone. Dashed gray vertical line at 25 mL. Green filled circle at (25,7). Small "EP: 25 mL / pH = 7" annotation text. "Transition zone" label in palette blue.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface.
+      Chrome: Title "titration-curve · r · ggplot2 · anyplot.ai" bold dark (~60% width, well-proportioned). Left y-axis label "pH" and x-axis label "Volume of NaOH added (mL)" in dark INK, clearly readable. Right y-axis label "dpH/dV (pH/mL)" in lavender (#C475FD) matching the derivative series color — nice design touch. Tick labels in dark INK_SOFT, clearly readable. Subtle horizontal y-only gridlines; x-grid removed.
+      Data: Main titration curve in #009E73 (solid, linewidth=1.5) tracing the classic S-shape from pH≈1 to pH≈13. Derivative (dpH/dV) in #C475FD (dotted, linewidth=1.0) mostly at y≈0 except for a clear spike at the equivalence point. Transition zone (pH 4–10) shaded very subtly in blue with alpha=0.07. Equivalence point at (25 mL, pH 7) marked with a filled green dot, gray dashed vertical line, and text annotation "EP: 25 mL / pH = 7" at lower right. Inside legend in upper left with border.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels adaptive: left/bottom in INK (#F0EFE8 equiv), right axis in lavender. Tick labels in INK_SOFT (#B8B7B0). Legend background elevated-dark (#242420). No dark-on-dark failures detected.
-      Data: Data colors identical to light render — same brand green titration curve (#009E73), same lavender derivative (#C475FD). Transition zone shading subtly visible. EP annotation in muted-adaptive (#A8A79F), readable.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface.
+      Chrome: Title in light #F0EFE8 against dark background — readable. Axis labels and tick labels in appropriate light-colored tokens (INK_SOFT = #B8B7B0 in dark theme). Right y-axis label in lavender — still clearly visible on dark background. Gridlines subtle, appropriate for dark theme. Legend box uses elevated dark background #242420 with border.
+      Data: Titration curve and derivative colors are identical to light render — #009E73 and #C475FD respectively. Transition zone shading still subtly visible. Equivalence point dot and annotation clearly visible.
+      Legibility verdict: PASS — no dark-on-dark text failures. All text elements are light-colored on the dark background. Brand green #009E73 reads well on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; main elements well-proportioned. Annotation
-          text (2.6mm EP, 2.3mm Transition zone) borderline small for mobile.
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8).
+          Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; legend upper-left, EP annotation lower-right,
-          transition zone label mid-right.
+        comment: No text overlaps with data or other text. EP annotation positioned
+          cleanly below main curve. Transition zone label in clear area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Titration curve and EP marker prominent. dpH/dV spike partially merged
-          visually with vertical dashed line.
+        comment: Main titration curve prominently visible. Derivative near-zero for
+          most x-range; only clearly visible at equivalence spike. Minor deduction.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green+lavender pair CVD-safe; solid vs dotted linetype provides redundant
-          encoding.
+        comment: Green + lavender with redundant solid/dotted linetype encoding. CVD-safe
+          pair.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape, balanced margins, no clipping, good canvas utilization.
+        comment: 3200x1800 (landscape). Good canvas utilization. No clipping. Legend
+          inside plot. Balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Volume of NaOH added (mL), Y-left: pH, Y-right: dpH/dV (pH/mL)
-          - all descriptive with units.'
+        comment: 'X: ''Volume of NaOH added (mL)'', Y-left: ''pH'', Y-right: ''dpH/dV
+          (pH/mL)'' — all descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD, shading uses palette[3] #4467A3,
-          backgrounds #FAF8F1/#1A1A17, all chrome theme-adaptive.'
+        comment: 'First series #009E73 (brand green), second #C475FD (lavender, position
+          2). Imprint palette. Correct #FAF8F1/#1A1A17 backgrounds. Theme-adaptive
+          chrome throughout.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,25 +119,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, theme-adaptive chrome, right-axis color-matched
-          to data series, inner legend with elevated background. Above generic defaults,
-          not FiveThirtyEight-level.
+        comment: 'Above well-configured default: color-coded secondary axis label,
+          inside legend with border, Imprint palette, intentional hierarchy. Not yet
+          publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped frame, subtle gridlines, but X-axis grid shown for a line
-          chart. Style guide says Y-axis-only grid for line charts.
+        passed: true
+        comment: X-grid removed, y-grid subtle (linewidth=0.3), minor grid off, panel
+          border off with L-shaped axis lines. Clean but not all details polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: dominant green curve, secondary derivative, shaded
-          transition zone, annotated EP. Chemistry story is told but somewhat implicit.'
+        comment: Clear focal point at equivalence point. Derivative overlay guides
+          viewer to EP as spike maximum. Transition zone provides contextual framing.
+          Visual hierarchy present.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,27 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped titration curve with all required overlays.
+        comment: 'Correct: line chart showing S-shaped titration curve with derivative
+          overlay on secondary axis.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: EP vertical dashed line + annotation, dpH/dV secondary axis, transition
-          zone shading, HCl+NaOH data, pH 0-14 Y-axis.
+        comment: EP dashed line + annotation present. Derivative with secondary y-axis
+          present. Shading present but adapted from 'buffer region' to 'transition
+          zone' for strong acid/base system — reasonable but not exactly as specified.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: volume_ml, Y-left: pH, Y-right: dpH/dV scaled to primary axis.'
+        comment: Volume on x (0-50 mL), pH on left y (0-14), derivative on right y.
+          Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'titration-curve · r · ggplot2 · anyplot.ai' correct; legend
-          labels pH and dpH/dV appropriate.
+        comment: 'Title: ''titration-curve · r · ggplot2 · anyplot.ai'' — correct
+          format. Legend labels ''pH'' and ''dpH/dV'' correct.'
     data_quality:
       score: 15
       max: 15
@@ -168,59 +179,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full S-curve from acid (~pH 1) through neutral EP (pH 7) to basic
-          plateau (~pH 12.5); derivative overlay; transition zone; annotated EP.
+        comment: Shows S-curve, flat acid region, steep transition, flat base plateau,
+          equivalence point, derivative spike.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 25 mL 0.1M HCl titrated with 0.1M NaOH - standard analytical chemistry
-          lab scenario, neutral and educational.
+        comment: HCl + NaOH titration — real chemistry, neutral academic scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: pH 0-14 full scale, volume 0-50 mL (double EP), correct chemistry
-          calculations, EP at pH 7 for strong acid/base.
+        comment: 0.1 M concentrations realistic. Equivalence at 25 mL (correct stoichiometry).
+          pH 0-14 full scale. Derivative spike exactly at EP. Chemically accurate.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Clean linear flow but defines ph_at_vol helper function instead of
-          using vectorized operations.
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical calculation; no randomness, no seed
-          needed.
+        comment: Deterministic mathematical data generation (no randomness, no seed
+          needed).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) imported but no dplyr functions used anywhere in the
-          script.
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear variable naming, well-organized theme tokens, no over-engineering.
+        comment: Clean, idiomatic R. sec_axis, guide_legend override, annotate() used
+          appropriately.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf, uses ragg::agg_png correctly.
+        comment: Saves as plot-{THEME}.png using ragg::agg_png device.
     library_mastery:
       score: 9
       max: 10
@@ -230,18 +240,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics composition, sec.axis for dual Y-axis,
-          expansion(), guide_legend(override.aes), legend.position.inside - all idiomatic
-          ggplot2.
+        comment: 'Full grammar-of-graphics: geom_line + annotate + scale_*_manual
+          + sec_axis + theme. Expert ggplot2 usage.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sec.axis with inverse transform, merged color+linetype scales via
-          matching names, inner-positioned legend via legend.position.inside, right-axis
-          color theming. Distinctive ggplot2 features well-leveraged.
-  verdict: REJECTED
+        comment: sec_axis() for dual y-axis, guide_legend() override for merged legend,
+          legend.position.inside — distinctive ggplot2 features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - ragg
@@ -249,7 +257,6 @@ impl_tags:
   - twin-axes
   - annotations
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
