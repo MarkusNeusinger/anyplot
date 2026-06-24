@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -192,7 +192,7 @@ fig.update_layout(
     height=450,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
     title={
-        "text": "curve-dose-response · python · plotly · anyplot.ai",
+        "text": "<b>curve-dose-response · python · plotly · anyplot.ai</b>",
         "font": {"size": 16, "color": INK, "family": "Arial, Helvetica, sans-serif"},
         "x": 0.5,
         "xanchor": "center",
@@ -202,9 +202,7 @@ fig.update_layout(
         "type": "log",
         "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
-        "showline": True,
-        "linewidth": 1,
-        "linecolor": INK_SOFT,
+        "showline": False,
         "range": [-9.5, -3.8],
     },
     yaxis={
@@ -215,9 +213,7 @@ fig.update_layout(
         "gridwidth": 0.5,
         "range": [-5, 115],
         "zeroline": False,
-        "showline": True,
-        "linewidth": 1,
-        "linecolor": INK_SOFT,
+        "showline": False,
     },
     template="plotly_white",
     paper_bgcolor=PAGE_BG,
@@ -232,6 +228,37 @@ fig.update_layout(
         "borderwidth": 1,
         "traceorder": "normal",
     },
+    updatemenus=[
+        {
+            "type": "dropdown",
+            "direction": "down",
+            "showactive": True,
+            "x": 0.99,
+            "xanchor": "right",
+            "y": 0.01,
+            "yanchor": "bottom",
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "font": {"color": INK_SOFT, "size": 10},
+            "buttons": [
+                {
+                    "label": "Both Compounds",
+                    "method": "update",
+                    "args": [{"visible": [True, True, True, True, True, True]}],
+                },
+                {
+                    "label": "Compound A only",
+                    "method": "update",
+                    "args": [{"visible": [True, True, True, True, False, False]}],
+                },
+                {
+                    "label": "Compound B only",
+                    "method": "update",
+                    "args": [{"visible": [False, False, False, False, True, True]}],
+                },
+            ],
+        }
+    ],
 )
 
 # --- Save ---
