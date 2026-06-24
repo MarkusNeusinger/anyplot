@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 titration-curve: Acid-Base Titration Curve
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 78/100 | Updated: 2026-06-24
@@ -23,12 +23,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Imprint palette — semantic positions for this chart
-# Series add() order: pH (1) → dpH/dV (2) → equivalence (3) → pH-7 ref (4)
+# Series add() order: pH (1) → dpH/dV (2) → equivalence (3) → pH-7 ref (4) → annotation (5)
 CHART_PALETTE = (
     "#009E73",  # pH curve — Imprint brand green (position 1)
     "#C475FD",  # dpH/dV derivative — Imprint lavender (position 2)
     "#AE3030",  # equivalence point — matte red (semantic: critical threshold)
     INK_MUTED,  # pH 7 reference — muted neutral (structural reference)
+    "#AE3030",  # equivalence annotation text (matches line color)
 )
 
 # Data — 25 mL of 0.1 M HCl titrated with 0.1 M NaOH
@@ -92,14 +93,14 @@ chart = pygal.XY(
     title=title_str,
     x_title="Volume of NaOH added (mL)",
     y_title="pH",
-    secondary_range=(0.0, 1.4),
+    secondary_range=(0.0, 0.7),
     show_dots=False,
     show_x_guides=False,
     show_y_guides=True,
     range=(0.0, 14.0),
     xrange=(0.0, 50.0),
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=2,
     legend_box_size=30,
     truncate_legend=-1,
     margin=30,
@@ -129,13 +130,25 @@ chart.add(
 )
 
 chart.add(
-    f"Equivalence Point — {eq_vol:.0f} mL, pH {eq_ph:.0f}",
+    f"Equivalence ({eq_vol:.0f} mL, pH {eq_ph:.0f})",
     eq_line_pts,
     show_dots=False,
     stroke_style={"width": 3, "dasharray": "14,8"},
 )
 
 chart.add("pH 7 Reference", ref_ph7_pts, show_dots=False, stroke_style={"width": 2, "dasharray": "6,6"})
+
+# Direct text annotation at equivalence point — positioned to the right of the vertical line
+ann_label = f"{eq_vol:.0f} mL, pH {eq_ph:.0f}"
+chart.add(
+    f"Eq. point: {ann_label}",
+    [(float(eq_vol + 2.5), float(eq_ph + 2.0))],
+    show_dots=True,
+    dots_size=10,
+    print_values=True,
+    value_formatter=lambda _: ann_label,
+    stroke=False,
+)
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
