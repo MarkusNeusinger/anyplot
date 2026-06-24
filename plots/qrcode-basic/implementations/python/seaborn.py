@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
-Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-06-24
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-24
 """
 
 import os
