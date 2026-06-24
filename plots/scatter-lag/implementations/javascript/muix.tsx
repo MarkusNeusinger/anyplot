@@ -132,9 +132,22 @@ export default function Chart() {
             itemMarkHeight: 12,
             markGap: 8,
             itemGap: 28,
-            labelStyle: { fontSize: 13, fill: t.ink },
+            labelStyle: { fontSize: 14, fill: t.ink },
           },
         }}
+      />
+      {/* L-frame: mask top and right spines with background color */}
+      <line
+        x1={MARGIN.left - 1} y1={MARGIN.top}
+        x2={width - MARGIN.right + 1} y2={MARGIN.top}
+        stroke={t.pageBg}
+        strokeWidth={3}
+      />
+      <line
+        x1={width - MARGIN.right} y1={MARGIN.top - 1}
+        x2={width - MARGIN.right} y2={height - MARGIN.bottom + 1}
+        stroke={t.pageBg}
+        strokeWidth={3}
       />
       {/* Title */}
       <text
