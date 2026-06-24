@@ -43,26 +43,41 @@ const QR_SIZE = QR_MATRIX.length;
 const QUIET_ZONE = 4;
 const TOTAL_MODULES = QR_SIZE + QUIET_ZONE * 2;
 
+// Flatten QR matrix to cell objects for D3 data binding
+const cells = QR_MATRIX.flatMap((row, ri) =>
+  row.map((val, ci) => ({ row: ri, col: ci, on: val === 1 }))
+);
+const darkModules = cells.filter(d => d.on);
+
 // Layout
 const TITLE_Y = 52;
-const QR_TOP = TITLE_Y + 36;
-const LABEL_RESERVE = 80;
-const CELL = Math.floor(
+const QR_TOP = TITLE_Y + 40;
+const LABEL_RESERVE = 100;
+const CELL_SIZE = Math.floor(
   Math.min((width - 80) / TOTAL_MODULES, (height - QR_TOP - LABEL_RESERVE) / TOTAL_MODULES)
 );
-const QR_PX = CELL * TOTAL_MODULES;
+const QR_PX = CELL_SIZE * TOTAL_MODULES;
 const QR_X = Math.floor((width - QR_PX) / 2);
 const QR_Y = QR_TOP;
 
-// QR module colors — high contrast for scanner readability
+// D3 linear scales — map module grid indices to pixel coordinates
+const xScale = d3.scaleLinear()
+  .domain([0, TOTAL_MODULES])
+  .range([QR_X, QR_X + QR_PX]);
+
+const yScale = d3.scaleLinear()
+  .domain([0, TOTAL_MODULES])
+  .range([QR_Y, QR_Y + QR_PX]);
+
+// QR module colors — fixed high-contrast pair for reliable scanning
 const MODULE_ON = "#1A1A17";
 const MODULE_OFF = "#FAF8F1";
 
-// SVG
+// SVG mount
 const svg = d3.select("#container").append("svg")
   .attr("width", width).attr("height", height);
 
-// QR card — warm white background covers full area including quiet zone
+// QR card background (warm white, covers quiet zone)
 svg.append("rect")
   .attr("x", QR_X)
   .attr("y", QR_Y)
@@ -72,7 +87,7 @@ svg.append("rect")
   .attr("rx", 10)
   .attr("ry", 10);
 
-// Subtle card border in dark theme for visual separation
+// Dark-theme card border for visual separation
 if (window.ANYPLOT_THEME === "dark") {
   svg.append("rect")
     .attr("x", QR_X)
@@ -87,18 +102,16 @@ if (window.ANYPLOT_THEME === "dark") {
     .attr("ry", 10);
 }
 
-// Draw dark modules only (light modules are the card background)
-QR_MATRIX.forEach((row, ri) => {
-  row.forEach((cell, ci) => {
-    if (!cell) return;
-    svg.append("rect")
-      .attr("x", QR_X + (QUIET_ZONE + ci) * CELL)
-      .attr("y", QR_Y + (QUIET_ZONE + ri) * CELL)
-      .attr("width", CELL)
-      .attr("height", CELL)
-      .attr("fill", MODULE_ON);
-  });
-});
+// QR modules — D3 data binding: xScale/yScale position each module via grid coordinates
+svg.selectAll("rect.module")
+  .data(darkModules)
+  .join("rect")
+  .attr("class", "module")
+  .attr("x", d => xScale(QUIET_ZONE + d.col))
+  .attr("y", d => yScale(QUIET_ZONE + d.row))
+  .attr("width", CELL_SIZE)
+  .attr("height", CELL_SIZE)
+  .attr("fill", MODULE_ON);
 
 // Title
 svg.append("text")
@@ -111,10 +124,20 @@ svg.append("text")
   .text("qrcode-basic · javascript · d3 · anyplot.ai");
 
 // URL label below QR code
+const LABEL_Y = QR_Y + QR_PX + 44;
 svg.append("text")
   .attr("x", width / 2)
-  .attr("y", QR_Y + QR_PX + 44)
+  .attr("y", LABEL_Y)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "18px")
   .text(ENCODED_URL);
+
+// Caption — scan context and matrix stats
+svg.append("text")
+  .attr("x", width / 2)
+  .attr("y", LABEL_Y + 30)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text(`Scan to visit anyplot.ai — ${QR_SIZE}×${QR_SIZE} matrix · ${darkModules.length} dark modules · Error correction M`);
