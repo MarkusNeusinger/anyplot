@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 titration-curve: Acid-Base Titration Curve
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -92,22 +92,22 @@ y_scale = alt.Scale(domain=[0, 14])
 DERIV_DISPLAY_MAX = 25.0
 deriv_scale = alt.Scale(domain=[0, DERIV_DISPLAY_MAX])
 
-# Shared axis styling using theme-adaptive tokens
-axis_props = {
+# Shared base axis styling using theme-adaptive tokens
+axis_props_base = {
     "labelFontSize": 10,
     "titleFontSize": 12,
     "titleFontWeight": "bold",
     "titleColor": INK,
     "labelColor": INK_SOFT,
-    "gridOpacity": 0.15,
-    "gridWidth": 0.5,
-    "gridColor": INK,
     "domainColor": INK_SOFT,
     "domainWidth": 1.5,
     "tickColor": INK_SOFT,
     "tickSize": 5,
     "labelPadding": 5,
 }
+# Y-axis: include subtle horizontal grid; X-axis: no grid (reduces visual noise)
+y_axis_props = {**axis_props_base, "gridOpacity": 0.15, "gridWidth": 0.5, "gridColor": INK}
+x_axis_props = {**axis_props_base, "gridOpacity": 0}
 
 # pH 7 horizontal reference line
 ref_line = (
@@ -133,7 +133,7 @@ equiv_marker = (
 # Equivalence point: text annotation
 equiv_annotation = (
     alt.Chart(equiv_label)
-    .mark_text(fontSize=9, fontWeight="bold", color=CLR_EQUIV, align="left", dx=8, lineBreak="\n")
+    .mark_text(fontSize=11, fontWeight="bold", color=CLR_EQUIV, align="left", dx=8, lineBreak="\n")
     .encode(x=alt.X("volume_ml:Q", scale=x_scale), y=alt.Y("ph:Q", scale=y_scale), text="label:N")
 )
 
@@ -143,9 +143,9 @@ titration_line = (
     .mark_line(strokeWidth=3, interpolate="monotone")
     .encode(
         x=alt.X(
-            "volume_ml:Q", scale=x_scale, title="Volume of NaOH added (mL)", axis=alt.Axis(tickCount=10, **axis_props)
+            "volume_ml:Q", scale=x_scale, title="Volume of NaOH added (mL)", axis=alt.Axis(tickCount=10, **x_axis_props)
         ),
-        y=alt.Y("ph:Q", scale=y_scale, title="pH", axis=alt.Axis(titlePadding=10, **axis_props)),
+        y=alt.Y("ph:Q", scale=y_scale, title="pH", axis=alt.Axis(titlePadding=10, **y_axis_props)),
         color=alt.value(CLR_CURVE),
         tooltip=[
             alt.Tooltip("volume_ml:Q", title="Volume (mL)", format=".1f"),
@@ -154,13 +154,21 @@ titration_line = (
     )
 )
 
-# Invisible dummy marks to drive the Imprint-palette legend
-legend_df = pd.DataFrame({"label": ["pH (titration curve)", "dpH/dV (derivative)"], "color": [CLR_CURVE, CLR_DERIV]})
+# mark_line legend: line swatches rendered at ph=-100 (outside [0,14] domain, clipped out)
+legend_df = pd.DataFrame(
+    {
+        "volume_ml": [0, 50, 0, 50],
+        "ph": [-100.0, -100.0, -100.0, -100.0],
+        "label": ["pH (titration curve)", "pH (titration curve)", "dpH/dV (derivative)", "dpH/dV (derivative)"],
+    }
+)
 
 legend_chart = (
     alt.Chart(legend_df)
-    .mark_point(size=0, opacity=0)
+    .mark_line(clip=True)
     .encode(
+        x=alt.X("volume_ml:Q", scale=x_scale),
+        y=alt.Y("ph:Q", scale=y_scale),
         color=alt.Color(
             "label:N",
             scale=alt.Scale(domain=["pH (titration curve)", "dpH/dV (derivative)"], range=[CLR_CURVE, CLR_DERIV]),
@@ -176,7 +184,7 @@ legend_chart = (
                 strokeColor=INK_SOFT,
                 labelColor=INK_SOFT,
             ),
-        )
+        ),
     )
 )
 
@@ -194,14 +202,13 @@ deriv_line = (
             title="dpH/dV (pH/mL, clipped at 25)",
             scale=deriv_scale,
             axis=alt.Axis(
+                domain=False,
                 titleColor=CLR_DERIV,
                 labelColor=CLR_DERIV,
                 titleFontSize=12,
                 titleFontWeight="bold",
                 labelFontSize=10,
                 gridOpacity=0,
-                domainColor=CLR_DERIV,
-                domainWidth=1.5,
                 tickColor=CLR_DERIV,
                 tickSize=5,
                 labelPadding=5,
@@ -237,7 +244,7 @@ chart = (
             offset=8,
         ),
     )
-    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_view(strokeWidth=0, strokeOpacity=0, fill=PAGE_BG)
     .configure(background=PAGE_BG, padding={"left": 15, "right": 15, "top": 8, "bottom": 8})
     .interactive()
 )
