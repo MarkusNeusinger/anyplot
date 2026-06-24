@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-chromagram
 created: '2026-06-24T13:39:56Z'
-updated: '2026-06-24T13:46:57Z'
+updated: '2026-06-24T14:00:33Z'
 generated_by: claude-sonnet
 workflow_run: 28101835330
 issue: 4564
@@ -12,136 +12,139 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Correct Imprint sequential colormap (imprint_seq via t.seq tokens, green→blue)
-    for energy data — exactly right for single-polarity continuous data
-  - 'Perfect spec compliance: all 12 pitch classes labeled, colorbar with Energy axis,
-    time in seconds, 80 frames of deterministic I-V-vi-IV chord progression data'
-  - Theme-adaptive chrome throughout — title, axis labels, tick labels, colorbar labels,
-    and row separators all use t.ink / t.inkSoft / t.pageBg tokens correctly; both
-    renders pass legibility check
-  - Chord change markers at 2s/4s/6s (vertical lines) are excellent storytelling elements
-    that show harmonic transitions without annotations
-  - Deterministic LCG with seed=42 ensures perfect reproducibility; realistic chord
-    energy profiles (C major, G major, A minor, F major) with subtle noise create
-    authentic-looking chroma features
+  - Custom Chart.js afterDraw plugin for canvas-level heatmap rendering is technically
+    sophisticated and idiomatic to the library's plugin API
+  - Full Imprint sequential colormap compliance using t.seq tokens interpolated via
+    LCG-seeded deterministic data
+  - Chord section labels (C maj, G maj, A min, F maj) above the heatmap provide genuine
+    data storytelling about the harmonic progression
+  - All 12 pitch classes correctly labeled C through B, time axis in seconds, and
+    colorbar with gradient + tick labels all match spec requirements
+  - 'Perfectly theme-adaptive: all chrome elements (title, axis labels, row separators,
+    chord markers, colorbar outlines) use t.ink/t.inkSoft/t.pageBg tokens so both
+    renders are fully readable'
   weaknesses:
-  - 'DE-01 (5/8): Design lacks final publication-ready polish — the heatmap is correct
-    but visually plain. Consider adding chord section label annotations (e.g. ''C
-    maj'', ''G maj'', ''A min'', ''F maj'') above each section using ctx.fillText
-    in the afterDraw plugin, or a subtle gradient vignette at the chord boundaries
-    to add depth.'
-  - 'DE-02 (4/6): Visual refinement is above default but not complete — the x-axis
-    grid lines (t.grid) show through the heatmap cells and compete slightly with the
-    data. Suppress x-axis grid (grid: { display: false }) to let the chord change
-    markers carry that structural role. Also consider explicitly removing all four
-    chart borders/spines for a cleaner frame.'
-  - 'CQ-01 (2/3): Three standalone helper functions (lcg, hexToRgb, energyToColor)
-    plus the plugin object break the KISS Imports→Data→Plot structure. The LCG could
-    be replaced with a pre-computed noise array; hexToRgb and energyToColor could
-    be inlined or collapsed into one helper to reduce the function count.'
-  - 'LM-02 (3/5): The plugin uses Canvas 2D drawing for cells — this is necessary
-    but not maximally Chart.js-idiomatic. The afterBuildTicks approach for custom
-    Y tick labels is a strong Chart.js-specific technique and should be highlighted;
-    consider also using Chart.js annotation plugin patterns where possible.'
+  - Colorbar width is only 16 CSS px — at 2x devicePixelRatio the rendered gradient
+    column is 32 native pixels, which is fairly narrow; increasing to 20-22px would
+    make the gradient and tick alignment more legible at mobile scaling
+  - 'LM-01 deduction: using an empty-dataset scatter chart purely as a coordinate-system
+    substrate for custom canvas drawing is unconventional — the chart has no actual
+    data points, making the scatter type a dummy; future implementations could explore
+    whether a purely-plugin-based approach avoids the empty dataset antipattern'
+  - The Imprint sequential green→blue colormap (both hues are mid-saturation) produces
+    lower luminance contrast between low-energy (~0.05, near-green) and high-energy
+    (~0.90, near-blue) cells compared to a luminance-ramping cmap — patterns are readable
+    but not maximally vivid; this is a palette-rule constraint, not a code flaw, but
+    it limits how striking the result looks
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "heatmap-chromagram · javascript · chartjs · anyplot.ai" in bold dark text at top (~50% width), well-proportioned. Y-axis label "Pitch Class" and X-axis label "Time (seconds)" in dark text, both clearly readable. Y-axis tick labels (B, A#, A, G#, G, F#, F, E, D#, D, C#, C) and X-axis tick labels (0.0s, 1.0s, ..., 8.0s) in inkSoft color, all legible. Colorbar on right shows gradient from green (#009E73) to blue (#4467A3) with tick labels 0.00, 0.25, 0.50, 0.75, 1.00 and rotated "Energy" label.
-      Data: Heatmap showing 4 chord sections across 80 frames / 8 seconds. Green-teal cells indicate low energy (~0.05), blue-tinted cells indicate high energy (~0.7-0.9). C major section (0-2s): C/E/G rows show blue; G major section (2-4s): G/B/D rows active; A minor section (4-6s): A/C/E rows active; F major section (6-8s): F/A/C rows active. Chord change markers (thin vertical lines) at 2s, 4s, 6s clearly visible. Row separators in page background color are subtle but add clarity. First series uses #009E73 (brand green) as the low-energy base — correct.
-      Legibility verdict: PASS — all text readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, clearly not pure white
+      Chrome: Title "heatmap-chromagram · javascript · chartjs · anyplot.ai" in dark ink, ~65% canvas width — well proportioned. Y-axis label "Pitch Class" and X-axis label "Time (seconds)" in dark ink. Tick labels (0.0s–8.0s and C–B) in slightly lighter inkSoft. All text is clearly readable against the light background.
+      Data: Heatmap grid of 12 pitch classes × 80 time frames. Low-energy cells render as brand green (#009E73); high-energy cells (chord tones) render as blue (#4467A3). The imprint_seq gradient is visible on the colorbar (green bottom, blue top, labeled 0.00–1.00 with "Energy" rotated label). Chord labels "C maj", "G maj", "A min", "F maj" appear in dark ink above the respective heatmap sections. Vertical chord-change separators at 2.0s/4.0s/6.0s are subtle (alpha=0.55, page-bg color). Row separators between pitch classes are thin and subtle.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and all axis labels/ticks appear in light text (cream/off-white) against the dark background. All text elements are clearly readable with no dark-on-dark failure. The "Energy" colorbar label and tick values remain legible.
-      Data: Identical chord pattern to light render — same green-to-blue gradient with same chord sections (C major, G major, A minor, F major). Data colors (#009E73 → #4467A3) are identical to light render; only chrome (background, text, row separator colors) has flipped theme. Chord change markers and row separators adapt correctly using t.pageBg token.
-      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, clearly not pure black
+      Chrome: Title in light cream text, fully readable against the dark background. Y-axis "Pitch Class" and X-axis "Time (seconds)" in light ink. Tick labels (pitch classes and time) in light inkSoft. Chord section labels (C maj, G maj, A min, F maj) appear in light ink above the heatmap sections — readable. Colorbar tick labels (0.00–1.00) and rotated "Energy" label in light inkSoft — readable. No dark-on-dark failures detected.
+      Data: Identical heatmap pattern to light render — same imprint_seq green→blue gradient, same chord structure patterns visible. Data colors are unchanged between themes; only the background and chrome flipped.
+      Legibility verdict: PASS — all text readable in both themes, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 22px bold, axis labels 16px,
-          tick labels 14px, colorbar ticks 12px, colorbar axis label 13px. Well-proportioned
-          in both themes.'
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, chord labels bold 14px, colorbar labels 12px, Energy 13px). All readable
+          in both themes. Proportions well-balanced. Minor: colorbar labels/Energy
+          text on the small side at mobile scaling.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Y-axis pitch class labels well-spaced,
-          time tick labels clear.
+        comment: No overlapping text elements. Pitch class labels well-spaced. Chord
+          section labels sit cleanly above the heatmap in the title padding area.
+          Colorbar tick labels do not collide.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with strong contrast between low (green)
-          and high (blue) energy. Chord patterns clearly distinguishable.
+        comment: 'Heatmap cells clearly distinguish active chord tones (blue) from
+          inactive pitches (green). Chord change markers and row separators are visible
+          but appropriately subtle. Colorbar gradient is smooth. Minor deduction:
+          the imprint_seq green→blue pair has similar luminance, making the contrast
+          somewhat subdued compared to a luminance-ramping cmap.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential (green→blue) provides luminance contrast between
-          low and high energy. CVD-safe palette.
+        comment: Imprint seq green→blue is CVD-safe for protanopia/deuteranopia. Hue
+          + saturation differences are sufficient for discrimination without relying
+          on red-green.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~85% of canvas width and height. Right padding (110px)
-          accommodates colorbar. Balanced margins.
+        comment: 'Canvas gate passed. Heatmap fills ~85% of canvas width. right: 110
+          padding cleanly accommodates the colorbar + labels + Energy text. Balanced
+          margins. No overflow or clipping detected.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Time (seconds)'' with units. Y-axis: ''Pitch Class'' (categorical,
-          no units needed). Colorbar: ''Energy'' label.'
+        comment: 'Title: correct format. X-axis: ''Time (seconds)'' with unit. Y-axis:
+          ''Pitch Class''. Colorbar has ''Energy'' label. All descriptive and accurate.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq (t.seq[0]=#009E73 → t.seq[1]=#4467A3) — correct
-          for single-polarity energy data. Light bg #FAF8F1, dark bg #1A1A17. Chrome
-          fully theme-adaptive. Data colors identical in both renders.'
+        comment: 'Uses t.seq (imprint_seq: #009E73→#4467A3) for single-polarity continuous
+          energy data — correct continuous colormap. Plot backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark). Chrome fully theme-adaptive via t.ink/t.inkSoft/t.pageBg
+          tokens.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above default: custom Imprint sequential colormap, chord change
-          markers, row separators. But lacks publication-ready polish — no chord section
-          labels, typography hierarchy beyond basics, or accent elements.'
+        passed: true
+        comment: 'Clearly above defaults: custom canvas plugin, chord labels, colorbar
+          with gradient. Thoughtful use of alpha-blending on separators. Not quite
+          publication-ready — the green→blue palette (same luminance range) limits
+          visual punch; patterns are readable but not vivid.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Y-axis grid disabled (correct for heatmap), row separators subtle
-          (page bg color), explicit padding, colorbar border thin (inkSoft). X-axis
-          grid lines still visible through heatmap — should be disabled.
+        passed: true
+        comment: 'Spines removed (border: display false), no grid, subtle pitch-class
+          row separators in pageBg color, chord markers at alpha=0.55. Very polished.
+          Minor: chord labels sit quite close (8px) to the heatmap top edge.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: 'Chord change markers at 2s/4s/6s create clear visual hierarchy showing
-          harmonic transitions. I-V-vi-IV progression (C→G→Am→F) tells a recognizable
-          musical story. Missing: section labels to name each chord.'
+        passed: true
+        comment: Chord section labels directly narrate the harmonic progression. Vertical
+          separators mark transitions. Viewer immediately reads the chord pattern.
+          Good hierarchy — above default, not yet excellent (no annotation or emphatic
+          focal point highlights).
     spec_compliance:
       score: 15
       max: 15
@@ -151,31 +154,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chromagram heatmap showing energy across all 12 pitch classes
-          over time. Chart.js plugin approach is appropriate.
+        comment: 'Correct chromagram heatmap: 12 pitch classes on Y, time on X, color
+          = energy intensity.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes labeled (C to B), sequential colormap (imprint_seq),
-          colorbar with Energy label, time axis in seconds, 80 frames with realistic
-          chord patterns.
+        comment: 'All spec requirements met: all 12 pitch classes labeled C→B, sequential
+          colormap, colorbar, time axis in seconds, 80-frame resolution, realistic
+          chord patterns.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: time (0-8s), Y-axis: pitch class (B→C top-to-bottom = standard
-          chromagram convention), color: energy 0-1.'
+        comment: X=time (0–8s), Y=pitch class (C–B), color=energy. Correct and complete.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''heatmap-chromagram · javascript · chartjs · anyplot.ai''
-          — correct format. No legend (colorbar is appropriate substitute for continuous
-          data).'
+          — exact required format. No categorical legend (correct for continuous heatmap;
+          colorbar serves as scale legend).'
     data_quality:
       score: 15
       max: 15
@@ -185,66 +187,66 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all chromagram features: 12 pitch classes with varying energy,
-          temporal evolution across 80 frames, 4 distinct chord sections with realistic
-          chord-tone distributions.'
+        comment: 'Shows all chromagram features: 12 pitch classes, multiple chord
+          types, clear transitions, both active and inactive pitch states across the
+          full energy range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic I-V-vi-IV chord progression (C major, G major, A minor, F
-          major) — highly recognizable music theory pattern. Neutral, non-controversial
-          topic.
+        comment: Music information retrieval scenario is real and widely used. Four-chord
+          progression (C maj → G maj → A min → F maj) is a realistic and recognizable
+          Western chord sequence. Deterministic noise simulates chroma extraction
+          artifacts.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy values 0-1 (normalized chroma features). Active chord tones
-          ~0.66-0.90, inactive ~0.05. 10 frames/second realistic for chroma extraction.
-          Gaussian noise ±0.05 adds realism.
+        comment: 'Energy normalized to [0,1] — standard for chroma features. 10 frames/second
+          is appropriate resolution. Chord profiles (C major: C,E,G; G major: G,B,D;
+          etc.) are musically correct.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Three helper functions (lcg, hexToRgb, energyToColor) plus chromagramPlugin
-          object break the KISS ideal. Functions are justified by Chart.js constraints
-          but add complexity.
+        passed: true
+        comment: Clean Data → Plugin → Mount → Chart flow. LCG and energyToColor are
+          minimal helpers required for this chart type.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with seed=42. All data fully reproducible.
+        comment: Deterministic LCG with fixed seed=42. All data is reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No explicit imports. Uses only Chart global and window.ANYPLOT_TOKENS
-          — both pre-loaded by harness.
+        comment: No imports (Chart is global). Uses only window.ANYPLOT_TOKENS which
+          is required.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. No fake UI or interactive elements. Plugin
-          approach is appropriate for Chart.js heatmap.
+        comment: Clean, well-structured JavaScript. Plugin pattern is appropriate
+          for Chart.js heatmaps. No fake interactivity, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Harness handles output. animation: false set. responsive: true,
-          maintainAspectRatio: false set. No deprecated APIs.'
+        comment: 'Correct Chart.js pattern: responsive:true, maintainAspectRatio:false,
+          animation:false. Harness handles file output.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -252,29 +254,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Chart.js plugin API (afterDraw hook), scale system
-          (getPixelForValue), afterBuildTicks for custom tick control. All required
-          options set. Slight deduction for low-level canvas drawing when plugin system
-          could be more declarative.
+        comment: 'afterDraw plugin hook, afterBuildTicks for custom ticks, getPixelForValue
+          for cell positioning, layout.padding for colorbar — all idiomatic Chart.js
+          patterns. Minor: using an empty-dataset scatter chart as a coordinate-system
+          substrate is an unusual antipattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'Uses Chart.js-specific: plugin afterDraw hook, scale.getPixelForValue
-          for cell placement, afterBuildTicks for custom Y tick labels. Core cell
-          drawing is Web Canvas 2D (not Chart.js-specific).'
-  verdict: REJECTED
+        passed: true
+        comment: Chart.js custom plugin API (afterDraw with canvas2D access) and scale.getPixelForValue()
+          for precise cell drawing are features distinctive to Chart.js's plugin system.
+          Could score 5 with tighter integration between the chart data and the plugin.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - grid-styling
+  - alpha-blending
