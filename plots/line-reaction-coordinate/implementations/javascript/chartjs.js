@@ -94,13 +94,13 @@ const annotPlugin = {
     arrowHead(ctx, eaTop.x, eaTop.y, eaBot.x, eaBot.y, 9);
 
     const eaMid = px(EA_X, 85);
-    ctx.font         = "italic 15px sans-serif";
+    ctx.font         = "italic 16px sans-serif";
     ctx.textAlign    = "right";
     ctx.textBaseline = "middle";
     ctx.fillText("Ea = 70 kJ/mol", eaMid.x - 10, eaMid.y);
 
     // ΔH double-headed arrow (reactant energy level → product energy level)
-    const DH_X  = 0.85;
+    const DH_X  = 0.91;
     const dhTop = px(DH_X, 50);
     const dhBot = px(DH_X, 20);
 
@@ -113,7 +113,7 @@ const annotPlugin = {
     arrowHead(ctx, dhTop.x, dhTop.y, dhBot.x, dhBot.y, 9);
 
     const dhMid = px(DH_X, 35);
-    ctx.font         = "italic 15px sans-serif";
+    ctx.font         = "italic 16px sans-serif";
     ctx.textAlign    = "left";
     ctx.textBaseline = "middle";
     ctx.fillText("ΔH = −30 kJ/mol", dhMid.x + 10, dhMid.y);
@@ -201,7 +201,7 @@ new Chart(canvas, {
           maxTicksLimit: 6,
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
       y: {
         min: 0,
@@ -218,7 +218,7 @@ new Chart(canvas, {
           font: { size: 13 },
         },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
       },
     },
   },
