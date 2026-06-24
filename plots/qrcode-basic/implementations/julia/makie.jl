@@ -41,11 +41,11 @@ ax = Axis(
     fig[1, 1];
     aspect             = DataAspect(),
     backgroundcolor    = QR_BG,
-    title              = "qrcode-basic · julia · makie · anyplot.ai",
+    title              = "Encode URL as QR Code · qrcode-basic · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
     xlabel             = "Encodes: $url  ·  Error correction: M (15%)",
-    xlabelsize         = 13,
+    xlabelsize         = 15,
     xlabelcolor        = INK_SOFT,
     topspinevisible    = false,
     rightspinevisible  = false,
