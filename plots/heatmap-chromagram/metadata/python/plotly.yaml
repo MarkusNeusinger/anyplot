@@ -1,107 +1,137 @@
 library: plotly
+language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:25:49Z'
-updated: '2026-03-17T22:36:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23219179221
+updated: '2026-06-24T13:27:40Z'
+generated_by: claude-sonnet
+workflow_run: 28100709495
 issue: 4564
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/plotly/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent data storytelling with chord progression labels, bracket line, and dotted
-    separator lines creating clear visual hierarchy
-  - Custom colorscale matching the dark plot background creates a cohesive, professional
-    aesthetic
-  - Musically accurate chord profiles with smooth blending transitions between sections
-  - Clean, well-structured code with appropriate complexity for the visualization
-  - Plotly-specific features (hovertemplate, HTML export) add value
+  - 'Full spec compliance: all 12 pitch classes labeled, colorbar with Energy scale,
+    time axis in seconds, 120-frame resolution captures chord transitions clearly'
+  - 'Strong data storytelling: chord section labels (C maj, G maj, A min, F maj) with
+    bracket line and dotted separator lines guide the viewer through the harmonic
+    progression'
+  - 'Correct imprint_seq colorscale (green→blue) for single-polarity energy data,
+    both themes correctly use #FAF8F1 / #1A1A17 backgrounds with fully theme-adaptive
+    chrome'
+  - 'Realistic synthetic data: C→G→Am→F is a universally recognized I-V-vi-IV pop
+    progression with chord-profile arrays and smooth blending at transitions'
+  - 'Clean code: seed(42), no functions/classes, only used imports, writes both plot-{THEME}.png
+    and plot-{THEME}.html'
   weaknesses:
-  - 'Minor: axis line colors could be even more subtle for additional visual refinement'
-  - LM-01 could be higher with more advanced Plotly patterns
-  image_description: The plot displays a heatmap chromagram with all 12 pitch classes
-    (C through B) on the y-axis and time in seconds (0 to ~5.95) on the x-axis. A
-    custom sequential colorscale runs from dark navy (#0d0628) through deep purple
-    and hot magenta to warm orange and bright gold (#fcffa4), representing energy
-    intensity from 0 to 1.2. Four chord sections are labeled above the heatmap — "C
-    maj", "G maj", "A min", "F maj" — separated by white dotted vertical lines, with
-    a thin horizontal bracket line connecting them. The C major section clearly lights
-    up C, E, and G pitch classes; G major highlights G, B, and D; A minor shows A,
-    E, and C; F major activates F, A, and C. Transitions between chords show smooth
-    blending. The colorbar on the right is labeled "Energy" with tick values at 0,
-    0.3, 0.6, 0.9, 1.2. The dark plot background matches the low end of the colorscale,
-    while the paper background is light gray. Small gaps between heatmap cells add
-    visual clarity.
+  - 'Design Excellence could be elevated: chord annotations are a good start but the
+    bracket line (y0=1.04 paper) is very thin and barely visible — consider thickening
+    to width=2 or adding small tick marks at each segment boundary to make the section
+    delineation more prominent'
+  - 'Colorbar ''bgcolor'' is set to ELEVATED_BG (#FFFDF6 / #242420) but this creates
+    a slightly different-colored background slab behind the colorbar ticks that is
+    visible in both renders — removing the bgcolor key or setting it to PAGE_BG would
+    integrate the colorbar more cleanly'
+  - 'Library Mastery: Plotly''s interactive strength is only partially used — the
+    hovertemplate is good, but adding a rangeslider on the x-axis or a custom modebar
+    config (e.g. modeBarButtonsToRemove) would better showcase Plotly-specific capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "heatmap-chromagram · python · plotly · anyplot.ai" in dark #1A1A17 at fontsize 16, centered. X-axis label "Time (seconds)" and Y-axis label "Pitch Class" in dark ink at size 12. Tick labels (0, 0.5, 1 … 5.5 on x; C through B on y) in muted #4A4A44 at size 10. All readable. Chord section labels "C maj", "G maj", "A min", "F maj" in dark ink above the plot with a horizontal bracket line. Separator dotted white lines mark chord boundaries inside the heatmap.
+      Data: Heatmap cells colored on imprint_seq scale: low-energy cells appear green (#009E73), high-energy cells appear blue (#4467A3). Harmonic structure of C→G→Am→F progression clearly visible — C and E activate in C maj section; G and B in G maj; A in A min; F and A in F maj. Colorbar on the right with "Energy" title, ticks at 0, 0.3, 0.6, 0.9, 1.2.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light #F0EFE8, axis labels in light ink, tick labels in muted #B8B7B0 — all clearly readable against dark background. Chord labels ("C maj", "G maj", "A min", "F maj") in light #F0EFE8 — no dark-on-dark issues. Colorbar "Energy" label and ticks in light ink. Bracket line in INK_SOFT (#B8B7B0) remains visible.
+      Data: Heatmap cell colors are identical to the light render — same green-to-blue imprint_seq scale, same harmonic patterns, same colorbar range. Only chrome (background, text, line colors) has flipped to dark-mode values.
+      Legibility verdict: PASS — all text is readable against the warm near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          16pt, colorbar title 20pt'
+        comment: 'Title (16px), axis labels (12px), tick labels (10px), chord annotations
+          (13px) all readable in both themes. Minor: chord annotations could be slightly
+          larger for mobile readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, chord labels well-spaced above heatmap
+        comment: No text or element overlap in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible with strong color contrast and cell
-          gaps
+        comment: Heatmap cells clearly visible. xgap/ygap create slight grid pattern
+          typical for heatmaps. Color contrast between low (green) and high (blue)
+          energy is clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential colorscale from dark navy to bright gold, fully colorblind-safe
+        comment: imprint_seq is CVD-safe; energy not encoded as red-green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Heatmap fills canvas well with balanced margins
+        comment: Canvas gate passed (3200x1800). Good margins, title and colorbar
+          not clipped. Proportions balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) with units, Pitch Class descriptive
+        comment: 'X: ''Time (seconds)'' with units; Y: ''Pitch Class''. Title follows
+          exact mandatory format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq used for single-polarity energy data. Backgrounds #FAF8F1/#1A1A17.
+          All chrome tokens theme-adaptive.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with custom colorscale, dark plot background, professional
-          typography, chord annotations with bracket line
+        comment: 'Above default: chord section labels with bracket line and dotted
+          separators add clear musical narrative structure. Clean colorbar with outlinewidth=0.
+          Professional result.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, subtle axis borders, cell gaps, generous whitespace,
-          bracket line detail
+        comment: No grid (correct for heatmap), axis lines styled in INK_SOFT, thin
+          colorbar, cell gaps. Above default but bracket line is very thin and colorbar
+          bgcolor creates slight visual slab artifact.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chord progression labels and separators create clear visual hierarchy
+        comment: Chord section labels and separator lines actively guide the viewer
+          through C→G→Am→F harmonic progression. Clear musical narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -111,48 +141,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap type for chromagram
+        comment: Correct heatmap with pitch class vs time, color encoding energy.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 12 pitch classes, sequential colormap,
-          colorbar, time axis, chord transitions'
+        comment: All 12 pitch classes labeled, sequential colormap (imprint_seq),
+          colorbar with energy scale, time in seconds, 120-frame resolution, realistic
+          chord patterns.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, Z=energy correctly mapped
+        comment: X=time(seconds), Y=pitch class, color=energy. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, colorbar serves as legend
+        comment: Title 'heatmap-chromagram · python · plotly · anyplot.ai' — exact
+          format. Colorbar 'Energy' label appropriate.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 4 different chords, smooth transitions, noise for realism
+        comment: Shows all 12 pitch classes, full time coverage, chord progression
+          with smooth transitions. Very comprehensive.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-G-Am-F is a common chord progression, musically accurate
+        comment: C→G→Am→F (I-V-vi-IV) is a universally recognized pop progression.
+          Chroma profiles and noise levels are realistic for extracted audio features.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0-1.2, 120 frames at 50ms, realistic parameters
+        comment: 6 seconds at 120 frames (0.05s resolution) is appropriate for chord
+          detection. Energy range 0–1.2 matches typical chroma feature magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -162,31 +197,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: No functions or classes, linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) — deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code with elegant chord blending
+        comment: Clean structure, no fake UI, well-organized data setup.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dimensions, also HTML
+        comment: Saves plot-{THEME}.png (write_image) and plot-{THEME}.html (write_html).
+          Current API.
     library_mastery:
       score: 7
       max: 10
@@ -196,14 +232,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Heatmap, add_annotation, add_shape, update_layout
-          with template
+        comment: go.Heatmap with proper z/x/y/colorscale/colorbar, fig.add_annotation,
+          fig.add_shape — idiomatic Plotly patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom hovertemplate, HTML export, interactive annotations are Plotly-specific
+        comment: Uses hovertemplate for rich hover display and write_html for interactive
+          output — Plotly-specific strengths. Could further leverage Plotly with rangeslider
+          or modebar customization.
   verdict: APPROVED
 impl_tags:
   dependencies: []

@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: heatmap-chromagram
+created: '2026-06-24T13:29:09Z'
+updated: '2026-06-24T13:48:33Z'
+generated_by: claude-sonnet
+workflow_run: 28101579879
+issue: 4564
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Secondary x-axis with bold chord labels (C, Am, F, G) provides immediate musical
+    context without cluttering the heatmap.
+  - 'Imprint sequential colormap correctly applied for continuous energy data (green
+    to blue, #009E73 to #4467A3).'
+  - 'Both themes fully theme-adaptive: all chrome tokens (INK, INK_SOFT, PAGE_BG,
+    ELEVATED_BG) correctly flip without touching data colors.'
+  - coord_fixed(ratio = n_frames / 12) elegantly constrains the heatmap to fill the
+    square canvas perfectly.
+  - I-vi-IV-V chord progression is highly realistic and directly illustrates the spec
+    harmonic analysis use case.
+  weaknesses:
+  - 'VQ-01 minor: At 400px mobile scaling, 8pt tick labels (axis.text) may become
+    marginal; could be raised to 9pt for safer mobile legibility.'
+  - 'DE-01: Legend box lacks a visible border — legend.background has no color argument
+    set, so the elevated bg blends into the canvas slightly; adding color = INK_SOFT
+    would add subtle framing.'
+  - 'LM-02: geom_vline chord boundary dashes are at times partially obscured by tile
+    colors; raising linewidth from 0.4 to 0.55 would make boundaries crisper.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "heatmap-chromagram · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Time (seconds)" and "Pitch Class" at 10pt dark ink. Tick labels at 8pt INK_SOFT (#4A4A44), readable. Secondary x-axis chord labels (C, Am, F, G) bold at 9pt. Colorbar "Energy" label and value ticks all readable.
+      Data: Imprint sequential colormap — low-energy tiles are brand-green (#009E73), high-energy tiles shift to blue (#4467A3). Chord patterns clearly visible: C-major pitches (C, E, G) activate in first region; A-minor (A, C, E) in second; F-major (F, A, C) in third; G-major (G, B, D) in fourth. Dashed chord boundary separators visible at 2s, 4s, 6s.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels switch to near-white (#F0EFE8), clearly readable against dark background. Tick labels in #B8B7B0, readable. Secondary axis chord labels in bold light text. Colorbar values (0.25, 0.50, 0.75) in white, legible. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — brand-green to blue gradient unchanged. Chord boundary dashes adapt to INK_SOFT dark (#B8B7B0) appearing as subtle light dashes. Data colors (Imprint palette positions) stay constant between themes as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 12pt, axis labels 10pt, tick
+          labels 8pt, secondary axis 9pt bold); readable in both themes. Minor: 8pt
+          tick labels may be marginal at 400px mobile.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 pitch class labels well-separated; secondary axis chord labels
+          well-spaced; no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap tiles vivid; color contrast between low-energy (green) and
+          high-energy (blue) clear; chord-boundary dashed lines visible in both themes;
+          colorbar spans full panel height.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential green-to-blue is CVD-safe; no red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct for heatmap; canvas gate passed;
+          coord_fixed ensures proportional fill; margins adequate.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) and Pitch Class are descriptive; secondary axis labeled
+          Chord; title matches required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) exactly imprint_seq;
+          backgrounds #FAF8F1/#1A1A17; both themes correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Above default. Secondary x-axis with bold chord names adds professional
+          musicological context. Large colorbar key (1.5in height). Panel border frames
+          cleanly. Elevated legend background applied.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default. Grid lines removed — correct for tile plot. Panel
+          border retained appropriately. Adequate whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Strong. I-vi-IV-V chord progression directly readable from heatmap.
+          Dashed boundary lines make transitions explicit. Serves the chord detection
+          and key estimation use case.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap-style chromagram using geom_tile().
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes labeled; sequential colormap (imprint_seq);
+          colorbar included; time axis in seconds; 80 frames captures chord transitions
+          clearly.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, fill=energy; all 12 pitch classes shown; 0-8s
+          range covered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title heatmap-chromagram · r · ggplot2 · anyplot.ai matches required
+          format; colorbar labeled Energy with breaks at 0, 0.25, 0.50, 0.75, 1.0.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 12 pitch classes, full time evolution, four chord regions.
+          Background noise plus chord energy peaks realistically simulated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: I-vi-IV-V in C major is the most widely used chord progression in
+          Western pop/folk music; realistic and musically neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy values normalized 0-1; 80 frames / 8 seconds is realistic
+          chroma-feature resolution; chromatic pitch class ordering correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity, clear data generation
+          loop.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png; current API throughout.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_tile() for heatmap, scale_fill_gradient(), scale_y_discrete(expand=c(0,0)),
+          coord_fixed() — all idiomatic ggplot2. sec_axis() usage is an advanced grammar-of-graphics
+          pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: sec_axis() on x-axis for chord region annotation is distinctively
+          ggplot2; coord_fixed(ratio = n_frames / 12) ensures pixel-perfect aspect
+          ratio; theme() stacking with per-element overrides demonstrates solid mastery.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
