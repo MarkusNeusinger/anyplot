@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-24
@@ -66,19 +66,21 @@ ax.plot(
 )
 
 # Colorbar
-cbar = fig.colorbar(scatter, ax=ax, pad=0.02, aspect=30)
+cbar = fig.colorbar(scatter, ax=ax, pad=0.03, aspect=28)
 cbar.set_label("Time Index", fontsize=10, color=INK_SOFT)
 cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 
-# Correlation annotation
+# Correlation annotation with qualitative descriptor for richer storytelling
+direction = "positive" if r_value > 0 else "negative"
+strength = "Strong" if abs(r_value) >= 0.7 else ("Moderate" if abs(r_value) >= 0.4 else "Weak")
 ax.text(
     0.04,
     0.96,
-    f"r = {r_value:.3f}",
+    f"r = {r_value:.3f}  ·  {strength} {direction} autocorrelation",
     transform=ax.transAxes,
-    fontsize=10,
+    fontsize=9,
     verticalalignment="top",
     fontweight="medium",
     color=INK,
@@ -98,7 +100,10 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
+# Both-axis grid for scatter plots (style guide recommendation)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
 
-plt.tight_layout()
+fig.subplots_adjust(left=0.09, right=0.86, top=0.93, bottom=0.10)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
