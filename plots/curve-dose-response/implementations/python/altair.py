@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
@@ -141,7 +141,7 @@ base_y = alt.Y(
 # 95% CI shaded bands
 ci_band = (
     alt.Chart(df_ci)
-    .mark_area(opacity=0.12)
+    .mark_area(opacity=0.22)
     .encode(x=alt.X("log_conc:Q"), y=alt.Y("ci_lower:Q"), y2="ci_upper:Q", color=color_no_legend)
 )
 
@@ -209,20 +209,20 @@ ec50_vlines = (
 # Top and bottom asymptote guides
 asymptote_top = (
     alt.Chart(df_ref)
-    .mark_rule(strokeDash=[3, 3], strokeWidth=1, opacity=0.3)
+    .mark_rule(strokeDash=[3, 3], strokeWidth=1, opacity=0.4)
     .encode(y=alt.Y("top_fit:Q"), color=color_no_legend)
 )
 
 asymptote_bottom = (
     alt.Chart(df_ref)
-    .mark_rule(strokeDash=[3, 3], strokeWidth=1, opacity=0.3)
+    .mark_rule(strokeDash=[3, 3], strokeWidth=1, opacity=0.4)
     .encode(y=alt.Y("bottom_fit:Q"), color=color_no_legend)
 )
 
 # EC50 value labels — offset above the intersection to avoid overlap with reference lines
 ec50_labels = (
     alt.Chart(df_ref)
-    .mark_text(fontSize=9, fontWeight="bold", align="left", dx=5, dy=-10)
+    .mark_text(fontSize=11, fontWeight="bold", align="left", dx=5, dy=-10)
     .encode(x=alt.X("ec50_log:Q"), y=alt.Y("half_response:Q"), text=alt.Text("ec50_label:N"), color=color_no_legend)
 )
 
@@ -249,7 +249,7 @@ chart = (
         height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "curve-dose-response · altair · pyplots.ai",
+            "curve-dose-response · python · altair · anyplot.ai",
             subtitle="4-Parameter Logistic Fit with 95% Confidence Intervals",
             fontSize=16,
             subtitleFontSize=11,
