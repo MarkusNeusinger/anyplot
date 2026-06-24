@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-06-24
+Quality: 87/100 | Updated: 2026-06-24
 """
 
 import importlib

@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:26:30Z'
-updated: '2026-06-24T13:26:33Z'
+updated: '2026-06-24T13:34:48Z'
 generated_by: claude-sonnet
 workflow_run: 28100949339
 issue: 4564
@@ -12,92 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: all 12 pitch classes, correct sequential colormap, colorbar,
-    and time axis all implemented faithfully'
-  - 'Excellent chord progression data: C→G→Am→F (I-V-vi-IV) produces musically realistic
-    chromagram patterns with smooth chord transitions'
-  - 'Perfect Imprint palette compliance: imprint_seq correctly applied for single-polarity
-    continuous data; both themes fully correct with no dark-on-dark failures'
-  - 'Idiomatic Altair usage: mark_rect() with x/x2 bin-edge encoding is the correct
-    approach for variable-width heatmap cells'
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED) correctly
-    applied to both light and dark renders'
+  - 'Imprint sequential colormap correctly applied: range=["#009E73", "#4467A3"] (imprint_seq)
+    — VQ-07 passes cleanly'
+  - All 12 pitch classes correctly ordered (C→B), chord progression clearly legible
+    from color blocks
+  - Both themes render with fully adaptive chrome (INK, INK_SOFT, INK_MUTED, ELEVATED_BG)
+    — no dark-on-dark failures
+  - 'Perfect spec compliance: all required elements present (all pitch classes, colorbar,
+    seconds axis, realistic data)'
+  - 'Excellent code quality: np.random.seed(42), no functions/classes, PAD-only canvas
+    logic, HTML output'
+  - Subtitle 'C → G → Am → F chord progression' improves data storytelling without
+    annotation clutter
   weaknesses:
-  - Axis title titleFontSize=20 is larger than chart title fontSize=16 — inverted
-    typography hierarchy; axis labels should not visually outweigh the chart title;
-    reduce axis title fontsize to 12–14 to match style guide recommendation for scale-based
-    libraries
-  - Short axis labels ('Time (seconds)', 'Pitch Class') at fontsize=20 are disproportionately
-    prominent — reduce to ~12px for balance with the rest of the chart typography
+  - 'DE-01 moderate: beyond the colormap and subtitle, no further design sophistication
+    (no chord-boundary markers at t=6,12,18s, no emphasis on dominant pitch classes
+    per chord section)'
+  - 'LM-02: only standard rect+tooltip Altair features used — no Altair-distinctive
+    interactions (e.g. interval selection brush for time range or hover-based pitch
+    highlight)'
+  - 'DE-02: legend and axis styling functional but not refined beyond token application'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "heatmap-chromagram · python · altair · anyplot.ai" in dark bold text; subtitle "Pitch class energy · C → G → Am → F chord progression" in muted gray; all 12 pitch class tick labels readable in dark tone; time axis ticks (0–24s) readable. Axis title "Time (seconds)" and "Pitch Class" at titleFontSize=20, visibly larger than chart title fontSize=16 — inverted hierarchy noted.
-      Data: Sequential colormap from bright teal-green (#009E73) for low energy to deep purple-blue (#4467A3) for high energy; four chord sections (C major, G major, A minor, F major) clearly distinguishable; energy colorbar on right labeled 0.2–1.0
-      Legibility verdict: PASS — all text readable, though axis titles disproportionately large relative to chart title
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold title "heatmap-chromagram · python · altair · anyplot.ai" in dark ink (#1A1A17), readable; subtitle in muted gray (#6B6A63), readable; Y-axis label "Pitch Class" and X-axis label "Time (seconds)" in dark ink (#1A1A17), readable; tick labels (C–B pitch classes, 0–24 s time) in secondary ink (#4A4A44), readable; Energy colorbar legend with elevated fill (#FFFDF6) and light stroke
+      Data: Imprint sequential colormap green (#009E73) → blue (#4467A3); C and E rows active (blue) 0–6 s (C major pattern), G row active 6–12 s (G major), A row active 12–18 s (Am), F row active 18–24 s (F major); base energy shows as brand green across all cells
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle rendered in light cream/off-white text against dark background — fully readable; all axis labels and tick marks in light gray; no dark-on-dark failures; legend box uses elevated dark fill (#242420); configure_axis correctly maps INK_SOFT to light-gray for dark theme
-      Data: Colors identical to light render — same green-to-blue imprint_seq gradient; same four-chord structure visible at identical positions; Imprint palette data colors constant across themes as required
-      Legibility verdict: PASS — all text readable, full theme adaptation correct
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background; subtitle in tertiary muted ink (#A8A79F), readable; axis labels "Pitch Class" / "Time (seconds)" in primary ink (#F0EFE8), readable; tick labels in secondary ink (#B8B7B0) — NO dark-on-dark failures; colorbar legend with dark elevated fill (#242420) and muted stroke (#B8B7B0), label text in light ink
+      Data: Identical colors to light render — green (#009E73) → blue (#4467A3) gradient; same chord progression pattern visible (C major 0–6 s, G major 6–12 s, Am 12–18 s, F major 18–24 s); brand green still clearly visible on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; axis titleFontSize=20 exceeds chart
-          title fontSize=16 — inverted hierarchy; style guide recommends ~12px axis
-          title for scale-based libraries
+        comment: 'All text readable in both themes; font sizes explicitly set (title
+          16, labels 13, ticks 12); minor: axis title fontsize 13 slightly above 12px
+          reference but proportionate; no overflow'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; pitch class labels well-spaced
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly distinguishable; chord transitions readable
+        comment: Heatmap cells clearly visible in both themes; color gradient cleanly
+          distinguishes low from high energy
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq green→blue is CVD-safe
+        comment: Imprint sequential (green to blue) is CVD-safe; no red-green sole-signal
+          conflict
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for heatmap; canvas gate passed; axis titles
-          disproportionately large for short labels
+        comment: Canvas gate passed; square 2400x2400 appropriate for heatmaps; padding
+          and proportions well-balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (seconds) and Pitch Class with units; title in mandated format
-          with subtitle
+        comment: Pitch Class and Time (seconds) are descriptive and include units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq [#009E73, #4467A3] correct for single-polarity continuous
-          data; backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'Sequential colormap uses range=[#009E73, #4467A3] (imprint_seq);
+          backgrounds #FAF8F1 light / #1A1A17 dark; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -105,22 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean with subtitle providing musical context; proper Imprint sequential
-          colormap; musicologically accurate chord data
+        comment: Correct imprint_seq colormap applied; subtitle adds narrative context;
+          legend gradient dimensions intentionally sized. Beyond requirements but
+          not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Grid disabled, view stroke removed, minimal chrome, clean legend
-          with token-based styling
+        passed: false
+        comment: configure_view(strokeWidth=0) removes border frame; grid=False appropriate
+          for heatmaps; elevated legend box tokens used. Some refinement but no deeper
+          polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Subtitle contextualizes progression; four chord sections visually
-          distinct; I-V-vi-IV pattern immediately recognizable
+        passed: false
+        comment: Subtitle guides viewer; chord patterns visually clear. No chord-boundary
+          annotations or emphasis highlights on specific chord transitions.
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mark_rect() heatmap
+        comment: Correct heatmap using mark_rect()
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes; sequential colormap; colorbar; time in seconds;
-          120 frames; C→G→Am→F progression
+        comment: All 12 pitch classes labeled; sequential colormap; colorbar; time
+          axis in seconds; realistic chord-progression data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, color=energy; x/x2 bin-edge encoding correct
+        comment: 'X: time (seconds); Y: pitch classes C-B; color: energy magnitude'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format; Energy colorbar legend
+        comment: Title matches heatmap-chromagram · python · altair · anyplot.ai;
+          Energy colorbar labeled
     data_quality:
       score: 15
       max: 15
@@ -159,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 chromatic pitch classes; full 24s progression; smooth inter-chord
-          transitions; normalization to 0-1
+        comment: 120 frames over 24 s; all 12 pitch classes; 4-chord progression;
+          smooth inter-chord transitions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C→G→Am→F (I-V-vi-IV) canonical real pop/folk progression; noise +
-          smoothing adds musical realism
+        comment: I-V-vi-IV (C-G-Am-F) is a ubiquitous real-world progression; normalized
+          0-1 energy matches real chroma feature extraction
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 frames over 24s (~5fps); energy normalized 0-1; complete 12-note
-          scale
+        comment: 24 s excerpt; ~5 fps chroma resolution; normalized energy 0-1 — all
+          domain-plausible
     code_quality:
       score: 10
       max: 10
@@ -184,7 +191,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: No functions/classes; linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,19 +203,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib pattern followed
+        comment: Only altair, numpy, pandas, PIL.Image — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean data generation; proper sys.path sanitization; no fake UI
+        comment: Clean chord template approach; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair API
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; PAD-to-2400x2400 block
+          correctly implemented
     library_mastery:
       score: 7
       max: 10
@@ -218,15 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: mark_rect() with x/x2 bin-edge encoding (correct idiom); configure_view/configure_axis/configure_legend
-          theming; alt.Title for structured title
+        comment: mark_rect() with x/x2 dual-encoding is the correct Altair rect pattern;
+          configure_* for theme; alt.Scale(range=...) for colormap
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Bin-edge approach (t1/t2) distinctively correct Altair pattern; tooltips
-          with formatted fields; both PNG and HTML saved
+        passed: false
+        comment: x2 encoding for rect bounds is Altair-specific; gradientLength/gradientThickness
+          on legend; tooltips with format specifiers. Room for more distinctive features
+          like interval selection brush.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -238,6 +247,7 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
