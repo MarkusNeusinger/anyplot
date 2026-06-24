@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-Library: bokeh | Python
-Imprint palette — sequential colormap (green→blue) for single-polarity energy data
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-24
 """
 
 import os
