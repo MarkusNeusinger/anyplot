@@ -1,12 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-Library: matplotlib 3.10.8 | Python 3.14.3
-Quality: 85/100 | Created: 2026-04-12
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-24
 """
+
+import os
+import sys
+
+
+# Remove script directory from path so "import matplotlib" finds the package, not this file
+sys.path.pop(0)
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint sequential colormap for time index (single-polarity continuous)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data — synthetic AR(1) process with strong positive autocorrelation
 np.random.seed(42)
@@ -23,14 +41,14 @@ y_t = series[:-lag]
 y_t_lag = series[lag:]
 time_index = np.arange(len(y_t))
 
-# Correlation
 r_value = np.corrcoef(y_t, y_t_lag)[0, 1]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 scatter = ax.scatter(
-    y_t, y_t_lag, c=time_index, cmap="viridis", s=120, alpha=0.65, edgecolors="white", linewidth=0.5, zorder=2
+    y_t, y_t_lag, c=time_index, cmap=imprint_seq, s=55, alpha=0.50, edgecolors=PAGE_BG, linewidth=0.3, zorder=2
 )
 
 # Diagonal reference line (y = x)
@@ -40,38 +58,52 @@ margin = (data_max - data_min) * 0.05
 ax.plot(
     [data_min - margin, data_max + margin],
     [data_min - margin, data_max + margin],
-    color="#AAAAAA",
-    linewidth=2,
+    color=INK_SOFT,
+    linewidth=1.5,
     linestyle="--",
-    alpha=0.6,
+    alpha=0.5,
     zorder=1,
 )
 
 # Colorbar
-cbar = fig.colorbar(scatter, ax=ax, pad=0.02, aspect=30)
-cbar.set_label("Time Index", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
+cbar = fig.colorbar(scatter, ax=ax, pad=0.03, aspect=28)
+cbar.set_label("Time Index", fontsize=10, color=INK_SOFT)
+cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT, color=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+cbar.outline.set_linewidth(0.5)
 
-# Correlation annotation
+# Correlation annotation with qualitative descriptor for richer storytelling
+direction = "positive" if r_value > 0 else "negative"
+strength = "Strong" if abs(r_value) >= 0.7 else ("Moderate" if abs(r_value) >= 0.4 else "Weak")
 ax.text(
     0.04,
     0.96,
-    f"r = {r_value:.3f}",
+    f"r = {r_value:.3f}  ·  {strength} {direction} autocorrelation",
     transform=ax.transAxes,
-    fontsize=20,
+    fontsize=9,
     verticalalignment="top",
     fontweight="medium",
-    color="#333333",
+    color=INK,
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "alpha": 0.85, "pad": 4},
 )
 
 # Style
-ax.set_xlabel("y(t)", fontsize=20)
-ax.set_ylabel(f"y(t + {lag})", fontsize=20)
-ax.set_title("AR(1) Autocorrelation · scatter-lag · matplotlib · pyplots.ai", fontsize=24, fontweight="medium")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("y(t)", fontsize=10, color=INK)
+ax.set_ylabel(f"y(t + {lag})", fontsize=10, color=INK)
+
+title = "scatter-lag · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
+
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.grid(True, alpha=0.2, linewidth=0.8)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Both-axis grid for scatter plots (style guide recommendation)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
+
+fig.subplots_adjust(left=0.09, right=0.86, top=0.93, bottom=0.10)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

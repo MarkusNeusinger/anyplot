@@ -1,48 +1,49 @@
 library: plotly
+language: python
 specification_id: scatter-lag
 created: '2026-04-12T18:10:48Z'
-updated: '2026-04-12T18:26:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 24313009870
+updated: '2026-06-24T23:05:01Z'
+generated_by: claude-sonnet
+workflow_run: 28134420661
 issue: 5251
-python_version: 3.14.3
-library_version: 6.7.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/plotly/plot.html
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotly/plot-dark.html
 quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (diagonal line, time-color encoding,
-    correlation annotation, configurable lag) implemented and visible'
-  - 'Excellent code quality: clean linear structure, reproducible, no waste'
-  - Well-chosen Plasma colorscale that reveals temporal structure while being colorblind-safe
-  - Styled correlation annotation box (bold, bordered, positioned) effectively guides
-    the viewer's eye
-  - Plotly-idiomatic hover tooltips with customdata showing time index and temperature
-    values
+  - 'Perfect spec compliance: all four spec features (configurable lag, diagonal y=x
+    reference, time-index coloring, r annotation) implemented cleanly'
+  - 'Excellent palette compliance: imprint_seq used correctly for continuous temporal
+    data, full theme-adaptive chrome with all six token variables'
+  - 'Good data storytelling: r=0.833 annotation + time coloring + dual reference/regression
+    lines create visual hierarchy guiding viewer to the autocorrelation insight'
+  - Clean, reproducible code with np.random.seed(42) and all font sizes explicitly
+    set per style-guide defaults
+  - 'Both renders pass theme-readability check: light render has dark text on #FAF8F1,
+    dark render has light text on #1A1A17 with no dark-on-dark failures'
   weaknesses:
-  - 'DE-01 not at publication level: typography hierarchy is functional but not refined;
-    title/subtitle relationship could be stronger; the annotation box is styled but
-    feels isolated rather than integrated into the design'
-  - 'DE-02 refinement is good but not complete: margins could be more generous (l=110,
-    r=150, t=120, b=110); the paper background adds polish but isn''t paired with
-    other finishing touches'
-  - Marker opacity (0.55) is slightly above optimal for 500 points, causing mild central
-    overcrowding; reduce to 0.45
-  image_description: The plot displays a scatter lag plot for an AR(1) temperature
-    time series. The title reads "scatter-lag · plotly · pyplots.ai" in dark gray,
-    centered, with a smaller subtitle "AR(1) process | lag = 1 | 500 observations"
-    beneath it. The x-axis is labeled "Temperature (°C) at time t" and the y-axis
-    "Temperature (°C) at time t+1", both spanning approximately 16–26°C. Five hundred
-    scatter points are colored by their time index using the Plasma colorscale (deep
-    purple for early observations, yellow for late), creating a vivid temporal gradient.
-    A very faint dotted gray diagonal reference line (y=x) runs from lower-left to
-    upper-right. A solid blue regression line (#306998) runs through the data, visually
-    confirming the strong positive autocorrelation. A styled annotation box in the
-    top-left reads "r = 0.833" in bold blue with a semi-transparent white background
-    and blue border. A vertical Plasma colorbar on the right is labeled "Time Index"
-    with ticks from 0 to ~450. The paper background is a pale off-white (#F8F9FA);
-    the plot area is pure white with very subtle gray grid lines.
+  - Subtitle annotation font size=10 (40 source-px at scale=4) is at the lower edge
+    of readability on large canvas — increase to 11 or 12 for better legibility
+  - DE-01 limited by straightforward scatter composition — adding a semi-transparent
+    confidence band around the regression line would elevate aesthetic sophistication
+  - LM-02 could be pushed higher by adding a rangeslider or dropdown for lag selection
+    to demonstrate plotly's distinctive interactive capabilities more explicitly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-lag · python · plotly · anyplot.ai" in dark ink (#1A1A17), clearly visible. Axis labels "Temperature (°C) at time t" and "Temperature (°C) at time t+1" in dark ink, readable. Tick labels in dark-soft (#4A4A44), readable. Subtitle "AR(1) process | lag = 1 | 500 observations" in muted gray (#6B6A63), readable. Correlation annotation "r = 0.833" in dark ink on elevated cream (#FFFDF6) box. Colorbar title and ticks in dark-soft, readable.
+      Data: 500 scatter points colored by time index using imprint_seq (green #009E73 for early, blue #4467A3 for late) at opacity=0.6. Dashed-dot diagonal reference line (y=x) in muted gray. Solid blue regression line. Dense linear cluster indicates strong positive autocorrelation.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title flips to light ink (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in light-soft (#B8B7B0), readable. Subtitle in light-muted (#A8A79F), readable. Correlation annotation box uses elevated dark (#242420) with light ink text — no dark-on-dark failure. Colorbar title and ticks in light-soft, readable. No dark-on-dark failures detected.
+      Data: Scatter point colors (green→blue gradient via imprint_seq) appear identical to light render — only chrome flipped. Diagonal reference line (dashed-dot) visible in light-muted. Regression line visible in Imprint blue (#4467A3).
+      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
       score: 29
@@ -50,72 +51,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
-          colorbar title=18, correlation annotation=24'
+        comment: All font sizes explicitly set (title=16, labels=12, ticks=10); all
+          text readable in both renders; subtitle at size=10 is borderline small but
+          visible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements fully separated; colorbar, annotation, and subtitle
-          coexist cleanly
+        comment: No overlapping elements; annotation box, colorbar, and scatter coexist
+          cleanly
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points visible and well-adapted; opacity=0.55 slightly above 0.3-0.5
-          recommended for 500+ points, causing mild crowding in the central region
+        comment: 500 points at size=9 with opacity=0.6 appropriate for this density;
+          cluster pattern clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma is a perceptually-uniform, colorblind-safe colorscale
+        comment: imprint_seq is perceptually uniform and CVD-safe; dual lines distinguished
+          by dash style and color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Margins well-balanced; colorbar fits comfortably without crowding
-          the plot
+        comment: Landscape 3200x1800 with generous explicit margins; plot fills ~65%
+          of canvas with balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes include units: ''Temperature (°C) at time t'' and ''...t+1'''
+        comment: Temperature (°C) at time t and Temperature (°C) at time t+1 — descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (green→blue) for continuous time index; backgrounds
+          #FAF8F1/#1A1A17; all six chrome tokens theme-adaptive'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design choices: Plasma colorscale, Python-blue regression
-          line, styled r-annotation box, dual-background approach. Clearly above defaults
-          but lacks typography polish for full publication quality'
+        comment: 'Above defaults: sequential colormap for temporal structure, styled
+          annotation box, subtitle, dual reference lines. Not quite strong design
+          (6) — scatter composition is straightforward'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: extremely subtle grid (rgba(0,0,0,0.06)), showline=False,
-          ticks removed, colorbar has no outline. Whitespace not generous and overall
-          finishing could be tighter'
+        comment: Spines removed, grid at 15% opacity, generous margins, colorbar explicitly
+          styled. Good refinement above library defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual story: r=0.833 annotation draws the eye; regression
-          vs diagonal communicates autocorrelation strength; Plasma time-color reveals
-          temporal stability. Good visual hierarchy'
+        comment: r=0.833 annotation quantifies visible pattern; time coloring adds
+          analytical dimension; diagonal vs regression line contrast gives interpretive
+          scaffolding
     spec_compliance:
       score: 15
       max: 15
@@ -125,53 +135,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag plot: y(t) on x-axis vs y(t+k) on y-axis'
+        comment: 'Correct lag plot: y(t) vs y(t+1) scatter'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, time-color encoding, correlation annotation,
-          configurable lag variable, bonus regression trend line - all present
+        comment: Configurable lag variable, diagonal y=x reference line, time-index
+          coloring via imprint_seq, correlation coefficient annotation — all four
+          spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: temperature at t; Y: temperature at t+1; correctly labeled'
+        comment: X=y(t), Y=y(t+lag); 500-point AR(1) series within spec 100-5000 range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches 'scatter-lag · plotly · pyplots.ai'; colorbar
-          serves as legend for time index
+        comment: Title exactly 'scatter-lag · python · plotly · anyplot.ai'; no categorical
+          legend needed (colorbar serves continuous time index)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates strong autocorrelation via AR(1) with phi=0.85; temporal
-          color shows stable process. Minor deduction: only one autocorrelation regime
-          shown'
+        comment: AR(1) with phi=0.85 produces clear strong-positive-autocorrelation
+          pattern demonstrating exactly what lag plots reveal; temporal coloring adds
+          coverage depth
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Daily temperature readings as AR(1) process: scientifically plausible,
-          neutral topic, appropriate domain'
+        comment: Daily temperature monitoring is neutral, real-world application;
+          values (mean=20°C, range 16-26°C) plausible for temperate climate station
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range ~16-26°C is realistic; phi=0.85 autocorrelation
-          is representative; 500 observations appropriate
+        comment: phi=0.85 reasonable for temperature AR; 500 observations, noise sigma=1°C,
+          mean=20°C internally consistent and factually plausible
     code_quality:
       score: 10
       max: 10
@@ -181,7 +192,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports -> Data -> Plot -> Save, no functions or classes
+        comment: 'Linear flow: sys.path guard → imports → theme tokens → data → figure
+          → layout → annotations → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -193,20 +205,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects; both used
+        comment: os, sys, numpy, plotly.graph_objects — all used, no extras
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity; no fake functionality
+        comment: Clean and well-organized; sys.path guard is necessary boilerplate;
+          no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 (1600x900 scale=3); also writes plot.html
-          which is appropriate for plotly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current plotly API
+          throughout
     library_mastery:
       score: 7
       max: 10
@@ -216,18 +229,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses go.Figure(), go.Scatter() with proper marker dict, fig.add_annotation(),
-          fig.update_layout(). customdata+hovertemplate is idiomatic plotly hover
-          design
+        comment: go.Figure() with add_trace() appropriate for custom composition;
+          explicit colorscale on marker dict, update_layout for global chrome, add_annotation
+          for overlays — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Leverages plotly-specific features: hovertemplate with customdata,
-          dual output (write_image + write_html), colorbar with plotly-specific styling
-          parameters (outlinewidth, len, thickness)'
-  verdict: REJECTED
+        comment: 'Uses plotly-specific: hovertemplate with customdata for rich hover
+          tooltips, write_html for interactive output, colorbar with full theming.
+          Could leverage advanced features (dropdown, rangeslider, animation) for
+          higher score'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -237,7 +251,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - regression
   styling:
