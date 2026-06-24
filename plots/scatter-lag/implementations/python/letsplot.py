@@ -1,18 +1,30 @@
-""" pyplots.ai
-scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 87/100 | Created: 2026-04-12
+"""scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
+Library: letsplot | Python
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
 
-# Data - Synthetic AR(1) process with phi=0.85 (strong positive autocorrelation)
+# Theme-adaptive chrome — Imprint palette
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint sequential colormap: brand-green → blue (single-polarity continuous)
+SEQ_LOW = "#009E73"  # position 1
+SEQ_HIGH = "#4467A3"  # position 3
+
+# Data: AR(1) temperature process, phi=0.85 → strong positive autocorrelation
 np.random.seed(42)
 n = 400
 lag = 1
@@ -24,78 +36,89 @@ temperature[0] = 20.0
 for i in range(1, n):
     temperature[i] = phi * temperature[i - 1] + (1 - phi) * 20.0 + innovations[i]
 
-# Build lag plot data: y(t) vs y(t+lag)
+# Lag plot data: y(t) vs y(t+lag)
 value_t = temperature[:-lag]
 value_t_lag = temperature[lag:]
 time_index = np.arange(len(value_t))
-
 df = pd.DataFrame({"value_t": value_t, "value_t_lag": value_t_lag, "day": time_index})
 
-# Compute autocorrelation at this lag
+# Autocorrelation at lag 1
 r = np.corrcoef(value_t, value_t_lag)[0, 1]
 
-# Reference line data (y = x diagonal)
+# Diagonal reference line (y = x)
 ref_min = min(value_t.min(), value_t_lag.min()) - 1
 ref_max = max(value_t.max(), value_t_lag.max()) + 1
 ref_df = pd.DataFrame({"x": [ref_min, ref_max], "y": [ref_min, ref_max]})
 
-# Annotation data
+# Correlation annotation: placed at bottom-right where point density is low
 anno_df = pd.DataFrame({"x": [ref_max - 1.5], "y": [ref_min + 1.5], "label": [f"r = {r:.2f}"]})
 
-# Plot
 plot = (
     ggplot(df, aes(x="value_t", y="value_t_lag", color="day"))  # noqa: F405
+    # Reference diagonal: y = x (perfect lag-1 autocorrelation)
     + geom_line(  # noqa: F405
-        aes(x="x", y="y"),  # noqa: F405
-        data=ref_df,
-        color="#CCCCCC",
-        size=1.0,
-        linetype="dashed",
+        aes(x="x", y="y"), data=ref_df, color=INK_SOFT, size=0.8, linetype="dashed", inherit_aes=False  # noqa: F405
+    )
+    # OLS regression line — letsplot-native geom_smooth with confidence band
+    + geom_smooth(  # noqa: F405
+        aes(x="value_t", y="value_t_lag"),  # noqa: F405
+        data=df,
+        method="lm",
+        color="#C475FD",
+        fill="#C475FD",
+        size=1.2,
+        alpha=0.12,
         inherit_aes=False,
     )
+    # Data points colored by temporal order (Imprint sequential: green → blue)
     + geom_point(  # noqa: F405
-        size=4,
-        alpha=0.6,
+        size=2.5,
+        alpha=0.45,
         shape=16,
         tooltips=layer_tooltips()  # noqa: F405
         .line("Day|@day")
         .line("y(t)|@{value_t}{.2f}")
         .line("y(t+1)|@{value_t_lag}{.2f}"),
     )
+    # Correlation coefficient annotation
     + geom_text(  # noqa: F405
         aes(x="x", y="y", label="label"),  # noqa: F405
         data=anno_df,
-        size=14,
-        color="#444444",
+        size=5,
+        color=INK,
         family="monospace",
         hjust=1.0,
         inherit_aes=False,
     )
     + scale_color_gradient(  # noqa: F405
-        low="#306998", high="#E3882D", name="Day"
+        low=SEQ_LOW, high=SEQ_HIGH, name="Day"
     )
     + labs(  # noqa: F405
         x="y(t)",
         y=f"y(t + {lag})",
         title="scatter-lag · letsplot · pyplots.ai",
-        caption="AR(1) simulated daily temperature · dashed line = y(t+1) = y(t)",
+        caption="AR(1) simulated daily temperature · dashed = y = x, purple = OLS fit ± 95% CI",
     )
-    + ggsize(1600, 900)  # noqa: F405
+    + ggsize(800, 450)  # noqa: F405 — scale=4 on export → 3200×1800 px
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        axis_text=element_text(size=16, color="#555555"),  # noqa: F405
-        axis_title=element_text(size=20, color="#333333"),  # noqa: F405
-        plot_title=element_text(size=24, color="#222222", face="bold"),  # noqa: F405
-        plot_caption=element_text(size=13, color="#999999", face="italic"),  # noqa: F405
-        panel_grid_major=element_line(color="#E8E8E8", size=0.35),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        panel_grid_major=element_line(color=GRID, size=0.3),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        legend_title=element_text(size=16, color="#444444"),  # noqa: F405
-        legend_text=element_text(size=14, color="#555555"),  # noqa: F405
-        axis_ticks=element_line(color="#CCCCCC", size=0.3),  # noqa: F405
+        axis_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
+        axis_title=element_text(size=12, color=INK),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT),  # noqa: F405
+        axis_ticks=element_line(color=INK_SOFT, size=0.3),  # noqa: F405
+        plot_title=element_text(size=16, color=INK, face="bold"),  # noqa: F405
+        plot_caption=element_text(size=8, color=INK_MUTED, face="italic"),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
+        legend_title=element_text(size=10, color=INK),  # noqa: F405
+        legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
         plot_margin=[30, 40, 20, 20],
     )
 )
 
-# Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+# Save PNG (3200×1800) and interactive HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)  # noqa: F405
+ggsave(plot, f"plot-{THEME}.html", path=".")  # noqa: F405
