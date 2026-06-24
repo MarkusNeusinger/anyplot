@@ -1,105 +1,137 @@
 library: plotnine
+language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:24:43Z'
-updated: '2026-03-17T22:36:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23219179064
+updated: '2026-06-24T13:42:09Z'
+generated_by: claude-sonnet
+workflow_run: 28101075225
 issue: 4564
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent data generation with realistic chord progression (C→G→Am→F), harmonics,
-    and smooth transitions
-  - Strong grammar of graphics usage with clean layer composition (geom_tile + geom_vline
-    + geom_text)
-  - Good visual storytelling with chord labels, boundary lines, and descriptive subtitle
-  - Perfect spec compliance with all required features present
-  - Clean, well-structured code following KISS principles
+  - Full Imprint palette compliance — sequential colormap uses correct anyplot stops
+    (#009E73→#4467A3) for single-polarity energy data
+  - Chord annotations (geom_text + geom_vline) elevate the plot from a plain heatmap
+    to a musically-annotated visualization, directly serving the spec music information
+    retrieval use case
+  - Both themes render correctly — no dark-on-dark failures, all chrome tokens properly
+    theme-adaptive
+  - Spec compliance is perfect — all 12 pitch classes, colorbar, time axis, realistic
+    harmonic simulation
+  - Clean code structure with np.random.seed for reproducibility
   weaknesses:
-  - Minor horizontal gaps visible between pitch class rows (inherent to discrete y
-    + geom_tile)
-  - Colorbar could be taller/more prominent for easier energy reading
-  image_description: 'The plot displays a heatmap-style chromagram with 12 pitch classes
-    (C through B) on the y-axis and time (0-8 seconds) on the x-axis. A plasma-like
-    sequential color gradient runs from deep indigo/purple (low energy ~0.25) through
-    magenta and orange to bright yellow (high energy ~1.00). White dashed vertical
-    lines at 2s, 4s, and 6s delineate four chord regions, each labeled in white bold
-    text at the bottom: "C maj", "G maj", "A min", "F maj". The chord patterns are
-    clearly visible — e.g., C/E/G rows light up during the C major section, G/B/D
-    during G major. A colorbar on the right shows the Energy scale. The title "heatmap-chromagram
-    · plotnine · pyplots.ai" is bold and centered, with a gray subtitle describing
-    the chord progression. Background is light gray, grid lines are removed, and the
-    layout is clean with good use of space.'
+  - Colorbar legend bottom (0.00 tick) appears cut off or missing — legend_key_height=40
+    with 5 breaks (0.00–1.00) may exceed the allocated legend height; increase figure
+    height margin or reduce legend_key_height to ~32 to fit all 5 breaks
+  - geom_text annotation size=4.5mm is slightly above the 2.5–4mm recommended range
+    for annotations per the plotnine guide; reducing to 4.0mm would be more conservative
+    while remaining readable
+  - Green→blue gradient provides moderate perceptual contrast for mid-range energies;
+    using a wider imprint_seq range or ensuring the low anchor is visually distinct
+    from the field could improve energy legibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "heatmap-chromagram · python · plotnine · anyplot.ai" bold centered readable dark (#1A1A17). Subtitle in #4A4A44. Axis labels "Time (s)" and "Pitch Class" in #1A1A17. Tick labels in #4A4A44 (INK_SOFT). All readable.
+      Data: Heatmap tiles using Imprint sequential colormap — green (#009E73) for low energy, blue (#4467A3) for high energy. Chord structure clearly visible: C major 0–2s, G major 2–4s, A minor 4–6s, F major 6–8s. White dashed boundary lines. White bold chord labels ("C maj", "G maj", "A min", "F maj") in top C row.
+      Legend: Energy colorbar on right with values 1.00, 0.75, 0.50, 0.25 — 0.00 tick appears truncated at legend bottom edge. Legend bg is #FFFDF6 (elevated light).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light cream (#F0EFE8) readable. Subtitle in #B8B7B0 readable. Axis labels and tick labels in appropriate light tones (#F0EFE8 / #B8B7B0). No dark-on-dark failures. All text clearly visible.
+      Data: Identical data colors to light render — same green→blue Imprint sequential gradient. Same chord structure patterns. Chord annotations and boundary lines remain white and legible on dark bg. First series color #009E73 clearly visible on dark surface.
+      Legend: Dark elevated bg (#242420) with light text. Same 0.00 tick truncation as light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt, tick
-          labels 16pt, legend text 14-16pt'
+        comment: Title, subtitle, axis labels, tick labels all readable in both themes.
+          Chord annotation labels at size=4.5mm slightly above 2.5-4mm recommended
+          range. Minor colorbar 0.00 tick truncation.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text anywhere
+        comment: No text-on-text or text-on-data overlaps detected in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Tiles well-sized, active pitch classes stand out sharply
+        comment: Chord structure clearly visible. Green-to-blue Imprint sequential
+          provides adequate contrast for high-energy regions; mid-range gradations
+          less distinct than luminance-based cmap.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Plasma-like sequential colormap is perceptually uniform and colorblind-safe
+        comment: Imprint sequential uses two CVD-safe stops; no red/green sole-signal
+          issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 layout, minor horizontal gaps between pitch class rows
+        comment: 'Canvas gate passed (3200x1800). Title proportion ~65%. Axis labels
+          balanced. Minor deduction: colorbar 0.00 tick clipped at legend bottom —
+          legend height slightly tight.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (s) with units, Pitch Class descriptive
+        comment: 'X: Time (s) with units; Y: Pitch Class. Correct title format with
+          subtitle.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint sequential (low=#009E73, high=#4467A3) correctly applied.
+          Backgrounds #FAF8F1/#1A1A17 correct. All chrome tokens theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom 15-stop gradient, intentional typography hierarchy, above
-          defaults
+        comment: 'Above default (4): Imprint palette applied, chord annotations and
+          boundary dashes add informational richness. scale_alpha_identity technique
+          shows design intentionality.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Grid removed, theme_minimal, light gray background, chord boundary
-          lines
+        comment: Grid removed (appropriate for heatmap). Panel border kept with all
+          4 sides (correct for tile grid). Legend frame styled. Above default of 2.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chord labels and boundary lines guide viewer through harmonic progression
+        comment: 'Strong narrative: chord labels serve as region headers, dashed lines
+          delineate transitions, subtitle names the progression. Above default of
+          2.'
     spec_compliance:
       score: 15
       max: 15
@@ -109,26 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap using geom_tile
+        comment: geom_tile heatmap correctly implements chromagram spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes, sequential colormap, colorbar, time axis in
-          seconds
+        comment: All 12 pitch classes labeled; sequential colormap; colorbar; time
+          axis in seconds; 80 frames; realistic harmonic simulation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, fill=energy. Correct mapping
+        comment: X=Time (s), Y=Pitch Class (ordered C-B), Fill=Energy. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labeled Energy with 0-1 scale
+        comment: 'Title: heatmap-chromagram · python · plotnine · anyplot.ai. Energy
+          colorbar labeled. Pitch classes match spec.'
     data_quality:
       score: 15
       max: 15
@@ -138,19 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Chord progressions, harmonics, noise floor, smooth transitions
+        comment: 80x12 grid covers all pitch classes and sufficient temporal resolution.
+          Harmonic overtones added. Boundary blending for realistic transitions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real C-G-Am-F progression, realistic chroma energy patterns
+        comment: C-G-Am-F is a canonical chord progression. Musically plausible chroma
+          patterns with correct note memberships. Neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0-1, 80 frames over 8 seconds, standard for MIR
+        comment: 8 seconds, 0-1 normalized energy, 10fps resolution — sensible for
+          chroma feature demonstration.
     code_quality:
       score: 10
       max: 10
@@ -160,52 +196,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: No functions or classes. Flat sequential structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All plotnine imports used. No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, well-structured chord_regions
+        comment: Grammar-of-graphics composition clean. No fake interactivity. scale_alpha_identity
+          is the correct idiomatic approach.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API
+        comment: Saves as plot-{THEME}.png at dpi=400, 8x4.5 in.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Excellent grammar of graphics composition with proper layering
+        comment: 'Proper layered ggplot grammar: geom_tile + geom_vline + geom_text.
+          Correct scale functions. theme() for all customization. scale_alpha_identity
+          for identity-mapped alpha.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_fill_gradientn, pd.Categorical integration, grammar of graphics
-          layering
+        comment: Demonstrates scale_alpha_identity, element_rect(fill=None) for transparent
+          fill with colored border, legend_key_height/width tuning. Above default
+          of 1.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - layer-composition
   patterns:
@@ -215,3 +256,4 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending
