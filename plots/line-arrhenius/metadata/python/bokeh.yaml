@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:08:25Z'
-updated: '2026-06-24T09:45:10Z'
+updated: '2026-06-24T09:54:04Z'
 generated_by: claude-sonnet
 workflow_run: 28088895918
 issue: 4408
@@ -12,46 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'All spec requirements satisfied: secondary temperature axis, linear regression,
-    R² displayed, Ea annotation with slope'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes fully implemented with correct
-    theme-adaptive chrome throughout
-  - 'Imprint palette used correctly: brand green (#009E73) for data points, blue (#4467A3)
-    for regression line — both themes identical data colors'
-  - 'Clean Bokeh idioms: ColumnDataSource, HoverTool, LinearAxis via add_layout, FixedTicker,
-    NumeralTickFormatter'
-  - Annotation box clearly shows Ea = 74.6 kJ/mol, slope = -8970.0 K, R² = 0.9995
-    with styled elevated background
-  - 'Realistic physical chemistry data: 75 kJ/mol activation energy, 300-600 K range,
-    first-order decomposition — neutral and scientifically appropriate'
+  - 'Full spec compliance: regression line, R² annotation, Ea/R extraction, and secondary
+    temperature axis all implemented correctly'
+  - 95% confidence interval band (varea) is a professional scientific addition demonstrating
+    statistical rigor
+  - 'Excellent use of Bokeh-distinctive features: HoverTool, varea(), FixedTicker,
+    NumeralTickFormatter, secondary LinearAxis'
+  - Both renders correctly invert all chrome tokens while preserving identical Imprint
+    data colors
+  - Physics-realistic synthetic data (75 kJ/mol, 300–600 K) from proper Arrhenius
+    model with reproducible noise seed (seed=42)
+  - Flat, readable code with correct sys.path guard preventing bokeh.py module shadowing
   weaknesses:
-  - Full box outline retained (p.outline_line_color = INK_SOFT) — style guide prefers
-    removing top/right spines for a cleaner L-shaped frame
-  - Temperature Label annotations placed inside the data area at y=ln_k.max()+3.0
-    are visually close to top boundary and y=15 tick, creating slight crowding near
-    the upper plot border; consider placing them at y=ln_k.max()+2.5 or adjusting
-    y_range top to provide more separation
-  - 'Design excellence is functional but not exceptional: no confidence band around
-    regression, no error bars on data points, no use of data emphasis techniques beyond
-    the annotation box'
+  - 'Regression line uses Imprint palette position 3 (#4467A3 / blue) instead of canonical
+    position 2 (#C475FD / lavender) — skips ordinal order for a 2-series chart; fix
+    by changing LINE_COLOR to #C475FD or adding a semantic-exception justification'
+  - Annotation box anchor (x=inv_T[8], y=ln_k[6]+3.5) places the box in mild proximity
+    to the regression line; shifting the anchor slightly higher or right would increase
+    visual separation
+  - Top-axis temperature tick labels are implemented via a hidden LinearAxis (font
+    size 0pt) plus separate Label annotations — redundant approach; use FixedTicker
+    labels dict or CustomJSTickFormatter to render temperature values natively on
+    the axis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "line-arrhenius · python · bokeh · anyplot.ai" bold centered, dark text — readable. Secondary x-axis label "Temperature (K)" in bold dark text above the data area. Bottom x-axis label "1/T (K⁻¹)" bold dark text. Y-axis label "ln(k)" bold dark text. All tick labels in dark secondary ink (#4A4A44). Temperature values (600, 500, 400, 350, 300) appear as Label annotations inside the data area at top, just below secondary axis line.
-      Data: 13 green scatter points (#009E73 brand green), clearly visible. Linear regression line in blue (#4467A3). Annotation box (upper middle area, ~x=0.002 y=12) shows Ea, slope, R² in dark text on elevated off-white background. Legend bottom-left with two entries. Grid lines subtle at 15% alpha.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-arrhenius · python · bokeh · anyplot.ai" centered in bold dark ink (#1A1A17); bottom x-axis label "1/T (K⁻¹)" and y-axis label "ln(k)" in dark ink; tick labels in secondary dark (#4A4A44); secondary top axis shows "Temperature (K)" with tick values 600, 500, 400, 350, 300 — all clearly readable
+      Data: 13 green (#009E73) circular markers with white stroke edge; blue (#4467A3) linear regression line; subtle blue confidence interval band (varea); annotation box showing Ea=74.6 kJ/mol, Slope=-8970.0 K, R²=0.9995 on elevated off-white (#FFFDF6) background; legend at bottom-left
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and all labels in light ink (#F0EFE8 / #B8B7B0) — all readable against dark surface. Annotation box text uses light ink on elevated dark background (#242420). Legend background uses elevated dark (#242420).
-      Data: Data colors identical to light render — green (#009E73) data points, blue (#4467A3) regression line — both remain clearly visible on dark background. Brand green reads well on dark surface.
-      Legibility verdict: PASS — all text visible, no dark-on-dark failures. Chrome flips correctly, data colors unchanged.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, and legend text flip to near-white tones (#F0EFE8 / #B8B7B0); annotation box background switches to dark elevated (#242420) with light text; grid lines subtle on dark surface — all readable
+      Data: Identical Imprint colors to light render — green markers (#009E73) and blue regression line (#4467A3) unchanged; confidence band maintains same subtle fill; no dark-on-dark failures observed
+      Legibility verdict: PASS — all text clearly readable against the dark background; no "dark-on-dark" failures; brand green #009E73 remains visible and distinct
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,80 +59,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 30pt annotation). Both themes readable. Minor: annotation text at
-          30pt slightly smaller than tick labels.'
+        comment: 'Font sizes explicitly set (50pt title, 42pt axis labels, 34pt ticks,
+          30pt annotation). All text readable in both themes. Minor: annotation text
+          at 30pt slightly subordinate in hierarchy.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Temperature Label annotations at y=ln_k.max()+3.0 are close to the
-          top boundary and y=15 tick label, creating slight visual crowding near the
-          upper border. No actual overlap with data elements.
+        comment: No text-on-text collisions. Annotation box has mild proximity to
+          regression line at x≈0.00190 but does not occlude data points.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 13 sparse data points at size=22 are clearly visible. Regression
-          line at line_width=5 is prominent. Both sets of elements clearly distinguishable.
+        comment: 13 sparse data points with size=22 Bokeh units; prominent markers
+          clearly layered above regression line. Confidence band visible but appropriately
+          subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette: green and blue are perceptually distinct under
-          CVD. No red-green as sole distinguishing signal.'
+        comment: Green (#009E73) + Blue (#4467A3) are CVD-safe; no red-green pairing
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Title occupies ~50% of width. min_border_*
-          reserves adequate space for large axis labels. All elements within bounds.
+        comment: Canvas 3200x1800, toolbar_location=None, min_border_* set per library
+          guide. Title at ~43 chars fills ~50% width — appropriate, no overflow or
+          clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Bottom x-axis: ''1/T (K⁻¹)'', y-axis: ''ln(k)'', secondary axis:
-          ''Temperature (K)''. Title: correct format.'
+        comment: '"1/T (K⁻¹)", "ln(k)", "Temperature (K)" are descriptive with correct
+          units.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Data points in #009E73 (position 1), regression in #4467A3 (position
-          3). Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome adapts correctly.'
+        passed: false
+        comment: 'Data points use Imprint position 1 (#009E73 ✓). Regression line
+          uses position 3 (#4467A3), skipping position 2 (#C475FD) — minor canonical
+          order deviation. Backgrounds correct (#FAF8F1 light / #1A1A17 dark ✓).'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above default: styled annotation box, secondary temperature axis,
-          HoverTool, theme-adaptive chrome. Limited by: full box outline retained,
-          no confidence interval, no error bars.'
+        passed: true
+        comment: Above default (4). 95% CI band is professional scientific touch;
+          parameter annotation adds analytical depth; secondary temperature axis bridges
+          abstract 1/T to intuitive K values.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Grid subtle at 15% alpha, legend styled with elevated background
-          and border. Full box outline (p.outline_line_color) kept — style guide prefers
-          L-shaped frame.
+        passed: true
+        comment: Above default (2). outline_line_alpha=0 for L-shaped frame; grid
+          at 15% alpha; elevated legend background; generous min_border whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Annotation box highlights Ea, slope, R². Dual-axis helps interpretation.
-          Clear focal point on the linear Arrhenius relationship. No additional emphasis
-          techniques.
+        passed: true
+        comment: Above default (2). Ea annotation answers primary scientific question;
+          confidence band communicates uncertainty; dual-axis design serves the reader
+          well.
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with regression line.'
+        comment: 'Correct Arrhenius plot: scatter on ln(k) vs 1/T with linear regression
+          overlay.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: regression line, R² display, Ea annotation
-          with slope, secondary temperature axis, data points visible above regression
-          line.'
+        comment: Linear regression ✓, R² displayed ✓, Ea/R slope annotation ✓, secondary
+          temperature axis ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T (K⁻¹), Y=ln(k). All 13 data points visible across full range.
+        comment: X = 1/T (K⁻¹), Y = ln(k); all 13 data points spanning 300–600 K visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-arrhenius · python · bokeh · anyplot.ai'' ✓. Legend:
-          ''Linear Fit (ln k = ln A − Eₐ/RT)'' and ''Experimental Data'' ✓.'
+        comment: Title is "line-arrhenius · python · bokeh · anyplot.ai" ✓; legend
+          labels descriptive and matching rendered content ✓.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key Arrhenius features: data scatter around regression,
-          temperature secondary axis, kinetic parameter annotation.'
+        comment: Scatter data, linear fit, 95% CI band, kinetic parameter annotation,
+          secondary axis — full coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition reaction, 75 kJ/mol activation energy,
-          300-600 K range. Realistic, neutral scientific context.
+        comment: First-order decomposition at 300–600 K with Ea=75 kJ/mol is physically
+          realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 13 data points, R²=0.9995, Ea=74.6 kJ/mol within typical organic
-          decomposition range. Experimental noise (sigma=0.15) realistic.
+        comment: 300–600 K range, A=1e12, Ea=75 kJ/mol, R²=0.9995 — all consistent
+          with real Arrhenius kinetics.
     code_quality:
       score: 10
       max: 10
@@ -198,35 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script, no functions or classes.
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic data.
+        comment: np.random.seed(42) used for noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path hack documented and necessary.
+        comment: All imported symbols are used; sys.path guard is correct and necessary.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. No fake UI. CDP device metrics override
-          is an appropriate precision technique.
+        comment: Well-structured, no fake UI elements; Selenium screenshot matches
+          library guide pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
-          3.9.0 and Selenium 4 APIs.
+        comment: Saves plot-{THEME}.html (output_file/save) and plot-{THEME}.png (Selenium)
+          correctly.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -234,15 +235,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of ColumnDataSource, HoverTool, LinearAxis with add_layout,
-          FixedTicker, NumeralTickFormatter — all idiomatic Bokeh patterns.
+        comment: 'ColumnDataSource for all renderers, figure(), add_layout(), add_tools()
+          — idiomatic. Minor: top-axis label workaround (font=0pt + Label annotations)
+          is roundabout; a FixedTicker labels dict would be cleaner.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: HoverTool for interactive tooltips, secondary axis via add_layout('above'),
-          HTML export alongside PNG, CDP viewport override for precise rendering dimensions.
+        comment: varea() for CI band, HoverTool with per-renderer targeting, secondary
+          LinearAxis with FixedTicker, NumeralTickFormatter — strong use of Bokeh-specific
+          capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies:
