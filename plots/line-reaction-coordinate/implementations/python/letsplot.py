@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: letsplot 4.10.1 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-06-24
+Quality: 89/100 | Updated: 2026-06-24
 """
 
 import os

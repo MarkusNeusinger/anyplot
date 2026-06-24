@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:46:14Z'
-updated: '2026-06-24T07:59:18Z'
+updated: '2026-06-24T08:09:26Z'
 generated_by: claude-sonnet
 workflow_run: 28083389075
 issue: 4409
@@ -12,45 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Correct Imprint palette usage: curve = #009E73 (position 1), Ea = #AE3030 (position
-    5 semantic matte red), ΔH = #4467A3 (position 3)'
-  - 'All spec requirements met: smooth CubicSpline curve, Ea and ΔH double-headed
-    arrows, dashed reference lines at reactant/product levels, labels for all key
-    chemical features'
-  - Both light and dark themes work correctly with proper theme-adaptive chrome (PAGE_BG,
-    INK, INK_SOFT, ELEVATED_BG)
-  - Color-coded annotation boxes (red Ea badge, blue ΔH badge) match their respective
-    arrows — intuitive visual hierarchy
-  - 'Clean deterministic code: CubicSpline from control points produces a realistic
-    exothermic energy landscape with no random elements'
-  - 'Correct canvas: ggsize(800, 450) + scale=4 yields 3200×1800 px as required'
-  - Chemical data is accurate and realistic (Ea=70 kJ/mol, ΔH=−30 kJ/mol for a moderate
-    single-step exothermic reaction)
+  - Smooth cubic spline energy curve with realistic reactant/TS/product energy levels
+  - 'All required spec features present: double-headed Ea and ΔH arrows, dashed reference
+    lines, direct labels for all three chemical species'
+  - 'Semantically correct Imprint palette usage: brand green for main curve, matte
+    red (#AE3030) for activation energy barrier, blue (#4467A3) for enthalpy change'
+  - Theme-adaptive chrome throughout — background, text, grid, and elevated label
+    boxes all switch correctly between light and dark
+  - Intentional x-axis tick suppression appropriate for reaction coordinate (arbitrary
+    units) domain
+  - CubicSpline with zero-derivative boundary conditions produces realistic energy
+    landscape with natural plateaus at reactants and products
   weaknesses:
-  - No explicit removal of top/right panel borders — in letsplot the default panel
-    keeps all 4 sides unless panel_border=element_blank() is added; consider adding
-    panel_border=element_blank() to the anyplot_theme block
-  - Reactants/Products/Transition State annotation labels at geom_label size=3.5mm
-    are slightly small relative to the 3200×1800 canvas; size=4.0–4.5 would improve
-    readability for these informational labels
-  - 'Hardcoded #FFFFFF for Ea and ΔH label text is acceptable on the colored boxes
-    but a minor style-guide deviation; using a very light INK-derived value would
-    be more canonical'
+  - geom_label annotation labels (size=4.5mm) may be slightly small at mobile viewport
+    widths (~400px); consider size=5.0-5.5 for improved mobile readability
+  - 'DE-01 could be elevated further: the area fill and colored badges are good choices,
+    but typography hierarchy and whitespace refinement could be pushed further toward
+    publication-ready style'
+  - 'DE-03: the Ea red badge creates a natural focal point, but an additional visual
+    element (e.g. slight curve thickness increase at the peak, or a subtle callout
+    arrow to the TS peak itself) could strengthen the storytelling hierarchy'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly matches the Imprint light surface.
-      Chrome: Title "line-reaction-coordinate · python · letsplot · anyplot.ai" in dark ink, centered, well-sized (~70% plot width). Y-axis label "Potential Energy (kJ/mol)" in dark INK at appropriate size. X-axis label "Reaction Coordinate" visible at bottom. Y-axis tick labels (0–140) in INK_SOFT gray. No X-axis tick labels (intentionally hidden for a clean look). All chrome elements are clearly readable against the light background.
-      Data: Smooth green (#009E73) energy curve from Reactants (50 kJ/mol) through Transition State peak (120 kJ/mol) down to Products (20 kJ/mol). Subtle green area fill (alpha=0.08) under the curve. Dashed gray horizontal reference lines at 50 and 20 kJ/mol. Red (#AE3030) double-headed arrow marking Ea=70 kJ/mol with a bold red badge label. Blue (#4467A3) double-headed arrow marking ΔH=−30 kJ/mol with a bold blue badge label. Three neutral label boxes (filled ELEVATED_BG) marking "Reactants 50 kJ/mol", "Transition State 120 kJ/mol", and "Products 20 kJ/mol".
-      Legibility verdict: PASS — all text, labels, and annotations are clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct; no pure white
+      Chrome: Title "line-reaction-coordinate · python · letsplot · anyplot.ai" in dark ink, centered and fully visible. Y-axis label "Potential Energy (kJ/mol)" in dark ink, readable. X-axis label "Reaction Coordinate" in dark ink. Y-axis tick labels (0, 20, 40, 60, 80, 100, 120, 140) clearly visible in secondary ink (#4A4A44). X-axis tick labels intentionally suppressed (appropriate for reaction coordinate).
+      Data: Smooth energy curve in brand green (#009E73), width=2.5. Light green area fill (alpha=0.08) under curve. Double-headed red arrow (#AE3030) for Ea, double-headed blue arrow (#4467A3) for ΔH. Three geom_label annotations: "Reactants 50 kJ/mol" (lower-left), "Transition State 120 kJ/mol" (above peak), "Products 20 kJ/mol" (lower-right), all with elevated background (#FFFDF6). Red badge "Ea = 70 kJ/mol" and blue badge "ΔH = -30 kJ/mol" with light text. Dashed reference lines at y=50 and y=20 in muted ink.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly matches the Imprint dark surface.
-      Chrome: Title appears in light cream (#F0EFE8 INK token), clearly readable. Y-axis label and tick labels in light INK_SOFT tone, all legible. X-axis label "Reaction Coordinate" in light ink — readable. No dark-on-dark failures observed for any chrome element.
-      Data: Identical data colors to light render — green curve (#009E73), red Ea arrow (#AE3030) with red badge, blue ΔH arrow (#4467A3) with blue badge. The neutral label boxes use ELEVATED_BG (#242420) fill with light INK text (#F0EFE8) — all three informational labels are readable on the dark background. The subtle green area fill is visible but appropriately understated. Dashed reference lines appear in a muted gray.
-      Legibility verdict: PASS — all text, labels, and annotations are clearly readable against the warm near-black background. Data colors are identical to the light render; only chrome flips.
+      Background: Warm near-black (#1A1A17) — correct; not pure black.
+      Chrome: Title in light ink (#F0EFE8), fully visible. Y-axis label and X-axis label in light ink. Y-axis tick labels in secondary light ink (#B8B7B0), clearly readable. No dark-on-dark failures detected.
+      Data: Energy curve in identical brand green (#009E73) — data colors match light render exactly. Dark elevated backgrounds (#242420) for annotation label boxes. Red and blue arrow/badge colors unchanged from light render. Dashed reference lines visible against dark background.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -61,55 +57,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all readable in both themes. Annotation
-          labels at size=3.5mm are slightly small but legible at full canvas resolution.
+        comment: 'All font sizes explicitly set. Title=16pt, axis titles=12pt, tick
+          labels=10pt. Readable in both themes. Minor: geom_label annotations at size=4.5mm
+          may be slightly small at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 'No overlapping text or data elements. All labels well-positioned:
-          Reactants below-left plateau, TS above peak, Products below-right, Ea and
-          DH badges centered on arrows.'
+        comment: 'No overlapping elements. Labels well-positioned: Reactants (lower-left),
+          TS (above peak), Products (lower-right). Ea/DH badges clear of each other.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve at size=2.5 is prominent, arrows clearly visible, area
-          fill subtle (alpha=0.08). All elements well-adapted to the chart.
+        comment: Energy curve (size=2.5) prominent. Area fill (alpha=0.08) adds depth
+          without dominating. Double-headed arrows visible and distinct in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green curve (#009E73) is CVD-safe. Red/blue annotation arrows serve
-          different semantic roles (Ea vs DH) and are not used as sole categorical
-          distinguishers.
+        comment: Imprint palette CVD-safe. Green curve, red Ea arrow, blue DH arrow
+          are distinguishable across deuteranopia/protanopia.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed (ggsize(800,450) + scale=4). Nothing cut
-          off. Good proportions with generous whitespace around the energy curve.
+        comment: Canvas gate passed (3200x1800). No clipping. Well-proportioned with
+          good whitespace. No AR-09 edge clipping detected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Potential Energy (kJ/mol)' is descriptive with units. X-axis
-          'Reaction Coordinate' is appropriate. Title follows mandatory format.
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units. X-axis: ''Reaction
+          Coordinate''. Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Curve = #009E73 (Imprint position 1, first series). Ea = #AE3030
-          (position 5 matte red, semantic activation energy). DH = #4467A3 (position
-          3 blue). Light bg #FAF8F1, dark bg #1A1A17. Both themes correct.'
+        comment: 'Main curve #009E73 (Imprint position 1). Ea uses #AE3030 (Imprint
+          position 5, semantic: energy barrier). DH uses #4467A3 (Imprint position
+          3). Backgrounds #FAF8F1 / #1A1A17 correct. Chrome theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,25 +112,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Color-coded annotation badges (red Ea, blue DH)
-          matching their arrows shows intentional design hierarchy. Subtle green area
-          fill adds depth. Still a domain-standard diagram.
+        comment: 'Above defaults: intentional semantic color choices (red=barrier,
+          blue=enthalpy), area fill for visual depth, colored badge labels. Clearly
+          more than a configured default. Not yet publication-ready typography.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Y-only grid (X grid disabled), subtle grid styling,
-          X tick marks removed for cleanliness. However, no explicit panel_border=element_blank()
-          to remove top/right panel borders.
+        comment: Spine removal (panel_border=element_blank), L-frame axis lines, y-grid
+          only (no x-grid), generous whitespace, rounded-corner label boxes. Good
+          refinement above minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Color-coded arrows (red Ea, blue DH) create visual
-          hierarchy for key chemistry concepts. Energy path clearly flows left-to-right
-          from reactants through barrier to products.
+        comment: 'Chart tells clear chemistry story: colored badges for Ea and DH
+          as focal points, dashed reference lines establish energy levels, green area
+          fill emphasizes the reaction pathway. Above default but short of FiveThirtyEight-level
+          visual hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram with smooth CubicSpline
-          curve and clear transition state maximum.
+        comment: 'Correct: line chart of energy vs reaction coordinate with smooth
+          cubic spline curve.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: smooth curve, Ea double-headed arrow,
-          DH double-headed arrow, horizontal dashed reference lines, labels for reactants/TS/products.'
+        comment: 'All spec features: labels for reactants/TS/products, Ea double-headed
+          arrow, DH double-headed arrow, horizontal dashed reference lines, smooth
+          curve with TS maximum.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X=reaction_coordinate (0–1), Y=energy (kJ/mol), scale 0–145 shows
-          all data. Exothermic: reactants at 50, TS at 120, products at 20 kJ/mol.'
+        comment: X=reaction coordinate (0-1), Y=potential energy (kJ/mol). Reactant=50,
+          TS=120, Product=20 kJ/mol as specified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-reaction-coordinate · python · letsplot · anyplot.ai'
-          matches mandatory format. No legend needed (direct annotations used instead).
+        comment: 'Title: ''line-reaction-coordinate · python · letsplot · anyplot.ai''
+          — exact correct format. No legend (single curve, appropriate).'
     data_quality:
       score: 15
       max: 15
@@ -177,24 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: activation energy barrier with arrows, enthalpy
-          change with arrows, transition state annotation, reactant/product labels,
-          horizontal reference lines, area fill for visual depth.'
+        comment: 'Shows all aspects: energy barrier (Ea=70 kJ/mol), enthalpy change
+          (DH=-30 kJ/mol), reactant and product plateaus, smooth transition curve.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Single-step exothermic reaction with Ea=70 kJ/mol and DH=-30 kJ/mol
-          — realistic moderate activation energy. Neutral scientific/educational context.
+        comment: Single-step exothermic reaction — scientifically valid and neutral
+          context. Reactants at 50, TS at 120, products at 20 kJ/mol are realistic
+          for an organic reaction.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy values 0–145 kJ/mol are physically reasonable. 70 kJ/mol activation
-          energy is typical for many organic reactions. -30 kJ/mol exothermic enthalpy
-          is plausible.
+        comment: Energy values (0-120 kJ/mol range) are physically realistic for a
+          typical exothermic reaction. Y-axis limits [0, 145] provide appropriate
+          headroom.
     code_quality:
       score: 10
       max: 10
@@ -204,36 +201,39 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Linear, well-organized script with clear
-          data preparation followed by plot assembly.
+        comment: 'Flat script: imports -> data -> theme tokens -> geom DataFrames
+          -> plot composition -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: CubicSpline from fixed control points, linspace
-          for coordinate grid. No random elements.'
+        comment: 'Fully deterministic: fixed control points for CubicSpline, no random
+          operations.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. scipy.interpolate.CubicSpline used for curve
-          generation. All lets_plot imports accounted for.
+        comment: 'All imports used: LetsPlot, aes, arrow, element_blank, element_line,
+          element_rect, element_text, geom_area, geom_label, geom_line, geom_segment,
+          ggplot, ggsize, labs, scale_x_continuous, scale_y_continuous, theme, ggsave,
+          CubicSpline, os, numpy, pandas.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured with descriptive variable names (reactant_energy,
-          transition_energy, ea_arrow_df etc). No fake UI or unnecessary complexity.
+        comment: Clean DataFrame construction for each annotation layer. Elegant double-headed
+          arrow implementation via 2-row DataFrames. Title fontsize scaling logic
+          is clear and justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Uses current
-          letsplot API including LetsPlot.setup_html() and ggsave from lets_plot.export.
+        comment: Saves plot-{THEME}.png (scale=4, 3200x1800) and plot-{THEME}.html.
+          Correct ggsave API.
     library_mastery:
       score: 7
       max: 10
@@ -243,23 +243,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper ggplot grammar: ggplot + geom_* + scale_* + labs + ggsize
-          + theme layering. Idiomatic use of aes() and data= parameters for segment
-          and label geoms.'
+        comment: 'Correct ggplot grammar: ggplot() + geom_*() + scale_*() + theme().
+          Proper aes() mappings. Multiple geom layers composed idiomatically. element_blank/text/line/rect
+          for theme customization.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses letsplot's arrow() function for geom_segment arrowheads (letsplot-specific
-          API), geom_label with label_r/label_padding/label_size for styled callout
-          boxes, and HTML export via ggsave.
+        comment: 'Uses letsplot-specific: arrow(length, type=''open'') for arrowhead
+          control, geom_label with label_r (corner radius), label_padding, label_size
+          (border width), fontface=''bold''. These are letsplot parameters not available
+          in standard ggplot2.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -267,3 +269,4 @@ impl_tags:
   - interpolation
   styling:
   - alpha-blending
+  - minimal-chrome
