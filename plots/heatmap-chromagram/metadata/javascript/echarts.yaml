@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: heatmap-chromagram
+created: '2026-06-24T13:37:59Z'
+updated: '2026-06-24T13:59:55Z'
+generated_by: claude-sonnet
+workflow_run: 28102088885
+issue: 4564
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Full spec compliance: all 12 pitch classes labeled, sequential imprint_seq colormap,
+    colorbar, time axis in seconds, fine resolution capturing chord transitions'
+  - Chord progression narrative with section labels (C, G, Am, F) and dashed boundary
+    lines is genuine data storytelling above defaults
+  - Theme-adaptive chrome flawlessly applied in both renders — no dark-on-dark failures,
+    identical data colors across themes
+  - Factually correct chord voicings (C/E/G, D/G/B, C/E/A, C/F/A) with realistic chroma
+    energy distributions
+  - Deterministic LCG seed ensures reproducible output on every render
+  - ECharts graphic component overlay is an idiomatic, distinctly ECharts approach
+    to section annotations
+  weaknesses:
+  - Chord annotation font size (12px CSS) is slightly smaller than axis labels (13-14px
+    CSS); at 400px mobile scaling these annotations approach the readability floor
+    — consider bumping to 14px
+  - Cell border color using t.pageBg inverts visual weight between themes (cream borders
+    in light, near-invisible borders in dark); t.grid would be more consistent
+  - 'DE could push further: a background highlight or subtle fill behind each chord
+    section (e.g. alternating very-low-alpha tint) would reinforce section boundaries
+    more prominently than dashed lines alone'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "heatmap-chromagram · javascript · echarts · anyplot.ai" in bold dark ink, clearly readable. Subtitle in muted secondary text. Chord labels (C, G, Am, F) in bold above sections. Y-axis labels (B through C, all 12 pitch classes) and X-axis labels (0.0s, 1.0s, 2.0s, 3.0s) in dark-on-light secondary text, all clearly visible. VisualMap "High"/"Low" labels readable.
+      Data: Imprint seq (green → blue) heatmap; low-energy cells in teal green (#009E73-range), high-energy chord tones in blue/purple (#4467A3-range). Chord transitions clearly visible at section boundaries. First data color is brand green #009E73 for low energy.
+      Legibility verdict: PASS — all text elements readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle flip to white/light ink via token. Chord annotation labels (C, G, Am, F) render in white-ish ink — clearly readable. Y-axis pitch class labels and X-axis time labels in lighter secondary text — all clearly visible against dark background. No dark-on-dark failures observed. VisualMap "High"/"Low" labels readable.
+      Data: Identical green-to-blue color scheme as light render — Imprint seq data colors are theme-independent as required. Cell borders (t.pageBg = #1A1A17) are subtle in dark mode but cells remain distinguishable by hue.
+      Legibility verdict: PASS — all text elements readable, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set. Minor deduction: chord annotation
+          labels at 12px CSS and axis tick labels at 13px CSS approach readability
+          floor at 400px mobile scaling.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 960 heatmap cells (12 pitch × 80 frames) clearly visible with
+          good contrast between chord-tone blue/purple and non-chord-tone green.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq (green → blue) is perceptually uniform and CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas (2400×2400) correct for heatmap. Canvas gate passed.
+          Balanced margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Time (seconds)'', Y: ''Pitch Class'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.seq (imprint_seq) for continuous single-polarity energy data.
+          Background transparent (inherits pageBg). All chrome tokens applied correctly
+          in both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional narrative design with chord section labels, dashed boundary
+          lines, and informative subtitle. Clearly above library defaults. Falls short
+          of publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: splitLine hidden on both axes, axisTick hidden, thin cell borders
+          (0.5px), generous margins. Good refinement for a heatmap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord annotations + dashed boundary lines actively guide viewer through
+          C→G→Am→F progression. Subtitle provides temporal context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Heatmap is the correct chart type for a chromagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes labeled C to B; sequential colormap (imprint_seq);
+          colorbar with High/Low; time axis in seconds; 80 frames at fine resolution;
+          realistic chord patterns.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, color=energy. All axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches heatmap-chromagram · javascript · echarts · anyplot.ai.
+          VisualMap serves as colorbar legend with High/Low labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 12 pitch classes, full temporal evolution, 4 distinct chord
+          sections, chord transitions at boundaries.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C-G-Am-F is a genuine chord progression. Chroma feature energy values
+          (0-1 normalized) are realistic for MIR. Frame rate of 20fps is standard.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Chord voicings are musically correct (C: C/E/G, G: D/G/B, Am: C/E/A,
+          F: C/F/A). Energy ranges are plausible (chord tones 0.55-1.0, non-chord
+          0-0.18).'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: tokens → LCG → chroma data → time labels → annotations
+          → chart. Inline LCG arrow function is a practical helper, not structural
+          complexity.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed=42; fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Globals only (window.ANYPLOT_TOKENS, echarts); no unnecessary imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, no fake UI, emphasis:disabled and calculable:false show
+          domain knowledge.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness produces plot-{theme}.png and plot-{theme}.html for ECharts
+          (interactive library). Correct output contract.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic ECharts heatmap with category/category/value axes, correct
+          visualMap, animation:false, echarts.init without explicit size or devicePixelRatio.
+          Graphic component usage demonstrates high-level API knowledge.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ECharts graphic component overlay (text + line elements in CSS-px
+          coordinate space) is distinctly ECharts-specific. VisualMap and emphasis:disabled
+          are also ECharts-native features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

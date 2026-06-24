@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-04-07
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-24
 """
+
+import os
 
 import pandas as pd
 import qrcode
@@ -10,10 +12,8 @@ from lets_plot import (
     LetsPlot,
     aes,
     coord_fixed,
-    element_geom,
     element_rect,
     element_text,
-    flavor_high_contrast_light,
     geom_raster,
     ggplot,
     ggsave,
@@ -27,49 +27,53 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme-adaptive chrome tokens (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 # Generate QR code data
 content = "https://pyplots.ai"
 qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
 qr.add_data(content)
 qr.make(fit=True)
 
-# Convert QR matrix to dataframe — use fill values directly for scale_fill_identity
+# Convert QR matrix to dataframe — fill column used directly by scale_fill_identity
 matrix = qr.get_matrix()
 size = len(matrix)
 rows = []
 for y, row in enumerate(matrix):
     for x, cell in enumerate(row):
-        rows.append({"x": x, "y": size - 1 - y, "fill": "#1A1A2E" if cell else "#FFFFFF"})
+        rows.append({"x": x, "y": size - 1 - y, "fill": INK if cell else PAGE_BG})
 df = pd.DataFrame(rows)
 
-# Plot using lets-plot distinctive features:
-# - theme_void() for clean base with no axes/grid
-# - flavor_high_contrast_light() for crisp white background
-# - geom_raster() optimized for grid/matrix rendering
-# - scale_fill_identity() maps fill column directly to colors
-# - element_geom() for global geom styling
+# Title length: 46 chars — shorter than 67-char baseline, use default 16px
+title = "qrcode-basic · python · letsplot · anyplot.ai"
+
+# Plot — square canvas: ggsize(600, 600) × scale=4 → 2400×2400 px (hard rule)
 plot = (
     ggplot(df, aes(x="x", y="y", fill="fill"))
     + geom_raster()
     + scale_fill_identity()
     + coord_fixed()
     + labs(
-        title="qrcode-basic · letsplot · pyplots.ai",
-        subtitle="Encoded: https://pyplots.ai | Error Correction: M (15%)",
-        caption="Version 2 · 25×25 modules · ECC Level M (15%)",
+        title=title,
+        subtitle=f"Encoded: {content}  |  Error Correction: M (15%)",
+        caption=f"Version {qr.version}  ·  {size}×{size} modules  ·  ECC Level M (15%)",
     )
-    + ggsize(1200, 1200)
+    + ggsize(600, 600)
     + theme_void()
-    + flavor_high_contrast_light()
     + theme(
-        plot_title=element_text(size=26, hjust=0.5, face="bold"),
-        plot_subtitle=element_text(size=16, hjust=0.5, color="#555555"),
-        plot_caption=element_text(size=13, hjust=0.5, color="#888888"),
-        plot_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),
-        panel_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),
-        geom=element_geom(pen="#1A1A2E", brush="#1A1A2E", paper="#FFFFFF"),
+        plot_title=element_text(size=16, hjust=0.5, face="bold", color=INK),
+        plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
+        plot_caption=element_text(size=8, hjust=0.5, color=INK_MUTED),
+        plot_background=element_rect(fill=PAGE_BG, color="#009E73", size=3),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
 
-# Save — square format (3600×3600 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save — square 2400×2400 px (PNG + HTML for interactive library)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
