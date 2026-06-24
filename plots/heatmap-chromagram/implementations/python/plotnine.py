@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
