@@ -1,14 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-21
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-06-24
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data
+# Theme tokens — Imprint palette (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint palette — curve + scientific annotation colors
+BRAND = "#009E73"  # brand green — main reaction curve (Imprint position 1)
+EA_COLOR = "#4467A3"  # blue — activation energy (Imprint position 3, kinetic)
+DH_COLOR = "#BD8233"  # ochre — enthalpy change (Imprint position 4, thermodynamic)
+FILL_COLOR = "rgba(0,158,115,0.10)" if THEME == "light" else "rgba(0,158,115,0.15)"
+
+# Data — single-step exothermic reaction
 reactant_energy = 50.0
 transition_energy = 120.0
 product_energy = 20.0
@@ -24,15 +41,12 @@ barrier_height = transition_energy - (
 gaussian_bump = barrier_height * np.exp(-((reaction_coord - peak_pos) ** 2) / (2 * 0.018))
 
 energy = baseline + gaussian_bump
-
-# Colorblind-safe colors: blue for Ea, orange for ΔH
-ea_color = "#0077BB"
-dh_color = "#EE7733"
+peak_idx = int(np.argmax(energy))
 
 # Plot
 fig = go.Figure()
 
-# Shaded region under curve for visual polish
+# Filled area under curve with brand green tint
 fig.add_trace(
     go.Scatter(
         x=reaction_coord,
@@ -40,43 +54,66 @@ fig.add_trace(
         mode="lines",
         line={"color": "rgba(0,0,0,0)", "width": 0},
         fill="tozeroy",
-        fillcolor="rgba(48,105,152,0.06)",
+        fillcolor=FILL_COLOR,
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
+# Main reaction energy curve
 fig.add_trace(
     go.Scatter(
         x=reaction_coord,
         y=energy,
         mode="lines",
-        line={"color": "#306998", "width": 4, "shape": "spline"},
+        line={"color": BRAND, "width": 4, "shape": "spline"},
         showlegend=False,
-        hovertemplate=("Reaction Coordinate: %{x:.2f}<br>Energy: %{y:.1f} kJ/mol<extra></extra>"),
+        hovertemplate="Reaction Coordinate: %{x:.2f}<br>Energy: %{y:.1f} kJ/mol<extra></extra>",
+    )
+)
+
+# Transition state peak marker dot
+fig.add_trace(
+    go.Scatter(
+        x=[reaction_coord[peak_idx]],
+        y=[energy[peak_idx]],
+        mode="markers",
+        marker={"color": BRAND, "size": 12, "symbol": "circle", "line": {"color": PAGE_BG, "width": 2}},
+        showlegend=False,
+        hoverinfo="skip",
     )
 )
 
 # Horizontal dashed lines at reactant and product energy levels
 for x0, x1, y_level in [(-0.05, 0.28, reactant_energy), (0.72, 1.05, product_energy)]:
     fig.add_shape(
-        type="line", x0=x0, x1=x1, y0=y_level, y1=y_level, line={"color": "#BBBBBB", "width": 1.5, "dash": "dash"}
+        type="line", x0=x0, x1=x1, y0=y_level, y1=y_level, line={"color": INK_SOFT, "width": 1.5, "dash": "dash"}
     )
 
-# Extended dashed line at reactant level on ΔH side for reference
+# Reference dashed line at reactant level on ΔH side
 fig.add_shape(
     type="line",
     x0=0.82,
     x1=0.94,
     y0=reactant_energy,
     y1=reactant_energy,
-    line={"color": "#BBBBBB", "width": 1, "dash": "dot"},
+    line={"color": INK_SOFT, "width": 1, "dash": "dot"},
+)
+
+# Reference dashed line at transition state level for Ea
+ea_x = 0.14
+fig.add_shape(
+    type="line",
+    x0=ea_x - 0.02,
+    x1=peak_pos + 0.08,
+    y0=transition_energy,
+    y1=transition_energy,
+    line={"color": INK_SOFT, "width": 1, "dash": "dot"},
 )
 
 # Activation energy (Ea) double-headed arrow
-ea_x = 0.14
 fig.add_shape(
-    type="line", x0=ea_x, y0=reactant_energy, x1=ea_x, y1=transition_energy, line={"color": ea_color, "width": 2.5}
+    type="line", x0=ea_x, y0=reactant_energy, x1=ea_x, y1=transition_energy, line={"color": EA_COLOR, "width": 2.5}
 )
 fig.add_annotation(
     x=ea_x,
@@ -88,7 +125,7 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2.5,
-    arrowcolor=ea_color,
+    arrowcolor=EA_COLOR,
 )
 fig.add_annotation(
     x=ea_x,
@@ -100,7 +137,7 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2.5,
-    arrowcolor=ea_color,
+    arrowcolor=EA_COLOR,
 )
 fig.add_annotation(
     x=ea_x,
@@ -109,23 +146,13 @@ fig.add_annotation(
     showarrow=False,
     xanchor="right",
     xshift=-14,
-    font={"size": 19, "color": ea_color, "family": "Arial Black, sans-serif"},
-)
-
-# Horizontal dashed line at transition state level (for Ea reference)
-fig.add_shape(
-    type="line",
-    x0=ea_x - 0.02,
-    x1=peak_pos + 0.08,
-    y0=transition_energy,
-    y1=transition_energy,
-    line={"color": "#BBBBBB", "width": 1, "dash": "dot"},
+    font={"size": 12, "color": EA_COLOR, "family": "Arial Black, sans-serif"},
 )
 
 # Enthalpy change (ΔH) double-headed arrow
 dh_x = 0.88
 fig.add_shape(
-    type="line", x0=dh_x, y0=product_energy, x1=dh_x, y1=reactant_energy, line={"color": dh_color, "width": 2.5}
+    type="line", x0=dh_x, y0=product_energy, x1=dh_x, y1=reactant_energy, line={"color": DH_COLOR, "width": 2.5}
 )
 fig.add_annotation(
     x=dh_x,
@@ -137,7 +164,7 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2.5,
-    arrowcolor=dh_color,
+    arrowcolor=DH_COLOR,
 )
 fig.add_annotation(
     x=dh_x,
@@ -149,7 +176,7 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=1.5,
     arrowwidth=2.5,
-    arrowcolor=dh_color,
+    arrowcolor=DH_COLOR,
 )
 fig.add_annotation(
     x=dh_x,
@@ -158,10 +185,10 @@ fig.add_annotation(
     showarrow=False,
     xanchor="left",
     xshift=14,
-    font={"size": 19, "color": dh_color, "family": "Arial Black, sans-serif"},
+    font={"size": 12, "color": DH_COLOR, "family": "Arial Black, sans-serif"},
 )
 
-# Labels — positioned to avoid crowding with arrows
+# Labels — Reactants, Transition State, Products
 fig.add_annotation(
     x=0.02,
     y=reactant_energy,
@@ -169,22 +196,21 @@ fig.add_annotation(
     showarrow=False,
     yshift=34,
     xanchor="left",
-    font={"size": 18, "color": "#2D2D2D", "family": "Arial, sans-serif"},
+    font={"size": 12, "color": INK, "family": "Arial, sans-serif"},
 )
 
-peak_idx = int(np.argmax(energy))
 fig.add_annotation(
     x=reaction_coord[peak_idx],
     y=energy[peak_idx],
     text="<b>Transition State</b><br>120 kJ/mol",
     showarrow=True,
     ay=-55,
-    ax=40,
+    ax=45,
     arrowhead=2,
     arrowsize=1,
-    arrowwidth=2,
-    arrowcolor="#555555",
-    font={"size": 18, "color": "#2D2D2D", "family": "Arial, sans-serif"},
+    arrowwidth=1.5,
+    arrowcolor=INK_SOFT,
+    font={"size": 12, "color": INK, "family": "Arial, sans-serif"},
 )
 
 fig.add_annotation(
@@ -194,51 +220,60 @@ fig.add_annotation(
     showarrow=False,
     yshift=-32,
     xanchor="right",
-    font={"size": 18, "color": "#2D2D2D", "family": "Arial, sans-serif"},
+    font={"size": 12, "color": INK, "family": "Arial, sans-serif"},
 )
+
+# Title — length 55 chars < 67 baseline, no scaling needed
+title = "line-reaction-coordinate · python · plotly · anyplot.ai"
+title_len = len(title)
+title_fontsize = round(16 * (67 / title_len)) if title_len > 67 else 16
 
 # Style
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"family": "Arial, sans-serif", "color": INK},
     title={
-        "text": "line-reaction-coordinate · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Arial, sans-serif", "color": "#2D2D2D"},
+        "text": title,
+        "font": {"size": title_fontsize, "family": "Arial, sans-serif", "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Reaction Coordinate", "font": {"size": 22, "family": "Arial, sans-serif"}, "standoff": 15},
-        "tickfont": {"size": 18},
+        "title": {
+            "text": "Reaction Coordinate",
+            "font": {"size": 12, "family": "Arial, sans-serif", "color": INK},
+            "standoff": 15,
+        },
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showgrid": False,
         "showticklabels": False,
         "zeroline": False,
         "range": [-0.08, 1.08],
         "showline": True,
-        "linecolor": "#CCCCCC",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
     },
     yaxis={
         "title": {
             "text": "Potential Energy (kJ/mol)",
-            "font": {"size": 22, "family": "Arial, sans-serif"},
+            "font": {"size": 12, "family": "Arial, sans-serif", "color": INK},
             "standoff": 10,
         },
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
         "range": [0, 140],
         "showline": True,
-        "linecolor": "#CCCCCC",
+        "linecolor": INK_SOFT,
         "linewidth": 1,
         "dtick": 20,
     },
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
     margin={"l": 85, "r": 60, "t": 80, "b": 65},
-    font={"family": "Arial, sans-serif"},
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
