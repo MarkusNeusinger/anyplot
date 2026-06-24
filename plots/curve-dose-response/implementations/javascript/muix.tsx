@@ -34,6 +34,12 @@ function rng() {
   return seed / 4294967296;
 }
 
+// Unicode superscript formatter for log10 tick labels (e.g. 10⁻⁹)
+const SUPERSCRIPT = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻' };
+function toSuperscript(n) {
+  return String(n).split('').map(c => SUPERSCRIPT[c] || c).join('');
+}
+
 // Compound pharmacological parameters
 const compA = { label: "Compound A (EC₅₀ = 100 nM)", bottom: 2, top: 98, ec50: 1e-7, hill: 1.8 };
 const compB = { label: "Compound B (EC₅₀ = 800 nM)", bottom: 5, top: 85, ec50: 8e-7, hill: 1.1 };
@@ -83,7 +89,7 @@ function CIBand() {
   const d =
     pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") + " Z";
 
-  return <path d={d} fill={t.palette[0]} fillOpacity={0.13} stroke="none" />;
+  return <path d={d} fill={t.palette[0]} fillOpacity={0.20} stroke="none" />;
 }
 
 // SEM error bars rendered directly as SVG lines
@@ -119,7 +125,8 @@ export default function Chart() {
     <ChartContainer
       width={width}
       height={height}
-      margin={{ top: 62, right: 48, bottom: 88, left: 96 }}
+      margin={{ top: 62, right: 56, bottom: 88, left: 96 }}
+      sx={{ '& .MuiChartsAxis-top, & .MuiChartsAxis-right': { display: 'none' } }}
       series={[
         {
           type: "line",
@@ -166,7 +173,7 @@ export default function Chart() {
         max: 3e-3,
         label: "Concentration (M)",
         tickInterval: [1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3],
-        valueFormatter: v => `10^${Math.round(Math.log10(v))}`,
+        valueFormatter: v => `10${toSuperscript(Math.round(Math.log10(v)))}`,
         tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
         labelStyle: { fontSize: 16, fill: t.ink },
       }]}
@@ -218,6 +225,40 @@ export default function Chart() {
         labelAlign="end"
         labelStyle={{ fill: t.inkSoft, fontSize: 12 }}
         lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4,4", strokeWidth: 1, opacity: 0.55 }}
+      />
+      {/* Top asymptotes — Compound A (98%) and Compound B (85%) */}
+      <ChartsReferenceLine
+        y={compA.top}
+        axisId="response"
+        label={`${compA.top}%`}
+        labelAlign="start"
+        labelStyle={{ fill: t.palette[0], fontSize: 11 }}
+        lineStyle={{ stroke: t.palette[0], strokeDasharray: "3,5", strokeWidth: 1, opacity: 0.45 }}
+      />
+      <ChartsReferenceLine
+        y={compB.top}
+        axisId="response"
+        label={`${compB.top}%`}
+        labelAlign="start"
+        labelStyle={{ fill: t.palette[1], fontSize: 11 }}
+        lineStyle={{ stroke: t.palette[1], strokeDasharray: "3,5", strokeWidth: 1, opacity: 0.45 }}
+      />
+      {/* Bottom asymptotes — Compound A (2%) and Compound B (5%) */}
+      <ChartsReferenceLine
+        y={compA.bottom}
+        axisId="response"
+        label={`${compA.bottom}%`}
+        labelAlign="start"
+        labelStyle={{ fill: t.palette[0], fontSize: 11 }}
+        lineStyle={{ stroke: t.palette[0], strokeDasharray: "3,5", strokeWidth: 1, opacity: 0.45 }}
+      />
+      <ChartsReferenceLine
+        y={compB.bottom}
+        axisId="response"
+        label={`${compB.bottom}%`}
+        labelAlign="start"
+        labelStyle={{ fill: t.palette[1], fontSize: 11 }}
+        lineStyle={{ stroke: t.palette[1], strokeDasharray: "3,5", strokeWidth: 1, opacity: 0.45 }}
       />
       <ChartsLegend
         position={{ vertical: "top", horizontal: "right" }}
