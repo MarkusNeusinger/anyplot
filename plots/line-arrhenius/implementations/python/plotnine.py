@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-21
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-24
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -26,14 +28,27 @@ from plotnine import (
 from scipy.stats import t as t_dist
 
 
-# Data — first-order decomposition with slight experimental scatter
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint palette — first series always #009E73, position 3 for fit line
+BRAND = "#009E73"
+BLUE = "#4467A3"
+
+# Data — first-order decomposition, 300–600 K with realistic experimental scatter
 temperature_K = np.array([300, 350, 400, 450, 500, 550, 600])
-rate_constant_k = np.array([0.0013, 0.0091, 0.054, 0.19, 0.72, 1.75, 4.2])
+noise = np.array([0.22, -0.18, 0.25, -0.14, 0.19, -0.21, 0.15])
+rate_constant_k = np.exp(-4878.0 / temperature_K + 9.5 + noise)
 
 inv_T = 1.0 / temperature_K
 ln_k = np.log(rate_constant_k)
 
-# Compute regression statistics for annotations
+# Regression statistics
 coeffs = np.polyfit(inv_T, ln_k, 1)
 slope, intercept = coeffs
 ln_k_pred = np.polyval(coeffs, inv_T)
@@ -41,16 +56,15 @@ ss_res = np.sum((ln_k - ln_k_pred) ** 2)
 ss_tot = np.sum((ln_k - ln_k.mean()) ** 2)
 r_squared = 1 - ss_res / ss_tot
 
-R = 8.314
-Ea_kJ = -slope * R / 1000
+R_gas = 8.314
+Ea_kJ = -slope * R_gas / 1000
 
 df = pd.DataFrame({"inv_T": inv_T, "ln_k": ln_k})
 
-# Regression line data for manual ribbon + line (tighter control than geom_smooth)
-inv_T_fine = np.linspace(inv_T.min() - 0.0001, inv_T.max() + 0.0001, 200)
+# Regression line with 95% confidence band
+inv_T_fine = np.linspace(inv_T.min(), inv_T.max(), 200)
 ln_k_fit = np.polyval(coeffs, inv_T_fine)
 
-# Compute residual SE for narrow confidence band
 n = len(inv_T)
 se_residual = np.sqrt(ss_res / (n - 2))
 inv_T_mean = inv_T.mean()
@@ -62,78 +76,73 @@ ci_upper = ln_k_fit + t_val * se_fit
 
 df_fit = pd.DataFrame({"inv_T": inv_T_fine, "ln_k_fit": ln_k_fit, "ci_lower": ci_lower, "ci_upper": ci_upper})
 
-# Tick labels with temperature reference — select subset for clean spacing
+# X-axis ticks with dual annotation (1/T + temperature in K)
 tick_temps = [300, 400, 500, 600]
 tick_positions = [1.0 / t for t in tick_temps]
 tick_labels = [f"{1.0 / t:.2e}\n({t} K)" for t in tick_temps]
 
-# Annotation placement — upper-left region for better balance
+# Annotation placement — upper-left quadrant
 anno_x = inv_T.min() + 0.35 * (inv_T.max() - inv_T.min())
-anno_y_top = ln_k.max() - 0.15
+anno_y_top = ln_k.max() - 0.2
 
-# Combined annotation text block for polished typography
-anno_line1 = f"R² = {r_squared:.4f}"
-anno_line2 = f"Eₐ = {Ea_kJ:.1f} kJ/mol"
-anno_line3 = f"slope = −Eₐ/R = {slope:.0f} K"
+anno_r2 = f"R² = {r_squared:.4f}"
+anno_ea = f"Eₐ = {Ea_kJ:.1f} kJ/mol"
+anno_slope = f"slope = −Eₐ/R = {slope:.0f} K"
 
-# Plot — manual ribbon + line for tight CI, geom_point for markers
+title = "line-arrhenius · python · plotnine · anyplot.ai"
+
+# Plot
 plot = (
     ggplot(df, aes(x="inv_T", y="ln_k"))
-    # Confidence ribbon — narrow band from manual calculation
     + geom_ribbon(
-        aes(x="inv_T", ymin="ci_lower", ymax="ci_upper"), data=df_fit, fill="#4a90d9", alpha=0.12, inherit_aes=False
+        aes(x="inv_T", ymin="ci_lower", ymax="ci_upper"), data=df_fit, fill=BRAND, alpha=0.12, inherit_aes=False
     )
-    # Regression line
-    + geom_line(aes(x="inv_T", y="ln_k_fit"), data=df_fit, color="#4a90d9", size=2.0, inherit_aes=False)
-    # Data points with filled markers
-    + geom_point(color="#0d2240", fill="#306998", size=7, stroke=1.4, shape="o")
-    + scale_x_continuous(breaks=tick_positions, labels=tick_labels)
+    + geom_line(aes(x="inv_T", y="ln_k_fit"), data=df_fit, color=BLUE, size=1.5, inherit_aes=False)
+    + geom_point(color=BRAND, size=4.5, stroke=0.8, shape="o")
+    + scale_x_continuous(breaks=tick_positions, labels=tick_labels, expand=(0.05, 0))
     + scale_y_continuous(expand=(0.08, 0))
-    # Annotation block — stacked text with visual hierarchy
     + annotate(
         "label",
         x=anno_x,
         y=anno_y_top,
-        label=anno_line1,
-        size=17,
-        color="#0d2240",
+        label=anno_r2,
+        size=4.5,
+        color=INK,
         fontweight="bold",
         ha="center",
-        fill="#ffffff",
-        alpha=0.75,
+        fill=ELEVATED_BG,
+        alpha=0.92,
         label_padding=0.4,
         label_size=0,
     )
-    + annotate(
-        "text", x=anno_x, y=anno_y_top - 0.9, label=anno_line2, size=15, color="#1a3a5c", fontweight="bold", ha="center"
-    )
+    + annotate("text", x=anno_x, y=anno_y_top - 0.9, label=anno_ea, size=4.0, color=INK, fontweight="bold", ha="center")
     + annotate(
         "text",
         x=anno_x,
         y=anno_y_top - 1.65,
-        label=anno_line3,
-        size=13,
-        color="#667788",
+        label=anno_slope,
+        size=4.0,
+        color=INK_MUTED,
         fontstyle="italic",
         ha="center",
     )
-    + labs(x="1/T (K⁻¹)", y="ln(k)", title="line-arrhenius · plotnine · pyplots.ai")
+    + labs(x="1/T (K⁻¹)", y="ln(k)", title=title)
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=26, weight="bold", color="#0d2240", margin={"b": 15}),
-        axis_title_x=element_text(size=20, color="#333333", margin={"t": 10}),
-        axis_title_y=element_text(size=20, color="#333333", margin={"r": 10}),
-        axis_text=element_text(size=16, color="#444444"),
-        axis_ticks=element_line(color="#cccccc", size=0.5),
-        plot_background=element_rect(fill="#f7f7f7", color="none"),
-        panel_background=element_rect(fill="#f7f7f7", color="none"),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, weight="bold", color=INK, margin={"b": 10}),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_ticks=element_line(color=INK_SOFT, size=0.3),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_grid_major_y=element_line(color="#dcdcdc", size=0.3, linetype="dashed"),
-        plot_margin=0.05,
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
+        axis_ticks_minor=element_blank(),
+        plot_margin=0.08,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
