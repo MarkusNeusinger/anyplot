@@ -1,86 +1,111 @@
 library: matplotlib
+language: python
 specification_id: titration-curve
 created: '2026-03-21T22:13:07Z'
-updated: '2026-03-21T22:25:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389865957
+updated: '2026-06-24T11:30:14Z'
+generated_by: claude-sonnet
+workflow_run: 28094426901
 issue: 4407
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/titration-curve/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Chemically accurate data with proper strong acid-base calculations
-  - Excellent visual hierarchy with color-coded dual axes and prominent equivalence
-    point marker
-  - Thoughtful annotations that guide the viewer through the titration chemistry narrative
-  - Professional styling with custom color palette, subtle grid, and refined typography
-  - Clean, well-structured code with appropriate complexity
+  - Color-coded dual y-axes (green pH left, lavender dpH/dV right) matching respective
+    data series — sophisticated design choice
+  - 'Perfect spec compliance: equivalence point marker, derivative overlay, buffer
+    shading, pH 0–14 axis all present'
+  - Semantic use of matte red (#AE3030) for the equivalence point scatter dot — appropriate
+    landmark color
+  - 'All chrome correctly adapts between light/dark themes: annotation boxes, axis
+    spines, tick labels, legend frame all use INK/ELEVATED_BG tokens'
+  - Chemically accurate strong acid/base data with equivalence at pH 7; derivative
+    peak precisely co-located at 25 mL
+  - Minor ticks added via AutoMinorLocator for precise axis reading
+  - Custom legend built with Line2D handles — clean approach for dual-axis legend
   weaknesses:
-  - Equivalence point vertical line uses dotted style instead of dashed as specified
-  - Blue fill region for Gradual pH Change Region is slightly heavy visually
-  - Missing small legend to explicitly identify pH curve vs derivative curve
-  - pH calculation loop could be vectorized with np.where for more idiomatic numpy
-  image_description: The plot displays an acid-base titration curve for HCl + NaOH.
-    The main S-shaped curve is rendered in deep blue (#306998) plotting pH (left y-axis,
-    0-14) against volume of NaOH added (x-axis, 0-50 mL). A secondary orange (#E8875B)
-    derivative curve (dpH/dV) is plotted on the right y-axis, showing a sharp peak
-    at the equivalence point (25 mL). The equivalence point is marked with a prominent
-    red dot (white edge) at pH 7, with an annotated box connected by an arrow reading
-    "Equivalence Point / 25 mL · pH 7". A blue semi-transparent fill covers the "Gradual
-    pH Change Region" (2-20 mL). An annotation "Steep rise near equivalence" with
-    arrow points to the transition zone. A subtle dashed horizontal line marks neutral
-    pH 7. The background has a very faint pH color gradient. Top spine is removed,
-    left y-axis text is blue, right y-axis text is orange. Minor tick marks are visible.
-    Title reads "HCl + NaOH Titration · titration-curve · matplotlib · pyplots.ai".
+  - Annotation font sizes are 7 pt, just below the 8 pt minimum for tick labels —
+    marginally small at mobile widths; increase to 7.5–8 pt
+  - Buffer region fill uses alpha=0.08 which is barely perceptible in the light render
+    and almost invisible in the dark render; increase to 0.12–0.15 so the shaded region
+    communicates clearly in both themes
+  - 'LM-02 headroom: twinx + Line2D custom legend are matplotlib-distinctive, but
+    deeper matplotlib mastery (e.g. gridspec subplots_mosaic, axhspan, advanced FuncFormatter
+    on secondary axis) would push Library Mastery higher in repair if needed'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct.
+      Chrome: Title "HCl + NaOH Titration · titration-curve · matplotlib · anyplot.ai" at ~12 pt in dark INK, clearly readable. X-axis label "Volume of NaOH added (mL)" and primary Y-axis label "pH" both at 10 pt in dark ink/brand-green respectively, clearly readable. Secondary Y-axis label "dpH/dV (rate of pH change)" at 10 pt in lavender, readable. Tick labels at 8 pt in INK_SOFT, readable. Legend in upper-left with elevated background and INK_SOFT frame.
+      Data: Primary pH curve in #009E73 (brand green), 2.5 pt line — prominent S-shaped sigmoidal curve from pH ~1 at 0 mL to pH ~12.5 at 50 mL. dpH/dV derivative curve in #C475FD (lavender), 2.0 pt, with a very sharp peak near 25 mL and a fill_between region (alpha=0.15) around the peak. Equivalence point marker: red dot (#AE3030, s=120) with white edge at (25, 7), with vertical dashed line and annotation box "Equivalence Point / 25 mL · pH 7". Buffer shading (green, alpha=0.08) from vol=2–20 mL — very subtle, barely perceptible. Neutral pH 7 dashed reference line with "pH 7" label at far right.
+      Legibility verdict: PASS — all text clearly readable on light background. Annotation fonts at 7 pt are small but readable at full resolution; may be marginal at mobile widths.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct.
+      Chrome: Title in light INK (#F0EFE8), clearly readable on dark background. X-axis label, axis ticks, legend text all in INK_SOFT (#B8B7B0) — clearly readable. Primary Y-axis "pH" label in brand-green, secondary Y-axis "dpH/dV" in lavender. Right axis spine correctly colored lavender. Legend frame uses ELEVATED_BG (#242420). Annotation boxes use ELEVATED_BG with INK_SOFT borders.
+      Data: pH curve and dpH/dV curve colors are identical to light render (#009E73 and #C475FD) — data colors unchanged as required. Equivalence point red dot still clearly visible with white edge. The derivative fill (alpha=0.15, lavender) appears as a slightly darker area against the near-black background — still identifiable but the fill blends in more than in the light render. The buffer region green fill (alpha=0.08) is nearly invisible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark text failures. All title, axis label, tick, and annotation text is in light-colored tokens readable against the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 13-15pt'
+        comment: All font sizes explicitly set; title, axis labels, ticks all clearly
+          readable in both themes. Annotation texts at 7 pt are slightly below 8 pt
+          minimum and may be marginal at mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, annotations well-positioned with white background
-          boxes
+        comment: No overlapping elements — annotation boxes, legend, and data all
+          well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve linewidth=3.5, derivative linewidth=2, marker s=280, all
-          well-adapted
+        comment: pH curve and dpH/dV both clearly visible; equivalence point marker
+          prominent (s=120, white edge).
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and orange easily distinguishable for colorblind viewers
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          under CVD; red used semantically for landmark marker.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio, tight_layout, plot fills canvas well
+        comment: Canvas gate passed. subplots_adjust provides good margins; no text
+          clipped. Plot fills ~65% of canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Volume of NaOH added (mL) with units, pH, dpH/dV descriptive
+        comment: 'X-axis: ''Volume of NaOH added (mL)'' with units; Y1: ''pH''; Y2:
+          ''dpH/dV (rate of pH change)'' — all descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; second series #C475FD (Imprint position
+          2); equivalence marker uses #AE3030 semantically. Backgrounds #FAF8F1/#1A1A17
+          correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -88,24 +113,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, pH gradient background, styled annotation boxes,
-          color-coded axes
+        comment: 'Above library defaults: color-coded axis labels/ticks matching data
+          series, semantic red for equivalence marker, themed annotation boxes with
+          rounded corners. Not quite publication-ready but clearly above average.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top spine removed, subtle grid alpha=0.12, minor ticks. Blue fill
-          region slightly heavy
+        comment: Spines correctly managed, subtle y-axis grid (alpha=0.12), minor
+          ticks added, color-coordinated axis spines. Buffer fill (alpha=0.08) is
+          too subtle to read clearly in dark theme.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Strong visual hierarchy with annotations guiding viewer through chemistry
-          narrative
+        comment: Clear visual hierarchy with prominently annotated equivalence point;
+          derivative curve adds analytical depth; buffer region annotation guides
+          viewer through key titration phases.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -113,27 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped titration curve
+        comment: Correct S-shaped titration curve with derivative overlay on secondary
+          y-axis.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'All major features present. Minor: dotted line instead of dashed
-          at equivalence point'
+        comment: 'All spec features present: equivalence point dashed vertical line,
+          annotation with volume and pH, dpH/dV secondary axis, buffer/gradual-change
+          region shading, pH 0–14 y-axis range, correct axis labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume, Y=pH correctly mapped, pH axis spans 0-14
+        comment: 'X: Volume 0–50 mL; Y1: pH 0–14; Y2: dpH/dV — all correctly mapped.'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes required format with descriptive prefix. No explicit
-          legend for dual curves
+        comment: Title 'HCl + NaOH Titration · titration-curve · matplotlib · anyplot.ai'
+          matches {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai format.
+          Legend labels 'pH curve' and 'dpH/dV' correct.
     data_quality:
       score: 15
       max: 15
@@ -143,19 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete titration curve with all regions and derivative peak
+        comment: Shows full sigmoidal curve, steep rise at equivalence, flat pre-equivalence
+          region, derivative peak, and post-equivalence basic region.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
+        comment: 25 mL 0.1 M HCl titrated with 0.1 M NaOH is a classic, neutral chemistry
+          lab scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemically accurate pH values throughout
+        comment: pH 0–14 full scale, equivalence at pH 7 chemically accurate for strong
+          acid/base, concentrations realistic.
     code_quality:
       score: 10
       max: 10
@@ -165,31 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save'
+        comment: 'Linear flow: imports → theme → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic from chemistry equations
+        comment: 'Deterministic: np.linspace + analytical formula, no random data.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: plt, ticker, np, LinearSegmentedColormap'
+        comment: 'All imports used: matplotlib.pyplot, matplotlib.ticker (AutoMinorLocator),
+          numpy, matplotlib.lines.Line2D, os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI elements
+        comment: Clean, Pythonic, appropriate complexity. No fake UI. sys.path guard
+          is idiomatic for module shadowing prevention.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
+        comment: Saves plot-{THEME}.png with dpi=400, no bbox_inches='tight', no bare
+          plot.png.
     library_mastery:
       score: 7
       max: 10
@@ -199,27 +237,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good ax-based API usage, twinx, annotate, fill_between. Minor: for
-          loop instead of vectorized numpy'
+        comment: Uses fig/ax pattern, axes methods, twinx(), ticker.AutoMinorLocator,
+          Line2D custom legend, annotate with arrowprops, fill_between — all idiomatic
+          matplotlib.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap, imshow for gradient, advanced annotation
-          styling with connectionstyle
+        comment: twinx() dual-axis, Line2D custom legend handles, AutoMinorLocator,
+          solid_capstyle='round' are matplotlib-specific. fill_between is broadly
+          available.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
-  - grid-styling
   - edge-highlighting
+  - grid-styling
