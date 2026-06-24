@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -95,7 +95,7 @@ ea_heads = (
             {"x": [ea_x, ea_x], "y": [actual_peak_energy, reactant_energy], "shape": ["triangle-up", "triangle-down"]}
         )
     )
-    .mark_point(filled=True, size=150, color=ea_color)
+    .mark_point(filled=True, size=250, color=ea_color)
     .encode(
         x=alt.X("x:Q", scale=x_scale),
         y=alt.Y("y:Q", scale=y_scale),
@@ -115,7 +115,7 @@ dh_heads = (
             {"x": [dh_x, dh_x], "y": [reactant_energy, product_energy], "shape": ["triangle-up", "triangle-down"]}
         )
     )
-    .mark_point(filled=True, size=150, color=dh_color)
+    .mark_point(filled=True, size=250, color=dh_color)
     .encode(
         x=alt.X("x:Q", scale=x_scale),
         y=alt.Y("y:Q", scale=y_scale),
@@ -160,8 +160,8 @@ arrow_labels = (
 # Energy level value annotations (muted, italic)
 energy_vals_df = pd.DataFrame(
     {
-        "x": [0.02, 0.97, peak_x + 0.09],
-        "y": [reactant_energy + 6, product_energy + 6, actual_peak_energy + 2],
+        "x": [0.02, 0.97, peak_x + 0.22],
+        "y": [reactant_energy + 6, product_energy + 6, actual_peak_energy + 4],
         "text": [f"{reactant_energy:.0f} kJ/mol", f"{product_energy:.0f} kJ/mol", f"{actual_peak_energy:.0f} kJ/mol"],
     }
 )
@@ -201,6 +201,7 @@ chart = (
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
         tickSize=4,
+        titlePadding=10,
         grid=False,
     )
     .configure_title(color=INK)
