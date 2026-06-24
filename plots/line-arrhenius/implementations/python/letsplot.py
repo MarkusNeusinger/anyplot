@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-24
@@ -84,6 +84,7 @@ anyplot_theme = theme(  # noqa: F405
     panel_grid_major_x=element_blank(),  # noqa: F405
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
+    panel_border=element_blank(),  # noqa: F405
     axis_line=element_line(color=INK_SOFT),  # noqa: F405
     axis_ticks=element_blank(),  # noqa: F405
     axis_ticks_length=0,
@@ -102,7 +103,7 @@ plot = (
         method="lm",
         color=BRAND,
         size=1.5,
-        alpha=0.15,
+        alpha=0.30,
         se=True,
         level=0.95,
     )
@@ -125,7 +126,7 @@ plot = (
     + geom_text(  # noqa: F405
         aes(x="x", y="y", label="label"),  # noqa: F405
         data=pd.DataFrame({"x": [annot_x], "y": [annot_y], "label": [eq_text]}),
-        size=4,
+        size=4.5,
         color=INK_SOFT,
         hjust=1,
     )
@@ -133,7 +134,7 @@ plot = (
     + geom_text(  # noqa: F405
         aes(x="inv_T", y="y_label", label="label"),  # noqa: F405
         data=df_ticks,
-        size=3.5,
+        size=4.5,
         color=INK_SOFT,
     )
     + geom_segment(  # noqa: F405
@@ -151,7 +152,7 @@ plot = (
         fontface="italic",
     )
     + labs(  # noqa: F405
-        x="1/T (K⁻¹)", y="ln(k)", title="line-arrhenius · letsplot · anyplot.ai"
+        x="1/T (K⁻¹)", y="ln(k)", title="line-arrhenius · python · letsplot · anyplot.ai"
     )
     + scale_x_continuous(  # noqa: F405
         breaks=inv_T_ticks.tolist(), labels=[f"{v:.2e}" for v in inv_T_ticks]
