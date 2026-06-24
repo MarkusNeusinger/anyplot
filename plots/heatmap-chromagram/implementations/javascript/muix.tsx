@@ -1,8 +1,7 @@
 // anyplot.ai
 // heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-06-24
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 86/100 | Created: 2026-06-24
 
 // MUI X community has no native heatmap; rendered as SVG within a React
 // component using the harness-injected theme tokens (Imprint seq colormap).
