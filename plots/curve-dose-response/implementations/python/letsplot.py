@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
-Library: letsplot | Python 3.13
-Quality: pending | Updated: 2026-06-24
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-24
 """
 
 import os
