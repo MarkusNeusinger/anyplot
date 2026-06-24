@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -107,6 +107,7 @@ title_fontsize = max(11, round(default_fontsize * ratio))
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major_y=element_line(color=GRID_COLOR, size=0.4),
     panel_grid_minor=element_blank(),
     panel_grid_major_x=element_blank(),
@@ -144,7 +145,7 @@ plot = (
     + geom_label(
         data=pd.DataFrame({"x": [0.08], "y": [reactant_energy - 9], "label": ["Reactants\n50 kJ/mol"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=3.5,
+        size=4.5,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.9,
@@ -155,7 +156,7 @@ plot = (
     + geom_label(
         data=pd.DataFrame({"x": [peak_pos], "y": [transition_energy + 9], "label": ["Transition State\n120 kJ/mol"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=3.5,
+        size=4.5,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.9,
@@ -166,7 +167,7 @@ plot = (
     + geom_label(
         data=pd.DataFrame({"x": [0.92], "y": [product_energy - 9], "label": ["Products\n20 kJ/mol"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=3.5,
+        size=4.5,
         color=INK,
         fill=ELEVATED_BG,
         alpha=0.9,
@@ -180,7 +181,7 @@ plot = (
         ),
         mapping=aes(x="x", y="y", label="label"),
         size=4.0,
-        color="#FFFFFF",
+        color="#F0EFE8",
         fill=EA_COLOR,
         alpha=0.9,
         label_padding=0.5,
@@ -194,7 +195,7 @@ plot = (
         ),
         mapping=aes(x="x", y="y", label="label"),
         size=4.0,
-        color="#FFFFFF",
+        color="#F0EFE8",
         fill=DH_COLOR,
         alpha=0.9,
         label_padding=0.5,
