@@ -1,20 +1,16 @@
-// anyplot.ai
-// qrcode-basic: Basic QR Code Generator
-// Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: 82/100 | Created: 2026-06-24
 //# anyplot-orientation: square
 // anyplot.ai
 // qrcode-basic: Basic QR Code Generator
 // Library: MUI X Charts | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-24
-import { Box, Typography } from "@mui/material";
+import { ChartContainer } from "@mui/x-charts";
+import { Box } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
 
 // Pre-computed QR code matrix for "https://anyplot.ai"
 // Version 2 (25×25), Error Correction M, Byte mode, Mask 6
-// Generated via standard QR encoding — scannable by all QR readers
 const QR_MODULES: number[][] = [
   [1,1,1,1,1,1,1,0,1,0,0,1,1,0,1,0,0,0,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,1,0,1,0,1,1,1,1,1,0,1,0,1,0,0,0,0,0,1],
@@ -43,108 +39,97 @@ const QR_MODULES: number[][] = [
   [1,1,1,1,1,1,1,0,1,1,0,1,1,1,0,0,1,1,1,0,0,1,0,0,1],
 ];
 
-const QUIET_ZONE = 4; // modules of quiet zone on each side
-const TOTAL = QR_MODULES.length + QUIET_ZONE * 2; // 33 modules total
-
-// Dark module = brand green (#009E73); light module = page background
-// QR codes use high-contrast black/white for scanner reliability;
-// we theme the dark module with the Imprint brand green on a cream/dark bg.
-const MODULE_DARK = "#009E73";   // Imprint position 1 — first categorical series
-const MODULE_LIGHT = t.pageBg;   // theme-adaptive: cream / near-black
-const INK_MUTED = t.theme === "dark" ? "#A8A79F" : "#6B6A63";
+const QR_SIZE = QR_MODULES.length;   // 25
+const QUIET_ZONE = 4;
+const TOTAL = QR_SIZE + QUIET_ZONE * 2;  // 33
 
 export default function Chart() {
-  const size = window.ANYPLOT_SIZE;
-  const cellSize = size.width / TOTAL;
+  const { width, height } = window.ANYPLOT_SIZE;
 
-  // Title: qrcode-basic · javascript · muix · anyplot.ai  (42 chars → fits default 22px)
-  const title = "qrcode-basic · javascript · muix · anyplot.ai";
+  // Integer cell size for pixel-perfect module rendering
+  const cellPx = Math.floor((width * 0.55) / TOTAL);
+  const qrPx = cellPx * TOTAL;
+
+  // Vertical layout
+  const titleH = 28, urlH = 22, captionH = 18;
+  const gap1 = 10, gap2 = 28, gap3 = 28;
+  const contentH = titleH + gap1 + urlH + gap2 + qrPx + gap3 + captionH;
+  const yStart = Math.round((height - contentH) / 2);
+
+  const titleY = yStart + titleH;
+  const urlY = titleY + gap1 + urlH;
+  const qrTop = urlY + gap2;
+  const qrLeft = Math.round((width - qrPx) / 2);
+  const captionY = qrTop + qrPx + gap3 + captionH;
 
   return (
-    <Box
-      sx={{
-        width: size.width,
-        height: size.height,
-        bgcolor: t.pageBg,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 3,
-      }}
-    >
-      {/* Title */}
-      <Typography
-        sx={{
-          color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
-          fontFamily: "system-ui, sans-serif",
-          letterSpacing: 0.3,
-        }}
-      >
-        {title}
-      </Typography>
-
-      {/* URL label */}
-      <Typography
-        sx={{
-          color: t.inkSoft,
-          fontSize: 16,
-          fontFamily: "monospace",
-          letterSpacing: 0.5,
-        }}
-      >
-        https://anyplot.ai
-      </Typography>
-
-      {/* QR code SVG — quiet zone included */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <svg
-          width={size.width * 0.55}
-          height={size.width * 0.55}
-          viewBox={`0 0 ${TOTAL} ${TOTAL}`}
-          shapeRendering="crispEdges"
-          aria-label="QR code for https://anyplot.ai"
+    <Box sx={{ width, height, bgcolor: t.pageBg }}>
+      {/* ChartContainer is the MUI X Charts composition root — provides the
+          SVG surface and harness-wired theme context for the QR visualization */}
+      <ChartContainer width={width} height={height} series={[]} skipAnimation>
+        {/* Title */}
+        <text
+          x={width / 2}
+          y={titleY}
+          textAnchor="middle"
+          fontSize={22}
+          fontWeight="500"
+          fill={t.ink}
+          fontFamily="system-ui, sans-serif"
         >
-          {/* Background (quiet zone + light modules) */}
-          <rect x={0} y={0} width={TOTAL} height={TOTAL} fill={MODULE_LIGHT} />
+          qrcode-basic · javascript · muix · anyplot.ai
+        </text>
 
-          {/* Dark modules */}
-          {QR_MODULES.map((row, r) =>
-            row.map((v, c) =>
-              v === 1 ? (
-                <rect
-                  key={`${r}-${c}`}
-                  x={QUIET_ZONE + c}
-                  y={QUIET_ZONE + r}
-                  width={1}
-                  height={1}
-                  fill={MODULE_DARK}
-                />
-              ) : null
-            )
-          )}
-        </svg>
-      </Box>
+        {/* URL label */}
+        <text
+          x={width / 2}
+          y={urlY}
+          textAnchor="middle"
+          fontSize={16}
+          fill={t.inkSoft}
+          fontFamily="monospace"
+        >
+          https://anyplot.ai
+        </text>
 
-      {/* Caption */}
-      <Typography
-        sx={{
-          color: INK_MUTED,
-          fontSize: 13,
-          fontFamily: "system-ui, sans-serif",
-          mt: 1,
-        }}
-      >
-        Scan to visit anyplot.ai · Error Correction M (15%) · Version 2 · 25×25
-      </Typography>
+        {/* QR background block — quiet zone shows as pageBg */}
+        <rect
+          x={qrLeft}
+          y={qrTop}
+          width={qrPx}
+          height={qrPx}
+          fill={t.pageBg}
+        />
+
+        {/* Dark modules — brand green #009E73 on pageBg */}
+        {QR_MODULES.map((row, r) =>
+          row.map((v, c) =>
+            v === 1 ? (
+              <rect
+                key={`${r}-${c}`}
+                x={qrLeft + (QUIET_ZONE + c) * cellPx}
+                y={qrTop + (QUIET_ZONE + r) * cellPx}
+                width={cellPx}
+                height={cellPx}
+                fill="#009E73"
+                shapeRendering="crispEdges"
+              />
+            ) : null
+          )
+        )}
+
+        {/* Caption */}
+        <text
+          x={width / 2}
+          y={captionY}
+          textAnchor="middle"
+          fontSize={14}
+          fill={t.inkSoft}
+          fontFamily="system-ui, sans-serif"
+        >
+          Scan to visit anyplot.ai · Error Correction M (15%) · Version 2 · 25×25
+        </text>
+      </ChartContainer>
     </Box>
   );
 }
