@@ -150,7 +150,7 @@ g.append("text")
   .attr("x", lgX + lgW / 2).attr("y", lgY - 4)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text("time index");
 
 g.append("rect")
@@ -161,20 +161,28 @@ g.append("rect")
 
 g.append("text")
   .attr("x", lgX).attr("y", lgY + lgH + 16)
-  .attr("fill", t.inkSoft).style("font-size", "12px")
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text("t = 1");
 
 g.append("text")
   .attr("x", lgX + lgW).attr("y", lgY + lgH + 16)
   .attr("text-anchor", "end")
-  .attr("fill", t.inkSoft).style("font-size", "12px")
+  .attr("fill", t.inkSoft).style("font-size", "14px")
   .text(`t = ${n}`);
 
 // Title
 svg.append("text")
-  .attr("x", width / 2).attr("y", 56)
+  .attr("x", width / 2).attr("y", 52)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "22px")
   .style("font-weight", "600")
   .text("scatter-lag · javascript · d3 · anyplot.ai");
+
+// Subtitle — surfaces configurable lag and interpretation anchor
+svg.append("text")
+  .attr("x", width / 2).attr("y", 76)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .text(`AR(1) hourly temperature  ·  lag k = ${lag}  ·  tight cluster = strong autocorrelation`);
