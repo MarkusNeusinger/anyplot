@@ -1,111 +1,143 @@
 library: bokeh
+language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:47:10Z'
-updated: '2026-03-21T21:06:28Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388404683
+updated: '2026-06-24T08:00:32Z'
+generated_by: claude-sonnet
+workflow_run: 28082882854
 issue: 4409
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/bokeh/plot.html
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/bokeh/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features (labels, Ea/ΔH arrows, dashed
-    lines, smooth curve)
-  - Thoughtful three-color design with colorblind-safe palette distinguishing curve,
-    activation energy, and enthalpy change
-  - Clean visual refinement with removed ticks, subtle grid, and custom background
-  - Transition state glow effect adds visual emphasis without clutter
-  - Perfect code quality with deterministic data and KISS structure
+  - 'Full spec compliance: all required elements present — smooth energy curve, double-headed
+    Ea and ΔH arrows with distinct Imprint colors, horizontal dashed reference lines,
+    direct state labels, and transition state marker'
+  - 'Intentional color coding: brand green (#009E73) for the main curve, ochre (#BD8233)
+    for activation energy, blue (#4467A3) for enthalpy change — semantically meaningful
+    and Imprint-compliant'
+  - 'Both themes fully functional: INK/INK_SOFT tokens applied to all chrome elements;
+    area fill alpha adjusted for dark mode; all text readable in light and dark renders'
+  - 'Idiomatic Bokeh usage: ColumnDataSource, Arrow/NormalHead, Span, Label via add_layout(),
+    varea() — expert use of Bokeh''s annotation model system'
+  - 'Perfect canvas setup: 3200×1800, toolbar_location=None, correct min_border_*
+    values, Selenium screenshot with crop to exact dims'
   weaknesses:
-  - Minor excess vertical whitespace above the curve peak
-  - Library mastery could be enhanced with hover tooltips or other interactive Bokeh
-    features
-  image_description: The plot displays a reaction coordinate energy diagram with a
-    smooth blue curve (#306998) on a light gray background (#fafafa). The x-axis is
-    labeled "Reaction Coordinate" (0 to 1) and the y-axis "Potential Energy (kJ/mol)"
-    (0 to ~150). The title reads "line-reaction-coordinate · bokeh · pyplots.ai" in
-    dark text at the top left. The curve rises smoothly from reactants at ~50 kJ/mol
-    through a transition state peak at ~118 kJ/mol, then descends to products at ~20
-    kJ/mol. Three bold labels mark "Reactants" (left), "Transition State" (peak),
-    and "Products" (right). An orange double-headed arrow at x≈0.18 shows "Eₐ = 70
-    kJ/mol" between the reactant level and transition state. A purple double-headed
-    arrow at x≈0.85 shows "ΔH = −30 kJ/mol" between reactant and product levels. Horizontal
-    gray dashed lines mark the reactant and product energy levels. A subtle light
-    blue area fill appears under the curve. The transition state has a glowing dot
-    marker (outer halo + inner dot). The chart has no visible ticks, no x-grid, and
-    a very subtle y-grid.
+  - 'DE-01 (5/8): Design is purposeful but not yet publication-ready — consider adding
+    a subtle spine-removal pattern (top/right axis lines hidden) and increasing visual
+    hierarchy between primary data and secondary annotations'
+  - 'LM-02 (3/5): Bokeh-specific annotation models used well but no interactive HTML
+    affordance beyond the base export — adding a HoverTool to the HTML artifact or
+    using CDSView for emphasis would demonstrate more library distinctiveness'
+  - 'VQ-01 minor: State labels (Reactants, Transition State, Products) at 28pt bold
+    are slightly large relative to the Ea/ΔH annotation labels at 24pt — a tighter
+    size differential (e.g. 26pt/22pt) would improve typographic hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: title "line-reaction-coordinate · python · bokeh · anyplot.ai" in dark INK (#1A1A17), spanning ~55-60% of plot width at 50pt; x-axis label "Reaction Coordinate" and y-axis label "Potential Energy (kJ/mol)" in INK at 42pt; tick labels in INK_SOFT (#4A4A44) at 34pt — all clearly readable
+      Data: brand green (#009E73) smooth energy curve with subtle teal area fill (alpha=0.08); transition state circle marker with glow effect at peak (~x=0.44, y=120); orange/ochre (#BD8233) double-headed Ea arrow from y=50 to y=120 at x=0.18 labeled "Ea = 70 kJ/mol"; blue (#4467A3) double-headed ΔH arrow from y=50 to y=20 at x=0.85 labeled "ΔH = −30 kJ/mol"; dashed horizontal reference lines at y=50 (Reactants) and y=20 (Products); bold state labels "Reactants", "Transition State", "Products" in dark INK
+      Subtle y-axis grid lines at 15% opacity; no x-grid
+      Legibility verdict: PASS — all text readable, no light-on-light issues, all annotations visible
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: same title and axis labels now rendered in off-white (#F0EFE8) — clearly legible against dark background; tick labels in INK_SOFT (#B8B7B0) — readable; state labels ("Reactants", "Transition State", "Products") in off-white (#F0EFE8 per INK token) — all visible
+      Data: brand green (#009E73) energy curve identical to light render; area fill alpha slightly stronger (0.14) for dark visibility; Ea arrow in ochre (#BD8233) and ΔH arrow in blue (#4467A3) — colors identical to light render as required; dashed reference lines in INK_SOFT (#B8B7B0)
+      Y-axis grid lines at 15% opacity using INK (#F0EFE8) — subtle but visible; no x-grid
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; brand green remains visible and vivid on dark surface
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, annotations 18-20pt. All readable.'
+        comment: 'All font sizes explicitly set at style-guide values (50pt title,
+          42pt axis labels, 34pt ticks, 28pt state labels, 24pt annotation labels).
+          All readable in both themes. Minor: state labels at 28pt bold vs annotation
+          labels at 24pt creates a slightly uneven typographic hierarchy.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; labels well-positioned with appropriate
-          offsets.
+        comment: No overlapping text or data elements in either render. Labels, arrows,
+          and curve well spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line width 5 well-suited, transition state marker visible with glow
-          effect. Area fill slightly heavy.
+        comment: 400-point smooth line highly visible; transition state marker (glow
+          + dot) prominent; Ea and DH arrows clearly distinguishable with distinct
+          Imprint colors; area fill adds depth without obscuring.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used — CVD-safe by design. Three distinct hue families
+          (green, ochre, blue) with sufficient luminance contrast.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue/orange/purple palette is colorblind-safe with strong contrast.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas utilization but some empty space above the curve.
+        comment: 3200x1800 canvas, toolbar_location=None, min_border_bottom=160/left=180/top=110/right=60
+          — all elements within bounds, generous margins, canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Potential Energy (kJ/mol) has units; Reaction Coordinate is descriptive.
+        comment: Y-axis includes units 'kJ/mol'. X-axis 'Reaction Coordinate' is descriptive.
+          Title follows correct anyplot format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Main curve in #009E73 (Imprint position 1). Ea arrow in #BD8233
+          (Imprint position 4). DH arrow in #4467A3 (Imprint position 3). Light bg
+          #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive via INK/INK_SOFT tokens.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive three-color scheme, custom background, area fill, transition
-          state glow. Clearly above defaults.
+        comment: 'Above library defaults: intentional semantic color assignments (green=curve,
+          ochre=Ea, blue=DH), area fill for depth, glow+dot transition state emphasis.
+          Professional scientific aesthetic. Not yet FiveThirtyEight-level publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Ticks removed, outline removed, x-grid removed, y-grid at 0.2 alpha,
-          custom backgrounds.
+        comment: Y-grid only at 15% opacity, x-grid disabled, outline removed, minor
+          ticks removed, generous min_border margins. Clearly above default — good
+          refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color-coded energy annotations, labeled key states, transition state
-          emphasis. Clear narrative.
+        comment: 'Clear visual hierarchy: energy curve (focal point) > transition
+          state marker (emphasis) > Ea/DH annotation arrows (secondary). Dashed reference
+          lines anchor energy levels. Color contrast guides viewer through reactants→TS→products
+          narrative.'
     spec_compliance:
       score: 15
       max: 15
@@ -115,48 +147,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram with smooth curve.
+        comment: 'Correct: smooth line plot of potential energy vs reaction coordinate.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: labels, Ea/ΔH arrows, smooth curve, dashed
-          lines, clean style.'
+        comment: 'All spec requirements met: state labels, Ea double-headed arrow,
+          DH double-headed arrow, smooth curve with clear TS maximum, horizontal dashed
+          reference lines, clean minimal scientific style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate, Y=potential energy. Correct mapping.
+        comment: 'X=reaction coordinate (0-1), Y=potential energy (kJ/mol). 400 points
+          for smooth curve. Values match spec example: reactants=50, TS=120, products=20
+          kJ/mol.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series diagram.
+        comment: Title 'line-reaction-coordinate · python · bokeh · anyplot.ai' correct.
+          No legend needed — state labels serve as direct annotations.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows single-step exothermic reaction with all key energy relationships.
+        comment: 'Shows all aspects: energy curve, activation energy barrier, enthalpy
+          change, state labels, reference lines, TS emphasis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real chemistry context with plausible energy values.
+        comment: Single-step exothermic reaction with Ea=70 kJ/mol and DH=-30 kJ/mol
+          — physically plausible values for a typical organic reaction. Neutral educational
+          chemistry context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Realistic values: reactants 50, TS 120, products 20 kJ/mol.'
+        comment: Energy range 0-155 kJ/mol appropriate for the displayed values. Gaussian+sigmoid
+          combination produces a physically realistic energy profile. Correct mathematical
+          representation of activation energy and enthalpy.
     code_quality:
       score: 10
       max: 10
@@ -166,51 +207,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes.
+        comment: 'Linear script: imports → theme tokens → data → figure → glyphs →
+          annotations → chrome → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation.
+        comment: 'Fully deterministic: uses mathematical functions (gaussian+sigmoid)
+          with no random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: io, os, sys, time, Path, numpy, bokeh models,
+          PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean Pythonic code.
+        comment: Clean Pythonic code, no over-engineering, no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
+          3.9.1 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, Bokeh models, and figure API.
+        comment: 'Expert Bokeh usage: ColumnDataSource, figure() with all params,
+          p.line/scatter/varea, Arrow+NormalHead, Span, Label via add_layout(). Follows
+          the canonical Bokeh annotation model pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses varea, Arrow/NormalHead, Span, HTML export — Bokeh-specific
-          features.
+        comment: 'Uses Bokeh-specific features: Arrow+NormalHead annotation models,
+          Span for infinite reference lines, add_layout() for model attachment, varea()
+          for filled area, HTML export as interactive artifact. Some library-specific
+          features used; HoverTool on HTML artifact would push to 4-5.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
   - annotations
   - html-export
@@ -220,4 +271,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
