@@ -61,6 +61,15 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+// --- Subtle shaded ΔH region between reactant and product energy levels
+g.append("rect")
+  .attr("x", 0)
+  .attr("y", yScale(E_r))
+  .attr("width", iw)
+  .attr("height", yScale(E_p) - yScale(E_r))
+  .attr("fill", t.palette[0])
+  .attr("opacity", 0.08);
+
 // --- Horizontal dashed reference lines at reactant and product energy levels
 g.append("line")
   .attr("x1", 0).attr("x2", xScale(0.38))
@@ -107,7 +116,7 @@ g.append("line")
   .attr("marker-end", "url(#arrow-end)");
 
 g.append("text")
-  .attr("x", dhX + 10)
+  .attr("x", dhX + 16)
   .attr("y", yScale((E_r + E_p) / 2))
   .attr("fill", t.ink)
   .attr("dominant-baseline", "middle")
@@ -143,7 +152,7 @@ g.append("text")
   .attr("y", yScale(E_r) - 4)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text(`${E_r} kJ/mol`);
 
 // Transition State
@@ -161,7 +170,7 @@ g.append("text")
   .attr("y", yScale(E_ts) - 4)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text(`${E_ts} kJ/mol`);
 
 // Products
@@ -179,7 +188,7 @@ g.append("text")
   .attr("y", yScale(E_p) - 4)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text(`${E_p} kJ/mol`);
 
 // --- Axes
@@ -195,7 +204,7 @@ const yAxis = g.append("g")
 
 yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 yAxis.selectAll(".tick line").attr("stroke", t.grid);
-yAxis.select(".domain").attr("stroke", t.inkSoft).attr("stroke-width", 1.5);
+yAxis.select(".domain").attr("stroke", "none");
 
 // --- Axis labels
 svg.append("text")
