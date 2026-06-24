@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
+// Library: muix 7.29.1 | JavaScript 22.23.0
+// Quality: 87/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
