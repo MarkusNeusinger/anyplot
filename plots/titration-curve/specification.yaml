@@ -6,7 +6,7 @@ title: Acid-Base Titration Curve
 
 # Specification tracking
 created: "2026-02-25T21:30:20Z"
-updated: null
+updated: "2026-06-24T22:47:30Z"
 issue: 4407
 suggested: MarkusNeusinger
 
@@ -23,4 +23,4 @@ tags:
     - education
   features:
     - annotated
-    - stepwise
+    - diagnostic
