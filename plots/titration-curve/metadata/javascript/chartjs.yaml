@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: titration-curve
+created: '2026-06-24T11:45:37Z'
+updated: '2026-06-24T12:04:06Z'
+generated_by: claude-sonnet
+workflow_run: 28095601556
+issue: 4407
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette throughout: pH curve uses #009E73 (brand green, palette[0])
+    and derivative uses #C475FD (lavender, palette[1]) — canonical order and identical
+    across both themes'
+  - Custom inline annotation plugin using Chart.js beforeDraw/afterDraw hooks to render
+    shaded buffer/transition zone and dashed equivalence-point line — idiomatic Chart.js
+    technique
+  - 'Full spec compliance: S-shaped pH curve, secondary y-axis derivative overlay,
+    dashed vertical line at equivalence point with annotation, buffer zone shading,
+    and correct axis labels with units'
+  - 'Excellent theme-adaptive chrome: title/axis/tick colors from t.ink/t.inkSoft,
+    grid from t.grid, annotation text uses t.ink — all flip correctly between light
+    (#FAF8F1) and dark (#1A1A17)'
+  - Deterministic, realistic chemistry data — 25 mL of 0.1 M HCl + 0.1 M NaOH using
+    correct acid-base equilibrium equations; equivalence point correctly computed
+    at 25 mL / pH 7.0
+  weaknesses:
+  - 'Right Y-axis label ''dpH/dV (pH/mL)'' is colored t.palette[1] (lavender #C475FD),
+    which has marginally lower contrast against the light cream background (#FAF8F1)
+    — consider using t.ink for the label text and relying on the legend entry for
+    color linkage, or add a stronger weight to compensate'
+  - 'DE-01: Aesthetic sophistication is above default but not exceptional — the custom
+    plugin is a strong move but overall design lacks subtle refinements like a well-thought-out
+    legend position or axis tick reduction'
+  - 'DE-02: Visual refinement is moderate — border:false removes spines correctly,
+    but the grid uses full opacity on both axes (x and y) including the right axis
+    which has drawOnChartArea:false; a grid-only-on-left-y approach would be slightly
+    cleaner'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct; not pure white.
+      Chrome: Title "titration-curve · javascript · chartjs · anyplot.ai" in dark ink at top; left Y-axis label "pH" in dark ink; X-axis label "Volume of NaOH added (mL)" in dark ink; right Y-axis label "dpH/dV (pH/mL)" in lavender (#C475FD) matching the secondary series; all tick labels in inkSoft; legend shows green square (pH) and lavender dashed box (dpH/dV). All text is readable against the light background.
+      Data: Green (#009E73) smooth S-shaped pH curve from pH ~1 at 0 mL rising steeply at 25 mL to plateau ~9 at 50 mL; lavender dashed derivative curve nearly flat at 0 for most of range, with a sharp spike at the equivalence point; semi-transparent green shading band (±3 mL around 25 mL) shows transition zone; vertical dashed line in inkSoft at 25 mL; bold annotation "Equiv. point: 25 mL, pH 7.0" in dark ink positioned to right of dashed line at ~pH 9.5.
+      Legibility verdict: PASS — all text readable, grid lines subtle, data curves clearly distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct; not pure black.
+      Chrome: Title in light ink (#F0EFE8) at top; Y-axis and X-axis labels in light ink; right Y-axis label in lavender (identical to light render); tick labels in light inkSoft; legend entries readable. No dark-on-dark text failures observed.
+      Data: Green pH curve (#009E73) identical color to light render; lavender derivative curve identical; buffer zone shading appears as a subtly visible mid-green tinted rectangle against the near-black background; dashed vertical line in light inkSoft; annotation text in light ink, clearly readable. All Imprint palette data colors are identical to the light render — only chrome (background, text, grid) has flipped.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; brand green #009E73 clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title (22px), axis labels (14px), tick labels (14px), annotation
+          (16px bold) all readable in both themes. Minor: right Y-axis label uses
+          lavender (#C475FD) on cream bg — lower contrast than ink color but still
+          readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text. Equivalence point annotation
+          positioned clear of the pH curve.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: pH curve (3px, green) clearly visible. Derivative curve (2px, lavender
+          dashed) prominent at equivalence spike; near-zero elsewhere — this is correct
+          data behavior, not a rendering flaw. Buffer zone shading visible in both
+          themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette colors; green and lavender are perceptually distinct.
+          No red-green sole-signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Landscape orientation appropriate for line chart.
+          Layout balanced with dual y-axes and legend above chart area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Volume of NaOH added (mL)'' — descriptive with units. Y: ''pH''
+          — concise and appropriate. Y2: ''dpH/dV (pH/mL)'' — descriptive with units.
+          Title matches required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series: #009E73 (palette[0]). Second series: #C475FD (palette[1]).
+          Backgrounds: #FAF8F1 light / #1A1A17 dark. Data colors identical across
+          themes. Chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default: custom annotation plugin, dual-axis with linked axis-label
+          color, semi-transparent buffer shading, and consistent Imprint palette.
+          Missing further elevation: no legend box refinement, no dynamic tick reduction.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Borders hidden (border:false on all axes). Theme-adaptive grid. Clean
+          legend. Generous padding. Slightly penalised for showing both x and y grid
+          on main axis area (could omit x grid for cleaner look).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point at equivalence point with annotation and dashed
+          line. Derivative curve explicitly guides viewer to locate equivalence point
+          as the maximum. Buffer/transition zone shaded. Good visual hierarchy between
+          primary (thick) and secondary (thin dashed) curves.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart showing S-shaped (sigmoidal) titration curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Equivalence point: dashed vertical line + annotation with volume
+          and pH. Derivative curve as secondary y-axis overlay. Buffer/transition
+          zone shaded. All required features present.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: volume 0-50 mL (beyond equivalence point). Left Y-axis:
+          pH 0-14. Right Y-axis: derivative 0-10. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''titration-curve · javascript · chartjs · anyplot.ai'' —
+          correct format. Legend labels ''pH'' and ''dpH/dV (pH/mL)'' match the series.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 101 data points (0–50 mL at 0.5 mL steps). S-shaped curve with full
+          pre- and post-equivalence regions. Derivative overlay. Equivalence point
+          annotation. Buffer zone shading.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH — standard strong acid/base
+          example. Equilibrium equations correct. Equivalence point at 25 mL / pH
+          7.0 — chemically accurate.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: pH range 0-14 (full scale, as specified). Volume 0-50 mL (extends
+          well past 25 mL equivalence point, as specified).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes defined. Custom plugin is inline and straightforward.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — data generated from explicit chemistry equations
+          with no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Chart.js is a global. No unused variables.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Custom plugin cleanly separates annotation
+          drawing from chart config. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No file saving in code — harness handles PNG output. Current Chart.js
+          4.4.7 API used correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct harness contract: responsive:true, maintainAspectRatio:false,
+          animation:false. Linear x-axis type explicit. Dual y-axis with yAxisID.
+          borderDash for dashed line. Chart.js idiomatic patterns throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom inline plugin using beforeDraw/afterDraw hooks and canvas
+          2D context API — a distinctively Chart.js approach to annotations. Dual
+          y-axis (y + y2) with independent scales. drawOnChartArea:false on y2 grid.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
