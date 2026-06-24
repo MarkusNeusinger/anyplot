@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:06:53Z'
-updated: '2026-06-24T09:38:46Z'
+updated: '2026-06-24T09:49:38Z'
 generated_by: claude-sonnet
 workflow_run: 28088670611
 issue: 4408
@@ -12,99 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Idiomatic sns.regplot() with ci=95 captures scatter + regression line + 95% CI
-    band in a single seaborn call
-  - 'All spec requirements met: ln(k) vs 1/T, regression with R², Ea annotation, secondary
-    temperature x-axis, visible markers'
-  - Enzyme kinetics domain (alkaline phosphatase) is scientifically accurate and domain-appropriate
-    with Ea=58.8 kJ/mol in the realistic enzyme range
-  - 'Full theme-adaptive chrome: both renders use correct backgrounds (#FAF8F1 light
-    / #1A1A17 dark) with all text tokens applied'
-  - Annotation box with green border creates a clear focal point; outlier annotation
-    adds storytelling context
+  - 'Perfect spec compliance: all required Arrhenius features implemented (1/T axis,
+    ln(k) axis, regression line, R², Ea/R annotation, secondary K axis, visible markers
+    above regression line)'
+  - Scientifically accurate enzyme kinetics data with realistic Ea (~58 kJ/mol), experimental
+    noise, and intentional outlier demonstrating regression robustness
+  - Idiomatic sns.regplot usage — built-in CI band is seaborn's strength for regression
+    visualization
+  - Full theme-adaptive chrome with correct Imprint palette; CI band alpha adapts
+    per theme (0.18 light → 0.38 dark)
   weaknesses:
-  - Scatter markers at s=100 are undersized for 10-point sparse data — guidelines
-    suggest s=150–200 for <30 points to improve visual weight
-  - Secondary x-axis tick labels and outlier annotation at fontsize=7 are below the
-    minimum recommended 8pt and may be unreadable at mobile widths (~400 px)
-  - '95% CI band in dark render is barely distinguishable from the near-black background
-    — the semi-transparent green fill blends into #1A1A17; consider using a slightly
-    lighter alpha or ELEVATED_BG fill instead'
-  - 'Design Excellence ceiling: twin axes and annotation are the only design differentiators;
-    removing the top spine explicitly (not just via rc), adding a tick-less secondary
-    axis style, or using a more deliberate whitespace rhythm could push DE-01 above
-    5'
+  - The for-coll-in-ax.collections loop applies identical alpha to both the CI band
+    PolyCollection AND the scatter marker PathCollection, making scatter markers semi-transparent
+    (alpha=0.18 light / 0.38 dark) — scatter markers should be fully opaque; style
+    CI band separately by type-checking or targeting only single-path polygons
+  - 'LM-02 opportunity: secondary temperature axis and annotations rely entirely on
+    matplotlib APIs; a seaborn-native composition (e.g. using residplot for an additional
+    panel) would strengthen library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "line-arrhenius · python · seaborn · anyplot.ai" in dark ink (~12pt medium weight) is clearly readable, spans ~70% of width. X-axis label "1/T (K⁻¹)" and Y-axis label "ln(k)" in dark ink at 10pt. Bottom tick labels at 8pt readable. Secondary (top) x-axis shows "Temperature (K)" label at 9pt and tick labels ("330 K", "313 K", "303 K", "293 K", "278 K") at 7pt — these are small but visible in the light render. Outlier annotation text at 7pt is visible but small. Annotation box (lower-left) with rounded corners and green (#009E73) border shows R²=0.9758, Slope=-7071 K, Ea=58.8 kJ/mol in dark text on elevated-bg (#FFFDF6).
-      Data: 10 circular markers in brand green (#009E73) with white edge highlights at s=100. Regression line in #009E73 at linewidth=2.5. Light-green semi-transparent 95% CI band visible around the line. The downward-left-to-right slope is clearly visible.
-      Legibility verdict: PASS — all primary text elements are readable. Secondary axis labels and outlier note at 7pt are the smallest elements and border on mobile-unreadable.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "line-arrhenius · python · seaborn · anyplot.ai" at top, dark text, ~60% width. Secondary x-axis "Temperature (K)" label with ticks 330K→278K (correctly reversed). Primary x-axis "1/T (K⁻¹)" with 4-decimal notation. Y-axis "ln(k)". All text dark-on-light, clearly readable.
+      Data: Ten scatter markers in brand green (#009E73) with white edge rings at s=170; slightly translucent (alpha=0.18 from collections loop). CI band is pale green shading. Regression line is solid brand green. Annotation box (lower-left) shows R²=0.9758, Slope=-7071K, Ea=58.8 kJ/mol with brand-green border. "outlier" annotation labels the 313K elevated point.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light near-white text (#F0EFE8 equivalent) clearly readable against dark background. Axis labels and tick labels in light secondary color — all readable, no dark-on-dark failures. Secondary temperature axis labels at 7pt are readable in context. Annotation box uses dark elevated background (#242420) with green border; inner text in light color is readable.
-      Data: Same 10 markers in #009E73 with white/light ring outlines — colors identical to light render (only chrome flipped). Regression line identical green. The 95% CI band is very dark (near-black dark-green fill) and barely distinguishable from the #1A1A17 background — it is technically present but provides minimal visual information in the dark render.
-      Legibility verdict: PASS overall — no dark-on-dark failures for any text element. Minor issue: CI band nearly invisible in dark mode.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title and all axis labels rendered in light off-white (#F0EFE8), fully readable. Tick labels in INK_SOFT (#B8B7B0), clearly distinguishable against dark background. No dark-on-dark text failures anywhere.
+      Data: Colors identical to light render — brand green (#009E73) for markers and regression line. CI band alpha raised to 0.38 for better dark-mode visibility. Scatter markers appear as semi-transparent green circles with white-ring edges; still clearly identifiable. Annotation box uses elevated dark background (#242420) with brand-green border.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, secondary=7).
-          Primary elements readable in both themes. Secondary axis labels and outlier
-          note at 7pt are small and may be below mobile-readable threshold.
+        comment: All font sizes explicitly set (title=12, xlabel/ylabel=10, ticks=8,
+          secondary axis=8-9). Balanced proportions, readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Annotation box and outlier label are well-spaced
-          from data points.
+        comment: No text collisions. Outlier annotation, kinetics box, and tick labels
+          all spatially clear.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers at s=100 are visible but undersized for 10-point sparse data
-          (guidelines suggest s=150-200 for <30 points). Line at 2.5 is appropriate.
+        comment: 10 data points at s=170 appropriate for sparse data. White-edge rings
+          add visual pop. Markers visible despite moderate transparency.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green with white edge highlights. CVD-safe.
+        comment: 'Single-series CVD-safe brand green #009E73. High contrast in both
+          themes.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions with subplots_adjust.
-          Some minor extra whitespace at bottom of plot area.
+        comment: Plot fills canvas well. subplots_adjust gives balanced generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''1/T (K⁻¹)'', Y: ''ln(k)'', secondary: ''Temperature (K)''.
-          All descriptive with units.'
+        comment: 1/T (K⁻¹), ln(k), Temperature (K) — all descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73 (brand green). Light bg=#FAF8F1, dark bg=#1A1A17.
-          All chrome tokens applied correctly. Data colors identical across themes.'
+        comment: 'First series #009E73. Background #FAF8F1 light / #1A1A17 dark. Chrome
+          fully theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -112,24 +105,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured defaults: annotation box with green border, white-edge
-          markers, twin axes. Clean composition. Not yet publication-quality (6+)
-          — lacks refinement in spacing rhythm and typographic hierarchy.'
+        comment: Clearly above well-configured default (4). Annotation box with brand-green
+          border, theme-adaptive CI band alpha, white-edge markers, custom tick formatting
+          show intentional design. Alpha coupling on scatter slightly weakens marker
+          hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: spines removed via rc dict, subtle y-axis grid
-          (alpha=0.15), rounded annotation box, generous whitespace via subplots_adjust.'
+        comment: 'Very refined: top/right spines removed, y-grid alpha=0.15/x-grid
+          alpha=0.08, generous whitespace, rounded annotation box, custom FormatStrFormatter.
+          Secondary axis top spine retained adds slight visual weight.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear focal point: annotation box with kinetic parameters (R², slope,
-          Ea). Outlier labeled for context. Twin axes guide interpretation of 1/T
-          values. The Arrhenius linear relationship story is well-communicated.'
+        comment: 'Clear narrative: regression line shows Arrhenius relationship; Ea/R²
+          box surfaces physically meaningful output; outlier annotation highlights
+          data quality; secondary K axis provides chemical intuition.'
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with scatter markers and linear
-          regression.'
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: regression line, R² display, Ea/R slope
-          annotation, secondary x-axis with K temperature labels, data points visible
-          above regression line.'
+        comment: 1/T x-axis, ln(k) y-axis, regression line, R² value, Ea annotation,
+          secondary K axis, data points above regression — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T (K⁻¹), Y=ln(k). All 10 data points visible.
+        comment: X/Y correctly assigned. All 10 data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-arrhenius · python · seaborn · anyplot.ai'' — correct
-          format. No legend (single series — appropriate omission).'
+        comment: 'Title: line-arrhenius · python · seaborn · anyplot.ai. No legend
+          needed for single-series.'
     data_quality:
       score: 15
       max: 15
@@ -171,22 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: linear trend, 95% CI band, outlier (at 313K),
-          enzyme kinetics context, temperature range spanning 52K.'
+        comment: Enzyme-catalyzed hydrolysis with intentional outlier at 313K demonstrates
+          regression robustness; temperature span 278-330K covers meaningful physiological
+          window.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Alkaline phosphatase hydrolysis — real biochemistry, neutral, plausible.
+        comment: Alkaline phosphatase kinetics — neutral scientific scenario, not
+          controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ea=58.8 kJ/mol realistic for enzyme-catalyzed reactions (typical
-          range 20-80 kJ/mol). Temperature range 278-330K is physiological. R²=0.9758
-          realistic with one outlier.
+        comment: Ea_true=58 kJ/mol typical for enzyme reactions. Extracted 58.8 kJ/mol
+          matches closely. R²=0.9758 realistic for experimental kinetics data.
     code_quality:
       score: 10
       max: 10
@@ -196,8 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: Imports → Constants → Data → Plot → Save. No functions or
-          classes.'
+        comment: 'Linear flow: path cleanup → imports → theme tokens → data → plot
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,14 +210,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering, no fake interactivity.
+        comment: Clean, Pythonic. Comment-justified sys.path manipulation. No fake
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches='tight'. Current
-          seaborn API.
+        comment: Saves plot-{THEME}.png without bbox_inches='tight'. Current API.
     library_mastery:
       score: 8
       max: 10
@@ -233,18 +227,18 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: sns.regplot() with ci=95 is the idiomatic seaborn pattern for regression
-          + scatter + confidence interval in a single call. sns.set_theme() with rc
-          dict for theme customization is correct.
+        comment: sns.regplot with built-in CI band is exactly the idiomatic seaborn
+          pattern for regression + scatter. sns.set_theme() and sns.despine() are
+          recommended seaborn customization pathways.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's built-in regression + 95% CI band (regplot) as the
-          distinctive feature. Twin axes and annotations are matplotlib operations
-          — seaborn-specific value is concentrated in the regplot call.
-  verdict: REJECTED
+        comment: sns.regplot CI band is a genuine seaborn differentiator. However
+          secondary axis, annotations, and tick formatting rely entirely on matplotlib
+          APIs rather than seaborn-native approaches.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -254,7 +248,6 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - regression
   styling:
