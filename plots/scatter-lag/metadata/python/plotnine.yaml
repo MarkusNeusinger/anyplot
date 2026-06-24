@@ -1,42 +1,55 @@
 library: plotnine
+language: python
 specification_id: scatter-lag
 created: '2026-04-12T18:13:17Z'
-updated: '2026-04-12T18:17:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 24313009899
+updated: '2026-06-24T23:13:47Z'
+generated_by: claude-sonnet
+workflow_run: 28134678321
 issue: 5251
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/plotnine/plot.png
-preview_html: null
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect code quality: KISS structure, reproducible seed, all imports used, clean
-    Pythonic code throughout'
-  - 'Full spec compliance: all three required features (configurable lags, diagonal
-    reference line, temporal color coding) correctly implemented'
-  - 'Excellent data quality: AR(1) daily temperature is a realistic neutral scenario;
-    scale and autocorrelation strength are appropriate'
-  - Explicit font size configuration at all levels meets the 24/20/16pt requirements
+  - 'Full spec compliance: diagonal reference line (y=x), temporal color gradient,
+    per-facet r annotation, and multiple lag comparison all present and correct'
+  - 'Excellent data storytelling: three-lag faceted layout immediately shows autocorrelation
+    decay from Lag 1 (tight linear cluster) through Lag 7 (broadening scatter)'
+  - 'Correct continuous colormap: imprint_seq (#009E73→#4467A3) applied via scale_color_gradient
+    for the day-index temporal encoding — not a categorical palette on continuous
+    data'
+  - Both themes render cleanly with fully theme-adaptive chrome (backgrounds, text,
+    grid, strip headers, legend box all respond to ANYPLOT_THEME)
+  - 'Clean flat code: np.random.seed(42), pd.Categorical for ordered facet levels,
+    per-facet annotation DataFrame — idiomatic plotnine grammar-of-graphics patterns
+    throughout'
+  - Realistic AR(1) temperature data with phi=0.85 provides genuinely informative
+    autocorrelation structure across lags
   weaknesses:
-  - Title format starts with 'Daily Temperature' prefix instead of spec-id; should
-    start with 'scatter-lag · plotnine · pyplots.ai'
-  - 'Color gradient (#306998 to #E8A838) is not a formally colorblind-optimized palette;
-    consider viridis or plasma'
-  - Design could reach publication quality with explicit spine removal, coord_fixed()
-    for equal axis scales, and stronger visual identity
-  image_description: Three faceted scatter plots arranged side by side, titled "Daily
-    Temperature · scatter-lag · plotnine · pyplots.ai". Each panel shows daily temperature
-    at day t (°C) on the x-axis vs temperature at day t+k (°C) on the y-axis, for
-    lags of 1, 3, and 7 days respectively. Points are colored on a blue-to-gold gradient
-    representing the day index (0–200+), with a "Day" colorbar legend on the right.
-    A dashed gray diagonal reference line (y=x) runs through each panel. The Lag=1
-    panel shows tight clustering along the diagonal (strong autocorrelation); Lag=3
-    shows moderate spread; Lag=7 shows noticeably more scatter — telling a clear visual
-    story of autocorrelation decay. The layout is clean on a white background using
-    theme_minimal with a subtle light gray grid. Temperature values range roughly
-    from 10–30°C across all panels.
+  - r annotation font (geom_text size=3, ≈8.5pt) is at the lower boundary of readability
+    on the 3200×1800 canvas — increase to size=3.5 or 4 for safe legibility when scaled
+    to mobile widths
+  - alpha=0.45 is slightly below the recommended 0.5–0.7 range for 100–300 point density;
+    increase to 0.55 to improve point visibility without losing overplotting control
+  - 'Design Excellence has headroom: consider adding a subtle annotation or call-out
+    arrow highlighting the strong Lag 1 linear pattern as the visual focal point;
+    would elevate DE-03 from ''data displayed'' to ''story told'''
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct surface, clearly not pure white.
+      Chrome: Title "scatter-lag · python · plotnine · anyplot.ai" is bold dark text, easily readable. Axis labels "Temperature at Day t (°C)" and "Temperature at Day t+k (°C)" are dark, well-proportioned (10pt). Tick labels dark-gray, 8pt, clearly readable. Three facet strip headers ("Lag = 1 day", "Lag = 3 days", "Lag = 7 days") have elevated-bg boxes with a thin INK_SOFT border and bold dark labels. Dashed diagonal reference line styled in INK_SOFT (medium-dark gray). Per-panel r annotation text (upper-left, ~8pt) is readable at full resolution though small. Legend "Day" colorbar with INK-colored title and INK_SOFT tick labels on right side.
+      Data: Points colored via imprint_seq gradient: green (#009E73) at day 0 rising to blue (#4467A3) at day 299. Lag 1 panel shows tight linear cluster along y=x (high positive autocorrelation). Lag 3 panel shows wider elliptical scatter. Lag 7 panel shows the broadest scatter. alpha=0.45 allows overplot transparency. All data visible.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title is light-colored (#F0EFE8) text, clearly readable against dark background. Axis labels and tick labels use light-cream colors (INK and INK_SOFT dark-theme tokens). Facet strip headers show elevated dark-bg (#242420) boxes with light bold text. Dashed diagonal reference line appears in light gray (dark-mode INK_SOFT = #B8B7B0), clearly visible. Grid lines are subtle lighter-than-background lines. Legend "Day" colorbar has light text against elevated dark bg.
+      Data: Color gradient is identical to light render — green (#009E73) to blue (#4467A3) — only chrome flipped. All three lag panels show the same pattern. No dark-on-dark text failures detected.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -44,45 +57,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt bold, axis titles 20pt,
-          tick labels 16pt, strip text 18pt bold, legend 14-16pt'
+        comment: All font sizes explicitly set and readable in both themes. r annotation
+          at geom_text size=3 (≈8.5pt) is at the lower boundary — visible at full
+          resolution but borderline for mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements across all three facets
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Points well-sized for ~100 per facet; alpha=0.65 adequate but slightly
-          high for density
+        comment: alpha=0.45 slightly below 0.5 lower bound for 100–300 point density;
+          size=2.0 adequate. Points visible and gradient discernible.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue-to-gold gradient not red-green but not formally colorblind-optimized
-          (no viridis)
+        comment: Imprint sequential gradient is CVD-safe. Reference line uses neutral
+          dash — no red-green sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Three facets fill canvas well; legend positioned cleanly; balanced
-          margins
+        comment: 3200×1800 canvas confirmed. Three facets fill the landscape width
+          well. Legend positioned to right, within canvas. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Temperature at Day t (°C) and Temperature
-          at Day t+k (°C)'
+        comment: 'X: ''Temperature at Day t (°C)'', Y: ''Temperature at Day t+k (°C)''
+          — descriptive with units. Title in correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_color_gradient(low=''#009E73'', high=''#4467A3'') is the imprint_seq
+          cmap. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive in both
+          renders.'
     design_excellence:
       score: 13
       max: 20
@@ -92,24 +114,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful color choice (Python Blue to amber), bold strip labels,
-          clean minimal theme; above defaults but short of publication-ready
+        comment: 'Above defaults: temporal gradient encoding, custom theme tokens,
+          styled strip headers. Not quite ''strong design'' (6) — visual hierarchy
+          could be sharpened with a focal-point annotation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle gray grid, minor grid removed, tick marks removed; good refinement
-          but no explicit spine removal beyond theme_minimal
+        comment: panel_border=element_blank, axis_ticks=element_blank, minor grid
+          removed, major grid subtle. theme_minimal base plus meaningful additions.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Multiple lags tell visual story of autocorrelation decay; temporal
-          color coding reveals structure; viewer reads insight clearly
+        comment: Three-lag comparison directly shows autocorrelation decay — viewer
+          sees the story without analysis. Temporal color gradient adds a second dimension
+          of insight. r values provide quantitative anchoring.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,27 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag plot: scatter of y(t) vs y(t+k)'
+        comment: 'Correct lag scatter plot: y(t) on x-axis, y(t+k) on y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Configurable lags (1,3,7), diagonal reference line, color by time
-          index all present
+        comment: Diagonal reference line, time-colored points, r annotation, configurable
+          lag values (1, 3, 7) via facets — all spec features present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=y(t), Y=y(t+k) as specified; all data visible
+        comment: X=temp_t (y at day t), Y=temp_t_lag (y at day t+k). All data points
+          rendered across the temperature range.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra prefix 'Daily Temperature' before spec-id; should
-          start with 'scatter-lag · plotnine · pyplots.ai'
+        passed: true
+        comment: 'Title: ''scatter-lag · python · plotnine · anyplot.ai'' — exact
+          correct format. Legend: ''Day'' colorbar appropriate for continuous temporal
+          index.'
     data_quality:
       score: 15
       max: 15
@@ -147,22 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple lags demonstrating autocorrelation decay,
-          temporal color structure, diagonal reference, realistic data spread'
+        comment: Three lags demonstrate autocorrelation at short, medium, and longer
+          timescales — shows the full range of the plot type's diagnostic capability.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperature AR(1) process is a classic, neutral, real-world
-          time series scenario
+        comment: AR(1) daily temperature readings with phi=0.85 — a realistic and
+          neutral domain that matches the spec example data suggestions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10-30 degrees C range realistic; phi=0.85 produces natural AR(1)
-          behavior
+        comment: Temperature range ~10–33°C is realistic for daily readings. 300 observations
+          within spec range. phi=0.85 produces a scientifically plausible autocorrelation
+          structure.
     code_quality:
       score: 10
       max: 10
@@ -172,60 +200,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports -> Data -> Plot -> Save; no functions or classes
+        comment: 'Flat code: tokens → data → lag dataframe → annotation dataframe
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic AR(1) simulation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 12 imported names are used
+        comment: All imported names (os, numpy, pandas, plotnine symbols) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity; AR(1) loop is necessary, not over-engineered
+        comment: Appropriate complexity. Loop over lags for data construction is the
+          right pattern. No fake UI, no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save('plot.png', dpi=300) correct
+        comment: Saves as plot-{THEME}.png at dpi=400, width=8, height=4.5. Current
+          plotnine API used throughout.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot grammar: layered geoms, facet_wrap, scale_color_gradient,
-          labs, theme overrides — all idiomatic plotnine'
+        comment: facet_wrap, geom_abline, scale_color_gradient, geom_text with separate
+          annotation DataFrame, pd.Categorical for ordered facet levels — all idiomatic
+          plotnine grammar-of-graphics patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap for small multiples and scale_color_gradient are distinctively
-          ggplot-idiomatic; could push with coord_fixed() or stat_smooth()
-  verdict: REJECTED
+        comment: facet_wrap for small multiples is a distinctly plotnine/ggplot2 feature.
+          Ordered pd.Categorical for controlled facet ordering and per-facet geom_text
+          via a separate DataFrame with matching categorical levels are grammar-of-graphics-native
+          patterns not easily replicated in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - annotations
   - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
