@@ -37,20 +37,27 @@ const regLineData = [
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// Inline annotation plugin: Ea/R and R² in chart area
+// Inline annotation plugin: Ea/R and R² in bottom-left (away from data cluster)
 const annotPlugin = {
     id: "annot",
     afterDraw(chart) {
         const { ctx, chartArea: ca } = chart;
+        const line1 = `Eₐ/R = ${(-slope).toFixed(0)} K   →   Eₐ = ${Ea_kJ} kJ/mol`;
+        const line2 = `R² = ${r2.toFixed(4)}`;
+        const x = ca.left + 14;
+        const y1 = ca.bottom - 74;
+        const y2 = ca.bottom - 48;
         ctx.save();
         ctx.font = "bold 14px sans-serif";
+        const boxW = Math.max(ctx.measureText(line1).width, ctx.measureText(line2).width) + 18;
+        ctx.globalAlpha = 0.82;
+        ctx.fillStyle = t.elevatedBg;
+        ctx.fillRect(x - 6, y1 - 18, boxW, 62);
+        ctx.globalAlpha = 1;
         ctx.fillStyle = t.ink;
         ctx.textAlign = "left";
-        ctx.fillText(
-            `Eₐ/R = ${(-slope).toFixed(0)} K   →   Eₐ = ${Ea_kJ} kJ/mol`,
-            ca.left + 22, ca.top + 46
-        );
-        ctx.fillText(`R² = ${r2.toFixed(4)}`, ca.left + 22, ca.top + 72);
+        ctx.fillText(line1, x, y1);
+        ctx.fillText(line2, x, y2);
         ctx.restore();
     },
 };
@@ -65,7 +72,7 @@ new Chart(canvas, {
                 label: "Arrhenius fit",
                 data: regLineData,
                 borderColor: t.palette[2],
-                borderWidth: 2.5,
+                borderWidth: 3.0,
                 backgroundColor: "transparent",
                 pointRadius: 0,
                 tension: 0,
@@ -159,6 +166,7 @@ new Chart(canvas, {
                     callback: (v) => `${Math.round(1 / v)}`,
                 },
                 grid: { display: false },
+                border: { display: false },
             },
         },
     },
