@@ -1,15 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-04-12
+Quality: 90/100 | Updated: 2026-06-24
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - synthetic AR(1) process with moderate autocorrelation
+# Theme tokens — Imprint palette, theme-adaptive chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1
+
+# Data — synthetic AR(1) process with strong positive autocorrelation
 np.random.seed(42)
 n_points = 500
 lag = 1
@@ -26,40 +38,44 @@ r_value = np.corrcoef(y_t, y_t_lag)[0, 1]
 
 df = pd.DataFrame({"y_t": y_t, "y_t_lag": y_t_lag, "time_index": np.arange(n_points - lag)})
 
-# Reference line (y = x diagonal)
-margin = 0.5
+# Axis domain with margin
+margin = 0.4
 axis_min = min(df["y_t"].min(), df["y_t_lag"].min()) - margin
 axis_max = max(df["y_t"].max(), df["y_t_lag"].max()) + margin
+domain = [axis_min, axis_max]
+
+# Reference line (y = x diagonal — perfect persistence baseline)
 ref_df = pd.DataFrame({"x": [axis_min, axis_max], "y": [axis_min, axis_max]})
 
-# Annotation for correlation coefficient
-annot_df = pd.DataFrame({"x": [axis_max - 0.3], "y": [axis_min + 0.5], "label": [f"r = {r_value:.3f}"]})
+# Correlation annotation (top-left, away from the dense cluster)
+annot_df = pd.DataFrame({"x": [axis_min + 0.25], "y": [axis_max - 0.3], "label": [f"r = {r_value:.3f}"]})
 
-# Reference line
+title_str = "scatter-lag · python · altair · anyplot.ai"
+subtitle_str = f"AR(1) process (φ = {phi}) | lag = {lag} | n = {n_points - lag}"
+
+# Chart layers
 reference_line = (
-    alt.Chart(ref_df).mark_line(strokeDash=[8, 6], strokeWidth=1.5, color="#aaaaaa").encode(x="x:Q", y="y:Q")
+    alt.Chart(ref_df).mark_line(strokeDash=[8, 6], strokeWidth=1.5, color=INK_MUTED).encode(x="x:Q", y="y:Q")
 )
 
-# Scatter points with reduced size/opacity to prevent overplotting
 points = (
     alt.Chart(df)
-    .mark_point(size=45, filled=True, strokeWidth=0.5, stroke="white", opacity=0.45)
+    .mark_point(size=40, filled=True, strokeWidth=0.5, stroke=PAGE_BG, opacity=0.5)
     .encode(
-        x=alt.X("y_t:Q", title="y(t)", scale=alt.Scale(domain=[axis_min, axis_max]), axis=alt.Axis(tickCount=10)),
-        y=alt.Y(
-            "y_t_lag:Q", title="y(t + 1)", scale=alt.Scale(domain=[axis_min, axis_max]), axis=alt.Axis(tickCount=10)
-        ),
+        x=alt.X("y_t:Q", title="y(t)", scale=alt.Scale(domain=domain), axis=alt.Axis(tickCount=8)),
+        y=alt.Y("y_t_lag:Q", title="y(t + 1)", scale=alt.Scale(domain=domain), axis=alt.Axis(tickCount=8)),
+        # Imprint sequential colormap: brand green → blue (single-polarity continuous)
         color=alt.Color(
             "time_index:Q",
-            scale=alt.Scale(scheme="viridis"),
+            scale=alt.Scale(range=["#009E73", "#4467A3"]),
             legend=alt.Legend(
                 title="Time Index",
-                titleFontSize=16,
-                labelFontSize=16,
-                gradientLength=280,
-                gradientThickness=14,
+                titleFontSize=10,
+                labelFontSize=10,
+                gradientLength=180,
+                gradientThickness=12,
                 orient="right",
-                offset=10,
+                offset=8,
             ),
         ),
         tooltip=[
@@ -70,43 +86,62 @@ points = (
     )
 )
 
-# Correlation annotation
+# OLS regression line — slope ≈ φ, contrasts with the y=x diagonal to show autocorrelation strength
+regression_line = (
+    alt.Chart(df)
+    .transform_regression("y_t", "y_t_lag", method="linear")
+    .mark_line(strokeWidth=2.5, color=BRAND, opacity=0.85)
+    .encode(x="y_t:Q", y="y_t_lag:Q")
+)
+
 annotation = (
     alt.Chart(annot_df)
-    .mark_text(align="right", baseline="bottom", fontSize=20, fontWeight="bold", color="#333333")
+    .mark_text(align="left", baseline="top", fontSize=12, fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="label:N")
 )
 
 chart = (
-    (reference_line + points + annotation)
+    (reference_line + points + regression_line + annotation)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title(
-            "scatter-lag · altair · pyplots.ai",
-            fontSize=28,
-            subtitle=f"AR(1) process (φ = {phi}) | lag = {lag}",
-            subtitleFontSize=18,
-            subtitleColor="#666666",
-        ),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title(title_str, fontSize=16, subtitle=subtitle_str, subtitleFontSize=12, subtitleColor=INK_SOFT),
     )
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
     .configure_axis(
-        labelFontSize=18,
-        titleFontSize=22,
+        labelFontSize=10,
+        titleFontSize=12,
         grid=True,
-        gridOpacity=0.15,
+        gridOpacity=0.12,
         gridWidth=0.5,
+        gridColor=INK,
         domainWidth=0,
-        tickSize=6,
+        tickSize=4,
         tickWidth=0.8,
-        tickColor="#999999",
-        labelColor="#444444",
-        titleColor="#333333",
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
     )
-    .configure_view(strokeWidth=0)
-    .configure_title(anchor="start", offset=10)
+    .configure_title(anchor="start", offset=12, color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG + HTML
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
+
+# Pad PNG to exact 3200×1800 (altair canvas hard contract)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
