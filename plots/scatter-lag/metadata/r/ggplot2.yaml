@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: scatter-lag
 created: '2026-06-24T23:02:09Z'
-updated: '2026-06-24T23:08:08Z'
+updated: '2026-06-24T23:18:09Z'
 generated_by: claude-sonnet
 workflow_run: 28135023237
 issue: 5251
@@ -12,100 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Correct lag plot implementation: y(t) vs y(t+1) scatter with diagonal reference
-    line, time-index color gradient, and r annotation — all four spec requirements
-    met'
-  - Imprint sequential colormap (green→blue) correctly applied to continuous time-index
-    data
-  - 'Theme-adaptive chrome is fully correct: warm off-white background (light) and
-    warm near-black (dark), with all text, grid, and legend box tokens flipping correctly'
-  - Annotate('label') with rounded corners (label.r) and elevated-background fill
-    is an idiomatic, polished ggplot2 technique
-  - All font sizes explicitly set with a clear hierarchy (12pt title, 10pt axis labels,
-    8pt ticks) and well-matched across both renders
-  - AR(1) data with phi=0.72 produces a clear diagonal autocorrelation pattern, giving
-    the plot a convincing and instructive example
+  - 'Full spec compliance: diagonal reference line (geom_abline), temporal color coding
+    (scale_color_gradient), and correlation annotation (annotate label) all implemented
+    correctly'
+  - Canonical imprint_seq palette (low=#009E73, high=#4467A3) used correctly for continuous
+    gradient — no prohibited colormaps
+  - 'Both renders pass theme-readability checks: light render uses warm off-white
+    (#FAF8F1) background with dark text; dark render uses warm near-black (#1A1A17)
+    with light text — no dark-on-dark failures'
+  - 'Annotation box styled for both themes: ELEVATED_BG fill and INK text color in
+    annotate(''label'', ...) with rounded corners (label.r) and explicit padding —
+    correctly adapts to each theme'
+  - 'Good data density handling: 299 points with size=2.5 and alpha=0.65 avoids overplotting
+    without losing individual point visibility'
   weaknesses:
-  - 'panel.border keeps all four spines — replace with spine removal (remove top and
-    right spines) per the style guide''s L-frame default: remove panel.border and
-    use axis.line = element_line(color = INK_SOFT) for left and bottom only'
-  - 'Unused import: library(dplyr) is loaded but no dplyr function is called anywhere
-    in the script — remove it to keep imports clean'
-  - Point size 2.0 is slightly small for 300 points at this canvas size — increase
-    to 2.5 per the ggplot2 library guide's recommended starting value
-  - 'Design Excellence: no top/right spine removal limits visual refinement score
-    — removing the box frame would improve the DE-02 score significantly'
+  - 'library(scales) is imported but no scales:: functions are directly called — scales
+    is auto-loaded by ggplot2 as a dependency; remove this redundant import to clean
+    up the preamble'
+  - axis.line = element_line(...) sets all four axis sides; prefer axis.line.x.bottom
+    and axis.line.y.left to explicitly limit lines to bottom/left for a cleaner no-top-right-spine
+    look
+  - 'Design Excellence could be elevated: consider a subtle subtitle (e.g. ''AR(1)
+    synthetic time series, lag k=1'') to give viewers immediate data context without
+    requiring them to read the correlation annotation first'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-lag · r · ggplot2 · anyplot.ai" in dark bold text (~70% width), fully readable. Y-axis label "y(t + 1)" and X-axis label "y(t)" in dark INK color, well-sized at 10pt. Tick labels in softer dark gray (INK_SOFT), 8pt, readable. "r = 0.66" annotation box top-left with elevated-background fill and light border, text readable. Colorbar legend "Time index" with proper title and tick labels (100, 200) visible.
-      Data: ~299 scatter points colored with imprint_seq gradient (green #009E73 at low time index → blue #4467A3 at high time index). Alpha 0.65 manages overlap for 300 points. Dashed diagonal reference line in INK_SOFT clearly separates regions. Points cluster along and around the diagonal, illustrating autocorrelation.
-      Legibility verdict: PASS — all text elements readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct Imprint chrome background, not pure white
+      Chrome: Title "scatter-lag · r · ggplot2 · anyplot.ai" in bold dark text, clearly readable. Axis labels "y(t)" and "y(t + 1)" in dark text, well-proportioned. Tick labels (-2.5, 0.0, 2.5) in medium-dark text, clearly readable. Subtle grid lines visible but not dominant. Correlation annotation "r = 0.66" in a rounded-corner box (top-left) with off-white fill and dark text — fully readable.
+      Data: 299 scatter points colored in a continuous gradient from brand green (#009E73) at low time index to blue (#4467A3) at high time index. Diagonal dashed reference line in medium-dark gray clearly visible. Colorbar legend on right with "Time index" label, tick marks at 100 and 200.
+      Legibility verdict: PASS — all text elements readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title text is light (#F0EFE8), clearly readable against dark background. Axis labels and tick labels flip to light/soft light tones, fully readable — NO dark-on-dark failures observed. "r = 0.66" annotation box uses dark elevated background (#242420) with light text, readable. Colorbar legend ticks and title appear in light text.
-      Data: Colors are identical to the light render — same green-to-blue gradient, confirming only chrome flipped. The dashed diagonal line is now rendered in light INK_SOFT, clearly visible against the dark background.
-      Legibility verdict: PASS — all text readable on dark background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct Imprint dark chrome background, not pure black
+      Chrome: Title in light cream text on dark background — fully readable. Axis labels and tick labels in light/muted text, readable with good contrast against the dark surface. Dashed reference line rendered in white/light gray, highly visible. Annotation box "r = 0.66" with dark elevated (#242420) fill and light (#F0EFE8) text — readable. No dark-on-dark failures detected.
+      Data: Scatter point colors are identical to the light render (green → blue gradient unchanged — only chrome flipped). Points are visible and distinguishable from the dark background.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8/9).
-          Clear hierarchy, readable in both themes. Minor: r annotation at size=3.5
-          is small but legible.'
+        comment: All font sizes explicitly set (axis.title=10, axis.text=8, plot.title=12
+          bold). Readable in both themes. No proportional sizing violations.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Scatter point overlap is managed by alpha=0.65.
+        comment: Annotation box (r=0.66) positioned at top-left with -Inf/Inf anchoring
+          — avoids data. No text collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 299 points at size=2.0 are visible; slightly small per style guide's
-          2.5 recommendation for this density — increase to 2.5 for better prominence.
+        comment: 299 points at size=2.5, alpha=0.65 — appropriate density handling.
+          Points clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue gradient is CVD-safe. Adequate alpha for overlap. No
-          red-green sole signal.
+        comment: Green-to-blue gradient is CVD-safe; no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correct (3200x1800). Plot area fills canvas well with colorbar
-          legend to the right. Minor extra whitespace on far right beyond colorbar.
+        comment: Canvas gate passed (3200x1800). Good proportions, nothing clipped.
+          Title spans ~60% width — appropriate for mandated title format.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: y(t) and y(t+1) are correct, descriptive lag notation. Units not
-          needed for dimensionless AR residuals.
+        comment: y(t) and y(t+1) are precise mathematical notation for a lag plot.
+          Title follows required spec-id · r · ggplot2 · anyplot.ai format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous imprint_seq gradient (#009E73 to #4467A3). Background
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive and correct.'
+        comment: 'imprint_seq (low=#009E73, high=#4467A3) used for continuous gradient.
+          Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -113,25 +112,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: intentional Imprint palette gradient,
-          custom annotation box with rounded corners, styled colorbar, warm adaptive
-          backgrounds. Not yet publication-ready (4-sided border, no spine removal).'
+        comment: 'Above-default polish: canonical imprint palette, annotate(''label'')
+          with rounded corners and explicit padding, guide_colorbar with custom barwidth/barheight.
+          Not at max tier but clearly above default.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Subtle grid (adjustcolor alpha=0.15), minor grid removed. But panel.border
-          retains all 4 spines — style guide mandates removing top/right. Legend is
-          nicely styled with border and margin.
+        comment: Minor grid disabled, major grid at 0.15 alpha (very subtle), panel
+          border removed, axis lines styled. axis.line applies to all 4 sides — slightly
+          less refined than specifying axis.line.x.bottom + axis.line.y.left.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time-index color gradient shows temporal structure; r=0.66 annotation
-          quantifies autocorrelation; diagonal reference line aids interpretation.
-          Together they guide the viewer to the autocorrelation story.
+        comment: 'Clear visual hierarchy: temporal coloring reveals how autocorrelation
+          evolves over time; r=0.66 annotation quantifies the pattern; diagonal reference
+          line anchors interpretation. Solid data storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -141,54 +140,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag plot: y(t) vs y(t+1) scatter.'
+        comment: 'Correct lag scatter plot: y(t) vs y(t+1).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line (geom_abline), configurable lag (lag_k=1),
-          time-index color encoding, r annotation — all spec requirements satisfied.
+        comment: Diagonal reference line (geom_abline y=x), temporal color coding,
+          correlation annotation (r=0.66), configurable lag (lag_k variable) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=y(t), y=y(t+1) correctly mapped. All 299 lag-1 pairs visible.
+        comment: x=y(t), y=y(t+1) correctly mapped. All data visible within axis ranges.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-lag · r · ggplot2 · anyplot.ai' matches required format.
-          Legend 'Time index' is correct.
+        comment: Title 'scatter-lag · r · ggplot2 · anyplot.ai' matches required format
+          exactly. Legend 'Time index' colorbar is appropriate.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows classic autocorrelation pattern, time gradient, reference
-          line, and r annotation. Missing: no multi-lag comparison, but spec says
-          default lag=1.'
+        comment: 'Demonstrates all lag plot aspects: autocorrelation structure, temporal
+          evolution, reference line, quantitative annotation.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: AR(1) hourly temperature residuals is a realistic and common use
-          case. Axis labels y(t)/y(t+1) are appropriate lag-plot notation but slightly
-          abstract.
+        comment: AR(1) hourly temperature residuals (phi=0.72) is plausible and neutral.
+          Realistic autocorrelation strength (r=0.66).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: AR(1) with phi=0.72, n=300, unit-normal errors produces values in
-          ~(-3, 3) range. r=0.66 is physically plausible for phi=0.72.
+        comment: n=300 within spec range (100-5000). Standardized values (-3 to 3)
+          appropriate for AR process. Lag=1 is default as specified.
     code_quality:
       score: 9
       max: 10
@@ -198,8 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save. No functions or
-          classes.'
+        comment: No functions or classes. Clean sequential script.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -211,54 +207,51 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: library(dplyr) is imported but no dplyr function is called anywhere.
-          library(scales) is borderline (used implicitly by ggplot2 formatting). Remove
-          dplyr.
+        comment: 'library(scales) imported but no scales:: functions directly called.
+          scales is auto-loaded as a ggplot2 dependency — explicit import is redundant.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R/ggplot2. No fake interactivity. Well-organized
-          sections.
+        comment: Clean, readable. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Uses linewidth= (not deprecated size=).
-          ragg::agg_png device correct.
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png. Current
+          ggplot2 3.5.1 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Exemplary ggplot2 grammar: aes() color mapping, geom_abline reference
-          line, scale_color_gradient, guide_colorbar, annotate(''label'') — all idiomatic
-          and expertly composed.'
+        comment: Grammar of graphics composition (ggplot + geom + scale + theme),
+          guide_colorbar() with custom dimensions, theme_minimal() + theme() layering,
+          geom_abline() for reference — idiomatic ggplot2.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses annotate('label') with label.r for rounded corners and label.padding
-          — a ggplot2-specific annotation style. guide_colorbar with custom barwidth/barheight.
-          These go beyond generic scatter plotting.
-  verdict: REJECTED
+        comment: annotate('label', ...) with rounded corners (label.r) and explicit
+          padding is distinctively ggplot2. guide_colorbar() customization and adjustcolor()
+          for grid alpha are R/ggplot2-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - annotations
-  - layer-composition
+  - colorbar
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
