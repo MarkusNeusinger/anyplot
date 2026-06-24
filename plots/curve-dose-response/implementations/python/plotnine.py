@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
-Library: plotnine 0.15.3 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-18
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-24
 """
 
 import os
