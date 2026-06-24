@@ -1,37 +1,55 @@
 library: seaborn
+language: python
 specification_id: qrcode-basic
 created: '2026-01-07T16:31:08Z'
-updated: '2026-04-07T18:18:44Z'
-generated_by: claude-opus-4-6
-workflow_run: 20788379946
+updated: '2026-06-24T17:41:44Z'
+generated_by: claude-sonnet
+workflow_run: 28115305380
 issue: 3184
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent educational annotations highlighting QR code anatomy (finder patterns,
-    quiet zone)
-  - Professional design with custom navy color palette and strong typographic hierarchy
-  - Perfect spec compliance using proper qrcode library for scannable output
-  - Clean minimal chrome with all spines/ticks removed
-  - Informative subtitle with technical details (error correction, version, module
-    count)
+  - 'Excellent spec compliance: uses recommended qrcode library, correctly shows finder
+    patterns in three corners, alignment patterns at Version 7 standard positions,
+    quiet zone with border=4, and error correction M (15%) as recommended'
+  - 'Educational visual hierarchy: brand green (#009E73) at alpha=0.4 highlights finder
+    patterns as primary focal point, INK_SOFT at alpha=0.35 for secondary alignment
+    patterns, italic muted text for quiet zone label — guides viewer through QR structure
+    in logical priority order'
+  - 'Theme-adaptive dual renders: correct backgrounds (#FAF8F1 light / #1A1A17 dark)
+    with QR module colors derived from chrome tokens, brand green annotations identical
+    across both themes'
+  - 'Clean, minimal presentation: all spines removed, no grid, explicit plt.subplots_adjust
+    for precise margin control, italic subtitle in INK_MUTED for technical context'
+  - 'Creative dual seaborn heatmap technique: masked numpy array for transparent regional
+    overlays is a sophisticated and idiomatic seaborn approach'
   weaknesses:
-  - Annotation text sizes (12-13pt) could be slightly larger for canvas size
-  - Could explore a larger QR version to showcase alignment patterns
-  image_description: 'The plot displays a QR code on a white square canvas. The QR
-    code encodes "https://pyplots.ai" using dark navy (#1a1a2e) modules against a
-    white background. Three finder patterns (concentric squares) in the top-left,
-    top-right, and bottom-left corners are highlighted with subtle rounded-corner
-    blue boxes. An arrow annotation labeled "Finder Pattern" points to the top-right
-    finder pattern. The left side has a vertically rotated italic gray label "Quiet
-    Zone" indicating the white border area. The title "qrcode-basic · seaborn · pyplots.ai"
-    appears at the top in bold dark text. A subtitle at the bottom in italic gray
-    reads "Encodes: https://pyplots.ai · Error Correction: M (15%) · Version 2 · 25×25
-    modules". All spines and tick marks are removed for a clean presentation.'
+  - 'Minor typography hierarchy inversion: annotation labels (fontsize=14) are slightly
+    larger than the bold title (fontsize=12) — title should be the visually dominant
+    text; consider title at 14pt and annotations at 12pt'
+  - Helper function _rgba defined in the script body violates KISS (no functions/classes)
+    rule — inline the 2-line mcolors.to_rgb call at the two call sites instead
+  - 'DE-02 polish: the quiet zone label at axis-coordinate x=1.5 sits inside the heatmap
+    axes rather than in true figure margin space, which can feel slightly cramped
+    against the QR pattern edge'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly NOT pure white, soft cream surface matches spec
+      Chrome: Bold title "qrcode-basic · python · seaborn · anyplot.ai" in dark ink at 12pt — fully readable. Subtitle in italic INK_MUTED at 10pt at bottom — readable. "Quiet Zone" italic label rotated 90° on left — readable.
+      Data: QR code rendered as black (#1A1A17) modules on elevated cream (#FFFDF6) background. Three finder patterns highlighted with semi-transparent teal (#009E73, alpha=0.4) square overlays. Alignment patterns at Version 7 positions highlighted with semi-transparent INK_SOFT (alpha=0.35). "Finder Pattern" annotation in teal with arrow points to top-right finder. "Alignment Pattern" annotation below QR matrix with arrow to center alignment.
+      Legibility verdict: PASS — all text elements readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correctly NOT pure black, matches required dark surface
+      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background. Subtitle in light muted text at bottom — readable. "Quiet Zone" label in muted light text — readable. "Finder Pattern" in brand green (#009E73) — visible and unchanged from light render.
+      Data: QR module colors inverted (as expected): filled modules in light off-white (#F0EFE8) on elevated dark (#242420) background, creating proper contrast. Finder pattern overlays in brand green (identical to light render). Alignment overlays in INK_SOFT light variant — still distinguishable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Brand green #009E73 remains visible. Data annotation colors identical across both themes.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -42,44 +60,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, subtitle 15pt, annotation
-          13pt). Secondary annotations could be slightly larger.
+        comment: 'All font sizes explicitly set. Minor hierarchy inversion: annotation
+          labels at 14pt larger than title at 12pt (bold).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere.
+        comment: No overlapping text or elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR modules crisp with perfect black/white contrast. Finder pattern
-          highlights clearly visible.
+        comment: QR modules high-contrast in both themes. Overlays clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Black on white is maximally accessible. Blue accent for annotations
-          only.
+        comment: High contrast binary QR pattern, brand green CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas suits QR code perfectly. Good margins, nothing cut
-          off.
+        comment: Square 2400x2400 canvas appropriate for QR. Good proportions, no
+          clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes not applicable for QR code. Title and subtitle provide complete
-          context.
+        comment: Mandatory title format correct. Axis labels N/A for QR heatmap.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Brand green #009E73 for primary
+          annotations. Chrome theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -87,22 +109,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom dark navy palette, muted blue accents, strong typographic
-          hierarchy. Above configured defaults.
+        comment: 'Strong design: intentional color hierarchy for educational highlights,
+          clean composition, above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no grid/ticks, FancyBboxPatch with rounded corners,
-          clean white background.
+        comment: 'Good: all spines removed, no grid, explicit margin control. Quiet
+          zone label placement slightly inside axis space.'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Educational annotations explain QR anatomy. Subtitle provides technical
-          details. Clear visual hierarchy.
+        comment: 'Good storytelling: visual hierarchy (green finder > gray alignment
+          > italic quiet zone) teaches QR structure.'
     spec_compliance:
       score: 15
       max: 15
@@ -112,66 +134,69 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using proper qrcode library.
+        comment: Correct QR code visualization using qrcode library as recommended.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: proper encoding, quiet zone, high contrast,
-          finder patterns, error correction M.'
+        comment: 'All features: quiet zone, finder patterns, alignment patterns, error
+          correction M, proper library.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: QR matrix correctly rendered as binary heatmap.
+        comment: QR matrix correctly mapped to heatmap. Version 7 45x45 modules accurate.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed.
+        comment: 'Title format correct: ''qrcode-basic · python · seaborn · anyplot.ai''.
+          No legend needed.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Complete QR code with finder patterns, timing patterns, data modules,
-          quiet zone.
+        comment: 'Shows all key QR components: modules, finder patterns (3), alignment
+          patterns (Version 7 positions), quiet zone.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes real URL https://pyplots.ai.
+        comment: WiFi QR for 'AnyPlotLab (WPA2)' is a realistic, neutral, practical
+          use case.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Version 2, 25x25 modules appropriate for short URL. Error correction
-          M is recommended default.
+        comment: Version 7 (45x45) valid for WiFi data. Error correction M (15%) matches
+          spec recommendation. Border=4 correct.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear flow, no functions or classes.
+        comment: Mostly flat but defines _rgba helper function (4 lines). Could be
+          inlined.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic output from fixed string input.
+        comment: QR generation is deterministic from fixed input string.
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -183,13 +208,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no fake functionality.
+        comment: Appropriate complexity. Dual heatmap overlay is the right approach.
+          No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300.
+        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, current API.
     library_mastery:
       score: 7
       max: 10
@@ -199,24 +225,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of sns.heatmap, set_theme, despine, color_palette.
+        comment: sns.heatmap, sns.set_theme, sns.despine all used idiomatically. Dual
+          heatmap with xlim/ylim preservation shows advanced usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn-specific palette generation, set_theme context, despine
-          utility.
+        comment: Masked numpy array overlay on seaborn heatmap is a seaborn-distinctive
+          technique. Layer composition with transparency is creative.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - qrcode
   techniques:
   - annotations
-  - patches
+  - layer-composition
   patterns:
-  - explicit-figure
+  - matrix-construction
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - alpha-blending
+  - minimal-chrome
