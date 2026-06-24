@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-arrhenius
 created: '2026-06-24T09:52:27Z'
-updated: '2026-06-24T10:00:38Z'
+updated: '2026-06-24T10:13:58Z'
 generated_by: claude-sonnet
 workflow_run: 28089801302
 issue: 4408
@@ -12,109 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'All spec features implemented: 1/T x-axis, ln(k) y-axis, regression line, R²
-    annotation, Ea annotation, and secondary Temperature (K) axis'
-  - 'Excellent Chart.js idiom: mixed scatter+line datasets, custom afterDraw plugin
-    for annotations, afterBuildTicks for secondary axis ticks'
-  - Imprint palette used correctly — palette[0] (#009E73) for experimental data, palette[2]
-    (#4467A3) for regression line
-  - 'Realistic and neutral scientific context: H₂O₂ decomposition over MnO₂ catalyst
-    with physically plausible values (Ea=74.4 kJ/mol, R²=0.9988)'
-  - Both themes render correctly — theme-adaptive ink/grid tokens propagated through
-    all text and grid elements
-  - 'Perfect code quality: KISS structure, deterministic in-memory data, animation:false
-    and responsive:true properly set'
+  - 'Perfect spec compliance: all five required features (regression line, R², Eₐ/R
+    annotation, secondary temperature axis, visible scatter markers) implemented correctly'
+  - 'Accurate chemistry: H₂O₂/MnO₂ system with physically realistic Eₐ = 74.4 kJ/mol;
+    regression calculation done in-place without external libraries'
+  - 'Advanced Chart.js API: afterBuildTicks for custom secondary axis ticks and afterDraw
+    plugin for annotation callout are non-trivial and idiomatic'
+  - 'Both theme renders flawless: correct backgrounds (#FAF8F1 / #1A1A17), all chrome
+    uses token values, data colors identical across themes'
   weaknesses:
-  - 'Annotation text overlaps with topmost data point (T=550K): the Ea/R label is
-    placed at ca.top+46 and the top scatter marker (radius 9) extends to ca.top+36
-    — roughly 3-5px of overlap. Move annotations to ca.bottom-80 / ca.bottom-54 (bottom-left)
-    or shift right to ca.left+160 to clear the dense top-left region where regression
-    line, top scatter point, and annotation converge.'
-  - 'Full chart border frame retained (Chart.js default): all four scale borders are
-    visible, creating a closed box instead of the preferred L-shaped frame. Remove
-    the top and right border lines: on scales.x add `border: { display: false }` to
-    remove the top-of-plot-area line from x2 axis, and on scales.y add `border: {
-    display: false }` to remove the right border. Keep scales.x and scales.y2 borders
-    for the bottom and left reference lines.'
-  - 'Design could be more visually polished to clear the first-attempt 90-point threshold:
-    consider slightly thicker regression line (borderWidth 3.0-3.5), a subtle filled
-    annotation box behind the Ea/R and R² text (using t.elevatedBg with low alpha)
-    to separate the annotation from the data, and removing the right/top border lines
-    for a cleaner open chart style.'
+  - 'Palette ordering: regression line uses t.palette[2] (blue) while scatter uses
+    t.palette[0] (green), reversing canonical first-series rule — reorder datasets
+    so scatter is dataset 0 (palette[0]) and fit line is dataset 1 (palette[1])'
+  - 'Minor design ceiling: y-axis border still visible; adding border: {display: false}
+    on the y scale would produce a cleaner L-shape frame'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme. Plot area background matches.
-      Chrome: Title "line-arrhenius · javascript · chartjs · anyplot.ai" is clearly readable in dark ink at the top. Axis titles "1/T (K⁻¹)" (bottom), "ln(k)" (left), and "Temperature (K)" (top secondary axis) are all dark and legible. Tick labels in a slightly softer dark tone are readable on all four axes. Legend ("Arrhenius fit" / "Experimental ln(k)") displays clearly. Annotation text "Eₐ/R = 8953 K → Eₐ = 74.4 kJ/mol" and "R² = 0.9988" in bold dark ink is readable but positioned very close to the topmost data point (T=550K), creating slight overlap.
-      Data: 12 green scatter markers (#009E73, palette[0]) clearly visible at appropriate size (radius 9). Blue regression line (#4467A3, palette[2]) clearly drawn across the full data range. Regression line extends diagonally from upper-left to lower-right as expected for an Arrhenius plot.
-      Legibility verdict: PASS — all text is readable against the light background. Minor concern: annotation text at top-left partially overlaps the T=550K scatter marker.
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "line-arrhenius · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "1/T  (K⁻¹)" (bottom), "Temperature (K)" (top secondary), "ln(k)" (left) all readable with units. Tick labels in inkSoft tone, clearly legible. Annotation callout box in bottom-left shows "Eₐ/R = 8953 K → Eₐ = 74.4 kJ/mol" and "R² = 0.9988" with semi-transparent elevated background and dark ink text.
+      Data: 12 brand-green (#009E73) scatter markers with white borders on a blue (#4467A3) linear regression line. Markers clearly visible and on top of the fit line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme. Full plot area rendered on dark surface.
-      Chrome: Title in light cream text is clearly readable. All axis labels and tick labels are light-colored and legible against the dark background. No dark-on-dark failures detected — ink tokens correctly adapt. Legend text is light. Annotation text "Eₐ/R = 8953 K → Eₐ = 74.4 kJ/mol" and "R² = 0.9988" appears in light (theme-adaptive t.ink) text — readable.
-      Data: Green scatter markers (#009E73) and blue regression line (#4467A3) are identical to the light render — data colors unchanged as required. Both series are clearly distinguishable from the dark background.
-      Legibility verdict: PASS — all text is readable. Same annotation/data-point proximity issue as light render but text remains legible in dark theme.
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in light colors (t.ink = #F0EFE8, t.inkSoft = #B8B7B0). Annotation callout box uses t.elevatedBg (#242420) with light ink text — fully readable. No dark-on-dark failures detected. Grid lines are subtle using t.grid token.
+      Data: Colors identical to light render — brand-green (#009E73) scatter, blue (#4467A3) regression line. Both clearly distinguishable against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22, axis 15, ticks 13, annotation
-          14). Well-proportioned in both themes. Minor: annotation cramped against
-          top-left data point.'
+        comment: All font sizes explicitly set (title 22px, labels 15px, ticks 13px,
+          annotation 14px); well-proportioned in both themes; no overflow
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Topmost scatter point (T=550K, ca.top+~27px from chart area) overlaps
-          with Ea/R annotation line (ca.top+46 baseline, text top ~ca.top+33px) —
-          ~3-5px of overlap in upper-left chart corner.
+        passed: true
+        comment: No text collisions; secondary axis labels well-spaced; annotation
+          box positioned away from data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 scatter points at pointRadius:9 are prominent and well-sized for
-          sparse data. Regression line at borderWidth:2.5 is clearly visible.
+        comment: 12 sparse points at pointRadius=9 CSS px are prominent; white marker
+          borders add definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are perceptually distinct and
-          CVD-safe. White marker borders (t.pageBg) add definition.
+        comment: CVD-safe Imprint palette; green and blue are perceptually distinct;
+          white borders help separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good proportions, plot fills majority of canvas,
-          balanced whitespace on all sides.
+        comment: Canvas gate passed; good plot fill; balanced dual x-axis layout;
+          no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All three axes labeled with units: ''1/T (K⁻¹)'', ''ln(k)'', ''Temperature
-          (K)''. Title correct.'
+        comment: 1/T (K⁻¹), Temperature (K), ln(k) — all descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'palette[0]=#009E73 for primary data series; palette[2]=#4467A3 for
-          regression line. Light bg #FAF8F1, dark bg #1A1A17. Chrome adapts correctly
-          between themes.'
+        passed: false
+        comment: Scatter (experimental data) correctly uses palette[0] (#009E73) but
+          regression line (dataset 0 in array) uses palette[2] (#4467A3), skipping
+          palette[1] and violating canonical order. Both theme backgrounds correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -122,25 +104,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: deliberate Imprint palette choice (green data vs
-          blue fit), custom inline annotation plugin, dual x-axis adds scientific
-          depth. Lacks polish from annotation overlap and full border frame.'
+        comment: 'Above defaults: dual palette, custom annotation callout, dual x-axis
+          with scientific tick display. Professional but not publication-stunning.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Themed grid colors (t.grid tokens used). Good padding. However, full
-          four-sided border frame retained (no spine removal to L-shape). Grid on
-          both axes could be y-axis only.
+        passed: true
+        comment: White marker borders, semi-transparent elevated callout (alpha 0.82),
+          secondary axis border suppressed. Some clear refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Secondary Temperature axis provides intuitive context. Inline Ea/R
-          and R² annotations communicate extracted physical insight directly. Visual
-          hierarchy: fit line + data points + annotations guide the viewer.'
+        comment: Annotation box communicates key insight (Eₐ, R²); dual x-axis makes
+          accessible to non-specialists; visual hierarchy guides from data to fit.
     spec_compliance:
       score: 15
       max: 15
@@ -150,29 +129,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: scatter (experimental data) + line (linear
-          regression fit).'
+        comment: Mixed line+scatter Arrhenius plot correctly implemented
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 1/T x-axis, ln(k) y-axis, regression
-          line, R² value, Ea/R annotation, secondary Temperature (K) axis.'
+        comment: Regression line, R², Eₐ/R annotation, secondary temperature axis,
+          scatter on top of fit — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T (K⁻¹), Y=ln(k) correctly mapped. All 12 data points visible.
+        comment: X=1/T (K⁻¹), Y=ln(k); all 12 points across 300-550 K visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-arrhenius · javascript · chartjs · anyplot.ai' matches
-          exact required format. Legend labels 'Arrhenius fit' and 'Experimental ln(k)'
-          are descriptive.
+        comment: Title 'line-arrhenius · javascript · chartjs · anyplot.ai' correct;
+          legend labels accurate
     data_quality:
       score: 15
       max: 15
@@ -182,23 +159,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all Arrhenius plot aspects: scatter data, linear fit,
-          kinetic parameter extraction, dual-axis context.'
+        comment: 'All Arrhenius plot aspects shown: scatter, fit line, Eₐ extraction,
+          R², dual temperature scale'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: H₂O₂ decomposition over MnO₂ catalyst — real, scientifically valid,
-          and neutral scenario.
+        comment: H₂O₂ decomposition over MnO₂ catalyst — real, well-known catalytic
+          system; scientifically neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: T=300-550K realistic for this reaction type. Ea=74.4 kJ/mol within
-          typical catalytic range (40-100 kJ/mol). R²=0.9988 physically plausible
-          for good experimental data.
+        comment: Temperature 300-550 K realistic; Eₐ=74.4 kJ/mol physically reasonable;
+          R²=0.9988 consistent with near-linear data
     code_quality:
       score: 10
       max: 10
@@ -208,34 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: constants → regression → canvas → chart. Inline plugin
-          is necessary Chart.js idiom, not over-engineering.'
+        comment: No functions or classes; sequential data → compute → render pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hard-coded temperature and ln(k) arrays.'
+        comment: 'Fully deterministic: hard-coded arrays, no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Chart.js global used as required by harness contract.
+        comment: No imports; Chart.js accessed as global per harness contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. afterBuildTicks hook is an elegant
-          pattern for custom axis ticks.
+        comment: Clean idiomatic JS; custom plugin minimal and correct; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false, responsive:true, maintainAspectRatio:false all correctly
-          set. No deprecated API.
+        comment: 'Correct Chart.js harness pattern; animation: false set'
     library_mastery:
       score: 9
       max: 10
@@ -245,18 +218,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Chart.js usage: mixed dataset types (scatter+line), custom
-          plugin via plugins array, dual axis with afterBuildTicks hook, proper token-based
-          theming.'
+        comment: Mixed chart with per-dataset type; responsive+maintainAspectRatio:false+animation:false;
+          ANYPLOT_TOKENS fully consumed; correct harness contract
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: afterDraw canvas plugin for inline text annotations, afterBuildTicks
-          for non-uniform secondary axis ticks at specific temperature values — distinctively
-          Chart.js patterns.
-  verdict: REJECTED
+        comment: Custom afterDraw plugin (Chart.js plugin API + Canvas 2D); secondary
+          x-axis with afterBuildTicks; exponential notation tick callback. Very strong,
+          could use chartjs-plugin-annotation patterns for more polish.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -265,8 +237,8 @@ impl_tags:
   - twin-axes
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - regression
   styling:
+  - alpha-blending
   - edge-highlighting
