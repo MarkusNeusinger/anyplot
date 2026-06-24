@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 titration-curve: Acid-Base Titration Curve
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-24
 """
 
 import os
