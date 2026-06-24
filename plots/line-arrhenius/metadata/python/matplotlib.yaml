@@ -1,41 +1,52 @@
 library: matplotlib
+language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:06:58Z'
-updated: '2026-03-21T22:18:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389777940
+updated: '2026-06-24T09:36:17Z'
+generated_by: claude-sonnet
+workflow_run: 28088557251
 issue: 4408
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent spec compliance with all required features plus confidence band bonus
-  - Strong design with temperature-mapped color encoding creating visual hierarchy
-    and storytelling
-  - Path effects on regression line and title add professional polish
-  - Physically realistic chemistry data with appropriate Arrhenius parameters
-  - Clean well-organized code with proper reproducibility
+  - 'Correct Arrhenius plot (ln(k) vs 1000/T) with all required spec features: regression
+    line, confidence band, R² + Ea annotation, secondary temperature x-axis, and 7
+    clearly visible markers'
+  - Sophisticated imprint_seq colormap applied to scatter markers encodes temperature
+    gradient from brand green (#009E73 at 300 K) to blue (#4467A3 at 600 K) — correct
+    and elegant use of the continuous colormap
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens used throughout title,
+    axis labels, ticks, legend, annotation box, colorbar, and spines in both light
+    and dark renders'
+  - Path effects (pe.withStroke) on regression line and title add subtle polish that
+    is distinctly matplotlib-native
+  - KISS code structure with np.random.seed(42), all imports used, ax-method-only
+    API, constrained_layout for proper spacing, no bbox_inches trimming
   weaknesses:
-  - Yellow markers at low temperatures have slightly reduced contrast against off-white
-    background
-  - Could use a more perceptually uniform colormap for better colorblind accessibility
-  image_description: The plot displays an Arrhenius plot with the title "line-arrhenius
-    · matplotlib · pyplots.ai" centered at the top. The x-axis shows "1000 / T (K⁻¹)"
-    ranging from ~1.7 to ~3.3, and the y-axis shows "ln(k)" ranging from 0 to ~15.
-    A secondary x-axis at the top displays "Temperature (K)" with labels from 600
-    K to 300 K. Seven data points are rendered as large circles color-mapped by temperature
-    using a YlOrRd (yellow-orange-red) colormap, with a vertical colorbar on the right
-    indicating the temperature scale. A blue regression line (#306998) with a subtle
-    white glow path effect runs through the data, accompanied by a very light blue
-    95% confidence band. An annotation box with a blue border and arrow points to
-    the regression line, displaying "Ea = 75.3 kJ/mol" and "R² = 0.9995". A legend
-    in the upper right lists "95% confidence band", "Linear fit", and "Experimental
-    data". Top and right spines are removed; remaining spines are thin gray. The background
-    is a warm off-white (#fafafa). Grid lines are very subtle, with y-axis grid slightly
-    more visible than x-axis grid.
+  - Legend and colorbar text at 7pt is slightly below the recommended 8pt minimum
+    for the 3200×1800 canvas — increase legend fontsize to 8 and colorbar label to
+    9pt for better readability at mobile scale
+  - Confidence band alpha=0.12 is so subtle it is nearly invisible in both renders
+    (the legend entry may confuse viewers who cannot perceive it) — increase to 0.20–0.25
+    so the band is perceptible without dominating the data
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-arrhenius · python · matplotlib · anyplot.ai" in dark INK at ~70% canvas width, readable. X-axis label "1000 / T  (K⁻¹)" and Y-axis label "ln(k)" in dark INK at 10pt, readable. Tick labels at 8pt in INK_SOFT. Secondary top x-axis "Temperature (K)" with tick labels "600 K … 300 K" at 7pt, readable. All chrome is dark-on-light — no legibility issues.
+      Data: 7 scatter markers colored via imprint_seq (green #009E73 at 300 K → blue #4467A3 at 600 K), s=180, with off-white edges. Regression line in #4467A3 at linewidth=2.5 with path-effect halo. Very subtle gray confidence band (alpha=0.12, barely perceptible). Colorbar on right shows temperature scale. Annotation box "Ea = 75.3 kJ/mol, R² = 0.9995" with blue border and arrow. Legend in upper-right with matching background.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels, secondary x-axis labels all render in light INK (#F0EFE8) / INK_SOFT (#B8B7B0) — clearly visible against dark background. No dark-on-dark failures. Legend text and colorbar labels are light-colored. Annotation box uses dark ELEVATED_BG (#242420) with blue border.
+      Data: Scatter marker colors are identical to light render (same imprint_seq gradient from green to blue) — only chrome flips. Regression line, confidence band, and colorbar are unchanged in data color.
+      Legibility verdict: PASS — all text readable against dark background; data colors match light render exactly.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -43,45 +54,54 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 15pt, annotation 18pt'
+        comment: All text explicitly sized; 7pt legend/colorbar labels slightly below
+          8pt guideline but readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotation, legend, colorbar well-positioned
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers s=240 perfectly sized for 7 data points, line width 3, white
-          edges
+        comment: s=180 markers clearly visible for 7 sparse data points; regression
+          line at linewidth=2.5
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: YlOrRd sequential colormap works for temperature data but yellow
-          markers have reduced contrast against light background
+        comment: imprint_seq (green→blue) is CVD-safe; edgecolors add definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, colorbar positioned with appropriate padding
+        comment: constrained_layout manages spacing well; colorbar integrated cleanly;
+          no cut-off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: 1000/T (K⁻¹) and ln(k)'
+        comment: 'All axes labeled with units: ''1000 / T  (K⁻¹)'', ''ln(k)'', ''Temperature
+          (K)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly used for continuous temperature data; regression
+          line in #4467A3; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive in both
+          renders'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -89,22 +109,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: Python Blue line with path effect glow, temperature-mapped
-          scatter, custom background, styled annotation'
+        comment: 'Strong design: custom imprint_seq colormap, path effects on line
+          and title, styled annotation box with arrow, confidence band, dual x-axis
+          — clearly above defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle asymmetric grid, colorbar outline hidden,
-          thin gray spines
+        comment: Top/right spines removed, very subtle grid (alpha=0.15/0.08), colorbar
+          outline removed, matching facecolors on legend and annotation
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Temperature color gradient creates visual narrative, annotation directs
-          attention to key result
+        comment: Annotation box highlights key insight (Ea, R²) directly on plot;
+          temperature color gradient guides the viewer through the data trend
     spec_compliance:
       score: 15
       max: 15
@@ -114,26 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with scatter and regression'
+        comment: 'Correct Arrhenius plot: ln(k) vs 1000/T with regression line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: regression line, R² value, Ea annotation,
-          secondary x-axis, visible markers, bonus confidence band'
+        comment: Regression line, R² displayed, Ea annotation, secondary temperature
+          x-axis, visible markers on top of line — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1000/T, Y=ln(k), axes show all data correctly
+        comment: 'X: 1000/T (K⁻¹), Y: ln(k), temperature range 300–600 K as spec'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format, descriptive legend labels
+        comment: Title 'line-arrhenius · python · matplotlib · anyplot.ai' correct;
+          legend labels accurate
     data_quality:
       score: 15
       max: 15
@@ -143,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 data points spanning 300-600K with realistic scatter around regression
-          line
+        comment: 'Shows complete Arrhenius analysis: scatter + regression + confidence
+          band + annotation + secondary axis + colorbar'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: first-order decomposition, Ea=75 kJ/mol, pre-exponential
-          1e13 s⁻¹'
+        comment: First-order thermal decomposition reaction with physically realistic
+          parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 300-600K experimentally realistic, activation energy
-          physically plausible
+        comment: Ea=75 kJ/mol, A=1e13 s⁻¹, T=300–600 K all physically plausible; R²=0.9995
+          reasonable for ±15% noise
     code_quality:
       score: 10
       max: 10
@@ -168,31 +190,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, regression, plot, style, save'
+        comment: Clean Imports → Data → Plot → Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All four imports used: patheffects, pyplot, ticker, numpy'
+        comment: 'All 6 imports are used: os, patheffects, pyplot, ticker, numpy,
+          LinearSegmentedColormap'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, confidence band justified, no over-engineering
+        comment: Clean, Pythonic, appropriate complexity; no fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches=tight, no deprecated API
+        comment: Saves plot-{THEME}.png at dpi=400 with no bbox_inches; modern API
+          throughout
     library_mastery:
       score: 7
       max: 10
@@ -202,14 +226,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good Axes API usage, proper twiny(), colorbar, FormatStrFormatter
+        comment: Ax-only methods, constrained_layout, tick_params with colors, twiny
+          — idiomatic matplotlib patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: patheffects for line glow and title, ticker.FormatStrFormatter, twiny(),
-          fill_between confidence band
+        comment: matplotlib.patheffects.withStroke (halo on line and title), LinearSegmentedColormap.from_list
+          (custom cmap), ax.twiny() — genuinely matplotlib-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -220,6 +245,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - regression
   styling:
