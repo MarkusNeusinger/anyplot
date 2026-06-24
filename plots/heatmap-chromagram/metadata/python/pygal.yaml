@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:26:50Z'
-updated: '2026-06-24T13:37:03Z'
+updated: '2026-06-24T13:50:46Z'
 generated_by: claude-sonnet
 workflow_run: 28101200921
 issue: 4564
@@ -12,51 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Custom ChromagramHeatmap class correctly extends pygal Graph base class to implement
-    a native heatmap type not built into pygal
-  - 'Correct imprint_seq colormap (#009E73 → #4467A3) for single-polarity energy data
-    — no forbidden cmaps'
-  - Chord section annotations (region bands, italic labels, dashed separators) meaningfully
-    enhance data storytelling
-  - Perfect theme adaptation in both light and dark renders — backgrounds, text, and
-    chrome all flip correctly
-  - All 12 pitch classes labeled C→B with C at bottom; colorbar with Energy label
-    and 0/0.5/1.0 scale values is clean and well-positioned
-  - Interactive SVG tooltips via <title> elements on each heatmap cell leverage pygal
-    distinctive feature
-  - Realistic I–V–vi–IV chord progression with time-smoothed transitions and np.random.seed(42)
-    ensures reproducibility
+  - 'Correct Imprint sequential colormap (imprint_seq: #009E73 → #4467A3) applied
+    to continuous energy data — fully palette-compliant'
+  - All 12 pitch classes labeled clearly on Y-axis; colorbar with 'Energy' label and
+    0.0/0.5/1.0 ticks is well-implemented
+  - Chord region annotations (C major, G major, A minor, F major) with italic labels
+    and dashed dividers add genuine storytelling
+  - 'Musical subtitle (''Chord progression: I – V – vi – IV (C major key)'') contextualises
+    the data elegantly'
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully theme-adaptive with
+    no dark-on-dark or light-on-light failures
+  - SVG tooltip titles on heatmap cells are a legitimate use of pygal's interactive
+    feature layer
+  - Custom ChromagramHeatmap subclass of pygal.Graph with _compute()/_plot() overrides
+    is the idiomatic way to build custom chart types in pygal
+  - Deterministic output with np.random.seed(42); correct output files (plot-{THEME}.svg,
+    .png, .html)
   weaknesses:
-  - 'CQ-01 KISS violation: ChromagramHeatmap class (~200 lines) departs significantly
-    from the Imports→Data→Plot→Save flat structure; direct SVG rendering via the pygal
-    node API outside a subclass would reduce structural complexity'
-  - 'CQ-04 minor inelegance: sys.path.remove / sys.path.insert(0, _cwd) hack used
-    to avoid pygal module-name collision — consider a direct absolute import path
-    or a try/except import strategy instead'
-  - 'DE-01 design ceiling: chord region background bands are very faint (opacity 0.05–0.09)
-    and barely perceptible in both renders; increasing to 0.12–0.18 would make section
-    boundaries more legible without overpowering the data'
-  - 'DE-02 refinement gap: heatmap border uses a flat stroke in ink color without
-    opacity, which slightly competes with the pitch-row separator lines — using INK_MUTED
-    with opacity 0.5 would unify the fine chrome'
-  - 'VQ-01 minor: chord region labels (38px italic) and subtitle (34px italic) are
-    noticeably smaller than pitch row labels (44px bold) — consider raising to 42px
-    italic to tighten the typographic hierarchy'
+  - 'DE-01: Chord region background shading (opacity 0.12/0.17) is subtly visible
+    but might be imperceptible on some displays — consider raising to 0.18/0.25 for
+    more impact without overwhelming the data'
+  - 'DE-02: No spine removal on the outer pygal SVG frame — the heatmap border is
+    handled manually but the default pygal spine chrome is still rendered; removing
+    or further suppressing it would clean up the outer frame'
+  - 'CQ-01: Custom class (ChromagramHeatmap) and two module-level helper functions
+    (_lerp_color, _render_heatmap) add complexity that is justified for pygal but
+    could be reduced by inlining _render_heatmap directly into _plot()'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface, not pure white.
-      Chrome: Title "heatmap-chromagram · python · pygal · anyplot.ai" at top in dark ink, spans ~55% of canvas width, readable. Four chord region labels "C major / G major / A minor / F major" above the heatmap in italic muted ink, clearly readable. Y-axis pitch labels (B through C, bottom=C) in bold dark ink, well-spaced. Rotated "Pitch Class" Y-axis title in dark ink on far left, visible. X-axis tick labels "0.0" through "7.2" in dark ink, readable. Bold "Time (seconds)" X-axis title below ticks. Subtitle "Chord progression: I – V – vi – IV (C major key)" in small italic muted ink below X-axis title. Colorbar "Energy" label and scale values (0.0, 0.5, 1.0) in dark ink on right side.
-      Data: Heatmap cells range from #009E73 (low energy, green) to ~#4467A3 (high energy, blue) — imprint_seq colormap correctly applied. Clear energy patterns: C/E/G active in first 20 frames (C major), G/B/D in 20–40 frames (G major), A/C/E in 40–60 frames (A minor), F/A/C in 60–80 frames (F major).
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
+      Chrome: Title "heatmap-chromagram · python · pygal · anyplot.ai" in dark INK (#1A1A17), spanning ~70% of canvas width — clear and unclipped. Y-axis title "Pitch Class" rotated 90°, dark ink, readable. X-axis title "Time (seconds)" in bold dark ink. Musical subtitle "Chord progression: I – V – vi – IV (C major key)" in italic INK_MUTED below x-axis. Chord region labels "C major", "G major", "A minor", "F major" in italic muted ink above the heatmap. Tick labels (0.0 to ~7.5 s on x-axis; B through C on y-axis) in dark ink, readable. Colorbar "Energy" label at top right with tick marks 1.0 / 0.5 / 0.0 in dark ink.
+      Data: Heatmap cells use Imprint sequential colormap (#009E73 green → #4467A3 blue). Low energy cells are teal-green; high energy cells are muted blue. Chord patterns clearly visible: C/E/G rows active in first section, G/B/D in second, A/C/E in third, F/A/C in fourth. Thin white horizontal separators between pitch rows. Dashed vertical dividers between chord regions. Subtle alternating background shading per chord region.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title visible in light cream ink against dark background. Chord region labels in light muted ink, readable. Y-axis pitch labels in light ink, clearly visible. "Pitch Class" rotated title visible. X-axis tick labels in light ink, readable. "Time (seconds)" X-axis title in light bold ink. Subtitle in light muted italic, readable. Colorbar "Energy" and scale values in light ink on right.
-      Data: Heatmap cell colors identical to light render — #009E73 (green) for low energy, ~#4467A3 (blue) for high energy. Data identity preserved correctly.
-      Legibility verdict: PASS — all text clearly readable against the near-black background. No dark-on-dark failures detected. Brand green #009E73 is still distinctly visible on the dark surface.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
+      Chrome: Title in light INK (#F0EFE8), all axis labels and tick labels in matching light ink. Chord region labels in muted light (#A8A79F) — readable. Colorbar ticks in light ink. Musical subtitle in light muted ink. All chrome elements correctly flipped to light-on-dark.
+      Data: Heatmap cell colors are identical to the light render — same teal-green for low energy, same muted blue for high energy. Chord patterns match exactly. White horizontal separators remain visible against dark background. Dashed dividers visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly readable on dark background. Brand green #009E73 visible in low-energy cells. Chrome correctly adaptive.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,75 +63,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; chord labels (38px italic) and subtitle
-          (34px italic) are slightly small relative to pitch row labels (44px bold)
-          — minor hierarchy gap
+        comment: All text readable in both renders at correct sizes; chord region
+          italic labels fine at scale; minor deduction for slightly italic chord labels
+          potentially harder to read when thumbnailed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text-text or text-data overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly visible; energy contrast between green and
-          blue is clear
+        comment: Heatmap cells clearly differentiated; chord energy patterns distinctly
+          visible; colorbar gradient readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green→blue) is CVD-safe; colorbar provides quantitative
-          reference
+        comment: Imprint sequential colormap is CVD-safe by design; green-to-blue
+          transition is distinguishable under deuteranopia/protanopia
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; heatmap fills most of canvas; colorbar well-positioned
-          at right
+        comment: 3200x1800 landscape canvas; no overflow; good proportions; margins
+          allow all labels room
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Time (seconds)'' and ''Pitch Class'' are descriptive with units'
+        comment: Title matches required format; Y='Pitch Class'; X='Time (seconds)';
+          colorbar='Energy'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73→#4467A3) correctly applied for single-polarity
-          energy data; backgrounds #FAF8F1/#1A1A17 correct; chrome theme-adaptive'
+        comment: 'Imprint sequential (#009E73 → #4467A3) used for continuous energy
+          data — correct; backgrounds #FAF8F1/#1A1A17; both themes correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above library default: custom colormap, chord annotations, subtitle,
-          and colorbar show design thought; chord background bands too faint (opacity
-          0.05–0.09) to fully register visually'
+        comment: Chord region shading + labels, musical subtitle, horizontal separators,
+          dashed dividers — above-median design thought; not maximally elaborate
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean layout, no unnecessary chrome, subtle dashed chord separators;
-          heatmap border could use opacity to match the more refined separators
+        comment: INK_MUTED borders at 0.5 opacity, subtle separators, no chartjunk
+          — refined but outer pygal spine chrome persists
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chord region labels and subtitle clearly narrate the I–V–vi–IV progression;
-          energy patterns guide the eye through chord changes
+        comment: Chord region labels and subtitle guide viewer through the harmonic
+          progression; pitch patterns tell the musical story clearly
     spec_compliance:
       score: 15
       max: 15
@@ -145,14 +141,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap/chromagram type
+        comment: Correct heatmap with pitch classes on Y and time on X
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes, sequential colormap, colorbar, time axis in
-          seconds, realistic harmonic patterns
+        comment: All 12 pitch classes labeled; sequential colormap (imprint_seq per
+          rules); colorbar included; time in seconds; realistic harmonic patterns
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -164,8 +160,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title is 'heatmap-chromagram · python · pygal · anyplot.ai'; no legend
-          needed (colorbar serves as scale)
+        comment: Exact required title format; no redundant legend (colorbar serves
+          this purpose)
     data_quality:
       score: 15
       max: 15
@@ -175,58 +171,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 12 pitch classes, temporal evolution, four distinct chord
-          types (major/minor), clear energy variation
+        comment: 12 pitch classes, 80 time frames, 4 distinct chord regions, full
+          energy range shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: I–V–vi–IV C major key progression is a real music theory concept;
-          neutral topic
+        comment: I-V-vi-IV progression in C major is a standard real-world musical
+          example; neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–1 normalized energy, 80 frames at 0.1s = 8s analysis window — realistic
-          chroma feature extraction parameters
+        comment: Energy clipped to [0,1]; time at 0.1s per frame (8s total) is realistic
+          for a chroma analysis window
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: ChromagramHeatmap class (~200 lines) significantly departs from Imports→Data→Plot→Save
-          flat structure
+        passed: true
+        comment: Custom class + two helpers add justified complexity for pygal custom
+          chart type; _render_heatmap could be inlined into _plot() to simplify
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, numpy, pygal.graph.graph.Graph, pygal.style.Style'
+        comment: All imports used; sys.path manipulation is a necessary workaround
+          for file naming collision
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: sys.path.remove/insert hack to avoid module name collision adds inelegance;
-          otherwise well-structured
+        passed: true
+        comment: No fake UI; SVG tooltip titles are legitimate; sys.path hack is documented
+          necessity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, and plot-{THEME}.html —
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, plot-{THEME}.html — all
           correct
     library_mastery:
       score: 8
@@ -237,22 +234,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Extends pygal Graph base class correctly; uses SVG node API (_plot/_compute);
-          proper Style object usage
+        comment: Correct subclassing of pygal.graph.graph.Graph with _compute()/_plot()
+          overrides; Style API used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SVG <title> tooltip on each cell exploits pygal's interactive SVG;
-          HTML export with embedded SVG is distinctively pygal
-  verdict: REJECTED
+        comment: chart.svg.node() for direct SVG manipulation, SVG title tooltips,
+          HTML output — leverages pygal's SVG-native interactivity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
@@ -260,3 +258,4 @@ impl_tags:
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
