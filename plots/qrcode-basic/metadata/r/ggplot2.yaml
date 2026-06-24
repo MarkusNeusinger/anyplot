@@ -1,0 +1,244 @@
+library: ggplot2
+language: r
+specification_id: qrcode-basic
+created: '2026-06-24T17:21:53Z'
+updated: '2026-06-24T17:28:26Z'
+generated_by: claude-sonnet
+workflow_run: 28116271298
+issue: 3184
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: proper qrcode R package, correct error correction level
+    M, quiet zone, finder patterns all present'
+  - 'Excellent theme adaptation: background and chrome correctly flip between #FAF8F1
+    and #1A1A17; module colors use INK/PAGE_BG tokens for maximum contrast in both
+    themes'
+  - 'Clean ggplot2 idiom: coord_fixed() + geom_tile is the correct approach for a
+    pixel-perfect square grid'
+  - 'Zero noise: all spines, axes, ticks, grid, and legend correctly removed for a
+    QR code visualization'
+  - Fully deterministic, reproducible output with correct title format
+  weaknesses:
+  - 'DE-03 below average: no additional data storytelling beyond the subtitle URL
+    — add a plot.caption with QR metadata (error correction level, module count, QR
+    version)'
+  - 'LM-02 generic: ggplot2 usage correct but not leveraging distinctive features
+    — consider plot.caption or annotate() for QR technical metadata'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold dark title "qrcode-basic · r · ggplot2 · anyplot.ai" centered at ~65% canvas width; muted dark subtitle "https://anyplot.ai" below — both clearly readable against light background
+      Data: QR code rendered as near-black (#1A1A17) dark modules on warm cream background; ~70% canvas utilization; all three finder patterns visible; quiet zone present
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle now light-colored (#F0EFE8 / #B8B7B0) — both clearly readable against dark background; no dark-on-dark failures
+      Data: QR code visually inverted — dark modules are now cream (#F0EFE8) on near-black background; colors are theme-adaptive (INK/PAGE_BG) rather than identical to light render, which is correct for binary QR encoding where module colors are structural chrome elements, not categorical data series; high contrast maintained for scanning
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title_size=12, subtitle=9); both themes
+          fully readable; title at ~65% width expected for this length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: QR code + title + subtitle layout has zero overlap by construction
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: QR tiles crisp and high-contrast; near-black on cream (light) and
+          cream on near-black (dark)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Maximum luminance contrast binary encoding; fully CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas appropriate; QR code fills ~70% of canvas
+          with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for QR code; title + subtitle fully describe
+          content
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct; QR modules
+          use INK/PAGE_BG chrome tokens appropriate for binary encoding'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean professional appearance; warm background avoids pure white/black;
+          constrained by QR code's inherent binary nature
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent refinement: no grid, no spines, no axes, no ticks, no
+          legend; generous margins; theme-adaptive module colors elegant'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtitle shows encoded URL which is above default; no additional
+          QR metadata or storytelling
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct QR code visualization using proper qrcode R package with
+          geom_tile grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zone, high contrast, finder patterns, error correction M (ecl='M')
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y coordinates correct; y-axis flipped for top-to-bottom matrix;
+          coord_fixed ensures square modules
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'qrcode-basic · r · ggplot2 · anyplot.ai' correct; no legend
+          appropriately suppressed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all QR structural elements: finder patterns, timing patterns,
+          data modules, quiet zone'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Encodes https://anyplot.ai — the actual website URL; real, neutral,
+          directly relevant
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: QR version and module density correct for short URL; proper encoding
+          library ensures scannable output
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean: imports → tokens → QR generation → tidy dataframe → plot
+          → save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: QR generation deterministic; no randomness required
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All three imports (ggplot2, ragg, qrcode) used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented matrix conversion; title fontsize scaling appropriate;
+          no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with sprintf; uses ragg::agg_png device
+          correctly
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_tile + coord_fixed() + scale_fill_manual(guide='none') + theme_minimal
+          layering all idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: R qrcode package integrated with ggplot2 tidy paradigm; coord_fixed
+          for square aspect ratio; ggplot2 rendering itself is fairly standard geom_tile
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - qrcode
+  techniques: []
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
