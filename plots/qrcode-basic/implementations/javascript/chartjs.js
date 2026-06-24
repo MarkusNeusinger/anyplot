@@ -1,7 +1,7 @@
 // anyplot.ai
 // qrcode-basic: Basic QR Code Generator
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-06-24
+// Library: chartjs 4.4.7 | JavaScript 22.22.3
+// Quality: 82/100 | Created: 2026-06-24
 //# anyplot-orientation: square
 
 // Chart.js is loaded by the harness; QR code generation requires a matrix
