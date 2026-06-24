@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-24
+// Quality: 92/100 | Created: 2026-06-24
 
 const t = window.ANYPLOT_TOKENS;
 
