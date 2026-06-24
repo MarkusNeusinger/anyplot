@@ -1,0 +1,40 @@
+library: muix
+language: javascript
+specification_id: line-stress-strain
+created: '2026-06-21T09:55:56Z'
+updated: '2026-06-21T10:00:12Z'
+generated_by: claude-sonnet
+workflow_run: 27900516528
+issue: 4413
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/muix/plot-dark.html
+quality_score: 80
+review:
+  strengths:
+  - Technically accurate piecewise stress-strain models with Lüders yield plateau
+    for mild steel — excellent engineering realism
+  - Two-material overlay (Mild Steel vs Al 6061-T6) with correct material properties
+    enables meaningful engineering comparison
+  - Good use of ChartsReferenceLine for UTS and yield reference lines — idiomatic
+    MUI X feature
+  - Proper theme-adaptive chrome through pageBg/ink/inkSoft tokens — both renders
+    correct
+  - Descriptive title prefix with font scaling for the 71-char title
+  - Clean, fully deterministic pure-math data generation with no randomness
+  weaknesses:
+  - Missing region labels — spec requires annotating elastic, plastic (strain hardening),
+    and necking regions on the curve with visible text labels
+  - Missing Young's modulus annotation — spec requires a visible slope line or text
+    annotation showing the elastic modulus in the elastic region
+  - 0.2% offset line functionally invisible — line spans only ~0.5% of x-axis width
+    due to steel's high E-modulus; at this scale the offset segment is a few pixels
+    and cannot demonstrate the offset yield method
+  - Fracture point not explicitly annotated — curves simply end without a marker or
+    label at the fracture strain
+  - 'Aluminum uses t.palette[2] (blue #4467A3) instead of t.palette[1] (lavender #C475FD),
+    skipping one position in the Imprint canonical order'
+  verdict: APPROVED
