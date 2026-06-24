@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:28Z'
-updated: '2026-06-24T15:27:58Z'
+updated: '2026-06-24T15:40:55Z'
 generated_by: claude-sonnet
 workflow_run: 28108769363
 issue: 4556
@@ -15,133 +15,121 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 quality_score: 89
 review:
   strengths:
-  - 'Complete spec compliance — all required features present: 4PL sigmoidal fits,
-    EC50 dashed crosshairs, 95% CI band, SEM error bars, top/bottom asymptote reference
-    lines, and 2 compounds'
-  - 'Perfect Imprint palette usage (#009E73 first, #C475FD second) with fully theme-adaptive
-    chrome in both light and dark renders — no dark-on-dark issues'
-  - 'Biologically realistic pharmacological data: EC50 values in the 100 nM – 500
-    nM range, Hill slopes 0.9–1.2, response 0–100%, concentration range 1 nM to 100
-    µM'
-  - EC50 annotation boxes with compound-colored borders and matched arrow colors clearly
-    highlight the key pharmacological parameter for each compound
-  - Interactive hover templates with formatted concentration and response values leverage
-    plotly's native strengths
+  - 'Complete spec compliance: all 8 required pharmacological features implemented
+    (log axis, 4PL fit, EC50 crosshairs + annotations, SEM error bars, asymptote lines,
+    CI band, ≥2 compounds, legend)'
+  - Full Imprint palette and theme-adaptive chrome correctly applied across both light
+    and dark renders — no dark-on-dark or light-on-light failures
+  - 'Genuine Plotly-specific interactivity: dropdown compound filter + custom hovertemplate
+    + HTML export — not available in static libraries'
+  - Realistic pharmacological data with plausible EC50 values and appropriate concentration
+    range
+  - Clean, reproducible code with no unnecessary abstractions; scipy curve_fit integration
+    is well-structured
   weaknesses:
-  - 'Design Excellence gap: the plot reads as ''well-configured plotly with thoughtful
-    extras'' but hasn''t reached the ''strong design / FiveThirtyEight-level'' tier.
-    Raise DE-01 by removing all four spines (add `showline=False` to both axes in
-    update_layout), switching to top/right-spine-free layout explicitly, and adding
-    a subtle weight hierarchy (bold/heavier title font weight if possible)'
-  - 'CQ-01 KISS violation: `logistic_4pl` is defined as a top-level function, breaking
-    the flat Imports→Data→Plot→Save structure. Inline it with a lambda passed to curve_fit
-    or accept the minor penalty'
-  - 'LM-02: HTML output and hovertemplate are good but the implementation doesn''t
-    use any uniquely distinctive plotly feature (e.g., updatemenus compound selector,
-    subplot panel for each compound, or rangeslider). Raising to 4-5/5 would require
-    one clearly plotly-exclusive capability beyond standard trace usage'
+  - Bottom asymptote label (yshift=-12 at y=5) sits very close to the 0-tick baseline
+    and may be difficult to read at small display sizes — consider yshift=+10 to position
+    it above the dotted line instead
+  - Two EC50 horizontal dashed crosshairs at similar y-positions (~52%) overlap slightly
+    in the mid-chart area — consider staggering the horizontal line y-endpoints or
+    reducing dash weight on the secondary compound
+  - Annotation callout text at fontsize=10 (40 source px) is at the minimum readable
+    size — could increase to 11px to improve mobile thumbnail legibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "curve-dose-response · python · plotly · anyplot.ai" in dark ink, centered, occupies ~70% of width (expected for this title length). Y-axis label "Response (%)" and X-axis label "Concentration (M)" both dark and clearly readable. Tick labels (1n, 10n, 100n, 1µ, 10µ, 100µ on X; 0–100 on Y) in INK_SOFT dark grey. Legend in upper-left with ELEVATED_BG (#FFFDF6) fill and INK_SOFT border.
-      Data: Compound A curve in #009E73 (brand green) — sigmoid rising from ~5% to ~100%, with green data markers (white outline), green SEM error bars, and a subtle green CI band fill. Compound B in #C475FD (lavender) with matching markers and error bars. EC50 dashed crosshairs (vertical + horizontal) in respective compound colors intersect at the half-maximal response. Two EC50 annotation boxes with colored borders. Top and bottom asymptote dotted grey lines span the full x-range with small text labels at right edge. Subtle horizontal Y-grid only.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "curve-dose-response · python · plotly · anyplot.ai" in dark ink (#1A1A17), bold, centered, clear. Axis labels "Concentration (M)" and "Response (%)" in #1A1A17 at 12px. Tick labels in #4A4A44 at 10px — all readable.
+      Data: First series (Compound A) in brand green #009E73 ✓. Second series (Compound B) in lavender #C475FD (Imprint pos 2) ✓. 8 data points per compound with SEM error bars. Smooth sigmoid curves at width=3. 95% CI band in semi-transparent green around Compound A. EC50 crosshairs (dashed) and annotation boxes with arrowheads. Dotted asymptote lines.
+      Legibility verdict: PASS — all title, axis labels, tick labels, and annotations clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light (#F0EFE8) text, clearly readable. Axis labels and tick labels in INK_SOFT light grey, readable against dark background. Legend with ELEVATED_BG (#242420) fill and light-grey border. EC50 annotation boxes use the dark ELEVATED_BG fill with colored text matching each compound.
-      Data: Compound A in #009E73 and Compound B in #C475FD — identical to light render (data colors unchanged, only chrome flipped). Green CI band slightly more prominent on dark background. All curves, markers, error bars, and reference lines visible.
-      Legibility verdict: PASS — no dark-on-dark issues. All text elements use theme-correct light tokens. The brand green #009E73 remains clearly visible on the dark surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white (#F0EFE8), axis labels in #F0EFE8, tick labels in #B8B7B0. All clearly readable. Annotation box fills use #242420 (elevated dark). Legend background #242420. No dark-on-dark failures detected.
+      Data: Compound A green #009E73 and Compound B lavender #C475FD — identical to light render as required. CI band, error bars, crosshairs all visible. Dropdown button styled with INK_SOFT border.
+      Legibility verdict: PASS — all text elements clearly readable against dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axes=12, ticks=10, legend=10,
-          annotations=10). Readable in both themes. Title spans ~70% of width — expected
-          for the mandated anyplot title length.
+        comment: Title/axis/tick text clear in both themes. Annotation text at 10px
+          (40 source px) is minimum readable; could be 11px for better mobile thumbnail
+          legibility.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: EC50 annotations staggered to avoid overlap. Legend positioned away
-          from curve region. No text-on-text or text-on-data collisions.
+        comment: 'Minor: two EC50 horizontal crosshairs converge near y~52% response;
+          bottom asymptote label close to 0-tick baseline.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 sparse data points per compound — marker size 10 (effective 40px)
-          is well-proportioned. Error bars clearly visible. CI band visible without
-          dominating.
+        comment: 8 sparse data points at size=10 appropriate; error bars at thickness=2
+          visible; curves at width=3 prominent; CI band visible without obscuring
+          data.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
-          members with distinct hue families. White marker outlines add definition.
+        comment: Imprint positions 1 (#009E73) and 2 (#C475FD) CVD-safe with strong
+          perceptual separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800, landscape). Margins explicit (l=80,
-          r=40, t=80, b=60). Plot fills ~70% of canvas. Legend near data in upper-left.
-          No content cut off.
+        comment: 3200x1800 canvas confirmed. Margins l=80 r=40 t=80 b=60. Title ~70%
+          width. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Concentration (M)'' and ''Response (%)'' — both descriptive with
-          units.'
+        comment: 'X: Concentration (M), Y: Response (%) — descriptive with units.
+          Title matches required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Compound A), second #C475FD (Compound B) —
-          canonical Imprint order. PAGE_BG correct in both themes. Chrome tokens all
-          theme-adaptive. Data colors identical across light and dark renders.'
+        comment: 'First series #009E73, second #C475FD, canonical Imprint order. PAGE_BG
+          #FAF8F1/#1A1A17 correct. All chrome theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above ''well-configured default'' (4): EC50 annotation boxes with
-          compound-colored borders, CI band, asymptote reference lines, and white
-          marker outlines add polish. Not yet at ''strong design / FiveThirtyEight-level''
-          (6+) — overall composition still reads as configured plotly rather than
-          distinctively crafted.'
+        comment: Above generic defaults. EC50 crosshairs with arrowhead annotations,
+          CI band, dropdown compound filter, bordercolor tied to series color — deliberate
+          design thinking.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-axis grid disabled (showgrid=False), Y-axis grid at 0.5 width with
-          GRID color at 15% opacity — subtle and correct. No top/right spines (plotly_white
-          template handles this). White marker edges. Some refinement visible, not
-          at maximum.
+        comment: 'plotly_white removes spines. X-grid suppressed; Y-grid subtle. Legend
+          and annotation boxes styled with elevated tokens. Minor: no L-frame spine
+          anchoring.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 crosshairs and annotation boxes create visual emphasis on the
-          key pharmacological parameter. CI band adds confidence context. Two curves
-          with offset EC50 values tell a clear potency-comparison story. Good visual
-          hierarchy without being outstanding.
+        comment: EC50 crosshairs guide to key values. CI band conveys uncertainty.
+          Two-compound potency comparison clear. Dropdown enables focused view.
     spec_compliance:
       score: 15
       max: 15
@@ -151,30 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curves with 4PL fit for both compounds.
+        comment: Correct sigmoidal 4PL dose-response curves on log-concentration x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 8 spec features present: log x-axis, 4PL fit, EC50 crosshairs,
-          SEM error bars, top/bottom asymptote lines, 2 compounds, legend, CI band
-          around Compound A.'
+        comment: Log x-axis, 4PL fit, EC50 crosshairs, SEM error bars, asymptote lines,
+          2+ compounds, legend, 95% CI band — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on log x-axis, Response (%) on y-axis. All data visible
-          across 1 nM to 100 µM range.
+        comment: Concentration on log x-axis, Response (%) on y-axis, full data range
+          covered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''curve-dose-response · python · plotly · anyplot.ai'' —
-          exact required format. Legend shows both compound names with fitted EC50
-          values.'
+        comment: 'Title: curve-dose-response · python · plotly · anyplot.ai. Legend
+          entries include EC50 values per compound.'
     data_quality:
       score: 15
       max: 15
@@ -184,63 +170,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both compounds show full sigmoidal range from bottom plateau to top
-          plateau. Different EC50 values (10x separation) and Hill slopes demonstrate
-          pharmacological diversity.
+        comment: Sigmoidal shape, EC50 annotation, asymptote references, CI band,
+          error bars, two-compound comparison — all dose-response features represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pharmacology scenario with Compound A/B — neutral, scientifically
-          standard framing. EC50 values and concentration ranges are realistic for
-          drug discovery assays.
+        comment: EC50 values ~98 nM and ~543 nM realistic for small molecules. Concentrations
+          1e-9 to 1e-4 M appropriate. Neutral compound names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EC50 ~100 nM and ~540 nM are typical drug potency values. Hill slopes
-          1.2 and 0.9 are physiologically reasonable. Response 0–100%. Concentration
-          range 1 nM–100 µM is standard.
+        comment: 5-order-of-magnitude concentration range appropriate for pharmacology;
+          response 0-100%.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: logistic_4pl defined as a top-level function, breaking the flat Imports→Data→Plot→Save
-          pattern. Otherwise structure is clean.
+        comment: Single helper function logistic_4pl genuinely needed for curve_fit.
+          No classes. Linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, plotly.graph_objects, scipy.optimize.curve_fit — all used.
+        comment: All 4 imports (os, numpy, plotly.graph_objects, scipy.optimize.curve_fit)
+          actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over compounds. No fake UI. Appropriate complexity for
-          a 4PL fitting + annotation task.
+        comment: updatemenus is genuine Plotly interactivity, not faked UI. Appropriate
+          complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API.
+        comment: write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
+          and write_html correct.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -248,19 +233,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure with go.Scatter traces, add_shape for reference lines,
-          add_annotation for EC50 labels, fill='tonexty' for CI band — all idiomatic
-          plotly patterns. Correct use of graph objects for complex multi-layer composition.
+        comment: go.Scatter with mode/marker/line/error_y, fill=tonexty for CI, add_shape,
+          add_annotation with arrowhead, update_layout theming — idiomatic graph-objects
+          patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: hovertemplate with compound-specific formatting, fill='tonexty' for
-          CI band, HTML export — these use plotly-specific capabilities. Does not
-          reach 4-5/5 as no uniquely distinctive feature (e.g., updatemenus, subplot
-          faceting, rangeslider) is employed.
-  verdict: REJECTED
+        comment: updatemenus dropdown (Plotly-exclusive), hovertemplate, fill=tonexty,
+          write_html, hoverinfo=skip on boundary traces — strong Plotly-specific feature
+          usage.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
