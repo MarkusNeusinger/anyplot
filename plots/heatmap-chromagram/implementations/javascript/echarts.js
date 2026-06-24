@@ -1,3 +1,7 @@
+// anyplot.ai
+// heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
+// Library: echarts 5.5.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-24
 //# anyplot-orientation: square
 
 // anyplot.ai
