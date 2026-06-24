@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: line-reaction-coordinate
 created: '2026-06-24T08:09:35Z'
-updated: '2026-06-24T08:15:00Z'
+updated: '2026-06-24T08:28:19Z'
 generated_by: claude-sonnet
 workflow_run: 28084004602
 issue: 4409
@@ -12,41 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance with all required annotation features (Ea arrow, ΔH arrow,
-    dashed reference lines, and all three point labels)
-  - Sophisticated use of MUI X composition API with useDrawingArea hook for accurate
-    coordinate-mapped custom SVG annotations
-  - 'Accurate chemistry data: Gaussian baseline + peak model produces a physically
-    plausible smooth curve; Ea and ΔH values correctly computed'
-  - Dual-theme implementation using ANYPLOT_TOKENS works correctly in both renders
-    with no dark-on-dark or light-on-light failures
-  - 'High code quality: deterministic data generation, clean React component structure,
-    no forbidden patterns'
+  - Idiomatic use of useDrawingArea hook for custom SVG annotation overlay — coordinate
+    mapping from data space to SVG pixels is precise and theme-adaptive
+  - 'Full spec compliance: all required features implemented (Ea double-headed arrow,
+    ΔH double-headed arrow, dashed reference lines at reactant/product levels, direct
+    labels, transition state marker)'
+  - 'Perfect palette compliance — brand green #009E73 as first (and only) series,
+    t.pageBg for background, all chrome via theme tokens'
+  - Both light and dark renders are fully readable — no dark-on-dark or light-on-light
+    failures; theme adaptation is seamless
+  - Deterministic data generation from clearly named constants (E_REACTANTS, E_TRANSITION,
+    E_PRODUCTS) — scientifically accurate energy curve via Gaussian peak formula
+  - ChartsReferenceLine used effectively for dashed horizontal lines at reactant and
+    product energy levels
+  - 'Clean code quality: KISS structure, all imports used, EnergyAnnotations component
+    is justified by the useDrawingArea hook dependency'
   weaknesses:
-  - Annotation text at fontSize=16 CSS px may be difficult to read at mobile display
-    widths (~400px); increase to 18-20px for better mobile readability
-  - The Reactants (50 kJ/mol) label is only 14px above the dashed reference line,
-    appearing crowded — increase yOffset to ~22-24px
-  - Design excellence is functional but not visually distinctive beyond spec requirements
-    — appropriate scientific styling but lacks a strong aesthetic signature
+  - Title fontSize=22 CSS px renders too small at the final 3200×1800 canvas — title
+    occupies only ~40-45% of canvas width (target is 50-70%); increase to ~26-28 CSS
+    px
+  - 'No Y-axis grid lines: without subtle horizontal reference lines at regular energy
+    intervals (e.g. every 25 kJ/mol), readers struggle to read exact energy values
+    from tick labels alone — add a light horizontal grid (opacity ~0.15) on the Y
+    axis'
+  - 'DE-01: SVG annotations are functional but could be more visually refined — arrowhead
+    polygon style and text offsets are mechanical; a light shaded fill under the energy
+    curve (area fill from y=0) would increase aesthetic sophistication significantly'
+  - 'DE-03: Data storytelling is spec-complete but does not go beyond requirements
+    — no emphasis technique (e.g. shading the activation energy region, gradient fill
+    under curve) to help the viewer''s eye identify the key feature of the diagram'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-reaction-coordinate · javascript · muix · anyplot.ai" centered at top in dark ink, fully readable. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" readable in inkSoft. Tick labels 0-140 on Y-axis and 0.00-1.00 on X-axis clearly visible.
-      Data: Brand green (#009E73) smooth energy curve from reactants (50 kJ/mol) through transition state (120 kJ/mol) to products (20 kJ/mol). Solid dark-ink double-headed arrow for Ea=70 kJ/mol. Dashed inkSoft double-headed arrow for ΔH=−30 kJ/mol. Horizontal dashed reference lines at 50 and 20 kJ/mol. Direct labels for "Transition State ‡", "Reactants (50 kJ/mol)", "Products (20 kJ/mol)".
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-reaction-coordinate · javascript · muix · anyplot.ai" in dark ink, centered at top — readable but slightly small (~40-45% of canvas width at fontSize 22). Axis labels "Reaction Coordinate" (x) and "Potential Energy (kJ/mol)" (y) in dark-secondary ink at fontSize 16 — clear. Tick labels from 0.00-1.00 (x) and 0-140 (y) at fontSize 14 — readable.
+      Data: Single smooth energy curve in brand green #009E73 (palette[0]) with strokeWidth 3 — clearly visible. Hollow circle marker at transition state peak (x≈0.4, y=120). Horizontal dashed reference lines at y=50 (reactants) and y=20 (products) in inkSoft with opacity 0.65. Direct labels: "Reactants (50 kJ/mol)", "Transition State ‡", "Products (20 kJ/mol)" in dark ink at fontSize 18. Ea double-headed arrow from y=50 to y=120 at x≈0.53 with "Ea = 70 kJ/mol" label. ΔH dashed double-headed arrow from y=50 to y=20 at x≈0.85 with "ΔH = −30 kJ/mol" label.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light text, clearly readable against dark background. Axis labels and tick labels in light ink, all readable. Annotation text (Ea, ΔH labels, point labels) in light-colored ink — no dark-on-dark failures observed.
-      Data: Green energy curve color identical to light render (#009E73). Arrow and reference line colors adapt to light theme-adaptive ink tokens. All data elements clearly distinguishable from the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light ink — clearly readable. Axis labels and tick labels adapted to light ink against dark background — no dark-on-dark failures observed. All annotation text (labels, Ea/ΔH values) rendered in t.ink which adapts to light on dark background.
+      Data: Energy curve in brand green #009E73 — identical to light render, clearly visible against near-black background. Brand green reads well on dark surface. All arrows, reference lines, and annotation markers appear identically colored to light render.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures; theme adaptation is seamless
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,51 +66,51 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title (22px), axis labels (16px), tick labels (14px) readable in
-          both themes; annotation text (16px) may be borderline at mobile widths
+        comment: All text readable in both themes; title at fontSize 22 CSS px occupies
+          only ~40-45% canvas width (target 50-70%) — slightly small
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No overlaps; Reactants label 14px above reference line is slightly
-          crowded
+        comment: No overlapping elements — labels, arrows, and curve are well-separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Energy curve at strokeWidth=3 prominent; reference lines visible
-          at opacity=0.65
+        comment: Energy curve strokeWidth 3 is prominent; hollow TS marker, dashed
+          reference lines, and arrows all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series; theme-adaptive ink for annotations; no red-green
-          sole signal
+        comment: 'Brand green #009E73 has good contrast on both surfaces; no red-green
+          CVD concerns with single-series'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; good margins; title ~60% width; well-proportioned
+        comment: Canvas gate passed; good margins (left 110, right 70, top 44, bottom
+          72); ΔH annotation at x≈0.85 leaves limited right margin breathing room
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Potential Energy (kJ/mol); X: Reaction Coordinate; title in correct
-          format'
+        comment: Reaction Coordinate (x) and Potential Energy kJ/mol (y) — descriptive
+          with units; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series t.palette[0]=#009E73; background t.pageBg theme-adaptive;
-          both renders correct
+        comment: First series uses t.palette[0] (#009E73); background is t.pageBg;
+          both renders theme-correct
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,22 +118,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Intentional scientific hierarchy: green curve, dark ink Ea arrow,
-          inkSoft ΔH arrow; appropriate for chemistry education'
+        comment: Custom SVG annotations with useDrawingArea show design sophistication;
+          scientific aesthetic is intentional. No area fill under curve or gradient
+          — annotations are functional rather than designed
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (disableLine+disableTicks); no grid; subtle axis styling;
-          clean whitespace
+        comment: Spines removed (disableLine/disableTicks), good whitespace. No Y-axis
+          grid lines — makes precise energy value estimation harder
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point at TS peak; measurement arrows guide viewer to
-          key quantities; dashed reference lines anchor orientation
+        comment: Annotations tell the reaction story correctly; but no extra storytelling
+          technique beyond spec requirements (no shading of Ea region, no gradient
+          fill)
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct smooth line chart for reaction coordinate energy diagram
-          with Gaussian peak
+        comment: Line chart with smooth natural interpolation — correct for reaction
+          coordinate diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: labels (reactants/TS/products), Ea arrow, ΔH arrow,
-          smooth curve, dashed reference lines'
+        comment: 'All spec features: reactant/product/TS labels, Ea double-headed
+          arrow, ΔH double-headed arrow, smooth curve, dashed reference lines'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate (0-1); Y=potential energy (kJ/mol); all data
-          within bounds
+        comment: 'X: reaction coordinate 0-1; Y: potential energy kJ/mol; exothermic
+          reaction reactants 50 → TS 120 → products 20'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed for single series
+        comment: 'Title: ''line-reaction-coordinate · javascript · muix · anyplot.ai''
+          — correct format; no legend (single series — appropriate)'
     data_quality:
       score: 15
       max: 15
@@ -162,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: activation barrier, enthalpy change, all three
-          chemical species, Gaussian model'
+        comment: 'All aspects: reactants, transition state, products, Ea (70 kJ/mol),
+          ΔH (-30 kJ/mol), 200-point smooth curve'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Physically plausible: 50/120/20 kJ/mol; Ea=70, ΔH=−30 correctly
-          computed; realistic for single-step exothermic reaction'
+        comment: Classic neutral chemistry example; values physically plausible for
+          a simple exothermic reaction
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y 0-145 kJ/mol with data 20-120; X 0-1 standard; 200 points for smooth
-          curve
+        comment: kJ/mol energy scale 0-145 appropriate; reaction coordinate 0-1 as
+          arbitrary units per spec
     code_quality:
       score: 10
       max: 10
@@ -187,34 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; EnergyAnnotations is an idiomatic React function component;
-          flat readable structure
+        comment: EnergyAnnotations component is justified by useDrawingArea hook requirement;
+          no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data deterministic from mathematical formulas; no random elements
-          or fetch
+        comment: All data deterministic from named constants; no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; only @mui/x-charts and @mui/material; no Pro/Premium
+        comment: All imports used; only @mui/x-charts community + @mui/material —
+          no Pro imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean separation of data computation and rendering; no fake interactivity
+        comment: Clean, no fake UI elements; meaningful constant names; SVG code is
+          readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS; default export;
-          skipAnimation
+        comment: Harness handles output; current MUI X API; skipAnimation set; window.ANYPLOT_SIZE
+          used for sizing
     library_mastery:
       score: 9
       max: 10
@@ -224,16 +240,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: ChartContainer composition API + LinePlot + ChartsReferenceLine
-          + useDrawingArea hook'
+        comment: ChartContainer + LinePlot + ChartsXAxis + ChartsYAxis + useDrawingArea
+          — compositional API used correctly and idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useDrawingArea hook for coordinate mapping is genuinely distinctive;
-          ChartsReferenceLine is library-specific; minor deduction for not using MUI
-          X slot API for custom marks
+        comment: useDrawingArea hook for coordinate mapping is highly distinctive
+          MUI X feature; ChartsReferenceLine is library-specific. Could leverage ChartsTooltip
+          slotProps or legend slot customization for additional distinctiveness
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -243,5 +259,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []
