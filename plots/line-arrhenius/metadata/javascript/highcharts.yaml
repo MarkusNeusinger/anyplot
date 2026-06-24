@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-arrhenius
 created: '2026-06-24T09:43:53Z'
-updated: '2026-06-24T09:51:45Z'
+updated: '2026-06-24T10:04:56Z'
 generated_by: claude-sonnet
 workflow_run: 28089354864
 issue: 4408
@@ -12,59 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/highcharts/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - 'Clever dual-line x-axis tick labels using Highcharts useHTML: true — simultaneously
-    shows 1/T (K⁻¹) and temperature in K, elegantly satisfying the secondary-axis
-    spec requirement without a separate axis'
-  - 'Subtitle serves as an information-dense annotation layer: Ea/R = 9,716 K, Ea
-    ≈ 80.8 kJ/mol, R² = 0.999 give the reader the key kinetic insight immediately'
-  - Correct zIndex layering ensures scatter data points render on top of the regression
-    line, preserving visual hierarchy
-  - 'Scatter marker edge highlighting (lineColor: t.pageBg, lineWidth: 1.5) gives
-    crisp definition against both light and dark backgrounds — correctly uses the
-    theme background as the edge color'
-  - 'Both renders pass theme-readability: warm off-white (#FAF8F1) light background
-    and warm near-black (#1A1A17) dark background; all text uses theme-adaptive tokens;
-    no dark-on-dark failures'
-  - In-memory hardcoded data makes the implementation fully deterministic and reproducible
-    — no seeded RNG needed
+  - 'Complete spec compliance — all required features present: regression line, R²
+    in subtitle, Ea/R on-chart annotation, dual-format x-axis labels showing both
+    1/T and temperature in K simultaneously'
+  - On-chart annotation using chart.renderer.text() with toPixels() coordinate conversion
+    — idiomatic Highcharts pattern executed cleanly
+  - Deterministic implementation with physically realistic data (11 points, 300–600
+    K, Ea ≈ 83.9 kJ/mol, R² ≈ 0.98)
+  - Clean KISS structure with inline linear regression calculation using Array.reduce
+    — no unnecessary abstractions
+  - 'Scatter markers with pageBg outline (lineColor: t.pageBg) add a subtle visual
+    refinement that improves marker legibility'
   weaknesses:
-  - 'Slope annotation missing: spec says ''Annotate the slope with an Ea/R label showing
-    the extracted activation energy'' — this information appears only in the subtitle,
-    not as an on-chart annotation near the regression line. In Highcharts core (without
-    the annotations module), use chart.renderer.text() to add an SVG text label positioned
-    near the midpoint of the fit line. Example: chart.renderer.text(''Ea/R = 9716
-    K'', x, y).attr({align: ''left''}).css({color: t.inkSoft, fontSize: ''13px''}).add()'
-  - 'First series palette order violation (VQ-07): the Arrhenius fit line is first
-    in the series array but uses t.palette[2] (#4467A3 blue) instead of t.palette[0]
-    (#009E73 brand green). Fix: swap the series order — put scatter (Measured k) first
-    with t.palette[0], and the Arrhenius fit line second with t.palette[1] or t.palette[2].
-    This ensures the brand green belongs to the first-in-array series while keeping
-    the semantic assignment logical'
-  - R² = 0.999 is unrealistically clean for 'experimental' kinetics data — the spec
-    explicitly calls for 'realistic lab scatter'. Adjust the lnK values to introduce
-    more scatter (e.g., ±0.3–0.5 random deviations) so R² lands around 0.97–0.98,
-    which is more representative of real measurement noise
-  - 'KISS structure: the linReg() helper function is a mild violation of the ''no
-    functions/classes'' code pattern. Inline the 5 variables (n, sx, sy, sxy, sxx,
-    m, b, r2) directly into the script body to match the expected flat structure'
+  - 'Palette ordering deviation: regression line uses palette[2] (#4467A3) instead
+    of palette[1] (#C475FD) — canonical 1→N rule requires no skipping for non-semantic
+    series'
+  - 'Chart border frame not explicitly controlled: Highcharts renders a default frame;
+    add chart.plotBorderWidth: 0 to remove unnecessary chrome and improve visual refinement'
+  - Design Excellence is competent but not elevated — the layout relies on Highcharts
+    defaults beyond the annotation; no explicit spine removal or intentional whitespace
+    management
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — PASS. Correctly matches the anyplot light surface.
-      Chrome: Title "line-arrhenius · javascript · highcharts · anyplot.ai" in dark ink, clearly readable at the top. Subtitle "Linear fit — Ea/R = 9,716 K | Ea ≈ 80.8 kJ/mol | R² = 0.999" in medium gray (inkSoft), readable. X-axis label "1/T (K⁻¹)" and Y-axis label "ln(k)" in dark gray, clearly readable. All tick labels use theme-adaptive colors and are legible.
-      Data: X-axis displays dual-line tick labels showing both the 1/T value (e.g. "0.0016") and the corresponding temperature in K (e.g. "625 K") below it — a distinctive Highcharts HTML-label feature that satisfies the secondary-axis spec requirement. Y-axis shows ln(k) from -12 to 10. Regression line rendered in #4467A3 (Imprint blue, palette[2]). Scatter markers for 11 measured data points rendered in #009E73 (brand green, palette[0]), radius 7, with white edge for definition. Markers are clearly above the regression line in z-order. Both series appear in the bottom legend.
-      Legibility verdict: PASS — all text readable at full resolution and at thumbnail scale.
+      Background: Warm off-white (#FAF8F1) — correct pageBg token applied via transparent chart background
+      Chrome: Title "line-arrhenius · javascript · highcharts · anyplot.ai" in dark ink, fully readable; subtitle with Ea/R, Ea, and R² values visible in softer ink; x-axis label "1/T (K⁻¹)" and y-axis label "ln(k)" clearly readable; tick labels at ~13px readable; secondary temperature-in-K sub-labels at 11px small but legible; grid lines subtle and appropriate
+      Data: Green (#009E73) scatter markers for "Measured k" with white-halo outlines; blue (#4467A3) regression line "Arrhenius fit" at 2.5px; on-chart annotation "Ea/R = 10,087 K" visible near midpoint of line; legend at bottom shows both series
+      Legibility verdict: PASS — all text readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — PASS. Correctly matches the anyplot dark surface.
-      Chrome: Title, subtitle, and all axis/tick labels flip to light-colored text (inkSoft / ink tokens) against the dark background. Title clearly readable in near-white text. Subtitle legible. Axis labels and both lines of the dual-format x-axis ticks are visible in light gray. No dark-on-dark text failures detected.
-      Data: Data colors are IDENTICAL to the light render — scatter markers remain #009E73 (brand green) and the regression line remains #4467A3 (blue). Grid lines appear as subtle lighter lines on the dark surface. White marker edges adapt correctly (using t.pageBg which is #1A1A17 dark), making the edges near-invisible on the dark background — the markers still read clearly against the dark canvas due to the green fill.
-      Legibility verdict: PASS — all text readable. No dark-on-dark failures. Data colors unchanged from light render.
+      Background: Warm near-black (#1A1A17) — correct pageBg token applied
+      Chrome: Title and all axis labels appear in light ink tokens — no dark-on-dark failures detected; subtitle readable; tick labels and secondary temperature labels visible in lighter text; grid lines subtle on dark surface
+      Data: Green markers and blue line identical to light render — Imprint palette colors are theme-independent as required; annotation "Ea/R = 10,087 K" visible; legend entries readable
+      Legibility verdict: PASS — all text readable against warm near-black background; data colors unchanged between themes
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -72,57 +57,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, tick
-          labels 13-14px). All text readable in both themes. Minor: secondary K temperature
-          labels at 11px CSS are slightly small but still legible.'
+        comment: All text readable in both themes; font sizes explicitly set (22px
+          title, 16px axis titles, 14px ticks); secondary temperature sub-labels at
+          11px are small but legible
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: ~19 dual-line tick labels on x-axis (1/T value + K value) are very
-          closely spaced but do not actually overlap. No data/text collisions.
+        comment: No overlap between text, markers, and regression line; annotation
+          placed without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 11 data points at radius 7 with white edge — prominent and well-defined
-          against both backgrounds. Regression line at lineWidth 2.5 clearly visible.
-          Optimal for the data density.
+        comment: 11 sparse data points with radius-7 markers are prominent; 2.5px
+          regression line clearly visible; zIndex ordering correct (scatter above
+          line)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue (#4467A3) regression line and green (#009E73) scatter markers
-          are CVD-safe and well-distinguished by both hue and luminance.
+        comment: Green vs blue is CVD-safe and not red-green; adequate contrast in
+          both themes
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed. Good proportions. marginBottom: 110 correctly
-          reserves space for dual-line tick labels. Minor: x-axis label area is dense
-          with 19 dual-line ticks.'
+        comment: 'Canvas gate passed; landscape orientation correct; marginBottom:
+          110 gives room for dual-line x-axis labels; nothing clipped'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''1/T (K⁻¹)'' with units. Y-axis: ''ln(k)''. Title format
-          correct. Subtitle provides kinetic parameters.'
+        comment: 'X: ''1/T (K⁻¹)'' with units; Y: ''ln(k)''; title follows spec-id
+          format'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Partial compliance. The scatter series (Measured k, primary data)
-          correctly uses t.palette[0] = #009E73 brand green. However, the first series
-          in the Highcharts series array is the regression fit line using t.palette[2]
-          = #4467A3 blue — violating the ''first series = #009E73'' rule. Backgrounds
-          are correctly #FAF8F1 (light) and #1A1A17 (dark). Both renders use identical
-          data colors with correct chrome adaptation.'
+        comment: First series (scatter) correctly uses palette[0] (#009E73); regression
+          line uses palette[2] (#4467A3), skipping palette[1] (#C475FD) — canonical
+          1→N order violated
     design_excellence:
       score: 12
       max: 20
@@ -132,30 +113,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above the default of 4. The dual-label x-axis (showing both 1/T and
-          K simultaneously) is a sophisticated design choice that reduces cognitive
-          load. The statistical subtitle is an elegant information layer. Not quite
-          publication-ready but clearly above a configured default.
+        comment: 'Above average: on-chart annotation with renderer.text(), dual-scale
+          x-axis using HTML formatter, informative subtitle with statistics; not exceptional
+          but clearly intentional'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: transparent background, credits disabled, fontFamily inherit, marker
-          edge highlighting, tooltip disabled. Some deliberate refinement visible.
-          Grid is shown on both axes which is appropriate for a scatter+line plot.
-          No bold borders or heavyweight chrome.
+        comment: Subtle grid via t.grid tokens, marker outline with pageBg, transparent
+          background; no explicit spine/border removal (chart.plotBorderWidth not
+          set)
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'The subtitle immediately surfaces the key insight (Ea/R, Ea, R²).
-          The dual x-axis labels bridge the gap between the transformed 1/T scale
-          and intuitive temperature in K. Visual hierarchy is clear: data points on
-          top of fit line. Good storytelling through data choice and layout.'
+        comment: Annotation and subtitle together tell the activation energy story;
+          dual-axis context aids interpretation; clear focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,104 +140,89 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: scatter of measured ln(k) vs 1/T with linear
-          regression line overlay.'
+        comment: 'Correct Arrhenius plot: scatter on transformed axes with regression
+          line'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'R² displayed in subtitle ✓. Ea/R and Ea in subtitle ✓. Secondary
-          K temperature labels on x-axis ✓. However, spec says ''Annotate the slope
-          with an Ea/R label'' — this implies an on-chart annotation near the regression
-          line, not just in the subtitle. Missing: direct annotation on/near the slope
-          line.'
+        passed: true
+        comment: Linear regression ✓, R² in subtitle ✓, Ea/R annotation on chart ✓,
+          secondary temperature labels on x-axis ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 1/T (K⁻¹) ✓. Y: ln(k) ✓. 11 data points spanning 300-600 K ✓.
-          All data visible in plot area.'
+        comment: 'X: 1/T (K⁻¹) ✓; Y: ln(k) ✓; all 11 data points visible ✓'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-arrhenius · javascript · highcharts · anyplot.ai''
-          — correct format. Legend: ''Arrhenius fit'' and ''Measured k'' — appropriate
-          and descriptive.'
+        comment: Title 'line-arrhenius · javascript · highcharts · anyplot.ai' correct;
+          legend labels 'Measured k' and 'Arrhenius fit' appropriate
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows Arrhenius plot with experimental scatter, linear regression
-          line, Ea/R annotation, R², and secondary temperature axis. All main features
-          present. Minor: the near-perfect linear fit (R²=0.999) somewhat understates
-          the scatter aspect.'
+        comment: 'Full feature set: scatter data, regression line, annotation, dual-scale
+          axis, subtitle stats'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'First-order thermal decomposition, 300-600 K temperature range,
-          plausible rate constants. Neutral scientific context. Minor issue: R² =
-          0.999 is unrealistically clean — the spec explicitly calls for ''realistic
-          lab scatter'' but the 11 hardcoded points track almost perfectly linearly.'
+        comment: 'Physical chemistry context: 300–600 K range, Ea = 83.9 kJ/mol is
+          realistic for thermal decomposition, R² = 0.979 realistic'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 300-600 K appropriate for chemical kinetics. Ea
-          = 80.8 kJ/mol is a realistic activation energy for organic decomposition.
-          ln(k) range -9.3 to 7.1 is physically plausible.
+        comment: 1/T values ~0.0016–0.0034 K⁻¹, ln(k) range -8.6 to 7.5 — physically
+          plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Mostly flat structure: data → regression → chart. The linReg() helper
-          function is a mild KISS violation (''no functions/classes''), but it''s
-          a single small utility rather than a class hierarchy.'
+        comment: Flat, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded. No RNG. Fully deterministic.
+        comment: Data hardcoded, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses only window.ANYPLOT_TOKENS and Highcharts globals.
-          Clean.
+        comment: No imports; uses globals as required
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, readable code. The linReg function is clean. zIndex
-          layering, xLo/xHi extension for the fit line, and the subtitle construction
-          all show thoughtful implementation.
+        comment: Linear regression via Array.reduce is clean; post-render annotation
+          via renderer.text() is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: '//# anyplot-orientation: landscape directive present. Highcharts.chart(''container'',
-          ...) correct. animation: false on both chart and plotOptions.series. credits
-          disabled.'
+        comment: 'Highcharts.chart(''container'', ...) correct; animation: false;
+          credits disabled; no explicit width/height'
     library_mastery:
       score: 7
       max: 10
@@ -270,23 +232,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct Highcharts.chart() call, proper series types (line + scatter),
-          animation: false, credits disabled, backgroundColor: transparent, fontFamily:
-          inherit. Above the default of 3 — all idiomatic patterns followed consistently.'
+        comment: Correct scatter + line series types, zIndex layering, useHTML formatter,
+          plotOptions per-type configuration
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'useHTML: true with a custom formatter returning HTML (dual-line
-          labels with inline styling) is a distinctive Highcharts feature. Mixed series
-          types (line + scatter) in a single chart. zIndex control for layer management.
-          These go beyond what a generic charting library would offer in the same
-          way.'
-  verdict: REJECTED
+        comment: chart.renderer.text() with toPixels() for post-render annotation
+          is distinctly Highcharts; multi-line HTML x-axis formatter is a distinctive
+          Highcharts capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   - html-export
   patterns:
@@ -294,4 +254,5 @@ impl_tags:
   dataprep:
   - regression
   styling:
+  - alpha-blending
   - edge-highlighting

@@ -1,8 +1,7 @@
 // anyplot.ai
 // line-arrhenius: Arrhenius Plot for Reaction Kinetics
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: 81/100 | Created: 2026-06-24
+// Quality: 87/100 | Created: 2026-06-24
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
