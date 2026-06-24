@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: curve-dose-response
 created: '2026-03-18T22:31:38Z'
-updated: '2026-06-24T15:35:07Z'
+updated: '2026-06-24T15:43:57Z'
 generated_by: claude-sonnet
 workflow_run: 28109041135
 issue: 4556
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Sophisticated 4PL curve fitting with delta-method 95% CI computation — real pharmacological
-    math, not cosmetic
-  - 'All spec requirements met: EC50 dashed H+V reference lines, SEM error bars, top/bottom
-    asymptotes, confidence bands, 2 compounds, log x-axis'
-  - 'Correct Imprint palette (positions 1 and 2: #009E73 Atorvastatin, #C475FD Simvastatin);
-    theme-adaptive chrome correctly set in both renders'
-  - Idiomatic Altair layer composition across 4 DataFrames with alt.selection_point
-    nearest-hover and transform_filter for interactive crosshair
-  - Canvas correctly targets 3200x1800 with scale_factor=4.0 and PIL padding fallback;
-    no edge clipping in either render
-  - Real-world pharmacological context (statins with physiologically plausible EC50
-    values and response percentages)
+  - Color-matched EC50 annotations (compound-specific colors) and L-shaped clipped
+    reference lines are a sophisticated, elegant analytical design choice
+  - 'All spec requirements met: 4PL sigmoidal fit, EC50 markers, SEM error bars, 95%
+    CI bands, asymptote guides, 2 compounds, legend'
+  - Interactive hover (nearest-point selection, conditional sizing, crosshair rule)
+    uses Altair-distinctive selection API effectively
+  - 'Theme-adaptive chrome fully implemented: background, text, grid, legend-box all
+    flip correctly in both light and dark renders'
+  - 'Full Imprint palette compliance: Atorvastatin at #009E73, Simvastatin at #C475FD;
+    data colors identical across themes'
+  - Proper canvas sizing (width=620, height=320, scale_factor=4.0) with pad-only PIL
+    guard prevents over/undersize
+  - Realistic pharmacology scenario (Atorvastatin vs Simvastatin) with plausible EC50
+    values and Hill slopes
   weaknesses:
-  - 'Title format is wrong: renders as ''curve-dose-response · altair · pyplots.ai''
-    but must be ''curve-dose-response · python · altair · anyplot.ai'' — missing ''python''
-    language component AND wrong domain name (''pyplots.ai'' vs ''anyplot.ai''). Fix:
-    change title string to ''curve-dose-response · python · altair · anyplot.ai'''
-  - CI confidence bands are too faint (opacity=0.12) — barely perceptible in the light
-    render, especially for Atorvastatin (green). Increase CI band opacity to 0.20–0.25
-    so the uncertainty envelope is clearly visible without overwhelming the fitted
-    line
-  - 'Design excellence could be stronger: the chart is technically sophisticated but
-    visually it reads as a well-configured default. Consider subtle improvements:
-    slightly increase EC50 label font size from 9 to 10–11, ensure asymptote lines
-    at opacity=0.3 are noticeable (maybe 0.4)'
+  - Data points are slightly small for sparse data density (10 points per compound,
+    ~20 total) — Altair mark_point size=50 renders as small circles; increase to size=80-120
+    for better visibility at mobile widths
+  - 'DE-01: Design is competent and above defaults but not fully publication-ready;
+    EC50 label fontSize=11 could be 12-13 for slightly better mobile legibility'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct Imprint surface color, not pure white.
-      Chrome: Title 'curve-dose-response · altair · pyplots.ai' in bold dark ink at ~16px is clearly readable (though wrong format — missing 'python', wrong domain). Subtitle '4-Parameter Logistic Fit with 95% Confidence Intervals' in INK_SOFT readable. X-axis label 'log₁₀ Concentration (M)' and Y-axis label 'Response (%)' are descriptive and readable. Tick labels (-9.0 through -4.0, 0–100) in INK_SOFT clearly readable. Legend ('Compound', 'Atorvastatin', 'Simvastatin') readable with ELEVATED_BG fill and INK_SOFT border.
-      Data: Atorvastatin sigmoid in #009E73 (brand green), Simvastatin in #C475FD (lavender) — correct Imprint positions 1 and 2. Fitted curves prominent (strokeWidth=2.5). Data points with white outlines clearly visible. SEM error bars visible. EC50 dashed L-shaped reference lines readable with matched colors. EC50 labels ('EC₅₀ = 1.1e-07 M', 'EC₅₀ = 2.9e-06 M') visible. Asymptote dashed lines at opacity=0.3 faintly visible. CI bands at opacity=0.12 are very subtle — barely visible as light colored shading around each curve.
-      Legibility verdict: PASS — all primary text elements readable; EC50 annotation labels small (fontSize=9) but legible at full resolution.
+      Background: Warm off-white #FAF8F1 — correct Imprint light surface
+      Chrome: Title "curve-dose-response · python · altair · anyplot.ai" left-aligned at ~65% width, dark ink color. Subtitle "4-Parameter Logistic Fit with 95% Confidence Intervals" in secondary ink. Axis labels "log₁₀ Concentration (M)" (X) and "Response (%)" (Y) in dark ink, well-proportioned. Tick labels at -9 through -4 (X) and 0/20/40/60/80/100 (Y) in secondary ink color, clearly readable. Legend "Compound" box with elevated background and border in upper-right.
+      Data: Two sigmoidal curves — Atorvastatin in #009E73 (brand green), Simvastatin in #C475FD (Imprint lavender). 95% CI shaded bands at opacity=0.22 subtly visible around each curve. Data points as filled circles with white stroke on each curve. Error bars (SEM) visible at each concentration. L-shaped dashed reference lines in compound colors pointing to EC50 intersections. EC50 labels "EC₅₀ = 1.1e-07 M" (green) and "EC₅₀ = 2.9e-06 M" (lavender) at intersection points. Dashed asymptote lines at top and bottom of each curve.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct Imprint dark surface, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels all render in light off-white/cream (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected. Legend has ELEVATED_BG (#242420) fill with INK_SOFT border, text in light tones — readable. All chrome correctly adapts to dark theme.
-      Data: Both compound colors identical to light render — #009E73 Atorvastatin (green) and #C475FD Simvastatin (lavender) unchanged as required. CI bands slightly more visible on dark bg due to higher relative contrast. Data points, curves, EC50 lines, asymptotes all present and readable.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements readable; brand green #009E73 clearly visible on dark surface.
+      Background: Warm near-black #1A1A17 — correct Imprint dark surface
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8) — fully visible against dark background. Axis labels and tick labels in secondary light ink (#B8B7B0) — all clearly readable. Legend box with elevated dark background (#242420) and lighter border. No dark-on-dark failures observed.
+      Data: Atorvastatin in #009E73, Simvastatin in #C475FD — colors IDENTICAL to light render (only chrome flipped). CI bands, data points, error bars, reference lines, asymptotes, and EC50 labels all preserve their compound colors and are clearly visible against the dark surface.
+      Legibility verdict: PASS — all text readable against near-black background; brand green #009E73 fully visible in dark theme
   criteria_checklist:
     visual_quality:
       score: 28
@@ -62,80 +57,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, subtitle=11, axis=12, tick=10);
-          readable in both themes. Minor deduction: EC50 annotation labels at fontSize=9
-          are small at mobile widths.'
+        comment: All font sizes explicitly set and readable in both themes. EC50 annotation
+          labels at fontSize=11 are slightly small for mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; EC50 labels positioned with dx=5, dy=-10
-          offset to avoid intersection.
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Curves, points, error bars clearly visible. CI bands at opacity=0.12
-          are very subtle — barely perceptible in light render, especially for Atorvastatin.
+        comment: Fitted curves and CI bands prominent; scatter points at size=50 are
+          visible but on the small side for sparse data (~20 total points)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1+2 (#009E73, #C475FD) are CVD-safe; adequate
-          luminance contrast against both backgrounds.'
+        comment: Green and lavender have good hue separation for CVD
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 3200x1800 landscape with PIL padding. Good canvas
-          utilization, balanced margins, no overflow.
+        comment: Canvas gate passed; good proportions and layout; legend well-placed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''log₁₀ Concentration (M)'', Y: ''Response (%)'' — descriptive
-          with units.'
+        comment: log₁₀ Concentration (M) and Response (%) both include units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD — correct Imprint order. Background
-          #FAF8F1/#1A1A17 correct. All chrome theme-adaptive in both renders.'
+        comment: 'First series #009E73, second #C475FD (Imprint positions 1-2). Backgrounds
+          #FAF8F1/#1A1A17. Chrome correctly adaptive in both themes.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: custom CI bands, color-matched EC50
-          annotations with opacity layering, subtitle. Not publication-ready but clearly
-          thoughtful.'
+        comment: 'Strong design: color-matched EC50 labels, L-shaped reference lines,
+          elevated legend box, CI bands — clearly above defaults; not yet Nature-figure
+          level'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: strokeWidth=0 removes chart box; grid opacity=0.12 is subtle; domain/tick
-          colors set to INK_SOFT. Positive refinement beyond defaults.
+        comment: Grid at opacity=0.12 subtle; view border removed (strokeWidth=0);
+          opacities carefully tuned for reference elements; clean overall
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 dashed reference lines guide the eye to the key pharmacological
-          insight; color-matched labels reinforce compound identity; potency comparison
-          (1.1e-7 vs 2.9e-6 M) is clear.
+        comment: 'L-shaped EC50 reference lines create clear focal points; visual
+          hierarchy: curves > points > references > grid. Viewer immediately understands
+          potency comparison.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,30 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL logistic fit.
+        comment: Correct sigmoidal dose-response with 4PL model
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x-axis, 4PL fit, EC50 H+V dashed lines, SEM error bars, top/bottom
-          asymptotes, 2 compounds, 95% CI band, legend — all present.
+        comment: Log x-axis, 4PL fit, EC50 markers, SEM error bars, asymptote guides,
+          2 compounds, CI band, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: log₁₀ concentration, Y: response %; all data visible across full
-          concentration range.'
+        comment: X=log10 concentration, Y=response, full range visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is 'curve-dose-response · altair · pyplots.ai' — wrong. Should
-          be 'curve-dose-response · python · altair · anyplot.ai'. Missing 'python'
-          language component; wrong domain 'pyplots.ai' vs 'anyplot.ai'. Legend labels
-          (Atorvastatin, Simvastatin) are correct.
+        passed: true
+        comment: 'Title: curve-dose-response · python · altair · anyplot.ai; legend
+          shows Atorvastatin and Simvastatin'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dose-response curve aspects: fitted sigmoid, raw data
-          with SEM, CI band, EC50 reference, asymptotes, 2-compound comparison.'
+        comment: 'Shows all aspects: fitted curves, raw data, error bars, CI bands,
+          EC50 annotations, asymptotes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real statin drugs (Atorvastatin, Simvastatin) in pharmacological
-          inhibition assay — neutral scientific context.
+        comment: Real compounds (Atorvastatin, Simvastatin), pharmacologically plausible
+          EC50 values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EC50 values (100 nM Atorvastatin, 3 µM Simvastatin) are physiologically
-          plausible for statins; response 0–100% appropriate for inhibition assay.
+        comment: Concentrations 1e-9 to 1e-4 M, EC50 at 1.1e-7 and 2.9e-6 M are realistic
+          statin values
     code_quality:
       score: 10
       max: 10
@@ -201,64 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural code; logistic_4pl function is mathematically necessary,
-          not over-engineering.
+        comment: Linear flow; logistic_4pl helper is necessary for curve_fit
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) used.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, PIL.Image, scipy.optimize.curve_fit,
-          scipy.stats.t.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; Jacobian-based CI computation is mathematically
-          rigorous.
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert layer composition, resolve_scale, configure_*, proper encoding
+          types
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong idiomatic Altair: layer composition with +, proper encoding
-          types (Q/N), resolve_scale for multi-DataFrame consistency, alt.condition
-          for conditional encoding.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Uses distinctly Altair features: alt.selection_point(nearest=True,
-          on=''pointerover''), transform_filter for hover crosshair, alt.condition
-          for size interaction, resolve_scale(color=''independent'').'
-  verdict: REJECTED
+        comment: 'Altair-specific: selection_point(nearest=True), alt.condition for
+          conditional sizing, transform_filter, layer + operator with 11 layers, HTML
+          export'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   - pillow
   techniques:
-  - layer-composition
   - hover-tooltips
-  - html-export
+  - layer-composition
   - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
