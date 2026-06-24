@@ -1,20 +1,47 @@
-""" pyplots.ai
+"""anyplot.ai
 titration-curve: Acid-Base Titration Curve
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-21
+Library: plotly | Python
+Quality: 90/100 | Regen
 """
+
+import os
+import sys
+
+
+# Prioritize venv's site-packages over current directory
+if sys.prefix not in sys.path:
+    import site
+
+    site_packages = site.getsitepackages()
+    if isinstance(site_packages, list):
+        sys.path = site_packages + sys.path
+    else:
+        sys.path.insert(0, site_packages)
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
+# Theme — Imprint palette chrome tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+
+# Imprint categorical palette — 8 hues, theme-independent
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
 # Data — 25 mL of 0.1 M HCl titrated with 0.1 M NaOH
 c_acid = 0.1
 v_acid = 25.0
 c_base = 0.1
-volume_ml = np.concatenate([np.linspace(0.0, 24.0, 80), np.linspace(24.0, 26.0, 30), np.linspace(26.0, 50.0, 50)])
-volume_ml = np.unique(volume_ml)
+volume_ml = np.unique(
+    np.concatenate([np.linspace(0.0, 24.0, 80), np.linspace(24.0, 26.0, 30), np.linspace(26.0, 50.0, 50)])
+)
 
 ph = np.zeros_like(volume_ml)
 for i, v in enumerate(volume_ml):
@@ -22,193 +49,184 @@ for i, v in enumerate(volume_ml):
     moles_acid = c_acid * v_acid / 1000.0
     moles_base = c_base * v / 1000.0
     diff = moles_acid - moles_base
-
     if diff > 1e-10:
-        h_conc = diff / total_vol
-        ph[i] = -np.log10(h_conc)
+        ph[i] = -np.log10(diff / total_vol)
     elif diff < -1e-10:
-        oh_conc = -diff / total_vol
-        poh = -np.log10(oh_conc)
-        ph[i] = 14.0 - poh
+        ph[i] = 14.0 + np.log10(-diff / total_vol)
     else:
         ph[i] = 7.0
 
 ph = np.clip(ph, 0, 14)
 
-# Derivative (dpH/dV) using central differences
+# Derivative — log-scaled on secondary axis to reveal both the spike and subtle
+# pre/post-equivalence variation (linear scale compressed everything to near zero)
 dph_dv = np.gradient(ph, volume_ml)
+dph_dv_log = np.clip(dph_dv, 1e-4, None)
 
-# Equivalence point — theoretical value for strong acid/strong base
+# Equivalence point (strong acid/base: pH 7 at 25 mL)
 eq_volume = 25.0
 eq_ph = 7.0
 
-# Buffer region — where pH changes slowly (flat part of the curve)
-# For strong acid/base: the region before the steep transition where excess acid buffers
-buffer_start = 5.0
-buffer_end = 20.0
-buffer_mask_pre = (volume_ml >= buffer_start) & (volume_ml <= buffer_end)
+# Excess acid region — gradual pH change zone before the steep transition
+# Renamed from "Buffer Region": strong acid-base titrations have no true buffer capacity
+ea_start, ea_end = 5.0, 20.0
+ea_mask = (volume_ml >= ea_start) & (volume_ml <= ea_end)
 
-# Plot — dual y-axis
+# Figure
 fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-# Buffer region shading via filled area
-buffer_vols = volume_ml[buffer_mask_pre]
-buffer_phs = ph[buffer_mask_pre]
-if len(buffer_vols) > 0:
-    fig.add_trace(
-        go.Scatter(
-            x=np.concatenate([buffer_vols, buffer_vols[::-1]]),
-            y=np.concatenate([buffer_phs, np.full(len(buffer_phs), 0.0)]),
-            fill="toself",
-            fillcolor="rgba(48, 105, 152, 0.12)",
-            line={"width": 0},
-            name="Buffer Region",
-            showlegend=True,
-            hoverinfo="skip",
-        ),
-        secondary_y=False,
-    )
-    # Buffer region label centered in shaded area
-    fig.add_annotation(
-        x=(buffer_start + buffer_end) / 2,
-        y=2.8,
-        text="Buffer Region",
-        showarrow=False,
-        font={"size": 16, "color": "rgba(48, 105, 152, 0.8)", "family": "Arial"},
-    )
+# Excess acid region shading
+ea_v = volume_ml[ea_mask]
+ea_p = ph[ea_mask]
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([ea_v, ea_v[::-1]]),
+        y=np.concatenate([ea_p, np.zeros(len(ea_p))]),
+        fill="toself",
+        fillcolor="rgba(68,103,163,0.10)",
+        line={"width": 0},
+        name="Excess Acid Region",
+        hoverinfo="skip",
+    ),
+    secondary_y=False,
+)
 
-# Main pH curve
+# pH curve — Imprint pos 1 (brand green), always first series
 fig.add_trace(
     go.Scatter(
         x=volume_ml,
         y=ph,
         mode="lines",
         name="pH",
-        line={"color": "#306998", "width": 3.5},
+        line={"color": IMPRINT[0], "width": 3.0},
         hovertemplate="Volume: %{x:.1f} mL<br>pH: %{y:.2f}<extra></extra>",
     ),
     secondary_y=False,
 )
 
-# Derivative curve
+# Derivative curve — Imprint pos 2 (lavender), log scale reveals shape throughout
 fig.add_trace(
     go.Scatter(
         x=volume_ml,
-        y=dph_dv,
+        y=dph_dv_log,
         mode="lines",
         name="dpH/dV",
-        line={"color": "#E8873A", "width": 2.5, "dash": "dot"},
-        hovertemplate="Volume: %{x:.1f} mL<br>dpH/dV: %{y:.2f}<extra></extra>",
+        line={"color": IMPRINT[1], "width": 2.5, "dash": "dot"},
+        hovertemplate="Volume: %{x:.1f} mL<br>dpH/dV: %{y:.3f} mL⁻¹<extra></extra>",
     ),
     secondary_y=True,
 )
 
-# Equivalence point vertical line
-fig.add_vline(x=eq_volume, line_dash="dash", line_color="rgba(120, 120, 120, 0.5)", line_width=1.5)
-
-# Equivalence point marker
+# Equivalence point marker + vertical reference + annotation
+fig.add_vline(x=eq_volume, line_dash="dash", line_color=INK_MUTED, line_width=1.5)
 fig.add_trace(
     go.Scatter(
         x=[eq_volume],
         y=[eq_ph],
         mode="markers",
         name="Equivalence Point",
-        marker={"size": 14, "color": "#D64545", "symbol": "diamond", "line": {"width": 2, "color": "white"}},
+        marker={"size": 14, "color": IMPRINT[4], "symbol": "diamond", "line": {"width": 2, "color": PAGE_BG}},
         showlegend=False,
         hovertemplate="Equivalence Point<br>%{x:.1f} mL, pH %{y:.1f}<extra></extra>",
     ),
     secondary_y=False,
 )
-
-# Equivalence point annotation — offset to avoid overlap with derivative spike
 fig.add_annotation(
     x=eq_volume,
     y=eq_ph,
     text=f"Equivalence Point<br>{eq_volume:.1f} mL, pH {eq_ph:.1f}",
     showarrow=True,
     arrowhead=2,
-    arrowsize=1,
     arrowwidth=1.5,
-    arrowcolor="#666666",
+    arrowcolor=INK_SOFT,
     ax=90,
-    ay=-70,
-    font={"size": 16, "color": "#333333", "family": "Arial"},
-    bgcolor="rgba(255, 255, 255, 0.85)",
-    bordercolor="rgba(100, 100, 100, 0.3)",
+    ay=-60,
+    font={"size": 10, "color": INK, "family": "Arial"},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=6,
 )
 
-# Style
+# Region label
+fig.add_annotation(
+    x=(ea_start + ea_end) / 2,
+    y=1.8,
+    text="Excess Acid Region",
+    showarrow=False,
+    font={"size": 10, "color": INK_MUTED, "family": "Arial"},
+)
+
+# Layout — canvas: width=800 height=450 scale=4 → 3200×1800 px
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "HCl + NaOH Titration · titration-curve · plotly · pyplots.ai",
-        "font": {"size": 28, "family": "Arial", "color": "#2a2a2a"},
+        "text": "HCl + NaOH Titration · titration-curve · plotly · anyplot.ai",
+        "font": {"size": 16, "family": "Arial", "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK, "family": "Arial"},
     legend={
-        "font": {"size": 18, "family": "Arial"},
+        "font": {"size": 10, "family": "Arial", "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
-        "bgcolor": "rgba(255, 255, 255, 0.9)",
-        "bordercolor": "rgba(200, 200, 200, 0.5)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 90, "t": 100, "b": 80},
-    plot_bgcolor="rgba(250, 250, 252, 1)",
+    margin={"l": 80, "r": 90, "t": 80, "b": 60},
     hovermode="x unified",
 )
 
 fig.update_xaxes(
-    title={"text": "Volume of NaOH added (mL)", "font": {"size": 22, "family": "Arial"}},
-    tickfont={"size": 18, "family": "Arial"},
+    title={"text": "Volume of NaOH added (mL)", "font": {"size": 12, "family": "Arial", "color": INK}},
+    tickfont={"size": 10, "family": "Arial", "color": INK_SOFT},
     showgrid=False,
     showline=True,
     linewidth=1,
-    linecolor="#CCCCCC",
+    linecolor=INK_SOFT,
     zeroline=False,
     ticks="outside",
-    tickwidth=1,
-    tickcolor="#CCCCCC",
     ticklen=5,
+    tickcolor=INK_SOFT,
 )
 
 fig.update_yaxes(
-    title={"text": "pH", "font": {"size": 22, "family": "Arial"}},
-    tickfont={"size": 18, "family": "Arial"},
+    title={"text": "pH", "font": {"size": 12, "family": "Arial", "color": INK}},
+    tickfont={"size": 10, "family": "Arial", "color": INK_SOFT},
     range=[0, 14],
+    dtick=2,
     showgrid=True,
     gridwidth=1,
-    gridcolor="rgba(0, 0, 0, 0.06)",
+    gridcolor=GRID,
     showline=True,
     linewidth=1,
-    linecolor="#CCCCCC",
+    linecolor=INK_SOFT,
     zeroline=False,
     ticks="outside",
-    tickwidth=1,
-    tickcolor="#CCCCCC",
     ticklen=5,
-    dtick=2,
+    tickcolor=INK_SOFT,
     secondary_y=False,
 )
 
 fig.update_yaxes(
-    title={"text": "dpH/dV (mL⁻¹)", "font": {"size": 22, "family": "Arial"}},
-    tickfont={"size": 18, "family": "Arial"},
+    title={"text": "dpH/dV (mL⁻¹, log)", "font": {"size": 12, "family": "Arial", "color": INK}},
+    tickfont={"size": 10, "family": "Arial", "color": INK_SOFT},
+    type="log",
     showgrid=False,
     showline=True,
     linewidth=1,
-    linecolor="#CCCCCC",
+    linecolor=INK_SOFT,
     zeroline=False,
     ticks="outside",
-    tickwidth=1,
-    tickcolor="#CCCCCC",
     ticklen=5,
+    tickcolor=INK_SOFT,
     secondary_y=True,
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
