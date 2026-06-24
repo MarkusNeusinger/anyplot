@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 76/100 | Updated: 2026-06-24
@@ -26,6 +26,7 @@ from lets_plot import (
     theme,
 )
 from lets_plot.export import ggsave
+from PIL import Image, ImageDraw
 
 
 LetsPlot.setup_html()
@@ -36,6 +37,18 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+
+def _fix_canvas_margin(path, bg_color):
+    """Replace letsplot's white outer canvas margin with bg_color via edge flood-fill."""
+    img = Image.open(path).convert("RGB")
+    w, h = img.size
+    bg_tuple = tuple(int(bg_color[i : i + 2], 16) for i in (1, 3, 5))
+    for corner in [(0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)]:
+        if all(c >= 245 for c in img.getpixel(corner)):
+            ImageDraw.floodfill(img, corner, bg_tuple, thresh=10)
+    img.save(path)
+
 
 # Imprint sequential gradient: background → brand green → blue (single-polarity energy)
 SEQ_COLORS = [PAGE_BG, "#009E73", "#4467A3"]
@@ -95,7 +108,7 @@ plot = (
         .line("@pitch_name at @time s")
         .line("Energy: @energy")
     )
-    + scale_fill_gradientn(colors=SEQ_COLORS, name="Energy", guide=guide_colorbar(barwidth=14, barheight=260, nbin=256))
+    + scale_fill_gradientn(colors=SEQ_COLORS, name="Energy", guide=guide_colorbar(barwidth=14, barheight=170, nbin=256))
     + scale_x_continuous(
         name="Time (seconds)", breaks=list(np.arange(0, n_frames * frame_duration + 0.5, 1.0)), expand=[0, 0]
     )
@@ -123,4 +136,5 @@ plot = (
 
 # Save — scale=4 produces 3200×1800 px from ggsize(800, 450)
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+_fix_canvas_margin(f"plot-{THEME}.png", PAGE_BG)
 ggsave(plot, f"plot-{THEME}.html", path=".")
