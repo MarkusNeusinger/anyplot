@@ -1,0 +1,274 @@
+library: d3
+language: javascript
+specification_id: curve-dose-response
+created: '2026-06-24T15:46:23Z'
+updated: '2026-06-24T16:05:42Z'
+generated_by: claude-sonnet
+workflow_run: 28110102518
+issue: 4556
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All spec requirements fully met: 4PL sigmoidal curve, EC50/IC50 reference lines
+    with labeled annotations, 95% CI band for Compound A, error bars (SEM), asymptote
+    dashed lines, two compounds for comparison, and log-scaled x-axis'
+  - 'Correct Imprint palette usage — Compound A in brand green #009E73 (palette[0]),
+    Compound B in lavender #C475FD (palette[1]); theme-adaptive chrome tokens applied
+    correctly to all non-data elements'
+  - 'D3-idiomatic implementation: clipPath for data containment, d3.area() with curveCatmullRom
+    for smooth CI band, d3.scaleLog() with custom tick formatter (nM/µM labels), d3.line()
+    for fitted curves, proper data-join pattern throughout'
+  - 'Both themes render correctly — light background #FAF8F1 and dark background #1A1A17
+    with appropriate text/grid tokens; data colors identical across themes'
+  - 'Pharmacologically realistic data: Compound A (EC50=100 nM, Hill=1.5) vs Compound
+    B (EC50=500 nM, Hill=0.9) illustrates potency and cooperativity differences; 9
+    concentrations spanning 4 orders of magnitude'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "curve-dose-response · javascript · d3 · anyplot.ai" at 22px in dark ink, clearly readable at ~70% canvas width. X-axis label "Concentration" and Y-axis label "% Inhibition" at 16px both fully visible. Tick labels (1 nM, 10 nM, 100 nM, 1 µM, 10 µM on x; 0%–100% on y) at 14px are legible. IC50 annotations at 14px readable though slightly small. Legend box has elevated cream background (#FFFDF6) with both compound entries visible.
+      Data: Compound A in brand green #009E73 — sigmoidal curve from ~2% to ~97% with smooth catmullRom interpolation, green CI band at 20% opacity, and green data markers (r=6) with pageBg stroke. Compound B in lavender #C475FD — sigmoidal curve rising to ~92% plateau, lavender data markers. Dashed EC50 reference lines for both compounds (vertical + horizontal at half-maximal response). IC50 annotations: "IC₅₀ = 100 nM" in green, "IC₅₀ = 500 nM" in lavender. Horizontal dashed asymptote lines for top and bottom plateaus of both compounds. Error bars (SEM) clearly visible on all data points.
+      Legibility verdict: PASS — all text elements readable against the warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title visible in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in theme-appropriate light-gray text (t.inkSoft = #B8B7B0), all legible against the dark background. No dark-on-dark failures detected. Legend box has elevated dark background (#242420) with light-colored text entries. Grid lines subtle but visible.
+      Data: Compound A green #009E73 — identical to light render; CI band uses same green at 20% opacity which pops nicely against the dark surface. Compound B lavender #C475FD — identical color to light render. EC50 reference lines, data markers, asymptote dashed lines all visually identical to light render; only chrome colors flip.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; brand green #009E73 clearly visible on the dark surface as expected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks/annotations/legend). All readable in both themes. Minor deduction:
+          IC50 annotations at 14px are the same size as tick labels — for key pharmacological
+          values, 16–18px would provide appropriate visual prominence.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements. IC50 annotations
+          are offset (+7px right, -9px up) from the EC50 crossing point and remain
+          clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (9 points/compound) — r=6 markers appropriately prominent.
+          Fitted curves at stroke-width 3 clearly visible. Error bars at 1.5px visible.
+          CI band at 20% opacity subtly present.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Green #009E73 and lavender #C475FD are CVD-safe and perceptually
+          distinct. Not a red-green pairing. Marker strokes using pageBg add definition.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Margins (80 top, 60 right, 90 bottom, 100
+          left) provide generous breathing room. Nothing clipped. Title at ~70% of
+          canvas width is expected for the mandated format. Balanced axis labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''% Inhibition'' has unit. X-axis: ''Concentration'' acceptable
+          as tick labels provide units (nM/µM). Title format correct: ''curve-dose-response
+          · javascript · d3 · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Compound A uses t.palette[0] = #009E73. Second series
+          uses t.palette[1] = #C475FD. Light bg #FAF8F1, dark bg #1A1A17. All chrome
+          uses t.ink/t.inkSoft/t.grid tokens. Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above the default (4): CI band with translucent fill adds depth;
+          EC50 reference lines with annotated values show intentional design; custom
+          legend box with elevated background and mixed swatch (CI rect + line + dot).
+          Not quite ''clearly above defaults'' (6) as the overall composition doesn''t
+          significantly transcend a well-configured library plot.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame (only left + bottom axes), subtle gridlines
+          using t.grid token, clipPath for clean data boundary (D3 refinement), data
+          markers with pageBg stroke for visual separation. Asymptote lines at restrained
+          opacity (0.3–0.4). Above defaults but not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EC50 annotations directly label key pharmacological findings (IC50
+          = 100 nM vs 500 nM), creating an actionable narrative. CI band for Compound
+          A communicates analytical confidence. Visual comparison between compounds
+          with different potency and hill slopes guides the reader to a clear conclusion.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: sigmoidal dose-response curve with 4PL model, two compounds.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: log x-axis (d3.scaleLog), 4PL model,
+          EC50 dashed reference lines (horizontal + vertical), error bars (SEM), asymptote
+          dashed lines, 2 compounds, legend, 95% CI band for Compound A.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on log-scaled x-axis, % inhibition on y-axis. All 9
+          data points per compound shown. Curves span full domain.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''curve-dose-response · javascript · d3 · anyplot.ai'' —
+          correct format. Legend: ''Compound A (95% CI)'' and ''Compound B'' clearly
+          labeled.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all pharmacological features: sigmoidal curves, EC50 values,
+          hill slopes, top/bottom asymptotes, CI band, error bars. Two compounds with
+          meaningfully different potency (5× difference) and cooperativity (hill 1.5
+          vs 0.9).'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Pharmacologically realistic: EC50 = 100 nM (Compound A) and 500
+          nM (Compound B) are typical in vitro potency values. Neutral scientific
+          context. No controversial content.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentration range 1 nM–10 µM appropriate for drug screening. Response
+          0–100% inhibition is standard. SEM values 1–3% reflect realistic experimental
+          variability. EC50 values in the physiologically meaningful range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes. Two helper functions (fourPL, ciHalfWidth) are justified
+          mathematical utilities for data generation, not abstraction overhead. Linear
+          draw order.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data arrays (noiseA, noiseB, semA, semB).
+          No RNG. Fully deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global used (no extraneous imports). window.ANYPLOT_TOKENS
+          and window.ANYPLOT_SIZE consumed appropriately.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code. Good use of D3 patterns. No fake interactivity.
+          Logical grouping of elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is an interactive library — harness generates both plot-{theme}.png
+          and plot-{theme}.html. Uses current window.ANYPLOT_TOKENS API correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong D3 idioms: d3.scaleLog(), d3.area() with curveCatmullRom,
+          d3.line(), d3.axisBottom/axisLeft with custom tickValues/tickFormat, data-join
+          pattern via .selectAll().data().join(), clipPath for boundary. Above default
+          (3) but not expert-level (5).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses several D3-distinctive features: clipPath (SVG/D3-native),
+          d3.area() with catmullRom interpolation, d3.scaleLog() with custom tick
+          formatter, multiple layered data joins. Above default (1) but not exceptional
+          (5).'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
