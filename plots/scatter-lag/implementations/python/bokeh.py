@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-06-24
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-24
 """
 
 import os
