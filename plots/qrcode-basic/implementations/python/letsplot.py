@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
-Library: letsplot 4.8.2 | Python 3.14.3
-Quality: 90/100 | Updated: 2026-06-24
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-24
 """
 
 import os
