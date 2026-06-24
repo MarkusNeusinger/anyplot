@@ -1,7 +1,7 @@
 # anyplot.ai
 # qrcode-basic: Basic QR Code Generator
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-06-24
+# Quality: 94/100 | Created: 2026-06-24
 
 using CairoMakie
 using Colors

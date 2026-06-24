@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: qrcode-basic
 created: '2026-06-24T17:27:28Z'
-updated: '2026-06-24T17:33:44Z'
+updated: '2026-06-24T17:50:04Z'
 generated_by: claude-sonnet
 workflow_run: 28116393626
 issue: 3184
@@ -12,112 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Full spec compliance: correct QR encoder (QRCoders.jl), ISO/IEC 18004 quiet zone
-    (4 modules), M error correction, all finder patterns present'
-  - 'Thoughtful theme adaptation: QR axis background kept at #FFFDF6 for scanner reliability
-    while outer chrome adapts correctly to both light and dark themes'
-  - 'Idiomatic Makie usage: yreversed=true for correct top-left matrix origin, DataAspect()
-    for equal aspect ratio, binary heatmap colormap with colorrange enforcement'
-  - 'Excellent code quality: KISS flat script, idiomatic Julia broadcasting for matrix
-    padding, deterministic output, clean imports'
-  - X-label repurposed as an informative subtitle showing encoded URL and error correction
-    level
+  - 'Technically flawless QR code implementation with all ISO-mandated features: quiet
+    zone (4 modules per ISO/IEC 18004), finder patterns in three corners, medium error
+    correction (15%), and a proper QR encoding library (QRCoders.jl)'
+  - 'Smart dual-surface design: maintains scanner-reliable QR contrast (dark modules
+    on warm-white inner background) while correctly adapting all page chrome to both
+    light and dark themes'
+  - Informative xlabel repurposed as a caption line providing URL and error correction
+    context without cluttering the visualization
+  - Clean, minimal code with zero unnecessary complexity — linear structure, deterministic,
+    all imports used
   weaknesses:
-  - xlabel (footer) at xlabelsize=13pt logical is slightly small for the 2400px canvas
-    — increase to 15pt for better readability at mobile widths
-  - DE could be elevated by adding a descriptive title prefix (e.g. "Encode URL as
-    QR Code · qrcode-basic · julia · makie · anyplot.ai") to fill ~70% of canvas width
-    and provide more context
+  - 'DE-03 limited by format: QR code visualisations have a low ceiling for data storytelling;
+    the current title/caption approach is good but leaves little room for additional
+    visual hierarchy'
+  - 'LM-02: xlabel is repurposed as a caption — technically functional but not idiomatic
+    Makie layout; a Label(fig[2,1], ...; tellwidth=false) below the axis would be
+    more canonical'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 outer page; QR code area on elevated cream #FFFDF6 axis background (card effect)
-      Chrome: Title "qrcode-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17) — clearly readable; footer "Encodes: https://anyplot.ai · Error correction: M (15%)" in INK_SOFT (#4A4A44) — readable
-      Data: Near-black (#1A1A17) QR modules on cream background; three finder patterns prominent; quiet zone (4 modules) cleanly rendered; all axis chrome hidden
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) outer page surface — correct, not pure white
+      QR area: Elevated warm-white inner card (#FFFDF6) occupying ~70% of canvas centre
+      Chrome: Title "Encode URL as QR Code · qrcode-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17) above the QR card; xlabel "Encodes: https://anyplot.ai · Error correction: M (15%)" in muted ink (#4A4A44) below
+      Data: QR modules rendered in near-black (#1A1A17) on warm-white inner background; high contrast; finder patterns clearly visible in three corners; quiet zone (4 modules) correctly applied
+      Legibility verdict: PASS — all text dark on light background, fully readable
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 outer page; QR code axis area preserves cream #FFFDF6 background (intentional for scanner reliability)
-      Chrome: Title in light #F0EFE8 — clearly readable against dark outer background; footer in #B8B7B0 — readable; no dark-on-dark text failures
-      Data: QR module colors identical to light render (dark modules on cream) — only outer page chrome changes; data patterns unchanged
-      Legibility verdict: PASS — all text readable; dark-on-dark check passed; QR code contrast preserved in both themes
+      Background: Warm near-black (#1A1A17) outer page surface — correct, not pure black
+      QR area: Inner card retains warm-white (#FFFDF6) — intentional for scanner reliability
+      Chrome: Title in light ink (#F0EFE8) above QR card; xlabel in muted light (#B8B7B0) below — both readable against dark outer background
+      Data: QR module colors (dark #1A1A17 on warm-white #FFFDF6) identical to light render — only page chrome flipped
+      Legibility verdict: PASS — no dark-on-dark failures; title and xlabel both clearly visible on dark page background
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title and footer readable in both themes; xlabelsize=13pt logical
-          slightly small for 2400px canvas
+        comment: Title, xlabel, and base fontsize all explicitly set; proportional
+          at 2400x2400 px; no tick labels needed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — minimal chrome by design
+        comment: Title above, xlabel below, QR matrix in centre — zero collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: QR code crisp and high-contrast; all modules clearly distinct
+        comment: QR modules high-contrast, large, and crisp; quiet zone gives excellent
+          visual separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Near-black on cream — maximum contrast for accessibility and scanning
+        comment: Binary black-on-white QR code is maximum contrast and inherently
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas; good proportions; quiet zone present; centered
-          QR code
+        comment: Square 2400x2400 optimal for symmetric QR code; QR fills ~70% of
+          canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; x-label repurposed as informational subtitle
+        comment: 'xlabel repurposed as informative caption: URL and error correction
+          level clearly stated'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Page backgrounds correct (#FAF8F1/#1A1A17); QR uses ink/elevated
-          tokens appropriately; no Imprint palette needed for functional QR
+        comment: Theme chrome correctly adapts (PAGE_BG, INK, INK_SOFT tokens); QR
+          binary colors are functionally mandated, not palette violations
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean minimal approach; QR_BG matches elevated background token;
-          thoughtful theme adaptation
+        comment: 'Strong design: elevated warm-white QR card within theme-adaptive
+          page surface creates visual hierarchy; thoughtful scanner-safe design choice'
       - id: DE-02
         name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Perfect: all spines removed, no grid, no ticks, ISO-standard quiet
+          zone, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: All 4 spines, all ticks, all grid lines removed; generous whitespace
-          around QR code
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Informative footer label adds URL and error-correction context; limited
-          by QR code plot type
+        comment: 'Good: descriptive title prefix, informative caption xlabel; format
+          has limited ceiling for additional storytelling'
     spec_compliance:
       score: 15
       max: 15
@@ -127,50 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using QRCoders.jl for proper encoding
+        comment: 'Correct: proper QR code with all mandatory structural components'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zone 4 modules (ISO/IEC 18004), high contrast black-on-white,
-          finder patterns, M error correction
+        comment: Quiet zone (4 modules ISO/IEC 18004), finder patterns, high contrast,
+          QRCoders.jl, error correction M
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: URL correctly encoded, error correction M applied, matrix transposed
-          correctly
+        comment: URL correctly encoded; matrix transposed and y-reversed for correct
+          reading orientation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact format 'qrcode-basic · julia · makie · anyplot.ai'
+        comment: Title uses optional descriptive prefix form; no legend required for
+          single-element visualisation
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Quiet zone, finder patterns, URL content, error correction level
-          all shown; could include version number
+        comment: Complete QR code with all required structural elements; quiet zone;
+          error correction demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encodes anyplot.ai URL — highly relevant and neutral
+        comment: Encodes the real anyplot.ai URL — meaningful, neutral, directly relevant
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Single URL with M error correction — spec-recommended defaults
+        comment: URL fits within QR version capacity at M error correction; physically
+          scannable result
     code_quality:
       score: 10
       max: 10
@@ -180,55 +188,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Linear: imports -> tokens -> data -> plot -> save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic — fixed URL input, no randomness needed
+        comment: QR code generation is deterministic; no random seed required
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, QRCoders — all three used
+        comment: CairoMakie, Colors, QRCoders — all three are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Idiomatic Julia: broadcasting for matrix ops, yreversed, DataAspect;
-          no fake UI'
+        comment: Clean, well-structured with ISO-standard constants and clear intent
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png correctly
+        comment: Saves as plot-$(THEME).png; current CairoMakie API used
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: yreversed=true for top-left matrix origin, DataAspect(), heatmap
-          with binary colormap, Axis backgroundcolor
+        comment: heatmap! correct Makie primitive for matrix; DataAspect() enforces
+          1:1 pixel ratio; yreversed corrects orientation; two-stop colormap array
+          is idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Binary heatmap colormap with colorrange enforcement, Axis backgroundcolor
-          for card-like effect, DataAspect for square QR
+        comment: DataAspect(), yreversed, two-stop colormap array are Makie-specific;
+          could use Label API for caption instead of xlabel repurposing
   verdict: APPROVED
 impl_tags:
   dependencies:
   - qrcoders
-  techniques: []
+  techniques:
+  - heatmap
   patterns:
   - matrix-construction
   dataprep: []
