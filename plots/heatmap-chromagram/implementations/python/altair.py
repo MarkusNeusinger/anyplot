@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-24
@@ -88,7 +88,7 @@ heatmap = (
         x=alt.X(
             "t1:Q",
             title="Time (seconds)",
-            axis=alt.Axis(labelFontSize=16, titleFontSize=20, titlePadding=12, values=list(range(0, 25, 2))),
+            axis=alt.Axis(labelFontSize=12, titleFontSize=13, titlePadding=10, values=list(range(0, 25, 2))),
             scale=alt.Scale(domain=[0, 24.2]),
         ),
         x2="t2:Q",
@@ -96,18 +96,18 @@ heatmap = (
             "Pitch Class:N",
             title="Pitch Class",
             sort=pitch_classes,
-            axis=alt.Axis(labelFontSize=16, titleFontSize=20, titlePadding=12),
+            axis=alt.Axis(labelFontSize=12, titleFontSize=13, titlePadding=10),
         ),
         color=alt.Color(
             "Energy:Q",
             scale=alt.Scale(range=IMPRINT_SEQ),
             legend=alt.Legend(
                 title="Energy",
-                titleFontSize=16,
-                labelFontSize=14,
-                gradientLength=320,
-                gradientThickness=16,
-                titlePadding=8,
+                titleFontSize=12,
+                labelFontSize=11,
+                gradientLength=280,
+                gradientThickness=14,
+                titlePadding=6,
                 offset=10,
                 direction="vertical",
             ),
