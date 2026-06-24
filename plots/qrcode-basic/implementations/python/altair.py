@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
@@ -98,14 +98,14 @@ chart = (
         ],
     )
     .properties(
-        width=475,
-        height=475,
+        width=468,
+        height=468,
         background=PAGE_BG,
         title=alt.Title(
             "qrcode-basic · python · altair · anyplot.ai",
             subtitle="Finder Patterns (green) for corner orientation · Timing Patterns (purple) for grid alignment · Data modules (blue)",
             fontSize=16,
-            subtitleFontSize=10,
+            subtitleFontSize=11,
             subtitleColor=INK_SOFT,
             color=INK,
             anchor="middle",
