@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: bokeh | Python 3.14
-Quality: pending | Created: 2026-06-24
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-24
 """
 
 import io
