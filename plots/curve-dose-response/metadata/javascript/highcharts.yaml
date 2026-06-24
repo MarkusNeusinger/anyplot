@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: curve-dose-response
 created: '2026-06-24T15:39:21Z'
-updated: '2026-06-24T15:48:19Z'
+updated: '2026-06-24T16:02:57Z'
 generated_by: claude-sonnet
 workflow_run: 28109435969
 issue: 4556
@@ -12,42 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Custom SVG renderer error bars via chart.events.render avoid the banned highcharts-more
-    module — technically sophisticated and demonstrates deep Highcharts knowledge
-  - Deterministic LCG with fixed seeds (42, 137) provides full reproducibility in
-    the browser environment where seeded Math.random() is unavailable
-  - 'Complete spec implementation: 4PL sigmoid, 2 compounds with distinct Hill slopes
-    and EC50s, 95% CI band, SEM error bars, EC50 reference lines, asymptote lines,
-    log x-axis with superscript labels'
-  - 'Full Imprint palette compliance — first series #009E73, second #C475FD, transparent
-    background, all chrome theme-adaptive via t tokens'
-  - Pharmacologically realistic data (concentration range, EC50 values, Hill slopes)
-    with informative subtitle explaining visual elements
+  - SVG renderer error bars via chart.events.render is a true Highcharts idiom — draws
+    correct caps and tracks re-renders, destroying and redrawing c._errorBars on each
+    render call
+  - 'Full spec feature set: EC50 crosshair reference lines (vertical + horizontal),
+    asymptote lines (top per compound, shared bottom), SEM error bars, CI band, and
+    2-compound comparison all present'
+  - Deterministic LCG + Box-Muller for reproducible synthetic data in a seed-less
+    JS environment — fixed seeds 42 and 137 ensure identical renders
+  - linkedTo series properly groups scatter data points with their fitted curves for
+    correct legend toggle behavior
+  - 'Both themes pass readability: all chrome tokens (ink, inkSoft, grid, pageBg,
+    elevatedBg) correctly applied to title, axes, tick labels, and legend box'
+  - 'Thoughtful pharmacological narrative: two compounds with meaningfully different
+    potency (EC50 = 100 nM vs 500 nM) and cooperativity (Hill slope 1.5 vs 0.8) demonstrate
+    the comparison capability'
   weaknesses:
-  - 'Bottom asymptote reference line uses t.grid color (rgba(26,26,23,0.15)) — effectively
-    invisible in both renders; spec requires a visible dashed line. Fix: change color
-    to t.inkSoft with dashStyle LongDash and width 1.5'
-  - 'CI lower-bound mask series fills with t.pageBg to hide the area below the lower
-    CI, which hides grid lines in that region (visible in both renders, more prominent
-    in dark theme). Fix: remove the _ci_mask series entirely — the grid masking artifact
-    is worse than having no lower CI boundary'
-  - 'Both X and Y grid lines are enabled; for a spline line chart, Y-axis-only grid
-    is preferred for cleaner visuals. Fix: set gridLineWidth: 0 on xAxis'
+  - 'CI band is not a true symmetric confidence band: uses a single area series from
+    curve+CI_W down to axis minimum (threshold: null), shading everything below the
+    upper CI bound rather than the region between lower and upper CI bounds. Fix:
+    compute ciLowerA = curveA.map(([x,y]) => [x, Math.max(0, y-CI_W)]) and create
+    a second area series to bound the CI region from below.'
+  - 'KISS violation: 5 helper functions (fourPL, smoothCurve, makeLCG, boxMuller,
+    genMeasured) violate the no-functions rule, though mathematically justified in
+    a JS environment without numpy.'
+  - 'EC50 plot-line labels (y: -6) create visual crowding with the subtitle text —
+    the labels sit very close to the subtitle line. Fix: change y: -6 to y: 18 on
+    both EC50 A and B plotLine labels to push them below the subtitle zone.'
+  - 'Bottom asymptote shown as a single approximate line (value: 3) rather than separate
+    lines per compound (Compound A bottom ~2%, Compound B bottom ~5%).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1
-      Chrome: Bold title "curve-dose-response · javascript · highcharts · anyplot.ai" clearly readable; subtitle explaining CI band and dashed lines readable; axis labels "Concentration (M)" and "Response (%)" clear; tick labels (superscript log powers) readable; legend text readable
-      Data: Compound A in #009E73 brand green with 95% CI band (rgba(0,158,115,0.15)); Compound B in #C475FD lavender; both with scatter data points and manually-rendered SEM error bars; dashed vertical EC50 lines at 1e-7 and 5e-7; dashed horizontal top asymptote lines at 98% and 85%; bottom asymptote at 3% nearly invisible (grid color)
-      Legibility verdict: PASS — all main text readable; EC50 labels (12px) small but visible
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "curve-dose-response · javascript · highcharts · anyplot.ai" in dark ink (~70% width) readable. Subtitle "Shaded band: 95% CI for Compound A | Dashed lines: EC50 and asymptote references" in muted gray, small but readable. X-axis label "Concentration (M)" and Y-axis label "Response (%)" both clearly visible. Tick labels readable on both axes.
+      Data: First compound (Compound A) in brand green #009E73 — smooth sigmoid curve with circle scatter markers and SVG-drawn error bars. Second compound (Compound B) in lavender #C475FD — smooth sigmoid curve with square scatter markers and error bars. Green-tinted CI band fills from upper CI bound down to axis minimum (not a true symmetric band). EC50 vertical dashed lines at 10^-7 M (A) and 5x10^-7 M (B). Horizontal dashed lines at 50% (halfA), 45% (halfB), 98% (top A), 85% (top B), ~3% (bottom). Legend box (right, vertical) with background, border, listing Compound A (fit), Compound A 95% CI, Compound B (fit).
+      Legibility verdict: PASS — all text readable against light background; minor crowding between EC50 plot-line labels and subtitle text at top
 
     Dark render (plot-dark.png):
-      Background: Warm near-black approximately #1A1A17
-      Chrome: Title and subtitle in light-colored text clearly readable; axis labels in inkSoft token (light gray on dark); tick labels in inkSoft readable; legend text readable against elevated dark background; no dark-on-dark failures detected
-      Data: Colors identical to light render — #009E73 green for Compound A, #C475FD lavender for Compound B; CI band lower mask (t.pageBg fill = dark background) partially hides grid lines in the lower CI boundary region (most visible in steep inflection zone ~1e-8 to 1e-6 M); brand green #009E73 clearly visible on dark surface
-      Legibility verdict: PASS — all text readable; minor grid masking artifact from CI band lower mask
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title and all labels switch to light cream/gray tones (inkSoft tokens). Title clearly readable in light color. Axis labels, tick labels, legend text all readable against dark background. No dark-on-dark failures detected. Grid lines remain subtle on dark surface. Legend box background changes to elevated dark surface (#242420).
+      Data: Compound A still renders in #009E73 (identical to light render). Compound B still renders in #C475FD (identical to light render). Data colors unchanged — only chrome flipped. CI band visible as subtle green-tinted region on dark background. EC50 and asymptote reference lines maintain compound-matched colors.
+      Legibility verdict: PASS — all text readable against dark background; no elements lost in the dark theme
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,51 +66,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px,
-          legend 14px); EC50 labels at 12px slightly small but readable in both themes
+        comment: All font sizes explicitly set (title 22px, axis 16px, ticks/legend
+          14px). -1 for EC50 plot-line labels at 12px being slightly small and creating
+          crowding near subtitle.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements; EC50 labels in margin area
-          coexist cleanly with subtitle
+        comment: 'Minor crowding: EC50 A/B plot-line labels (y: -6) sit very close
+          to subtitle text. No severe overlap but tight spacing flagged.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All curves, scatter markers (radius 6), error bars, and reference
-          lines clearly visible in both themes
+        comment: Curves, error bars, CI band, and reference lines all clearly visible
+          at appropriate sizes for 10 data points per compound.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint palette #009E73 and #C475FD provides excellent hue separation;
-          CVD-safe'
+        comment: Imprint green/lavender combination is CVD-safe. Error bar line width
+          2px gives good visibility on both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins (90/50/90/80); CI lower-bound pageBg mask hides grid
-          lines in band region in both renders
+        comment: Canvas gate passed. Explicit margins (90/50/90/80 px). Plot fills
+          canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) both descriptive with units
+        comment: Concentration (M) and Response (%) with units on both axes.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (palette[1]); transparent background
-          shows harness-managed #FAF8F1/#1A1A17; data colors identical across themes'
+        comment: 'First compound #009E73 (brand green). Second compound #C475FD (lavender,
+          position 2). Both themes use warm off-white/near-black backgrounds with
+          theme-adaptive chrome tokens.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,23 +120,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: custom SVG error bars show Highcharts depth, CI shading
-          adds visual dimension, legend box refined; not quite publication-ready'
+        comment: 'Above defaults: styled legend box with background/border/padding,
+          informative subtitle, EC50-labeled reference lines, and CI band create a
+          layered professional visualization. Thoughtful design but not FiveThirtyEight-level
+          polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Transparent background and legend box polish are positives; full
-          XY grid (both axes) makes chart busier than needed for a spline chart
+        comment: 'Transparent background, explicit margins, no vertical grid (X axis
+          gridLineWidth: 0), Y-axis grid present (appropriate), styled legend frame.
+          Clean but not every detail polished.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 vertical lines anchor key comparison; CI band shows uncertainty;
-          subtitle explains visual language; clear pharmacological story with good
-          visual hierarchy
+        comment: EC50 crosshair reference lines guide viewer to key pharmacological
+          parameter. Compound comparison (100 nM vs 500 nM) tells a clear potency
+          story. CI band communicates uncertainty. Good visual hierarchy.
     spec_compliance:
       score: 14
       max: 15
@@ -136,32 +149,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response chart with 4PL model on logarithmic
-          x-axis
+        comment: 'Correct: two smooth 4PL sigmoidal dose-response curves on log x-axis.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: EC50 lines, error bars, top asymptotes, CI band, 2 compounds all
-          present; bottom asymptote plotLine uses t.grid color (rgba(26,26,23,0.15))
-          — effectively invisible, spec requires visible dashed line
+        comment: 'Log x-axis, 4PL curves, EC50 crosshair (vertical + horizontal dashed),
+          SEM error bars, asymptote lines, 2 compounds all present. -1: CI band uses
+          area series from upper CI bound to axis minimum (threshold: null), not a
+          proper symmetric band around the curve.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on log x-axis, response (%) on y-axis; all data correctly
-          mapped
+        comment: Concentration on log x-axis, response (%) on y-axis. Full data range
+          1 nM to 100 uM covered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title curve-dose-response · javascript · highcharts · anyplot.ai
-          matches required format; legend labels correct
+        comment: 'Title: curve-dose-response · javascript · highcharts · anyplot.ai.
+          Legend shows Compound A (fit), Compound A 95% CI, Compound B (fit).'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -169,22 +182,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with distinct Hill slopes (1.5 vs 0.8) and EC50s (100nM
-          vs 500nM); CI band; error bars; asymptote lines — full coverage
+        comment: 'Shows all features: two compounds, different EC50 (100 nM vs 500
+          nM) and Hill slopes (1.5 vs 0.8), SEM error bars, CI band, EC50 crosshairs,
+          top and bottom asymptote references.'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Pharmacological drug-potency comparison; concentration range 1nM-100uM
-          and 0-100% response are standard lab values; neutral scientific domain
+        comment: Standard pharmacology drug-potency scenario. Compound A/B naming
+          is generic but industry-appropriate for anonymized compounds. -1 for abstract
+          naming.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EC50 values, Hill slopes, SEM magnitudes, and 5-decade concentration
-          span consistent with realistic in-vitro assay data
+        comment: EC50 values in nM-uM range, Hill slopes (1.5 cooperativity, 0.8 subunitary),
+          response 0-100%, concentration 1 nM to 100 uM — all consistent with real
+          pharmacological data.
     code_quality:
       score: 9
       max: 10
@@ -194,62 +210,63 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Five helper functions (fourPL, smoothCurve, makeLCG, boxMuller, genMeasured)
-          break strict KISS; justified by browser reproducibility constraints but
-          adds structural complexity
+        comment: Uses 5 helper functions (fourPL, smoothCurve, makeLCG, boxMuller,
+          genMeasured) — violates no-functions rule. Acceptable given JS environment
+          without numpy but flagged per criteria.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG with fixed seeds (42, 137) — correct pattern for
-          browser JS
+        comment: Deterministic LCG with fixed seeds 42 and 137. Correct approach for
+          JS without seeded Math.random().
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; Highcharts is a global; all variables used
+        comment: No external imports. Only uses globally-provided window.ANYPLOT_TOKENS
+          and Highcharts.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Highcharts; SVG renderer for error bars is correct
-          approach without highcharts-more
+        comment: Well-structured, clearly commented sections, no fake UI elements.
+          SVG renderer error bars are a legitimate Highcharts technique.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness manages output; uses current Highcharts 12.6.0 API
+        comment: 'Output handled by harness. Highcharts.chart(''container'', ...)
+          called correctly. animation: false set on both chart and plotOptions.series.'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: plotLines for reference lines, linkedTo for legend grouping, useHTML
-          with superscript formatter, chart.events.render for post-render drawing
-          — all idiomatic above basic usage
+        comment: 'Expertly uses Highcharts: chart.events.render for custom SVG drawing,
+          plotLines with labels on both axes, linkedTo for series grouping, area with
+          fillColor for CI band, spline for smooth curves, scatter for data points.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: chart.events.render + SVG renderer path API for error bars is distinctly
-          Highcharts; linkedTo series relationship; useHTML axis tick formatter; CI
-          band via stacked area masking
-  verdict: REJECTED
+        comment: SVG renderer API (c.renderer.path([...]).attr({...}).add()) for error
+          bars is distinctively Highcharts. linkedTo for legend toggling is Highcharts-specific.
+          plotLines with label config is characteristic. -1 for not using arearange
+          (canonical CI band feature, requires unavailable highcharts-more).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups

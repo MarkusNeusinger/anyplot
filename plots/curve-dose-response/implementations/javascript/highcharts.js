@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-dose-response: Pharmacological Dose-Response Curve
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 86/100 | Created: 2026-06-24
+// Quality: 87/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
