@@ -1,3 +1,7 @@
+// anyplot.ai
+// curve-dose-response: Pharmacological Dose-Response Curve
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 89/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // curve-dose-response: Pharmacological Dose-Response Curve
