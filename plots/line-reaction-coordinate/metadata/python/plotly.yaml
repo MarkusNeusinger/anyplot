@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:46:59Z'
-updated: '2026-06-24T07:46:05Z'
+updated: '2026-06-24T07:56:17Z'
 generated_by: claude-sonnet
 workflow_run: 28082781051
 issue: 4409
@@ -12,125 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'All six spec requirements implemented correctly: Ea arrow with value, ΔH arrow
-    with value, reactant/TS/product labels, horizontal dashed reference lines, smooth
-    Gaussian barrier curve, and transition state peak marker'
-  - 'Correct Imprint palette: brand green (#009E73) for curve, blue (#4467A3) for
-    Ea (kinetic), ochre (#BD8233) for ΔH (thermodynamic) — color semantics are intentional
-    and well-chosen'
-  - Excellent theme-adaptive chrome — all annotation colors, backgrounds, tick labels,
-    and axis labels correctly flip between light and dark; no dark-on-dark failures
-    in either render
-  - 'Physically accurate energy values: Ea=70 kJ/mol and ΔH=−30 kJ/mol are arithmetically
-    consistent with the displayed energy levels (reactants 50, TS 120, products 20
-    kJ/mol)'
-  - Plotly interactivity preserved in HTML output with meaningful hovertemplate showing
-    reaction coordinate and energy values
+  - Complete spec compliance — all required features (Ea double-headed arrow, ΔH double-headed
+    arrow, dashed reference lines, direct labels for reactants/transition state/products,
+    smooth Gaussian curve) implemented correctly
+  - Color-coded annotations using Imprint palette positions 3 and 4 (blue for kinetics/Ea,
+    ochre for thermodynamics/ΔH) create meaningful visual distinction with scientific
+    intent
+  - Correct theme adaptation — data colors stable across both themes, chrome flips
+    appropriately; no dark-on-dark failures in dark render
+  - Professional scientific presentation with HTML subscript/bold formatting for Eₐ
+    annotation and direct-label approach instead of a legend
+  - 'Idiomatic Plotly usage: fill=''tozeroy'' for area fill, line.shape=''spline''
+    for smooth interpolation, hovertemplate for interactive tooltips, write_html()
+    export'
   weaknesses:
-  - Annotation font families are inconsistent — Ea and ΔH value labels use 'Arial
-    Black, sans-serif' while species labels use 'Arial, sans-serif'; standardise all
-    annotation fonts to 'Arial, sans-serif' with bold via HTML <b> tags rather than
-    mixing font families
-  - The right-side margin (r=60) leaves some dead space; the ΔH annotation at x=0.88
-    sits comfortably but the canvas could breathe better with a slightly wider effective
-    data range or tighter margin
+  - 'DE-01 MINOR: Annotation text at 12px is on the smaller end for mobile-width readability
+    — consider increasing to 14px for the direct data labels (Reactants, Products,
+    Transition State)'
+  - 'DE-02 MINOR: fill=''tozeroy'' creates a wedge shape from y=0 to the curve, which
+    may imply energy starts at zero rather than the reactant baseline — a subtle scientific
+    inaccuracy; a fill=''tonexty'' from a flat baseline trace at the reactant floor
+    would be more accurate'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "line-reaction-coordinate · python · plotly · anyplot.ai" centered in dark ink (#1A1A17), clearly readable. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" in dark ink, readable. Y-axis tick labels (0, 20, 40, 60, 80, 100, 120, 140) in INK_SOFT (#4A4A44), clearly readable. X-axis tick labels omitted (appropriate for dimensionless reaction coordinate).
-      Data: Main curve in brand green (#009E73) — Imprint position 1, correct. Subtle green-tinted fill below curve (rgba(0,158,115,0.10)). Activation energy Ea arrow in blue (#4467A3), labelled "Eₐ = 70 kJ/mol". Enthalpy change ΔH arrow in ochre (#BD8233), labelled "ΔH = −30 kJ/mol". Transition state dot marker in brand green at peak. Species labels (Reactants 50 kJ/mol, Transition State 120 kJ/mol, Products 20 kJ/mol) in INK (#1A1A17). Horizontal dashed reference lines at 50 and 20 kJ/mol in INK_SOFT.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, passes theme check.
+      Chrome: Title "line-reaction-coordinate · python · plotly · anyplot.ai" in dark ink at top-center (~62% width); Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" in dark ink; Y-axis tick labels (0, 20, 40, ... 140) in INK_SOFT; X-axis tick labels hidden (appropriate for arbitrary-unit reaction coordinate). All text readable.
+      Data: Brand-green #009E73 smooth Gaussian curve rising from reactants (50 kJ/mol) to transition state peak (120 kJ/mol) then falling to products (20 kJ/mol). Subtle green-tinted fill area (rgba(0,158,115,0.10)) under the curve. Blue (#4467A3) double-headed arrow with Ea = 70 kJ/mol label on the left. Ochre (#BD8233) double-headed arrow with ΔH = -30 kJ/mol label on the right. Dashed horizontal reference lines at reactant and product energy levels. Direct annotations for Reactants (50 kJ/mol), Transition State (120 kJ/mol with arrow), Products (20 kJ/mol). First series is #009E73 (correct).
+      Legibility verdict: PASS — all text readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title visible in light cream (#F0EFE8), clearly readable against dark background. Y-axis and X-axis labels in light cream, readable. Y-axis tick labels in INK_SOFT dark (#B8B7B0), readable. No dark-on-dark failures detected. Dashed reference lines in light INK_SOFT, visible.
-      Data: Colors identical to light render — brand green (#009E73) curve and fill, blue (#4467A3) Ea arrow with label, ochre (#BD8233) ΔH arrow with label, green transition state dot. Fill tint appears slightly darker (rgba(0,158,115,0.15) alpha) but still visible. Annotation text colors correct: species labels in light cream (INK dark mode), Ea label in blue, ΔH label in ochre.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, passes theme check.
+      Chrome: Title and all annotation text render in light ink (#F0EFE8 equivalent) — clearly readable against dark background. Y-axis tick labels and axis labels also in light ink. No dark-on-dark failures observed.
+      Data: Brand-green #009E73 curve, blue #4467A3 Ea arrow, ochre #BD8233 ΔH arrow are identical to the light render — only chrome flips. Green fill is slightly more opaque (0.15) for dark theme visibility. Grid lines subtle but visible.
+      Legibility verdict: PASS — all text readable against warm near-black background; data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, axis labels 12px, tick
-          labels 10px). All visible text readable in both themes. Proportional sizing
-          checks pass.
+        comment: 'Font sizes explicitly set (title 16px, labels 12px, ticks 10px,
+          annotations 12px); readable in both themes. Minor: annotation text at 12px
+          is on the smaller end for mobile scaling.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps any other text or data element in either render.
-          All labels have proper spacing.
+        comment: All annotation text, arrows, and labels are cleanly separated with
+          no collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 500-point smooth Gaussian curve is prominent. Transition state dot
-          marker (size=12) clearly visible. Fill area appropriately subtle in both
-          themes.
+        comment: Brand-green curve prominent; peak marker visible; Ea/ΔH arrows clearly
+          distinguishable; fill area adds depth without obscuring data.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: All colors from Imprint palette (CVD-safe). No red-green as sole
-          signal.
+        comment: Imprint palette positions 1/3/4 used; all CVD-safe; no red-green
+          sole-signal pairing.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Proper margins. No overflow or clipping.
+        comment: Correct 3200x1800 canvas; title at ~62% width; generous margins (l=85,
+          r=40, t=80, b=65); no overflow or clipping in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (kJ/mol). X-axis 'Reaction Coordinate' is appropriate
-          (dimensionless). Title matches required format.
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units; X-axis: ''Reaction
+          Coordinate'' appropriate for arbitrary units; title in correct spec-id ·
+          python · plotly · anyplot.ai format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Curve in #009E73 (Imprint pos 1). Ea in #4467A3 (Imprint pos 3).
-          ΔH in #BD8233 (Imprint pos 4). Backgrounds #FAF8F1/#1A1A17 correct. Data
-          colors identical across themes.'
+        comment: 'Main curve = #009E73 (Imprint position 1); Ea arrow = #4467A3 (position
+          3, kinetic); ΔH arrow = #BD8233 (position 4, thermodynamic); backgrounds
+          #FAF8F1/#1A1A17 correct; data colors identical in both themes.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic: correct Imprint palette across three annotation types,
-          subtle fill, professional scientific annotation style with color-coded arrows.'
+        comment: 'Above default: intentional color-coded annotations (kinetic vs thermodynamic),
+          HTML subscript/bold in annotation text, subtle fill area. Thoughtful scientific
+          design.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: L-shaped frame, Y-axis only grid at 15% opacity, clean minimal scientific
-          style. Inconsistent annotation font families slightly reduce refinement.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: smooth energy curve dominates, Ea and ΔH
-          arrows deliver kinetic and thermodynamic story, labels anchor species. Left-to-right
-          narrative flow.'
+        comment: Y-axis grid only (subtle), hidden x-axis tick labels (clean for arbitrary
+          units), L-frame axes (bottom+left lines only), generous whitespace. Solid
+          refinement above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: green curve as focal point; color-coded
+          arrows distinguish kinetics from thermodynamics; direct labeling avoids
+          legend; fill reinforces energy landscape.'
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: smooth line chart showing potential energy vs. reaction
-          coordinate (reaction coordinate energy diagram).'
+        comment: Correct reaction coordinate energy diagram with smooth curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: labels on reactants/TS/products, Ea double-headed
-          arrow with value, ΔH double-headed arrow with value, smooth curve, horizontal
+        comment: 'All required: direct labels for reactants/products/transition state,
+          Ea double-headed arrow, ΔH double-headed arrow, smooth Gaussian curve, horizontal
           dashed reference lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: reaction coordinate 0-1. Y: potential energy in kJ/mol (0-140).
-          All three energy levels correctly represented.'
+        comment: 'X: reaction coordinate 0→1; Y: potential energy 0–140 kJ/mol; single-step
+          exothermic with reactants=50, TS=120, products=20 kJ/mol.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'line-reaction-coordinate · python · plotly · anyplot.ai'.
-          No legend (single-series — correct omission).
+        comment: Title 'line-reaction-coordinate · python · plotly · anyplot.ai' correct;
+          no legend needed — direct annotation used.
     data_quality:
       score: 15
       max: 15
@@ -173,23 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all aspects: smooth curve, energy maximum at TS, Ea annotation
-          with numeric value, ΔH annotation with numeric value, horizontal reference
-          lines, all three species labelled.'
+        comment: 'Complete energy landscape: reactants → transition state → products;
+          Ea=70 kJ/mol; ΔH=-30 kJ/mol; exothermic profile clearly communicated.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Physically plausible single-step exothermic reaction. Ea=70 and ΔH=-30
-          kJ/mol are arithmetically consistent and typical for a moderately fast reaction.
+        comment: Physically plausible energy values; single-step exothermic reaction;
+          Gaussian bump for smooth transition state; neutral chemistry educational
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy range 0-140 kJ/mol realistic. 500 data points yield visually
-          smooth curve. Gaussian width produces natural-looking barrier.
+        comment: Y-axis 0–140 kJ/mol covers all energy levels with headroom; 500 data
+          points for smooth curve; dtick=20 provides clean grid spacing.
     code_quality:
       score: 10
       max: 10
@@ -199,54 +200,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Logical grouping of shapes
-          and annotations.
+        comment: Flat procedural script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; mathematical formula requires no random seed.
+        comment: Fully deterministic mathematical formula (baseline + Gaussian bump);
+          no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects — all used.
+        comment: Only os, numpy, plotly.graph_objects imported; all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI. Shape/annotation loop for reference
-          lines is clean.
+        comment: Well-organized with clear sections; appropriate Plotly API usage;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
-          explicit width/height. Current plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper go.Figure() + add_trace() + add_shape() + add_annotation();
+          hovertemplate; write_image() + write_html().
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct go.Figure() + add_trace() pattern. Shape API for precise
-          line drawing, annotation API for arrows. Proper trace layering (fill → line
-          → dot). autosize=False with explicit scale.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses hovertemplate for interactive tooltips, write_html() for CDN-hosted
-          interactive output, and plotly's annotation arrow system — distinctly plotly
-          capabilities.
+        comment: fill='tozeroy' for area fill, line.shape='spline' for smooth interpolation,
+          HTML-formatted annotation text with subscripts/bold, interactive hover tooltips
+          — good use of Plotly's distinctive capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -259,3 +258,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
