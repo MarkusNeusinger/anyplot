@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:25:11Z'
-updated: '2026-06-24T13:18:15Z'
+updated: '2026-06-24T13:26:37Z'
 generated_by: claude-sonnet
 workflow_run: 28100582657
 issue: 4564
@@ -12,41 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct imprint_seq colormap applied to continuous chromagram energy data
-  - Both themes render cleanly with theme-adaptive chrome — no dark-on-dark issues
-  - All 12 pitch classes labeled, colorbar present and correctly styled
-  - Realistic chord progression data (C-G-Am-F) with passing tones and convolution
-    smoothing
-  - 'Clean code structure: seed set, no functions/classes, only used imports'
-  - Square 2400×2400 canvas correctly chosen for symmetric heatmap
-  - Title format matches spec exactly
-  - Colorbar styling (shrink, outline, tick params) properly tied to theme tokens
+  - Correct imprint_seq colormap applied — green→blue gradient is brand-consistent
+    and correctly maps low-to-high energy
+  - All 12 pitch classes labeled and clearly visible on y-axis
+  - Chord transition annotations (dashed lines + chord name labels) effectively tell
+    the harmonic story
+  - Square 2400×2400 canvas correctly chosen for heatmap
+  - 'Colorbar fully styled: facecolor, tick colors, label color, and outline all theme-adaptive'
+  - Realistic C–G–Am–F chord progression with passing tones adds data credibility
+  - tick_params length=0 removes tick marks cleanly
+  - rasterized=True for crisp heatmap rendering
   weaknesses:
-  - Design storytelling lacks annotations to guide viewer to chord transitions — axis
-    labels and title tell the story but no visual emphasis (e.g., vertical lines or
-    text callouts at 2s, 4s, 6s, 7s boundaries)
-  - Visual refinement is functional but minimal — removing cell borders (linewidths=0)
-    and styling the colorbar outline is good, but no additional DE polish (e.g., subtle
-    y-axis band shading per chord section, or a minor typographic hierarchy distinction)
-  - The imprint_seq green→blue gradient (both mid-luminance) provides lower perceptual
-    contrast between high and low energy cells compared to a dark-anchored sequential
-    scale — cells in the 0.2–0.5 energy range can look similar; acceptable given palette
-    compliance rules but worth noting
+  - Chord annotation labels (C, G, Am, C, F) use fontsize=7.5 — very small at this
+    canvas size; consider 9pt for mobile readability
+  - Design Excellence is functional but not exceptional — colorbar styling and spine
+    removal are good but the overall aesthetic remains close to default seaborn heatmap
+    look
+  - 'LM-02: seaborn-specific features used are primarily sns.heatmap() and cbar_kws
+    — could demonstrate more of seaborns distinctive capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "heatmap-chromagram · python · seaborn · anyplot.ai" in dark ink (~75% plot width), axis labels "Pitch Class" and "Time (seconds)" at fontsize 10, tick labels at fontsize 8 — all readable against light background. Colorbar "Energy" label and tick labels (0.0–1.0) are dark and clear.
-      Data: Heatmap uses imprint_seq (#009E73 teal-green → #4467A3 blue) showing chord progression energy: C (0–2s), G (2–4s), Am (4–6s), F (7–8s) clearly visible as distinct blue-shifted bands in the relevant pitch rows. All 12 pitch classes labeled C–B on Y-axis. Time axis shows 0–8 seconds.
-      Legibility verdict: PASS — all text readable, no illegible elements, colorbar ticks clear.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "heatmap-chromagram · python · seaborn · anyplot.ai" in dark ink, clearly readable. Y-axis label "Pitch Class" and x-axis label "Time (seconds)" in dark ink — readable. Tick labels (C, C#, D...B on y-axis; 0–8 on x-axis) in INK_SOFT (#4A4A44) — readable. Colorbar label "Energy" in dark ink — readable. Small chord names (C, G, Am, C, F) visible above the heatmap area between title and plot top edge.
+      Data: imprint_seq colormap (green #009E73 at low energy → blue #4467A3 at high energy). Chord patterns clearly visible: C major active at 0–2s (C/E/G rows blue), G major at 2–4s (G/B/D rows blue), Am at 4–6s (A/C/E rows blue), C at 6–7s, F at 7–8s. Dashed vertical lines mark chord transitions.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title and axis labels rendered in light off-white text, readable against dark background. Tick labels (pitch classes and time values) appear in light grey — no dark-on-dark failures. Colorbar "Energy" label and tick marks are light-colored and legible.
-      Data: Identical color palette to light render — imprint_seq green-to-blue tones unchanged. Same chord progression patterns visible with the same contrast. Brand green and blue remain distinguishable.
-      Legibility verdict: PASS — all text readable on dark surface, chrome flipped correctly, data colors preserved.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) clearly readable against dark background. Axis labels "Pitch Class" and "Time (seconds)" in light ink — readable. Tick labels in INK_SOFT (#B8B7B0) — readable against dark background, no dark-on-dark issues. Colorbar label and tick values readable. Chord name annotations visible.
+      Data: Colors identical to light render — same green→blue gradient, same chord pattern locations. Data colors unchanged between themes, only chrome flips. No theme bleed into data colors.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,50 +55,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at correct font sizes; tick labels
-          at 8pt are small but legible at full resolution
+        comment: All major text readable in both themes; chord annotation labels at
+          fontsize=7.5 are small but visible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly distinguishable, colorbar ticks legible
+        comment: Heatmap cells clearly differentiated; chord regions distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe; single continuous scale with no red/green
-          categorical conflict
+        comment: imprint_seq is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas correct for heatmap; canvas gate passed;
-          tight_layout without bbox_inches='tight' on savefig
+        comment: Square 2400x2400 correct; canvas gate passed; good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled 'Pitch Class', 'Time (seconds)'; colorbar labeled 'Energy';
-          title matches required format
+        comment: All axes labeled with units; colorbar labeled Energy
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq used for continuous energy data; PAGE_BG correct for
-          both themes; all chrome tokens theme-adaptive
+        comment: 'imprint_seq used correctly for single-polarity continuous data;
+          backgrounds #FAF8F1 / #1A1A17 correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -108,22 +103,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: intentional Imprint colormap, careful colorbar styling,
-          rasterized=True for performance — but no distinct design flair beyond requirements'
+        comment: Brand-consistent colormap, chord annotations show intentional design;
+          above default
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, linewidths=0 gives clean cell edges, colorbar
-          outline styled — functional but not deeply refined
+        comment: Spines removed, colorbar fully styled, subtle dashed transition lines;
+          above default
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Chord progression patterns are visible and interpretable; no annotations
-          to guide the viewer to key transitions
+        comment: Chord names and transition lines create clear musical narrative;
+          meaningful raise from default
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap showing energy distribution across pitch classes
-          x time
+        comment: Correct heatmap visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes labeled C-B; sequential colormap; colorbar present;
-          time axis in seconds; 160 frames; realistic chord data
+        comment: All 12 pitch classes; colorbar; time axis; fine resolution; chord
+          patterns
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, color=energy — all correct
+        comment: X=time, Y=pitch class, color=energy
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'heatmap-chromagram · python · seaborn · anyplot.ai';
-          colorbar as appropriate continuous legend
+        comment: Correct title format; colorbar labeled Energy
     data_quality:
       score: 15
       max: 15
@@ -164,22 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 pitch classes, 160 time frames, 4-chord progression, passing
-          tones, convolution smoothing, normalization
+        comment: All chromagram aspects shown; passing tones add realism; convolution
+          smoothing
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: C-G-Am-F is a classic pop chord progression; 8s duration; 20fps frame
-          rate is realistic for audio chroma features
+        comment: C-G-Am-F is a real common chord progression; normalized energy values
+          realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized energy 0-1; 160 frames at 8s; proper chromatic pitch class
-          count
+        comment: 8s / 160 frames; energy 0-1; all 12 pitch classes
     code_quality:
       score: 10
       max: 10
@@ -189,34 +181,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
-          LinearSegmentedColormap'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI elements, clean chord-building
-          logic
+        comment: Clean, readable; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight' on savefig (correct
-          per seaborn guide)
+        comment: Saves plot-{THEME}.png; no bbox_inches=tight
     library_mastery:
       score: 7
       max: 10
@@ -226,26 +215,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.heatmap with cbar_kws, xticklabels=False, linewidths; sns.set_theme
-          for global theming — idiomatic seaborn patterns
+        comment: sns.heatmap() with cbar_kws, sns.set_theme() for global styling,
+          axes-level API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: rasterized=True, linewidths=0, xticklabels=False are seaborn/heatmap-specific
-          features; cbar styling via collections[0].colorbar is seaborn-specific access
-          pattern
+        comment: Uses seaborn heatmap with rasterized=True, linewidths=0, full cbar_kws
+          customization; above default
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-24
+Quality: 88/100 | Updated: 2026-06-24
 """
 
 import os
