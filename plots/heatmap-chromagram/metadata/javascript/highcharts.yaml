@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-chromagram
+created: '2026-06-24T13:35:51Z'
+updated: '2026-06-24T13:55:20Z'
+generated_by: claude-sonnet
+workflow_run: 28101328517
+issue: 4564
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Perfect use of imprint_seq (t.seq[0] → t.seq[1]) for continuous energy data with
+    correct sequential semantics
+  - Chord section labels ('C maj', 'G maj', 'Am', 'F maj') with dashed dividers add
+    genuine musical storytelling without dominating the visual
+  - Deterministic LCG PRNG with seed 42 ensures fully reproducible output
+  - Creative use of Highcharts SVG renderer to implement a custom heatmap when the
+    heatmap module is unavailable in the core bundle
+  - I-V-vi-IV chord progression (C-G-Am-F) is a highly realistic, recognizable, and
+    neutral musical example
+  - Attack/decay envelopes at chord boundaries add musical realism to the synthetic
+    data
+  weaknesses:
+  - Chord annotation labels (13px) are 1px below tick label size (14px) — minor visual
+    inconsistency; consider aligning to 14px for uniform typography hierarchy
+  - DE-02 could be elevated with more polished colorbar details (e.g., intermediate
+    tick marks between 0.0-0.5-1.0 labels)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface
+      Chrome: Title "heatmap-chromagram · javascript · highcharts · anyplot.ai" in dark text (22px) at ~65% width — fully readable. Y-axis label "Pitch Class" and X-axis label "Time (s)" in dark-gray (16px), tick labels in dark-gray (14px), all readable. Chord annotations "C maj", "G maj", "Am", "F maj" in bold dark text (13px) above heatmap — readable, 1px smaller than tick labels. Colorbar labels "Energy", "1.0", "0.5", "0.0" in dark-gray (14px) — readable.
+      Data: Heatmap cells use imprint_seq (t.seq[0]=#009E73 brand green for low energy → t.seq[1]=#4467A3 blue for high energy). Active chord tones appear as blue/purple cells; inactive pitch classes appear as teal-green. Chord changes at t=2,4,6s are visible via dashed vertical dividers. All 12 pitch classes (C through B) labeled on Y-axis. Custom SVG colorbar on right side.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light cream text (#F0EFE8, via t.ink dark token) — clearly visible against dark background. Chord annotations in same light color — readable. Axis labels and tick labels in lighter gray (t.inkSoft dark = #B8B7B0) — all readable. Colorbar labels in gray — readable. No dark-on-dark failures observed anywhere.
+      Data: Heatmap cell colors are identical to light render — imprint_seq green-to-blue gradient unchanged between themes. Chord pattern (C, E, G active for C maj; G, B, D for G maj; A, C, E for A min; F, A, C for F maj) clearly visible in both renders.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, tick
+          labels 14px, colorbar labels 14px). Chord annotation labels at 13px are
+          1px below tick label size — minor inconsistency, fully readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells show clear contrast between high-energy (blue) and
+          low-energy (green) pitch classes. All 12 pitch classes visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green → blue) is CVD-safe; elements distinguishable
+          without relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent layout. Colorbar well-positioned on right with margin [60,
+          115, 65, 68]. Chord annotations sit neatly above heatmap. No content cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Time (s)'', Y: ''Pitch Class'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (t.seq[0] → t.seq[1]) correctly used for continuous energy
+          data. Backgrounds theme-correct (transparent over pageBg). Chrome tokens
+          t.ink and t.inkSoft applied to all text elements. Data colors identical
+          across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Imprint sequential palette, custom SVG colorbar,
+          chord section annotations, attack/decay envelope in data. Clearly above
+          defaults but not FiveThirtyEight-level polish.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no grid lines, subtle partial border (top+right
+          SVG path), generous margins, legend disabled. Missing a few final polish
+          details.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord labels with dashed dividers create clear temporal segmentation
+          and guide the viewer through the harmonic progression. Above default data
+          display.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chromagram heatmap with pitch classes x time.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes labeled (C-B); sequential colormap; colorbar;
+          time axis in seconds; 80 frames; realistic I-V-vi-IV chord progression.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X-axis (0-8s), pitch class on Y-axis (C at bottom, B at top),
+          energy as color intensity.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'heatmap-chromagram · javascript · highcharts · anyplot.ai'
+          (correct format). Colorbar serves as energy scale legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all 12 pitch classes, 4 chord changes, energy variation from
+          ~0.03 (noise) to ~0.95 (chord tones), attack/decay envelopes at boundaries.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: I-V-vi-IV progression (C-G-Am-F) is a common, recognizable, neutral
+          musical example from music information retrieval.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8s duration, 10 frames/second (80 total), energy 0-1 — consistent
+          with real chroma feature extraction outputs.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat structure with three minimal utility functions (LCG rand, h2r,
+          seqColor). No classes or unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG PRNG seeded at 42 (_seed = 42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; all globals from harness (window.ANYPLOT_TOKENS, Highcharts).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; SVG renderer approach is appropriately complex
+          for the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness outputs plot-light.png and plot-dark.png; Highcharts 12.6.0
+          API used correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses Highcharts within core-bundle constraints: SVG renderer
+          for custom heatmap cells, category axis for labels, dummy scatter to force
+          axis rendering, chart.seriesGroup for z-ordering, plot coordinate system
+          for positioning.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts SVG renderer API (ren.rect, ren.path, ren.text, ren.g)
+          and plot-area coordinate system — features distinctive to Highcharts enabling
+          fully custom chart rendering within the existing chart frame.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

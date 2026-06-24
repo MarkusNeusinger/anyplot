@@ -1,18 +1,54 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-17
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-24
 """
+
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Remove this script's directory from sys.path so 'bokeh.py' doesn't shadow the installed package
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, save
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, FixedTicker, HoverTool, LinearColorMapper, Range1d
+from bokeh.io import output_file, save
+from bokeh.models import (
+    BasicTicker,
+    ColorBar,
+    ColumnDataSource,
+    FixedTicker,
+    HoverTool,
+    Label,
+    LinearColorMapper,
+    Range1d,
+    Span,
+)
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated chromagram: 12 pitch classes over 80 time frames
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+
+# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3), single-polarity energy
+IMPRINT_SEQ = [
+    "#{:02X}{:02X}{:02X}".format(round(t * 68 / 255), round(158 - t * 55 / 255), round(115 + t * 48 / 255))
+    for t in range(256)
+]
+
+# Data — simulated chromagram: 12 pitch classes over 80 time frames
 np.random.seed(42)
 pitch_classes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 n_pitch = len(pitch_classes)
@@ -31,6 +67,7 @@ chord_patterns = {
 }
 
 chord_sequence = ["C_major", "G_major", "A_minor", "F_major"]
+chord_display = ["C major", "G major", "A minor", "F major"]
 frames_per_chord = n_frames // len(chord_sequence)
 
 for idx, chord_name in enumerate(chord_sequence):
@@ -53,17 +90,15 @@ for i in range(1, len(chord_sequence)):
 
 energy = np.clip(energy, 0, 1)
 
-# Prepare data for rendering
 dt = time_seconds[1] - time_seconds[0]
 
-# Reverse energy rows so C is at top (row 0 in image = bottom of plot = B)
-# image glyph renders row 0 at the bottom, so reversed energy puts C at top
+# image glyph renders row 0 at bottom; reversing places C at top
 energy_image = energy[::-1, :]
 
 # Flatten to DataFrame for HoverTool interactivity
 records = []
 for i, pitch in enumerate(pitch_classes):
-    y_pos = n_pitch - 1 - i  # C=11 (top), B=0 (bottom)
+    y_pos = n_pitch - 1 - i
     for j in range(n_frames):
         records.append(
             {"time": float(time_seconds[j]), "pitch": pitch, "y": y_pos, "energy": round(float(energy[i, j]), 3)}
@@ -71,109 +106,137 @@ for i, pitch in enumerate(pitch_classes):
 
 source = ColumnDataSource(pd.DataFrame(records))
 
-# Sequential colormap (magma-inspired)
-magma_palette = [
-    "#000004",
-    "#0d0829",
-    "#1b0c41",
-    "#280b53",
-    "#3d0965",
-    "#510a6c",
-    "#63106e",
-    "#76176e",
-    "#89226a",
-    "#9c2e64",
-    "#ae395c",
-    "#bf4a52",
-    "#cd5e48",
-    "#d9743e",
-    "#e48c35",
-    "#eda72e",
-    "#f3c321",
-    "#f8df17",
-    "#fcffa4",
-]
+mapper = LinearColorMapper(palette=IMPRINT_SEQ, low=0, high=1)
 
-# Color mapper
-mapper = LinearColorMapper(palette=magma_palette, low=0, high=1)
-
-# Create figure with numeric axes
+# Square canvas (2400×2400) — symmetric pitch×time grid suits 1:1 format
 p = figure(
-    width=4800,
-    height=2700,
+    width=2400,
+    height=2400,
     y_range=Range1d(-0.5, n_pitch - 0.5),
     x_range=(-dt / 2, 8 + dt / 2),
-    title="heatmap-chromagram · bokeh · pyplots.ai",
+    title="heatmap-chromagram · python · bokeh · anyplot.ai",
     x_axis_label="Time (seconds)",
     y_axis_label="Pitch Class",
     toolbar_location=None,
-    tools="",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=230,
 )
 
-# Custom y-axis tick labels for pitch classes
+# Y-axis: pitch class labels
 p.yaxis.ticker = FixedTicker(ticks=list(range(n_pitch)))
 p.yaxis.major_label_overrides = {i: pitch_classes[n_pitch - 1 - i] for i in range(n_pitch)}
 
-# Seamless heatmap using image glyph (no gaps between cells)
+# Seamless heatmap via image glyph — no cell gaps
 p.image(image=[energy_image], x=-dt / 2, y=-0.5, dw=8 + dt, dh=n_pitch, color_mapper=mapper)
 
-# Invisible rect layer for HoverTool interactivity (HTML only)
+# Invisible rect overlay for HoverTool interactivity
 r = p.rect(x="time", y="y", width=dt, height=1, source=source, fill_alpha=0, line_alpha=0)
 
-# Color bar — wider with larger labels for 4800px canvas
+# Chord boundary Span annotations
+for t_boundary in [2.0, 4.0, 6.0]:
+    p.add_layout(
+        Span(
+            location=t_boundary,
+            dimension="height",
+            line_color=INK_SOFT,
+            line_width=3,
+            line_alpha=0.55,
+            line_dash="dashed",
+        )
+    )
+
+# Chord label annotations at the top of each region
+for idx, label_text in enumerate(chord_display):
+    t_center = idx * 2.0 + 1.0
+    p.add_layout(
+        Label(
+            x=t_center,
+            y=n_pitch - 0.6,
+            text=label_text,
+            text_font_size="28pt",
+            text_color=INK_SOFT,
+            text_align="center",
+            text_baseline="top",
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.65,
+        )
+    )
+
+# Color bar
 color_bar = ColorBar(
     color_mapper=mapper,
-    width=100,
-    ticker=BasicTicker(desired_num_ticks=8),
-    label_standoff=25,
-    major_label_text_font_size="24pt",
+    width=60,
+    ticker=BasicTicker(desired_num_ticks=6),
+    label_standoff=15,
+    major_label_text_font_size="34pt",
+    major_label_text_color=INK_SOFT,
     border_line_color=None,
     padding=20,
     title="Energy",
-    title_text_font_size="26pt",
-    title_standoff=30,
+    title_text_font_size="36pt",
+    title_text_color=INK,
+    title_standoff=20,
+    background_fill_color=PAGE_BG,
+    bar_line_color=None,
+    major_tick_line_color=INK_SOFT,
+    minor_tick_line_color=None,
 )
 p.add_layout(color_bar, "right")
 
-# HoverTool for interactive HTML
 hover = HoverTool(
     tooltips=[("Pitch", "@pitch"), ("Time", "@time{0.00} s"), ("Energy", "@energy{0.000}")], renderers=[r]
 )
 p.add_tools(hover)
 
-# Styling for 4800x2700 px
-p.title.text_font_size = "32pt"
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+# Font sizes — canonical bokeh values for 2400×2400 canvas
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Grid and axes
+# No grid — heatmap fills the entire plot area
 p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = None
-p.axis.axis_line_color = None
-p.axis.major_tick_line_color = None
-p.outline_line_color = None
+p.outline_line_color = INK_SOFT
 
-# Dark background to complement magma colormap
-p.min_border_right = 200
-p.min_border_left = 40
-p.min_border_top = 30
-p.min_border_bottom = 40
-p.background_fill_color = "#0a0a0a"
-p.border_fill_color = "#1a1a1a"
-p.title.text_color = "#e0e0e0"
-p.xaxis.axis_label_text_color = "#cccccc"
-p.yaxis.axis_label_text_color = "#cccccc"
-p.xaxis.major_label_text_color = "#aaaaaa"
-p.yaxis.major_label_text_color = "#cccccc"
-color_bar.major_label_text_color = "#cccccc"
-color_bar.title_text_color = "#cccccc"
-color_bar.background_fill_color = "#1a1a1a"
-color_bar.bar_line_color = None
-color_bar.major_tick_line_color = "#666666"
-color_bar.minor_tick_line_color = None
+# Theme-adaptive background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
-# Save
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="heatmap-chromagram · bokeh · pyplots.ai")
+# Save interactive HTML (required Bokeh catalog artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome — avoid export_png (snap chromium incompatibility)
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# CDP override ensures exact viewport — window-size alone can drift due to browser chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
