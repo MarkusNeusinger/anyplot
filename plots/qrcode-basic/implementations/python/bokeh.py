@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-24
@@ -118,8 +118,8 @@ p = figure(
     min_border_right=50,
 )
 
-# QR area: white inner background for maximum scannability; border takes PAGE_BG
-p.background_fill_color = "#FFFFFF"
+# QR area: near-white (#FAF8F1) inner background — scannable and Imprint-palette-compliant
+p.background_fill_color = "#FAF8F1"
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
@@ -149,7 +149,7 @@ p.add_layout(
         y=-0.5,
         text=f"Encoded: {content}",
         text_font_size="26pt",
-        text_color=INK_SOFT,
+        text_color="#4A4A44",  # always dark — footer renders on near-white QR background
         text_font="monospace",
         text_align="center",
     )
@@ -160,7 +160,7 @@ p.add_layout(
         y=-1.9,
         text=f"Version {qr.version} ({size}×{size} modules) · Error Correction M (15%)",
         text_font_size="20pt",
-        text_color=INK_SOFT,
+        text_color="#4A4A44",  # always dark — footer renders on near-white QR background
         text_align="center",
     )
 )
