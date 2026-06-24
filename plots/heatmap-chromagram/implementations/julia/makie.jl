@@ -91,6 +91,15 @@ hm = heatmap!(ax, time_seconds, collect(1:N_PITCH), chroma; colormap = ANYPLOT_S
 
 ax.yticks = (collect(1:N_PITCH), PITCH_NAMES)
 
+# Chord boundary markers and region labels
+vlines!(ax, [3.0, 6.0, 9.0]; color = INK_SOFT, linewidth = 1.5, linestyle = :dash)
+
+for (xc, label) in zip([1.5, 4.5, 7.5, 10.5], ["C", "G", "Am", "F"])
+    text!(ax, xc, 12.7; text = label, color = INK, fontsize = 14, align = (:center, :bottom))
+end
+
+ylims!(ax, 0.35, 13.6)
+
 cb = Colorbar(
     fig[1, 2], hm;
     label          = "Energy",
