@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -39,9 +39,9 @@ qr.make(fit=True)
 qr_matrix = qr.get_matrix()
 matrix_size = len(qr_matrix)
 
-# 4-cell ISO-spec quiet zone + 1-cell brand-green frame annotation
+# 4-cell ISO-spec quiet zone + 2-cell brand-green frame annotation (wider = more solid)
 inner_quiet = 4
-outer_frame = 1
+outer_frame = 2
 total_cells = matrix_size + 2 * (inner_quiet + outer_frame)
 
 # Slight oversize per cell closes SVG sub-pixel rendering gaps between rows
@@ -90,7 +90,7 @@ chart = pygal.StackedBar(
     margin_bottom=220,
     print_values=False,
     range=(0, total_cells * CELL),
-    x_title=(f"{qr_content}  ·  Error Correction: M (15%)  ·  {matrix_size}×{matrix_size} modules"),
+    x_title=f"{qr_content} · EC: M · {matrix_size}×{matrix_size}",
     css=["file://style.css", "file://graph.css", custom_css],
 )
 
@@ -101,15 +101,11 @@ side_frame = (
 )
 
 
-def to_bar_row(colors):
-    return [{"value": CELL, "color": c} for c in colors]
-
-
 # Bottom outer frame then quiet zone
 for _ in range(outer_frame):
-    chart.add("", to_bar_row(full_frame))
+    chart.add("", [{"value": CELL, "color": c} for c in full_frame])
 for _ in range(inner_quiet):
-    chart.add("", to_bar_row(side_frame))
+    chart.add("", [{"value": CELL, "color": c} for c in side_frame])
 
 # QR matrix rows (reversed so matrix row 0 ends up at the top)
 for row_idx in reversed(range(matrix_size)):
@@ -120,13 +116,13 @@ for row_idx in reversed(range(matrix_size)):
         + [MODULE_LIGHT] * inner_quiet
         + [FRAME_ACCENT] * outer_frame
     )
-    chart.add("", to_bar_row(row))
+    chart.add("", [{"value": CELL, "color": c} for c in row])
 
 # Top quiet zone then outer frame
 for _ in range(inner_quiet):
-    chart.add("", to_bar_row(side_frame))
+    chart.add("", [{"value": CELL, "color": c} for c in side_frame])
 for _ in range(outer_frame):
-    chart.add("", to_bar_row(full_frame))
+    chart.add("", [{"value": CELL, "color": c} for c in full_frame])
 
 # --- Save ---
 chart.render_to_png(f"plot-{THEME}.png")
