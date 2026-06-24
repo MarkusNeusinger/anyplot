@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-reaction-coordinate
 created: '2026-06-24T08:01:35Z'
-updated: '2026-06-24T08:07:12Z'
+updated: '2026-06-24T08:23:41Z'
 generated_by: claude-sonnet
 workflow_run: 28083692278
 issue: 4409
@@ -12,41 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: all five required elements (species labels, Ea arrow, ΔH
-    arrow, smooth curve, dashed reference lines) present and correctly placed'
-  - 'Correct Imprint palette usage — brand green #009E73 for data, theme-adaptive
-    chrome via t.pageBg / t.ink / t.inkSoft / t.grid tokens, both renders pass theme-readability
-    check'
-  - Sophisticated custom annotation system using Chart.js plugin API with hand-drawn
-    double-headed arrows and appropriate typographic hierarchy (bold labels, italic
-    measurements)
-  - 'Mathematically consistent data: reactants=50, TS=120, products=20 kJ/mol → Ea=70,
-    ΔH=−30 kJ/mol, all correctly labeled'
-  - Clean, deterministic code with no fake interactivity
+  - 'All three attempt-1 weaknesses addressed: borders removed (border: {display:false}),
+    annotation text bumped to 16px italic, ΔH arrow repositioned to x=0.91 for better
+    span across both reference lines'
+  - Full spec compliance with all five required elements (species labels, Ea arrow,
+    ΔH arrow, smooth curve, dashed reference lines) correctly implemented
+  - 'Mathematically consistent data: Reactants=50, TS=120, Products=20 kJ/mol → Ea=70
+    kJ/mol, ΔH=−30 kJ/mol, all correctly labeled'
+  - 'Both renders pass theme-readability: correct Imprint palette and theme-adaptive
+    chrome (t.pageBg, t.ink, t.inkSoft, t.grid) throughout'
+  - Custom annotation system using Chart.js afterDraw plugin with hand-drawn double-headed
+    arrows and typographic hierarchy (bold direct labels / italic measurements)
   weaknesses:
-  - 'DE-02: Chart.js frame borders appear on all four sides — suppress top/right borders
-    via border: { display: false } on both scales for a cleaner L-shaped scientific
-    frame'
-  - 'DE-01: Annotation text (15px italic) is at the lower end of readability at full
-    canvas size; 16–17px would provide slightly more comfort without disrupting layout'
-  - 'LM-02: ΔH arrow is positioned at x=0.85 where the curve has already descended;
-    placing it at x=0.90–0.92 would better span the full vertical gap between the
-    dashed reference lines'
+  - 'Grid is shown on both x and y axes — style guide recommends y-axis only for line
+    charts; suppress x-axis grid with x: { grid: { display: false } } to reduce visual
+    noise'
+  - Annotation text at 16px italic is near the low end for mobile-scaled viewing (400px
+    viewport); bumping to 17–18px would provide more comfortable reading margin
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "line-reaction-coordinate · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "Reaction Coordinate" and "Potential Energy (kJ/mol)" in dark ink, readable. Tick labels in inkSoft color, readable. State labels "Reactants", "Transition State ‡", "Products" in bold dark text, all legible. Arrow annotations with italic italic labels "Ea = 70 kJ/mol" and "ΔH = −30 kJ/mol" readable.
-      Data: Brand green (#009E73) smooth bell-shaped curve. Dashed reference lines in inkSoft. Double-headed arrows in ink color.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+      Chrome: Title "line-reaction-coordinate · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "Reaction Coordinate" (x) and "Potential Energy (kJ/mol)" (y) in dark ink, readable. Tick labels in inkSoft muted-dark color, readable. State labels "Reactants", "Transition State ‡", "Products" in bold dark text, all legible. Arrow annotations with italic labels "Ea = 70 kJ/mol" and "ΔH = −30 kJ/mol" in dark ink, readable.
+      Data: Smooth bell-shaped energy curve in brand green (#009E73), 3px width, 200 points. Dashed gray reference lines at Reactants (y=50) and Products (y=20) levels. Double-headed arrows for Ea and ΔH rendered in dark ink with arrowheads.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues detected
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, tick labels, state labels, and arrow annotations all flip to white/light text — clearly readable against the dark background. No dark-on-dark issues detected.
-      Data: Brand green (#009E73) curve identical to light render. Dashed reference lines and arrows rendered in white/light ink, clearly visible.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background, no dark-on-dark failures
+      Chrome: Title, axis labels, tick labels, state labels, and arrow annotations all render in white/off-white (t.ink = #F0EFE8 in dark mode) — clearly readable against the dark background. Dashed reference lines and arrows in light ink. No dark-on-dark failures detected.
+      Data: Brand green (#009E73) curve identical to light render — data colors unchanged between themes as required. Dashed reference lines and arrows appear in light ink, clearly visible.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,54 +54,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes. Title 22px,
-          axis labels 16px, ticks 13px, state labels 16px bold, measurement labels
-          15px italic. Annotation text could be marginally larger.
+        comment: 'All sizes explicitly set: title 22px, axis labels 16px, ticks 13px,
+          state labels 16px bold, measurement labels 16px italic. Readable in both
+          themes. Annotation text is marginal at mobile scaling but acceptable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions. State labels, arrows, and dashed
-          references are well spaced.
+        comment: All text, data, and annotation elements cleanly separated. State
+          labels, arrows, and reference lines are well spaced. Lower-right area (Products
+          + ΔH arrow) is close but non-overlapping.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green curve at 3px borderWidth is prominent. 200-point smooth curve
-          appropriate density. Dashed reference lines visible but appropriately subtle.
+        comment: Brand green curve at 3px borderWidth is prominent and smooth (200
+          points). Dashed reference lines visible but appropriately subtle. Double-headed
+          arrows clearly convey energy differences.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single data series in #009E73. Structural elements use inkSoft.
-          No red-green contrast issue.'
+        comment: 'Single data series in #009E73. Chrome uses theme-adaptive tokens.
+          No CVD issues.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Right padding 140px correctly reserves space
-          for ΔH annotation. No overflow or clipping. Y-axis 0-145 provides good headroom
-          above 120 kJ/mol peak.
+        comment: Canvas gate passed (3200x1800 landscape). Right padding (140px CSS)
+          reserves space for ΔH annotation without overflow or clipping. Y-axis 0-145
+          kJ/mol is appropriate — 0 kJ/mol is a meaningful reference in chemistry.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Reaction Coordinate and Potential Energy (kJ/mol) with units. Title
-          in required format.
+        comment: Reaction Coordinate (x) and Potential Energy (kJ/mol) (y) with units.
+          Title matches required format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: t.palette[0] (#009E73) for data. t.pageBg for background via bgPlugin.
-          t.ink/t.inkSoft/t.grid for all chrome. Both renders correct.
+        comment: t.palette[0] (#009E73) for data series. Background via t.pageBg bgPlugin.
+          All chrome (t.ink, t.inkSoft, t.grid) is theme-adaptive. Both renders correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -112,23 +111,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default. Custom canvas annotation plugin, typographic hierarchy
-          (bold labels vs italic measurements), legend disabled in favor of direct
-          labeling, scientific minimal style.
+        comment: Above default. Custom canvas annotation plugin with typographic hierarchy
+          (bold direct labels vs italic measurements), legend correctly suppressed
+          in favor of direct labeling, scientific minimal style appropriate to chemistry
+          context.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default. Tooltips disabled, grid via t.grid, no legend clutter,
-          adequate padding. Chart.js frame borders still present on all four sides.
+        comment: 'Improved from attempt 1. Frame borders removed on both axes (border:
+          {display:false}), tooltips disabled, no legend clutter, adequate padding.
+          Grid shown on both axes — style guide recommends y-only for line charts.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default. Direct species labels, quantified Ea and ΔH with arrows,
-          transition state ‡ notation, clear exothermic narrative.
+        comment: 'Clear narrative: Reactants -> Transition State -> Products flows
+          naturally left-to-right. Ea and ΔH quantified with double-headed arrows.
+          Transition state ‡ notation signals chemistry expertise. Effective visual
+          hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +141,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram as smooth line chart.
+        comment: Correct reaction coordinate energy diagram with smooth line chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All five required features present: species labels, Ea arrow, ΔH
-          arrow, smooth curve, dashed reference lines.'
+        comment: 'All five required features: species labels (Reactants/Transition
+          State/Products), Ea double-headed arrow with label, ΔH double-headed arrow
+          with label, smooth curve, dashed horizontal reference lines.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Reaction Coordinate 0-1, Y: Potential Energy 0-145 kJ/mol. Reactants=50,
-          TS=120, Products=20 as specified.'
+        comment: 'X: Reaction Coordinate 0-1; Y: Potential Energy 0-145 kJ/mol. Reactants=50,
+          TS=120, Products=20 kJ/mol as specified.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly line-reaction-coordinate · javascript · chartjs
-          · anyplot.ai. No legend appropriate for single-series annotated scientific
+        comment: Title is exactly 'line-reaction-coordinate · javascript · chartjs
+          · anyplot.ai'. No legend — appropriate for single-series annotated scientific
           plot.
     data_quality:
       score: 15
@@ -170,22 +174,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all aspects: smooth energy profile, activation energy, enthalpy
-          change, species identification, reference energy levels.'
+        comment: 'Full coverage: smooth energy profile, activation energy (Ea), enthalpy
+          change (ΔH), species identification, quantified arrows, dashed reference
+          energy levels.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible single-step exothermic reaction (Ea=70, ΔH=−30 kJ/mol).
-          Neutral educational chemistry context.
+        comment: Plausible single-step exothermic reaction (Ea=70 kJ/mol, ΔH=-30 kJ/mol).
+          Neutral educational chemistry context. Values are mathematically consistent.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: kJ/mol units, reaction coordinate 0-1, 200 points for smooth curve,
-          values match spec example exactly.
+        comment: kJ/mol is the correct unit for reaction energies. Reaction coordinate
+          0-1 is standard. 200 data points for smooth Gaussian curve. Values match
+          spec example exactly.
     code_quality:
       score: 10
       max: 10
@@ -195,7 +201,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with two plugin objects and one reusable arrowHead helper.
+        comment: Flat script with two plugin objects and one arrowHead helper function.
           No unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
@@ -208,7 +214,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports. Only Chart.js global and ANYPLOT_TOKENS used.
+        comment: No imports. Only Chart.js global and window.ANYPLOT_TOKENS used.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -239,8 +245,9 @@ review:
         max: 5
         passed: true
         comment: Custom Chart.js plugin API (beforeDraw + afterDraw hooks) for background
-          painting and canvas-native annotation arrows. Multiple datasets for reference
-          lines using borderDash.
+          and canvas-native annotation arrows. getPixelForValue() coordinate mapping
+          for accurate arrow placement. Multiple datasets with borderDash for reference
+          lines.
   verdict: APPROVED
 impl_tags:
   dependencies: []
