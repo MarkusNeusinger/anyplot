@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -88,6 +88,19 @@ boot_curves = np.array([logistic4pl(x_fit, *s) for s in param_samples])
 ci_lo = np.percentile(boot_curves, 2.5, axis=0)
 ci_hi = np.percentile(boot_curves, 97.5, axis=0)
 
+# Long-format DataFrame for fitted curves (enables sns.lineplot hue+style mapping)
+df_fit = pd.concat(
+    [
+        pd.DataFrame(
+            {"concentration": x_fit, "response": logistic4pl(x_fit, *fit_params["Imatinib"]), "compound": "Imatinib"}
+        ),
+        pd.DataFrame(
+            {"concentration": x_fit, "response": logistic4pl(x_fit, *fit_params["Erlotinib"]), "compound": "Erlotinib"}
+        ),
+    ],
+    ignore_index=True,
+)
+
 # Plot — landscape 3200×1800 px (figsize=(8, 4.5) × dpi=400, no bbox_inches='tight')
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -95,9 +108,21 @@ ax.set_facecolor(PAGE_BG)
 # CI band — Imatinib only (spec: at least one fitted curve)
 ax.fill_between(x_fit, ci_lo, ci_hi, color=COLOR_A, alpha=0.15, zorder=1)
 
-# Fitted curves
-ax.plot(x_fit, logistic4pl(x_fit, *fit_params["Imatinib"]), color=COLOR_A, linewidth=2.5, zorder=4)
-ax.plot(x_fit, logistic4pl(x_fit, *fit_params["Erlotinib"]), color=COLOR_B, linewidth=2.5, zorder=4)
+# Fitted curves via sns.lineplot (idiomatic seaborn: hue+style over long-format DataFrame)
+sns.lineplot(
+    data=df_fit,
+    x="concentration",
+    y="response",
+    hue="compound",
+    hue_order=["Imatinib", "Erlotinib"],
+    style="compound",
+    dashes=False,
+    palette=palette_dict,
+    linewidth=2.5,
+    zorder=4,
+    ax=ax,
+    legend=False,
+)
 
 # Data points (seaborn scatterplot for idiomatic hue+style mapping)
 sns.scatterplot(
@@ -149,6 +174,19 @@ for compound in ["Imatinib", "Erlotinib"]:
     )
     ax.vlines(
         ec50_val, -5, half_resp, colors=palette_dict[compound], linestyles="dashed", linewidth=1.2, alpha=0.55, zorder=3
+    )
+
+# EC50 value annotations near crosshair intersections
+for compound in ["Imatinib", "Erlotinib"]:
+    popt = fit_params[compound]
+    ec50_val = popt[2]
+    half_resp = popt[0] + (popt[1] - popt[0]) / 2
+    if ec50_val < 1e-6:
+        ec50_label = f"EC50 = {ec50_val * 1e9:.0f} nM"
+    else:
+        ec50_label = f"EC50 = {ec50_val * 1e6:.1f} μM"
+    ax.text(
+        ec50_val * 2.5, half_resp + 4, ec50_label, fontsize=7.5, color=palette_dict[compound], va="bottom", ha="left"
     )
 
 # Asymptote reference lines (top and bottom plateaus)
