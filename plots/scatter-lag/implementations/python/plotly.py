@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -70,7 +70,7 @@ fig.add_trace(
         y=y_t_lag,
         mode="markers",
         marker={
-            "size": 7,
+            "size": 9,
             "color": time_index,
             "colorscale": imprint_seq,
             "colorbar": {
@@ -83,7 +83,7 @@ fig.add_trace(
                 "bgcolor": PAGE_BG,
                 "tickcolor": INK_SOFT,
             },
-            "opacity": 0.45,
+            "opacity": 0.6,
             "line": {"width": 0.3, "color": "rgba(255,255,255,0.4)"},
         },
         hovertemplate=(
