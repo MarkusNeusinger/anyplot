@@ -1,46 +1,53 @@
 library: matplotlib
+language: python
 specification_id: scatter-lag
 created: '2026-04-12T18:10:35Z'
-updated: '2026-04-12T18:25:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 24313009889
+updated: '2026-06-24T23:05:09Z'
+generated_by: claude-sonnet
+workflow_run: 28134236496
 issue: 5251
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/matplotlib/plot.png
-preview_html: null
-quality_score: 85
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - 'Perfect code quality: clean KISS structure, seed set, correct API throughout'
-  - Temporal color encoding via viridis clearly reveals time structure in the scatter
-  - r=0.834 annotation with ax.transAxes relative positioning is well-executed
-  - 'All required spec features implemented: diagonal reference line, time-index color,
-    r-value annotation'
-  - Font sizes explicitly set at all levels for high-res output
+  - 'All specced features implemented correctly: diagonal reference line, temporal
+    coloring, configurable lag, r-value annotation'
+  - Qualitative annotation label ('Strong positive autocorrelation') elevates the
+    plot from a bare number to a diagnostic statement
+  - Correct imprint_seq colormap construction (green to blue) for single-polarity
+    continuous temporal data; both renders theme-correct
+  - No bbox_inches='tight'; subplots_adjust used correctly; canvas is exactly 3200x1800
+  - 'Complete theme adaptation: every chrome element (title, labels, ticks, spines,
+    grid, colorbar, annotation box) uses theme tokens'
   weaknesses:
-  - Marker size s=120 too large for 499 data points causing dense overlap; reduce
-    to s=50-60, alpha=0.45-0.55
-  - Title format deviates from spec-id · library · pyplots.ai — has extra AR(1) Autocorrelation
-    prefix
-  - Full x+y gridlines instead of preferred y-axis-only grid
-  - Generic annotation box style; needs subtle white background bbox with no border
-    edge
-  image_description: The plot shows a scatter plot of an AR(1) time series against
-    its lag-1 version. The x-axis is labeled "y(t)" and the y-axis "y(t + 1)", with
-    values ranging roughly from -4.5 to 5.5 on both axes. Approximately 499 data points
-    are colored using the viridis colormap, transitioning from dark purple (time index
-    0) to bright yellow (time index ~499), with a colorbar on the right labeled "Time
-    Index". A dashed diagonal reference line (y = x) runs from lower-left to upper-right
-    in light gray. The data forms a strong linear cluster along the diagonal, visually
-    confirming high positive autocorrelation. An annotation in the upper-left corner
-    shows "r = 0.834" in bold. The title reads "AR(1) Autocorrelation · scatter-lag
-    · matplotlib · pyplots.ai". Top and right spines are removed; a subtle grid (alpha=0.2)
-    is visible. The overall layout is clean and professional on a light background
-    with a 16:9 aspect ratio.
+  - 'Annotation lacks typographic hierarchy: r-value number and qualitative label
+    rendered at identical weight — add fontweight=''bold'' for only the numeric portion
+    to create emphasis'
+  - Colorbar aspect=28 produces a narrow-and-long bar; aspect=20 would create better
+    visual proportion alongside the scatter area
+  - Diagonal reference line at alpha=0.5 on dark render is quite faint — using alpha=0.6
+    or color=INK with same alpha would improve dark-render contrast while maintaining
+    subtlety
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-lag · python · matplotlib · anyplot.ai" in dark ink #1A1A17 at 12pt; axis labels "y(t)" and "y(t + 1)" in #1A1A17 at 10pt; tick labels in INK_SOFT #4A4A44 at 8pt; all clearly readable
+      Data: 499 scatter points using imprint_seq colormap (brand green #009E73 to blue #4467A3) mapped by time index; s=55, alpha=0.50; dashed diagonal reference line in INK_SOFT; annotation box with elevated cream #FFFDF6 fill showing "r = 0.834 · Strong positive autocorrelation"; colorbar on right labeled "Time Index"
+      Legibility verdict: PASS — all text elements readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in #F0EFE8 at 12pt; axis labels in #F0EFE8 at 10pt; tick labels in INK_SOFT #B8B7B0 at 8pt; colorbar label and ticks in INK_SOFT; all readable against dark background; annotation box uses #242420 elevated background with #F0EFE8 text — no dark-on-dark failures
+      Data: Scatter point colors identical to light render (imprint_seq green→blue unchanged); diagonal line and grid remain subtly visible
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -48,67 +55,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16, colorbar
-          label=18, colorbar ticks=14, annotation=20'
+        comment: All text readable in both themes; title 12pt, axis labels 10pt, ticks
+          8pt; proportions within 50-70% title-width guideline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text or element collisions; annotation positioned in sparse upper-left
+          corner of scatter
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: s=120, alpha=0.65 for 499 points is too large per guideline (s=20-50
-          for 300+); visible crowding in dense center
+        comment: s=55 with alpha=0.50 appropriate for 499-point medium-density scatter;
+          temporal colormap distinguishes all points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
+        comment: imprint_seq (green to blue) is CVD-safe; no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, colorbar well-positioned
+        comment: 3200x1800 confirmed; subplots_adjust provides balanced margins; colorbar
+          well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: y(t) and y(t+1) are standard notation for lag plots; appropriate
-          and descriptive
+        comment: y(t) and y(t+1) descriptive for lag plot; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq correctly built from #009E73 to #4467A3; backgrounds
+          FAF8F1/1A1A17; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean functional design; viridis and spine removal add polish but
-          overall is a well-configured library default
+        comment: 'Above default (4): temporal coloring with imprint_seq adds depth;
+          qualitative annotation descriptor; edgecolors=PAGE_BG creates subtle marker
+          separation'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid (alpha=0.2), tight_layout; deducted for
-          full x+y grid instead of preferred y-axis-only
+        comment: 'Above default (2): top/right spines removed, both-axis grid at 0.15
+          alpha, edgecolors treatment, colorbar styled with INK_SOFT'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Temporal color encoding reveals time structure, r annotation quantifies
-          the pattern, diagonal line guides interpretation
+        comment: 'Above default (2): qualitative annotation turns r-value into narrative;
+          temporal coloring reveals epoch contributions; diagonal reference anchors
+          interpretation'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -116,52 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag plot: scatter of y(t) vs y(t+k)'
+        comment: 'Correct lag scatter: y(t) on x-axis, y(t+k) on y-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal y=x reference line, time-index color encoding, r-value annotation,
-          configurable lag all present
+        comment: Diagonal y=x line, temporal coloring, r-value annotation, configurable
+          lag variable — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=y(t), y=y(t+1), correct per spec
+        comment: 499 of 500 observations plotted (lag=1 slicing); correct axis assignment
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra 'AR(1) Autocorrelation · ' prefix before spec-id;
-          should start with scatter-lag · matplotlib · pyplots.ai
+        passed: true
+        comment: Title 'scatter-lag · python · matplotlib · anyplot.ai' correct; colorbar
+          serves as legend for time index
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Strong autocorrelation case clearly demonstrated; missing contrast
-          with random/uncorrelated case which spec explicitly describes
+        comment: Demonstrates autocorrelation structure, temporal trends, diagonal
+          alignment, correlation quantification
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AR(1) synthetic process is explicitly listed in spec; neutral and
-          scientifically appropriate
+        comment: AR(1) with phi=0.85 is a standard neutral time-series; appropriate
+          for financial returns or sensor data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values -4.5 to 5.5 are realistic for zero-mean AR(1) with Gaussian
-          noise std=1
+        comment: 500 observations within spec range (100-5000); values approx [-5,
+          6] sensible for unit-noise AR(1)
     code_quality:
       score: 10
       max: 10
@@ -171,31 +188,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save, no functions or classes
+        comment: Flat top-to-bottom script; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: All imports used; sys.path.pop(0) is a necessary module-shadow fix
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity for AR(1) generation
+        comment: Clean readable code; no fake UI; AR(1) loop is idiomatic NumPy
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches='tight', no deprecated functions
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG); no
+          bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -205,27 +223,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ax.scatter with c= colormap, fig.colorbar(), ax methods throughout;
-          correct but no advanced matplotlib patterns
+        comment: Axes methods throughout; fig.colorbar(); tick_params with labelcolor;
+          ax.set_axisbelow(True); spines API; subplots_adjust
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: c= parameter with colormap + colorbar on scatter is distinctive matplotlib;
-          ax.transAxes for relative text placement is a nice touch
-  verdict: REJECTED
+        comment: LinearSegmentedColormap.from_list for custom imprint_seq; scatter
+          c= parameter for continuous color mapping; colorbar.outline and tick_params
+          theming
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - colorbar
+  - annotations
   patterns:
   - data-generation
-  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
   - grid-styling
