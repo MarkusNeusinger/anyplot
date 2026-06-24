@@ -1,13 +1,9 @@
 // anyplot.ai
 // qrcode-basic: Basic QR Code Generator
-// Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 85/100 | Created: 2026-06-24
-//# anyplot-orientation: square
-// anyplot.ai
-// qrcode-basic: Basic QR Code Generator
 // Library: Highcharts 12.6.0 | Node 22
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: pending | Created: 2026-06-24
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -61,7 +57,7 @@ const chart = Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    margin: [90, 60, 70, 60],
+    margin: [90, 60, 30, 60],
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -72,7 +68,7 @@ const chart = Highcharts.chart("container", {
   },
   subtitle: {
     text: "Encodes: " + ENCODED_URL + "  |  Version 2  ·  ECC Level M",
-    style: { color: t.inkSoft, fontSize: "13px" },
+    style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: { visible: false },
   yAxis: { visible: false },
@@ -98,7 +94,7 @@ const cellSize = qrAreaSize / totalMods;
 
 // White quiet zone background
 chart.renderer.rect(offsetX, offsetY, qrAreaSize, qrAreaSize)
-  .attr({ fill: QR_BG, zIndex: 3 })
+  .attr({ fill: QR_BG, zIndex: 3, 'shape-rendering': 'crispEdges' })
   .add();
 
 // Black QR modules
@@ -110,7 +106,7 @@ for (let row = 0; row < qrSize; row++) {
         offsetY + (row + quietZone) * cellSize,
         cellSize,
         cellSize
-      ).attr({ fill: MODULE_COLOR, zIndex: 4 }).add();
+      ).attr({ fill: MODULE_COLOR, zIndex: 4, 'shape-rendering': 'crispEdges' }).add();
     }
   }
 }
