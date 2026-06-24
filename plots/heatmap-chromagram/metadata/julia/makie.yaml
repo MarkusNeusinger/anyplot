@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-chromagram
 created: '2026-06-24T13:30:45Z'
-updated: '2026-06-24T13:36:32Z'
+updated: '2026-06-24T13:46:46Z'
 generated_by: claude-sonnet
 workflow_run: 28101706915
 issue: 4564
@@ -12,46 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all 12 pitch classes labeled on Y-axis, colorbar present
-    with Energy label, X-axis in seconds, sequential imprint_seq colormap applied
-    correctly'
-  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG) applied
-    to title, axis labels, tick labels, spines, and colorbar — both renders are fully
-    readable'
-  - Realistic I-V-vi-IV chord progression (C major → G major → A minor → F major)
-    with musically accurate chord tones and proximity-decay for adjacent pitches
-  - 'Idiomatic Makie layout: colorbar placed in fig[1, 2] with colgap! for spacing
-    — uses Makie''s figure layout grid as intended rather than overlaying elements
-    manually'
-  - 'Flawless code quality: flat script, Random.seed!(42), only used imports, no fake
-    UI elements'
+  - Correct Imprint sequential colormap (green→blue) applied to single-polarity continuous
+    energy data — palette compliance is perfect
+  - Full theme-adaptive chrome with all tokens (INK, INK_SOFT, PAGE_BG) wired through
+    to every axis element including colorbar ticks and labels
+  - Chord annotations (labels + dashed boundaries) add genuine domain storytelling
+    — the harmonic progression is immediately readable from the visualization
+  - 'Musically accurate data: circular pitch-class distance decay creates realistic
+    energy profiles for adjacent pitch classes'
+  - Modern `size=` API (correct for CairoMakie 0.22), Random.seed!(42) for reproducibility,
+    clean flat script
   weaknesses:
-  - 'DE-01/DE-03: No chord boundary annotations or labels to delineate the four chord
-    regions (0-3s C major, 3-6s G major, 6-9s A minor, 9-12s F major) — adding vertical
-    dividers or text annotations at chord transitions would significantly improve
-    data storytelling and viewer orientation'
-  - 'VQ-03: The imprint_seq (green #009E73 → blue #4467A3) gradient has limited luminance
-    contrast since both endpoints are mid-luminance colors — active chord tones (blue)
-    are visually distinguishable from the background (green) but the separation is
-    less crisp than a high-contrast dark-to-bright sequential gradient'
+  - Chord annotation labels (C, G, Am, F) at fontsize=14 are visually small relative
+    to the 2400 px canvas — increasing to fontsize=16–18 would improve readability
+    without crowding the top margin
+  - ELEVATED_BG token is defined but never used; minor code cleanliness issue
+  - Design Excellence is solid but conservative — a subtle per-chord background tint
+    or shaded region behind the chord labels would further enhance visual hierarchy
+    and storytelling without disrupting the heatmap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "heatmap-chromagram · julia · makie · anyplot.ai" in bold dark ink, spanning ~60% of width — readable. X-axis label "Time (seconds)" and Y-axis label "Pitch Class" in dark ink at size 16 — clear. Tick labels for pitch class names (C through B) and time values (0, 5, 10) in INK_SOFT gray — all readable. Colorbar label "Energy" with ticks at 0.25, 0.50, 0.75 — readable. Top and right spines removed; left and bottom spines in INK_SOFT.
-      Data: Heatmap uses imprint_seq (green #009E73 → blue #4467A3). Low-energy background is teal-green; active chord tone cells show as blue-purple. Four chord regions visible: C/E/G active (0-3s), D/G/B active (3-6s), C/E/A active (6-9s), C/F/A active (9-12s). Colorbar on right shows full gradient.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "heatmap-chromagram · julia · makie · anyplot.ai" in dark bold ink — readable. Y-axis label "Pitch Class" and X-axis label "Time (seconds)" in dark ink — readable. Tick labels (C/C#/.../B pitch names; 0/5/10 time values) in dark gray INK_SOFT — readable. Colorbar "Energy" label and 0.25/0.50/0.75 tick labels in dark gray — readable.
+      Data: Imprint sequential colormap (brand green #009E73 for low energy → blue #4467A3 for high energy). Chord tones appear as blue patches against the green field. Dashed vertical boundary lines at 3, 6, 9 s visible. Small "C", "G", "Am", "F" text labels above top row.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light cream text against near-black background — clearly readable. Y-axis pitch class tick labels (B at top, C at bottom) in INK_SOFT light gray — all readable, no dark-on-dark failure. X-axis time tick labels visible in light gray. Colorbar "Energy" label and tick values in light INK_SOFT — readable. Spines in INK_SOFT light gray against dark background.
-      Data: Heatmap data colors are identical to the light render — same teal-green background and blue-purple chord tone regions. The imprint_seq gradient looks consistent across both themes. The colorbar gradient matches the light render.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures observed; data colors identical between themes as required
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in near-white (#F0EFE8) — readable. Axis labels in near-white — readable. Tick labels in light gray (INK_SOFT #B8B7B0) — readable against dark background. Colorbar tick labels in light gray — readable. No dark-on-dark failure detected.
+      Data: Heatmap colors identical to light render — same brand-green/blue imprint_seq gradient. Chord boundary dashes visible in light gray. Chord annotations visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,55 +55,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text sizes explicitly set (titlesize=20, labels=16, ticks=14,
-          colorbar=16/13). Readable in both themes. Slight concern: tick labels at
-          size 14 may be marginal at mobile scale on 2400x2400 canvas.'
+        comment: All main labels readable in both themes; font sizes explicitly set;
+          chord annotation labels at fontsize=14 are small but visible; minor mobile-scale
+          deduction
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. 12 pitch class labels well spaced on Y-axis.
-          Colorbar clearly separated from heatmap.
+        comment: No text or element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Active chord tones clearly distinguishable as blue-purple against
-          green background. Contrast is adequate but limited by imprint_seq's mid-luminance
-          endpoints.
+        comment: Heatmap contrast clear; dashed chord-boundary lines visible; colorbar
+          gradient well-rendered
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses imprint_seq which is perceptually uniform and CVD-safe per palette
-          spec.
+        comment: imprint_seq (green→blue) is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400). Colorbar well positioned in fig[1,2].
-          colgap!(15) provides clean separation. No overflow.
+        comment: Square 2400×2400 px correct for heatmap; good colorbar gap; nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: xlabel='Time (seconds)' with units, ylabel='Pitch Class', colorbar
-          label='Energy'. All descriptive.
+        comment: Time (seconds), Pitch Class, Energy — all descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses imprint_seq (green->blue) for sequential continuous data. Light
-          bg #FAF8F1, dark bg #1A1A17. Both themes correct. Data colors identical
-          between renders.'
+        comment: 'imprint_seq (brand green→blue) for single-polarity continuous data;
+          backgrounds #FAF8F1/#1A1A17 correct; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,24 +106,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Proper Imprint palette, clean theme tokens, spines removed, Makie
-          layout grid used for colorbar. No exceptional sophistication but above the
-          generic default.
+        comment: 'Above default: Imprint sequential colormap, removed spines, chord
+          annotations; intentional musical structure in data'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed, no grid lines (appropriate for heatmap),
-          colgap for spacing. Active refinement choices above minimum.
+        comment: Top/right spines removed; grid off (appropriate for heatmap); subtle
+          colorbar width; colgap for breathing room
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Chord progression pattern is visible in data. No annotations identifying
-          chord regions or transitions — viewer must infer the harmonic structure
-          without guidance.
+        comment: Chord labels + dashed boundaries create musical narrative; I-V-vi-IV
+          progression recognisable; harmonic content readable from heatmap
     spec_compliance:
       score: 15
       max: 15
@@ -142,57 +131,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap chromagram visualization.
+        comment: Correct heatmap chromagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes labeled, X-axis in seconds, colorbar present,
-          sequential colormap (imprint_seq), 120 frames at 10fps, chord transitions
-          visible.
+        comment: All 12 pitch classes labelled; sequential colormap; colorbar included;
+          time axis in seconds; fine-grained chord transitions
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X, pitch class on Y, energy as color intensity. All data
-          axes correctly mapped.
+        comment: X=time (s), Y=pitch class, color=energy; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'heatmap-chromagram · julia · makie · anyplot.ai'. Colorbar
-          labeled 'Energy'.
+        comment: heatmap-chromagram · julia · makie · anyplot.ai — correct canonical
+          format
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'All 12 pitch classes shown, time axis, energy colormap, colorbar,
-          fine resolution. Missing: chord boundary annotations would demonstrate full
-          feature range.'
+        comment: 120 time frames, 12 pitch classes, 4 chord regions, realistic energy
+          decay using circular pitch-class distance
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: I-V-vi-IV chord progression (C, G, Am, F) — the most common real-world
-          chord progression. Musically accurate chord tone selection with proximity-decay
-          falloff. Neutral.
+        comment: I-V-vi-IV in C major is a real-world progression; energy values musically
+          plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0.0-1.0 (normalized chroma features), 120 frames over 12 seconds
-          (~10fps chroma rate), 12 pitch classes. All realistic for chroma feature
-          extraction.
+        comment: 12 seconds at 10 fps (120 frames); energy 0–1 normalized; sensible
+          domain values
     code_quality:
       score: 10
       max: 10
@@ -202,31 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present.
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three are used.
+        comment: CairoMakie, Colors, Random — all actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a heatmap. No fake UI elements.
+        comment: Clean structure, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct.
+        comment: Saves plot-$(THEME).png; uses modern size= API correct for Makie
+          0.22
     library_mastery:
       score: 7
       max: 10
@@ -236,20 +221,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Figure+Axis+heatmap!+Colorbar in layout grid. colgap! for spacing.
-          ax.yticks for custom labels. All idiomatic Makie patterns.
+        comment: heatmap!, vlines!, text!, Colorbar in figure grid, colgap!, ax.yticks,
+          ylims!, cgrad() — all canonical Makie idioms; above default
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: fig[1,2] colorbar placement in layout grid and colgap! are Makie-distinctive.
-          ax.yticks=(positions, labels) shows Makie tick customization.
+        comment: Makie figure-layout grid for Colorbar placement is distinctively
+          Makie; cgrad() is Makie-native; colgap! is a Makie layout-system call
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
