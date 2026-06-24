@@ -1,0 +1,282 @@
+library: d3
+language: javascript
+specification_id: titration-curve
+created: '2026-06-24T11:48:04Z'
+updated: '2026-06-24T12:08:13Z'
+generated_by: claude-sonnet
+workflow_run: 28095707003
+issue: 4407
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Excellent dual-axis layout with derivative curve correctly implemented using d3.axisRight
+    and a secondary y-scale
+  - Perfect data quality — 501-point mathematically correct HCl+NaOH titration with
+    accurate pH values, equivalence at pH 7
+  - All font sizes explicitly set and theme tokens correctly threaded through all
+    DOM elements (title, ticks, axis labels, legend, annotation)
+  - 'Clean D3 idiom: d3.line() with curveMonotoneX and curveCatmullRom.alpha(0.5),
+    proper datum() / join() usage, no hard-coded canvas sizes'
+  - Code quality is perfect — deterministic mathematical data generation, no fake
+    interactivity, KISS structure
+  weaknesses:
+  - 'SC-02 partial miss: spec asks to shade the buffer region (pH = pKa ± 1) but the
+    implementation shades a steep transition zone (23–27 mL) which is a different
+    concept — for a strong acid/strong base system there is no pKa, so a chemically
+    accurate alternative (half-equivalence region annotation or omission of buffer
+    zone) should be considered'
+  - 'DE-01 / DE-02 headroom: the design is clean but not yet publication-ready — removing
+    the remaining tick-mark lines (ax.select(.domain) removed but tick lines on xAx
+    and yAxL still use t.inkSoft instead of t.grid), and reducing the Steep transition
+    zone label from 11 px to something even subtler or omitting it would lift polish'
+  - 'VQ-01 minor: Steep transition zone label at 11 px CSS is the smallest text in
+    the chart — at 22 px native on a 3200 px canvas it is borderline; removing or
+    increasing to 12 px would improve legibility at mobile widths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct anyplot light surface.
+      Chrome: Title "titration-curve · javascript · d3 · anyplot.ai" in dark ink (~22 px) clearly
+        readable; left y-axis label "pH" and x-axis label "Volume of NaOH Added (mL)" in dark ink
+        (16 px) clearly readable; right y-axis label "dpH/dV (pH per mL)" in lavender (#C475FD) at
+        14 px readable; tick labels in secondary ink at 14 px readable; legend text at 13 px
+        readable; annotation "Equivalence point" / "V = 25.0 mL,  pH = 7.0" in ink and inkSoft
+        readable.
+      Data: Primary titration curve in brand green #009E73, stroke-width 3.5, clean sigmoidal shape
+        from pH ~1 to pH ~13. Derivative (dpH/dV) in lavender #C475FD dashed line with a sharp peak
+        at V=25 mL. Equivalence point marker (green circle, r=7) at (25 mL, pH 7). Shaded
+        transition zone (23–27 mL) in pale green at 7% opacity. pH=7 dashed reference line subtle.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — correct anyplot dark surface.
+      Chrome: Title in light ink readable; axis labels in light ink readable; right axis label in
+        lavender readable; tick labels in secondary light color readable; annotation box shows
+        dark elevated background (#242420) with light ink text readable; legend text readable.
+      Data: Titration curve still in #009E73 — identical to light render. Derivative curve still in
+        #C475FD — identical. No color shift between themes confirmed.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text renders with
+        adequate contrast against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, legend/annotation 13px); all readable in both themes. Minor: ''Steep
+          transition zone'' label at 11px CSS is the smallest element, borderline
+          for mobile scaling.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; annotation box positioned above equivalence
+          point without collision; legend in top-left clear of all data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line chart with 501 pts; stroke-width 3.5 for primary curve, 2.5
+          for derivative; equivalence marker r=7 clearly visible; appropriate sizing
+          throughout.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          and CVD-safe (different hue families with high ΔE under deuteranopia/protanopia).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200×1800. Good margins (top:80, right:125, bottom:85,
+          left:85). Right axis label at width-20 is tight but all pixels visible —
+          no AR-09 clipping. Good canvas utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Volume of NaOH Added (mL)'' with units; Y: ''pH'' (dimensionless,
+          correct); right Y: ''dpH/dV (pH per mL)'' with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) ✓; second series #C475FD (Imprint
+          position 2, lavender) ✓; light bg ~#FAF8F1 ✓; dark bg ~#1A1A17 ✓; data colors
+          identical between themes ✓; chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional layout with Imprint palette, annotation box with
+          elevated background, derivative axis in matching palette color, reference
+          lines. Good but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain strokes removed on main axes; grid y-only in t.grid; right
+          axis in palette color at 0.6 opacity; annotation box uses elevatedBg. Good
+          refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Equivalence point has four visual cues: vertical dashed line, marker
+          dot, annotation box, and derivative peak. pH=7 reference line anchors neutrality.
+          Viewer guided to the key chemistry insight.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal titration curve with derivative overlay.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Equivalence point marked with dashed line + annotation ✓; derivative
+          on secondary y-axis ✓; x/y axis labels ✓; pH 0-14 ✓. Buffer region shading:
+          spec asks for pKa±1 buffer region but implementation uses ''steep transition
+          zone'' (23-27 mL) — correct for strong acid/base but conceptually different.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: volume 0-50 mL ✓; left Y: pH 0-14 ✓; right Y: dpH/dV ✓.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'titration-curve · javascript · d3 · anyplot.ai' ✓; legend
+          labels 'Titration curve (pH)' and 'Derivative (dpH/dV)' match the data ✓.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full sigmoidal curve, equivalence point, derivative peak, transition
+          zone, pH=7 reference — all aspects of the plot type covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard 25 mL / 0.1 M HCl + 0.1 M NaOH — textbook chemistry lab
+          scenario, neutral and educational.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: pH start ~1 (correct for 0.1 M HCl), equivalence at pH 7 ✓, end pH
+          ~13 (correct for excess NaOH). 501 points produce smooth curve. Derivative
+          peak sharp and at exactly 25 mL ✓.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: data → SVG → scales → grid → curves → axes → labels → legend
+          → title. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data generated deterministically from mathematical formula —
+          no random elements.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only d3 global and window.ANYPLOT_TOKENS / window.ANYPLOT_SIZE
+          — no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Clean idiomatic D3: datum(), d3.line(), join(), scaleLinear(). No
+          fake interactivity. Appropriate complexity for the visualization.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness emits plot-light.png + plot-dark.png + HTML. No deprecated
+          functions.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct D3 margin convention, datum()-based path rendering, d3.scaleLinear(),
+          d3.axisLeft/Right/Bottom, d3.line() with curve interpolators, d3.max() for
+          domain computation.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual y-axis with d3.axisRight() on a secondary scale; d3.curveMonotoneX
+          for the sigmoidal pH curve; d3.curveCatmullRom.alpha(0.5) for derivative
+          smoothing; central-difference numerical derivative computed in-snippet.
+          These are features that show genuine D3 mastery.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
