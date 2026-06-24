@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
-Library: plotnine | Python 3.13
-Quality: pending | Updated: 2026-06-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-24
 """
 
 import os
