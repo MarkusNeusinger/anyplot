@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -20,7 +20,7 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette
 BRAND = "#009E73"  # position 1 — data markers
-LINE_COLOR = "#4467A3"  # position 3 — regression line
+LINE_COLOR = "#C475FD"  # position 2 — regression line
 
 # Data — first-order decomposition reaction rate constants at various temperatures
 temperature_K = np.array([300, 330, 360, 400, 440, 480, 520, 560, 600])
@@ -106,7 +106,7 @@ fig.add_annotation(
     y=ln_k.max() - 0.3,
     text=f"<b>E<sub>a</sub> = {Ea_extracted / 1000:.1f} kJ/mol</b><br>R² = {r_squared:.4f}",
     showarrow=False,
-    font={"size": 20, "color": INK},
+    font={"size": 14, "color": INK},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderwidth=1,
