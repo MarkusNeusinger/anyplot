@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
