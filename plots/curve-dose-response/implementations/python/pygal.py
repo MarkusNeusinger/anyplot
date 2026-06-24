@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-24
+Quality: 91/100 | Updated: 2026-06-24
 """
 
 import os
