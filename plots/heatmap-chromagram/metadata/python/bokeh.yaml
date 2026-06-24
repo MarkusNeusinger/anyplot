@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: heatmap-chromagram
 created: '2026-03-17T22:28:50Z'
-updated: '2026-06-24T13:24:24Z'
+updated: '2026-06-24T13:34:09Z'
 generated_by: claude-sonnet
 workflow_run: 28100828163
 issue: 4564
@@ -15,123 +15,125 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 quality_score: 89
 review:
   strengths:
-  - Correct Imprint sequential colormap built from scratch with _lerp_hex interpolation
-    — exactly the right colormap choice for single-polarity energy data
-  - Chord section annotations (labels + dashed boundary Span lines) add genuine musical
-    storytelling — well above a plain heatmap
-  - 'Both themes fully theme-adaptive: all chrome tokens (background, text, colorbar,
-    annotation fills) flip correctly; data colors identical across themes'
-  - image glyph for seamless heatmap rendering (no cell gaps) is the idiomatic Bokeh
-    approach for this use case
-  - Realistic I-V-vi-IV chord progression data with smooth transitions and background
-    noise — excellent domain fidelity
-  - 2400x2400 square canvas correctly chosen for the symmetric pitch x time grid
+  - 'Perfect spec compliance: all 12 pitch classes shown with clear labels, colorbar
+    present with ''Energy'' title, time axis in seconds, chord progressions correctly
+    simulated'
+  - 'Correct imprint_seq colormap built from #009E73 to #4467A3 — mathematically verified
+    linear interpolation, single-polarity energy data mapped appropriately'
+  - 'Excellent chord progression annotations: dashed Span boundaries at t=2/4/6s with
+    Label overlays (C major, G major, A minor, F major) provide clear musical narrative'
+  - 'Both themes pass readability checks: #FAF8F1 light background with dark text,
+    #1A1A17 dark background with light text, all chrome tokens correctly applied'
+  - 'Idiomatic Bokeh usage: image glyph for seamless heatmap (no cell gaps), invisible
+    rect overlay for HoverTool interactivity, ColumnDataSource for full hover capability'
+  - 'Perfect code quality: KISS structure, np.random.seed(42), all imports used, CDP
+    viewport override for reliable 2400×2400 PNG output'
   weaknesses:
-  - 'Title is missing the mandatory ''· python ·'' language component — fix: change
-    title="heatmap-chromagram · bokeh · anyplot.ai" to title="heatmap-chromagram ·
-    python · bokeh · anyplot.ai"'
-  - '_lerp_hex helper function departs from the flat-script KISS convention — minor:
-    could be inlined as a list comprehension'
-  - Chord annotation font size (28pt) is slightly smaller than tick labels (34pt)
-    — consider aligning to 32-34pt for consistent typographic hierarchy
+  - 'Design Excellence is moderate (13/20): chord annotations are functional but the
+    annotation styling (plain background fill boxes) could be more elegant — consider
+    thinner dashed lines and smaller annotation font or positioning labels above the
+    plot area to avoid overlapping the C pitch class row'
+  - Colorbar tick label font size (34pt) and title font size (36pt) are slightly large
+    relative to the colorbar width (60px) — the colorbar area feels crowded; reducing
+    to ~28pt tick labels and ~30pt title would improve proportions
+  - No grid reference lines on the Y-axis between pitch classes — a very subtle y-axis
+    grid (opacity ~0.1) would help distinguish rows, especially for the middle pitch
+    classes (F, F#, G) which can appear ambiguous in the green baseline
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "heatmap-chromagram · bokeh · anyplot.ai" in bold dark INK (#1A1A17) at top; X-axis label "Time (seconds)" and Y-axis label "Pitch Class" in INK; tick labels in INK_SOFT (#4A4A44); chord annotation labels with semi-transparent PAGE_BG background fill; colorbar "Energy" title and tick labels in INK/INK_SOFT — all readable
-      Data: Imprint sequential colormap (brand green #009E73 → blue #4467A3) showing energy across 12 pitch classes; chord sections C major (0-2s), G major (2-4s), A minor (4-6s), F major (6-8s) visible via distinct energy patterns; dashed boundary lines at t=2,4,6s in INK_SOFT
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-chromagram · python · bokeh · anyplot.ai" bold dark text spans ~75% width, clearly readable; Y-axis label "Pitch Class" and X-axis label "Time (seconds)" in dark INK; tick labels (C, C#, D, ... B and 0, 2, 4, 6, 8) in INK_SOFT dark gray; colorbar on right with "Energy" title and 0–1 scale — all readable
+      Data: Heatmap uses imprint_seq from #009E73 (low energy, teal/green baseline) to #4467A3 (high energy, blue/indigo). Active chord notes appear as blue rectangular regions against green background. C and G rows show high energy in first segment (C major); G and B in second (G major); A and C/E in third (A minor); F and A in fourth (F major). Dashed vertical boundary lines at t=2, 4, 6s with chord labels "C major", "G major", "A minor", "F major" overlaid on top of heatmap with semi-transparent PAGE_BG backgrounds
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light INK (#F0EFE8) clearly readable; axis labels in INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0); chord annotation labels with semi-transparent #1A1A17 background fill keeping them legible; colorbar labels and title in light colors — all readable against dark background; no dark-on-dark failures observed
-      Data: Imprint sequential colormap colors are IDENTICAL to light render (green #009E73 → blue #4467A3) — only chrome flips between themes
-      Legibility verdict: PASS
+      Chrome: Title in light INK (#F0EFE8), clearly visible against dark background; axis labels in light INK; tick labels in INK_SOFT (#B8B7B0) light gray; colorbar labels and "Energy" title in light colors — all readable, no dark-on-dark failures observed
+      Data: Data colors are identical to light render — same teal/green for low energy, same blue/indigo for high energy. The imprint_seq palette positions are theme-invariant as required. Chord annotations have PAGE_BG (#1A1A17) background fill at 0.65 alpha blending with dark background; text is INK_SOFT light gray — readable
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 28pt chord annotations); chord annotations at 28pt slightly smaller
-          than tick labels at 34pt — minor inconsistency but all text readable in
-          both themes
+        comment: 'All font sizes explicitly set: 50pt title, 42pt axis labels, 34pt
+          ticks. Both themes fully readable with correct proportions. No overflow.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; chord annotations with background fills sit cleanly
-          inside heatmap
+        comment: No text collisions. Chord annotation labels have background fill
+          to prevent readability issues when overlapping heatmap cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Heatmap cells clearly render energy gradient; chord boundary dashed
-          lines visible; colorbar shows full 0-1 range
+        comment: Heatmap cells clearly visible with good color contrast between green
+          (low energy) and blue/indigo (high energy). All 12 pitch classes distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint sequential colormap is CVD-safe; no red-green as sole signal;
-          colorbar provides quantitative reference
+        comment: imprint_seq (green to blue) is CVD-safe. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas for symmetric pitch-time grid; canvas
-          gate passed; min_border values accommodate colorbar and axis labels
+        comment: Canvas gate passed (2400x2400). Heatmap fills plot area well. min_border
+          values provide generous margins. Colorbar correctly positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Time (seconds), Y: Pitch Class, colorbar: Energy — all descriptive
-          with units where applicable'
+        comment: 'Title: ''heatmap-chromagram · python · bokeh · anyplot.ai''. X:
+          ''Time (seconds)''. Y: ''Pitch Class''. Colorbar: ''Energy''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct imprint_seq (#009E73 to #4467A3) for single-polarity continuous
-          energy data; backgrounds #FAF8F1/#1A1A17; all theme chrome tokens correctly
-          applied'
+        comment: 'imprint_seq correctly built: #009E73 to #4467A3. Single-polarity
+          sequential for energy data. Light bg #FAF8F1, dark bg #1A1A17. All theme-adaptive
+          chrome correct.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design above defaults: custom imprint_seq colormap, chord
-          annotations with theme-adaptive background fills, intentional typographic
-          hierarchy, well-styled colorbar'
+        comment: 'Above default: custom imprint_seq colormap, thoughtful chord annotations
+          with dashed boundaries, semi-transparent annotation backgrounds. Professional
+          but not FiveThirtyEight-level polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed (correct for heatmap); four spines retained (correct
-          for enclosed heatmap); theme-adaptive outline; background fills on chord
-          labels; generous margins
+        comment: Grid disabled (appropriate for heatmap), all 4 spines kept (correct
+          for enclosed grid), generous margins, colorbar well-integrated.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Chord boundary lines and labeled sections create clear I-V-vi-IV
-          harmonic narrative; viewer guided through tonal story
+        comment: 'Chord progression annotations (I-V-vi-IV: C major, G major, A minor,
+          F major) create clear musical narrative. Dashed boundaries provide temporal
+          segmentation. Viewer immediately understands harmonic structure.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,28 +141,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct heatmap-style chromagram using Bokeh image glyph for seamless
-          rendering
+        comment: Correct heatmap chromagram with pitch classes vs time, color=energy.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 12 pitch classes labeled; sequential colormap for energy; colorbar;
-          time axis in seconds; chord progression data
+        comment: All 12 pitch classes labeled, sequential colormap, colorbar with
+          energy scale, time axis in seconds, realistic chord progressions.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=pitch class, color=energy; full range visible
+        comment: X=time in seconds, Y=pitch class, color=energy. All data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing mandatory '· python ·' component — is 'heatmap-chromagram
-          · bokeh · anyplot.ai', must be 'heatmap-chromagram · python · bokeh · anyplot.ai'
+        passed: true
+        comment: Title 'heatmap-chromagram · python · bokeh · anyplot.ai'. Colorbar
+          labeled 'Energy'.
     data_quality:
       score: 15
       max: 15
@@ -170,59 +171,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 12 chromatic pitch classes; chord-by-chord energy variation;
-          transitions with smoothing; tonal and non-tonal pitch energy
+        comment: Shows all 12 pitch classes with varied energy patterns across 4 chord
+          sections. Both high-energy active notes and low-energy background. Smooth
+          chord transitions.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real MIR domain; I-V-vi-IV progression is widely recognized; 0-8s
-          at 10fps matches real chroma extraction parameters
+        comment: Classic I-V-vi-IV chord progression (C-G-Am-F) — the most common
+          pop music progression. Realistic MIR context, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy 0-1 normalized; 80 frames over 8s; 12 pitch classes covering
-          chromatic octave
+        comment: '80 frames over 8 seconds (10fps) realistic for chroma extraction.
+          Energy 0-1 normalized. Chord notes correctly match music theory (C major:
+          C/E/G, G major: G/B/D, etc.).'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: _lerp_hex helper function defined; departs from flat-script KISS
-          convention though small and justified
+        passed: true
+        comment: 'Flat script: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used; sys.path manipulation correctly prevents
-          module shadowing
+        comment: All imports used. No extra imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean sequential structure; zip with strict=True; convolution for
-          smooth transitions; CDP override for exact viewport
+        comment: Clean Pythonic code. No fake UI elements. CDP override for viewport
+          is a sound engineering choice.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.9.1
+          API.
     library_mastery:
       score: 8
       max: 10
@@ -232,31 +234,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, add_layout for ColorBar/Span/Label, FixedTicker
-          + major_label_overrides, Range1d — all idiomatic Bokeh patterns
+        comment: Uses ColumnDataSource, image glyph for seamless heatmap, LinearColorMapper,
+          FixedTicker with major_label_overrides, add_layout for annotations. Strong
+          Bokeh patterns throughout.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: image glyph for seamless raster heatmap (distinctively Bokeh), HoverTool
-          with invisible rect overlay, Span annotations, LinearColorMapper with custom
-          palette
-  verdict: REJECTED
+        comment: 'Uses multiple Bokeh-distinctive features: Span for boundary lines,
+          Label for overlay annotations, HoverTool with custom tooltips, image glyph
+          (no cell gaps), invisible rect overlay pattern for interactivity on a raster
+          layer.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - colorbar
-  - hover-tooltips
-  - html-export
   - annotations
   - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - alpha-blending
