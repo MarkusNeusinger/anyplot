@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
@@ -129,6 +129,15 @@ cbar.ax.set_facecolor(PAGE_BG)
 cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
 cbar.set_label("Energy", fontsize=10, color=INK)
 cbar.outline.set_edgecolor(INK_SOFT)
+
+# Chord transition annotations — vertical dashed lines + chord labels above plot
+chord_bounds = [0, 40, 80, 120, 140, 160]
+chord_names = ["C", "G", "Am", "C", "F"]
+for bound in chord_bounds[1:-1]:
+    ax.axvline(x=bound, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.65, zorder=5)
+for start, end, name in zip(chord_bounds[:-1], chord_bounds[1:], chord_names, strict=False):
+    center_frac = ((start + end) / 2) / n_frames
+    ax.text(center_frac, 1.012, name, ha="center", va="bottom", fontsize=7.5, color=INK_SOFT, transform=ax.transAxes)
 
 fig.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
