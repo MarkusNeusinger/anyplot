@@ -3,10 +3,6 @@
 // Library: echarts 5.5.1 | JavaScript 22.23.0
 // Quality: 86/100 | Created: 2026-06-24
 //# anyplot-orientation: square
-// anyplot.ai
-// qrcode-basic: Basic QR Code Generator
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-24
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -61,10 +57,25 @@ const chart = echarts.init(document.getElementById("container"));
 const MODULE_DARK = t.ink;
 const MODULE_LIGHT = t.pageBg;
 
-// Grid: 990×990 CSS px centered in 1200×1200 mount
-// Each of 33 cells = 30 CSS px — exactly fills the quiet-zone + 25-module QR
-const GRID_SIZE = 990;
-const MARGIN = (1200 - GRID_SIZE) / 2; // 105 CSS px
+// Grid: 930×930 CSS px centered in 1200×1200 mount
+// Equal left/right margins (135 px) + increased bottom (140 px) center the QR vertically
+const GRID_SIZE = 930;
+const MARGIN = (1200 - GRID_SIZE) / 2; // 135 CSS px
+const GRID_TOP = 130;
+const GRID_BOTTOM = 140;
+
+// Cell size for computing annotation positions
+const cellW = GRID_SIZE / TOTAL; // ≈ 28.18 px
+
+// Finder-pattern pixel anchors (top-left corner of each 7×7 FP block, in canvas coords)
+const fp_tl_x = MARGIN + QUIET * cellW;          // top-left FP left edge
+const fp_tl_y = GRID_TOP + QUIET * cellW;         // top FPs top edge
+const fp_tr_x = MARGIN + (QUIET + 18) * cellW;   // top-right FP left edge
+const fp_bl_y = GRID_TOP + (QUIET + 18) * cellW; // bottom-left FP top edge
+const fp_w = 7 * cellW;                           // finder-pattern width/height
+const fp_cx_l = fp_tl_x + fp_w / 2;              // left FP center x
+const fp_cx_r = fp_tr_x + fp_w / 2;              // right FP center x
+const qrBottom = 1200 - GRID_BOTTOM;              // grid bottom edge in canvas px
 
 chart.setOption({
   animation: false,
@@ -77,11 +88,62 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" },
     subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
+  graphic: [
+    // Thin themed frame around the full QR (including quiet zone) — design framing
+    {
+      type: "rect",
+      bounding: "raw",
+      shape: { x: MARGIN - 2, y: GRID_TOP - 2, width: GRID_SIZE + 4, height: GRID_SIZE + 4 },
+      style: { fill: "transparent", stroke: t.inkSoft, lineWidth: 1.5, opacity: 0.35 },
+      z: 50,
+    },
+    // "FP" callout above the top-left finder pattern (in the quiet zone)
+    {
+      type: "text",
+      bounding: "raw",
+      x: fp_cx_l,
+      y: fp_tl_y - 20,
+      style: { text: "FP", fill: t.inkSoft, fontSize: 10, fontWeight: "bold", textAlign: "center" },
+      z: 60,
+    },
+    // "FP" callout above the top-right finder pattern (in the quiet zone)
+    {
+      type: "text",
+      bounding: "raw",
+      x: fp_cx_r,
+      y: fp_tl_y - 20,
+      style: { text: "FP", fill: t.inkSoft, fontSize: 10, fontWeight: "bold", textAlign: "center" },
+      z: 60,
+    },
+    // "FP" callout below the bottom-left finder pattern (in the quiet zone)
+    {
+      type: "text",
+      bounding: "raw",
+      x: fp_cx_l,
+      y: fp_bl_y + fp_w + 6,
+      style: { text: "FP", fill: t.inkSoft, fontSize: 10, fontWeight: "bold", textAlign: "center" },
+      z: 60,
+    },
+    // Footer annotation explaining QR structural components
+    {
+      type: "text",
+      bounding: "raw",
+      x: 600,
+      y: qrBottom + 38,
+      style: {
+        text: "FP = Finder Pattern (3 corners)  ·  Timing Patterns  ·  Quiet Zone (border)",
+        fill: t.inkSoft,
+        fontSize: 12,
+        textAlign: "center",
+      },
+      z: 50,
+    },
+  ],
   grid: {
     left: MARGIN,
     right: MARGIN,
-    top: 130,
-    bottom: 80,
+    top: GRID_TOP,
+    bottom: GRID_BOTTOM,
     containLabel: false,
   },
   xAxis: {
