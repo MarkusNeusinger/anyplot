@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:46:01Z'
-updated: '2026-06-24T07:55:18Z'
+updated: '2026-06-24T08:27:45Z'
 generated_by: claude-sonnet
 workflow_run: 28083179212
 issue: 4409
@@ -12,102 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Smooth Gaussian-based energy curve with box-filter smoothing produces a realistic
-    single-step exothermic profile
-  - Excellent color assignments using semantic Imprint palette roles — green for energy
-    profile, cyan for Ea, ochre for ΔH, lavender for transition state
-  - Horizontal dashed reference lines at reactant and product energy levels match
-    spec requirements
-  - 'Full code quality: deterministic data, clean imports, KISS structure, and correct
-    HTML+PNG dual output for pygal (interactive library)'
-  - Theme-adaptive chrome implemented correctly — backgrounds, INK, INK_MUTED all
-    flip properly between light and dark
+  - 'All spec features implemented: smooth energy curve, direct inline labels for
+    Transition State/Reactants/Products, Ea and ΔH double-headed arrows injected via
+    SVG, horizontal dashed reference lines at key energy levels'
+  - SVG post-processing for inline text annotations and arrowhead polygon injection
+    is a sophisticated technique that leverages pygal's SVG-native rendering pipeline
+  - 'Perfect spec compliance: correct exothermic energy values (reactants 50, TS 120,
+    products 20 kJ/mol → Ea=70, ΔH=−30 kJ/mol), all required visual elements present
+    and labeled'
+  - 'Both light and dark themes pass theme-readability checks — INK token correctly
+    flips to #F0EFE8 for dark mode SVG annotation text, no dark-on-dark failures'
+  - Deterministic data generation (Gaussian-based curve with convolution smoothing)
+    ensures full reproducibility without a random seed
   weaknesses:
-  - Spec requires labeling reactants, products, and transition state *directly on
-    the plot* (as text annotations), but the implementation uses only legend entries
-    — direct on-plot text labels are expected for educational clarity
-  - Spec requires double-headed arrows for Ea and ΔH, but pygal cannot render SVG
-    path arrows natively; the dashed vertical lines with endpoint dots are a reasonable
-    approximation but fall short of the arrow requirement
-  - Some unused blank canvas space at bottom — the large margin_bottom=260 pushes
-    a visible gap below the 3-column bottom legend
-  - 'Design Excellence is moderate: the chart reads as a well-configured pygal chart;
-    no spines can be hidden in pygal (library constraint), and grid lines use pygal
-    defaults with limited styling control'
+  - 'VQ-07 (1/2): Imprint palette colors used but in non-canonical positions 2→N order
+    (#2ABCCD for Ea, #BD8233 for ΔH, #C475FD for TS, #4467A3 for Reactants, #AE3030
+    for Products) without reader-evident semantic mapping — chemistry readers have
+    no strong universal color expectation for these roles'
+  - 'DE-02 (3/6): Pygal default box/frame is visible around the plot; a cleaner scientific
+    aesthetic would benefit from reduced or removed frame. Legend at the bottom is
+    partially redundant since Transition State, Reactants, and Products are already
+    directly labeled with inline text annotations'
+  - 'CQ-01 (2/3): Multiple helper functions (find_plot_transform, find_circle_with_r,
+    tri_up, tri_down, xy closure) deviate from KISS flat structure; necessary for
+    the SVG manipulation but increases complexity'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "line-reaction-coordinate · python · pygal · anyplot.ai" renders in dark ink (~65% canvas width, proportional). Y-axis label "Potential Energy (kJ/mol)" readable in dark text on left. X-axis label "Reaction Coordinate" visible and centered below the plot area. Y-axis tick labels (20, 50, 80, 100, 120) in dark text, clearly legible. No X-axis tick labels (by design — reaction coordinate is dimensionless). All text readable against light background.
-      Data: Main energy curve in brand green #009E73 (correct Imprint position 1) — smooth Gaussian bell curve from ~50 kJ/mol rising to 120 kJ/mol at the transition state then descending to ~20 kJ/mol. Dashed reference lines at 50 kJ/mol (reactant) and 20 kJ/mol (product). Large lavender (#C475FD) marker at transition state (5.0, 120). Blue (#4467A3) marker at reactants (1.0, 50). Matte red (#AE3030) marker at products (9.5, 20). Cyan (#2ABCCD) dashed vertical line for Ea indicator from (5, 50) to (5, 120) with endpoint dots. Ochre (#BD8233) dashed vertical line for ΔH indicator from (8.5, 50) to (8.5, 20) with endpoint dots.
-      Legend: 6-entry 3-column legend at bottom: Energy Profile, Ea = 70 kJ/mol, ΔH = -30 kJ/mol, Transition State (‡), Reactants (50 kJ/mol), Products (20 kJ/mol) — all readable.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "line-reaction-coordinate · python · pygal · anyplot.ai" in dark text spans ~75% of canvas width, clearly readable. Y-axis title "Potential Energy (kJ/mol)" rotated vertically, dark text, readable. X-axis title "Reaction Coordinate" at bottom, readable. Y-axis tick labels (20, 50, 80, 100, 120) in dark muted text, all readable. No x-axis tick labels (intentional — arbitrary units).
+      Data: Smooth Gaussian energy profile curve in brand green (#009E73) prominently visible. Lavender circle marker (#C475FD) at the transition state peak (~120 kJ/mol). Blue circle marker (#4467A3) at reactants (~50 kJ/mol). Matte red circle marker (#AE3030) at products (~20 kJ/mol). Cyan dashed vertical line (#2ABCCD) with up/down arrowheads for Ea indicator. Ochre dashed vertical line (#BD8233) with up/down arrowheads for ΔH indicator. Dashed horizontal reference lines in INK_MUTED at 50 and 20 kJ/mol. Direct SVG-injected bold text: "Transition State (‡)" above peak, "Reactants" near blue marker, "Products" near red marker. Legend at bottom with 3 columns showing 6 series.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, Y-axis label, X-axis label, and tick labels all render in light cream text (#F0EFE8 / INK_MUTED variants) — clearly visible against the dark background. No dark-on-dark failures observed. Legend text is light-colored and readable. No "dark on dark" failure on any element.
-      Data: All data colors identical to light render — green energy curve #009E73, lavender transition state marker, blue reactants marker, red products marker, cyan Ea dashed line, ochre ΔH dashed line. Reference dashed lines appear as lighter dashed lines on dark background. Colors are correct Imprint palette.
-      Legibility verdict: PASS — all text is light-colored and readable against the near-black background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and all axis labels in light text (#F0EFE8 equivalent), clearly readable against dark background. Y-axis tick labels (20, 50, 80, 100, 120) in light muted color, all readable. Legend text at bottom in light color, readable. SVG-injected annotation text ("Transition State (‡)", "Reactants", "Products") correctly uses INK=#F0EFE8 in dark mode — all light-colored and readable.
+      Data: Energy profile curve in same brand green (#009E73) as light render — identical data color. Lavender, blue, and matte red markers unchanged. Ea and ΔH indicator colors unchanged (cyan, ochre). Reference lines visible as dashed muted lines. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44). Readable at full size in both themes. No overflow. Slight deduction:
-          no x-axis tick labels means axis values are absent (by design, but limits
-          readability).'
+        comment: Font sizes explicitly set (title=66, label=56, major_label=44, legend=44,
+          annotation=46). All text readable in both themes. Title spans ~75% of width
+          — expected for long mandated title. No overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Intentional element overlaps (reference lines crossing
-          the energy curve) are by design.
+        comment: No visible overlap. Annotation text, tick labels, legend, and data
+          elements all have adequate separation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main curve at stroke_width=6 is highly visible. Markers at r=14-22
-          are prominent and well-sized. Dashed reference and indicator lines are visible.
+        comment: Thick energy curve (width=6), large markers (r=22 TS, r=16 reactants/products),
+          clearly visible dashed indicator lines with arrowheads. Sparse data well-served
+          by prominent elements.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe. Multiple redundant encodings (size, dasharray,
-          shape) beyond color.
+        comment: Imprint palette — CVD-safe by design. Ea (cyan) and ΔH (ochre) are
+          perceptually distinct from each other and from the energy profile (green).
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good layout overall. Minor issue: large margin_bottom=260 creates
-          visible blank space below the 3-column bottom legend, wasting some canvas
-          area.'
+        comment: Canvas gate passed (3200x1800). Generous margins (margin_left=200,
+          margin_bottom=200). Plot fills canvas well. Legend at bottom organized.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Potential Energy (kJ/mol)' includes units. X-axis 'Reaction
-          Coordinate' is descriptive (arbitrary units is standard in chemistry).
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units. X-axis: ''Reaction
+          Coordinate''. Title: correct mandated format.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series Energy Profile is #009E73 (brand green). Subsequent
-          series follow Imprint palette with semantic justification. Backgrounds correctly
-          #FAF8F1 (light) / #1A1A17 (dark). Chrome flips properly between themes.'
+        passed: false
+        comment: 'First series #009E73 correct. Backgrounds #FAF8F1/#1A1A17 correct.
+          All colors from Imprint palette. But series 2→N follow non-canonical order
+          (pos6 for Ea, pos4 for ΔH, pos2 for TS, pos3 for Reactants, pos5 for Products)
+          without reader-evident semantic justification.'
     design_excellence:
       score: 12
       max: 20
@@ -117,30 +118,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color assignment for each element type. Clear
-          intentional hierarchy with thick main curve, thinner reference lines, and
-          prominently sized markers. Above generic defaults but constrained by pygal's
-          styling limits.
+        comment: 'Above configured defaults: SVG-injected bold annotations with coordinate
+          transformation, role-based Imprint color assignment, arrowhead polygons.
+          Scientific and clean but not publication-quality beautiful.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Y-only grid guides (no X guides) is a deliberate clean choice. Hidden
-          x-axis tick labels keep it uncluttered. However, pygal's grid styling is
-          largely default (dotted lines), and spines cannot be hidden in pygal — limited
-          refinement options.
+        comment: Y-only grid (show_x_guides=False), custom dashed reference lines,
+          legend at bottom organized. But pygal's default box frame/border visible,
+          and legend is partially redundant given direct inline labels.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green energy curve is the clear focal point. The transition state's
-          large lavender marker immediately draws the eye. Color-coded Ea and ΔH indicators
-          add quantitative context. Missing direct on-plot text annotations that would
-          elevate storytelling for the educational context.
+        comment: 'Good visual hierarchy: Ea and ΔH arrows guide eye to the key quantities;
+          direct labels identify the three key states; peak visually prominent. Viewer
+          immediately understands the reaction''s energy landscape.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,99 +146,97 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate diagram with smooth XY line chart using
-          pygal.XY().
+        comment: Correct reaction coordinate energy diagram implemented as pygal.XY
+          with smooth energy profile line.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Missing: (1) direct on-plot text labels for reactants/products/transition
-          state — only legend entries. (2) True double-headed arrows for Ea and ΔH
-          — dashed lines with endpoint dots are used instead. Present: smooth curve
-          with clear maximum, horizontal dashed reference lines, clean scientific
-          style.'
+        passed: true
+        comment: 'All spec features present: direct labels on plot (TS/Reactants/Products),
+          Ea double-headed arrow, ΔH double-headed arrow, smooth curve with clear
+          maximum, horizontal dashed reference lines, clean minimal style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate, Y=potential energy (kJ/mol). All data ranges
-          correct.
+        comment: 'X: reaction coordinate (0-10, arbitrary units). Y: potential energy
+          in kJ/mol. Correct values: reactants=50, TS=120, products=20.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title matches required format. Legend labels are informative: Ea
-          = 70 kJ/mol, ΔH = -30 kJ/mol, Transition State (‡), Reactants (50 kJ/mol),
-          Products (20 kJ/mol).'
+        comment: Title 'line-reaction-coordinate · python · pygal · anyplot.ai' —
+          correct mandated format. Legend labels clearly identify all series with
+          values.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows energy curve, reference energy levels, transition state marker,
-          activation energy indicator, enthalpy change indicator. Main feature only
-          partially complete (no direct labels or true arrows).
+        comment: 'Shows all aspects: smooth energy curve, transition state peak, activation
+          energy barrier, enthalpy change, reactant and product energy levels, reference
+          lines.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chemistry reaction coordinate diagram with standard kJ/mol units.
-          Reactants=50, TS=120, Products=20 kJ/mol is a realistic single-step exothermic
-          reaction.
+        comment: 'Real-world chemistry scenario: single-step exothermic reaction.
+          Clear educational context. Neutral subject matter.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ea=70 kJ/mol and ΔH=-30 kJ/mol are chemically plausible. Energy range
-          5-130 kJ/mol is appropriate.
+        comment: Ea=70 kJ/mol and ΔH=−30 kJ/mol are physically realistic for a simple
+          chemical reaction. Energy range (5-130 kJ/mol) covers data well.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → constants → data generation → chart
-          setup → series → save.'
+        comment: Mostly linear but defines helper functions (find_plot_transform,
+          find_circle_with_r, tri_up, tri_down, xy closure) for SVG manipulation.
+          Necessary for the complexity but deviates from flat KISS structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — data generated via mathematical formulas with
-          no random elements.
+        comment: Fully deterministic data generation using mathematical functions
+          — no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, numpy, pygal, pygal.style.Style — all used.
+        comment: All imports used (os, re, sys for path fix, cairosvg, numpy, pygal,
+          Style).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized. The sys.path.pop(0) workaround is documented
-          with a comment explaining the edge case. Smoothing loop is appropriate for
-          the task.
+        comment: Clean, Pythonic. SVG post-processing complexity is justified for
+          the task. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot-{THEME}.html and plot-{THEME}.png — correct dual
-          output for pygal as an interactive library.
+        comment: Saves plot-{THEME}.png (via cairosvg) and plot-{THEME}.html (interactive
+          SVG). Current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -250,24 +246,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY() with stroke=True for line chart is idiomatic. Style()
-          for theming. Custom y_labels dict format. stroke_style with dasharray for
-          dashed series. Node dict for custom marker sizes. Generally idiomatic usage.
+        comment: Idiomatic pygal.XY usage with Style object, chart.add() with stroke_style/show_dots
+          parameters, chart.render() for SVG bytes. SVG post-processing is outside
+          the official API but leverages pygal's SVG-native nature effectively.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's interactive HTML output (dual .html + .png). Custom
-          dasharray patterns for reference/indicator lines. Node dict marker customization.
-          legend_at_bottom with column layout. These are pygal-specific features not
-          available in most other libraries.
-  verdict: REJECTED
+        comment: Exploits pygal's SVG-native rendering pipeline for post-processing
+          (coordinate extraction via regex + polygon/text injection). HTML export
+          leverages pygal's interactive output. Both are features that couldn't be
+          replicated as cleanly in raster-based libraries.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - annotations
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []

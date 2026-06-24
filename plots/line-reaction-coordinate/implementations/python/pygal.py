@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: pygal 3.1.3 | Python 3.13.14
-Quality: 84/100 | Updated: 2026-06-24
+Quality: 87/100 | Updated: 2026-06-24
 """
 
 import os
