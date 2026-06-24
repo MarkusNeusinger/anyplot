@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -55,7 +55,6 @@ baseline = reactant_energy * sigmoid + product_energy * (1 - sigmoid)
 energy = baseline + gaussian_peak
 
 source = ColumnDataSource(data={"x": reaction_coord, "y": energy})
-fill_source = ColumnDataSource(data={"x": reaction_coord, "y": energy})
 
 # Title — 54 chars, under the 67-char baseline so no font scaling needed
 TITLE = "line-reaction-coordinate · python · bokeh · anyplot.ai"
@@ -76,8 +75,9 @@ p = figure(
     min_border_right=60,
 )
 
-# Area fill under the energy curve
-p.varea(x="x", y1=0, y2="y", source=fill_source, fill_color=BRAND, fill_alpha=0.08)
+# Area fill under the energy curve — slightly stronger in dark mode for visibility
+fill_alpha = 0.08 if THEME == "light" else 0.14
+p.varea(x="x", y1=0, y2="y", source=source, fill_color=BRAND, fill_alpha=fill_alpha)
 
 # Main energy curve
 p.line("x", "y", source=source, line_width=6, color=BRAND)
@@ -130,7 +130,7 @@ p.add_layout(
     Label(
         x=ea_x,
         y=(reactant_energy + transition_energy) / 2,
-        text="Eₐ = 70 kJ/mol",
+        text="Ea = 70 kJ/mol",
         text_font_size="24pt",
         text_color=EA_COLOR,
         text_font_style="bold",
@@ -183,6 +183,8 @@ p.title.text_font_style = "normal"
 
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_font_style = "normal"
+p.yaxis.axis_label_text_font_style = "normal"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
