@@ -1,7 +1,7 @@
 # anyplot.ai
 # heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-06-24
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 85/100 | Created: 2026-06-24
 
 using CairoMakie
 using Colors
