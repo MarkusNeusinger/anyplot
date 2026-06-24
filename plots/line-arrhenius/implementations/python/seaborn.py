@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -82,18 +82,24 @@ sns.regplot(
     x=inv_T,
     y=ln_k,
     ci=95,
-    scatter_kws={"s": 100, "color": BRAND, "edgecolor": "white", "linewidths": 1.5, "zorder": 5},
+    scatter_kws={"s": 170, "color": BRAND, "edgecolor": "white", "linewidths": 1.5, "zorder": 5},
     line_kws={"color": BRAND, "linewidth": 2.5, "alpha": 0.9},
     ax=ax,
 )
 
-# Annotate the outlier point
+# Fix CI band visibility in dark theme — regplot draws the band as a PolyCollection
+# with low default alpha; raise it in dark mode so it reads against #1A1A17
+for coll in ax.collections:
+    coll.set_facecolor(BRAND)
+    coll.set_alpha(0.38 if THEME == "dark" else 0.18)
+
+# Outlier annotation — raised to 8pt (above mobile-readable minimum)
 ax.annotate(
     "outlier",
     xy=(inv_T[7], ln_k[7]),
     xytext=(6, 10),
     textcoords="offset points",
-    fontsize=7,
+    fontsize=8,
     color=INK_MUTED,
     arrowprops={"arrowstyle": "-", "color": INK_MUTED, "lw": 0.8},
 )
@@ -109,7 +115,7 @@ ax.text(
     verticalalignment="top",
     horizontalalignment="left",
     color=INK,
-    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": BRAND, "alpha": 0.95, "linewidth": 1.2},
+    bbox={"boxstyle": "round,pad=0.6", "facecolor": ELEVATED_BG, "edgecolor": BRAND, "alpha": 0.95, "linewidth": 1.5},
 )
 
 # Secondary x-axis — temperature in Kelvin for chemical context
@@ -117,9 +123,10 @@ ax_top = ax.twiny()
 ax_top.set_xlim(ax.get_xlim())
 temp_ticks_K = np.array([278, 293, 303, 313, 330])
 ax_top.set_xticks(1.0 / temp_ticks_K)
-ax_top.set_xticklabels([f"{t} K" for t in temp_ticks_K], fontsize=7)
+ax_top.set_xticklabels([f"{t} K" for t in temp_ticks_K], fontsize=8)
 ax_top.set_xlabel("Temperature (K)", fontsize=9, labelpad=8, color=INK)
-ax_top.tick_params(axis="x", labelsize=7, colors=INK_SOFT)
+# Tick-less secondary axis: labels only, no tick marks — cleaner composition
+ax_top.tick_params(axis="x", labelsize=8, colors=INK_SOFT, length=0)
 ax_top.spines["top"].set_color(INK_SOFT)
 ax_top.spines["right"].set_visible(False)
 
@@ -129,9 +136,13 @@ ax.set_ylabel("ln(k)", fontsize=10, color=INK)
 ax.set_title("line-arrhenius · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.xaxis.grid(True, alpha=0.08, linewidth=0.6, color=INK)
 ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.4f"))
 
-fig.subplots_adjust(top=0.78, bottom=0.14, left=0.10, right=0.97)
+# Explicit spine cleanup (belt-and-suspenders alongside rc — seaborn despine idiom)
+sns.despine(ax=ax, top=True, right=True)
+
+fig.subplots_adjust(top=0.78, bottom=0.15, left=0.10, right=0.97)
 _out = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"plot-{THEME}.png")
 plt.savefig(_out, dpi=400, facecolor=PAGE_BG)
 plt.close(fig)
