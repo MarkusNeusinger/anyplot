@@ -21,10 +21,10 @@ let _seed = 42;
 function rand() { _seed = (_seed * 1664525 + 1013904223) >>> 0; return _seed / 0x100000000; }
 function randN() { return Math.sqrt(-2 * Math.log(rand() + 1e-15)) * Math.cos(2 * Math.PI * rand()); }
 
-// Compound parameters — Imprint palette positions 1 and 3
+// Compound parameters — Imprint palette positions 0 and 1
 const COMPOUNDS = [
   { name: "Compound A", color: t.palette[0], bot: 3,  top: 96, ec50: 5e-8, hill: 1.5 },
-  { name: "Compound B", color: t.palette[2], bot: 5,  top: 85, ec50: 7e-7, hill: 1.1 },
+  { name: "Compound B", color: t.palette[1], bot: 5,  top: 85, ec50: 7e-7, hill: 1.1 },
 ];
 
 // Concentration grids
