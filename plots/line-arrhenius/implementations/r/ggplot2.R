@@ -44,29 +44,29 @@ r_sq <- summary(fit)$r.squared
 # slope = -Ea / (R × 1000)  →  Ea [kJ/mol] = -slope × R_gas
 Ea_kJ <- -b1 * R_gas
 
-# Regression line (extended slightly beyond data range)
-x_rng  <- range(x_1k)
-x_fit  <- seq(x_rng[1] - 0.04, x_rng[2] + 0.04, length.out = 300)
-df_fit <- data.frame(x_1k = x_fit, ln_k = b0 + b1 * x_fit)
-
 # --- Annotation text (R plotmath) ------------------------------------------
 # Annotations in upper-right (above the descending regression line)
-y_rng   <- range(df$ln_k)
-ann_x   <- x_rng[2] - 0.03 * diff(x_rng)
-ann_y1  <- y_rng[2] - 0.06 * diff(y_rng)
-ann_y2  <- y_rng[2] - 0.23 * diff(y_rng)
+x_rng  <- range(x_1k)
+y_rng  <- range(df$ln_k)
+ann_x  <- x_rng[2] - 0.03 * diff(x_rng)
+ann_y1 <- y_rng[2] - 0.06 * diff(y_rng)
+ann_y2 <- y_rng[2] - 0.23 * diff(y_rng)
 
 label_ea <- sprintf("E[a] == %.1f~kJ~mol^{-1}", Ea_kJ)
 label_r2 <- sprintf("R^2 == %.4f", r_sq)
 
-# Secondary x-axis: temperature in K
-sec_breaks <- c(300, 340, 380, 420)
+# Secondary x-axis: temperature in K (440 K covers the full data range up to 433 K)
+sec_breaks <- c(300, 340, 380, 420, 440)
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot() +
-    geom_line(
-        data      = df_fit,
+    geom_smooth(
+        data      = df,
         aes(x = x_1k, y = ln_k, color = "Arrhenius fit"),
+        method    = "lm",
+        formula   = y ~ x,
+        se        = TRUE,
+        fill      = alpha(IMPRINT_PALETTE[2], 0.15),
         linewidth = 1.1
     ) +
     geom_point(
@@ -114,7 +114,7 @@ p <- ggplot() +
     theme(
         plot.background      = element_rect(fill = PAGE_BG,    color = PAGE_BG),
         panel.background     = element_rect(fill = PAGE_BG,    color = NA),
-        panel.grid.major     = element_line(color = INK_MUTED, linewidth = 0.25),
+        panel.grid.major     = element_line(color = INK_MUTED, linewidth = 0.18),
         panel.grid.minor     = element_blank(),
         panel.border         = element_blank(),
         axis.line.x.bottom   = element_line(color = INK_SOFT,  linewidth = 0.5),
