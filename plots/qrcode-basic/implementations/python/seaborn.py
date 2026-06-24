@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: seaborn 0.13.2 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-04-07
+Quality: 91/100 | Updated: 2026-06-24
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,26 +14,40 @@ from matplotlib.colors import ListedColormap
 from matplotlib.patches import FancyBboxPatch
 
 
-# Configure seaborn with consolidated set_theme
-sns.set_theme(context="poster", style="white", font_scale=1.0)
+# Theme tokens — Imprint palette chrome
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRAND = "#009E73"  # Imprint palette position 1
 
-# Generate QR code with proper encoding
-encoded_url = "https://pyplots.ai"
-qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
-qr.add_data(encoded_url)
-qr.make(fit=True)
+# Configure seaborn with theme-adaptive background
+sns.set_theme(
+    style="white",
+    rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "axes.edgecolor": "none", "text.color": INK},
+)
 
-# Convert QR matrix to numpy array
+# WiFi credentials QR code (spec §Applications: "Generating WiFi network credentials")
+# Version 7 (45×45 modules) showcases alignment patterns alongside the three finder patterns
+encoded_content = "WIFI:S:AnyPlotLab;T:WPA2;P:OpenDataViz2024!;;"
+qr = qrcode.QRCode(version=7, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=1, border=4)
+qr.add_data(encoded_content)
+qr.make(fit=False)
+
+# Convert QR matrix to numpy array (includes 4-cell quiet zone on each side)
 qr_matrix = np.array(qr.get_matrix(), dtype=np.uint8)
-n_modules = qr_matrix.shape[0] - 8  # exclude quiet zone (border=4 each side)
+border = 4
+n_modules = qr_matrix.shape[0] - 2 * border  # 45 for version 7
 
-# Branded color scheme using seaborn palette
-brand_dark = sns.color_palette("dark:#1a1a2e", 1)[0]
-brand_accent = sns.color_palette("muted")[0]  # seaborn muted blue for accents
-qr_cmap = ListedColormap(["#ffffff", brand_dark])
+# QR colormap: 0=empty (elevated bg) → 1=filled module (ink) — theme-adaptive
+qr_cmap = ListedColormap([ELEVATED_BG, INK])
 
-# Plot on square canvas
-fig, ax = plt.subplots(figsize=(12, 12))
+# Square canvas: 2400×2400 px (figsize=(6,6) × dpi=400)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)
+fig.set_facecolor(PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 sns.heatmap(
     qr_matrix,
@@ -44,77 +60,112 @@ sns.heatmap(
     xticklabels=False,
     yticklabels=False,
     linewidths=0,
-    linecolor="white",
 )
 
-# Remove all chrome
+# Remove all chrome for clean QR presentation
 sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
 ax.set_xlabel("")
 ax.set_ylabel("")
 ax.tick_params(left=False, bottom=False)
 
-# Annotate finder patterns with subtle highlight boxes
+# Highlight finder patterns (7×7 in three corners) with Imprint BRAND green
 finder_size = 7
-border = 4
 finder_positions = [
-    (border, border, "top-left"),
-    (border, qr_matrix.shape[1] - border - finder_size, "top-right"),
-    (qr_matrix.shape[0] - border - finder_size, border, "bottom-left"),
+    (border, border),
+    (border, qr_matrix.shape[1] - border - finder_size),
+    (qr_matrix.shape[0] - border - finder_size, border),
 ]
-for row, col, _label in finder_positions:
+for row, col in finder_positions:
     rect = FancyBboxPatch(
-        (col - 0.3, row - 0.3),
-        finder_size + 0.6,
-        finder_size + 0.6,
-        boxstyle="round,pad=0.2",
-        linewidth=1.5,
-        edgecolor=brand_accent,
+        (col - 0.4, row - 0.4),
+        finder_size + 0.8,
+        finder_size + 0.8,
+        boxstyle="round,pad=0.15",
+        linewidth=1.2,
+        edgecolor=BRAND,
+        facecolor="none",
+        alpha=0.7,
+    )
+    ax.add_patch(rect)
+
+# Annotate the top-right finder pattern; label sits in the quiet zone area
+fp_col = qr_matrix.shape[1] - border - finder_size
+fp_row = border
+fp_cx = fp_col + finder_size / 2  # heatmap x = column index
+fp_cy = fp_row + finder_size / 2  # heatmap y = row index
+ax.annotate(
+    "Finder Pattern",
+    xy=(fp_cx, fp_cy),
+    xytext=(37, 1.8),
+    fontsize=14,
+    color=BRAND,
+    ha="center",
+    arrowprops={"arrowstyle": "->", "color": BRAND, "lw": 1.5},
+)
+
+# Highlight alignment patterns (version 7: centers at module positions from {6, 22, 38},
+# excluding the three corners where finder patterns reside)
+align_module_centers = [(6, 22), (22, 6), (22, 22), (22, 38), (38, 22), (38, 38)]
+for am_row, am_col in align_module_centers:
+    mr = am_row + border  # row in matrix coords
+    mc = am_col + border  # col in matrix coords
+    rect = FancyBboxPatch(
+        (mc - 2 - 0.35, mr - 2 - 0.35),
+        5 + 0.7,
+        5 + 0.7,
+        boxstyle="round,pad=0.1",
+        linewidth=0.8,
+        edgecolor=INK_SOFT,
         facecolor="none",
         alpha=0.5,
     )
     ax.add_patch(rect)
 
-# Finder pattern annotation arrow pointing to top-right finder
-fp_x = qr_matrix.shape[1] - border - finder_size / 2
-fp_y = border + finder_size / 2
+# Annotate the center alignment pattern — label in bottom quiet zone (rows 49-52)
+ap_mc = 22 + border  # col 26
+ap_mr = 22 + border  # row 26
 ax.annotate(
-    "Finder Pattern",
-    xy=(fp_x, fp_y),
-    xytext=(fp_x + 2.5, fp_y - 5),
-    fontsize=13,
-    fontweight="medium",
-    color=brand_accent,
+    "Alignment Pattern",
+    xy=(ap_mc, ap_mr),
+    xytext=(26, 51),
+    fontsize=14,
+    color=INK_SOFT,
     ha="center",
-    arrowprops={"arrowstyle": "->", "color": brand_accent, "lw": 1.5},
+    va="center",
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
 )
 
-# Quiet zone label on left side
+# Quiet zone label — rotated text in the left quiet zone
 ax.text(
-    1.2,
+    1.5,
     qr_matrix.shape[0] / 2,
     "Quiet Zone",
-    fontsize=12,
-    color="#888888",
+    fontsize=14,
+    color=INK_MUTED,
     rotation=90,
     ha="center",
     va="center",
     fontstyle="italic",
 )
 
-# Title with strong typographic hierarchy
-ax.set_title("qrcode-basic · seaborn · pyplots.ai", fontsize=28, fontweight="bold", pad=24, color="#1a1a2e")
+# Title: mandatory format {spec-id} · {language} · {library} · anyplot.ai
+title = "qrcode-basic · python · seaborn · anyplot.ai"
+n = len(title)
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(8, round(12 * ratio))
+ax.set_title(title, fontsize=title_fontsize, fontweight="bold", pad=10, color=INK)
 
-# Subtitle with encoded content and technical details — tighter spacing below QR
+# Subtitle with technical details
 fig.text(
     0.5,
-    0.03,
-    f"Encodes: {encoded_url}  ·  Error Correction: M (15%)  ·  Version {qr.version}  ·  {n_modules}×{n_modules} modules",
+    0.025,
+    f"WiFi: AnyPlotLab (WPA2)  ·  Error Correction: M (15%)  ·  Version {qr.version}  ·  {n_modules}×{n_modules} modules",
     ha="center",
     va="bottom",
-    fontsize=15,
-    color="#666666",
+    fontsize=10,
+    color=INK_MUTED,
     fontstyle="italic",
 )
 
-plt.subplots_adjust(bottom=0.07, top=0.93)
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.subplots_adjust(bottom=0.07, top=0.93, left=0.03, right=0.97)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
