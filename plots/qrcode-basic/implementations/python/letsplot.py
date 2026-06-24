@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -61,7 +61,7 @@ plot = (
     + labs(
         title=title,
         subtitle=f"Encoded: {content}  |  Error Correction: M (15%)",
-        caption=f"Version 2  ·  {size}×{size} modules  ·  ECC Level M (15%)",
+        caption=f"Version {qr.version}  ·  {size}×{size} modules  ·  ECC Level M (15%)",
     )
     + ggsize(600, 600)
     + theme_void()
@@ -69,7 +69,7 @@ plot = (
         plot_title=element_text(size=16, hjust=0.5, face="bold", color=INK),
         plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
         plot_caption=element_text(size=8, hjust=0.5, color=INK_MUTED),
-        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_background=element_rect(fill=PAGE_BG, color="#009E73", size=3),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     )
 )
