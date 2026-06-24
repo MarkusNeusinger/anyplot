@@ -1,44 +1,54 @@
 library: matplotlib
+language: python
 specification_id: curve-dose-response
 created: '2026-03-18T22:30:31Z'
-updated: '2026-03-23T21:20:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23270128760
+updated: '2026-06-24T15:26:45Z'
+generated_by: claude-sonnet
+workflow_run: 28108506265
 issue: 4556
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent pharmacological realism with real drug names (Erlotinib, Lapatinib)
-    and plausible EC50 values
-  - 'Complete spec compliance: all 8 required features implemented correctly'
-  - Strong data storytelling through EC50 annotations with arrows and Hill slope notation
-  - Proper 95% CI calculation using delta method with covariance propagation
-  - Clean visual design with removed spines, subtle grid, and well-organized legend
+  - All 8 spec requirements implemented completely and correctly (4PL fit, EC50 annotations
+    with H/V dashed lines, SEM error bars, 95% CI band, asymptote markers, 2 compounds,
+    log x-axis, legend)
+  - 'Full Imprint palette compliance: #009E73 first, #C475FD second, correct backgrounds
+    in both themes; all chrome tokens correctly adapted'
+  - Scientifically rigorous 95% CI via delta method with explicit Jacobian propagation
+    through the covariance matrix
+  - Custom concentration tick formatter (auto nM/uM switching) and minor log ticks
+    are professional pharmacology-specific details
+  - Real EGFR inhibitor drug names (Erlotinib, Lapatinib) with pharmacologically realistic
+    EC50 and Hill slope values
   weaknesses:
-  - Helper functions (logistic4pl, format_ec50) slightly break KISS structure, though
-    justified by reuse
-  - Library mastery could be higher with more distinctive matplotlib features (e.g.,
-    custom tick formatters for concentration units, PathEffects for text)
-  image_description: 'The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis (Concentration in M) vs Response (%). Erlotinib is shown in steel blue
-    (#306998) with circle markers, and Lapatinib in coral red (#C75233) with square
-    markers. Both compounds have fitted 4PL curves with data points overlaid with
-    SEM error bars. A light blue 95% confidence interval band surrounds the Erlotinib
-    fit. Dashed horizontal and vertical reference lines in matching colors mark the
-    EC50 positions for each compound: Erlotinib EC50 = 299 nM (annotated with an arrow
-    in blue) and Lapatinib EC50 = 6.7 µM (annotated with an arrow in red). Dotted
-    horizontal asymptote lines mark the top and bottom plateaus for both compounds.
-    Hill slopes are noted in italic gray text at the bottom-right (Erlotinib = 1.06,
-    Lapatinib = 0.81). Top and right spines are removed, a subtle y-axis grid is present,
-    and the legend is well-organized in the upper left with data/fit entries logically
-    grouped. Title reads "curve-dose-response · matplotlib · pyplots.ai".'
+  - CI confidence band (alpha=0.15) is quite subtle — consider increasing to alpha=0.20
+    to make it more visually prominent without overwhelming the curves
+  - Asymptote dotted lines (alpha=0.3, linewidth=0.8) are barely visible in the light
+    render; consider alpha=0.4 or linewidth=1.0 for slightly better legibility as
+    reference elements
+  - Layout margins are somewhat tight (right=0.97 leaves ~3% of canvas); a slightly
+    more generous right margin would add breathing room
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white
+      Chrome: Title "curve-dose-response · python · matplotlib · anyplot.ai" fully readable in dark ink; axis labels "Concentration" and "Response (%)" in INK (#1A1A17) at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt — all clearly readable
+      Data: First series Erlotinib in #009E73 (brand green) with circle markers and 95% CI band; second series Lapatinib in #C475FD (lavender) with square markers; EC50 annotation callout boxes in matching series colors; dashed H/V reference lines for EC50; faint dotted asymptote lines; Hill slope italic footnote in INK_MUTED
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — confirmed, not pure black
+      Chrome: Title and axis labels visible as light off-white text (#F0EFE8); tick labels in #B8B7B0 (INK_SOFT dark); legend frame uses #242420 (ELEVATED_BG dark) with #B8B7B0 edge — all readable; no dark-on-dark failures detected
+      Data: Colors are identical to light render — Erlotinib #009E73, Lapatinib #C475FD; annotation box fills use #242420 (ELEVATED_BG dark); all data elements clearly distinguishable on dark background
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -46,64 +56,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt, annotations 16pt'
+        comment: All font sizes explicitly set; title scaled via formula; axis 10pt,
+          ticks 8pt, legend 8pt, annotations 8pt; proportional and readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable, EC50 annotations well-positioned with arrows
+        comment: No overlapping text or data elements; EC50 annotation boxes are close
+          but distinct with no pixel overlap
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Markers size 10 with white edges, linewidth 3 curves, well adapted
-          to 8 points per compound
+        comment: Curves and markers well-sized for sparse 8-point data; CI band (alpha=0.15)
+          and asymptote lines (alpha=0.3) are intentionally faint secondary elements
+          but could be slightly more visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue vs coral is colorblind-safe, good contrast
+        comment: Green/purple high perceptual contrast; redundant shape encoding (circles
+          vs squares); Imprint palette is CVD-optimized
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 aspect ratio with tight_layout, good canvas utilization
+        comment: 3200x1800 px landscape; canvas well-utilized; explicit subplots_adjust
+          margins; no clipping detected
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Concentration (M) and Response (%) — descriptive with units
+        comment: 'Y-axis: Response (%) with units; X-axis: Concentration with units
+          in tick labels (nM/uM) - standard pharmacology convention; title format
+          correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #C475FD; light background #FAF8F1;
+          dark background #1A1A17; all chrome tokens theme-adaptive'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, white marker edges, styled annotation boxes with
-          arrows, reordered legend
+        comment: 'Above configured defaults: colored annotation callout boxes with
+          arrows, auto-switching nM/uM tick formatter, italic Hill slope footnote;
+          much sophistication was spec-driven rather than creative design choice'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle y-axis grid, minor tick formatting, generous
-          whitespace
+        comment: Top/right spines removed; subtle y-axis-only grid alpha=0.15; theme-adaptive
+          legend frame; minor log ticks; white marker edges; falls short of every
+          detail polished due to tight margins and dense composition
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: EC50 annotations communicate key comparison, asymptote lines and
-          Hill slopes provide context
+        comment: EC50 annotation callouts with arrows create clear focal points; visual
+          hierarchy (thick curves > markers > CI band > asymptotes) is intentional;
+          Hill slope footer adds quantitative depth
     spec_compliance:
       score: 15
       max: 15
@@ -113,26 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve with 4PL logistic fit
+        comment: 'Correct: sigmoidal dose-response curves on logarithmic x-axis with
+          4PL model fit'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All 8 required features present: log x-axis, 4PL fit, EC50 lines,
-          error bars, asymptotes, 2 compounds, legend, 95% CI'
+        comment: Log x-axis, 4PL sigmoid fit, EC50 dashed H/V reference lines, SEM
+          error bars, asymptote dotted lines, 2 compounds, legend, 95% CI band - all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = concentration (log scale), Y = response (%), correctly mapped
+        comment: Concentration on x-axis (log scale), Response (%) on y-axis; full
+          range displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data with logical grouping
+        comment: 'Title: curve-dose-response · python · matplotlib · anyplot.ai; legend
+          entries all correct'
     data_quality:
       score: 15
       max: 15
@@ -142,75 +173,79 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with different EC50, Hill slopes, asymptotes — shows
-          all aspects
+        comment: Both compounds show complete sigmoidal shape with varied EC50 ranges;
+          CI for one curve; different Hill slopes and top asymptotes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real EGFR inhibitors Erlotinib and Lapatinib with realistic pharmacological
-          ranges
+        comment: 'Real drug names: Erlotinib (EGFR inhibitor) and Lapatinib (dual
+          EGFR/HER2 inhibitor); neutral oncology research context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: EC50 values in nM-µM range, Hill slopes ~1 biologically plausible
+        comment: Concentration range 1 nM-100 uM (5 orders of magnitude) standard;
+          EC50 ~299 nM and ~6.7 uM pharmacologically plausible; Hill slopes ~1 consistent
+          with monovalent binding
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Has logistic4pl and format_ec50 functions — minor KISS deviation
-          but mathematically justified
+        comment: 'Single logistic4pl function minimally required for scipy.curve_fit
+          API; otherwise flat: imports → data → fit → CI → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; deterministic parameters
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 6 imports used: os, matplotlib.pyplot, matplotlib.ticker, numpy,
+          scipy.optimize.curve_fit, scipy.stats.t'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, appropriate complexity for scientific curve
-          fitting
+        comment: Clean, Pythonic; delta method CI via explicit Jacobian is mathematically
+          rigorous and appropriately complex; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, bbox_inches=tight
+        comment: Saves as plot-{THEME}.png; no deprecated APIs
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Consistent Axes methods, proper fig/ax pattern, LogLocator for minor
-          ticks
+        comment: Consistently uses ax.* methods; ax.errorbar, ax.fill_between, ax.annotate,
+          ax.hlines/ax.vlines, ax.axhline - all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: annotate with arrowprops/connectionstyle, LogLocator custom subs,
-          fill_between, legend handle reordering, transAxes
+        comment: ticker.FuncFormatter with auto nM/uM switching and ticker.LogLocator
+          with subs for minor log ticks are distinctively matplotlib; fig.subplots_adjust
+          for precise margins - good but replicable with effort in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -218,11 +253,12 @@ impl_tags:
   techniques:
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - regression
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
