@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
@@ -85,7 +85,7 @@ df = pd.DataFrame(
 chord_labels = pd.DataFrame(
     {
         "Time (s)": [1.0, 3.0, 5.0, 7.0],
-        "Pitch Class": pd.Categorical(["B"] * 4, categories=pitch_classes[::-1], ordered=True),
+        "Pitch Class": pd.Categorical(["C"] * 4, categories=pitch_classes[::-1], ordered=True),
         "label": ["C maj", "G maj", "A min", "F maj"],
         "alpha": [0.9] * 4,
     }
@@ -105,10 +105,9 @@ plot = (
         data=chord_labels,
         inherit_aes=False,
         color="#FFFFFF",
-        size=3.5,
+        size=4.5,
         fontweight="bold",
-        va="bottom",
-        nudge_y=0.3,
+        va="center",
     )
     + scale_alpha_identity()
     + scale_fill_gradient(
@@ -148,9 +147,10 @@ plot = (
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill=PAGE_BG, color="none"),
+        panel_background=element_blank(),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
         plot_background=element_rect(fill=PAGE_BG, color="none"),
-        plot_margin=0.02,
+        plot_margin=0.05,
     )
 )
 
