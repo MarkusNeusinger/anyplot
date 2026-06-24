@@ -1,0 +1,259 @@
+library: echarts
+language: javascript
+specification_id: scatter-lag
+created: '2026-06-24T23:21:58Z'
+updated: '2026-06-24T23:27:45Z'
+generated_by: claude-sonnet
+workflow_run: 28135376916
+issue: 5251
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Deterministic LCG-based AR(1) data generation with phi=0.82 produces a visually
+    clear positive-autocorrelation pattern
+  - Temporal gradient via visualMap (t.seq) reveals time structure within the scatter
+    — excellent use of ECharts continuous color mapping
+  - Diagonal reference line (y=x) cleanly rendered as a dashed silent line series
+    with appropriate opacity
+  - Pearson r annotation positioned via graphic element, readable in both themes
+  - 'Subtitle provides context: AR(1) process, lag k, and sample size n=249'
+  - 'Theme-adaptive chrome: t.ink, t.inkSoft, t.grid all correctly applied; pageBg
+    used as marker border color for definition'
+  - 'animation: false set, echarts.init called without explicit size or devicePixelRatio
+    — follows library rules exactly'
+  - 'All spec optional features implemented: diagonal reference, correlation annotation,
+    temporal coloring, configurable lag'
+  weaknesses:
+  - 'ECharts default grid border (4-sided box) is visible — add `grid: { borderWidth:
+    0 }` to remove it and achieve the preferred L-spine or spine-free look'
+  - 'top-level `color: t.palette` array is omitted — while the scatter uses visualMap
+    (correct), setting the palette array is good defensive practice for any future
+    categorical series'
+  - 'DE-02: No explicit suppression of the right/top axis border — the plot frame
+    appears as a box rather than an open L-shape, which is slightly less refined'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "scatter-lag · javascript · echarts · anyplot.ai" clearly readable in dark ink; subtitle "AR(1) process · lag k = 1 · n = 249 pairs" visible below; axis names "y(t)" and "y(t + 1)" readable in inkSoft; tick labels at -4/-2/0/2/4 visible; "Earlier"/"Later" colorbar labels readable; "r = 0.778" annotation clear in bold dark ink
+      Data: 249 scatter points colored by temporal index using imprint_seq gradient (teal-green #009E73 = earlier → slate-blue #4467A3 = later); dashed diagonal reference line (y=x) visible in inkSoft; colorbar vertical legend on right side
+      Legibility verdict: PASS — all text and data elements clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct theme surface, not pure black
+      Chrome: Title readable in light ink against dark background; subtitle visible; axis names and tick labels rendered in light inkSoft color; "Earlier"/"Later" colorbar labels readable; "r = 0.778" in bold white — no dark-on-dark failures observed
+      Data: Scatter point colors identical to light render (same imprint_seq teal-green → blue gradient); dashed diagonal reference line visible; colorbar identical
+      Legibility verdict: PASS — all chrome elements adapt correctly to dark theme, no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate sizes (title 22px,
+          axis names 16px, labels 14px, colorbar 13px); minor concern at 400px mobile
+          scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; scatter density is moderate with alpha=0.75 preventing
+          visual confusion
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 249 points at symbolSize=9 with alpha=0.75 well-suited for medium
+          density; temporal gradient clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green->blue) is CVD-safe; reference line in inkSoft
+          provides sufficient contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; generous margins (left:100, right:160, top:115,
+          bottom:90); no clipping; colorbar properly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'x: ''y(t)'', y: ''y(t + 1)'' with subtitle providing lag/n context;
+          title follows spec-id format exactly'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous coloring via t.seq (imprint_seq); background transparent
+          (page bg = FAF8F1 light / 1A1A17 dark); chrome correctly theme-adaptive
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): temporal gradient is a sophisticated multi-dimensional
+          encoding; clean professional look; r annotation adds informational layer;
+          subtitle gives diagnostic context'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Grid lines subtle via t.grid; marker borderColor=pageBg gives nice
+          definition; but ECharts default grid border visible (4-sided box) — grid:
+          {borderWidth:0} not set'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: scatter (focal) + diagonal reference (context)
+          + r annotation (quantification) + temporal gradient (time structure). Guides
+          viewer to read autocorrelation pattern'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+1) from AR(1) process'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line ✓, Pearson r annotation ✓, temporal color
+          index ✓, configurable lag ✓
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=y(t), y=y(t+lag), 249 pairs from n=250 AR(1) observations, symmetric
+          axis range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-lag · javascript · echarts · anyplot.ai'' ✓; colorbar
+          labeled Earlier/Later ✓'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows autocorrelation (linear pattern along diagonal), temporal evolution,
+          r value, appropriate reference line
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(1) with phi=0.82 is a classic realistic strong-autocorrelation
+          scenario; n=250 is a practical dataset size; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric range ~-5 to 5, integer tick labels, appropriate for normalized
+          AR(1) process
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; top-level code; well-organized sections
+          with comments
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG with fixed seed 42 using Box-Muller transform; fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (browser env); only uses provided globals (window.ANYPLOT_TOKENS,
+          echarts, document)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; Pearson r computed cleanly inline
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init without explicit size/devicePixelRatio; animation:
+          false set; harness handles PNG/HTML output'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: visualMap for continuous coloring, graphic for positioned annotation,
+          mixed series types (line+scatter), proper axis config with nameLocation/nameGap
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ECharts visualMap component for temporal gradient (distinctive ECharts
+          feature); graphic text component for r annotation; silent+emphasis.disabled
+          on reference line; top-level color array omitted (minor miss)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
