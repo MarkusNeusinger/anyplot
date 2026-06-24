@@ -1,7 +1,7 @@
 # anyplot.ai
 # titration-curve: Acid-Base Titration Curve
 # Library: makie 0.22.10 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-06-24
+# Quality: 91/100 | Created: 2026-06-24
 
 using CairoMakie
 using Colors

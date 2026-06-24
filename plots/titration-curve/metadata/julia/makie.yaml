@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: titration-curve
 created: '2026-06-24T11:47:20Z'
-updated: '2026-06-24T11:54:06Z'
+updated: '2026-06-24T12:07:32Z'
 generated_by: claude-sonnet
 workflow_run: 28095493255
 issue: 4407
@@ -12,109 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette usage — pH curve in brand green #009E73, derivative in
-    lavender #C475FD, transition zone in cyan #2ABCCD; canonical order respected'
-  - 'Full theme-adaptive chrome: all INK/INK_SOFT tokens wired to title, axis labels,
-    tick labels, spines — both renders pass legibility checks'
-  - 'Strong spec compliance: equivalence point dashed line + annotation, derivative
-    curve on secondary y-axis, pH 0–14 range, correct x-axis label with units'
-  - Idiomatic Makie dual-axis via overlaid Axis objects in fig[1,1] with linkxaxes!,
-    PolyElement for legend proxy — genuinely library-specific patterns
-  - 'Realistic HCl/NaOH chemistry: 0.1 M concentrations, equivalence at 25 mL and
-    pH 7, physically correct pH calculation'
-  - 'Data storytelling: shaded transition zone, derivative spike, and equivalence
-    annotation all converge at 25 mL — viewer is guided to the key insight'
+  - Perfect visual quality across both themes — all font sizes explicitly set, no
+    overlaps, complete Imprint palette compliance, correctly inverted chrome
+  - Dual-axis overlay correctly implemented with linked x-axes, color-matched secondary
+    axis spine/label/ticks — demonstrates genuine Makie mastery
+  - Scientifically accurate titration chemistry with correct pH calculation for strong
+    acid/strong base system; equivalence at pH=7 physically correct
+  - Elegant comprehension-based pH computation and clean KISS code structure
+  - 'Layered visual storytelling: thick primary curve + derivative spike + transition
+    fill + annotation all guide eye to the equivalence point'
   weaknesses:
-  - Helper function calc_ph() violates KISS pattern — inline the formula or use an
-    anonymous function instead of a named function block
-  - Secondary y-axis label (dpH/dV (pH·mL⁻¹)) is tight against the right canvas edge;
-    increase right-side margin or reduce ylabelsize on ax2 to prevent potential clipping
-  - Derivative curve is near-invisible as a flat line along the x-axis outside the
-    equivalence region (alpha ~0 visually when dph_dv ≈ 0) — this is physically correct
-    but the dashed line at near-zero could be visually confusing; consider using ylims!(ax2,
-    -2, 22) so the flat regions have slight separation from the bottom spine
-  - DE-01 design is functional but not exceptional — consider adding a subtle annotation
-    arrow from the derivative peak to the pH inflection point, or a horizontal pH=7
-    reference line to strengthen the equivalence story
-  - Transition zone shading uses IMPRINT_PALETTE[6] (cyan) at alpha=0.1 in the polygon
-    — very pale; the legend swatch (alpha=0.3) is inconsistent with the plot fill
-    — unify to 0.15 in both
+  - 'SC-02: Spec describes buffer region shading (pKa +/- 1, for weak acid/base) but
+    data is for strong acid/base where no traditional buffer region exists; transition
+    zone shading is chemically appropriate but deviates from spec wording'
+  - 'DE-01: Design follows the anyplot template well but does not push beyond it to
+    truly publication-ready distinctiveness; secondary axis color-matching is the
+    strongest design touch'
+  - 'DE-03: Annotation at fontsize=11 is the smallest text element — borderline for
+    mobile rendering; consider 12pt minimum for annotations'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "HCl/NaOH Titration · titration-curve · julia · makie · anyplot.ai" in dark INK (#1A1A17) at ~titlesize 20, spans ~70% of canvas width — appropriate proportion. Left y-axis label "pH" and x-axis label "Volume of NaOH added (mL)" both in INK, clearly readable. Tick labels in INK_SOFT (#4A4A44). Right y-axis label "dpH/dV (pH·mL⁻¹)" in IMPRINT_PALETTE[2] lavender (#C475FD), tight against right canvas edge but appears within bounds.
-      Data: S-shaped titration curve in brand green #009E73 (solid, linewidth=3) dominates the primary axis. Lavender dashed derivative curve (IMPRINT_PALETTE[2]) visible as a prominent spike at 25 mL and nearly invisible flat line elsewhere. Light cyan shaded transition zone (IMPRINT_PALETTE[6] at alpha=0.1) around ±2 mL of equivalence point. Vertical dashed line at 25 mL in muted grey. Annotation "Equivalence point (V = 25 mL, pH = 7)" placed at (26.5, 4.5), readable and non-overlapping.
-      Legend: Top-left corner, ELEVATED_BG fill (#FFFDF6), shows all three elements with INK_SOFT labels.
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "HCl/NaOH Titration · titration-curve · julia · makie · anyplot.ai" clearly readable in dark INK color. Axis labels ("pH", "Volume of NaOH added (mL)", "dpH/dV (pH·mL⁻¹)") all readable in dark INK. Tick labels in INK_SOFT dark grey. Legend text readable. Annotation "Equivalence point (V = 25 mL, pH = 7)" readable in INK_SOFT.
+      Data: pH curve in Imprint #009E73 (brand green), linewidth=3. Derivative curve in #C475FD (Imprint lavender), linewidth=2, dashed. Transition zone fill in #2ABCCD (Imprint cyan) at 15% alpha. Vertical dashed equivalence line in INK_MUTED. pH=7 dotted reference line in INK_MUTED.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title in light INK (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — all readable, no dark-on-dark failures detected. Right y-axis label in IMPRINT_PALETTE[2] (lavender), same as light render — correctly theme-independent. Grid lines are subtle light lines.
-      Data: pH curve identical green #009E73, derivative identical lavender #C475FD dashed — data colors are constant between themes as required. Transition zone shading still visible (darker cyan tint on dark background). Equivalence annotation text appears in INK_SOFT, readable.
-      Legend: Dark elevated background (#242420), light label text — correct theme inversion.
-      Legibility verdict: PASS — all chrome correctly flipped to light-on-dark; data colors unchanged from light render; no dark-on-dark text failures.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title readable in light near-white (#F0EFE8) color. Axis labels readable in light INK color. Tick labels in light INK_SOFT grey (#B8B7B0). Legend text readable in INK_SOFT light. Annotation readable in INK_SOFT light. No dark-on-dark failures.
+      Data: pH curve in identical #009E73 green (same as light render). Derivative curve in identical #C475FD lavender. Transition zone fill appears as slightly darker teal-cyan alpha-blended over dark background — same underlying color, different surface interaction. All data colors confirmed identical to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (titlesize=20, xlabelsize=14, ylabelsize=14,
-          xticklabelsize=12, yticklabelsize=12); both renders readable. Minor deduction:
-          right y-axis label tight against canvas edge.'
+        comment: All font sizes explicitly set; titlesize=20 scaled, xlabelsize=14,
+          ylabelsize=14/12 primary/secondary, xticklabelsize=12, yticklabelsize=12,
+          annotation=11. Proportions well-balanced in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Annotation placed at (26.5, 4.5) — below
-          the steep curve section, clear of data.
+        comment: No text overlaps; annotation placed right of dashed line in open
+          space; legend top-left clear of data.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: pH curve and derivative spike clearly visible. Derivative flat line
-          near zero is nearly invisible outside equivalence region — physically correct
-          but visually weak; minor deduction.
+        comment: Primary pH curve linewidth=3.0 prominent; derivative linewidth=2.0
+          dashed, distinguishable; transition fill visible; reference lines intentionally
+          subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pair is CVD-safe. No red-green sole signal. Adequate
-          contrast on both surfaces.
+        comment: Imprint palette green and lavender are CVD-safe distinct hues. Adequate
+          luminance contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Canvas gate passed (3200x1800). Good proportions overall. Deduction:
-          right canvas margin is tight for the secondary y-axis label — could clip
-          at some render scales.'
+        comment: Canvas 3200x1800 correct. figure_padding=(10,35,10,10) gives secondary
+          axis label room. Good utilization, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Volume of NaOH added (mL)'' with units. Y-axis: ''pH''
-          (self-describing unit). Right y-axis: ''dpH/dV (pH·mL⁻¹)'' with units. All
-          descriptive.'
+        comment: 'X: Volume of NaOH added (mL) with units. Y: pH (standard unit).
+          Secondary: dpH/dV (pH·mL⁻¹) with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Derivative #C475FD (Imprint
-          position 2). Transition zone #2ABCCD (Imprint position 6). Backgrounds #FAF8F1
-          / #1A1A17 correct. Chrome fully theme-adaptive.'
+        comment: 'First series #009E73 correct. Second series #C475FD (Imprint[2]).
+          Transition fill #2ABCCD (Imprint[6]). Light bg #FAF8F1, dark bg #1A1A17.
+          Data colors identical across themes. Chrome adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -124,28 +111,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above the generic default: dual-axis with color-coded secondary,
-          Imprint palette, subtle shading, themed legend. Not yet publication-ready
-          — no editorial flourishes, annotation could be more prominent.'
+        comment: 'Solid design above defaults: colored secondary axis elements, intentional
+          line-weight hierarchy, annotation and reference lines. Follows anyplot template
+          well but does not transcend it to publication-ready level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (top/right). Y-only grid at alpha=0.12. No x-grid.
-          Color-coded secondary axis spine matches derivative series. Legend uses
-          ELEVATED_BG token. Deliberate refinement visible.
+        comment: Top/right spines removed (right kept for secondary axis). Y-axis-only
+          grid at 12% alpha. Legend with gentle frame and elevated background. Good
+          whitespace. Above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Transition zone shading, derivative spike, and equivalence annotation
-          all converge at 25 mL — viewer guided to the key insight. Color contrast
-          between green curve and lavender derivative creates hierarchy. Good but
-          not exceptional storytelling.
+        comment: Multiple visual cues guide the eye to equivalence point story. Thick
+          primary curve, derivative spike, transition zone, annotation with explicit
+          coordinates. Good visual hierarchy.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -153,32 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: S-shaped titration curve (line chart) with secondary axis
-          for derivative — exactly what the spec requires.'
+        comment: Correct titration curve, S-shaped sigmoidal profile for strong acid/strong
+          base.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features present: equivalence point dashed line + annotation
-          (V=25 mL, pH=7), derivative curve on secondary y-axis, shaded region around
-          equivalence zone, realistic HCl/NaOH data, correct axis labels, pH 0-14
-          range.'
+        comment: 'Equivalence point line+annotation, derivative secondary axis, transition
+          zone shading, realistic chemistry, y-axis 0-14. Minor: spec says buffer
+          region but implementation uses transition zone (appropriate for strong acid/base
+          system).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: volume 0-50 mL. Left Y: pH 0-14. Right Y: dpH/dV 0-20. All mappings
-          correct.'
+        comment: 'X: volume 0-50 mL. Y: pH 0-14. Secondary Y: dpH/dV correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''HCl/NaOH Titration · titration-curve · julia · makie ·
-          anyplot.ai'' — correct format with descriptive prefix. Legend: ''pH curve'',
-          ''dpH/dV (derivative)'', ''Transition zone'' — clear and accurate.'
+        comment: 'Title: HCl/NaOH Titration · titration-curve · julia · makie · anyplot.ai
+          — correct prefixed format. Legend labels meaningful.'
     data_quality:
       score: 15
       max: 15
@@ -188,64 +172,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all titration aspects: initial acidic region, sigmoid rise,
-          equivalence point, post-equivalence basic plateau, plus derivative for precise
-          equivalence location.'
+        comment: Full titration curve from acid to basic region, derivative peak,
+          transition zone, pH=7 reference. All features represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic HCl + NaOH titration — well-known analytical chemistry scenario.
-          0.1 M concentrations, 25 mL sample volume are standard. Neutral scientific
-          topic.
+        comment: 'Standard analytical chemistry: 25 mL 0.1 M HCl + 0.1 M NaOH. Neutral
+          educational topic.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Physically correct: equivalence at pH 7 for strong acid/base, correct
-          pH calculation formula, derivative peaks at 25 mL, pH range 0-14 covers
-          full scale.'
+        comment: Mathematically correct titration chemistry. Concentrations 0.1 M
+          textbook standard. Equivalence at pH=7 correct for symmetric strong acid/base.
+          pH 0-14 range as specified.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Minor KISS violation: calc_ph(v) is a named function rather than
-          inline code. Should be a comprehension or vectorized expression. Rest of
-          structure is linear: data → figure → axes → plot elements → save.'
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set. Data is analytically deterministic.
+        comment: Random.seed!(42) set. Deterministic titration data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three are actively used.
+        comment: CairoMakie, Colors, Random — all three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean constant definitions, well-named variables, idiomatic axis
-          configuration. No over-engineering.
+        comment: Clean idiomatic Julia. Comprehension for pH calculation is elegant.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22+ API).
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -253,19 +235,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent Makie patterns: overlaid Axis for dual-axis, linkxaxes!,
-          poly! for shading, vlines!, PolyElement for legend proxy, tellheight/tellwidth
-          for legend positioning.'
+        comment: 'Expert Makie usage: Figure → Axis layout, lines!/vlines!/hlines!/poly!/text!,
+          Legend with custom elements, xlims!/ylims!, linkxaxes!.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses Makie-specific dual-axis overlay (two Axis objects in fig[1,1])
-          and linkxaxes! — a technique with no direct parallel in matplotlib. PolyElement
-          for legend proxy is Makie-distinctive. Would need more unique Makie recipe
-          usage (e.g., Observable, lift, Colorbar) to score 5.
-  verdict: REJECTED
+        comment: Overlay axis with yaxisposition=:right (Makie-idiomatic secondary
+          axis). PolyElement in Legend (distinctively Makie). linkxaxes! (Makie-specific).
+          Not quite 5 as some techniques are available in other libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -274,6 +254,8 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
