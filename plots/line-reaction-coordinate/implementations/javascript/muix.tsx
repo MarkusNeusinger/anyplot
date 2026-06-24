@@ -1,7 +1,3 @@
-// anyplot.ai
-// line-reaction-coordinate: Reaction Coordinate Energy Diagram
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-reaction-coordinate: Reaction Coordinate Energy Diagram
@@ -56,7 +52,7 @@ function EnergyAnnotations() {
   const yP  = toY(E_PRODUCTS);    // pixel y for product level (20)
 
   // Arrow x positions (in data-coordinate space)
-  const xEa  = toX(0.53);  // Ea annotation — right of peak, ascending area
+  const xEa  = toX(0.53);  // Ea annotation — right of peak, descending area
   const xDH  = toX(0.85);  // ΔH annotation — flat product region
 
   const AW = 5;  // arrowhead half-width (px)
@@ -64,9 +60,20 @@ function EnergyAnnotations() {
 
   const ink     = t.ink;
   const inkSoft = t.inkSoft;
+  const green   = t.palette[0];
 
   return (
     <g fontFamily={FONT}>
+      {/* ── Transition state peak marker — hollow circle on the curve ── */}
+      <circle
+        cx={toX(X_PEAK)}
+        cy={yTS}
+        r={7}
+        fill={t.pageBg}
+        stroke={green}
+        strokeWidth={2.5}
+      />
+
       {/* ── Ea arrow: reactant level → transition state ── */}
       <line
         x1={xEa} y1={yTS + AH + 1}
@@ -85,7 +92,7 @@ function EnergyAnnotations() {
       />
       <text
         x={xEa + 11} y={(yTS + yR) / 2}
-        fill={ink} fontSize={16} dominantBaseline="middle" fontWeight="500"
+        fill={ink} fontSize={18} dominantBaseline="middle" fontWeight="500"
       >
         Ea = 70 kJ/mol
       </text>
@@ -108,31 +115,31 @@ function EnergyAnnotations() {
       />
       <text
         x={xDH + 11} y={(yR + yP) / 2}
-        fill={inkSoft} fontSize={16} dominantBaseline="middle"
+        fill={inkSoft} fontSize={18} dominantBaseline="middle"
       >
         ΔH = −30 kJ/mol
       </text>
 
-      {/* ── Transition State label (above peak) ── */}
+      {/* ── Transition State label (above peak marker) ── */}
       <text
-        x={toX(X_PEAK)} y={yTS - 16}
-        fill={ink} fontSize={16} textAnchor="middle" fontWeight="500"
+        x={toX(X_PEAK)} y={yTS - 22}
+        fill={ink} fontSize={18} textAnchor="middle" fontWeight="500"
       >
         Transition State ‡
       </text>
 
-      {/* ── Reactants label ── */}
+      {/* ── Reactants label — offset 22px above dashed reference line ── */}
       <text
-        x={toX(0.03)} y={yR - 14}
-        fill={ink} fontSize={16} textAnchor="start"
+        x={toX(0.03)} y={yR - 22}
+        fill={ink} fontSize={18} textAnchor="start"
       >
         Reactants (50 kJ/mol)
       </text>
 
       {/* ── Products label ── */}
       <text
-        x={toX(0.72)} y={yP - 14}
-        fill={ink} fontSize={16} textAnchor="start"
+        x={toX(0.72)} y={yP - 18}
+        fill={ink} fontSize={18} textAnchor="start"
       >
         Products (20 kJ/mol)
       </text>
@@ -240,7 +247,7 @@ export default function Chart() {
           disableTicks
         />
 
-        {/* Custom annotations: labels and measurement arrows */}
+        {/* Custom annotations: peak marker, labels, and measurement arrows */}
         <EnergyAnnotations />
       </ChartContainer>
     </Box>
