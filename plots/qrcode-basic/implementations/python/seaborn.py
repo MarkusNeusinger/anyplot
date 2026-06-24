@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -6,12 +6,12 @@ Quality: 88/100 | Updated: 2026-06-24
 
 import os
 
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import qrcode
 import seaborn as sns
 from matplotlib.colors import ListedColormap
-from matplotlib.patches import FancyBboxPatch
 
 
 # Theme tokens — Imprint palette chrome
@@ -62,37 +62,59 @@ sns.heatmap(
     linewidths=0,
 )
 
-# Remove all chrome for clean QR presentation
-sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
-ax.set_xlabel("")
-ax.set_ylabel("")
-ax.tick_params(left=False, bottom=False)
-
-# Highlight finder patterns (7×7 in three corners) with Imprint BRAND green
+# Build region overlay matrix — NaN cells render transparent via seaborn heatmap (masked bad-color)
 finder_size = 7
 finder_positions = [
     (border, border),
     (border, qr_matrix.shape[1] - border - finder_size),
     (qr_matrix.shape[0] - border - finder_size, border),
 ]
+align_module_centers = [(6, 22), (22, 6), (22, 22), (22, 38), (38, 22), (38, 38)]
+
+region_matrix = np.full(qr_matrix.shape, np.nan)
 for row, col in finder_positions:
-    rect = FancyBboxPatch(
-        (col - 0.4, row - 0.4),
-        finder_size + 0.8,
-        finder_size + 0.8,
-        boxstyle="round,pad=0.15",
-        linewidth=1.2,
-        edgecolor=BRAND,
-        facecolor="none",
-        alpha=0.7,
-    )
-    ax.add_patch(rect)
+    region_matrix[row : row + finder_size, col : col + finder_size] = 1.0
+for am_row, am_col in align_module_centers:
+    mr, mc = am_row + border, am_col + border
+    region_matrix[mr - 2 : mr + 3, mc - 2 : mc + 3] = 2.0
+
+
+# Second sns.heatmap overlays region colors using RGBA colors with built-in alpha so
+# set_alpha() on the collection is not needed (it would override NaN transparency)
+def _rgba(hex_color, alpha):
+    r, g, b = mcolors.to_rgb(hex_color)
+    return (r, g, b, alpha)
+
+
+region_cmap = ListedColormap([_rgba(BRAND, 0.4), _rgba(INK_SOFT, 0.35)])
+region_cmap.set_bad(alpha=0)  # NaN cells stay fully transparent
+region_masked = np.ma.masked_invalid(region_matrix)
+xlim, ylim = ax.get_xlim(), ax.get_ylim()
+sns.heatmap(
+    region_masked,
+    ax=ax,
+    cmap=region_cmap,
+    vmin=0.5,
+    vmax=2.5,
+    cbar=False,
+    xticklabels=False,
+    yticklabels=False,
+    linewidths=0,
+)
+ax.set_xlim(xlim)
+ax.set_ylim(ylim)
+
+# Remove all chrome for clean QR presentation
+sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
+ax.set_xlabel("")
+ax.set_ylabel("")
+ax.tick_params(left=False, bottom=False)
 
 # Annotate the top-right finder pattern; label sits in the quiet zone area
 fp_col = qr_matrix.shape[1] - border - finder_size
 fp_row = border
-fp_cx = fp_col + finder_size / 2  # heatmap x = column index
-fp_cy = fp_row + finder_size / 2  # heatmap y = row index
+fp_cx = fp_col + finder_size / 2
+fp_cy = fp_row + finder_size / 2
 ax.annotate(
     "Finder Pattern",
     xy=(fp_cx, fp_cy),
@@ -103,27 +125,9 @@ ax.annotate(
     arrowprops={"arrowstyle": "->", "color": BRAND, "lw": 1.5},
 )
 
-# Highlight alignment patterns (version 7: centers at module positions from {6, 22, 38},
-# excluding the three corners where finder patterns reside)
-align_module_centers = [(6, 22), (22, 6), (22, 22), (22, 38), (38, 22), (38, 38)]
-for am_row, am_col in align_module_centers:
-    mr = am_row + border  # row in matrix coords
-    mc = am_col + border  # col in matrix coords
-    rect = FancyBboxPatch(
-        (mc - 2 - 0.35, mr - 2 - 0.35),
-        5 + 0.7,
-        5 + 0.7,
-        boxstyle="round,pad=0.1",
-        linewidth=0.8,
-        edgecolor=INK_SOFT,
-        facecolor="none",
-        alpha=0.5,
-    )
-    ax.add_patch(rect)
-
-# Annotate the center alignment pattern — label in bottom quiet zone (rows 49-52)
-ap_mc = 22 + border  # col 26
-ap_mr = 22 + border  # row 26
+# Annotate the center alignment pattern — label in bottom quiet zone
+ap_mc = 22 + border
+ap_mr = 22 + border
 ax.annotate(
     "Alignment Pattern",
     xy=(ap_mc, ap_mr),
@@ -150,10 +154,7 @@ ax.text(
 
 # Title: mandatory format {spec-id} · {language} · {library} · anyplot.ai
 title = "qrcode-basic · python · seaborn · anyplot.ai"
-n = len(title)
-ratio = 67 / n if n > 67 else 1.0
-title_fontsize = max(8, round(12 * ratio))
-ax.set_title(title, fontsize=title_fontsize, fontweight="bold", pad=10, color=INK)
+ax.set_title(title, fontsize=12, fontweight="bold", pad=10, color=INK)
 
 # Subtitle with technical details
 fig.text(
