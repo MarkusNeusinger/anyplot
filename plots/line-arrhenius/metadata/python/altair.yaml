@@ -1,42 +1,57 @@
 library: altair
+language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:07:37Z'
-updated: '2026-03-21T22:20:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389778092
+updated: '2026-06-24T09:53:12Z'
+generated_by: claude-sonnet
+workflow_run: 28089008782
 issue: 4408
-python_version: 3.14.3
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/altair/plot.html
+language_version: 3.13.14
+library_version: 6.2.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/altair/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Complete spec compliance with all required features (regression line, R², Ea annotation,
-    temperature labels)
-  - Strong design with removed spines/domain, clean typography, and effective annotation
-    hierarchy
-  - Idiomatic Altair usage with native transform_regression and interactive features
-  - Realistic physical chemistry data with appropriate parameters
-  - Clean, well-organized code structure
+  - 'Perfect spec compliance: all five required Arrhenius features present and working
+    (regression line, R² annotation, Ea/R slope annotation, secondary temperature
+    reference, visible markers)'
+  - Excellent use of Altair native transform_regression — declarative, idiomatic,
+    avoids manual numpy-only regression for the chart layer
+  - Full theme-adaptive chrome in both renders — all INK/INK_SOFT/INK_MUTED tokens
+    correctly applied, no dark-on-dark failures
+  - Scientific context elevated via dashed ln(k)=0 reference line and secondary temperature
+    axis simulation
+  - 'Perfect data quality: realistic Arrhenius parameters (Ea=75 kJ/mol, A=1.5e12
+    s⁻¹), appropriate Gaussian scatter, neutral scientific domain'
+  - 'Clean code structure: proper seed, clean imports, correct PAD-only canvas handling
+    to exact 3200×1800'
   weaknesses:
-  - Temperature reference labels (14pt) could be slightly larger for better readability
-  - Minor whitespace imbalance on the right edge of the canvas
-  image_description: The plot displays an Arrhenius plot with "line-arrhenius · altair
-    · pyplots.ai" as the title and a subtitle "First-Order Decomposition · Rate Constants
-    vs Inverse Temperature". The x-axis shows "1/T (K⁻¹)" ranging from 0.00160 to
-    0.00340, and the y-axis shows "ln(k)" ranging from approximately -3 to 14. A blue
-    regression line (#306998 Python Blue) extends across the full data range with
-    12 filled blue circular data points (white stroke) plotted on top. In the upper-left
-    area, a bold blue annotation reads "Eₐ = 74.5 kJ/mol R² = 0.9995" and below it
-    in gray italic "slope = −Eₐ/R = -8963 K". Along the bottom of the plot area, gray
-    temperature labels (550 K, 500 K, 450 K, 400 K, 350 K, 300 K) provide secondary
-    x-axis reference with a centered "Temperature (K)" label beneath them. The design
-    is clean with no grid lines, no spines/domain lines, and a white background. Layout
-    fills the canvas well in landscape format.
+  - 'Bottom axis area slightly crowded: three text layers stack below x-axis (primary
+    tick labels, secondary temperature K labels, x-axis title) — consider adding bottom
+    padding or increasing y-scale lower bound for breathing room'
+  - 'DE-01 at 5/8: design is clean but conventional — a subtle callout box (fill=ELEVATED_BG,
+    stroke=INK_SOFT) around the Ea/R² annotation or a semi-transparent area fill under
+    the regression line would push toward 6+'
+  - Secondary temperature axis uses raw text marks in data space rather than a proper
+    Altair axis with labelExpr — less idiomatic and harder to maintain
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-arrhenius · python · altair · anyplot.ai" in bold dark (#1A1A17) text, centered, ~60-65% plot width. Subtitle in INK_SOFT secondary color. Y-axis "ln(k)" and X-axis "1/T (K⁻¹)" labels in INK at fontSize=12. Tick labels in INK_SOFT at fontSize=10. All readable.
+      Data: 12 filled circle markers in #009E73 (brand green) with white stroke. Regression line in #009E73 at 2.5px. Ea annotation in bold green: "Eₐ = 74.5 kJ/mol · R² = 0.9995". Slope annotation in italic INK_SOFT. Dashed reference line at ln(k)=0 in INK_MUTED at opacity=0.35. Secondary temperature labels (550K-300K) in INK_MUTED.
+      Legibility verdict: PASS — all text readable, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light (#F0EFE8) text, clearly visible. Subtitle in #B8B7B0. Y-axis and X-axis labels in INK (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0). Temperature reference labels in INK_MUTED (#A8A79F) — readable on dark surface. No dark-on-dark failures.
+      Data: Same #009E73 markers and regression line as light render — data colors identical. Ea annotation in green, visible. Slope annotation in #B8B7B0, visible. Dashed reference line at ln(k)=0 subtle but visible.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -44,65 +59,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28pt, subtitle 18pt, axis titles
-          22pt, ticks 18pt, annotations 20/17pt). Temperature labels at 14pt slightly
-          small.
+        comment: All font sizes explicitly set (title=16, subtitle=12, axis=12, ticks=10,
+          annotations=11-12). Readable in both themes. Minor bottom crowding from
+          stacked secondary temperature labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements anywhere in the plot.
+        comment: No text overlaps; data points spread cleanly; annotations in upper-left
+          above data cloud.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 data points with size 350/500, clearly visible with white stroke
-          separation.
+        comment: 12 sparse points at size=200 are prominent; regression line at 2.5px
+          well-weighted.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green with white marker stroke; CVD-safe Imprint
+          palette.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Single-color scheme (Python Blue), no colorblind concerns.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good landscape layout. Minor whitespace imbalance on right side.
+        comment: Canvas gate passed. Centred in 3200x1800 with balanced padding. No
+          content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: 1/T (K⁻¹) and ln(k).'
+        comment: 'Y: ln(k), X: 1/T (K⁻¹) — descriptive with mathematical notation
+          and units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series #009E73; background #FAF8F1/#1A1A17; all chrome theme-adaptive;
+          data colors identical across themes.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful design with Python Blue, Helvetica Neue, removed spines/domain.
-          Clearly above defaults.
+        comment: Intentional annotation hierarchy (bold green Ea vs italic INK_SOFT
+          slope), scientific reference line, secondary temperature axis. Above configured
+          default but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Grid disabled, domain/spines removed, view stroke removed, custom
-          tick colors. Well-polished.
+        comment: Spines removed (domain=False), Y-axis-only grid at opacity=0.15,
+          white marker strokes. Good refinement above minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotations display key insight (Ea and R²), slope annotation provides
-          interpretation, subtitle frames experiment.
+        comment: Ea/R² annotation communicates scientific takeaway; dashed reference
+          at ln(k)=0 provides chemical context; secondary temperature axis aids interpretation.
     spec_compliance:
       score: 15
       max: 15
@@ -112,51 +139,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with scatter and regression.'
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with data markers and regression
+          line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: regression line, R², Ea/R annotation,
-          temperature labels, visible data points.'
+        comment: Regression line, R² annotation, Ea/R slope annotation, secondary
+          temperature reference, visible markers on top of line — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T (K⁻¹), Y=ln(k) correctly mapped.
+        comment: X=1/T (K⁻¹), Y=ln(k) correctly assigned; all 12 points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series.
+        comment: 'Title: ''line-arrhenius · python · altair · anyplot.ai'' — correct
+          format. No legend for single series (N/A).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 12 data points spanning 300-600K with realistic scatter. Good coverage
-          but uniform scatter.
+        comment: 12 points spanning 300-600 K; realistic scatter; activation energy
+          extraction demonstrated; reference line adds scientific feature.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition with Ea=75 kJ/mol, realistic chemistry
-          scenario.
+        comment: First-order decomposition reaction — canonical physical-chemistry
+          scenario. Neutral scientific context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 300-600K and Ea=75 kJ/mol are realistic for reaction
-          kinetics.
+        comment: A=1.5e12 s⁻¹ and Ea=75 kJ/mol are physically correct for gas-phase
+          first-order reactions. R²=0.9995 consistent with σ=0.15 noise.
     code_quality:
       score: 10
       max: 10
@@ -166,60 +195,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot layers, combine, save.'
+        comment: 'Linear: imports → constants → data → regression → DataFrames → chart
+          layers → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: os, altair, numpy, pandas, PIL.Image — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, well-organized layer composition.
+        comment: Clean, Pythonic. Altair is interactive so selection_point and tooltips
+          are native features, not fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html with current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL padding to exact
+          3200×1800; current Altair 6.x API.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Altair patterns: layered composition, encoding types, alt.Title,
-          configure methods.'
+        comment: Uses transform_regression, alt.selection_point with nearest=True,
+          alt.condition for hover sizing, alt.layer(), alt.Title with subtitle. Clearly
+          above default baseline.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses transform_regression, selection_point, tooltips, .interactive(),
-          HTML export.
+        comment: transform_regression is distinctively Vega-Lite/Altair. selection_point
+          + alt.condition hover interaction is distinctly interactive/Altair. Not
+          easily replicated in static libraries.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
   - edge-highlighting
+  - alpha-blending
