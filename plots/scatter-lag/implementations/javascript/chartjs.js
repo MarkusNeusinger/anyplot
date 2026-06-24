@@ -15,16 +15,17 @@ function rand() {
 // AR(1) time series: y(t) = 0.85 * y(t-1) + noise
 const N = 300;
 const PHI = 0.85;
+const LAG = 1; // configurable: try 7 or 12 for seasonal lag
 const series = new Array(N);
 series[0] = 0.0;
 for (let i = 1; i < N; i++) {
   series[i] = PHI * series[i - 1] + (rand() - 0.5) * 2.0;
 }
 
-// Lag-1 scatter pairs: x = y(t), y = y(t+1)
+// Lag scatter pairs: x = y(t), y = y(t + LAG)
 const lagData = [];
-for (let i = 0; i < N - 1; i++) {
-  lagData.push({ x: series[i], y: series[i + 1] });
+for (let i = 0; i < N - LAG; i++) {
+  lagData.push({ x: series[i], y: series[i + LAG] });
 }
 
 // Interpolate color along imprint_seq by time index (early: green → late: blue)
@@ -34,7 +35,7 @@ function hexRgb(h) {
 function lerpColor(c1, c2, frac) {
   const [r1, g1, b1] = hexRgb(c1);
   const [r2, g2, b2] = hexRgb(c2);
-  return `rgba(${Math.round(r1 + (r2 - r1) * frac)},${Math.round(g1 + (g2 - g1) * frac)},${Math.round(b1 + (b2 - b1) * frac)},0.82)`;
+  return `rgba(${Math.round(r1 + (r2 - r1) * frac)},${Math.round(g1 + (g2 - g1) * frac)},${Math.round(b1 + (b2 - b1) * frac)},0.65)`;
 }
 const pointColors = lagData.map((_, i) => lerpColor(t.seq[0], t.seq[1], i / (lagData.length - 1)));
 
@@ -90,6 +91,33 @@ const rAnnotation = {
   },
 };
 
+// Compact horizontal gradient colorbar drawn above the bottom legend
+const colorbarPlugin = {
+  id: "colorbar",
+  afterDraw(chart) {
+    const { ctx, chartArea, width } = chart;
+    const barW = 120;
+    const barH = 10;
+    const barX = (width - barW) / 2;
+    const barY = chartArea.bottom + 28;
+    ctx.save();
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0, t.seq[0]);
+    grad.addColorStop(1, t.seq[1]);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 3);
+    ctx.fill();
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "right";
+    ctx.fillText("early", barX - 5, barY + barH - 1);
+    ctx.textAlign = "left";
+    ctx.fillText("late", barX + barW + 5, barY + barH - 1);
+    ctx.restore();
+  },
+};
+
 // Mount canvas
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -97,11 +125,11 @@ document.getElementById("container").appendChild(canvas);
 // Chart
 new Chart(canvas, {
   type: "scatter",
-  plugins: [bgPlugin, rAnnotation],
+  plugins: [bgPlugin, rAnnotation, colorbarPlugin],
   data: {
     datasets: [
       {
-        label: "y(t) vs y(t+1)",
+        label: `y(t) vs y(t+${LAG})`,
         data: lagData,
         backgroundColor: pointColors,
         borderColor: "transparent",
@@ -154,7 +182,7 @@ new Chart(canvas, {
       tooltip: {
         callbacks: {
           label(ctx) {
-            return `y(t) = ${ctx.parsed.x.toFixed(3)},  y(t+1) = ${ctx.parsed.y.toFixed(3)}`;
+            return `y(t) = ${ctx.parsed.x.toFixed(3)},  y(t+${LAG}) = ${ctx.parsed.y.toFixed(3)}`;
           },
         },
       },
@@ -170,6 +198,7 @@ new Chart(canvas, {
           font: { size: 16 },
           padding: { top: 6 },
         },
+        border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
       },
@@ -178,11 +207,12 @@ new Chart(canvas, {
         max: axisMax,
         title: {
           display: true,
-          text: "y(t + 1)",
+          text: `y(t + ${LAG})`,
           color: t.ink,
           font: { size: 16 },
           padding: { bottom: 6 },
         },
+        border: { display: false },
         ticks: { color: t.inkSoft, font: { size: 13 } },
         grid: { color: t.grid },
       },
