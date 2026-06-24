@@ -86,7 +86,7 @@ export default function Chart() {
         height={sz.height}
         skipAnimation
         margin={{ top: 110, bottom: 110, left: 110, right: 60 }}
-        colors={[t.palette[0], t.palette[2]]}
+        colors={[t.palette[0], t.palette[1]]}
         grid={{ horizontal: true }}
         xAxis={[
           {
@@ -116,7 +116,7 @@ export default function Chart() {
           {
             id: "lnk",
             label: "ln(k)",
-            labelStyle: { fontSize: 16, fill: t.ink },
+            labelStyle: { fontSize: 18, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
         ]}
@@ -141,6 +141,7 @@ export default function Chart() {
         topAxis="tempK"
         bottomAxis="invT"
         leftAxis="lnk"
+        rightAxis={null}
         slotProps={{
           legend: {
             position: { vertical: "bottom", horizontal: "middle" },
