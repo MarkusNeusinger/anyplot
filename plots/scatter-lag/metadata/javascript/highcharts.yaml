@@ -1,0 +1,272 @@
+library: highcharts
+language: javascript
+specification_id: scatter-lag
+created: '2026-06-24T22:59:39Z'
+updated: '2026-06-24T23:22:21Z'
+generated_by: claude-sonnet
+workflow_run: 28134852433
+issue: 5251
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Excellent temporal color gradient using imprint_seq (brand green → blue) that
+    reveals how autocorrelation is distributed across time — a direct visualization
+    of the time index encoding requested in the spec
+  - Correlation coefficient r=0.798 prominently displayed in the subtitle alongside
+    AR(1) parameters (φ=0.8, lag k=1), providing quantitative context exactly as the
+    spec requires
+  - 'Full spec compliance: diagonal y=x reference line, temporal point coloring, r-value
+    annotation, configurable lag, and AR(1) synthetic data all implemented correctly'
+  - Clean, idiomatic Highcharts code with fixed-seed LCG (seed=42) for deterministic
+    reproducibility — the correct pattern for browser-side data generation
+  - 'Perfect theme adaptation: transparent background passes through to #FAF8F1/#1A1A17
+    surfaces, all chrome tokens (t.ink, t.inkSoft, t.grid) properly applied in both
+    renders'
+  - Per-point color array in Highcharts data API plus mixed series types (scatter
+    + line) demonstrate solid library mastery
+  weaknesses:
+  - 'VQ-01 (minor): The subtitle is long (''Temperature Anomaly — AR(1), φ = 0.8 ·
+    Lag k = 1 · r = 0.798 · Color: temporal order (early → late)'') at 14px CSS —
+    borderline readable at mobile breakpoints (~400px). Consider truncating to ''AR(1)
+    φ=0.8 · Lag k=1 · r=0.798 · color: temporal order'' or reducing subtitle fontsize
+    to 13px.'
+  - 'DE-02 (minor): Visual refinement stays close to Highcharts scatter defaults.
+    Explicit top/right spine removal (via xAxis.lineWidth=0 / yAxis.opposite: false
+    / chart.margin config) would sharpen the L-frame aesthetic.'
+  - 'LM-02: The temporal gradient is good, but no Highcharts crosshair or cursor configuration
+    was used — adding xAxis.crosshair and yAxis.crosshair with inkSoft color would
+    improve interactivity and showcase additional library features.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "scatter-lag · javascript · highcharts · anyplot.ai" in dark ink at 22px — clearly readable. Subtitle in softer gray with AR(1) parameters and r-value — readable but small. X-axis label "y(t) — anomaly at time t (°C)" and Y-axis label "y(t + 1) — anomaly at next step (°C)" in inkSoft at 16px — both clearly visible. Tick labels at 14px — readable. Legend at bottom shows "Lag-1 observations" (green swatch) and "y = x (reference)" (dashed gray line).
+      Data: 199 scatter points colored by temporal order — early observations in brand green (#009E73), late observations in blue (#4467A3), using imprint_seq gradient. Points have opacity 0.62 and pageBg edge stroke for definition. Strong linear cluster along the diagonal visually confirms high positive autocorrelation. Dashed diagonal reference line (y=x) drawn in inkSoft for comparison.
+      Legibility verdict: PASS — all text readable against warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light cream text — clearly readable. Subtitle in lighter gray — visible. Axis labels in light inkSoft color — readable. Tick labels in matching light tone — readable. Legend visible at bottom. Reference dashed line now appears in a lighter shade against the dark background.
+      Data: Scatter points use identical green-to-blue gradient (imprint_seq) as the light render — data colors unchanged between themes. Temporal ordering is equally apparent. Reference line visible as dashed lighter line.
+      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark issues detected. Brand green (#009E73) remains visible and identifiable on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22px), axis labels (16px), tick labels (14px) all readable
+          in both themes. Subtitle at 14px with long text is borderline at extreme
+          mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data overlap. Legend is below plot area.
+          Scatter overlap handled by opacity 0.62.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 199 points at radius 5 with 0.62 opacity — appropriate density. Reference
+          line clearly visible. Temporal gradient clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient (green-to-blue) is CVD-safe. Dashed linestyle
+          adds redundant encoding for reference line.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed. Good proportions: title ~50% width, balanced
+          axis labels, no overflow, no clipping.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''y(t) — anomaly at time t (°C)'', Y: ''y(t + 1) — anomaly at
+          next step (°C)'' — descriptive with units. Title matches required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq (t.seq[0] → t.seq[1]) used for continuous temporal coloring.
+          Background transparent (passes through to #FAF8F1/#1A1A17). All chrome uses
+          t.ink/t.inkSoft/t.grid tokens.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above-default (4): temporal color gradient is an intentional design
+          choice that adds analytical depth; subtitle with φ, lag, r-value and encoding
+          description provides strong contextual framing.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above-default (2): opacity 0.62 for density awareness; marker edge
+          (lineColor: pageBg) for definition. Could push further with explicit spine
+          removal and more refined legend styling.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above-default (2): temporal gradient reveals how autocorrelation
+          persists across time; r-value quantifies the pattern; reference line anchors
+          the comparison. Clear focal point and guided interpretation.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+1). Appropriate chart type.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line ✓, temporal color encoding ✓, r-value annotation
+          in subtitle ✓, configurable lag (lag=1 variable, subtitle shows k=1) ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=y(t), y=y(t+1) correctly mapped. All 199 pairs plotted. AR(1) data
+          with φ=0.8 shows appropriate strong autocorrelation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-lag · javascript · highcharts · anyplot.ai'' —
+          exactly matches required format. Legend: ''Lag-1 observations'' + ''y =
+          x (reference)'' — clear and accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows temporal structure, autocorrelation pattern, reference line,
+          200 observations — comprehensive feature coverage.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Temperature anomaly is a real-world time series domain. AR(1) with
+          φ=0.8 produces realistic autocorrelation. Values ±5°C are plausible anomalies.
+          No controversial data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 observations is sufficient to reveal autocorrelation structure.
+          φ=0.8 produces strong but realistic dependence (r≈0.8 observed). Value range
+          appropriate for anomalies.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Three small utility functions (rng, hexToRgb, lerpColor) are all
+          justified by requirements: LCG required by Highcharts guide; color functions
+          required for temporal gradient. Main chart call is flat.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) produces deterministic AR(1) data — correct
+          approach for browser-side reproducibility.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Highcharts uses globals. Only window.ANYPLOT_TOKENS
+          accessed. Clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Well-organized sections: data generation, correlation computation,
+          chart config. No fake UI. Appropriate complexity.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts harness produces plot-light.png + plot-dark.png and plot-light.html
+          + plot-dark.html. Both confirmed present. Current Highcharts.chart() API
+          used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Highcharts.chart(''container'', ...) pattern. animation:
+          false on both chart and plotOptions.series. credits: {enabled: false}. backgroundColor:
+          transparent. Per-point color via data array — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point color objects in Highcharts data array (Highcharts-specific
+          feature), mixed series types (scatter + line), ShortDash style, zIndex layering,
+          marker lineColor for edge definition. Solid but crosshair/cursor configs
+          not utilized.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
