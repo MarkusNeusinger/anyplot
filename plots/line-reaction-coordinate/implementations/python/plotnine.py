@@ -1,8 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
 """
+
 # ruff: noqa: E402
 """anyplot.ai — line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: plotnine | Python
@@ -97,7 +98,7 @@ plot = (
         inherit_aes=False,
     )
     # Main energy curve — Imprint brand green (#009E73), first categorical series
-    + geom_line(color=IMPRINT_PALETTE[0], size=1.2)
+    + geom_line(color=IMPRINT_PALETTE[0], size=1.5)
     # Key-point markers at reactant, transition state, product
     + geom_point(
         key_points,
@@ -133,7 +134,7 @@ plot = (
         x=ea_x + 0.04,
         y=(reactant_energy + transition_energy) / 2,
         label="Eₐ = 70 kJ/mol",
-        size=3,
+        size=3.5,
         color=ea_color,
         ha="left",
         fontweight="bold",
@@ -164,7 +165,7 @@ plot = (
         x=dh_x + 0.03,
         y=(reactant_energy + product_energy) / 2,
         label="ΔH = −30\nkJ/mol",
-        size=3,
+        size=3.5,
         color=dh_color,
         ha="left",
         fontweight="bold",
@@ -175,7 +176,7 @@ plot = (
         x=0.02,
         y=reactant_energy + 7,
         label="Reactants\n50 kJ/mol",
-        size=3,
+        size=3.5,
         color=INK,
         ha="left",
         va="bottom",
@@ -186,7 +187,7 @@ plot = (
         x=0.50,
         y=transition_energy + 6,
         label="Transition State\n120 kJ/mol",
-        size=3,
+        size=3.5,
         color=INK,
         ha="center",
         va="bottom",
@@ -197,14 +198,16 @@ plot = (
         x=0.93,
         y=product_energy - 5,
         label="Products\n20 kJ/mol",
-        size=3,
+        size=3.5,
         color=INK,
         ha="right",
         va="top",
         fontweight="bold",
     )
     + labs(
-        title="line-reaction-coordinate · plotnine · anyplot.ai", x="Reaction Coordinate", y="Potential Energy (kJ/mol)"
+        title="line-reaction-coordinate · python · plotnine · anyplot.ai",
+        x="Reaction Coordinate",
+        y="Potential Energy (kJ/mol)",
     )
     + scale_x_continuous(breaks=[0, 0.25, 0.5, 0.75, 1.0], labels=["0", "", "0.5", "", "1.0"], expand=(0.02, 0.08))
     + scale_y_continuous(limits=[0, 145], expand=(0.02, 0.02))
@@ -221,7 +224,8 @@ plot = (
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_margin=0.02,
+        axis_ticks=element_blank(),
+        plot_margin=0.04,
     )
 )
 
