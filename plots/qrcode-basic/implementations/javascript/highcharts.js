@@ -1,3 +1,7 @@
+// anyplot.ai
+// qrcode-basic: Basic QR Code Generator
+// Library: highcharts 12.6.0 | JavaScript 22.23.0
+// Quality: 85/100 | Created: 2026-06-24
 //# anyplot-orientation: square
 // anyplot.ai
 // qrcode-basic: Basic QR Code Generator
