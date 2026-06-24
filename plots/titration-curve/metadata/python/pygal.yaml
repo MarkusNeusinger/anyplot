@@ -1,45 +1,56 @@
 library: pygal
+language: python
 specification_id: titration-curve
 created: '2026-03-21T22:13:06Z'
-updated: '2026-03-21T22:49:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389866036
+updated: '2026-06-24T12:07:02Z'
+generated_by: claude-sonnet
+workflow_run: 28095063835
 issue: 4407
-python_version: 3.14.3
-library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/titration-curve/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/titration-curve/pygal/plot.html
-quality_score: 83
+language_version: 3.13.14
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent data quality with realistic chemistry data computed from first principles
-    (stoichiometric calculation)
-  - Two-panel composition effectively communicates both the titration curve and its
-    derivative
-  - Cohesive custom color palette with accessible blue/orange/red scheme
-  - Interactive HTML output leverages pygal SVG-native strengths
-  - Clear data storytelling through annotation box, transition zone shading, and derivative
-    panel
+  - 'Perfect Imprint palette application: green main curve, lavender derivative, semantic
+    red for equivalence threshold, muted for reference — intentional semantic color
+    roles throughout'
+  - Correct dual-axis setup using pygal's secondary=True API, including secondary_range
+    configuration
+  - 'Theme adaptation is complete in both renders: warm off-white / near-black backgrounds
+    with correct ink tokens'
+  - All font sizes explicitly set following style guide defaults for pygal (title
+    66, labels 56, ticks 44)
+  - Factually correct titration chemistry — HCl+NaOH at 0.1M, equivalence at pH 7,
+    500 data points for smooth curve
+  - Simultaneous PNG + interactive HTML export leverages pygal's core strength
   weaknesses:
-  - Derivative curve as separate panel rather than secondary y-axis overlay (spec
-    preference)
-  - PIL-based pixel coordinate overlay for transition zone shading is fragile and
-    hardcoded
-  - Transition Zone label partially obscured by equivalence point dashed line
-  - Helper function data_to_px breaks flat script convention
-  image_description: 'The plot displays a two-panel composition for an acid-base titration
-    curve. The upper panel shows the characteristic S-shaped pH curve (blue, #306998)
-    plotting pH (0–14, left y-axis) against Volume of NaOH added (0–50 mL, x-axis).
-    A vertical dashed red line marks the equivalence point at 25.0 mL. A horizontal
-    gray dashed line marks pH 7 as a reference. A light blue semi-transparent rectangle
-    shades the "Transition Zone" between ~20–30 mL. A white rounded annotation box
-    in the upper right reads "Equivalence: 25.0 mL, pH 7.0" with the subtitle "25
-    mL of 0.1 M HCl titrated with 0.1 M NaOH." The lower panel shows the derivative
-    curve (dpH/dV) in orange (#D35400) with a sharp peak at the equivalence point,
-    with its own red dashed vertical line. The background is light blue-white (#FAFCFF)
-    with a slightly tinted plot area (#F0F4F8). The title reads "titration-curve ·
-    pygal · pyplots.ai". A combined legend at the bottom lists all five series across
-    both panels.'
+  - 'secondary_range=(0.0, 0.7) clips the normalized derivative peak (peak=1.0 exceeds
+    range; top of spike is cut off within chart area). Fix: use secondary_range=(0.0,
+    1.1) to display the full spike with 10% headroom.'
+  - 'Annotation dot is very small (dots_size=10 with value_font_size=36 produces barely-visible
+    label at (27.5, 9.0)). The spec requires a clear text annotation at the equivalence
+    point. Fix: increase dots_size to 20-30 and consider placing the annotation at
+    a less crowded position (e.g., (30, 5) below the equivalence line).'
+  - 'At x=25 mL, derivative spike and equivalence vertical line visually overlap at
+    the steepest region of the pH curve, making them harder to distinguish at reduced
+    scale. Fix: widen the equivalence dasharray gaps or use a slightly different x
+    offset for the annotation.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "titration-curve · python · pygal · anyplot.ai" in dark ink, readable. X-axis label "Volume of NaOH added (mL)" and Y-axis label "pH" in dark ink, readable. Tick labels 0-14 (left) and 0-0.7 (right) in muted ink, readable. Legend at bottom with 5 entries in 2-column layout.
+      Data: Green (#009E73) S-shaped pH curve prominent. Thin vertical dashed line at x=25 mL (equivalence). Narrow derivative spike (dpH/dV) converges at x=25 mL. Horizontal dotted gray reference line at pH=7. Small dot annotation at (27.5, 9.0).
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title in light/cream text, readable. Axis labels and tick labels in light ink, all readable. Legend at bottom with light-colored text. No dark-on-dark failures observed.
+      Data: Green (#009E73) pH curve identical to light render. Equivalence dashed line, derivative spike, pH=7 reference, and annotation dot all visible. Data colors unchanged from light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -50,41 +61,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 56, labels 34, major labels
-          32, legend 40). Annotation box text slightly small but readable.
+        comment: 'All font sizes explicitly set per style guide. Readable in both
+          themes. Minor: annotation dot text very small.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Transition Zone label partially obscured by equivalence point dashed
-          line.
+        comment: No significant overlap. Minor visual crowding at x=25 mL where derivative,
+          equivalence line, and pH curve converge.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Titration curve clearly visible with stroke width 6. Derivative peak
-          is extremely narrow/sharp.
+        comment: Main curve very prominent. Derivative spike peak clipped by secondary_range=(0.0,
+          0.7). Annotation dot small.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/red/gray palette is colorblind-safe with good contrast.
+        comment: Imprint palette with distinct hue families. Adequate contrast in
+          both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Two-panel layout uses space well. Combined legend with 5 items slightly
-          cluttered.
+        comment: Good 3200x1800 proportions, balanced margins, legend at bottom. 5-series
+          legend in 2-column slightly crowded.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Volume of NaOH added (mL), pH, dpH/dV.'
+        comment: Volume of NaOH added (mL) and pH with correct units. Title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Imprint palette order. Backgrounds #FAF8F1
+          / #1A1A17. Theme-adaptive chrome in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -94,22 +114,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom cohesive color palette, custom backgrounds, rounded annotation
-          box. Above defaults but not publication-level.
+        comment: Intentional semantic color roles, line-weight hierarchy. Above generic
+          default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Custom backgrounds, y-guides only, generous margins, panel divider,
-          annotation overlay.
+        comment: Custom stroke widths, dasharray patterns, generous margins, font_family
+          set, y-axis-only grid.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation box highlights equivalence point, transition zone shading
-          guides viewer, derivative panel reinforces key insight.
+        comment: 'Clear visual hierarchy: thick green S-curve, derivative precisely
+          locates equivalence, pH=7 reference provides context.'
     spec_compliance:
       score: 14
       max: 15
@@ -119,84 +139,85 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct XY line chart showing sigmoidal titration curve.
+        comment: Correct XY line chart with secondary y-axis overlay.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: All features present. Derivative as separate panel rather than secondary
-          y-axis overlay.
+        comment: Equivalence line+annotation present. Derivative overlay present.
+          Buffer region N/A for strong acid/base. secondary_range clips derivative
+          peak.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = volume (0-50 mL), Y = pH (0-14). Correct mapping with full pH
-          scale.
+        comment: X=volume 0-50mL, Y=pH 0-14, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels are descriptive.
+        comment: 'Title: titration-curve · python · pygal · anyplot.ai. Legend labels
+          descriptive and accurate.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows S-curve, transition zone, equivalence point, derivative peak,
-          pH 7 reference.
+        comment: S-curve, equivalence point, derivative overlay, pH=7 reference. Buffer
+          region N/A for strong system.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH.'
+        comment: 25mL 0.1M HCl + 0.1M NaOH — classic neutral chemistry scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: pH 0-14 full scale, volume 0-50 mL, 0.1 M standard concentrations.
+        comment: Equivalence at pH 7, pH 0-14 range, 500 data points. Factually correct.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Follows imports-data-plot-save flow but defines helper function data_to_px.
+        comment: Linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical calculation, no randomness.
+        comment: Fully deterministic calculation-based data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, cairosvg, numpy, pygal, PIL.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: PIL overlay with hardcoded pixel coordinates is fragile and verbose.
+        comment: Clean Pythonic code. sys.path fix is a necessary addition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -206,27 +227,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY, Style, stroke_style, legend positioning, tooltip
-          settings, value formatters.
+        comment: pygal.XY with secondary=True, secondary_range, per-series stroke_style,
+          value_formatter, legend_at_bottom — solid idiomatic pygal.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML with native SVG tooltips, dual PNG+HTML output leverages
-          pygal strengths.
-  verdict: REJECTED
+        comment: Dual-axis secondary series, SVG-native dasharray stroke patterns,
+          simultaneous PNG+HTML export.
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - pillow
+  dependencies: []
   techniques:
-  - annotations
-  - subplots
+  - twin-axes
   - html-export
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+  dataprep:
+  - normalization
+  styling: []

@@ -1,0 +1,261 @@
+library: makie
+language: julia
+specification_id: titration-curve
+created: '2026-06-24T11:47:20Z'
+updated: '2026-06-24T12:07:32Z'
+generated_by: claude-sonnet
+workflow_run: 28095493255
+issue: 4407
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect visual quality across both themes — all font sizes explicitly set, no
+    overlaps, complete Imprint palette compliance, correctly inverted chrome
+  - Dual-axis overlay correctly implemented with linked x-axes, color-matched secondary
+    axis spine/label/ticks — demonstrates genuine Makie mastery
+  - Scientifically accurate titration chemistry with correct pH calculation for strong
+    acid/strong base system; equivalence at pH=7 physically correct
+  - Elegant comprehension-based pH computation and clean KISS code structure
+  - 'Layered visual storytelling: thick primary curve + derivative spike + transition
+    fill + annotation all guide eye to the equivalence point'
+  weaknesses:
+  - 'SC-02: Spec describes buffer region shading (pKa +/- 1, for weak acid/base) but
+    data is for strong acid/base where no traditional buffer region exists; transition
+    zone shading is chemically appropriate but deviates from spec wording'
+  - 'DE-01: Design follows the anyplot template well but does not push beyond it to
+    truly publication-ready distinctiveness; secondary axis color-matching is the
+    strongest design touch'
+  - 'DE-03: Annotation at fontsize=11 is the smallest text element — borderline for
+    mobile rendering; consider 12pt minimum for annotations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "HCl/NaOH Titration · titration-curve · julia · makie · anyplot.ai" clearly readable in dark INK color. Axis labels ("pH", "Volume of NaOH added (mL)", "dpH/dV (pH·mL⁻¹)") all readable in dark INK. Tick labels in INK_SOFT dark grey. Legend text readable. Annotation "Equivalence point (V = 25 mL, pH = 7)" readable in INK_SOFT.
+      Data: pH curve in Imprint #009E73 (brand green), linewidth=3. Derivative curve in #C475FD (Imprint lavender), linewidth=2, dashed. Transition zone fill in #2ABCCD (Imprint cyan) at 15% alpha. Vertical dashed equivalence line in INK_MUTED. pH=7 dotted reference line in INK_MUTED.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title readable in light near-white (#F0EFE8) color. Axis labels readable in light INK color. Tick labels in light INK_SOFT grey (#B8B7B0). Legend text readable in INK_SOFT light. Annotation readable in INK_SOFT light. No dark-on-dark failures.
+      Data: pH curve in identical #009E73 green (same as light render). Derivative curve in identical #C475FD lavender. Transition zone fill appears as slightly darker teal-cyan alpha-blended over dark background — same underlying color, different surface interaction. All data colors confirmed identical to light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; titlesize=20 scaled, xlabelsize=14,
+          ylabelsize=14/12 primary/secondary, xticklabelsize=12, yticklabelsize=12,
+          annotation=11. Proportions well-balanced in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; annotation placed right of dashed line in open
+          space; legend top-left clear of data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Primary pH curve linewidth=3.0 prominent; derivative linewidth=2.0
+          dashed, distinguishable; transition fill visible; reference lines intentionally
+          subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette green and lavender are CVD-safe distinct hues. Adequate
+          luminance contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. figure_padding=(10,35,10,10) gives secondary
+          axis label room. Good utilization, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Volume of NaOH added (mL) with units. Y: pH (standard unit).
+          Secondary: dpH/dV (pH·mL⁻¹) with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Second series #C475FD (Imprint[2]).
+          Transition fill #2ABCCD (Imprint[6]). Light bg #FAF8F1, dark bg #1A1A17.
+          Data colors identical across themes. Chrome adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Solid design above defaults: colored secondary axis elements, intentional
+          line-weight hierarchy, annotation and reference lines. Follows anyplot template
+          well but does not transcend it to publication-ready level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed (right kept for secondary axis). Y-axis-only
+          grid at 12% alpha. Legend with gentle frame and elevated background. Good
+          whitespace. Above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Multiple visual cues guide the eye to equivalence point story. Thick
+          primary curve, derivative spike, transition zone, annotation with explicit
+          coordinates. Good visual hierarchy.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct titration curve, S-shaped sigmoidal profile for strong acid/strong
+          base.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Equivalence point line+annotation, derivative secondary axis, transition
+          zone shading, realistic chemistry, y-axis 0-14. Minor: spec says buffer
+          region but implementation uses transition zone (appropriate for strong acid/base
+          system).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: volume 0-50 mL. Y: pH 0-14. Secondary Y: dpH/dV correctly mapped.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: HCl/NaOH Titration · titration-curve · julia · makie · anyplot.ai
+          — correct prefixed format. Legend labels meaningful.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full titration curve from acid to basic region, derivative peak,
+          transition zone, pH=7 reference. All features represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Standard analytical chemistry: 25 mL 0.1 M HCl + 0.1 M NaOH. Neutral
+          educational topic.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically correct titration chemistry. Concentrations 0.1 M
+          textbook standard. Equivalence at pH=7 correct for symmetric strong acid/base.
+          pH 0-14 range as specified.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Deterministic titration data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all three used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic Julia. Comprehension for pH calculation is elegant.
+          No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (current
+          Makie 0.22+ API).
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Makie usage: Figure → Axis layout, lines!/vlines!/hlines!/poly!/text!,
+          Legend with custom elements, xlims!/ylims!, linkxaxes!.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Overlay axis with yaxisposition=:right (Makie-idiomatic secondary
+          axis). PolyElement in Legend (distinctively Makie). linkxaxes! (Makie-specific).
+          Not quite 5 as some techniques are available in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
