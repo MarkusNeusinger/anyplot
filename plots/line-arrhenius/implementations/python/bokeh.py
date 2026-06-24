@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
-Library: bokeh 3.9.0 | Python 3.14.3
-Quality: 92/100 | Updated: 2026-06-24
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-24
 """
 
 import os
