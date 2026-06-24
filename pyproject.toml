@@ -44,7 +44,7 @@ dependencies = [
     "httpx>=0.28.0",
     # Essentials
     "pydantic>=2.13.4",
-    "pydantic-settings>=2.14.1",
+    "pydantic-settings>=2.14.2",
     "pyyaml>=6.0.0",
     "python-dotenv>=1.0.0",
     "pandas-stubs>=3.0.3.260530",
