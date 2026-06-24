@@ -1,6 +1,7 @@
-"""
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-Library: matplotlib | Python
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 93/100 | Updated: 2026-06-24
 """
 
 import os
