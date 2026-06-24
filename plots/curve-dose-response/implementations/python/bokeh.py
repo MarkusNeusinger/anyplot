@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
@@ -182,12 +182,13 @@ p.add_layout(bottom_asymptote)
 
 # Asymptote labels
 top_asym_label = Label(
-    x=5e-10,
+    x=1e-4,
     y=popt_a[1] + 2,
     text=f"Top asymptote ({popt_a[1]:.0f}%)",
     text_font_size="22pt",
     text_color=INK_MUTED,
     text_font_style="italic",
+    text_align="right",
 )
 bottom_asym_label = Label(
     x=5e-10,
@@ -269,7 +270,7 @@ p.yaxis.major_label_text_color = INK_SOFT
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
