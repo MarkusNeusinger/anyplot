@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-arrhenius
 created: '2026-06-24T09:58:52Z'
-updated: '2026-06-24T10:06:11Z'
+updated: '2026-06-24T10:17:18Z'
 generated_by: claude-sonnet
 workflow_run: 28090024556
 issue: 4408
@@ -12,55 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Spec fully satisfied: correct 1/T x-axis, ln(k) y-axis, regression line, R² display,
-    Ea/R annotation, and secondary temperature-in-K tick labels all implemented'
-  - Custom Kinetics Summary annotation box using ECharts graphic element displays
-    R², Ea (kJ/mol), and Ea/R clearly — a distinctive ECharts technique that creates
-    a strong focal point
-  - Dual-format x-axis tick labels (1/T value + T in K on second line) implemented
-    elegantly via ECharts axisLabel.formatter — creative storytelling-friendly approach
-    that satisfies the secondary-axis spec requirement without a true twin-axis
-  - Fully deterministic, in-memory data with realistic H₂O₂ decomposition chemistry
-    (Ea ≈ 95 kJ/mol, sensible temperature range 300–550 K, tight R² = 0.9996)
-  - 'Correct theme-adaptive token usage throughout: t.ink, t.inkSoft, t.grid, t.pageBg,
-    t.elevatedBg all properly applied; dark render correctly shows light text on dark
-    background with no dark-on-dark failures'
-  - 'Scatter markers use borderColor: t.pageBg producing a clean halo separation effect
-    between overlapping markers and the regression line'
-  - 'Perfect spec compliance: all 6 spec items present and working; 11 data points
-    within the 5–20 specified range; R² and Ea/R correctly extracted from regression'
+  - 'All spec requirements implemented: regression line, R² value, Ea/R annotation,
+    secondary temperature K tick labels, z-indexed markers above the line'
+  - ECharts graphic component used idiomatically for the Kinetics Summary annotation
+    box — shows domain knowledge and ECharts API mastery
+  - 'Correct Imprint palette throughout: brand green (#009E73) first for experimental
+    data, lavender (palette[1]) for regression line'
+  - Deterministic in-memory data generation with realistic H₂O₂ decomposition chemistry
+    (Ea~95 kJ/mol, 11 points spanning 300–550 K)
+  - 'Both renders pass theme-readability: warm off-white / near-black backgrounds,
+    all chrome correctly theme-adaptive via ANYPLOT_TOKENS'
+  - Custom dual-line axis formatter shows both 1/T (×10⁻³ K⁻¹) and K temperature reference
+    — directly satisfies spec requirement for secondary x-axis labels
+  - Scatter z-index (z:10) above line (z:5) ensures markers sit on top of the regression
+    line as specified
   weaknesses:
-  - 'VQ-07 / Palette order violation: Arrhenius fit line uses t.palette[2] (#4467A3
-    blue) instead of the canonical t.palette[1] (#C475FD lavender). No semantic exception
-    applies here — ''regression line vs. data points'' is not a real-world color association
-    like ''grass→green''. Fix: change lineStyle.color and itemStyle.color for the
-    ''Arrhenius fit'' series to t.palette[1], and update the top-level color array
-    accordingly'
-  - 'VQ-05 / Layout proportions: large bottom margin (grid.bottom=140, nameGap=90)
-    creates noticeable whitespace below the x-axis tick labels and before the axis
-    title. Consider reducing nameGap to 60–70 and grid.bottom to 110–120 to tighten
-    the bottom while still accommodating the two-line tick labels'
-  - 'VQ-01 / Tick label size: the two-line x-axis tick labels (1/T value + T in K)
-    render at fontSize=13, which is slightly small for the 3200×1800 canvas; increase
-    to 14–15 for better mobile readability'
+  - 'DE-02: No explicit axis-line removal — ECharts default shows axis lines on all
+    four sides of the grid area; for a cleaner L-shaped frame, set axisLine.show:false
+    on the top and right (or add grid.containLabel:true with axisLine styles adjusted)'
+  - 'DE-01: Kinetics Summary box uses a flat rect with a solid border; a subtle box
+    shadow or reduced border opacity (lineWidth:0.4) would add more visual refinement'
+  - 'VQ-01: Dual-line x-axis tick labels (''1.81\n(553 K)'') at fontSize 14 may be
+    slightly tight when the chart is rendered at mobile widths; consider increasing
+    nameGap or using slightly larger tick labels (fontSize:15) for these two-line
+    labels'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "line-arrhenius · javascript · echarts · anyplot.ai" in bold dark text, centered, occupying ~62% of canvas width — well-proportioned. Axis labels "1/T (×10⁻³ K⁻¹)" and "ln(k)" in soft-dark (#4A4A44-equivalent) with units. X-axis tick labels use a two-line format showing both 1/T value (1.81, 2.10, … 3.30 ×10⁻³ K⁻¹) and T in K (553 K, 476 K, … 303 K). Y-axis tick labels from -12 to 9. Legend at top showing "Experimental data" (green circle) and "Arrhenius fit" (blue line). All text clearly readable against the light background.
-      Data: 11 scatter points in brand green (#009E73) with white/pageBg halo border rendering on top of a smooth regression line in blue (#4467A3). Linear trend clearly visible from upper-left to lower-right. Kinetics Summary box in upper-right with elevated (#FFFDF6) background showing R²=0.9996, Ea=94.7 kJ/mol, Ea/R=11388 K in dark text.
-      Legibility verdict: PASS — all title, axis labels, tick labels, legend, and summary box text are clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "line-arrhenius · javascript · echarts · anyplot.ai" at top center in dark ink, clearly readable. Y-axis label "ln(k)" on left in soft ink. X-axis label "1/T (×10⁻³ K⁻¹)" at bottom in soft ink — both clearly readable. Dual-line x-tick labels (e.g., "1.81 / (553 K)") in soft ink — readable at full resolution. Legend row shows green circle "Experimental data" and purple line "Arrhenius fit" — clearly readable.
+      Data: 11 green (#009E73) scatter markers at symbolSize 14 with pageBg border rings, sitting clearly on top of a lavender (#C475FD) regression line extending slightly beyond the data range. Y-axis has subtle horizontal grid lines. Kinetics Summary annotation box in upper right shows "R² = 0.9996", "Ea = 94.7 kJ/mol", "Ea/R = 11388 K" — all legible with elevated background fill.
+      Legibility verdict: PASS — all text elements are clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct theme surface, not pure black.
-      Chrome: Same title in light cream text (#F0EFE8-equivalent) on dark background — fully readable. Axis labels and tick labels in light-soft tone (#B8B7B0-equivalent) — clearly visible. Legend text is light-colored. Kinetics Summary box has dark-elevated background (#242420) with thin border, text in light-cream for "Kinetics Summary" header and light-soft for the values.
-      Data: Scatter markers remain in identical brand green (#009E73) — data colors unchanged from light render, only chrome flips. Regression line remains in identical blue (#4467A3). Horizontal grid lines are subtle light lines on dark background (t.grid token). No dark-on-dark failures detected.
-      Legibility verdict: PASS — all elements readable against the warm dark background. Brand green #009E73 reads well on the dark surface. No "dark-on-dark" issues found.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title, axis labels, tick labels and legend text all render in light ink (#F0EFE8 / #B8B7B0 tone) — clearly readable against the dark background. No dark-on-dark failures detected. Kinetics Summary box uses elevated dark background (#242420) with light text — all values readable.
+      Data: Data colors are identical to the light render — green (#009E73) scatter markers, lavender (#C475FD) regression line. Y-axis subtle grid lines are visible as lighter lines on the dark surface.
+      Legibility verdict: PASS — all text elements are clearly readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,57 +61,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (22px title, 14px axis labels,
-          13px tick labels/legend). All readable in both themes. Two-line x-tick labels
-          at 13px slightly small for mobile; 14-15px would be more comfortable.
+        comment: 'All font sizes explicitly set (title 22px, labels 14px, ticks 13-14px).
+          Minor: dual-line tick labels may be tight at mobile width'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render. Kinetics Summary box correctly
-          placed in right margin whitespace, does not overlap data area.
+        comment: No overlapping elements anywhere in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Scatter symbolSize=14 is appropriate for 11 data points. Regression
-          line at width=3 is clearly visible. Marker halo via pageBg borderColor creates
-          good visual separation.
+        comment: symbolSize:14 is appropriate for 11 sparse points; markers clearly
+          visible on top of regression line via z-ordering
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are perceptually distinct and
-          CVD-safe. No red-green pair as sole signal.
+        comment: Green (#009E73) and lavender (#C475FD) are distinct hue families,
+          CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Layout mostly good. Large bottom margin (grid.bottom=140, nameGap=90)
-          creates noticeable empty space below two-line tick labels. Right panel (right=224)
-          is well-used by the Kinetics Summary box. Could tighten bottom spacing.
+        comment: Good margins (left:90, right:224, top:102, bottom:115). Kinetics
+          Summary box stays within canvas bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axes labeled with units: ''1/T (x10^-3 K^-1)'' and ''ln(k)''. Descriptive
-          and correct for the domain.'
+        comment: 'X: ''1/T (×10⁻³ K⁻¹)'' with units; Y: ''ln(k)'' — both descriptive'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series correctly uses t.palette[0] (#009E73). Second series
-          (Arrhenius fit) uses t.palette[2] (#4467A3 blue), skipping t.palette[1]
-          (#C475FD lavender). No semantic color exception applies. Background and
-          chrome are theme-correct in both renders.
+        passed: true
+        comment: 'First series #009E73 (brand green); second palette[1]=#C475FD; backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -126,27 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above well-configured default (4/8). Custom Kinetics Summary annotation
-          box, dual-scale axis formatting, marker halo effect, and proper scientific
-          plot layout elevate this above generic defaults. Not at strong-design (6)
-          level.
+        comment: Kinetics Summary box with rounded rect and styled stats is above
+          defaults. borderColor:pageBg on markers adds definition. Not yet FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines absent (ECharts default). Grid styled with t.grid
-          token (subtle). Marker halos with pageBg border color. Elevated background
-          for summary box. Some visible refinement above minimal defaults.
+        comment: X-axis grid hidden, Y-axis grid subtle. No explicit spine removal
+          — ECharts default 4-sided axis lines still visible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Kinetics Summary box creates a clear analytical focal point (R²,
-          Ea, Ea/R). Dual-scale x-axis (1/T + T in K) is scientist-friendly storytelling.
-          High R²=0.9996 communicates excellent model fit visually and numerically.
-          Clear visual hierarchy: data guides the viewer to the linear Arrhenius relationship.'
+        comment: Kinetics Summary box creates a clear focal point for extracted parameters.
+          Dual-axis tick context guides the reader on temperature interpretation
     spec_compliance:
       score: 15
       max: 15
@@ -156,30 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: scatter of ln(k) vs 1/T with linear regression
-          overlay.'
+        comment: 'Correct Arrhenius plot: scatter for data, line for linear fit, ln(k)
+          vs 1/T'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: 1/T x-axis, ln(k) y-axis, regression
-          line, R² display, Ea/R annotation, secondary temperature tick labels (in
-          K). Feature-complete.'
+        comment: 'All features: regression line, R², Ea/R annotation, secondary K
+          labels on x-axis, markers above line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T, Y=ln(k). 11 data points spanning 300-550 K range (within 5-20
-          spec). All data visible.
+        comment: 1/T on x-axis, ln(k) on y-axis, 11 points spanning 300-550 K
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'line-arrhenius · javascript · echarts · anyplot.ai' — correct
-          format. Legend labels 'Experimental data' and 'Arrhenius fit' are appropriate.
+        comment: Title 'line-arrhenius · javascript · echarts · anyplot.ai' matches
+          exact format. Legend labels descriptive
     data_quality:
       score: 15
       max: 15
@@ -189,24 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows realistic experimental scatter around the regression line,
-          clear linear trend on Arrhenius coordinates, 11 data points with varying
-          deviations from the fit.
+        comment: 'Shows all aspects: scatter with noise, linear regression, R² fit
+          quality, extracted Ea, dual-axis reference'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: H2O2 thermal decomposition is a well-known, uncontroversial chemistry
-          reaction. Context is real, scientifically grounded, and appropriate.
+        comment: H₂O₂ thermal decomposition is a real reaction. Neutral scientific
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range 300-550 K realistic. Activation energy ~95 kJ/mol
-          plausible for H2O2 decomposition. R²=0.9996 consistent with well-defined
-          Arrhenius kinetics.
+        comment: Ea ~95 kJ/mol realistic for decomposition. Temperature 300-550 K
+          appropriate. Noise values physically plausible
     code_quality:
       score: 10
       max: 10
@@ -216,62 +193,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: Data → Init → Option. No functions or classes.'
+        comment: 'Linear structure: data → regression → init → setOption. No functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: fixed temperature arrays and fixed noise perturbation
-          array. No RNG.'
+        comment: Hard-coded noise array and fixed constants ensure deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Only uses window.ANYPLOT_TOKENS, window.echarts globals
-          as required.
+        comment: No imports needed; all globals used (t, echarts, document)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, appropriate complexity. Linear regression computed
-          cleanly inline. Graphic element for annotation box is a valid ECharts pattern.
+        comment: Clean use of reduce/map for regression computation. Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct ECharts pattern: echarts.init() without explicit size/DPR,
-          animation:false, setOption(). Output handled by harness.'
+        comment: animation:false set; echarts.init with no explicit size; harness
+          handles output files
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ECharts usage: graphic API, multiple series types, z-ordering,
+          custom formatter, tooltip type-checking'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct echarts.init() (no size/DPR), animation:false, proper series
-          types, z-index control for layering, token-based theming, conditional tooltip
-          formatter. Above baseline (3) but not expert-level (5).
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ECharts graphic element for custom annotation overlay (ECharts-specific),
-          custom axisLabel.formatter for multi-line dual-scale tick labels, z-index
-          layer ordering between series. These are ECharts-distinctive features not
-          easily replicated in other libraries.
-  verdict: REJECTED
+        comment: ECharts graphic component (rect+text children) for annotation box
+          is distinctive. Dual-line formatter is ECharts-idiomatic. One point off
+          — the combo could be more visually striking
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
