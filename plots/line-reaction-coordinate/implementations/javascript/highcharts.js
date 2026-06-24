@@ -29,6 +29,7 @@ Highcharts.chart("container", {
         animation: false,
         style: { fontFamily: "inherit" },
         margin: [70, 60, 80, 80],
+        plotBorderWidth: 0,
         events: {
             load: function () {
                 const chart = this;
@@ -94,10 +95,10 @@ Highcharts.chart("container", {
                     .add();
 
                 // --- Direct labels ---
-                renderer.text("Reactants", xLeft, y50 - 14)
+                renderer.text("Reactants", xLeft, y50 - 30)
                     .css({ color: ink, fontSize: "14px", fontWeight: "600", fontFamily: "inherit" })
                     .add();
-                renderer.text("50 kJ/mol", xLeft, y50 - 1)
+                renderer.text("50 kJ/mol", xLeft, y50 - 17)
                     .css({ color: soft, fontSize: "12px", fontFamily: "inherit" })
                     .add();
 
@@ -108,10 +109,10 @@ Highcharts.chart("container", {
                     .css({ color: soft, fontSize: "12px", fontFamily: "inherit" })
                     .add();
 
-                renderer.text("Products", xRight, y20 - 14)
+                renderer.text("Products", xRight + 5, y20 - 30)
                     .css({ color: ink, fontSize: "14px", fontWeight: "600", fontFamily: "inherit" })
                     .add();
-                renderer.text("20 kJ/mol", xRight, y20 - 1)
+                renderer.text("20 kJ/mol", xRight + 5, y20 - 17)
                     .css({ color: soft, fontSize: "12px", fontFamily: "inherit" })
                     .add();
             }
@@ -173,8 +174,11 @@ Highcharts.chart("container", {
         }
     },
     series: [{
+        type: "areaspline",
         name: "Potential Energy",
         data: energyData,
-        color: t.palette[0]
+        color: t.palette[0],
+        fillColor: "rgba(0,158,115,0.10)",
+        threshold: null
     }]
 });
