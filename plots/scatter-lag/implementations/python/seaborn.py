@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
@@ -21,8 +21,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Imprint sequential cmap for temporal index (single-polarity continuous)
-midpoint_seq = ["#009E73", "#4467A3"]
-imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", midpoint_seq)
+imprint_seq = LinearSegmentedColormap.from_list("imprint_seq", ["#009E73", "#4467A3"])
 
 # Data — AR(1) with extreme positive autocorrelation (phi=0.9, n=1500)
 np.random.seed(42)
@@ -64,9 +63,8 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 fig.patch.set_facecolor(PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-scatter = ax.scatter(
-    df["y(t)"], df["y(t+1)"], c=df["Time Index"], cmap=imprint_seq, s=8, alpha=0.35, edgecolors="none", zorder=3
-)
+# Density contours via sns.kdeplot — visual depth separating dense cluster from sparse outer points
+sns.kdeplot(data=df, x="y(t)", y="y(t+1)", levels=4, color=INK_SOFT, linewidths=0.8, alpha=0.45, ax=ax, zorder=1)
 
 # Diagonal reference line (y = x) using theme-adaptive neutral
 data_min = min(y_t.min(), y_t_lag.min())
@@ -82,10 +80,30 @@ ax.plot(
     zorder=2,
 )
 
+# Temporal scatter via sns.scatterplot with continuous hue — seaborn-idiomatic coloring
+norm = plt.Normalize(df["Time Index"].min(), df["Time Index"].max())
+sm = plt.cm.ScalarMappable(cmap=imprint_seq, norm=norm)
+sm.set_array([])
+
+sns.scatterplot(
+    data=df,
+    x="y(t)",
+    y="y(t+1)",
+    hue="Time Index",
+    palette=imprint_seq,
+    hue_norm=norm,
+    s=8,
+    alpha=0.35,
+    edgecolor="none",
+    legend=False,
+    ax=ax,
+    zorder=3,
+)
+
 # Colorbar for temporal structure
-cbar = plt.colorbar(scatter, ax=ax, pad=0.02, aspect=28)
-cbar.set_label("Time Index", fontsize=8, color=INK_SOFT)
-cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar = plt.colorbar(sm, ax=ax, pad=0.02, aspect=28)
+cbar.set_label("Time Index", fontsize=9, color=INK_SOFT)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 
