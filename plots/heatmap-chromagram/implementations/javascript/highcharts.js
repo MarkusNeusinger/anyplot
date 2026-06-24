@@ -147,12 +147,31 @@ ren.rect(cbX, py, cbW, ph)
   .add();
 
 // Colorbar labels
-const ls = { color: t.inkSoft, fontSize: '12px' };
+const ls = { color: t.inkSoft, fontSize: '14px' };
 const lx = cbX + cbW + 5;
 ren.text('1.0', lx, py + 5).css(ls).attr({ align: 'left' }).add();
 ren.text('0.5', lx, py + ph / 2 + 4).css(ls).attr({ align: 'left' }).add();
 ren.text('0.0', lx, py + ph + 3).css(ls).attr({ align: 'left' }).add();
 ren.text('Energy', cbX + cbW / 2, py - 8)
-  .css({ color: t.inkSoft, fontSize: '13px' })
+  .css({ color: t.inkSoft, fontSize: '14px' })
   .attr({ align: 'center' })
   .add();
+
+// Chord section dividers at t=2, 4, 6 s
+[2, 4, 6].forEach(tb => {
+  const xDiv = px + (tb / DURATION) * pw;
+  ren.path(['M', xDiv, py, 'L', xDiv, py + ph])
+    .attr({ stroke: t.inkSoft, 'stroke-width': 1, dashstyle: 'ShortDash', opacity: 0.65 })
+    .add();
+});
+
+// Chord name annotations just above the heatmap area
+const CHORD_LABELS = ['C maj', 'G maj', 'Am', 'F maj'];
+CHORD_LABELS.forEach((label, i) => {
+  const midT = (i + 0.5) * (DURATION / CHORD_TONES.length);
+  const xMid = px + (midT / DURATION) * pw;
+  ren.text(label, xMid, py - 8)
+    .css({ color: t.ink, fontSize: '13px', fontWeight: '600' })
+    .attr({ align: 'center' })
+    .add();
+});
