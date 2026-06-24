@@ -63,7 +63,6 @@ const curveB = smoothCurve(compB);
 // 95% CI band for Compound A: ±8 response units around fitted curve
 const CI_W = 8;
 const ciUpperA = curveA.map(([x, y]) => [x, Math.min(100, y + CI_W)]);
-const ciLowerA = curveA.map(([x, y]) => [x, Math.max(0, y - CI_W)]);
 
 // Half-maximal response thresholds for EC50 reference lines
 const halfA = (compA.bottom + compA.top) / 2;  // 50 %
@@ -90,8 +89,8 @@ Highcharts.chart('container', {
                 if (c._errorBars) c._errorBars.forEach(el => el.destroy());
                 c._errorBars = [];
 
-                // Series indices 4 (Compound A data) and 5 (Compound B data)
-                [[4, t.palette[0]], [5, t.palette[1]]].forEach(([si, color]) => {
+                // Series indices 3 (Compound A data) and 4 (Compound B data)
+                [[3, t.palette[0]], [4, t.palette[1]]].forEach(([si, color]) => {
                     const s = c.series[si];
                     if (!s || !s.points) return;
                     s.points.forEach(pt => {
@@ -138,7 +137,7 @@ Highcharts.chart('container', {
         lineColor: t.inkSoft,
         tickColor: t.inkSoft,
         gridLineColor: t.grid,
-        gridLineWidth: 1,
+        gridLineWidth: 0,
         labels: {
             style: { color: t.inkSoft, fontSize: '14px' },
             formatter: function () {
@@ -199,8 +198,8 @@ Highcharts.chart('container', {
             // Top asymptotes
             { value: compA.top, color: t.palette[0], dashStyle: 'LongDash', width: 1, zIndex: 4 },
             { value: compB.top, color: t.palette[1], dashStyle: 'LongDash', width: 1, zIndex: 4 },
-            // Bottom asymptote (shared, subtle)
-            { value: 3, color: t.grid, dashStyle: 'LongDash', width: 1, zIndex: 4 }
+            // Bottom asymptote (shared)
+            { value: 3, color: t.inkSoft, dashStyle: 'LongDash', width: 1.5, zIndex: 4 }
         ]
     },
 
@@ -255,20 +254,6 @@ Highcharts.chart('container', {
             enableMouseTracking: false,
             marker: { enabled: false },
             zIndex: 1
-        },
-        // CI lower mask — covers fill below lower CI bound with page background
-        {
-            type: 'area',
-            name: '_ci_mask',
-            data: ciLowerA,
-            color: 'transparent',
-            fillColor: t.pageBg,
-            lineWidth: 0,
-            threshold: null,
-            showInLegend: false,
-            enableMouseTracking: false,
-            marker: { enabled: false },
-            zIndex: 2
         },
         // Compound B fitted curve
         {
