@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: qrcode-basic
 created: '2026-01-07T16:29:36Z'
-updated: '2026-06-24T17:17:29Z'
+updated: '2026-06-24T17:28:46Z'
 generated_by: claude-sonnet
 workflow_run: 28115549408
 issue: 3184
@@ -12,132 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/python/bokeh/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Creative use of Imprint palette to color-code QR structural regions (finder=green
-    #009E73, timing=blue #4467A3, alignment=lavender #C475FD) — makes the visualization
-    educational and visually distinctive'
-  - Interactive HoverTool showing region type on hover leverages Bokeh's unique interactive
-    advantage effectively
-  - Proper qrcode library with deterministic encoding of real URL (https://anyplot.ai)
-    — scannable output
-  - Clean code with elegant set-based region classification for O(1) lookup per module
-  - Correct 2400x2400 square canvas, well-suited for symmetric QR code layout
-  - All font sizes explicitly set; title scaling formula handles long titles correctly
+  - 'Semantic color assignment: brand green (#009E73) for finder patterns is the perfect
+    use of the Imprint first-series slot'
+  - HoverTool region identification leverages Bokeh interactive advantage — viewers
+    can inspect any module structural role
+  - 'Correctly maintains #FAF8F1 inner background for QR scannability across both
+    themes while adapting outer border to PAGE_BG'
+  - 'Complete QR anatomy coverage: finder patterns, timing grid, alignment block,
+    data modules all correctly identified using real qrcode library producing a scannable
+    code'
+  - 'Perfect code structure: region classification using flat set lookups is clean
+    and efficient'
   weaknesses:
-  - 'Dark theme footer text contrast failure: footer Label elements use INK_SOFT=#B8B7B0
-    (dark-theme light gray) but render on the white inner plot background (#FFFFFF),
-    producing ~1.9:1 contrast ratio — well below the readable threshold. Fix: use
-    a dark-on-white color for footer labels regardless of theme, e.g. hard-code #4A4A44
-    or #6B6A63 since the inner QR background is always white.'
-  - 'Inner plot background is hardcoded to pure #FFFFFF for both light and dark themes
-    — justified for QR scannability but the dark render shows a jarring bright-white
-    square inside the near-black border. Consider using a very-near-white (#F5F5F5
-    or the light theme PAGE_BG #FAF8F1) in the QR area to soften the contrast while
-    keeping scannability.'
-  - Lavender alignment pattern (#C475FD) has relatively low luminance contrast against
-    white background compared to the other structural elements; this is also the lightest
-    Imprint hue and may affect QR scanner grayscale recognition of the alignment pattern.
-  - 'SC-02 minor: the spec states QR code MUST be scannable — colored finder/timing/alignment
-    modules (especially lavender) could reduce scanner reliability. Consider using
-    a legend to clarify these are display-only colorings on top of the required black-module
-    structure.'
+  - Version metadata line at 20pt is borderline small at mobile widths (~400px) —
+    consider increasing to 24pt; Encoded footer label at 26pt should be 30pt
+  - Top margin (min_border_top=110) creates noticeable whitespace between title and
+    QR body — consider reducing to ~80 for tighter composition
   image_description: |-
     Light render (plot-light.png):
-      Background: Outer border is warm off-white (#FAF8F1) correct; inner plot area is pure white (#FFFFFF) intentionally for QR scannability.
-      Chrome: Title "qrcode-basic · python · bokeh · anyplot.ai" in dark near-black ink (#1A1A17), clearly readable at the top. Footer labels "Encoded: https://anyplot.ai" and version info in soft dark gray (#4A4A44), readable on white.
-      Data: QR code with finder patterns in brand green (#009E73) at three corners, timing cells in blue (#4467A3), alignment pattern (center-right) in lavender (#C475FD), data modules in near-black (#1A1A17). QR modules are clearly visible on the white background.
-      Legibility verdict: PASS — all text is readable on the light surface. Footer text has adequate contrast on white inner area in light theme.
+      Background: Warm off-white #FAF8F1 — both outer border and inner QR area are cream-toned. Correct.
+      Chrome: Title "qrcode-basic · python · bokeh · anyplot.ai" centered at top in dark text (~80pt), occupies ~70% of canvas width. Footer labels: "Encoded: https://anyplot.ai" (26pt monospace) and "Version 2 (25x25 modules) · Error Correction M (15%)" (20pt). All text readable. Version line is slightly small.
+      Data: Finder patterns (#009E73 green) at three corners. Timing grid modules (#4467A3 blue). Alignment block (#C475FD lavender). Data modules (#1A1A17 near-black). First series is #009E73. All QR structural regions distinctly colored using Imprint palette.
+      Legibility verdict: PASS (version line at 20pt is borderline at mobile scale)
 
     Dark render (plot-dark.png):
-      Background: Outer border is warm near-black (#1A1A17) correct; inner QR area remains pure white (#FFFFFF) — a jarring bright square within the dark frame.
-      Chrome: Title is light cream text (#F0EFE8) on near-black outer border — clearly readable. Footer labels use INK_SOFT=#B8B7B0 (dark-theme light gray) but appear ON the white inner background, producing very low contrast (~1.9:1) — the text is faint but barely readable.
-      Data: QR module colors are identical to light render (finder green, timing blue, alignment lavender, data near-black) — data colors correct across themes. No dark-on-dark failure for the QR modules themselves since they're on white. But the footer text is a light gray on white (wrong combination for dark theme).
-      Legibility verdict: FAIL — footer label text (INK_SOFT #B8B7B0 on #FFFFFF white) has ~1.9:1 contrast ratio, failing readability. Title is fine (light text on dark outer border). The footer is the specific failure point.
+      Background: Outer canvas border is #1A1A17 (warm near-black). Inner plot area retains #FAF8F1 (intentionally hardcoded for QR scannability — data modules use near-black, requiring light background). This is a legitimate technical exception, not a theme compliance failure.
+      Chrome: Title renders in light (#F0EFE8) text against the dark outer border band — clearly readable. No dark-on-dark failures. Footer labels use hardcoded #4A4A44 but render on cream inner area — contrast is fine.
+      Data: Colors are identical to light render: green finder patterns, blue timing, lavender alignment, near-black data — no hue drift between themes. Imprint palette data colors unchanged as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Title and footer explicitly sized; dark theme footer text uses INK_SOFT
-          (#B8B7B0 light gray) on white inner background — ~1.9:1 contrast, too low
+        passed: true
+        comment: Title and main footer well-sized at 80pt and 26pt respectively. Version
+          info line at 20pt is borderline small for mobile (~400px) viewing. All text
+          explicitly set.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; footer well-spaced below QR code
+        comment: Clean grid layout, no text collisions anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: QR modules clearly visible; lavender alignment pattern is the lightest
-          element but distinguishable
+        comment: QR modules clearly distinct; color-coded regions immediately visible
+          at full resolution
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; data modules near-black on white provides
-          excellent contrast
+        comment: High contrast black-on-cream for data modules; green/blue/lavender
+          region separation is CVD-safe via Imprint palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good square canvas layout; QR fills ~65% of canvas height with appropriate
-          quiet zone; minor extra whitespace above QR
+        comment: Square 2400x2400 perfect for QR; canvas utilization ~65%, balanced
+          margins, quiet zone handled cleanly
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; no data axes needed; footer provides encoded
-          content context
+        comment: Axes intentionally hidden (correct for QR matrix); footer metadata
+          provides encoded content and version; title correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Imprint palette used for structural regions correctly (finder=#009E73,
-          timing=#4467A3, alignment=#C475FD); outer border adapts to theme; but inner
-          plot background is hardcoded #FFFFFF (pure white) — violates no-pure-white
-          rule, though justified for QR scannability'
+        passed: true
+        comment: 'Finder patterns use #009E73 (brand green, first series); Timing
+          #4467A3 (Imprint pos 3); Alignment #C475FD (Imprint pos 2); Data modules
+          use neutral #1A1A17; inner background hardcoded #FAF8F1 for QR scannability
+          is valid technical exception; outer border PAGE_BG is theme-adaptive; INK
+          token used for title color'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Creative and intentional use of Imprint palette to highlight QR code
-          structural regions; clearly above a configured default; educational and
-          visually distinctive
+        comment: 'Above default 4: semantic color assignment of brand green to structurally
+          critical finder patterns is intentional and clever; framed dark-mode aesthetic
+          (dark border around cream QR body) is genuinely sophisticated'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes fully hidden for clean presentation; quiet zone properly implemented;
-          dark theme footer text contrast issue reduces score
+        comment: 'Axes and grid hidden (correct for plot type), clean quiet zone,
+          generous margins, intentional cream inner area maintained for QR function
+          in both themes. Minor: top margin slightly generous.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded QR structural regions create visual hierarchy and teach
-          QR code anatomy; footer labels provide metadata context
+        comment: 'Color-coded QR regions turn a functional diagram into educational
+          structural anatomy: three green corners draw the eye to finder pattern anchors;
+          visual hierarchy is clear and purposeful'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -145,53 +137,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct QR code visualization using proper qrcode library
+        comment: Correct QR code visualization using the qrcode library producing
+          a real scannable output
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Proper library used, error correction M, quiet zone present, finder
-          patterns at three corners; colored modules (especially lavender) may affect
-          scanner reliability per spec's must-be-scannable requirement
+        comment: Quiet zone present; high-contrast modules on light background; all
+          three finder patterns; proper QR encoding library; Error Correction M (15%)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: URL correctly encoded; proper QR matrix generated
+        comment: QR matrix correctly rendered; column->x, row(flipped)->y mapping
+          is correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''qrcode-basic · python · bokeh · anyplot.ai'' correct; no
-          legend needed'
+        comment: Title is exactly 'qrcode-basic · python · bokeh · anyplot.ai'; HoverTool
+          provides region labels interactively which is appropriate for Bokeh
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows finder, timing, alignment, and data regions; demonstrates QR
-          code structure comprehensively
+        comment: 'All QR structural regions shown: Finder (3 corners), Timing (row
+          6 and col 6), Alignment (version-appropriate position), Data modules — complete
+          anatomical coverage'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real URL https://anyplot.ai — practical, neutral, real-world use
-          case
+        comment: Encodes 'https://anyplot.ai' — the project's own URL, perfectly neutral
+          and real-world meaningful
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Version 2 (25×25 modules) appropriate for short URL; error correction
-          M (15%) is recommended default per spec
+        comment: Version 2, 25x25 modules with Error Correction M for a 19-char URL
+          is factually correct and proportionate
     code_quality:
       score: 10
       max: 10
@@ -201,33 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure; sys.path fix is documented necessity
+        comment: Imports -> token definitions -> data generation -> region classification
+          -> plot -> save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: QR encoding is fully deterministic
+        comment: QR encoding from fixed string is deterministic; no random state needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; standard library and numpy used appropriately
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Set-based O(1) region classification is elegant; no over-engineering
+        comment: Well-structured; flat set lookups for region classification are appropriate
+          O(1) optimization; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.html (output_file/save) and plot-{THEME}.png (Selenium
+          screenshot)
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -235,16 +232,19 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, HoverTool, Label, add_layout, add_tools — idiomatic
-          Bokeh patterns
+        comment: ColumnDataSource, HoverTool, Label via add_layout, rect() glyph,
+          output_file/save pattern — all idiomatic Bokeh; above default 3 due to purposeful
+          tool and layout composition
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive HTML with region-level HoverTool is a genuinely distinctive
-          Bokeh capability; dual HTML+PNG output
-  verdict: REJECTED
+        comment: HoverTool for interactive region identification is genuinely Bokeh-distinctive;
+          HTML export with interactive tooltips is a Bokeh exclusive. Scores 3 (some
+          distinctive features) rather than 5 since core visualization is straightforward
+          rect glyphs
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - qrcode
@@ -255,6 +255,7 @@ impl_tags:
   - annotations
   patterns:
   - columndatasource
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
