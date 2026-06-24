@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-Library: altair 6.0.0 | Python 3.14.3
-Quality: 90/100 | Created: 2026-03-17
+Library: altair | Python 3.13
+Quality: pending | Updated: 2026-06-24
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import importlib
+import os
+import sys
 
+
+# Remove script directory from sys.path so `altair` resolves to the package, not this file
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _this_dir]
+
+alt = importlib.import_module("altair")
+np = importlib.import_module("numpy")
+pd = importlib.import_module("pandas")
+Image = importlib.import_module("PIL.Image")
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint sequential colormap for continuous single-polarity energy data
+IMPRINT_SEQ = ["#009E73", "#4467A3"]
 
 # Data - simulate a chromagram with chord progressions
 np.random.seed(42)
@@ -59,6 +79,8 @@ for t_idx, t_val in enumerate(time_seconds):
 df = pd.DataFrame(rows)
 
 # Plot
+title_text = "heatmap-chromagram · python · altair · anyplot.ai"
+
 heatmap = (
     alt.Chart(df)
     .mark_rect()
@@ -66,7 +88,7 @@ heatmap = (
         x=alt.X(
             "t1:Q",
             title="Time (seconds)",
-            axis=alt.Axis(labelFontSize=15, titleFontSize=20, titlePadding=12, values=list(range(0, 25, 2))),
+            axis=alt.Axis(labelFontSize=16, titleFontSize=20, titlePadding=12, values=list(range(0, 25, 2))),
             scale=alt.Scale(domain=[0, 24.2]),
         ),
         x2="t2:Q",
@@ -78,15 +100,15 @@ heatmap = (
         ),
         color=alt.Color(
             "Energy:Q",
-            scale=alt.Scale(scheme="inferno"),
+            scale=alt.Scale(range=IMPRINT_SEQ),
             legend=alt.Legend(
                 title="Energy",
                 titleFontSize=16,
                 labelFontSize=14,
-                gradientLength=350,
+                gradientLength=320,
                 gradientThickness=16,
                 titlePadding=8,
-                offset=12,
+                offset=10,
                 direction="vertical",
             ),
         ),
@@ -98,26 +120,42 @@ heatmap = (
     )
 )
 
-# Combine and configure
 chart = (
     heatmap.properties(
-        width=1600,
-        height=900,
+        width=420,
+        height=440,
+        background=PAGE_BG,
         title=alt.Title(
-            "heatmap-chromagram · altair · pyplots.ai",
-            subtitle="Pitch class energy over time · C → G → Am → F chord progression",
-            fontSize=26,
-            subtitleFontSize=16,
-            subtitleColor="#666666",
+            title_text,
+            subtitle="Pitch class energy · C → G → Am → F chord progression",
+            fontSize=16,
+            subtitleFontSize=12,
+            color=INK,
+            subtitleColor=INK_MUTED,
             anchor="start",
             offset=16,
         ),
-        padding={"left": 20, "right": 20, "top": 20, "bottom": 20},
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     )
-    .configure_axis(grid=False)
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=420, continuousHeight=440)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, grid=False, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG then pad to exact canonical target (2400 × 2400 — square for heatmaps)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
