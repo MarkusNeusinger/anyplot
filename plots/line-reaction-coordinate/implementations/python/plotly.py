@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -142,11 +142,11 @@ fig.add_annotation(
 fig.add_annotation(
     x=ea_x,
     y=(reactant_energy + transition_energy) / 2,
-    text="E<sub>a</sub> = 70 kJ/mol",
+    text="<b>E<sub>a</sub> = 70 kJ/mol</b>",
     showarrow=False,
     xanchor="right",
     xshift=-14,
-    font={"size": 12, "color": EA_COLOR, "family": "Arial Black, sans-serif"},
+    font={"size": 12, "color": EA_COLOR, "family": "Arial, sans-serif"},
 )
 
 # Enthalpy change (ΔH) double-headed arrow
@@ -181,11 +181,11 @@ fig.add_annotation(
 fig.add_annotation(
     x=dh_x,
     y=(reactant_energy + product_energy) / 2,
-    text="ΔH = −30 kJ/mol",
+    text="<b>ΔH = −30 kJ/mol</b>",
     showarrow=False,
     xanchor="left",
     xshift=14,
-    font={"size": 12, "color": DH_COLOR, "family": "Arial Black, sans-serif"},
+    font={"size": 12, "color": DH_COLOR, "family": "Arial, sans-serif"},
 )
 
 # Labels — Reactants, Transition State, Products
@@ -271,7 +271,7 @@ fig.update_layout(
         "linewidth": 1,
         "dtick": 20,
     },
-    margin={"l": 85, "r": 60, "t": 80, "b": 65},
+    margin={"l": 85, "r": 40, "t": 80, "b": 65},
 )
 
 # Save
