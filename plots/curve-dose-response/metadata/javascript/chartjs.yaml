@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: curve-dose-response
 created: '2026-06-24T15:47:28Z'
-updated: '2026-06-24T15:54:24Z'
+updated: '2026-06-24T16:06:10Z'
 generated_by: claude-sonnet
 workflow_run: 28109968501
 issue: 4556
@@ -12,138 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dos
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - Complete spec compliance — all 7 required features (4PL sigmoid, EC50 reference
-    lines, SEM error bars, asymptote dashed lines, 2 compounds, 95% CI band, legend)
-    fully implemented
-  - Sophisticated custom Chart.js plugins (ciBandPlugin, overlayPlugin) with correct
-    canvas clipping regions using chartArea bounds — advanced use of beforeDatasetsDraw/afterDatasetsDraw
-    lifecycle hooks
-  - Reproducible data generation via seeded LCG (seed=42) with deterministic log-spaced
-    concentration arrays spanning 5 orders of magnitude
-  - 'Realistic pharmacological parameters: EC50 = 50 nM vs 700 nM (14× potency difference),
-    Hill slopes 1.5 and 1.1, response asymptotes 3–96% and 5–85%'
-  - Custom tick callback renders logarithmic X-axis with Unicode superscript notation
-    (10⁻⁹, 10⁻⁸, …) — clean scientific formatting
-  - EC50 labels display concentration in nM/μM with Unicode subscripts; EC50 annotations
-    (horizontal + vertical dashed lines) are correctly anchored to bottom-asymptote
-    baseline
-  - Theme-adaptive chrome correctly uses all ANYPLOT_TOKENS (t.ink, t.inkSoft, t.grid,
-    t.pageBg) — both renders are visually correct with no dark-on-dark or light-on-light
-    failures
+  - 'Complete spec compliance: all 7 required features implemented (log x-axis, 4PL
+    sigmoid, EC50 reference lines, SEM error bars, asymptote lines, 2+ compounds,
+    CI bands for both)'
+  - Excellent use of Chart.js canvas plugin API for CI bands, error bars, and annotation
+    overlays using scale-aware coordinate transforms (getPixelForValue)
+  - Seeded LCG ensures full reproducibility without external dependencies
+  - Correct Imprint palette application with theme-adaptive chrome throughout both
+    renders
+  - EC50 labels and intersection lines clearly communicate the pharmacological message
+  - 'Biologically realistic data: EC50 values (50 nM and 700 nM), Hill slopes (1.5
+    and 1.1), and response ranges all in appropriate pharmacological ranges'
   weaknesses:
-  - 'Palette canonical order violated: Compound B uses t.palette[2] (#4467A3, blue)
-    instead of t.palette[1] (#C475FD, lavender) — no semantic exception applies to
-    generic ''Compound A / Compound B'' labels; fix by changing palette[2] to palette[1]'
-  - EC50 annotation text hardcoded as 'bold 14px sans-serif' rather than using a theme-aware
-    size; text is small at the bottom of the chart and may be hard to read when the
-    image is scaled to mobile widths (~400 px)
-  - 'Design excellence moderate: no explicit spine removal, no custom whitespace treatment
-    beyond Chart.js defaults — the visual polish is functional but not exceptional'
+  - 'Standard Chart.js rectangular chart border is not removed — consider setting
+    border: { display: false } on both scales for a cleaner L-shaped or borderless
+    aesthetic aligned with the style guide''s spine-removal recommendation'
+  - Seven helper functions (fourPL, logSpace, rand, randN, ciHW, fmtEC50, toSup) reduce
+    code linearity; simple formatters could be inlined for a more KISS flow
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
-      Chrome: Title "curve-dose-response · javascript · chartjs · anyplot.ai" displayed in dark ink at the top centre — clearly readable at font size 22. X-axis label "Concentration (M)" and Y-axis label "Response (%)" both in dark ink at font size 16 — clearly readable and balanced. Logarithmic X-axis tick labels (10⁻⁹ through 10⁻³) rendered with Unicode superscripts — readable. Y-axis tick labels (−5%, 0%, 20%, 40%, 60%, 80%, 100%, 108%) — clearly readable.
-      Data: Two sigmoidal dose-response curves — Compound A in #009E73 (brand green, first Imprint position), Compound B in #4467A3 (blue, third Imprint position — skips lavender). Shaded 95% CI bands in matching colours at ~13% alpha sit behind the curves. Filled circle data points (radius 7) with SEM error bars (vertical lines + horizontal caps). Dashed asymptote lines at top/bottom response levels (40% alpha). EC50 dashed reference lines (vertical + horizontal) at 80% alpha converge on the half-maximal response. EC50 text labels "EC₅₀ = 50 nM" (green) and "EC₅₀ = 700 nM" (blue) at the bottom of the chart area. Legend at top showing "Compound A" (green line) and "Compound B" (blue line).
-      Legibility verdict: PASS — all title, axis label, tick label, legend, and annotation text is clearly readable against the warm off-white background. No light-on-light issues.
+      Background: Warm off-white approx #FAF8F1 — correct theme surface
+      Chrome: Title "curve-dose-response · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. X-axis label "Concentration (M)" and Y-axis label "Response (%)" in dark ink. Tick labels in inkSoft color, all readable. Legend at top shows both compounds in dark ink.
+      Data: Compound A in #009E73 (brand green), Compound B in #C475FD (lavender/palette[1]). Smooth sigmoid curves with CI bands (13% alpha fill), data points at radius 7 with pageBg border, SEM error bars, dashed asymptote lines (alpha 0.4), EC50 intersection dashed lines (alpha 0.8) with labeled annotations.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and axis labels rendered in light cream — clearly readable against the near-black background. Tick labels in light secondary ink — readable. Legend text in light ink — readable. No dark-on-dark issues detected anywhere in the render.
-      Data: Data colours are identical to the light render (#009E73 green for Compound A, #4467A3 blue for Compound B — Imprint palette colours do not change between themes). Green CI band for Compound A remains prominently visible. Blue CI band for Compound B is more subtle on the dark background (dark blue on near-black at 13% alpha) but still discernible. Error bars visible. EC50 labels readable in their respective compound colours.
-      Legibility verdict: PASS — all text elements are rendered in light colours against the near-black background; no dark-on-dark failures. Data colours are identical between themes; only chrome (text, grid, background) flips.
+      Background: Warm near-black approx #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light/cream color (t.ink resolves to ~#F0EFE8 in dark mode). All text clearly readable. No dark-on-dark failures.
+      Data: Colors identical to light render — Compound A still #009E73, Compound B still #C475FD. CI bands, error bars, asymptote lines, EC50 annotation lines all visible and correctly rendered. Brand green #009E73 clearly legible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title (22px), axis labels (16px), tick labels (14px) readable in
-          both themes. EC50 annotation text (hardcoded 14px bold sans-serif) is small
-          near the bottom of the chart and may be slightly hard to read at mobile
-          scale.
+        comment: 'All font sizes explicitly set: title 22px, axis labels 16px, tick
+          labels 14px, legend 16px. All text well-proportioned and readable in both
+          themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlap observed in either render. EC50 labels
-          at different x-positions are well-separated.
+        comment: EC50 labels at different horizontal positions, legend cleanly separated,
+          no overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curves (borderWidth 3.5), data points (radius 7), CI bands (13% alpha),
-          error bars all clearly visible. Blue CI band is slightly subtle on dark
-          background but still discernible.
+        comment: Data points at radius 7 appropriate for sparse 10-point datasets;
+          curves at borderWidth 3.5 prominent; CI bands, error bars, reference lines
+          all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and blue (#4467A3) are CVD-safe — not a red-green
-          pair. Adequate contrast on both surfaces.
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-distinguishable; no
+          red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800 landscape). Title spans ~65% of width.
-          Axis labels balanced at same font size. No overflow or clipping.
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins
+          and good chart area utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Concentration (M)'' with units. Y-axis: ''Response (%)''
-          with units. Title correctly formatted as ''curve-dose-response · javascript
-          · chartjs · anyplot.ai''.'
+        comment: X-axis 'Concentration (M)' and Y-axis 'Response (%)' both descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly uses t.palette[0] (#009E73 brand green).
-          Second series uses t.palette[2] (#4467A3 blue) — skips palette[1] (#C475FD
-          lavender). No semantic exception applies to generic Compound A/B labels.
-          Backgrounds are correct (#FAF8F1 light / #1A1A17 dark).'
+        passed: true
+        comment: 'First series #009E73, second #C475FD (palette[1]). Light bg ~#FAF8F1,
+          dark bg ~#1A1A17. Chrome uses t.ink/t.inkSoft/t.grid tokens correctly. Data
+          colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above-default sophistication: custom Canvas plugins for CI bands
-          and overlays, pharmacologically-correct visual hierarchy, subtle alpha layering
-          (13% CI / 40% asymptotes / 80% EC50 lines). Not exceptional enough for 6+
-          due to reliance on default Chart.js chrome.'
+        comment: 'Clearly above defaults: custom CI bands via canvas 2D API, EC50
+          annotation lines with labels, asymptote markers, pageBg-bordered scatter
+          points, custom legend with line-style markers.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: CI bands subtly transparent. Asymptote lines at 40% alpha appropriately
-          recede. EC50 lines at 80% alpha appropriately prominent. No explicit spine
-          removal (Chart.js scatter has no top/right borders by default). Whitespace
-          treatment is functional.
+        comment: Grid lines subtle using t.grid token. Standard Chart.js rectangular
+          chart border present — no explicit border/spine removal. Generous whitespace
+          but Chrome defaults not fully refined.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: fitted curve > data points > CI band > asymptotes
-          > EC50 lines. EC50 labels make the key pharmacological metric immediately
-          visible. Compound comparison (50 nM vs 700 nM potency) is evident at a glance.'
+        comment: EC50 dashed intersection lines communicate pharmacological message.
+          Labeled EC50 values directly compare potency. Visual hierarchy guides viewer
+          through color contrast and annotation.
     spec_compliance:
       score: 15
       max: 15
@@ -153,31 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response curve using Chart.js scatter type
-          with showLine, plotted on a logarithmic X-axis.
+        comment: Sigmoidal dose-response curve with 4PL model and logarithmic x-axis
+          — exactly correct.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: 4PL sigmoid fit, EC50 dashed reference
-          lines (horizontal + vertical), SEM error bars, top/bottom asymptote dashed
-          lines, 2 compounds, 95% CI band, legend.'
+        comment: 'All features present: log x-axis, 4PL fitted curves, EC50 dashed
+          reference lines, SEM error bars, asymptote lines, 2 compounds, legend, 95%
+          CI bands for both curves.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Concentration on logarithmic X-axis (1e-9 to 1e-3 M). Response (%)
-          on linear Y-axis (-5 to 108%). All data visible.
+        comment: Concentration on log x-axis, response (%) on y-axis; both compounds
+          correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'curve-dose-response · javascript · chartjs · anyplot.ai'.
-          Legend via custom generateLabels shows 'Compound A' and 'Compound B' with
-          line-style markers.
+        comment: Title 'curve-dose-response · javascript · chartjs · anyplot.ai' matches
+          exact format. Legend shows 'Compound A' and 'Compound B' via custom generateLabels.
     data_quality:
       score: 15
       max: 15
@@ -187,96 +171,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Showcases all aspects of dose-response analysis: sigmoid shape,
-          asymptotes, EC50 annotation, SEM uncertainty, CI band, multi-compound comparison.'
+        comment: Both compounds with distinct EC50 values (50 nM vs 700 nM), different
+          Hill slopes (1.5 vs 1.1), different top asymptotes (96% vs 85%), SEM error
+          bars, CI bands — all key dose-response features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: EC50 values 50 nM vs 700 nM are realistic drug potencies. Hill slopes
-          1.5 and 1.1 are physiologically plausible. Response ranges (3-96% and 5-85%)
-          represent typical pharmacological assay data. Neutral generic compound names.
+        comment: Pharmacological drug discovery context with realistic EC50 values
+          in nM range typical for drug-target interactions and standard % response
+          endpoint.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log X-axis spans 1e-9 to 1e-3 M (6 orders of magnitude) — appropriate
-          for comparing nM and μM potency compounds. Y-axis -5% to 108% shows full
-          sigmoid with headroom.
+        comment: Concentrations 1e-9 to 1e-4 M realistic for in vitro assays; EC50
+          50 nM and 700 nM typical for potent/moderate inhibitors; Hill slopes 1.5
+          and 1.1 physiologically plausible.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Concise helper functions (fourPL, logSpace, rand, randN, ciHW, fmtEC50,
-          toSup) are all necessary for this complex plot. No unnecessary abstraction
-          or class wrappers.
+        comment: Seven helper functions plus two plugin objects add complexity beyond
+          linear flow, though all necessary for spec requirements.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG with seed=42 ensures fully deterministic random noise
-          and SEM values.
+        comment: Seeded LCG (seed=42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No import/require statements. Chart global provided by harness. No
-          unused variables.
+        comment: No imports; Chart.js used as global. All variables utilized.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Well-organized: constants → data generation → datasets → plugins
-          → mount → chart. No fake interactivity or UI controls.'
+        comment: No fake interactive elements; plugin pattern is idiomatic Chart.js;
+          code well-organized with clear section comments.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Harness produces plot-light.png, plot-dark.png, plot-light.html,
-          plot-dark.html. Code appends canvas to #container correctly. No filesystem
-          calls. animation: false set.'
+        comment: Interactive library; harness handles plot-{theme}.png and plot-{theme}.html.
+          Current Chart.js 4.4.7 API used.
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses Chart.js logarithmic scale type, scatter chart type, plugins
-          API, generateLabels for custom legend, lifecycle hooks (beforeDatasetsDraw,
-          afterDatasetsDraw). Idiomatic and correct.
+        comment: 'Expert use of Chart.js: scatter type with showLine, logarithmic
+          scale, plugin API (beforeDatasetsDraw/afterDatasetsDraw), generateLabels,
+          getPixelForValue for scale-aware coordinate positioning.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Custom plugins leverage Chart.js's canvas context access with proper
-          chartArea clipping — a distinctively Chart.js approach. Unicode superscript
-          tick callbacks demonstrate advanced formatter usage.
+        comment: Canvas plugin system with getPixelForValue() is a distinctive Chart.js
+          feature enabling direct ctx drawing with scale-aware coordinate transforms.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
