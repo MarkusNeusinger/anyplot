@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: titration-curve
 created: '2026-03-21T22:11:31Z'
-updated: '2026-06-24T11:37:02Z'
+updated: '2026-06-24T11:44:47Z'
 generated_by: claude-sonnet
 workflow_run: 28094958156
 issue: 4407
@@ -12,91 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - Full spec compliance including derivative overlay adapted correctly for plotnine's
-    single-axis constraint
-  - Analytically computed titration data is physically accurate (vectorized approach,
-    HCl+NaOH system)
-  - 'Correct Imprint palette usage: brand green first (#009E73), lavender second (#C475FD),
-    semantic red for equivalence point marker'
-  - Both themes work correctly with full chrome token adaptation — no dark-on-dark
-    issues
-  - 'Perfect code quality: flat script, deterministic, clean imports, idiomatic plotnine
-    grammar-of-graphics'
-  - L-shaped spine frame with y-only subtle grid follows style guide conventions
+  - 'Perfect spec compliance: all required features present (S-curve, equivalence
+    marker with dashed line + annotation, derivative overlay, transition shading).'
+  - 'Idiomatic plotnine grammar-of-graphics: long-format DataFrame + scale_color_manual
+    + multi-geom layering executed cleanly.'
+  - 'Fully theme-adaptive: all chrome tokens (background, text, grid, legend, annotations)
+    adapt correctly between light and dark themes — no dark-on-dark failures.'
+  - 'Analytically accurate data: vectorized strong acid/base calculation with denser
+    sampling around equivalence point for smooth rendering.'
+  - geom_ribbon for transition zone shading is the right plotnine idiom (not patched
+    on as a matplotlib workaround).
   weaknesses:
-  - Annotation text size=2.5 mm (~7pt) for 'Peak dpH/dV' label is too small for mobile
-    readability at 400px — increase to size=3.5 minimum
-  - Derivative curve is scientifically accurate (flat near-0 with spike) but visually
-    underwhelming for most of the chart width; ribbon shading is very subtle in dark
-    mode at alpha=0.15 — consider increasing ribbon alpha to 0.25 or using a slightly
-    bolder line for the derivative area
+  - 'Legend order is reversed: dpH/dV (scaled) appears before pH in the legend due
+    to alphabetical sorting. Fix by setting pd.Categorical on the series column: df["series"]
+    = pd.Categorical(df["series"], categories=["pH", "dpH/dV (scaled)"], ordered=True).'
+  - Equivalence point annotation font is small (geom_text size=3mm ≈ 8.5pt italic)
+    — marginally readable on mobile. Bump to size=3.5–4 to match the Peak dpH/dV label.
+  - The derivative area fill at alpha=0.18 and the flat near-zero portions are barely
+    distinguishable from the baseline. A slightly higher alpha (0.25) or more prominent
+    fill color would improve storytelling impact.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
-      Chrome: Title "titration-curve · python · plotnine · anyplot.ai" bold dark, clearly readable. X-axis label "Volume of NaOH added (mL)" and Y-axis label "pH / dpH/dV (scaled)" in dark ink at 10pt — readable. Tick labels at 8pt dark — readable. Annotation texts at size=2.5–3mm (~7–8.5pt) readable at full resolution, borderline at mobile scale.
-      Data: Main pH curve in brand green #009E73, bold S-shaped sigmoidal from pH~1 to pH~12.5. Derivative overlay in lavender #C475FD, near-zero flat line with sharp spike at 25 mL equivalence. Red diamond marker (#AE3030) at equivalence point (25 mL, pH 7). Semi-transparent green ribbon around transition region (22–28 mL). Lavender area fill for derivative spike. Dashed gray vertical line at 25 mL.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface.
+      Chrome: Title "titration-curve · python · plotnine · anyplot.ai" in bold dark ink, clearly readable. Axis labels "Volume of NaOH added (mL)" and "pH / dpH/dV (scaled)" in dark ink at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Legend box with elevated background (#FFFDF6), readable labels in INK_SOFT. Horizontal grid lines subtle (y-only, alpha=0.15).
+      Data: pH curve in brand green (#009E73) — first series correct. Derivative curve in lavender (#C475FD). Semi-transparent green ribbon around 22–28 mL transition zone. Red diamond (#AE3030) at equivalence point (25 mL, pH 7). Italic italic annotation "Equivalence Point / (25 mL, pH 7)" in dark ink. Bold lavender "Peak dpH/dV = 57.5 / at 25 mL" in upper right.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
-      Chrome: Title and axis labels flip to light tokens (#F0EFE8 primary, #B8B7B0 secondary) — all readable against dark background. Legend uses elevated dark background (#242420). No dark-on-dark failures observed. Tick labels are light and clearly visible.
-      Data: Colors are identical to light render — teal-green pH curve, lavender derivative, red diamond, green ribbon. Ribbon is subtler on dark bg (alpha=0.15 × dark surface = very faint green tint) but visible. Brand green #009E73 fully visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Axis labels in light cream. Tick labels in INK_SOFT (#B8B7B0 dark-mode), readable against dark background. Legend box with elevated dark background (#242420) and subtle border; legend text in light tones — readable. Horizontal grid lines barely visible but present.
+      Data: pH curve in same brand green (#009E73) — identical to light render. Derivative curve in same lavender (#C475FD). Transition ribbon appears as darker teal due to background blending but distinct. Red diamond equivalence marker visible. Annotations rendered in INK (#F0EFE8) — readable on dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text elements are readable against the near-black background. Data colors are identical between light and dark renders; only chrome flips.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Main text (title 12pt, axis labels 10pt, ticks 8pt) clear in both
-          themes. Annotation geom_text size=2.5mm (~7pt) borderline at mobile scale.
+        comment: All text readable in both themes; equivalence-point annotation small
+          (size=3mm) but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render.
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: pH curve prominent. Derivative accurate but near-invisible flat line
-          at 0 for ~95% of range. Ribbon subtle in dark mode.
+        comment: pH curve prominent; derivative flat portions very thin near zero
+          baseline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint positions 1+2 are CVD-safe. Red diamond semantic.
+        comment: CVD-safe Imprint green/lavender; red diamond as semantic emphasis
+          anchor
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 confirmed. Good proportions, no overflow.
+        comment: 3200x1800 canvas (gate passed); good proportions; no overflow or
+          clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct. Axis labels descriptive with units.
+        comment: Title format correct; axis labels descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD. Backgrounds correct. Chrome
-          adapts.'
+        comment: 'First series #009E73, second #C475FD, backgrounds correct for both
+          themes'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -104,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, multi-layer composition (ribbon, area, lines, diamond).
-          Above default for layered approach.
+        comment: Good color hierarchy, multi-layer composition; above default but
+          not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: L-shaped spines, y-only subtle grid, elevated legend background,
-          no minor grid.
+        comment: theme_minimal base, y-only grid, axis lines added; solid but not
+          exceptional
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear focal point at equivalence point. Ribbon, dashed line, diamond,
-          and annotation create multi-cue narrative.
+        comment: Clear focal point at equivalence point; derivative overlay helps;
+          flat derivative portions dilute storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -129,50 +132,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal acid-base titration curve.
+        comment: Correct sigmoidal titration curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Equivalence point dashed line + annotation, derivative overlay (scaled),
-          transition ribbon, HCl+NaOH system.
+        comment: 'All required features: equivalence marker, derivative overlay, transition
+          shading, annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: 0-50 mL volume, Y: 0-14 pH, analytical data.'
+        comment: Correct x/y mapping, pH 0-14 full scale, accurate HCl+NaOH data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exact match. Legend labels match series names.
+        comment: Title format exact; legend shows both series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: S-curve, equivalence point, derivative overlay, transition zone,
-          marker. No true secondary y-axis (plotnine limitation).
+        comment: 'All aspects covered: S-curve, equivalence point, derivative, shading,
+          full scale, dense data'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: HCl + NaOH, 25 mL × 0.1 M, standard analytical chemistry. Neutral
-          context.
+        comment: Analytically accurate HCl+NaOH titration; physically realistic; neutral
+          educational topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Full pH 0-14, volume 0-50 mL, 0.1 M concentrations.
+        comment: Volume 0-50 mL (2x equivalence), pH 0-14 full scale, 200 data points
+          with dense equivalence-point sampling
     code_quality:
       score: 10
       max: 10
@@ -182,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Linear script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic analytical calculation.
+        comment: Fully deterministic analytical calculation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, only necessary packages.
+        comment: All imports used; sys path fix is necessary and documented
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic plotnine grammar-of-graphics. No fake UI.
+        comment: Long-format DataFrame for multi-series color mapping is idiomatic;
+          well-organized geom layers
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current API.
+        comment: Saves as plot-{THEME}.png with correct dpi/dimensions via plot.save()
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -216,25 +221,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Long-format DataFrame, scale_color_manual, guide_legend override_aes,
-          all theming via theme(). Very idiomatic.
+        comment: Long-format data for color aesthetic, scale_color_manual with named
+          dict, guide_legend override, layered grammar-of-graphics
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses geom_ribbon, geom_area, multi-layer ggplot composition. Could
-          show more advanced plotnine-specific features.
+        passed: false
+        comment: Uses geom_ribbon and geom_area (ggplot2-native features) but overall
+          approach is standard layering without advanced plotnine-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - interpolation
-  - normalization
   styling:
   - alpha-blending
