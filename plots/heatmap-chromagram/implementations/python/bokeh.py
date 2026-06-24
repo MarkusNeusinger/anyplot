@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-24
@@ -42,17 +42,11 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 
-def _lerp_hex(c0, c1, t):
-    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
-    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
-    r = int(round(r0 + (r1 - r0) * t))
-    g = int(round(g0 + (g1 - g0) * t))
-    b = int(round(b0 + (b1 - b0) * t))
-    return f"#{r:02X}{g:02X}{b:02X}"
-
-
-# Imprint sequential colormap: brand green → blue (single-polarity energy data)
-IMPRINT_SEQ = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)]
+# Imprint sequential colormap: brand green (#009E73) → blue (#4467A3), single-polarity energy
+IMPRINT_SEQ = [
+    "#{:02X}{:02X}{:02X}".format(round(t * 68 / 255), round(158 - t * 55 / 255), round(115 + t * 48 / 255))
+    for t in range(256)
+]
 
 # Data — simulated chromagram: 12 pitch classes over 80 time frames
 np.random.seed(42)
@@ -120,7 +114,7 @@ p = figure(
     height=2400,
     y_range=Range1d(-0.5, n_pitch - 0.5),
     x_range=(-dt / 2, 8 + dt / 2),
-    title="heatmap-chromagram · bokeh · anyplot.ai",
+    title="heatmap-chromagram · python · bokeh · anyplot.ai",
     x_axis_label="Time (seconds)",
     y_axis_label="Pitch Class",
     toolbar_location=None,
