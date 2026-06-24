@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-24
@@ -59,7 +59,12 @@ plot = (
     ggplot(df, aes(x="value_t", y="value_t_lag", color="day"))  # noqa: F405
     # Reference diagonal: y = x (perfect lag-1 autocorrelation)
     + geom_line(  # noqa: F405
-        aes(x="x", y="y"), data=ref_df, color=INK_SOFT, size=0.8, linetype="dashed", inherit_aes=False  # noqa: F405
+        aes(x="x", y="y"),  # noqa: F405
+        data=ref_df,
+        color=INK_SOFT,
+        size=0.8,
+        linetype="dashed",
+        inherit_aes=False,  # noqa: F405
     )
     # OLS regression line — letsplot-native geom_smooth with confidence band
     + geom_smooth(  # noqa: F405
@@ -98,7 +103,7 @@ plot = (
     + labs(  # noqa: F405
         x="y(t)",
         y=f"y(t + {lag})",
-        title="scatter-lag · letsplot · pyplots.ai",
+        title="scatter-lag · python · letsplot · anyplot.ai",
         caption="AR(1) simulated daily temperature · dashed = y = x, purple = OLS fit ± 95% CI",
     )
     + ggsize(800, 450)  # noqa: F405 — scale=4 on export → 3200×1800 px
