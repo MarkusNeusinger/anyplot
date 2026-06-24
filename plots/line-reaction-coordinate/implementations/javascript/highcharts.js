@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-reaction-coordinate: Reaction Coordinate Energy Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-24
+// Quality: 91/100 | Created: 2026-06-24
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;

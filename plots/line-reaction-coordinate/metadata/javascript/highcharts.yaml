@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-reaction-coordinate
 created: '2026-06-24T07:58:09Z'
-updated: '2026-06-24T08:04:02Z'
+updated: '2026-06-24T08:14:34Z'
 generated_by: claude-sonnet
 workflow_run: 28083281658
 issue: 4409
@@ -12,43 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'All spec requirements met: reactants/TS/products labeled, Ea and ΔH double-headed
-    arrows, dashed reference lines'
-  - Excellent use of Highcharts SVG renderer API for custom arrows with toPixels()
-    coordinate conversion
-  - 'Perfect palette and theme compliance: brand green curve, transparent background,
-    theme-adaptive chrome in both renders'
-  - Smoothstep interpolation produces a chemically realistic smooth energy profile
-  - 'Clean code structure; deterministic data generation; correct animation: false
-    on both chart and series'
+  - 'Comprehensive spec compliance: all five required annotation elements (direct
+    labels, Ea arrow, ΔH arrow, smooth curve, dashed reference lines) implemented
+    correctly'
+  - Excellent use of Highcharts renderer API with toPixels() coordinate conversion
+    for pixel-accurate custom SVG annotations
+  - Deterministic smoothstep data generation produces a scientifically plausible and
+    visually smooth energy curve
+  - 'Theme adaptation correct in both renders: brand green data color preserved, chrome
+    tokens flip appropriately'
+  - Clean minimal design appropriate for scientific/educational use with no unnecessary
+    decoration
   weaknesses:
-  - Reactants label group ("Reactants" + "50 kJ/mol") overlaps with the dashed reference
-    line at y=50 and the energy curve starting point — shift labels ~15px upward (e.g.
-    y50-30 and y50-17) to clear overlap
-  - Products label group ("Products" + "20 kJ/mol") overlaps with the dashed reference
-    line at y=20 and the curve endpoint — offset upward and right to avoid overlap
-  - 'Default Highcharts chart border/spines are visible — add chart: { plotBorderWidth:
-    0 } for a cleaner publication-ready scientific look'
-  - No area fill under the energy curve — a subtle semi-transparent areaspline fill
-    would enhance the scientific aesthetic
+  - Secondary energy sub-labels (50 kJ/mol, 120 kJ/mol, 20 kJ/mol) at 12px CSS are
+    slightly small for mobile readability — raise to 13-14px to match Ea/ΔH annotation
+    labels
+  - Typography could benefit from a weight distinction between primary direct labels
+    (bold) and secondary annotation text for stronger visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct pageBg, not pure white
-      Chrome: Title "line-reaction-coordinate · javascript · highcharts · anyplot.ai" in dark text, clearly readable. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" readable. Y-axis tick labels (0, 20, 40, 60, 80, 100, 120, 140, 160) visible in soft ink. Annotations "Reactants", "Transition State", "Products" in bold; sub-labels "50 kJ/mol", "120 kJ/mol", "20 kJ/mol" in softer style; "Ea = 70 kJ/mol" and "ΔH = −30 kJ/mol" annotation text readable.
-      Data: Energy curve in brand green #009E73 (palette[0]). Double-headed arrows for Ea and ΔH in dark ink. Dashed reference lines at y=50 and y=20 in soft ink. Minor overlap: "Reactants"/"50 kJ/mol" labels overlap with the dashed reference line at y=50 and the curve; "Products"/"20 kJ/mol" similarly overlap on the right side.
-      Legibility verdict: PASS (all text readable, minor label/line overlap does not prevent readability)
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Title 'line-reaction-coordinate · javascript · highcharts · anyplot.ai' in bold dark ink at 22px, clearly readable. Y-axis title 'Potential Energy (kJ/mol)' in secondary dark ink at 16px. X-axis title 'Reaction Coordinate' in secondary dark ink at 16px. Y-axis tick labels (0, 20, 40, 60, 80, 100, 120, 140, 160) in secondary ink at 14px — all readable. X-axis tick labels disabled (appropriate). Direct labels 'Reactants', 'Transition State', 'Products' in bold dark ink at 14px clearly placed. Secondary energy-value labels at 12px — readable at full resolution. Ea and DH annotation labels at 13px — readable.
+      Data: Smooth areaspline curve in #009E73 (brand green) with lineWidth 3. Light green fill at 10% opacity under curve. Dashed horizontal reference lines at y=50 and y=20 in secondary ink color. Double-headed arrows for Ea=70 kJ/mol and DH=-30 kJ/mol in dark ink.
+      Legibility verdict: PASS — all text readable on warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark pageBg, not pure black
-      Chrome: Title, axis labels, tick labels, and all annotation text rendered in light ink — clearly readable against dark background. No dark-on-dark failures observed. All chrome elements flip correctly to light text on dark background.
-      Data: Brand green #009E73 energy curve is identical to light render (only chrome flips). Arrows and reference lines maintain good contrast on dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures, all elements readable in dark theme
+      Background: Warm near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title in bold light cream text — readable. Y-axis title and X-axis title in light secondary color — readable. Y-axis tick labels in light secondary color — readable. Direct labels 'Reactants', 'Transition State', 'Products' in light ink — readable. Annotation labels in light ink — readable. All chrome elements correctly theme-adaptive.
+      Data: Brand green curve #009E73 identical to light render — data colors preserved. Subtle green fill barely perceptible on dark background but acceptable. Dashed reference lines visible. Arrows visible in light ink color.
+      Legibility verdict: PASS — all text readable on warm near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,50 +54,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor readability impact where
-          sub-labels sit directly on dashed reference lines
+        comment: 'All font sizes explicitly set (22px title, 16px axis titles, 14px
+          tick/direct labels, 13px annotation labels, 12px secondary energy sub-labels).
+          Minor deduction: 12px CSS secondary labels are at the small end for mobile
+          readability.'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Reactants/50 kJ/mol labels overlap with energy curve and dashed reference
-          line at y=50; Products/20 kJ/mol similarly overlaps at y=20
+        passed: true
+        comment: No overlapping text elements; all labels, arrows, and data clearly
+          separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Energy curve, arrows, reference lines, and all annotations clearly
-          visible in both themes
+        comment: Areaspline at lineWidth 3 is clearly visible; markers disabled (correct
+          for smooth curve); annotation arrows visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on neutral background is accessible; single-series avoids
-          red-green confusion
+        comment: Single brand green series with good contrast on both light and dark
+          surfaces; CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; landscape orientation correct; generous margins;
-          nothing clipped
+        comment: Good canvas utilization with balanced margins; energy curve occupies
+          central plot area effectively.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (kJ/mol); X-axis descriptive; title matches
-          required format
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units; X-axis: ''Reaction
+          Coordinate'' (arbitrary units per spec); title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series uses palette[0]=#009E73; colors:t.palette set; backgroundColor:transparent;
-          both themes correct
+        comment: Primary series uses t.palette[0] (#009E73); transparent background
+          shows pageBg correctly; all chrome tokens applied; data colors identical
+          across themes.
     design_excellence:
       score: 13
       max: 20
@@ -109,22 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional scientific diagram with intentional label hierarchy
-          and custom SVG arrows; no area fill or gradient highlighting
+        comment: 'Above default (4): custom SVG annotations with double-headed arrows,
+          direct labels, subtle area fill demonstrate intentional design. Not at publication-level
+          polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean chart with subtle gridlines and hidden x-axis ticks; default
-          chart spines visible (no explicit spine removal)
+        comment: X-axis tick labels disabled (appropriate), legend/tooltip disabled,
+          gridLineColor from token, dashed reference lines as meaningful refinement.
+          Some refinement visible above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Excellent scientific narrative with smooth pathway, dual arrows quantifying
-          Ea and ΔH, direct labels, and reference lines
+        comment: Double-headed arrows with quantity annotations communicate the chemical
+          story clearly. Visual hierarchy (bold direct labels > secondary values >
+          axis text) guides the viewer deliberately.
     spec_compliance:
       score: 15
       max: 15
@@ -134,29 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct spline type producing smooth energy curve with clear single
-          maximum
+        comment: 'Correct: smooth areaspline curve tracing energy vs. reaction coordinate.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: direct labels, Ea arrow, ΔH arrow, dashed
-          reference lines'
+        comment: Direct labels on reactants/TS/products, Ea double-headed arrow, DH
+          double-headed arrow, smooth curve with peak, dashed reference lines — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate (0-100); Y=potential energy (kJ/mol); full
-          range visible
+        comment: 'X: reaction coordinate 0-100; Y: potential energy kJ/mol; reactants=50,
+          TS=120, products=20 all correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; no legend needed (single series with
-          direct annotations)
+        comment: 'Title: ''line-reaction-coordinate · javascript · highcharts · anyplot.ai'';
+          legend disabled (single series, correct).'
     data_quality:
       score: 15
       max: 15
@@ -166,22 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All key features: smooth curve, TS maximum, reactant/product plateaus,
-          Ea annotation, ΔH annotation, reference lines'
+        comment: 'Full reaction coordinate diagram: smooth curve, energy maximum,
+          baseline levels, Ea and DH annotations, dashed reference lines, direct labels
+          — all key features covered.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chemically realistic single-step exothermic reaction; values (50/120/20
-          kJ/mol) are plausible; neutral educational context
+        comment: Standard single-step exothermic reaction; values consistent with
+          introductory physical chemistry. Neutral educational content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-145 kJ/mol with 20 kJ/mol intervals; x-axis 0-100 arbitrary
-          units; matches spec example values
+        comment: Ea=70 kJ/mol and DH=-30 kJ/mol physically plausible for a simple
+          organic reaction.
     code_quality:
       score: 10
       max: 10
@@ -191,34 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural data generation + single
-          chart call
+        comment: 'Linear: data generation -> chart config. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic smoothstep formula; no random numbers
+        comment: Deterministic smoothstep formula; no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses ANYPLOT_TOKENS and Highcharts globals as expected
+        comment: No imports; only global Highcharts and window.ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized data-then-chart structure; appropriate use of Highcharts
-          renderer; no fake UI
+        comment: Clean; uses chart.events.load pattern correctly for post-render annotations.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness handles output; Highcharts.chart('container') called correctly;
-          animation:false on both chart and series
+        comment: Outputs plot-{theme}.png and plot-{theme}.html; current Highcharts
+          API.
     library_mastery:
       score: 9
       max: 10
@@ -228,22 +231,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses chart.events.load, yAxis.plotLines, spline type, renderer.path/text
-          — all idiomatic Highcharts patterns
+        comment: Correct use of areaspline, plotLines with dashStyle, chart.events.load
+          with renderer API, xAxis.toPixels()/yAxis.toPixels() for coordinate conversion.
+          All Highcharts-canonical patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Excellent use of SVG renderer for custom arrows; toPixels() for coordinate
-          conversion; plotLines with dashStyle — distinctively Highcharts
+        comment: 'Uses Highcharts SVG renderer API for custom annotations with coordinate
+          conversion (toPixels()) — distinctively Highcharts. Minor deduction: areaspline
+          type itself is standard.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
-  dataprep:
-  - interpolation
-  styling: []
+  dataprep: []
+  styling:
+  - alpha-blending
