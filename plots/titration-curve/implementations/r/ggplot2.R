@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-06-24
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens (Imprint palette, theme-adaptive chrome)
@@ -35,20 +34,15 @@ vol_step <- 0.25   # mL
 volume_ml <- seq(0, 50, by = vol_step)
 mmol_acid <- c_acid * v_acid  # 2.5 mmol
 
-ph_at_vol <- function(v) {
-  mmol_base <- c_base * v
-  total_vol <- v_acid + v
-  excess    <- mmol_acid - mmol_base  # positive = acid excess, negative = base excess
-  if (abs(excess) < 1e-9) {
-    7.0                              # exactly at equivalence: neutral salt
-  } else if (excess > 0) {
-    -log10(excess / total_vol)       # acidic: [H+] = excess / total volume
-  } else {
-    14 + log10(-excess / total_vol)  # basic: pOH from excess base
-  }
-}
+mmol_base <- c_base * volume_ml
+total_vol <- v_acid + volume_ml
+excess    <- mmol_acid - mmol_base
 
-pH <- sapply(volume_ml, ph_at_vol)
+pH <- ifelse(
+  abs(excess) < 1e-9,
+  7.0,
+  ifelse(excess > 0, -log10(abs(excess) / total_vol), 14 + log10(abs(excess) / total_vol))
+)
 
 # Derivative dpH/dV (forward finite difference; last point set to NA)
 dphdv_raw <- c(diff(pH) / diff(volume_ml), NA_real_)
@@ -90,12 +84,13 @@ p <- ggplot(df, aes(x = volume_ml)) +
     aes(y = pH, color = "pH", linetype = "pH"),
     linewidth = 1.5
   ) +
-  # Equivalence point: vertical dashed line
-  geom_vline(
-    xintercept = equiv_vol,
-    linetype   = "dashed",
-    color      = INK_SOFT,
-    linewidth  = 0.7
+  # Equivalence point: vertical dashed line (capped at y=11 so derivative spike has breathing room)
+  annotate("segment",
+    x = equiv_vol, xend = equiv_vol,
+    y = 0,         yend = 11,
+    linetype  = "dashed",
+    color     = INK_SOFT,
+    linewidth = 0.7
   ) +
   # Equivalence point dot on the curve
   annotate("point",
@@ -112,7 +107,7 @@ p <- ggplot(df, aes(x = volume_ml)) +
     y     = 1.8,
     label = paste0("EP: ", equiv_vol, " mL\npH = ", equiv_ph),
     hjust = 0,
-    size  = 2.6,
+    size  = 3.0,
     color = INK_MUTED
   ) +
   # Transition zone label (right side, in empty area above plateau)
@@ -121,7 +116,7 @@ p <- ggplot(df, aes(x = volume_ml)) +
     y     = 7.0,
     label = "Transition\nzone",
     hjust = 0.5,
-    size  = 2.3,
+    size  = 2.8,
     color = IMPRINT_PALETTE[3],
     alpha = 0.75
   ) +
@@ -158,7 +153,7 @@ p <- ggplot(df, aes(x = volume_ml)) +
   theme(
     plot.background     = element_rect(fill = PAGE_BG,  color = PAGE_BG),
     panel.background    = element_rect(fill = PAGE_BG,  color = NA),
-    panel.grid.major.x  = element_line(color = GRID_COLOR, linewidth = 0.3),
+    panel.grid.major.x  = element_blank(),
     panel.grid.major.y  = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor    = element_blank(),
     panel.border        = element_blank(),
