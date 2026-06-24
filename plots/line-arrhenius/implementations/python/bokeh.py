@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
@@ -60,6 +60,16 @@ Ea_fitted = -slope * R_gas  # activation energy from slope
 inv_T_line = np.linspace(inv_T.min() - 0.00005, inv_T.max() + 0.00005, 200)
 ln_k_line = slope * inv_T_line + intercept
 
+# 95% confidence interval band around regression
+n_pts = len(inv_T)
+x_mean = inv_T.mean()
+Sxx = np.sum((inv_T - x_mean) ** 2)
+s_e = np.sqrt(np.sum((ln_k - (slope * inv_T + intercept)) ** 2) / (n_pts - 2))
+t_val = stats.t.ppf(0.975, df=n_pts - 2)
+se_band = s_e * np.sqrt(1.0 / n_pts + (inv_T_line - x_mean) ** 2 / Sxx)
+ci_upper = ln_k_line + t_val * se_band
+ci_lower = ln_k_line - t_val * se_band
+
 # Data sources
 scatter_source = ColumnDataSource(
     data={
@@ -71,6 +81,7 @@ scatter_source = ColumnDataSource(
     }
 )
 line_source = ColumnDataSource(data={"inv_T": inv_T_line, "ln_k": ln_k_line})
+ci_source = ColumnDataSource(data={"inv_T": inv_T_line, "ci_upper": ci_upper, "ci_lower": ci_lower})
 
 # Title — canonical format; length=43 chars < 67, use default 50pt
 TITLE = "line-arrhenius · python · bokeh · anyplot.ai"
@@ -83,7 +94,7 @@ p = figure(
     x_axis_label="1/T (K⁻¹)",
     y_axis_label="ln(k)",
     x_range=(inv_T.min() - 0.00015, inv_T.max() + 0.00015),
-    y_range=(ln_k.min() - 1.5, ln_k.max() + 3.5),
+    y_range=(ln_k.min() - 1.5, ln_k.max() + 5.0),
     toolbar_location=None,
     min_border_bottom=160,
     min_border_left=180,
@@ -94,7 +105,10 @@ p = figure(
 # Background
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_alpha = 0  # L-shaped frame: remove box outline, keep axis lines
+
+# 95% confidence band behind regression line
+p.varea(x="inv_T", y1="ci_lower", y2="ci_upper", source=ci_source, fill_color=LINE_COLOR, fill_alpha=0.15)
 
 # Regression line (Imprint position 3 — blue)
 p.line(
