@@ -1,62 +1,71 @@
-""" pyplots.ai
+"""anyplot.ai
 line-reaction-coordinate: Reaction Coordinate Energy Diagram
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-21
+Library: letsplot | Python 3.13
+Quality: pending | Created: 2026-06-24
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import (
+    LetsPlot,
+    aes,
+    arrow,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_area,
+    geom_label,
+    geom_line,
+    geom_segment,
+    ggplot,
+    ggsize,
+    labs,
+    scale_x_continuous,
+    scale_y_continuous,
+    theme,
+)
 from lets_plot.export import ggsave
+from scipy.interpolate import CubicSpline
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Data - Single-step exothermic reaction energy profile
+# Theme tokens (Imprint palette — see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID_COLOR = "#D5D4CC" if THEME == "light" else "#2A2A26"
+
+# Imprint palette
+CURVE_COLOR = "#009E73"  # Imprint position 1 — main energy curve
+EA_COLOR = "#AE3030"  # Imprint position 5 (matte red) — activation energy barrier
+DH_COLOR = "#4467A3"  # Imprint position 3 (blue) — enthalpy change
+
+# Data: single-step exothermic reaction via cubic spline interpolation
+# Control points chosen for realistic reactant plateau, TS peak, and product plateau
 reactant_energy = 50.0
 transition_energy = 120.0
 product_energy = 20.0
-
-# Build smooth energy curve using Gaussian-based profile
-n_points = 300
-reaction_coord = np.linspace(0, 1, n_points)
-
-# Piecewise smooth curve: Gaussian peak on sigmoid transition
 peak_pos = 0.45
-sigma = 0.12
-gaussian_peak = np.exp(-0.5 * ((reaction_coord - peak_pos) / sigma) ** 2)
 
-# Smooth sigmoid transition from reactant to product level
-transition = 1 / (1 + np.exp(-20 * (reaction_coord - 0.6)))
-base_energy = reactant_energy * (1 - transition) + product_energy * transition
+ctrl_x = np.array([0.0, 0.10, 0.25, 0.45, 0.60, 0.78, 0.90, 1.0])
+ctrl_y = np.array([50.0, 50.0, 72.0, 120.0, 60.0, 22.0, 20.0, 20.0])
+cs = CubicSpline(ctrl_x, ctrl_y, bc_type=((1, 0.0), (1, 0.0)))
 
-# Add the activation barrier
-barrier_height = transition_energy - (
-    reactant_energy * (1 - 1 / (1 + np.exp(-20 * (peak_pos - 0.6))))
-    + product_energy * (1 / (1 + np.exp(-20 * (peak_pos - 0.6))))
-)
-energy = base_energy + barrier_height * gaussian_peak
-
-# Flatten plateaus at start and end
-energy[reaction_coord < 0.1] = reactant_energy
-energy[reaction_coord > 0.9] = product_energy
-
+reaction_coord = np.linspace(0, 1, 400)
+energy = cs(reaction_coord)
 df = pd.DataFrame({"reaction_coordinate": reaction_coord, "energy": energy})
 
-# Key values
 ea = transition_energy - reactant_energy
 delta_h = product_energy - reactant_energy
 
-# Shaded region under curve for visual richness
-area_df = df.copy()
-
-# Colorblind-safe palette: blue (#306998) and orange (#E67E22) instead of red-green
-ea_color = "#D35400"  # deep orange for Ea
-dh_color = "#2471A3"  # steel blue for ΔH
-curve_color = "#306998"  # Python blue
-label_color = "#2C3E50"  # dark slate
-
-# Horizontal reference lines at energy levels
+# Horizontal reference dashed lines at reactant and product energy levels
 hline_df = pd.DataFrame(
     {
         "x": [0.0, 0.0],
@@ -66,149 +75,140 @@ hline_df = pd.DataFrame(
     }
 )
 
-# Ea arrow segments (double-headed)
+# Ea double-headed arrow
+ea_x = 0.22
 ea_arrow_df = pd.DataFrame(
     {
-        "x": [0.20, 0.20],
+        "x": [ea_x, ea_x],
         "y": [reactant_energy + 2, transition_energy - 2],
-        "xend": [0.20, 0.20],
+        "xend": [ea_x, ea_x],
         "yend": [transition_energy - 2, reactant_energy + 2],
     }
 )
 
-# ΔH arrow segments (double-headed)
+# ΔH double-headed arrow
+dh_x = 0.80
 dh_arrow_df = pd.DataFrame(
     {
-        "x": [0.80, 0.80],
+        "x": [dh_x, dh_x],
         "y": [reactant_energy - 2, product_energy + 2],
-        "xend": [0.80, 0.80],
+        "xend": [dh_x, dh_x],
         "yend": [product_energy + 2, reactant_energy - 2],
     }
 )
 
-# Build plot with lets-plot distinctive features
+# Title font scaling (57 chars < 67 baseline → no scaling needed)
+title_str = "line-reaction-coordinate · python · letsplot · anyplot.ai"
+n = len(title_str)
+default_fontsize = 16
+ratio = 67 / n if n > 67 else 1.0
+title_fontsize = max(11, round(default_fontsize * ratio))
+
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_y=element_line(color=GRID_COLOR, size=0.4),
+    panel_grid_minor=element_blank(),
+    panel_grid_major_x=element_blank(),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
+    axis_text_x=element_blank(),
+    axis_ticks_x=element_blank(),
+    axis_line_x=element_line(color=INK_SOFT, size=0.5),
+    axis_line_y=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=title_fontsize, hjust=0.5),
+    legend_position="none",
+)
+
 plot = (
-    ggplot(df, aes(x="reaction_coordinate", y="energy"))  # noqa: F405
-    # Shaded area under the energy curve using geom_area
-    + geom_area(fill=curve_color, alpha=0.08)  # noqa: F405
-    # Horizontal dashed reference lines
-    + geom_segment(  # noqa: F405
-        data=hline_df,
-        mapping=aes(x="x", xend="xend", y="y", yend="yend"),  # noqa: F405
-        linetype="dashed",
-        color="#B0B0B0",
-        size=0.7,
+    ggplot(df, aes(x="reaction_coordinate", y="energy"))
+    + geom_area(fill=CURVE_COLOR, alpha=0.08)
+    + geom_segment(
+        data=hline_df, mapping=aes(x="x", xend="xend", y="y", yend="yend"), linetype="dashed", color=INK_MUTED, size=0.7
     )
-    # Main energy curve - prominent
-    + geom_line(color=curve_color, size=2.5)  # noqa: F405
-    # Ea double-headed arrow (orange - colorblind safe)
-    + geom_segment(  # noqa: F405
+    + geom_line(color=CURVE_COLOR, size=2.5)
+    + geom_segment(
         data=ea_arrow_df,
-        mapping=aes(x="x", xend="xend", y="y", yend="yend"),  # noqa: F405
-        color=ea_color,
+        mapping=aes(x="x", xend="xend", y="y", yend="yend"),
+        color=EA_COLOR,
         size=1.3,
-        arrow=arrow(length=10, type="open"),  # noqa: F405
+        arrow=arrow(length=10, type="open"),
     )
-    # ΔH double-headed arrow (steel blue - colorblind safe)
-    + geom_segment(  # noqa: F405
+    + geom_segment(
         data=dh_arrow_df,
-        mapping=aes(x="x", xend="xend", y="y", yend="yend"),  # noqa: F405
-        color=dh_color,
+        mapping=aes(x="x", xend="xend", y="y", yend="yend"),
+        color=DH_COLOR,
         size=1.3,
-        arrow=arrow(length=10, type="open"),  # noqa: F405
+        arrow=arrow(length=10, type="open"),
     )
-    # Labels using geom_label (lets-plot distinctive: label_padding, label_r)
-    + geom_label(  # noqa: F405
-        data=pd.DataFrame({"x": [0.08], "y": [reactant_energy - 8], "label": ["Reactants\n50 kJ/mol"]}),
-        mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=15,
-        color=label_color,
-        fill="#F8F9FA",
-        alpha=0.85,
+    + geom_label(
+        data=pd.DataFrame({"x": [0.08], "y": [reactant_energy - 9], "label": ["Reactants\n50 kJ/mol"]}),
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.5,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.9,
         label_padding=0.4,
         label_r=0.3,
         label_size=0,
     )
-    + geom_label(  # noqa: F405
-        data=pd.DataFrame({"x": [peak_pos], "y": [transition_energy + 8], "label": ["Transition State\n120 kJ/mol"]}),
-        mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=15,
-        color=label_color,
-        fill="#F8F9FA",
-        alpha=0.85,
+    + geom_label(
+        data=pd.DataFrame({"x": [peak_pos], "y": [transition_energy + 9], "label": ["Transition State\n120 kJ/mol"]}),
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.5,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.9,
         label_padding=0.4,
         label_r=0.3,
         label_size=0,
     )
-    + geom_label(  # noqa: F405
-        data=pd.DataFrame({"x": [0.92], "y": [product_energy - 8], "label": ["Products\n20 kJ/mol"]}),
-        mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=15,
-        color=label_color,
-        fill="#F8F9FA",
-        alpha=0.85,
+    + geom_label(
+        data=pd.DataFrame({"x": [0.92], "y": [product_energy - 9], "label": ["Products\n20 kJ/mol"]}),
+        mapping=aes(x="x", y="y", label="label"),
+        size=3.5,
+        color=INK,
+        fill=ELEVATED_BG,
+        alpha=0.9,
         label_padding=0.4,
         label_r=0.3,
         label_size=0,
     )
-    # Energy annotation labels with colored backgrounds matching their arrows
-    + geom_label(  # noqa: F405
+    + geom_label(
         data=pd.DataFrame(
-            {"x": [0.20], "y": [(reactant_energy + transition_energy) / 2], "label": [f"Ea = {ea:.0f} kJ/mol"]}
+            {"x": [ea_x], "y": [(reactant_energy + transition_energy) / 2], "label": [f"Ea = {ea:.0f} kJ/mol"]}
         ),
-        mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=16,
+        mapping=aes(x="x", y="y", label="label"),
+        size=4.0,
         color="#FFFFFF",
-        fill=ea_color,
+        fill=EA_COLOR,
         alpha=0.9,
         label_padding=0.5,
         label_r=0.3,
         label_size=0,
         fontface="bold",
     )
-    + geom_label(  # noqa: F405
+    + geom_label(
         data=pd.DataFrame(
-            {"x": [0.80], "y": [(reactant_energy + product_energy) / 2], "label": [f"ΔH = {delta_h:.0f} kJ/mol"]}
+            {"x": [dh_x], "y": [(reactant_energy + product_energy) / 2], "label": [f"ΔH = {delta_h:.0f} kJ/mol"]}
         ),
-        mapping=aes(x="x", y="y", label="label"),  # noqa: F405
-        size=16,
+        mapping=aes(x="x", y="y", label="label"),
+        size=4.0,
         color="#FFFFFF",
-        fill=dh_color,
+        fill=DH_COLOR,
         alpha=0.9,
         label_padding=0.5,
         label_r=0.3,
         label_size=0,
         fontface="bold",
     )
-    # Scales
-    + scale_x_continuous(  # noqa: F405
-        name="Reaction Coordinate", breaks=[], expand=[0.02, 0.02]
-    )
-    + scale_y_continuous(  # noqa: F405
-        name="Potential Energy (kJ/mol)", limits=[0, 145]
-    )
-    + labs(title="line-reaction-coordinate · letsplot · pyplots.ai")  # noqa: F405
-    + coord_cartesian(ylim=[0, 145])  # noqa: F405
-    + ggsize(1600, 900)  # noqa: F405
-    # Lets-plot distinctive: flavor for base styling + element_geom for global defaults
-    + flavor_high_contrast_light()  # noqa: F405
-    + theme(  # noqa: F405
-        axis_text=element_text(size=16, color="#555555"),  # noqa: F405
-        axis_title=element_text(size=20, color="#333333"),  # noqa: F405
-        plot_title=element_text(size=24, hjust=0.5, color="#2C3E50", face="bold"),  # noqa: F405
-        axis_text_x=element_blank(),  # noqa: F405
-        axis_ticks_x=element_blank(),  # noqa: F405
-        axis_line_x=element_line(color="#CCCCCC", size=0.6),  # noqa: F405
-        axis_line_y=element_line(color="#CCCCCC", size=0.6),  # noqa: F405
-        panel_grid_major_y=element_line(color="#EEEEEE", size=0.3),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        legend_position="none",
-        plot_background=element_rect(fill="#FFFFFF", color="#FFFFFF"),  # noqa: F405
-        panel_background=element_rect(fill="#FAFBFC", color="#FAFBFC"),  # noqa: F405
-    )
+    + scale_x_continuous(name="Reaction Coordinate", breaks=[], expand=[0.02, 0.02])
+    + scale_y_continuous(name="Potential Energy (kJ/mol)", limits=[0, 145])
+    + labs(title=title_str)
+    + ggsize(800, 450)
+    + anyplot_theme
 )
 
 # Save
-ggsave(plot, filename="plot.png", path=".", scale=3)
-ggsave(plot, filename="plot.html", path=".")
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")
