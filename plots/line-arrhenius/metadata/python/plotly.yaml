@@ -1,41 +1,54 @@
 library: plotly
+language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:07:48Z'
-updated: '2026-03-21T22:11:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389778034
+updated: '2026-06-24T09:49:52Z'
+generated_by: claude-sonnet
+workflow_run: 28088783546
 issue: 4408
-python_version: 3.14.3
-library_version: 6.6.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/plotly/plot.html
+language_version: 3.13.14
+library_version: 6.8.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/plotly/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - All spec requirements fully implemented including secondary temperature axis and
-    Ea annotation
-  - Cohesive monochromatic blue color scheme with intentional design hierarchy
-  - Rich interactive hover tooltips showing all relevant quantities (T, 1000/T, ln(k),
-    k)
-  - Clean, well-structured code with appropriate complexity
-  - Realistic chemistry data with physically meaningful parameters
+  - Perfect Imprint palette compliance — brand green markers (#009E73) and lavender
+    regression line (#C475FD) correctly use positions 1-2
+  - Full spec compliance — secondary temperature axis, Ea annotation, R² display,
+    and linear fit all implemented
+  - Excellent code quality — clean KISS structure, reproducible with seed, explicit
+    font sizes, themed chrome throughout
+  - Rich Plotly interactivity — hovertemplate with customdata exposes T, 1000/T, ln(k),
+    and k in one hover card
+  - Both renders pass theme-readability — warm off-white / near-black backgrounds
+    with properly adaptive chrome
   weaknesses:
-  - Markers could be slightly larger for maximum visual impact at this low data density
-  - Experimental noise is very low (R²=0.9999), making data appear almost perfectly
-    linear
-  image_description: The plot displays an Arrhenius plot with ln(k) on the y-axis
-    and 1000/T (K⁻¹) on the x-axis (reversed, so higher temperatures appear on the
-    right). Nine blue circular data points with white edges are plotted along a dark
-    navy regression line. A secondary x-axis at the top shows corresponding temperatures
-    from 300 K to 600 K. A styled annotation box near the center-top displays "Ea
-    = 75.0 kJ/mol" and "R² = 0.9999" with a light background and blue border. The
-    legend in the bottom-left shows "Linear Fit (R² = 0.9999)" and "Experimental Data".
-    The title reads "line-arrhenius · plotly · pyplots.ai" in dark blue. The background
-    is white with subtle dashed horizontal grid lines on the y-axis only. The overall
-    color scheme is a cohesive monochromatic dark-to-medium blue palette.
+  - The Ea annotation box position (x=mean, y near max) can overlap data markers at
+    high-temperature end — consider shifting to (x=inv_T[2], y=ln_k.max()-0.5) or
+    lower y offset to guarantee clear separation
+  - All four plot border lines are visible (Plotly default frame); removing the top
+    and right border lines would improve minimalism per the style guide
+  - 'DE-01 / DE-02: No intentional visual hierarchy beyond the annotation — adding
+    a subtle highlight (e.g., slightly larger marker + bold outline on the highest-temperature
+    point) would strengthen storytelling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "line-arrhenius · python · plotly · anyplot.ai" centered at top, dark ink (#1A1A17), clearly readable. X-axis label "1000 / T (K⁻¹)" and Y-axis label "ln(k)" both in dark ink at 12px — fully legible. Tick labels in INK_SOFT (#4A4A44) at 10px — readable. Secondary x-axis across the top shows "300 K" through "600 K" temperature labels — clearly visible.
+      Data: 9 green circular markers (#009E73, size=18, white edge) representing experimental data; a lavender (#C475FD) linear regression line runs through and behind the markers. An annotation box (elevated background #FFFDF6, border INK_SOFT) in the upper-center area shows "Ea = 74.9 kJ/mol" and "R² = 0.9991" in bold ink text. Legend at bottom-left (elevated bg, border) shows "Linear Fit (R² = 0.9991)" and "Experimental Data".
+      Legibility verdict: PASS — all text readable, no dark-on-light failures, appropriate contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), readable against dark background. Axis labels and tick labels in appropriate light tones. Secondary temperature axis labels at top readable in light color.
+      Data: Green markers (#009E73) and lavender regression line (#C475FD) are identical to the light render — data colors unchanged, only chrome flips. Annotation box uses dark elevated background (#242420) with light text — readable. Legend background elevated dark, text light.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected; brand green and lavender remain clearly visible on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -43,64 +56,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis labels 22pt, ticks
-          18pt, legend 16pt, annotation 20pt'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10).
+          Both themes readable. Title ~65% width. Balanced axis labels. No overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend, annotation, and axis labels all well-positioned
+        comment: No text overlaps. Annotation, legend, data markers all have clear
+          separation.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers size 14 with white edge clearly visible for 9 data points;
-          slightly small for optimal impact
+        comment: Marker size=18 appropriate for 9 sparse data points. White edge ring
+          provides definition. Regression line width=3 clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Monochromatic blue scheme is inherently colorblind-safe
+        comment: Green (#009E73) vs lavender (#C475FD) are CVD-safe with distinct
+          luminance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Plot fills canvas well. Margins generous and balanced. Secondary
+          x-axis above, legend below-left. Canvas passes gate (3200x1800).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: 1000/T (K⁻¹) and ln(k)'
+        comment: 'X: ''1000 / T (K⁻¹)'' with units. Y: ''ln(k)'' with units. Secondary
+          axis: temperature in K.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green). Second series #C475FD (Imprint
+          pos 2). Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive. Data colors
+          identical across both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive dark blue palette, styled annotation box, white marker edges;
-          clearly above defaults
+        comment: 'Above default: custom Imprint palette, styled annotation callout
+          box, theme-adaptive chrome. Not yet at publication/FiveThirtyEight level
+          — no spine removal, no strong visual hierarchy beyond annotation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: plotly_white template, x-grid removed, subtle dashed y-grid, light
-          gray axis lines
+        comment: Y-axis only grid (subtle), elevated legend bg, elevated annotation
+          bg, explicit tick styling. Top/right border lines still present — removing
+          them would improve minimalism.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation prominently displays Ea and R², secondary T axis provides
-          physical context
+        comment: Annotation box prominently shows Ea = 74.9 kJ/mol and R² = 0.9991
+          — immediately tells the scientific story. Secondary temperature axis aids
+          interpretation. Could add one more emphasis (e.g. bold highest-T marker)
+          for stronger focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -110,51 +139,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T with linear regression'
+        comment: 'Correct Arrhenius plot: ln(k) vs 1000/T with reversed x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: regression line, R², Ea annotation, secondary
-          T axis, visible markers'
+        comment: Linear regression line with R², Ea annotation, secondary temperature
+          axis, data markers on top of line — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1000/T, Y=ln(k) correctly mapped with full data range
+        comment: X=1000/T (K⁻¹) reversed, Y=ln(k). Covers 300-600 K range. Secondary
+          x shows K values correctly.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels appropriate
+        comment: 'Title: ''line-arrhenius · python · plotly · anyplot.ai'' — correct
+          format. Legend: ''Linear Fit (R²=0.9991)'' and ''Experimental Data'' — clear
+          and descriptive.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clear linear relationship with slight scatter; 9 points spanning
-          300-600K; minimal noise reduces variability demonstration
+        comment: Shows experimental noise, regression fit, activation energy extraction,
+          secondary temperature reference — all Arrhenius plot features covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition with Ea=75 kJ/mol — physically realistic
-          chemistry
+        comment: First-order decomposition reaction with physically realistic parameters
+          (Ea=75 kJ/mol, A=1.2×10¹⁰ s⁻¹, T=300-600 K, 20% noise).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 300-600K and rate constants spanning orders of magnitude
-          are sensible
+        comment: Activation energy 75 kJ/mol in typical range (40-200 kJ/mol). Temperature
+          span 300-600 K appropriate. Pre-exponential factor physically reasonable.
     code_quality:
       score: 10
       max: 10
@@ -164,54 +196,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → transform → plot → save, no functions/classes
+        comment: 'Clean linear: theme tokens → data → Arrhenius transform → regression
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before noise generation
+        comment: np.random.seed(42) set before noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; invisible trace for secondary axis is necessary
-          Plotly workaround
+        comment: Clean Pythonic code. Invisible trace workaround documented with a
+          comment explaining the Plotly requirement. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png at 4800x2700 and HTML with CDN
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200×1800)
+          and plot-{THEME}.html. Current API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper go.Figure() with go.Scatter traces, update_layout, secondary
-          overlaying axis
+        comment: Correct use of go.Scatter with xaxis2/overlaying='x' for secondary
+          axis, hovertemplate with customdata, add_annotation, update_layout — idiomatic
+          Plotly patterns throughout.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Rich hovertemplate with customdata, HTML export, secondary overlaying
-          axis
+        comment: Secondary x-axis via xaxis2+overlaying is Plotly-distinctive. Rich
+          hover card with customdata exposing raw k values is Plotly-native. HTML
+          export adds interactivity beyond any static library.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - twin-axes
   - annotations
   - hover-tooltips
   - html-export
@@ -222,4 +259,3 @@ impl_tags:
   - regression
   styling:
   - edge-highlighting
-  - grid-styling
