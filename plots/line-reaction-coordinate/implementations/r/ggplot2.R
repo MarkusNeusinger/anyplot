@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' line-reaction-coordinate: Reaction Coordinate Energy Diagram
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-06-24
+#' Quality: 90/100 | Created: 2026-06-24
 
 library(ggplot2)
 library(ragg)
