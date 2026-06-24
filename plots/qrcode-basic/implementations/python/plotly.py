@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 qrcode-basic: Basic QR Code Generator
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-24
@@ -83,7 +83,7 @@ fig.update_layout(
         "showline": False,
         "range": [-0.5, n_modules - 0.5],
     },
-    margin={"l": 40, "r": 40, "t": 80, "b": 180},
+    margin={"l": 40, "r": 40, "t": 80, "b": 130},
 )
 
 # Accent border framing the QR code area
@@ -106,9 +106,9 @@ fig.add_shape(
     xref="paper",
     yref="paper",
     x0=0.25,
-    y0=-0.04,
+    y0=-0.06,
     x1=0.75,
-    y1=-0.04,
+    y1=-0.06,
     line={"color": ACCENT, "width": 1.5, "dash": "dot"},
     opacity=0.5,
 )
@@ -119,7 +119,7 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.08,
+    y=-0.14,
     showarrow=False,
     font={"size": 12, "color": ACCENT, "family": "Arial, sans-serif"},
     xanchor="center",
@@ -132,9 +132,9 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.5,
-    y=-0.24,
+    y=-0.27,
     showarrow=False,
-    font={"size": 10, "color": INK_SOFT, "family": "Arial, sans-serif"},
+    font={"size": 12, "color": INK_SOFT, "family": "Arial, sans-serif"},
     xanchor="center",
     yanchor="top",
 )
