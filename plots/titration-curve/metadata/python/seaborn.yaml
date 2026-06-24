@@ -1,0 +1,273 @@
+library: seaborn
+language: python
+specification_id: titration-curve
+created: '2026-06-24T11:25:22Z'
+updated: '2026-06-24T11:47:28Z'
+generated_by: claude-sonnet
+workflow_run: 28094536560
+issue: 4407
+language_version: 3.13.14
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Seaborn's native statistical aggregation (errorbar='sd') over replicate DataFrame
+    is a genuinely distinctive feature — clearly demonstrates library mastery
+  - Dual-axis design with the right spine colored to match the derivative curve is
+    a sophisticated and professional aesthetic touch
+  - 'Complete spec compliance: equivalence point with dashed line + arrow annotation,
+    full dpH/dV derivative overlay, transition zone shading, phenolphthalein indicator
+    range, and pH 0-14 y-axis range all implemented correctly'
+  - Imprint palette applied correctly — brand green (#009E73) for primary pH series,
+    lavender (#C475FD) for derivative, ochre (#BD8233) for indicator range
+  - All font sizes explicitly set (title=12, labels=10, ticks=8, legend=8) with proper
+    theme-adaptive chrome tokens for both light and dark renders
+  - Combined legend from both axes handled cleanly with explicit handle merging
+  - 'Realistic chemistry data: accurate HCl+NaOH concentrations, correct equivalence
+    point at pH 7 at 25 mL, and real phenolphthalein range (pH 8.2–10.0)'
+  weaknesses:
+  - Background shadings (Transition zone at alpha=0.07, Phenolphthalein range at alpha=0.08)
+    are nearly invisible in dark mode — increase alpha to ~0.12–0.15 for dark theme
+    or apply separate alpha values per theme
+  - 'DE-01 / DE-02: Design is strong but falls short of publication-ready polish —
+    there''s no typographic hierarchy differentiator between the annotation text and
+    other labels, and the overall composition could benefit from slightly more whitespace
+    around the annotation callout'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "titration-curve · python · seaborn · anyplot.ai" at fontsize=12 is fully visible and fills ~65% of width. X-axis label "Volume of NaOH added (mL)" and left Y-axis label "pH" at fontsize=10 are dark and readable. Right Y-axis label "dpH / dV  (pH / mL)" in purple/lavender is readable. Tick labels at fontsize=8 are clearly legible. Legend (4 entries) in upper-left with elevated-background frame is clean.
+      Data: Primary S-shaped pH curve in #009E73 (brand green) with confidence band from replicate aggregation. Vertical dashed line at 25 mL with arrow annotation "Equiv. point / 25 mL · pH 7". Purple/lavender spike of derivative (dpH/dV) on secondary axis. Semi-transparent green transition zone band (±3 mL around equivalence). Semi-transparent ochre horizontal band for phenolphthalein range (pH 8.2–10.0). Right spine colored purple to match derivative — nice touch.
+      Legibility verdict: PASS — all text readable, no overlaps, no edge clipping.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface.
+      Chrome: Title and axis labels use light theme tokens (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected. Legend entries readable. Arrow annotation text readable in light INK_SOFT tone.
+      Data: pH curve (#009E73) and derivative curve (#C475FD) colors are identical to light render — correct behavior. The Transition zone (alpha=0.07 green) and Phenolphthalein range (alpha=0.08 ochre) background shadings are barely perceptible in dark mode due to low alpha values on the near-black surface — minor visibility issue for these secondary decorative elements.
+      Legibility verdict: PASS — all critical data elements and text readable; the near-invisible background shadings are a minor refinement concern, not a legibility failure.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=12, labels=10, ticks=8, legend/annotation=8).
+          Well-proportioned, balanced axes, readable in both themes. Minor deduction:
+          8pt annotation text is very small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Legend, annotation, and curve
+          are clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Primary pH curve and derivative clearly visible with appropriate
+          line widths. Background shadings (alpha=0.07-0.08) are nearly invisible
+          in dark mode — minor visibility deduction for secondary elements.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs purple derivative are well-separated in hue and luminance.
+          Imprint palette is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. subplots_adjust with right=0.88 gives room for
+          secondary y-axis. Balanced margins. Plot fills canvas well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Volume of NaOH added (mL)'' with units. Left Y: ''pH'' (correctly
+          unitless for a dimensionless scale). Right Y: ''dpH / dV  (pH / mL)'' with
+          units. All descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (#009E73 brand green) correct. Derivative uses Imprint
+          position 2 (#C475FD lavender). Indicator range uses Imprint position 4 (#BD8233
+          ochre). Background #FAF8F1 light / #1A1A17 dark. Chrome tokens correct in
+          both renders. Data colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: dual-axis with matching-colored right spine,
+          Imprint palette applied correctly, confidence band, multiple contextual
+          shading layers. Strong design — not quite FiveThirtyEight-level but well
+          above a configured default.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: sns.despine used, colored right spine, y-only grid at alpha=0.15,
+          elevated-background legend frame. Good refinement. Dark mode shading visibility
+          miss prevents perfect score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear focal point: equivalence point with dashed line + annotation
+          + derivative spike converge to tell the story. Multiple contextual layers
+          (transition zone, indicator range) enrich the narrative. Good visual hierarchy.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoidal titration curve with secondary dpH/dV derivative
+          overlay.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: equivalence point marker+annotation,
+          derivative secondary axis, transition zone shading, pH 0-14 range, correct
+          axis labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Volume (mL) on x-axis, pH 0-14 on primary y-axis, dpH/dV on secondary
+          y-axis. All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title ''titration-curve · python · seaborn · anyplot.ai'' correct.
+          Legend labels accurate: Transition zone, Phenolphthalein range, pH, dpH/dV.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full titration arc shown: pre-equivalence pH rise, sharp inflection
+          at equivalence point, post-equivalence plateau. Derivative spike, replicate
+          variability (confidence band), buffer/transition zone, and indicator range
+          all shown.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: HCl + NaOH titration is the canonical strong acid/strong base example.
+          Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0.1 M concentrations, 25 mL volumes, pH 7 equivalence point for strong
+          acid/strong base — all chemically accurate. Phenolphthalein range pH 8.2–10.0
+          is the real-world value.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.default_rng(42) with fixed seed. Base titration data is
+          deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys (path manipulation), matplotlib, numpy,
+          pandas, seaborn.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. No fake functionality. The replicate-data approach
+          for seaborn's errorbar aggregation is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Correct seaborn
+          0.13.2 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.set_theme() for global theming, sns.lineplot() with statistical
+          aggregation, sns.despine() — all idiomatic. Integration with matplotlib
+          twinx is at the matplotlib level, not seaborn-native.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: errorbar='sd' over a replicate DataFrame is genuinely seaborn-native
+          — the code explicitly creates 8 replicate measurements to enable seaborn's
+          built-in statistical aggregation and confidence band. This couldn't be replicated
+          in plain matplotlib without manual computation.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
