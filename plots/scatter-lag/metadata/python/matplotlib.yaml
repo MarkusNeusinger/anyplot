@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: scatter-lag
 created: '2026-04-12T18:10:35Z'
-updated: '2026-06-24T22:53:30Z'
+updated: '2026-06-24T23:05:09Z'
 generated_by: claude-sonnet
 workflow_run: 28134236496
 issue: 5251
@@ -12,96 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (diagonal reference line, time-index
-    coloring, r annotation, configurable lag) implemented correctly.'
-  - Correct imprint_seq colormap for continuous time-index encoding — palette compliance
-    is flawless.
-  - Both themes render cleanly with proper INK/INK_SOFT token threading — no dark-on-dark
-    or light-on-light failures.
-  - Canvas dimensions exact at 3200x1800; no bbox_inches tight drift.
-  - Dynamically generated y-axis label f"y(t + {lag})" is a nice touch.
-  - r = 0.834 annotation in a themed elevated box is clean and informative.
+  - 'All specced features implemented correctly: diagonal reference line, temporal
+    coloring, configurable lag, r-value annotation'
+  - Qualitative annotation label ('Strong positive autocorrelation') elevates the
+    plot from a bare number to a diagnostic statement
+  - Correct imprint_seq colormap construction (green to blue) for single-polarity
+    continuous temporal data; both renders theme-correct
+  - No bbox_inches='tight'; subplots_adjust used correctly; canvas is exactly 3200x1800
+  - 'Complete theme adaptation: every chrome element (title, labels, ticks, spines,
+    grid, colorbar, annotation box) uses theme tokens'
   weaknesses:
-  - Grid is y-axis only (ax.yaxis.grid); the style guide recommends both-axis grid
-    for scatter plots — adding ax.xaxis.grid with the same alpha/linewidth would better
-    serve visual alignment in a lag plot.
-  - plt.tight_layout() is used before savefig — the library guide recommends fig.subplots_adjust()
-    for internal padding control to avoid potential canvas drift with complex layouts
-    (colorbars). Canvas gate passed this time, but it is safer to use explicit margin
-    controls.
-  - 'Design Excellence is moderate: the colorbar spacing is tight and the visualization
-    lacks a strong typographic hierarchy or focal-point emphasis element beyond the
-    r annotation.'
+  - 'Annotation lacks typographic hierarchy: r-value number and qualitative label
+    rendered at identical weight — add fontweight=''bold'' for only the numeric portion
+    to create emphasis'
+  - Colorbar aspect=28 produces a narrow-and-long bar; aspect=20 would create better
+    visual proportion alongside the scatter area
+  - Diagonal reference line at alpha=0.5 on dark render is quite faint — using alpha=0.6
+    or color=INK with same alpha would improve dark-render contrast while maintaining
+    subtlety
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "scatter-lag · python · matplotlib · anyplot.ai" in dark ink, spans ~65-70% width at fontsize=12. Axis labels "y(t)" and "y(t + 1)" in dark INK at 10pt. Tick labels in INK_SOFT at 8pt. Colorbar label "Time Index" and ticks (0-400) in INK_SOFT. r=0.834 annotation in INK on ELEVATED_BG box (#FFFDF6). All readable.
-      Data: 499 scatter points colored with imprint_seq (green #009E73 for early, blue #4467A3 for late time indices). Dashed diagonal reference line in INK_SOFT at alpha=0.5. Y-axis grid lines at alpha=0.15. L-frame spines (top/right removed).
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-lag · python · matplotlib · anyplot.ai" in dark ink #1A1A17 at 12pt; axis labels "y(t)" and "y(t + 1)" in #1A1A17 at 10pt; tick labels in INK_SOFT #4A4A44 at 8pt; all clearly readable
+      Data: 499 scatter points using imprint_seq colormap (brand green #009E73 to blue #4467A3) mapped by time index; s=55, alpha=0.50; dashed diagonal reference line in INK_SOFT; annotation box with elevated cream #FFFDF6 fill showing "r = 0.834 · Strong positive autocorrelation"; colorbar on right labeled "Time Index"
+      Legibility verdict: PASS — all text elements readable; no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light cream #F0EFE8 — readable. Axis labels in #F0EFE8. Tick labels in #B8B7B0. Colorbar label and ticks in #B8B7B0. r annotation in elevated dark box (#242420) with light INK text — readable. No dark-on-dark failures detected.
-      Data: Identical imprint_seq colors as light render — only chrome flipped, data colors unchanged. Diagonal reference line visible in soft gray. Grid lines subtle and visible.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in #F0EFE8 at 12pt; axis labels in #F0EFE8 at 10pt; tick labels in INK_SOFT #B8B7B0 at 8pt; colorbar label and ticks in INK_SOFT; all readable against dark background; annotation box uses #242420 elevated background with #F0EFE8 text — no dark-on-dark failures
+      Data: Scatter point colors identical to light render (imprint_seq green→blue unchanged); diagonal line and grid remain subtly visible
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title at fontsize=12 spans ~65-70%
-          width; 10pt axis labels, 8pt ticks
+        comment: All text readable in both themes; title 12pt, axis labels 10pt, ticks
+          8pt; proportions within 50-70% title-width guideline
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 499 points with alpha=0.50 and s=55 handle medium density well; edgecolors=PAGE_BG
-          adds separation
+        comment: No text or element collisions; annotation positioned in sparse upper-left
+          corner of scatter
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Points clearly visible; imprint_seq colormap distinguishes early/late
-          observations; diagonal reference line visible
+        comment: s=55 with alpha=0.50 appropriate for 499-point medium-density scatter;
+          temporal colormap distinguishes all points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe; no red-green sole signal
+        comment: imprint_seq (green to blue) is CVD-safe; no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800 (gate passed); title, axes, colorbar, annotation
-          well proportioned; no overflow or clipping
+        comment: 3200x1800 confirmed; subplots_adjust provides balanced margins; colorbar
+          well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: y(t), Y: f''y(t + {lag})'' — dynamically generated and descriptive;
-          title matches required format exactly'
+        comment: y(t) and y(t+1) descriptive for lag plot; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous data uses imprint_seq (only allowed sequential cmap);
-          backgrounds #FAF8F1/#1A1A17; colormap identical across both renders'
+        comment: 'imprint_seq correctly built from #009E73 to #4467A3; backgrounds
+          FAF8F1/1A1A17; both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,23 +106,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom imprint_seq colormap intentionally applied; edgecolors=PAGE_BG
-          adds polish; elevated annotation box; above average but not exceptional
+        comment: 'Above default (4): temporal coloring with imprint_seq adds depth;
+          qualitative annotation descriptor; edgecolors=PAGE_BG creates subtle marker
+          separation'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: L-frame spines; subtle y-axis grid at alpha=0.15; PAGE_BG edge on
-          scatter points; missing both-axis grid recommended for scatter by style
-          guide
+        comment: 'Above default (2): top/right spines removed, both-axis grid at 0.15
+          alpha, edgecolors treatment, colorbar styled with INK_SOFT'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time coloring reveals temporal drift; r=0.834 quantifies autocorrelation;
-          diagonal reference line anchors comparison; strong AR(1) narrative
+        comment: 'Above default (2): qualitative annotation turns r-value into narrative;
+          temporal coloring reveals epoch contributions; diagonal reference anchors
+          interpretation'
     spec_compliance:
       score: 15
       max: 15
@@ -135,52 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lag plot: y(t) on x-axis, y(t+k) on y-axis'
+        comment: 'Correct lag scatter: y(t) on x-axis, y(t+k) on y-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, time-index coloring, r annotation, and configurable
-          lag variable all present
+        comment: Diagonal y=x line, temporal coloring, r-value annotation, configurable
+          lag variable — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=y(t), Y=y(t+1), all 499 observations plotted; time index on colorbar
+        comment: 499 of 500 observations plotted (lag=1 slicing); correct axis assignment
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; colorbar substitutes appropriately
-          for continuous scale
+        comment: Title 'scatter-lag · python · matplotlib · anyplot.ai' correct; colorbar
+          serves as legend for time index
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates lag-1 autocorrelation; time coloring shows temporal
-          structure; r annotation quantifies pattern; shows only one lag value
+        comment: Demonstrates autocorrelation structure, temporal trends, diagonal
+          alignment, correlation quantification
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: AR(1) with phi=0.85 is canonical; 500 observations within spec range;
-          neutral, non-controversial data
+        comment: AR(1) with phi=0.85 is a standard neutral time-series; appropriate
+          for financial returns or sensor data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values centered around 0 with ±5 range, typical for standardized
-          AR(1); seed 42 ensures reproducibility
+        comment: 500 observations within spec range (100-5000); values approx [-5,
+          6] sensible for unit-noise AR(1)
     code_quality:
       score: 10
       max: 10
@@ -190,35 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; no unnecessary functions or classes
+        comment: Flat top-to-bottom script; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; os, sys, numpy, matplotlib.pyplot, LinearSegmentedColormap
-          all referenced
+        comment: All imports used; sys.path.pop(0) is a necessary module-shadow fix
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path.pop(0) is valid documented workaround for matplotlib module
-          naming conflict; no fake UI
+        comment: Clean readable code; no fake UI; AR(1) loop is idiomatic NumPy
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400; no bbox_inches=tight on savefig
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG); no
+          bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,16 +223,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly uses Axes methods; fig.colorbar() on scatter mappable;
-          tick_params with color tokens; cbar.outline.set_edgecolor() — all idiomatic
+        comment: Axes methods throughout; fig.colorbar(); tick_params with labelcolor;
+          ax.set_axisbelow(True); spines API; subplots_adjust
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: LinearSegmentedColormap with fig.colorbar() and mappable scatter
-          is a characteristic matplotlib pattern; could push further with inset axes
-          or more complex colorbar formatting
+        comment: LinearSegmentedColormap.from_list for custom imprint_seq; scatter
+          c= parameter for continuous color mapping; colorbar.outline and tick_params
+          theming
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -244,9 +241,7 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep:
-  - correlation-matrix
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
