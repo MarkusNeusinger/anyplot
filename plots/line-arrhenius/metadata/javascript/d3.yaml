@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: line-arrhenius
+created: '2026-06-24T10:03:25Z'
+updated: '2026-06-24T10:09:56Z'
+generated_by: claude-sonnet
+workflow_run: 28089916392
+issue: 4408
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Full spec compliance: all required Arrhenius features (regression line, R² annotation,
+    Ea/R, secondary temperature axis) are present and correctly implemented'
+  - 'Excellent data quality: realistic N2O decomposition kinetics with physically
+    plausible activation energy and R² = 0.999'
+  - Both themes pass legibility check with no dark-on-dark failures; chrome tokens
+    applied correctly throughout
+  - Custom annotation box with rounded corners, elevated background, and three key
+    kinetic parameters adds significant scientific value
+  - Secondary temperature axis translates abstract 1/T scale into practitioner-friendly
+    K values
+  - KISS code structure with expert idiomatic D3 patterns
+  weaknesses:
+  - Regression line uses palette[2] (#4467A3, blue) instead of palette[1] (#C475FD,
+    lavender) — skips ordinal order without a semantic justification. Change to t.palette[1]
+    or add a comment justifying the skip.
+  - Legend text at 13px and secondary axis tick labels at 13px are slightly below
+    the 14px guide recommendation — may be hard to read at mobile widths. Bump to
+    14px.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "line-arrhenius · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable. Axis labels "1/T × 10³ (K⁻¹)" and "ln(k / s⁻¹)" in dark ink at 16px. Tick labels at 14px in dark secondary ink. Secondary temperature axis label "Temperature (K)" at 14px. All text clearly readable against light background.
+      Data: Ten data points in Imprint brand green #009E73 (palette[0]) with page-background stroke. Dashed regression line in #4467A3 (blue, palette[2]). Annotation box (elevated background #FFFDF6) shows R²=0.999, Ea/R=9607 K, Ea≈80 kJ mol⁻¹. Legend in lower-left identifies series correctly.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: All chrome elements correctly flipped: title, axis labels, tick labels, and legend text in light off-white. Secondary temperature axis labels in light ink. Annotation box uses dark elevated background (#242420) with light text. Grid lines subtle and visible on dark surface. No dark-on-dark failures detected.
+      Data: Green data points (#009E73) and dashed blue regression line (#4467A3) are identical to light render — only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; proportionate in both themes. Legend and
+          secondary axis ticks at 13px slightly below 14px guide.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Annotation box and legend are in uncrowded
+          regions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: r=9px circles appropriate for 10 data points. Regression line 2.5px
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green markers and blue dashed line perceptually distinct; CVD-safe.
+          Shape+linestyle redundancy.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Balanced margins. Secondary axis uses top
+          space effectively.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All axes have descriptive labels with units. Secondary axis also
+          labeled.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Data points correctly use palette[0] #009E73. Regression line uses
+          palette[2] (#4467A3), skipping palette[1] (lavender). Backgrounds and chrome
+          tokens are theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: annotation box with rounded corners, secondary temperature
+          axis, marker strokes. Clearly above configured defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only subtle grid, L-shaped spines, generous whitespace, pageBg
+          marker stroke. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation box immediately communicates key insight. Secondary axis
+          aids practical interpretation. Clear visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1/T.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression line, R² display, Ea/R annotation, secondary K axis, data
+          points on top of line — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: 1000/T, Y: ln(k). All data visible, axes correctly scaled.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec. Legend labels Experimental data and Arrhenius
+          fit are appropriate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 data points with realistic scatter spanning 300-600 K. Shows linear
+          Arrhenius relationship and experimental variability.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: N2O decomposition kinetics — real, neutral physical chemistry scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ea~80 kJ/mol and Ea/R=9607 K are physically plausible. R²=0.999 realistic
+          for controlled kinetics.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data, pre-computed regression. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only D3 global and ANYPLOT_TOKENS/ANYPLOT_SIZE per harness contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Comments explain chemistry and implementation
+          choices.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness produces plot-light.png/dark.png/html. D3 7.9.0 API used
+          correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3.scaleLinear, axisBottom/axisLeft, selectAll/join,
+          d3.line, d3.format.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom secondary axis built from raw SVG elements is distinctly D3.
+          Fine-grained SVG control over chrome tokens.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
