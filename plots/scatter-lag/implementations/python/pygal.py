@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-lag: Lag Plot for Time Series Autocorrelation Diagnosis
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-24
@@ -115,7 +115,7 @@ custom_style = Style(
     value_font_size=36,
     tooltip_font_size=32,
     tooltip_font_family=font,
-    opacity=0.65,
+    opacity=0.45,
     opacity_hover=0.95,
     stroke_width=2.5,
 )
@@ -127,7 +127,7 @@ chart = pygal.XY(
     style=custom_style,
     title=title,
     x_title="y(t)  — Temperature (°C)",
-    y_title=f"y(t+{lag})  — Temperature at lag {lag} (°C)",
+    y_title=f"y(t+{lag})  — Temp. (°C)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
@@ -138,7 +138,7 @@ chart = pygal.XY(
     show_y_guides=True,
     x_value_formatter=lambda x: f"{x:.1f}",
     value_formatter=lambda y: f"{y:.1f}",
-    margin_bottom=100,
+    margin_bottom=65,
     margin_left=80,
     margin_right=30,
     margin_top=40,
@@ -151,11 +151,11 @@ chart = pygal.XY(
     truncate_legend=40,
 )
 
-# Temporal quartile scatter series
-chart.add("Hours 1–100", early, stroke=False, dots_size=9)
-chart.add("Hours 101–200", mid_early, stroke=False)
-chart.add("Hours 201–300", mid_late, stroke=False)
-chart.add("Hours 301–399", late, stroke=False, dots_size=9)
+# Temporal quartile scatter series — size encodes temporal recency (7→10)
+chart.add("Hours 1–100", early, stroke=False, dots_size=7)
+chart.add("Hours 101–200", mid_early, stroke=False, dots_size=8)
+chart.add("Hours 201–300", mid_late, stroke=False, dots_size=9)
+chart.add("Hours 301–399", late, stroke=False, dots_size=10)
 
 # ±1σ spread envelope (structural layer — no legend entry)
 env_style = {"width": 3, "dasharray": "6, 8", "linecap": "round"}
