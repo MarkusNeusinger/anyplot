@@ -1,4 +1,8 @@
-"""anyplot.ai — curve-dose-response: Pharmacological Dose-Response Curve"""
+""" anyplot.ai
+curve-dose-response: Pharmacological Dose-Response Curve
+Library: altair 6.2.2 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-24
+"""
 
 import os
 
