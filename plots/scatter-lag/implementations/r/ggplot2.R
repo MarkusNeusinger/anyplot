@@ -4,7 +4,6 @@
 #' Quality: 85/100 | Created: 2026-06-24
 
 library(ggplot2)
-library(dplyr)
 library(scales)
 library(ragg)
 
@@ -48,7 +47,7 @@ p <- ggplot(df, aes(x = x, y = y, color = t)) +
     linewidth = 0.8,
     linetype  = "dashed"
   ) +
-  geom_point(size = 2.0, alpha = 0.65) +
+  geom_point(size = 2.5, alpha = 0.65) +
   annotate(
     "label",
     x = -Inf, y = Inf,
@@ -82,7 +81,8 @@ p <- ggplot(df, aes(x = x, y = y, color = t)) +
     panel.background  = element_rect(fill = PAGE_BG,     color = NA),
     panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.5),
     panel.grid.minor  = element_blank(),
-    panel.border      = element_rect(color = INK_SOFT,   fill = NA, linewidth = 0.5),
+    panel.border      = element_blank(),
+    axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
     axis.title        = element_text(color = INK,        size = 10),
     axis.text         = element_text(color = INK_SOFT,   size = 8),
     plot.title        = element_text(color = INK,        size = 12, face = "bold"),
