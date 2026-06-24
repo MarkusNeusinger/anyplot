@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-arrhenius: Arrhenius Plot for Reaction Kinetics
 // Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 87/100 | Created: 2026-06-24
+// Quality: 88/100 | Created: 2026-06-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // line-arrhenius: Arrhenius Plot for Reaction Kinetics
