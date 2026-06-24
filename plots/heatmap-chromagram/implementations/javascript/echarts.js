@@ -4,11 +4,6 @@
 // Quality: 89/100 | Created: 2026-06-24
 //# anyplot-orientation: square
 
-// anyplot.ai
-// heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-24
-
 const t = window.ANYPLOT_TOKENS;
 
 // Pitch classes ordered C to B
@@ -51,6 +46,41 @@ const timeLabels = Array.from({ length: numFrames }, (_, i) =>
   i % 20 === 0 ? `${(i * 0.05).toFixed(1)}s` : ""
 );
 
+// Chord section annotations — graphic positions in 1200×1200 CSS-px space
+// Grid: left 82, right 118 (from right edge), top 112, bottom 80
+// Grid area: x [82, 1082], y [112, 1120], width 1000, height 1008
+const gLeft = 82;
+const gTop = 112;
+const gBottom = 1120;
+const sectionW = 1000 / 4; // 250px per chord section
+
+const chordNames = ["C", "G", "Am", "F"];
+const labelGraphics = chordNames.map((name, i) => ({
+  type: "text",
+  style: {
+    text: name,
+    fill: t.ink,
+    fontSize: 12,
+    fontWeight: "bold",
+    textAlign: "center",
+    textVerticalAlign: "bottom",
+  },
+  x: gLeft + sectionW * i + sectionW / 2,
+  y: gTop - 5,
+}));
+
+// Vertical dashed lines at chord boundaries (between sections)
+const boundaryGraphics = [1, 2, 3].map((i) => ({
+  type: "line",
+  shape: {
+    x1: gLeft + sectionW * i,
+    y1: gTop,
+    x2: gLeft + sectionW * i,
+    y2: gBottom,
+  },
+  style: { stroke: t.inkSoft, lineWidth: 1, lineDash: [4, 3], opacity: 0.55 },
+}));
+
 const chart = echarts.init(document.getElementById("container"));
 
 chart.setOption({
@@ -66,7 +96,7 @@ chart.setOption({
     subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
 
-  grid: { left: 82, right: 118, top: 100, bottom: 80 },
+  grid: { left: 82, right: 118, top: 112, bottom: 80 },
 
   xAxis: {
     type: "category",
@@ -106,9 +136,11 @@ chart.setOption({
     inRange: { color: t.seq },
     text: ["High", "Low"],
     textGap: 8,
-    textStyle: { color: t.inkSoft, fontSize: 13 },
+    textStyle: { color: t.inkSoft, fontSize: 14 },
     outOfRange: { color: t.pageBg },
   },
+
+  graphic: [...labelGraphics, ...boundaryGraphics],
 
   series: [
     {
