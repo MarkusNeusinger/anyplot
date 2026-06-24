@@ -1,0 +1,251 @@
+library: ggplot2
+language: r
+specification_id: line-stress-strain
+created: '2026-06-21T09:46:01Z'
+updated: '2026-06-21T09:53:19Z'
+generated_by: claude-sonnet
+workflow_run: 27900282175
+issue: 4413
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Excellent physics accuracy: Luders plateau for steel, smooth nonlinear response
+    for aluminum — both curves are textbook-quality'
+  - All seven spec-required features implemented (regions, critical points, 0.2% offset
+    method, Young's modulus, multi-material overlay)
+  - 'Imprint palette applied correctly with #009E73 as first series'
+  - Open-circle critical point markers (fill=PAGE_BG) are an elegant ggplot2 detail
+    that adapts to both themes
+  - Inside legend placement is clean and space-efficient
+  weaknesses:
+  - Young's modulus slope segment (0,0)->(0.001,200) spans only 0.27% of the x-axis
+    width and appears as a near-vertical dash at the y-axis — conveys no meaningful
+    slope information; should be drawn 5-10x longer (e.g., to strain~0.005-0.01) with
+    a label explaining the slope represents E
+  - 'Annotation crowding in upper-left: YS=250 MPa (green) and 0.2% YS=276 MPa (lavender)
+    are only ~12 MPa apart vertically and both left-aligned near x~0.005-0.010 — increase
+    vertical separation or use offset arrows/leaders to prevent visual collision'
+  - 0.2% offset line annotation label at size=2.8 is the smallest text element and
+    may be illegible at mobile scale — increase to size=3.2 minimum
+  - library(dplyr) is imported but never used — remove
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "line-stress-strain · r · ggplot2 · anyplot.ai" bold dark (#1A1A17), fully readable. Axis labels "Engineering Stress (MPa)" and "Engineering Strain (mm/mm)" at 10pt in dark ink. Tick labels at 8pt in INK_SOFT (#4A4A44). Region labels ("Elastic", "Strain Hardening", "Necking") in italic INK_MUTED, readable near top of plot. Critical point annotations in material colors. "E = 200 GPa" and "0.2% offset line" labels small (size=2.8-2.9) but readable at full resolution.
+      Data: Steel in Imprint green #009E73, Aluminum in Imprint lavender #C475FD. Open-circle markers (fill=PAGE_BG, stroke=1.5) at critical points. 0.2% offset dashed line in INK_SOFT gray. Young's modulus slope segment in INK_MUTED gray near y-axis (very narrow at chart scale).
+      Legibility verdict: PASS — all text readable against light background; minor crowding of YS labels in upper-left.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8), axis labels in INK (#F0EFE8), tick labels in INK_SOFT (#B8B7B0). Region labels in INK_MUTED (#A8A79F). All annotation text using adaptive ink tokens. Legend box at #242420 with muted border. No dark-on-dark failures observed — all chrome elements correctly use light-theme-flipped tokens.
+      Data: Colors identical to light render — green #009E73 for steel, lavender #C475FD for aluminum — only chrome flipped as expected.
+      Legibility verdict: PASS — all text clearly visible against dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title/axis/tick text readable in both themes. Annotation sizes 2.8-3.2
+          ggplot2 units are small — borderline at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor crowding: YS=250 MPa and 0.2% YS=276 MPa labels only 12 MPa
+          apart vertically in upper-left region.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines and markers clearly visible. Young's modulus slope segment
+          spans only 0.27% of x-axis — appears as near-vertical dash at y-axis, not
+          a readable slope indicator.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Two Imprint hues (green, lavender) are perceptually distinct and
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 passed gate. Title ~55% width. Inside legend well-placed.
+          No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Engineering Strain (mm/mm) and Engineering Stress (MPa) — descriptive
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. Grid at 12% INK opacity.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above defaults: Imprint palette, inside legend, open-circle markers
+          (fill=PAGE_BG), themed backgrounds, clear typography hierarchy, region boundary
+          guides.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel.border removed, minor grid disabled, 12%-opacity major grid,
+          elevated legend background. L-shaped spine preserved.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Region labels walk viewer through deformation stages. All critical
+          properties annotated. Multi-material comparison adds value. Young's modulus
+          indicator weak.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Engineering stress-strain curve with geom_line — correct chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, critical points, 0.2% offset method, Young's modulus
+          annotation, offset line, multi-material overlay — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=strain, Y=stress, correct axes, full data range shown, physically
+          realistic curves.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-stress-strain · r · ggplot2 · anyplot.ai' matches required
+          format. Legend labels accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Elastic region, Luders plateau (steel), strain hardening, necking,
+          fracture — all represented. 0.2% offset method illustrated.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AISI 1020 steel and Al 6061-T6 are real materials with accurate mechanical
+          properties.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stress 0-410 MPa and strain 0-0.35 are physically correct for these
+          materials.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean sequential script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data generation is deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) imported but unused — rbind/data.frame/factor are
+          all base R.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with clear commented sections. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) correct; ragg::agg_png device used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct grammar of graphics: aes(), geom_line/geom_point, annotate(),
+          scale_color_manual(), theme() chaining, expansion() — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: shape=21 open-circle markers; legend.position.inside with modern
+          ggplot2 >=3.5 API; adjustcolor() for grid opacity; inherit.aes=FALSE for
+          multi-layer data.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
