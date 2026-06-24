@@ -47,15 +47,25 @@ intercept = y_bar - slope * x_bar
 ln_k_fit = slope .* inv_T_scaled .+ intercept
 r_sq     = 1.0 - sum((ln_k .- ln_k_fit).^2) / sum((ln_k .- y_bar).^2)
 
-# Ea from slope: since x = 1000/T, slope × 1000 = -Ea/R;  ×1000 and ÷1000 cancel the J→kJ step
-ea_kJmol = -slope * R_GAS   # evaluates to ≈ 79.9 kJ/mol
+# Ea from slope: since x = 1000/T, slope × 1000 = -Ea/R
+ea_kJmol = -slope * R_GAS  # ≈ 79.9 kJ/mol
 
 # Extended regression line
 margin = 0.08 * (maximum(inv_T_scaled) - minimum(inv_T_scaled))
-x_fit  = range(minimum(inv_T_scaled) - margin, maximum(inv_T_scaled) + margin; length = 200)
+x_fit  = collect(range(minimum(inv_T_scaled) - margin,
+                       maximum(inv_T_scaled) + margin; length = 200))
 y_fit  = slope .* x_fit .+ intercept
 
-# Title with adaptive fontsize
+# 95% confidence band (t_{0.025, df=7} = 2.365)
+n_pts   = length(inv_T_scaled)
+sse     = sum((ln_k .- ln_k_fit).^2)
+s2      = sse / (n_pts - 2)
+Sxx     = sum((inv_T_scaled .- x_bar).^2)
+t_crit  = 2.365
+se_band = sqrt.(s2 .* (1.0 / n_pts .+ (x_fit .- x_bar).^2 ./ Sxx))
+y_upper = y_fit .+ t_crit .* se_band
+y_lower = y_fit .- t_crit .* se_band
+
 title_str  = "line-arrhenius · julia · makie · anyplot.ai"
 title_size = length(title_str) > 67 ? max(14, round(Int, 20 * 67 / length(title_str))) : 20
 
@@ -64,11 +74,6 @@ fig = Figure(
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
-
-x_range = maximum(inv_T_scaled) - minimum(inv_T_scaled)
-y_range = maximum(ln_k) - minimum(ln_k)
-y_lo    = minimum(ln_k) - 0.05 * y_range
-y_hi    = maximum(ln_k) + 0.22 * y_range
 
 ax = Axis(
     fig[1, 1];
@@ -97,11 +102,45 @@ ax = Axis(
     xminorgridvisible  = false,
     yminorgridvisible  = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.12),
-    limits             = (nothing, nothing, y_lo, y_hi),
+    xticks             = LinearTicks(4),
 )
 
-# Regression line (drawn first so markers render on top)
-lines!(ax, collect(x_fit), collect(y_fit);
+# True secondary x-axis: temperature reference in K (overlapping Axis at top)
+ax_top = Axis(
+    fig[1, 1];
+    xaxisposition      = :top,
+    yaxisposition      = :right,
+    backgroundcolor    = :transparent,
+    topspinevisible    = true,
+    topspinecolor      = INK_SOFT,
+    bottomspinevisible = false,
+    leftspinevisible   = false,
+    rightspinevisible  = false,
+    xgridvisible       = false,
+    ygridvisible       = false,
+    yticksvisible      = false,
+    yticklabelsvisible = false,
+    xlabel             = "Temperature (K)",
+    xlabelsize         = 13,
+    xlabelcolor        = INK_SOFT,
+    xticklabelsize     = 11,
+    xticklabelcolor    = INK_SOFT,
+    xtickcolor         = INK_SOFT,
+    xticks             = (
+        1000.0 ./ [300.0, 350.0, 400.0, 500.0, 600.0],
+        ["300", "350", "400", "500", "600"],
+    ),
+)
+linkxaxes!(ax, ax_top)
+linkyaxes!(ax, ax_top)
+
+# Confidence band (Makie band! — highlights fit quality)
+band!(ax, x_fit, y_lower, y_upper;
+    color = (IMPRINT_PALETTE[3], 0.15),
+)
+
+# Regression line (drawn before markers so they render on top)
+lines!(ax, x_fit, y_fit;
     color     = IMPRINT_PALETTE[3],
     linewidth = 2.5,
     linestyle = :dash,
@@ -117,21 +156,11 @@ scatter!(ax, inv_T_scaled, ln_k;
     label       = "Measured k(T)",
 )
 
-# Temperature reference labels — placed in the headroom above data
-temp_ref_vals = [600.0, 500.0, 400.0, 350.0, 300.0]
-y_temp_label  = maximum(ln_k) + 0.13 * y_range
-for T in temp_ref_vals
-    text!(ax, 1000.0 / T, y_temp_label;
-        text     = "$(Int(T)) K",
-        color    = INK_SOFT,
-        fontsize = 12,
-        align    = (:center, :bottom),
-    )
-end
-
 # Annotation: kinetic parameters — lower-left corner
-x_ann = minimum(inv_T_scaled) + 0.03 * x_range
-y_ann = minimum(ln_k) + 0.08 * y_range
+x_range = maximum(inv_T_scaled) - minimum(inv_T_scaled)
+y_range = maximum(ln_k) - minimum(ln_k)
+x_ann   = minimum(inv_T_scaled) + 0.03 * x_range
+y_ann   = minimum(ln_k) + 0.08 * y_range
 
 text!(ax, x_ann, y_ann;
     text     = @sprintf("-Ea/R = %d K\nEa = %.1f kJ mol⁻¹\nR² = %.4f",
@@ -150,4 +179,5 @@ axislegend(ax;
     labelcolor      = INK,
 )
 
+resize_to_layout!(fig)
 save("plot-$(THEME).png", fig; px_per_unit = 2)
