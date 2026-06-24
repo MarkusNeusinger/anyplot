@@ -1,44 +1,49 @@
 library: plotnine
+language: python
 specification_id: curve-dose-response
 created: '2026-03-18T22:29:46Z'
-updated: '2026-03-18T22:46:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23270128875
+updated: '2026-06-24T15:34:37Z'
+generated_by: claude-sonnet
+workflow_run: 28109171721
 issue: 4556
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Full spec compliance with all required features implemented correctly (4PL fit,
-    EC50 references, asymptotes, error bars, confidence bands)
-  - Strong visual design with custom color palette, open circle markers, and thorough
-    theme refinement
-  - Pharmacologically accurate data generation with realistic concentration ranges
-    and distinct compound profiles
-  - Clean, well-structured code with appropriate use of scipy for curve fitting and
-    delta method for confidence intervals
+  - Complete 4PL model with delta-method 95% CI bands
+  - Real pharmacological data (Erlotinib/Gefitinib as actual EGFR inhibitors) with
+    realistic concentration ranges and EC50 values
+  - EC50 annotations with Unicode subscript formatting (EC₅₀=X.X×10⁻ⁿ M) and dashed
+    reference lines on both axes
+  - Full theme-adaptive chrome (PAGE_BG, INK, INK_SOFT tokens correctly applied to
+    both renders)
+  - 'All spec requirements met: log x-axis, 4PL sigmoid, EC50 intersecting lines,
+    SEM error bars, asymptote dotted lines, CI ribbon, 2 compounds, legend'
   weaknesses:
-  - EC50 annotation labels are positioned close together, causing minor visual crowding
-    in the mid-plot region
-  - Compound names are generic rather than using plausible drug names
-  image_description: The plot displays two sigmoidal dose-response curves on a logarithmic
-    x-axis. Compound A is rendered in dark blue (#306998) and Compound B in burnt
-    orange (#E0652B). Both curves follow the classic S-shape from low baseline responses
-    (~5% and ~10%) to upper plateaus (~95% and ~85%). Data points are shown as open
-    circles with white fill and colored borders, accompanied by vertical error bars
-    (SEM). Smooth fitted curves are overlaid as solid lines with semi-transparent
-    confidence bands (ribbons). Dashed vertical and horizontal reference lines mark
-    the EC50 values for each compound — approximately 9.7×10⁻⁸ M for Compound A and
-    6.2×10⁻⁷ M for Compound B. Bold EC50 annotations appear near the intersection
-    points. Dotted horizontal lines indicate the top and bottom asymptotes for each
-    compound. The x-axis shows "Concentration (M)" with superscript log-scale labels
-    (10⁻⁹ to 10⁻⁵), and the y-axis shows "Response (%)" from 0 to 100. A boxed legend
-    labeled "Compound" sits in the lower-right area. The title reads "curve-dose-response
-    · plotnine · pyplots.ai". The background is a subtle off-white (#fafafa) with
-    light horizontal gridlines only.
+  - Annotation text (geom_text size=3.0mm ≈88.5pt) is borderline small at mobile scale
+    (~400px) — consider increasing to size=3.5–4.0mm
+  - CI ribbons (alpha=0.18) are very faint in the dark render, especially the Gefitinib
+    lavender band — consider alpha=0.25 for dark theme or use ANYPLOT_MUTED as a theme-adaptive
+    fill instead of the raw data color
+  - LM-02 could be elevated by using a distinctly plotnine idiom such as stat_function
+    or annotate() for more idiomatic reference-line annotation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "curve-dose-response · python · plotnine · anyplot.ai" spans ~72% of canvas width at 12pt, clearly legible; Y-axis label "Response (%)" and X-axis label "Concentration (M)" at 10pt are readable and balanced; tick labels at 8pt visible; INK/INK_SOFT tokens applied correctly for dark text on light background
+      Data: Erlotinib series in #009E73 (brand green) with CI ribbon and error bars; Gefitinib in #C475FD (Imprint lavender); CI ribbons in matching colors at alpha=0.18 are visible but subtle; EC50 dashed segments and annotation labels in compound colors; asymptote dotted lines present; legend at position (0.82, 0.22) with Compound title, framed with elevated background
+      Legibility verdict: PASS — all text readable against warm off-white background; EC50 annotation text at size=3.0mm is smallest element but legible at full canvas resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, and tick labels rendered in light INK (#F0EFE8 / #B8B7B0) tokens — fully readable against dark background; no dark-on-dark failures; legend background uses ELEVATED_BG (#242420) with INK_SOFT frame
+      Data: Erlotinib green (#009E73) and Gefitinib lavender (#C475FD) are identical to light render — only chrome flips; CI ribbons are noticeably more faint in dark mode (especially Gefitinib lavender at alpha=0.18 over near-black), visible but subdued; EC50 reference lines and asymptote lines remain visible; all data points and error bars clearly distinguishable
+      Legibility verdict: PASS — all main text (title, axes, ticks, legend) readable in light chrome; CI bands slightly less prominent in dark but this is a minor visual issue, not a legibility failure
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,43 +51,58 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis titles 20pt bold,
-          axis text 16pt, legend 16-18pt'
+        comment: All theme font sizes explicitly set (title=12pt, axis_title=10pt,
+          axis_text=8pt, legend=8pt); annotation geom_text at size=3.0mm (~8.5pt)
+          is borderline small at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: EC50 annotations slightly crowded but readable
+        comment: EC50 annotations staggered to avoid overlap; legend positioned inside
+          plot without covering data; no collision detected
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points, lines, error bars, ribbons all well-sized
+        comment: Markers size=2.5 with white fill and colored stroke clearly visible
+          for ~16 data points; lines size=1.0 appropriate; CI ribbons visible (faint
+          in dark but present)
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange colorblind-safe with strong luminance contrast
+        comment: Green and lavender have sufficient luminance contrast; Imprint palette
+          is CVD-safe; redundant encoding via CI bands and error bars
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout with balanced margins
+        comment: Canvas gate passed (3200x1800 landscape); plot fills ~75% of canvas;
+          balanced margins; legend inside plot at lower-right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: 'X: ''Concentration (M)'', Y: ''Response (%)'' — both descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Erlotinib=#009E73 (brand green, first series), Gefitinib=#C475FD
+          (Imprint position 2); background #FAF8F1 light / #1A1A17 dark; all chrome
+          tokens theme-adaptive'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -90,19 +110,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, open circles, bold typography hierarchy, subtle ribbons
+        comment: 'Strong design: EC50 annotations with Unicode subscripts, CI ribbons,
+          white-filled markers with stroke, asymptote reference lines — clearly above
+          defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: X-grid removed, subtle y-grid only, axis lines styled, custom background
+        comment: X-axis grid removed, minor grid removed, Y-only subtle grid at alpha=0.15,
+          L-shaped axis frame via theme_minimal + axis_line, clean warm background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: EC50 annotations create focal points, reference lines guide viewer
+        comment: EC50 dashed reference lines guide viewer to key pharmacological parameters;
+          compound comparison visible via distinct colors and curve positions; above
+          default 'display only'
     spec_compliance:
       score: 15
       max: 15
@@ -112,28 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sigmoidal dose-response with 4PL model
+        comment: Correct sigmoidal dose-response curve with log x-axis and 4PL model
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log x, 4PL fit, EC50 lines, error bars,
-          asymptotes, 2 compounds, legend, CI bands'
+        comment: 'All features present: log x-axis, 4PL fit, EC50 intersecting lines,
+          SEM error bars, CI ribbon (95% delta method), asymptote dotted lines, 2
+          compounds, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=concentration (log), Y=response (%). Full range shown
+        comment: X=concentration (log), Y=response (%), color=compound — correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: 'Title: ''curve-dose-response · python · plotnine · anyplot.ai''
+          — correct format; legend shows Erlotinib and Gefitinib'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -141,19 +168,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two compounds with distinct EC50, Hill slopes, and asymptotes
+        comment: Compounds differ in EC50, Hill slope, top/bottom asymptotes; CI bands
+          show fitting uncertainty; error bars show measurement variability
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real pharmacological context, generic compound names
+        comment: Erlotinib and Gefitinib are real FDA-approved EGFR inhibitors; concentration
+          range 1e-9 to 1e-4 M realistic for pharmacological assays; % inhibition
+          response is standard
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic concentration range (1e-9 to 1e-4 M) and response values
+        comment: EC50 values in ~100 nM range are plausible for EGFR inhibitors; response
+          0-100% inhibition; relative potency order Erlotinib > Gefitinib is approximately
+          correct
     code_quality:
       score: 10
       max: 10
@@ -163,48 +195,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; function required by curve_fit API
+        comment: 'logistic_4pl function necessary for scipy curve_fit; otherwise KISS:
+          data generation → fitting → smooth curves → EC50 data → annotations → plot
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports verified as used; os, numpy, pandas, plotnine components,
+          scipy.optimize.curve_fit
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean code, appropriate complexity
+        comment: Delta method CI calculation is complex but domain-appropriate; no
+          fake UI elements; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
+        comment: Saves as plot-{THEME}.png with dpi=400, width=8, height=4.5, units=in;
+          verbose=False valid in plotnine
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Fluent ggplot grammar with layers, scales, guides, theme
+        comment: 'Expertly uses grammar of graphics: layered geoms (ribbon+line+errorbar+point+segment+text+hline),
+          scale functions, theme modifiers, guides() with override_aes'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_x_log10 with lambda, guide_legend override_aes, element theming
-          system
+        comment: scale_x_log10 with custom lambda label function using Unicode superscripts;
+          geom_ribbon for CI; guide_legend(override_aes) — some plotnine/ggplot2-specific
+          features used but most syntax is shared with ggplot2/letsplot
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -212,6 +251,7 @@ impl_tags:
   techniques:
   - annotations
   - layer-composition
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -219,4 +259,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
