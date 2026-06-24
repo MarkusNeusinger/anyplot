@@ -1,0 +1,262 @@
+library: chartjs
+language: javascript
+specification_id: curve-dose-response
+created: '2026-06-24T15:47:28Z'
+updated: '2026-06-24T16:06:10Z'
+generated_by: claude-sonnet
+workflow_run: 28109968501
+issue: 4556
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-dose-response/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Complete spec compliance: all 7 required features implemented (log x-axis, 4PL
+    sigmoid, EC50 reference lines, SEM error bars, asymptote lines, 2+ compounds,
+    CI bands for both)'
+  - Excellent use of Chart.js canvas plugin API for CI bands, error bars, and annotation
+    overlays using scale-aware coordinate transforms (getPixelForValue)
+  - Seeded LCG ensures full reproducibility without external dependencies
+  - Correct Imprint palette application with theme-adaptive chrome throughout both
+    renders
+  - EC50 labels and intersection lines clearly communicate the pharmacological message
+  - 'Biologically realistic data: EC50 values (50 nM and 700 nM), Hill slopes (1.5
+    and 1.1), and response ranges all in appropriate pharmacological ranges'
+  weaknesses:
+  - 'Standard Chart.js rectangular chart border is not removed — consider setting
+    border: { display: false } on both scales for a cleaner L-shaped or borderless
+    aesthetic aligned with the style guide''s spine-removal recommendation'
+  - Seven helper functions (fourPL, logSpace, rand, randN, ciHW, fmtEC50, toSup) reduce
+    code linearity; simple formatters could be inlined for a more KISS flow
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approx #FAF8F1 — correct theme surface
+      Chrome: Title "curve-dose-response · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. X-axis label "Concentration (M)" and Y-axis label "Response (%)" in dark ink. Tick labels in inkSoft color, all readable. Legend at top shows both compounds in dark ink.
+      Data: Compound A in #009E73 (brand green), Compound B in #C475FD (lavender/palette[1]). Smooth sigmoid curves with CI bands (13% alpha fill), data points at radius 7 with pageBg border, SEM error bars, dashed asymptote lines (alpha 0.4), EC50 intersection dashed lines (alpha 0.8) with labeled annotations.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black approx #1A1A17 — correct theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light/cream color (t.ink resolves to ~#F0EFE8 in dark mode). All text clearly readable. No dark-on-dark failures.
+      Data: Colors identical to light render — Compound A still #009E73, Compound B still #C475FD. CI bands, error bars, asymptote lines, EC50 annotation lines all visible and correctly rendered. Brand green #009E73 clearly legible on dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis labels 16px, tick
+          labels 14px, legend 16px. All text well-proportioned and readable in both
+          themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: EC50 labels at different horizontal positions, legend cleanly separated,
+          no overlapping text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Data points at radius 7 appropriate for sparse 10-point datasets;
+          curves at borderWidth 3.5 prominent; CI bands, error bars, reference lines
+          all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-distinguishable; no
+          red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins
+          and good chart area utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Concentration (M)' and Y-axis 'Response (%)' both descriptive
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD (palette[1]). Light bg ~#FAF8F1,
+          dark bg ~#1A1A17. Chrome uses t.ink/t.inkSoft/t.grid tokens correctly. Data
+          colors identical across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: custom CI bands via canvas 2D API, EC50
+          annotation lines with labels, asymptote markers, pageBg-bordered scatter
+          points, custom legend with line-style markers.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid lines subtle using t.grid token. Standard Chart.js rectangular
+          chart border present — no explicit border/spine removal. Generous whitespace
+          but Chrome defaults not fully refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: EC50 dashed intersection lines communicate pharmacological message.
+          Labeled EC50 values directly compare potency. Visual hierarchy guides viewer
+          through color contrast and annotation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Sigmoidal dose-response curve with 4PL model and logarithmic x-axis
+          — exactly correct.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: log x-axis, 4PL fitted curves, EC50 dashed
+          reference lines, SEM error bars, asymptote lines, 2 compounds, legend, 95%
+          CI bands for both curves.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on log x-axis, response (%) on y-axis; both compounds
+          correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-dose-response · javascript · chartjs · anyplot.ai' matches
+          exact format. Legend shows 'Compound A' and 'Compound B' via custom generateLabels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both compounds with distinct EC50 values (50 nM vs 700 nM), different
+          Hill slopes (1.5 vs 1.1), different top asymptotes (96% vs 85%), SEM error
+          bars, CI bands — all key dose-response features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Pharmacological drug discovery context with realistic EC50 values
+          in nM range typical for drug-target interactions and standard % response
+          endpoint.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentrations 1e-9 to 1e-4 M realistic for in vitro assays; EC50
+          50 nM and 700 nM typical for potent/moderate inhibitors; Hill slopes 1.5
+          and 1.1 physiologically plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Seven helper functions plus two plugin objects add complexity beyond
+          linear flow, though all necessary for spec requirements.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) ensures deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart.js used as global. All variables utilized.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactive elements; plugin pattern is idiomatic Chart.js;
+          code well-organized with clear section comments.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Interactive library; harness handles plot-{theme}.png and plot-{theme}.html.
+          Current Chart.js 4.4.7 API used.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Chart.js: scatter type with showLine, logarithmic
+          scale, plugin API (beforeDatasetsDraw/afterDatasetsDraw), generateLabels,
+          getPixelForValue for scale-aware coordinate positioning.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Canvas plugin system with getPixelForValue() is a distinctive Chart.js
+          feature enabling direct ctx drawing with scale-aware coordinate transforms.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
