@@ -83,18 +83,18 @@ chart.setOption({
       return "";
     }
   },
-  grid: { left: 90, right: 224, top: 102, bottom: 140 },
+  grid: { left: 90, right: 224, top: 102, bottom: 115 },
   xAxis: {
     type: "value",
     name: "1/T  (×10⁻³ K⁻¹)",
     nameLocation: "middle",
-    nameGap: 90,
+    nameGap: 65,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     min: x_lo,
     max: x_hi,
     axisLabel: {
       color: t.inkSoft,
-      fontSize: 13,
+      fontSize: 14,
       formatter: function(val) {
         return (val * 1000).toFixed(2) + "\n(" + Math.round(1 / val) + " K)";
       }
@@ -131,8 +131,8 @@ chart.setOption({
       name: "Arrhenius fit",
       type: "line",
       data: line_data,
-      lineStyle: { color: t.palette[2], width: 3 },
-      itemStyle: { color: t.palette[2] },
+      lineStyle: { color: t.palette[1], width: 3 },
+      itemStyle: { color: t.palette[1] },
       symbol: "none",
       smooth: false,
       z: 5
