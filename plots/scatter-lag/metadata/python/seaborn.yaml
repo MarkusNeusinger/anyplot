@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: scatter-lag
 created: '2026-04-12T18:10:33Z'
-updated: '2026-06-24T22:51:26Z'
+updated: '2026-06-24T23:00:21Z'
 generated_by: claude-sonnet
 workflow_run: 28134329399
 issue: 5251
@@ -15,98 +15,98 @@ preview_html_dark: null
 quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: diagonal reference line (y=x), temporal coloring via imprint_seq,
-    and r annotation all present and correctly styled'
-  - Theme-adaptive chrome is correctly implemented throughout — INK, INK_SOFT, PAGE_BG,
-    ELEVATED_BG all resolve correctly for both light and dark renders; no dark-on-dark
-    failures
-  - Imprint sequential colormap (green→blue) correctly applied for single-polarity
-    temporal index data; both renders show identical data colors
-  - Density-adaptive marker sizing (s=8, alpha=0.35) appropriate for 1499 high-density
-    scatter points
-  - r annotation is styled cleanly with rounded-corner bbox, theme-adaptive ELEVATED_BG
-    fill, and INK_SOFT border — reinforces the quantitative story immediately
-  - Code is clean, flat, reproducible (np.random.seed(42)), and linearly structured
-    with no unnecessary abstractions
+  - 'Excellent spec compliance: diagonal reference line, temporal coloring via imprint_seq,
+    and correlation annotation all present'
+  - 'Thoughtful layer composition: KDE density contours behind scatter, both communicating
+    autocorrelation structure'
+  - 'Full theme-adaptive chrome implemented correctly — both light and dark renders
+    are readable and use correct backgrounds (#FAF8F1 / #1A1A17)'
+  - Clean code structure with explicit font sizes, subplots_adjust for margins, and
+    no bbox_inches='tight'
+  - Correlation coefficient annotation with styled rounded-corner box adds direct
+    statistical insight
+  - imprint_seq colormap correctly built from ['#009E73', '#4467A3'] for single-polarity
+    continuous (time index)
   weaknesses:
-  - Colorbar tick labels set at fontsize=7 and label at fontsize=8 are slightly below
-    the style-guide minimum of 8pt for tick labels at 3200×1800 — increase colorbar
-    ticks to 8pt and label to 9pt
-  - Core scatter uses matplotlib's ax.scatter rather than sns.scatterplot — seaborn's
-    idiomatic plotting functions are bypassed; the sns layer is used only for styling
-    (set_theme, despine); consider using sns.scatterplot with hue= and a norm for
-    more seaborn-idiomatic continuous coloring, or supplementing with sns.kdeplot
-    for density contours
-  - No visual emphasis differentiating the dense central cluster from the sparse outer
-    scatter — a subtle sns.kdeplot contour overlay or hexbin underlay would add depth
-    and improve DE-01/DE-02
+  - Scatter marker size s=8 is well below the recommended s=20-50 for 300+ data points
+    — individual points are visible but quite small at the outlier regions
+  - 'DQ-02: Synthetic AR(1) with abstract ''y(t)''/''y(t+1)'' labels is the minimal
+    viable data context; a real-world scenario (e.g. daily temperature readings or
+    hourly sensor data) would strengthen the real-world plausibility'
+  - 'LM-02: Library-distinctive features mostly limited to kdeplot+scatter layering;
+    could add seaborn-specific features like hue_norm with palette=imprint_seq more
+    explicitly or sns.axes_style context manager'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-lag · python · seaborn · anyplot.ai" in dark ink (#1A1A17) at 12pt — fills ~80% of plot width, expected for mandated title. X-axis label "y(t)" and Y-axis label "y(t+1)" in dark ink at 10pt — clear and balanced. Tick labels at 8pt in INK_SOFT (#4A4A44) — readable. Colorbar label "Time Index" at 8pt in INK_SOFT — legible. Colorbar ticks at 7pt — slightly small but readable.
-      Data: 1499 scatter points colored via imprint_seq (green #009E73 → blue #4467A3) by time index; alpha=0.35 and s=8 appropriate for density. Dashed diagonal reference line in INK_SOFT. r=0.90 annotation box top-left with rounded corners and ELEVATED_BG fill (#FFFDF6). Colorbar on right shows temporal gradient.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct theme surface, no pure white.
+      Chrome: Title "scatter-lag · python · seaborn · anyplot.ai" at fontsize=12 in dark ink, fully readable. X-axis label "y(t)" and Y-axis label "y(t+1)" at fontsize=10 in dark ink, clear. Tick labels at fontsize=8 in dark secondary ink (INK_SOFT), readable. Colorbar label "Time Index" and tick labels visible. Correlation annotation "r = 0.90" in rounded-corner box with elevated background, clearly readable.
+      Data: Scatter of ~1499 points colored with imprint_seq (green #009E73 to blue #4467A3) by temporal index; small markers (s=8) visible but on the small side. Four KDE contour lines in neutral ink at 45% opacity show elliptical density structure. Dashed diagonal reference line (y=x) in neutral ink at 65% opacity. The elliptical scatter cloud confirms strong positive lag-1 autocorrelation.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8) — clearly readable. Axis labels y(t) and y(t+1) in #F0EFE8 — readable. Tick labels in INK_SOFT (#B8B7B0) — readable on dark background. Colorbar label and ticks in #B8B7B0 — readable. r=0.90 annotation box with ELEVATED_BG (#242420) fill — visible and readable. Grid lines subtle.
-      Data: Scatter colors identical to light render (imprint_seq green→blue) — palette correctly theme-independent. Dashed diagonal line visible against dark background. Strong linear cluster along the diagonal clearly shows AR(1) autocorrelation structure.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements adapt correctly to the dark surface
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink, readable. Tick labels in secondary light ink (INK_SOFT #B8B7B0), readable. Colorbar labels and annotation "r = 0.90" in elevated-bg box — all readable. No dark-on-dark failures observed.
+      Data: Scatter point colors are identical to light render (imprint_seq green→blue) — data colors unchanged across themes as required. KDE contours visible in lighter ink. Diagonal reference line visible. The imprint_seq #009E73 brand green is clearly visible at the lower end of the colorbar.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick text readable in both themes; colorbar ticks
-          at 7pt slightly below 8pt style-guide minimum — minor deduction
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8). Both
+          themes fully readable. Title ~65% of width — expected for long mandated
+          format. Axis labels balanced.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap; r annotation placed upper-left where scatter is sparse
+        comment: No overlapping text. Annotation box in upper-left is clear of the
+          data scatter.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: s=8, alpha=0.35 density-appropriate for 1499 points; diagonal reference
-          line clearly visible
+        comment: s=8 is below the 20-50 recommendation for 300+ datapoints. Points
+          are visible but small; individual outliers are quite small. KDE contours
+          compensate somewhat. Alpha=0.35 is in range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single continuous colormap; color not sole encoding (position encodes
-          structure)
+        comment: 'imprint_seq (#009E73 to #4467A3) has distinct luminance across range.
+          CVD-safe. No red-green as sole distinguishing signal.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800; subplots_adjust gives good margins; colorbar
-          fits cleanly at right=0.91
+        comment: figsize=(8,4.5) dpi=400 → 3200x1800 exactly. subplots_adjust explicitly
+          set. Canvas gate passed. Colorbar takes right margin cleanly. Balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; y(t) / y(t+1) notation matches spec and standard
-          lag plot convention
+        comment: y(t) and y(t+1) are standard lag-plot notation — descriptive for
+          the context. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (green→blue) for single-polarity temporal data; light
-          bg #FAF8F1, dark bg #1A1A17; data colors identical across themes'
+        comment: 'imprint_seq correctly built from [''#009E73'',''#4467A3''] for single-polarity
+          continuous temporal data. Background #FAF8F1 light / #1A1A17 dark. Theme-adaptive
+          chrome throughout. Data colors identical in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,24 +114,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: intentional use of imprint_seq temporal coloring,
-          styled annotation box, theme-adaptive chrome. Not exceptional — no visual
-          emphasis between high-density and sparse regions'
+        comment: Thoughtful multi-layer composition (KDE + scatter + diagonal + colorbar
+          + annotation), custom imprint_seq cmap. Above defaults but not publication-ready
+          tier.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: sns.despine removes top/right spines; subtle grid
-          (alpha=0.15); reasonable margins via subplots_adjust. No deeper refinements'
+        comment: Spines removed via sns.despine, subtle grid (alpha=0.15), annotation
+          box with rounded corners, colorbar with styled outline, explicit subplots_adjust
+          margins. Clearly above minimal defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default: temporal coloring reveals AR(1) stationarity over
-          time; r annotation provides immediate quantitative anchor; diagonal line
-          sets the interpretive baseline. Good visual hierarchy'
+        comment: Correlation annotation directly quantifies the pattern (r=0.90),
+          temporal coloring reveals time evolution of the AR(1) process, KDE contours
+          guide the eye toward the elliptical density. Clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -141,29 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lag-1 scatter plot of y(t) vs y(t+1)
+        comment: 'Correct lag plot: y(t) on x-axis vs y(t+1) on y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal y=x reference line present; temporal color encoding via
-          time index; r correlation annotation; configurable lag (lag=1 variable)
+        comment: lag=1 variable, diagonal reference line, temporal coloring via imprint_seq,
+          correlation coefficient annotation — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=y(t), y=y(t+1) correctly mapped; all 1499 lag pairs shown
+        comment: X=y(t), Y=y(t+1). Full data range visible. AR(1) with phi=0.9, n=1500
+          within spec range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''scatter-lag · python · seaborn · anyplot.ai'' — correct.
-          No categorical legend needed; colorbar covers temporal axis'
+        comment: Title 'scatter-lag · python · seaborn · anyplot.ai' correct. No discrete
+          legend needed (continuous colorbar used for temporal hue).
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -171,22 +173,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key lag-plot features: scatter structure, temporal evolution,
-          quantitative correlation metric, reference diagonal'
+        comment: 'Shows all key lag-plot features: dense central cluster, elliptical
+          distribution, outliers, strong linear pattern along diagonal indicating
+          high positive autocorrelation.'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: AR(1) process with phi=0.9, n=1500 — realistic, domain-neutral, within
-          spec size range of 100–5000
+        comment: Synthetic AR(1) explicitly mentioned in spec as an acceptable data
+          type. Mathematically correct and plausible, but abstract — no real-world
+          domain framing like 'hourly temperature readings'.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values ~-6 to 8 appropriate for AR(1) stationary process; 1499 lag
-          pairs appropriate for showing linear autocorrelation structure
+        comment: phi=0.9 with unit noise produces values in [-8,8] range as expected.
+          r=0.90 matches the AR parameter. 1500 observations is within the 100-5000
+          spec range.
     code_quality:
       score: 10
       max: 10
@@ -196,34 +201,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level script; no functions or classes; linear flow
+        comment: 'Clean linear flow: imports → tokens → data → plot layers → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
-          LinearSegmentedColormap'
+        comment: All imports (os, matplotlib, numpy, pandas, seaborn, LinearSegmentedColormap)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI; no unnecessary abstractions
+        comment: Clean, Pythonic. z-order used properly for layering. Appropriate
+          complexity for a multi-layer visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; no bbox_inches; current API
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current seaborn/matplotlib
+          API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,29 +239,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme with rc overrides is the right way to set theme-adaptive
-          chrome; sns.despine used correctly. Core scatter uses ax.scatter (matplotlib)
-          rather than sns.scatterplot — pragmatic but not purely idiomatic
+        comment: sns.scatterplot with hue+palette+hue_norm for continuous coloring,
+          sns.kdeplot for density contours, sns.set_theme for global theme, sns.despine
+          — all idiomatic seaborn patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Seaborn theme system is the only library-distinctive element; actual
-          visualization (scatter, colorbar, annotation, reference line) is all matplotlib.
-          No sns.scatterplot, sns.kdeplot, or other seaborn-specific plot functions
-          used
+        passed: true
+        comment: sns.kdeplot density contours layered with sns.scatterplot is a seaborn-specific
+          idiom not easily replicated in matplotlib alone. hue_norm parameter for
+          continuous colormap normalization is seaborn-distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - kde
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
