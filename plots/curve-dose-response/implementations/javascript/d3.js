@@ -98,7 +98,7 @@ const clip = g.append("g").attr("clip-path", "url(#plot-clip)");
   clip.append("line")
     .attr("x1", 0).attr("x2", iw)
     .attr("y1", y(aVal)).attr("y2", y(aVal))
-    .attr("stroke", t.palette[2]).attr("stroke-dasharray", "6,9")
+    .attr("stroke", t.palette[1]).attr("stroke-dasharray", "6,9")
     .attr("stroke-width", 1.5).attr("opacity", 0.3);
 });
 
@@ -108,7 +108,7 @@ const areaGen = d3.area()
   .curve(d3.curveCatmullRom.alpha(0.5));
 
 clip.append("path").datum(curveA)
-  .attr("fill", t.palette[0]).attr("opacity", 0.13)
+  .attr("fill", t.palette[0]).attr("opacity", 0.20)
   .attr("d", areaGen);
 
 // Fitted curves
@@ -120,7 +120,7 @@ clip.append("path").datum(curveA)
   .attr("stroke-width", 3).attr("d", lineGen);
 
 clip.append("path").datum(curveB)
-  .attr("fill", "none").attr("stroke", t.palette[2])
+  .attr("fill", "none").attr("stroke", t.palette[1])
   .attr("stroke-width", 3).attr("d", lineGen);
 
 // EC50 reference lines — Compound A
@@ -141,12 +141,12 @@ const ec50BResp = (paramB.bottom + paramB.top) / 2;
 g.append("line")
   .attr("x1", x(paramB.ec50)).attr("x2", x(paramB.ec50))
   .attr("y1", y(paramB.bottom - 2)).attr("y2", y(ec50BResp))
-  .attr("stroke", t.palette[2]).attr("stroke-dasharray", "8,5")
+  .attr("stroke", t.palette[1]).attr("stroke-dasharray", "8,5")
   .attr("stroke-width", 1.5).attr("opacity", 0.6);
 g.append("line")
   .attr("x1", 0).attr("x2", x(paramB.ec50))
   .attr("y1", y(ec50BResp)).attr("y2", y(ec50BResp))
-  .attr("stroke", t.palette[2]).attr("stroke-dasharray", "8,5")
+  .attr("stroke", t.palette[1]).attr("stroke-dasharray", "8,5")
   .attr("stroke-width", 1.5).attr("opacity", 0.6);
 
 // EC50 annotations
@@ -157,38 +157,35 @@ g.append("text")
 
 g.append("text")
   .attr("x", x(paramB.ec50) + 7).attr("y", y(ec50BResp) - 9)
-  .attr("fill", t.palette[2]).style("font-size", "14px").style("font-weight", "600")
+  .attr("fill", t.palette[1]).style("font-size", "14px").style("font-weight", "600")
   .text("IC₅₀ = 500 nM");
 
-// Error bars — helper
-function drawErrorBars(group, data, color) {
-  const capW = 5;
-  data.forEach(d => {
-    const cx = x(d.conc);
-    group.append("line")
-      .attr("x1", cx).attr("x2", cx)
-      .attr("y1", y(d.response - d.sem)).attr("y2", y(d.response + d.sem))
-      .attr("stroke", color).attr("stroke-width", 1.5);
-    [d.response + d.sem, d.response - d.sem].forEach(capY => {
-      group.append("line")
-        .attr("x1", cx - capW).attr("x2", cx + capW)
-        .attr("y1", y(capY)).attr("y2", y(capY))
-        .attr("stroke", color).attr("stroke-width", 1.5);
-    });
-  });
-}
-
-drawErrorBars(g, dataA, t.palette[0]);
-drawErrorBars(g, dataB, t.palette[2]);
+// Error bars — D3 data-join, inside clip group to respect plot boundary
+const capW = 5;
+[{ data: dataA, color: t.palette[0] }, { data: dataB, color: t.palette[1] }].forEach(({ data, color }) => {
+  const ebG = clip.append("g");
+  ebG.selectAll("line.stem").data(data).join("line")
+    .attr("x1", d => x(d.conc)).attr("x2", d => x(d.conc))
+    .attr("y1", d => y(d.response - d.sem)).attr("y2", d => y(d.response + d.sem))
+    .attr("stroke", color).attr("stroke-width", 1.5);
+  ebG.selectAll("line.cap-top").data(data).join("line")
+    .attr("x1", d => x(d.conc) - capW).attr("x2", d => x(d.conc) + capW)
+    .attr("y1", d => y(d.response + d.sem)).attr("y2", d => y(d.response + d.sem))
+    .attr("stroke", color).attr("stroke-width", 1.5);
+  ebG.selectAll("line.cap-bot").data(data).join("line")
+    .attr("x1", d => x(d.conc) - capW).attr("x2", d => x(d.conc) + capW)
+    .attr("y1", d => y(d.response - d.sem)).attr("y2", d => y(d.response - d.sem))
+    .attr("stroke", color).attr("stroke-width", 1.5);
+});
 
 // Data points
-g.selectAll(".dot-a").data(dataA).join("circle")
+clip.selectAll(".dot-a").data(dataA).join("circle")
   .attr("cx", d => x(d.conc)).attr("cy", d => y(d.response)).attr("r", 6)
   .attr("fill", t.palette[0]).attr("stroke", t.pageBg).attr("stroke-width", 2);
 
-g.selectAll(".dot-b").data(dataB).join("circle")
+clip.selectAll(".dot-b").data(dataB).join("circle")
   .attr("cx", d => x(d.conc)).attr("cy", d => y(d.response)).attr("r", 6)
-  .attr("fill", t.palette[2]).attr("stroke", t.pageBg).attr("stroke-width", 2);
+  .attr("fill", t.palette[1]).attr("stroke", t.pageBg).attr("stroke-width", 2);
 
 // Axes
 function xTickFormat(d) {
@@ -222,12 +219,18 @@ svg.append("text")
   .attr("fill", t.ink).style("font-size", "16px")
   .text("% Inhibition");
 
-// Legend
+// Legend — D3 data join
+const legendEntries = [
+  { name: "Compound A  (95% CI)", color: t.palette[0], hasCI: true },
+  { name: "Compound B", color: t.palette[1], hasCI: false },
+];
+
 const lx = iw - 290;
 const ly = 18;
 const lPad = 12;
 const lW = 300;
 const lH = 90;
+const rowH = 38;
 
 g.append("rect")
   .attr("x", lx - lPad).attr("y", ly - lPad)
@@ -235,34 +238,27 @@ g.append("rect")
   .attr("fill", t.elevatedBg).attr("rx", 5).attr("opacity", 0.92)
   .attr("stroke", t.grid).attr("stroke-width", 1);
 
-// Legend row — Compound A
-g.append("rect")
-  .attr("x", lx).attr("y", ly + 6).attr("width", 22).attr("height", 8)
-  .attr("fill", t.palette[0]).attr("opacity", 0.18);
-g.append("line")
-  .attr("x1", lx).attr("x2", lx + 28)
-  .attr("y1", ly + 10).attr("y2", ly + 10)
-  .attr("stroke", t.palette[0]).attr("stroke-width", 2.5);
-g.append("circle")
-  .attr("cx", lx + 14).attr("cy", ly + 10).attr("r", 5)
-  .attr("fill", t.palette[0]).attr("stroke", t.pageBg).attr("stroke-width", 1.5);
-g.append("text")
-  .attr("x", lx + 36).attr("y", ly + 15)
-  .attr("fill", t.ink).style("font-size", "14px")
-  .text("Compound A  (95% CI)");
+const legendRows = g.selectAll(".legend-row").data(legendEntries).join("g")
+  .attr("class", "legend-row")
+  .attr("transform", (d, i) => `translate(${lx},${ly + i * rowH + 10})`);
 
-// Legend row — Compound B
-g.append("line")
-  .attr("x1", lx).attr("x2", lx + 28)
-  .attr("y1", ly + 52).attr("y2", ly + 52)
-  .attr("stroke", t.palette[2]).attr("stroke-width", 2.5);
-g.append("circle")
-  .attr("cx", lx + 14).attr("cy", ly + 52).attr("r", 5)
-  .attr("fill", t.palette[2]).attr("stroke", t.pageBg).attr("stroke-width", 1.5);
-g.append("text")
-  .attr("x", lx + 36).attr("y", ly + 57)
+legendRows.filter(d => d.hasCI).append("rect")
+  .attr("x", 0).attr("y", -4).attr("width", 22).attr("height", 8)
+  .attr("fill", d => d.color).attr("opacity", 0.20);
+
+legendRows.append("line")
+  .attr("x1", 0).attr("x2", 28)
+  .attr("y1", 0).attr("y2", 0)
+  .attr("stroke", d => d.color).attr("stroke-width", 2.5);
+
+legendRows.append("circle")
+  .attr("cx", 14).attr("cy", 0).attr("r", 5)
+  .attr("fill", d => d.color).attr("stroke", t.pageBg).attr("stroke-width", 1.5);
+
+legendRows.append("text")
+  .attr("x", 36).attr("y", 5)
   .attr("fill", t.ink).style("font-size", "14px")
-  .text("Compound B");
+  .text(d => d.name);
 
 // Title
 svg.append("text")
