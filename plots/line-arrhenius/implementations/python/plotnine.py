@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-arrhenius: Arrhenius Plot for Reaction Kinetics
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-24
@@ -98,7 +98,7 @@ plot = (
         aes(x="inv_T", ymin="ci_lower", ymax="ci_upper"), data=df_fit, fill=BRAND, alpha=0.12, inherit_aes=False
     )
     + geom_line(aes(x="inv_T", y="ln_k_fit"), data=df_fit, color=BLUE, size=1.5, inherit_aes=False)
-    + geom_point(color=BRAND, size=3.0, stroke=0.8, shape="o")
+    + geom_point(color=BRAND, size=4.5, stroke=0.8, shape="o")
     + scale_x_continuous(breaks=tick_positions, labels=tick_labels, expand=(0.05, 0))
     + scale_y_continuous(expand=(0.08, 0))
     + annotate(
@@ -121,7 +121,7 @@ plot = (
         x=anno_x,
         y=anno_y_top - 1.65,
         label=anno_slope,
-        size=3.5,
+        size=4.0,
         color=INK_MUTED,
         fontstyle="italic",
         ha="center",
@@ -139,7 +139,8 @@ plot = (
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.15),
-        plot_margin=0.05,
+        axis_ticks_minor=element_blank(),
+        plot_margin=0.08,
     )
 )
 
