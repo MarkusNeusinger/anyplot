@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:06:52Z'
-updated: '2026-06-24T09:47:30Z'
+updated: '2026-06-24T09:56:10Z'
 generated_by: claude-sonnet
 workflow_run: 28089124341
 issue: 4408
@@ -12,41 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrh
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance — all required Arrhenius features implemented including
-    dual-format x-axis ticks for temperature reference
-  - Full Imprint palette compliance with correct theme tokens in both renders; dark
-    mode looks clean with no dark-on-dark issues
-  - 95% confidence band via geom_ribbon is a meaningful value-add that shows fit quality
-  - 'Perfect data quality: neutral, realistic physical chemistry scenario with physically
-    correct scales'
-  - Clean KISS code structure with deterministic data
+  - 'Perfectly spec-compliant: all required features present (linear regression, R²
+    annotation, Ea/kJ label, dual-format tick labels showing 1/T and temperature in
+    K)'
+  - Idiomatic plotnine grammar-of-graphics with elegant layer composition (geom_ribbon
+    + geom_line + geom_point)
+  - Theme-adaptive chrome correctly implemented for both light and dark renders with
+    proper token hierarchy
+  - Confidence band (geom_ribbon, 95% CI) adds genuine statistical insight without
+    obscuring data
+  - Clean annotation box styling via annotate label type with ELEVATED_BG fill and
+    label_size=0
   weaknesses:
-  - Scatter markers (size=3.0) are somewhat small for 7 data points; increase to size=4.5
-    to make the Arrhenius data more prominent against the regression line
-  - Slope annotation (size=3.5, italic) is near the mobile readability floor — increase
-    to size=4.0 for consistency with other annotations
-  - plot_margin=0.05 is tight; increase to 0.08 for more generous whitespace around
-    the chart
-  - Minor tick marks still visible; add axis_ticks_minor=element_blank() to theme
-    for cleaner look
+  - 'Confidence band alpha=0.12 becomes barely perceptible in the dark render against
+    #1A1A17 — increase to alpha=0.18-0.20 for dark theme parity'
+  - Auto-generated minor tick marks appear on the X-axis between labeled major ticks
+    despite axis_ticks_minor=element_blank() — explicitly set minor_breaks=[] in scale_x_continuous
+    to suppress them cleanly
+  - 'LM-02 gap: implementation uses standard plotnine patterns only; consider using
+    plotnine stat_smooth or explicit ggplot2-style aesthetics (color/fill aes mapping)
+    to showcase more of plotnines grammar-of-graphics distinctive power'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "line-arrhenius · python · plotnine · anyplot.ai" in bold dark text (~70% width); x-axis label "1/T (K-1)" and y-axis label "ln(k)" in dark text; dual-format tick labels in dark secondary text; all chrome is readable
-      Data: Seven green (#009E73) scatter points; blue (#4467A3) regression line; light green confidence band (alpha=0.12); three text annotations (R²=0.9950, Ea=40.1 kJ/mol, slope label) in upper center area
-      Legibility verdict: PASS — all text is clearly readable against the light background
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white.
+      Chrome: Title "line-arrhenius · python · plotnine · anyplot.ai" bold at 12pt, dark ink, spanning ~70% width — well-proportioned. Y-axis label "ln(k)" rotated, clearly readable. X-axis label "1/T (K⁻¹)" clear with correct Unicode superscript. Two-line tick labels (scientific notation + temperature in K) at 8pt — readable. Y-axis tick labels (-7.5, -5.0, -2.5, 0.0) clear. Grid: y-only horizontal lines, subtle opacity ~15%. Top/right spines removed via theme_minimal.
+      Data: 7 data points in Imprint brand green #009E73, size=4.5, clearly visible. Regression line in Imprint blue #4467A3, size=1.5. Confidence band in brand green at alpha=0.12 — visible but subtle. Annotations: "R² = 0.9950" in styled label box (ELEVATED_BG fill, bold INK text), "Eₐ = 40.1 kJ/mol" bold below, slope annotation in italic INK_MUTED.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title and all axis labels/ticks rendered in light text (off-white); annotation box uses elevated dark background #242420; grid lines subtle against dark surface
-      Data: Colors are identical to light render — #009E73 green scatter points, #4467A3 blue regression line, same confidence band; data colors unchanged between themes as required
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title light-colored (#F0EFE8), clearly visible against dark background. Axis labels and tick labels in light INK_SOFT (#B8B7B0), all readable. Grid lines subtle. Annotation box uses ELEVATED_BG (#242420) fill with F0EFE8 text — readable. No dark-on-dark failures observed. All chrome elements correctly flipped to dark theme tokens.
+      Data: Data points remain Imprint brand green #009E73 — identical to light render ✓. Regression line Imprint blue #4467A3 identical ✓. Confidence band alpha=0.12 becomes very subtle on #1A1A17 background (barely perceptible vs. light render) — minor reduction in visual parity.
+      Legibility verdict: PASS — all primary text readable. Confidence band visibility is reduced in dark mode but the primary data elements (points, line, annotations) are all clear.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,72 +57,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; both renders readable. Minor: slope
-          annotation size=3.5 approaches mobile readability limit.'
+        comment: 'All font sizes explicitly set (title=12, axis=10, tick=8, annotate=4.5/4.0).
+          Readable in both themes. Minor: auto minor ticks on X-axis between labeled
+          positions are slightly untidy.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; annotations, tick labels, and data are well-separated.
+        comment: No text overlaps with other text or data elements. Annotation box
+          well-positioned in upper-center empty area.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers visible but size=3.0 is small for 7 sparse data points; density
-          heuristic suggests larger.
+        comment: 7 data points with size=4.5 are prominent. Regression line size=1.5
+          is clearly visible. Confidence band visible in light; subtle but present
+          in dark.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint colors with adequate contrast on both backgrounds.
+        comment: Brand green (#009E73) and Imprint blue (#4467A3) are well-contrasted
+          CVD-safe pair. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good layout; plot_margin=0.05 slightly
-          tight.
+        comment: Landscape 3200x1800, plot fills ~70% canvas. Balanced margins. No
+          content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: 1/T (K-1) and ln(k).'
+        comment: 'X: ''1/T (K⁻¹)'' with units; Y: ''ln(k)'' descriptive. Title correct
+          format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; regression #4467A3 (Imprint blue); correct
-          backgrounds; all chrome theme-adaptive.'
+        comment: 'First series #009E73 ✓. Second series #4467A3 (Imprint pos 3, semantically
+          appropriate for regression line). Backgrounds #FAF8F1/#1A1A17 correct. Theme
+          chrome fully adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: confidence band, color-differentiated fit line, annotated
-          statistics, dual-format ticks. Not yet publication-ready.'
+        comment: 'Strong design: Imprint dual-color scheme (green points + blue line),
+          styled annotation box with ELEVATED_BG fill and label_size=0, warm background,
+          theme-adaptive chrome. Clearly above library defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines; y-axis-only subtle grid; but minor
-          tick marks still visible.
+        comment: 'Good: theme_minimal removes top/right spines, y-only grid at subtle
+          opacity, minor ticks removed, generous whitespace via plot_margin=0.08.
+          Some minor cleanup possible (auto minor X-ticks).'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotations guide viewer to R², Ea, slope. Confidence band shows
-          fit quality. Good visual hierarchy.
+        comment: 'Good: Three-layer annotations (R², Ea, slope) create a clear focal
+          point. Contrasting colors guide the eye from data points to regression line.
+          Dual-format tick labels connect abstract 1/T scale to physical temperatures.
+          Story of excellent fit + quantified activation energy is immediately clear.'
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Arrhenius scatter with linear regression line.
+        comment: 'Correct Arrhenius plot: scatter + regression line on 1/T vs ln(k)
+          axes.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Regression line, R² annotation, Ea/R slope annotation, dual-format
-          temperature labels, markers on top of line.
+        comment: 'All spec features present: regression line with R², Ea/R annotation,
+          dual-format tick labels showing temperature in K.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T (K-1), Y=ln(k); all 7 data points visible.
+        comment: X=1/T correctly, Y=ln(k) correctly. All 7 data points visible across
+          full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact required title format; no legend needed for single-series.
+        comment: Title 'line-arrhenius · python · plotnine · anyplot.ai' correct.
+          No legend needed (annotations serve identification role for single main
+          series).
     data_quality:
       score: 15
       max: 15
@@ -158,22 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Arrhenius features shown: scatter, regression, CI band, statistics
-          annotations, dual-scale axis.'
+        comment: 'Full Arrhenius plot features: scatter data with realistic noise,
+          linear regression, confidence band, statistical annotation, dual-axis labeling.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition at 300-600 K; neutral, real-world physical
-          chemistry scenario.
+        comment: First-order decomposition reaction. Temperature range 300-600 K is
+          realistic for laboratory kinetics. Neutral science domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ea=40.1 kJ/mol physically plausible; R²=0.9950 realistic; correct
-          1/T scale range.
+        comment: Ea=40.1 kJ/mol is physically realistic. Rate constants spanning ~7
+          log units over 300-600 K is plausible. R²=0.9950 appropriate for a clean
+          synthetic dataset.
     code_quality:
       score: 10
       max: 10
@@ -183,59 +201,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> data -> regression -> CI -> plot -> save.
+        comment: 'Linear flow: imports → tokens → data → regression → plot → save.
           No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded arrays; no random seed needed.
+        comment: Deterministic hardcoded data arrays. No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; scipy.stats.t used for CI t-distribution.
+        comment: All imports used. scipy.stats.t correctly imported for CI calculation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; appropriate complexity for custom CI band
-          calculation.
+        comment: Clean, appropriately complex. Confidence interval calculation is
+          well-structured. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save().
+        comment: Saves as plot-{THEME}.png with correct dimensions. Current plotnine
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Grammar of graphics layer composition, scale_x_continuous with custom
-          breaks/labels, annotate label geom, theme customization. CI built manually
-          rather than via stat layer.
+        comment: 'Expertly uses ggplot grammar-of-graphics: + operator for layer composition,
+          scale_*_continuous for axis customization, annotate() for positioned text,
+          theme() for chrome.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon for confidence band, annotate('label') with box fill,
-          layer composition. Missing stat layers or faceting.
-  verdict: REJECTED
+        comment: Uses geom_ribbon for confidence band (ggplot2-distinctive), annotate('label')
+          with label_padding/label_size (ggplot2-specific geom_label type), dict-style
+          margins in element_text. Good but doesn't reach full plotnine distinctiveness
+          (e.g. stat transforms, aes-mapped fills).
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
