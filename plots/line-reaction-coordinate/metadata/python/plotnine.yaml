@@ -1,36 +1,59 @@
 library: plotnine
+language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:48:24Z'
-updated: '2026-03-21T21:00:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388404555
+updated: '2026-06-24T08:02:30Z'
+generated_by: claude-sonnet
+workflow_run: 28083078895
 issue: 4409
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent colorblind-safe palette using Okabe-Ito colors for annotation arrows
-  - Clean visual hierarchy with color-coded Ea and DH annotations
-  - Smooth cubic spline interpolation creates a professional energy curve
-  - All spec requirements fully met including dashed reference lines and double-headed
-    arrows
-  - 'Perfect code quality: deterministic, clean, linear structure'
+  - 'Perfect spec compliance — all required features present: smooth energy curve,
+    direct state labels (Reactants/Transition State/Products), double-headed Ea and
+    ΔH arrows, and dashed reference lines at reactant and product energy levels'
+  - 'Excellent theme adaptation — both renders are theme-correct: warm off-white (#FAF8F1)
+    background in light, warm near-black (#1A1A17) in dark; data colors (green curve,
+    red/blue arrows) are identical across themes; chrome (text, grid, axis lines)
+    correctly adapts'
+  - Thoughtful semantic color choices — matte red (#AE3030) for activation energy
+    barrier (cost/warning semantic) and blue (#4467A3) for enthalpy change, creating
+    an immediate visual hierarchy that guides the chemistry narrative
+  - Realistic and factually correct chemistry data — Ea=70 kJ/mol and ΔH=-30 kJ/mol
+    are physically plausible for a single-step exothermic reaction; 300-point CubicSpline
+    curve produces smooth, publication-appropriate rendering
+  - Clean, deterministic code with perfect KISS structure — no functions/classes,
+    fully deterministic data (hardcoded control points + CubicSpline), all imports
+    used, correct plot-{THEME}.png output
   weaknesses:
-  - Right-side labels (DH, Products) slightly tight near canvas edge
-  - Annotation font size (14) slightly smaller than axis text (16)
-  image_description: The plot displays a reaction coordinate energy diagram with a
-    smooth blue curve (#306998) tracing from reactants at 50 kJ/mol (left) through
-    a transition state peak at 120 kJ/mol (center) down to products at 20 kJ/mol (right).
-    Three blue dots mark these key points. A vermillion/orange double-headed arrow
-    on the left indicates the activation energy (Ea = 70 kJ/mol), while a blue double-headed
-    arrow on the right shows the enthalpy change (DH = -30 kJ/mol). Horizontal dashed
-    gray lines extend at the reactant and product energy levels. The title "line-reaction-coordinate
-    · plotnine · pyplots.ai" appears centered at the top in bold dark blue. Axes are
-    labeled "Reaction Coordinate" (x) and "Potential Energy (kJ/mol)" (y). The background
-    is clean white with subtle dotted y-axis gridlines only.
+  - 'LM-02 low: implementation uses plotnine''s grammar of graphics for layer composition
+    but the annotation approach (annotate(''segment'') + annotate(''text'')) is functionally
+    identical to ggplot2 — no plotnine-distinctive features are showcased'
+  - State label annotations (size=3.5 in mm ≈ 10pt) are on the small side for key
+    labeling at mobile widths — 'Reactants 50 kJ/mol', 'Transition State 120 kJ/mol',
+    and 'Products 20 kJ/mol' could be nudged to size=4.0 for slightly better readability
+    when scaled to 400px
+  - Key-point markers (size=3) are modest given only 3 sparse data anchor points —
+    increasing to size=4 or 5 would make the reactant, transition state, and product
+    dots more prominent without crowding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct; no pure white.
+      Chrome: Title "line-reaction-coordinate · python · plotnine · anyplot.ai" in bold dark ink (~80% canvas width, expected for this title length). Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" in INK_SOFT dark gray, balanced sizing. Tick labels (0, 50, 100 on Y; 0, 0.5, 1.0 on X) in INK_SOFT dark gray. Subtle horizontal Y-axis grid lines (alpha ≈ 0.15). All text is clearly readable against the warm off-white background.
+      Data: Main energy curve in brand green (#009E73, first series — correct). Three key-point markers in the same green at reactants (x=0, y=50), transition state (x=0.5, y=120), and products (x=1.0, y=20). Double-headed Ea arrow in matte red (#AE3030) spanning from y≈53 to y≈117, labeled "Eₐ = 70 kJ/mol" in the same red. Double-headed ΔH arrow in blue (#4467A3) spanning from y≈22 to y≈48, labeled "ΔH = −30 kJ/mol" in the same blue. Dashed gray reference lines at y=50 (reactant level) and y=20 (product level). State labels "Reactants 50 kJ/mol", "Transition State 120 kJ/mol", "Products 20 kJ/mol" in dark INK.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, no edge clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct; no pure black.
+      Chrome: Title in light F0EFE8-ish color, clearly visible on dark background. Axis labels and tick labels in INK_SOFT light gray (#B8B7B0 in dark mode). Grid lines faintly visible (alpha 0.15 on light-over-dark). No dark-on-dark issues detected.
+      Data: Main energy curve remains brand green (#009E73) — identical to light render. Key-point markers same green. Ea arrow remains matte red (#AE3030), readable on dark background. ΔH arrow remains blue (#4467A3), readable on dark background. State label annotations ("Reactants", "Transition State", "Products") in light INK color (#F0EFE8 in dark mode) — all visible against the dark surface. Dashed reference lines in muted gray, visible.
+      Legibility verdict: PASS — all text readable in light color on dark surface, no dark-on-dark failures, data colors identical to light render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -41,65 +64,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24, axis titles 20, tick text
-          16, annotations 14). Annotations slightly smaller than ideal but fully readable.
+        comment: 'All font sizes explicitly set (title=12pt, axes=10pt, ticks=8pt,
+          annotations=3.5mm). Proportions good. Minor: state label annotations at
+          size=3.5 are on the small side for mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all labels well-separated.
+        comment: No overlapping text elements. State labels, Ea/ΔH annotations, and
+          curve are well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Main curve thick (size=2.5), key points clearly marked (size=5),
-          arrows visible with closed arrowheads.
+        comment: Main energy curve (size=1.5) is clearly visible. Key-point markers
+          (size=3) are modest for only 3 anchor points — could be larger.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Red and blue arrows are perceptually
+          distinct from green curve and from each other.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Uses Okabe-Ito colorblind-safe palette: vermillion for Ea, blue
-          for DH.'
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good proportions. Right-side labels slightly tight near canvas edge.
+        comment: 3200x1800 landscape, good canvas utilization, balanced margins, nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Potential Energy (kJ/mol) with units, Reaction Coordinate descriptive.
+        comment: 'Y-axis: ''Potential Energy (kJ/mol)'' with units. X-axis: ''Reaction
+          Coordinate'' (arbitrary units standard for this plot type). Title in correct
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Main curve: #009E73 (brand green, correct first series). Ea uses
+          #AE3030 (semantic matte red — appropriate for energy barrier). ΔH uses #4467A3
+          (Imprint blue). Backgrounds: #FAF8F1 light / #1A1A17 dark. Both renders
+          theme-correct.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with intentional color hierarchy and bold typography.
-          Clearly above defaults.
+        comment: Semantic color hierarchy (red=barrier cost, blue=thermodynamics,
+          green=pathway) is thoughtful and above library defaults. Clean minimal scientific
+          aesthetic. Not yet FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal with x-grid removed, y-grid dotted, white background,
-          clean spines.
+        comment: 'Good refinement: subtle horizontal-only grid (alpha=0.15), tick
+          marks removed, generous whitespace. Top/right spines removed via theme_minimal.
+          Clearly above defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy guides viewer through chemistry concept with
-          color-coded annotations.
+        comment: 'Semantic color hierarchy guides the viewer: green=pathway, red=barrier
+          cost, blue=thermodynamic gain. Direct state labeling with energy values
+          creates immediate narrative for the exothermic reaction story.'
     spec_compliance:
       score: 15
       max: 15
@@ -109,51 +149,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: smooth reaction coordinate energy diagram with clear maximum
-          at transition state.'
+        comment: Correct reaction coordinate energy diagram — line chart with smooth
+          curve showing reactants, transition state, and products.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec features present including labeled key points, Ea/DH arrows,
-          dashed reference lines.
+        comment: 'All required features: state labels on plot, Ea double-headed arrow,
+          ΔH double-headed arrow, smooth cubic spline curve with peak at transition
+          state, dashed reference lines at reactant and product energy levels, clean
+          minimal style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction coordinate, Y = potential energy. All data visible.
+        comment: X=reaction coordinate (0-1), Y=potential energy (kJ/mol). Reactants
+          at 50, TS at 120, products at 20. All data visible with correct axis range
+          (0-145).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No legend needed for single-series.
+        comment: 'Title: ''line-reaction-coordinate · python · plotnine · anyplot.ai''
+          — exact format. No legend (single-series, correct omission).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows key features: smooth energy profile, transition state peak,
-          Ea barrier, exothermic DH.'
+        comment: 'Shows all aspects: smooth energy curve, activation barrier, enthalpy
+          change, all three states labeled with energy values, Ea and ΔH quantified.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real chemistry scenario with plausible energy values. Neutral scientific
-          topic.
+        comment: Single-step exothermic reaction in chemistry — neutral, realistic,
+          educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Energy values (50, 120, 20 kJ/mol) realistic for chemical reactions.
+        comment: Ea=70 kJ/mol and ΔH=-30 kJ/mol are physically plausible values. Energy
+          range 0-145 kJ/mol is appropriate for this type of reaction.
     code_quality:
       score: 10
       max: 10
@@ -163,33 +209,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes.'
+        comment: 'Clean linear flow: imports → data → plot → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data, no random generation.
+        comment: Fully deterministic — hardcoded control points, CubicSpline is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: All imports are used. scipy.interpolate.CubicSpline, all plotnine
+          elements imported are referenced in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. CubicSpline appropriate for smooth interpolation.
+        comment: Clean and appropriately complex. Double-arrow implementation via
+          two opposite-pointing segments is the correct plotnine approach. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300, current API.
+        comment: Saves as plot-{THEME}.png. Uses current plotnine API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -197,15 +246,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of grammar of graphics: aes, geom layers, annotate, theme
-          system.'
+        comment: 'Good use of ggplot grammar of graphics: aes(), geom_line(), geom_point(),
+          annotate(), scale_*(), theme(). inherit_aes=False for secondary geoms is
+          idiomatic.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses plotnine theme system extensively with element_text margins,
-          element_blank, element_line.
+        passed: false
+        comment: Uses plotnine's arrow() object and annotate('segment') for the energy
+          arrows — somewhat distinctive. However the overall approach mirrors ggplot2's
+          API with no features unique to the Python plotnine ecosystem.
   verdict: APPROVED
 impl_tags:
   dependencies:
