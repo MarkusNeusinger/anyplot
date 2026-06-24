@@ -1,40 +1,57 @@
 library: seaborn
+language: python
 specification_id: line-reaction-coordinate
 created: '2026-03-21T20:48:16Z'
-updated: '2026-03-21T21:09:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23388404793
+updated: '2026-06-24T07:58:49Z'
+generated_by: claude-sonnet
+workflow_run: 28082677303
 issue: 4409
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - 'Excellent visual design with professional polish: custom colors, subtle fill,
-    clean typography'
-  - All spec requirements fully met with proper Ea and ΔH annotations
-  - Strong data storytelling through visual hierarchy and clear labeling
-  - Deterministic, clean code with appropriate use of PCHIP interpolation
-  - Perfect text legibility with all font sizes explicitly set
+  - Smooth PCHIP spline curve creates a physically correct energy landscape with a
+    single well-defined maximum at the transition state
+  - Semantic use of Imprint palette — brand green for the data curve, matte red (#AE3030)
+    for activation energy barrier, blue (#4467A3) for enthalpy change — perfectly
+    matches chemical semantics
+  - 'All required spec features are present: species labels with energy values, double-headed
+    Ea and ΔH arrows, horizontal dashed reference lines, and area fill under the curve'
+  - Complete theme adaptation — all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    applied correctly to both light and dark renders
+  - 'Clean scientific style: x-ticks removed (appropriate for reaction coordinate),
+    y-only grid, L-shaped spines via sns.despine, annotation boxes with rounded edges
+    and no visible border'
+  - Mathematical notation ($E_a$, $\Delta H$) renders correctly in both themes
+  - Fully deterministic — PchipInterpolator over fixed control points; no random seed
+    needed
   weaknesses:
-  - Heavy reliance on matplotlib for annotations/arrows rather than seaborn-specific
-    features (inherent limitation for this plot type)
-  - Could potentially show additional reaction pathway features (catalyzed comparison)
-  image_description: The plot displays a reaction coordinate energy diagram with a
-    smooth blue curve (#306998) tracing the energy pathway from reactants (50 kJ/mol)
-    on the left, rising through a transition state peak (120 kJ/mol) at the center,
-    and descending to products (20 kJ/mol) on the right. A subtle light blue fill
-    sits beneath the curve. Bold text labels identify "Reactants (50 kJ/mol)", "Transition
-    State (120 kJ/mol)", and "Products (20 kJ/mol)" at their respective positions.
-    A red double-headed arrow on the left shows "Eₐ = 70 kJ/mol" with a white background
-    box, and a blue double-headed arrow on the right shows "ΔH = -30 kJ/mol" also
-    with a white background box. Short horizontal dashed gray lines appear at the
-    reactant and product energy levels. The y-axis reads "Potential Energy (kJ/mol)"
-    ranging from 0 to 140, the x-axis reads "Reaction Coordinate" with no tick marks.
-    Top and right spines are removed. A subtle y-axis grid is visible. The title reads
-    "line-reaction-coordinate · seaborn · pyplots.ai".
+  - 'DQ-01: Single-step reaction only; a multi-step case with an intermediate state
+    would demonstrate more of the plot type''s range (intermediate valley, two Ea
+    barriers)'
+  - 'LM-02: Most of the complex annotation work (ax.annotate arrows, ax.text boxes,
+    ax.hlines, fill_between) is raw matplotlib — seaborn''s distinctive contribution
+    is limited to relplot + scatterplot + set_theme/despine'
+  - 'DE-02: The layout is clean but the whitespace distribution is slightly unbalanced
+    — the bottom margin below the x-axis label is narrower than the top and right
+    margins'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
+      Chrome: Title "line-reaction-coordinate · python · seaborn · anyplot.ai" at fontsize=12 in INK (#1A1A17) — fully readable, occupies ~65% of width. Y-axis label "Potential Energy (kJ/mol)" and X-axis label "Reaction Coordinate" in INK at fontsize=10, clearly readable. Y-axis tick labels at fontsize=8 in INK_SOFT (#4A4A44) — readable. X-axis ticks removed (intentional for reaction coordinate). L-shaped spine in INK_SOFT. Subtle y-only grid lines.
+      Data: Brand green #009E73 smooth PCHIP curve from ~0.12 to ~0.88 reaction coordinate, rising from 50 kJ/mol through a peak at 120 kJ/mol then descending to 20 kJ/mol. Green scatter markers at reactant, TS, and product positions (s=80). Subtle green area fill (alpha=0.08) under the curve. Red (#AE3030) double-headed Ea arrow from 50→120 kJ/mol at x=0.13 with labeled text box. Blue (#4467A3) double-headed ΔH arrow from 50→20 kJ/mol at x=0.82 with labeled text box. Horizontal dashed reference lines at y=50 and y=20. Direct species labels in INK at Reactants, Transition State, and Products.
+      Legibility verdict: PASS — all text, arrows, and annotations clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title in INK (#F0EFE8, light cream) — fully readable. Axis labels in INK, tick labels in INK_SOFT (#B8B7B0) — both readable against dark background. Grid lines subtle. L-shaped spine in INK_SOFT. No dark-on-dark text failures observed.
+      Data: Brand green #009E73 curve identical to light render — same hue and saturation, correctly theme-invariant. Scatter markers same green. Ea arrow red (#AE3030) and ΔH arrow blue (#4467A3) — both visible on dark bg. Label boxes use ELEVATED_BG (#242420) with red/blue text — readable. Species labels in INK (#F0EFE8) — light text on dark background, readable. Subtle green area fill.
+      Legibility verdict: PASS — all elements readable in dark theme. Data colors identical to light render; only chrome (background, text, grid) flipped as required.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -45,40 +62,57 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 15-16pt'
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, annotations=8-9).
+          Readable at full resolution and mobile scale in both themes. Title proportion
+          ~65% of width — expected for mandated format.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels well-separated with no collisions
+        comment: No text overlaps — species labels, arrow label boxes, and tick labels
+          are all well-spaced. Ea and ΔH label boxes positioned at non-competing y-levels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Curve clearly visible at linewidth 3.5 with subtle fill
+        comment: Smooth curve at linewidth=2.5 is prominent; scatter markers at s=80
+          clearly mark key states; area fill at alpha=0.08 adds depth without obscuring.
+          Well-adapted to single-curve context.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue curve, red/blue arrows provide colorblind-safe contrast
+        comment: Brand green, matte red, and blue are three perceptually distinct
+          hues. No red-green sole-distinguishing issue. Imprint palette is CVD-optimised.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 well-utilized with balanced margins
+        comment: Canvas gate passed. 16:9 landscape fills well. Plot area uses ~70%
+          of canvas. No clipping. tight_layout provides balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis with units, x-axis descriptive
+        comment: Y-axis 'Potential Energy (kJ/mol)' has units. X-axis 'Reaction Coordinate'
+          is descriptive (no units expected for arbitrary-unit axis). Title in correct
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (brand green). Secondary annotation colors
+          use Imprint positions 5 (#AE3030) and 3 (#4467A3) with semantic justification.
+          Backgrounds #FAF8F1 / #1A1A17. All chrome tokens theme-adaptive. Data colors
+          identical across both renders.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -86,21 +120,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color scheme, white bbox annotations, subtle fill, professional
-          polish
+        comment: 'Strong design: semantic Imprint color assignment (green=data, red=barrier,
+          blue=enthalpy) creates intentional hierarchy. Clean scientific aesthetic
+          appropriate for chemistry education. Mathematical notation ($E_a$, $\Delta
+          H$) polished. Elevated annotation boxes with no visible edge.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Despine, subtle grid alpha=0.15, x-ticks removed, generous whitespace
+        comment: Spines reduced to L-shape via despine, x-ticks removed (correct for
+          reaction coordinate), y-only grid at alpha=0.15 is subtle. Slightly uneven
+          whitespace distribution (bottom margin narrower than top/right). Above library
+          defaults but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: curve primary, colored arrows for Ea/ΔH, labeled
-          values for immediate understanding'
+        comment: 'Color hierarchy guides the viewer: red emphasizes the energy cost
+          (barrier), blue shows the net change (exothermic ΔH). The area fill reinforces
+          the energy profile shape. Direct labels with energy values make the diagram
+          self-contained. Clear focal point at the transition state peak.'
     spec_compliance:
       score: 15
       max: 15
@@ -110,26 +151,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reaction coordinate energy diagram
+        comment: Correct reaction coordinate energy diagram with smooth curve and
+          single transition state maximum.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: labels, Ea arrow, ΔH arrow, smooth curve, dashed lines,
-          clean style'
+        comment: 'All spec features present: species labels on plot, Ea double-headed
+          arrow, ΔH double-headed arrow, horizontal dashed reference lines, smooth
+          PCHIP curve, clean minimal scientific style.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=reaction coordinate, Y=potential energy correctly mapped
+        comment: 'X: Reaction Coordinate (0-1), Y: Potential Energy (kJ/mol). All
+          data visible. Axes range set appropriately (-0.02 to 1.02, 0 to 145).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, no legend needed for single series
+        comment: Title is 'line-reaction-coordinate · python · seaborn · anyplot.ai'.
+          No legend needed (single series with direct annotation labels).
     data_quality:
       score: 14
       max: 15
@@ -139,19 +184,26 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows single-step exothermic reaction with Ea and ΔH as specified
+        comment: Demonstrates all core features of a single-step reaction coordinate
+          diagram (smooth curve, TS maximum, Ea barrier, ΔH change, reference levels).
+          Single-step case only — a multi-step example with intermediate state would
+          show more of the plot type's full range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Chemistry context with plausible energy values, neutral science topic
+        comment: 'Real chemistry scenario: exothermic single-step reaction with Ea=70
+          kJ/mol and ΔH=-30 kJ/mol. Values are chemically plausible. Neutral educational
+          context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic kJ/mol values for chemical reaction energy profile
+        comment: Energy values (20-120 kJ/mol range) are realistic for typical organic
+          reactions. Exothermic profile (ΔH=-30) is consistent with reactants higher
+          than products.
     code_quality:
       score: 10
       max: 10
@@ -161,49 +213,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions/classes
+        comment: 'Clean linear structure: imports → theme tokens → data → figure →
+          annotations → style → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with fixed control points
+        comment: Fully deterministic — uses fixed control points with PchipInterpolator.
+          No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn, scipy.interpolate.PchipInterpolator
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and appropriate, PCHIP interpolation is elegant
+        comment: Pythonic, appropriate complexity. PchipInterpolator is an elegant
+          choice for chemically-correct smooth curves. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, current API
+        comment: Saves plot-{THEME}.png with correct facecolor. Current seaborn API
+          used.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot, set_style, set_context, despine but bulk of viz
-          is matplotlib
+        comment: Uses seaborn figure-level relplot with correct height/aspect for
+          canvas sizing, layers sns.scatterplot on the same axes, applies sns.set_theme
+          with full RC customization, and uses sns.despine correctly. Idiomatic patterns
+          throughout.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: Seaborn theming and despine used but plot type inherently requires
-          matplotlib-level control
+        passed: false
+        comment: relplot + scatterplot layering and sns.set_theme for full theme control
+          are seaborn-specific, but the complex annotation work (ax.annotate arrows,
+          ax.text boxes, ax.hlines, fill_between) is raw matplotlib. Seaborn's distinctive
+          contribution is limited relative to the overall complexity.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -213,9 +274,7 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - interpolation
   styling:
-  - grid-styling
   - alpha-blending
