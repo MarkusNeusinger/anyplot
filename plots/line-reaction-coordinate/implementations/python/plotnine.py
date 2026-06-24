@@ -1,3 +1,8 @@
+""" anyplot.ai
+line-reaction-coordinate: Reaction Coordinate Energy Diagram
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-24
+"""
 # ruff: noqa: E402
 """anyplot.ai — line-reaction-coordinate: Reaction Coordinate Energy Diagram
 Library: plotnine | Python
