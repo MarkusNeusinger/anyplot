@@ -75,7 +75,7 @@ const annotationPlugin = {
         // Equivalence point label
         ctx.setLineDash([]);
         ctx.fillStyle = t.ink;
-        ctx.font = 'bold 14px system-ui, sans-serif';
+        ctx.font = 'bold 16px system-ui, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillText(
@@ -108,7 +108,7 @@ new Chart(canvas, {
             {
                 label: 'dpH/dV (pH/mL)',
                 data: volumes.map((v, i) => ({ x: v, y: derivatives[i] })),
-                borderColor: t.palette[2],
+                borderColor: t.palette[1],
                 backgroundColor: 'transparent',
                 borderWidth: 2,
                 borderDash: [6, 3],
@@ -150,6 +150,7 @@ new Chart(canvas, {
                 },
                 ticks: { color: t.inkSoft, font: { size: 14 } },
                 grid: { color: t.grid },
+                border: { display: false },
                 min: 0,
                 max: 50,
             },
@@ -162,6 +163,7 @@ new Chart(canvas, {
                 },
                 ticks: { color: t.inkSoft, font: { size: 14 } },
                 grid: { color: t.grid },
+                border: { display: false },
                 min: 0,
                 max: 14,
             },
@@ -171,11 +173,12 @@ new Chart(canvas, {
                 title: {
                     display: true,
                     text: 'dpH/dV (pH/mL)',
-                    color: t.palette[2],
+                    color: t.palette[1],
                     font: { size: 14 },
                 },
-                ticks: { color: t.palette[2], font: { size: 14 } },
+                ticks: { color: t.inkSoft, font: { size: 14 } },
                 grid: { drawOnChartArea: false },
+                border: { display: false },
                 min: 0,
                 max: 10,
             },
