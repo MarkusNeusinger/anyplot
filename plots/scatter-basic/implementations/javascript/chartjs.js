@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: chartjs 4.4.7 | JavaScript 22.22.3
-// Quality: 90/100 | Created: 2026-06-02
+// Quality: pending | Updated: 2026-06-25
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -100,8 +100,8 @@ new Chart(canvas, {
     scales: {
       x: {
         ticks: { color: t.inkSoft, font: { size: 18 }, maxTicksLimit: 8 },
-        grid: { display: false },  // Y-axis-only grid reduces visual noise
-        border: { color: t.inkSoft },
+        grid: { color: t.grid },
+        border: { display: false },
         title: {
           display: true,
           text: "Annual Rainfall (mm)",
@@ -113,7 +113,7 @@ new Chart(canvas, {
       y: {
         ticks: { color: t.inkSoft, font: { size: 18 } },
         grid: { color: t.grid },
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: "Wheat Yield (t/ha)",
