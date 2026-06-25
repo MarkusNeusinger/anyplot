@@ -1,0 +1,276 @@
+library: chartjs
+language: javascript
+specification_id: contour-basic
+created: '2026-06-25T03:56:01Z'
+updated: '2026-06-25T04:19:56Z'
+generated_by: claude-sonnet
+workflow_run: 28145349165
+issue: 855
+language_version: 22.23.0
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/chartjs/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Creative use of Chart.js scatter type to simulate filled contour bands — 28 z-level
+    datasets create a convincing diverging fill across the grid
+  - Marching squares algorithm implemented within the Chart.js afterDraw plugin hook,
+    producing proper interpolated isolines for every other level
+  - 'Custom colorbar drawn directly on canvas: gradient from t.div[0]→t.div[1]→t.div[2],
+    tick marks at min/0/max, zero-line marker, and ''z'' label'
+  - Correct use of imprint_div diverging colormap via t.div tokens — data colors identical
+    across both themes, only chrome adapts
+  - 'Fully deterministic: mathematical peaks function on a 70×70 grid with no randomness;
+    both themes rendered correctly with proper ANYPLOT_TOKENS chrome'
+  - 'Correct Chart.js boilerplate: responsive, maintainAspectRatio: false, animation:
+    false, single canvas appended to #container, square orientation directive'
+  weaknesses:
+  - Axis labels are generic 'X' and 'Y' — for a mathematical peaks function, 'x coordinate'
+    and 'y coordinate' would be more descriptive and score VQ-06
+  - Scatter-based contour fill creates slight pixelation at band boundaries — visible
+    as rounded dot edges where adjacent z-bands meet; higher grid density (N=90+)
+    or smaller pointRadius (6–8) could reduce the artifact
+  - 'A spurious cross/× marker artifact appears at the highest-z peak region in both
+    renders (white × in light, dark × in dark) — likely the Chart.js default scatter
+    pointStyle showing through where the top z-band has very few data points; adding
+    pointStyle: ''circle'' to each dataset config would suppress this'
+  - 'DE-01 and DE-02 have room to grow: spines are still fully visible (all four axis
+    borders), grid is present but could be y-only for a cleaner look, and the colorbar
+    ''z'' label font size (15px) is slightly small compared to the axis title font
+    size (16px)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white
+      Chrome: Title "contour-basic · javascript · chartjs · anyplot.ai" in dark ink at top — fully visible and readable. Y-axis label 'Y' in dark ink (left). X-axis label 'X' in dark ink (bottom). Tick labels -3 to 3 on both axes in secondary ink color — all readable. Colorbar on right with 'z' label, gradient from red at bottom (-6.5) through near-neutral midpoint to blue at top (+8.1), tick marks at min/0/max.
+      Data: Diverging contour fill from reddish-coral (negative regions) through near-cream (zero crossings) to medium blue (positive peak). Three main regions: a large positive blue peak (upper-center), a negative red region (left), and a strong negative red peak (lower-center). Subtle isolines drawn at every-other level via marching squares. Small white '×' artifact visible at the center of the highest-z blue peak region.
+      Legibility verdict: PASS — all chrome text readable, warm background correct.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, no pure black
+      Chrome: Title in light/cream text — fully readable against dark background. Y-axis label 'Y' and X-axis label 'X' in light ink — visible. Tick labels in secondary light color — readable. Colorbar gradient same structure (red→dark-midpoint→blue), with light-colored tick labels.
+      Data: Same contour structure as light render — the imprint_div data colors (red, near-neutral-dark, blue) are identical to the light render. The diverging midpoint adapts to the dark surface color (t.div[1]), making the zero-crossing bands blend into the near-black background, creating a dramatic contrast between the colored peaks/valleys. Isolines visible as subtle lighter strokes. Same '×' artifact visible as a dark cross at the peak location.
+      Legibility verdict: PASS — no dark-on-dark text failures; all labels readable; brand adaptation correct. Data colors identical between themes as required.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis titles 16px, ticks
+          14px, colorbar labels 15px. Well-proportioned in both themes, no overflow.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps — title, axis labels, tick labels, and colorbar
+          labels all have adequate separation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Contour fill bands visible, isolines visible. Minor pixelation at
+          band edges from scatter-based fill approach. Slight '×' artifact at the
+          highest peak.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint diverging colormap is CVD-safe. Red-to-blue diverging scale
+          with adequate luminance separation.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for symmetric contour plot. Chart fills ~80%
+          of canvas. Right padding (100px) accommodates colorbar. Minor crowding near
+          colorbar right edge with labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 0
+        max: 2
+        passed: false
+        comment: Axis labels are generic 'X' and 'Y' — scores 0 per criteria ('x',
+          'y', or empty = 0). Should be 'x coordinate' / 'y coordinate' or more descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correctly uses imprint_div diverging colormap via t.div tokens for
+          continuous data. Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Chrome
+          adapts via t.ink / t.inkSoft / t.grid tokens.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-default sophistication: custom colorbar with gradient and
+          labeled ticks, marching squares isolines, and diverging Imprint palette
+          correctly applied. Not quite at ''strong design'' (6) due to scatter fill
+          pixelation artifact.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid via t.grid token, no legend (appropriate for continuous
+          data), subtle isolines at 0.8px / 35% opacity. However, all four axis spines
+          remain visible and y-only grid would be cleaner.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: diverging colormap immediately highlights
+          the positive blue peak and two red valleys. Distinct focal points guide
+          the viewer. Zero contour marked on colorbar provides a meaningful reference.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Implements contour plot with marching squares isolines + scatter-based
+          filled bands. Correct chart type and both contour variants (lines + fill).
+          Minor deduction for scatter approximation rather than true filled polygons.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled regions via 28-band scatter datasets, contour isolines via
+          marching squares, colorbar with gradient + tick marks, sufficient grid resolution
+          (70x70).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y coordinates correctly mapped to axes (-3 to 3), z-values mapped
+          to diverging colormap, colorbar shows full z range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'contour-basic · javascript · chartjs · anyplot.ai' matches
+          required format. Legend correctly hidden for continuous single-z data.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both positive peaks and negative valleys with diverging colormap,
+          filled regions and isolines, colorbar with value scale. Classic peaks function
+          demonstrates all contour plot features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Mathematical 'peaks' function is a well-known scientific visualization
+          benchmark — plausible and neutral scientific context. Could be even more
+          realistic with a real-world scenario (e.g., temperature distribution).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X/Y range -3 to 3, z range -6.5 to +8.1 — appropriate for the mathematical
+          peaks function. Sensible values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Structure is appropriate for Chart.js: helper functions (hexToRgb,
+          lerpColor, divColor) are minimal and necessary for custom colormap; plugin
+          object is the idiomatic Chart.js pattern for custom canvas drawing.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: mathematical peaks function, no randomness,
+          no seed needed.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports — Chart is a global, all other helpers are inline.
+          Clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized code with clear section headers. Marching squares
+          SEG table is elegantly compact. No over-engineering, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Chart.js harness handles file output. Correct responsive/animation/maintainAspectRatio
+          config. No deprecated APIs.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Creative idiomatic use: scatter type for contour band fill, plugin
+          system for custom canvas drawing. Correct ANYPLOT_TOKENS integration. Proper
+          Chart.js config pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages Chart.js's afterDraw plugin hook for custom canvas-API
+          rendering (colorbar gradient, isoline strokes, clip regions). This is a
+          distinctive Chart.js extensibility pattern.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
