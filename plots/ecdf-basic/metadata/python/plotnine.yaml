@@ -2,95 +2,110 @@ library: plotnine
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:05Z'
-updated: '2026-04-24T13:29:23Z'
-generated_by: claude-opus
-workflow_run: 24890800769
+updated: '2026-06-25T09:55:21Z'
+generated_by: claude-sonnet
+workflow_run: 28160686084
 issue: 976
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality in both light and dark themes with all chrome tokens correctly
-    theme-adaptive
-  - Reference lines at y=0.5 and x=median create meaningful data storytelling beyond
-    mere display
-  - All font sizes explicitly set to style guide specifications (24/20/16pt hierarchy)
-  - Clean ECDF computation and idiomatic grammar of graphics composition
-  - Neutral, realistic test score context with appropriate 200-sample dataset
+  - stat_ecdf correctly computes the ECDF via plotnine's native stat layer — no manual
+    ECDF calculation needed, maximally idiomatic ggplot2 grammar
+  - 'Quartile storytelling is effective: IQR shaded band + dotted Q1/median/Q3 crosshairs
+    + value annotations guide the viewer to extract percentile information directly
+    from the step function'
+  - Theme adaptation is flawless — all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
+    correctly flip between warm-off-white light and near-black dark themes with no
+    dark-on-dark failures
+  - 'Perfect spec compliance: stat_ecdf step function, Y-axis 0–1, descriptive axis
+    labels with units, correct title format, realistic neutral test-score dataset
+    of 200 observations'
   weaknesses:
-  - DE-01 could reach strong design level with annotation labels on the reference
-    lines identifying the median value explicitly
-  - LM-02 limited because ECDF is computed manually rather than via a grammar-of-graphics
-    stat layer; no plotnine-specific stat is used
+  - IQR shaded band uses alpha=0.06 — nearly invisible in both renders; increase to
+    alpha=0.12–0.15 so the interquartile region has meaningful visual weight without
+    overpowering the step line
+  - Six dotted reference lines (3 horizontal at Q1/0.50/Q3 + 3 vertical at Q1/median/Q3)
+    layered on top of 10 major Y-axis grid lines creates visual clutter; consider
+    removing the panel Y-axis grid when quartile reference lines are present, or reduce
+    opacity of reference lines further
+  - Quartile annotation labels at annotate size=3.5 mm are small at mobile scale;
+    increase to size=4.5–5.0 mm for better readability across screen sizes
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
-      Chrome: Title "ecdf-basic · plotnine · anyplot.ai" dark ink, left-aligned; axis labels "Test Score (points)" and "Cumulative Proportion" in dark INK; tick labels in INK_SOFT — all clearly readable
-      Data: Brand green #009E73 ECDF step curve spanning full x range (~10-87); dotted reference lines in INK_SOFT at y=0.5 and x≈50 (median)
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "ecdf-basic · python · plotnine · anyplot.ai" renders in dark INK (#1A1A17) at top-left, occupying ~60% of plot width — well-proportioned. X-axis label "Test Score (points)" and Y-axis label "Cumulative Proportion" in dark INK at fontsize=10, balanced and readable. Tick labels in INK_SOFT (#4A4A44) at fontsize=8, clearly visible against the warm off-white background. Grid lines subtle (alpha=0.15), horizontal only (major), not competing with data.
+      Data: Brand green #009E73 ECDF step line clearly visible at size=1.1 — traces the cumulative distribution from 0 to 1 across test score range ~0–100. IQR shaded rectangle between Q1≈39.4 and Q3≈63.1 in brand green fill at alpha=0.06 — perceptible as a faint teal tint but very subtle. Six dotted reference lines (3 horizontal at y=0.25/0.50/0.75; 3 vertical at Q1/median/Q3) in INK_SOFT. Annotation labels: "Q1: 39.4" at (41, 0.16), "Median: 49.9" at (51.5, 0.08), "Q3: 63.1" at (64.6, 0.80) — small but readable.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, tick labels all rendered in light-colored ink (#F0EFE8 / #B8B7B0) — clearly readable against dark surface; no dark-on-dark failures; subtle grid lines visible but non-competing
-      Data: ECDF curve identical color #009E73 to light render — only chrome flipped; reference lines visible in muted tone
-      Legibility verdict: PASS — all text clearly readable against dark background; brand green #009E73 remains visible and identifiable
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title in light INK (#F0EFE8) — clearly visible against near-black background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — medium gray that reads well on dark bg. Grid lines subtle and visible. No dark-on-dark failures detected anywhere.
+      Data: ECDF step line in identical brand green #009E73 — same hue as light render, confirming Imprint palette positions unchanged between themes. IQR shaded band identically faint (alpha=0.06). Reference dotted lines and annotations use INK_SOFT (#B8B7B0) — good contrast on dark background (~9:1 contrast ratio).
+      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render, chrome correctly flipped.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt — all explicitly set;
-          both renders fully readable
+        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
+          text=7); readable in both themes. Annotation labels at size=3.5mm (~10pt)
+          are functional but borderline small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no text collisions in either render
+        comment: No overlapping elements in either render. Q1/Median/Q3 annotations
+          are spaced apart on both axes.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: geom_step(size=2) perfectly adapted to 200-point ECDF; individual
-          steps visible without overwhelming
+        comment: ECDF step line clearly visible (brand green, size=1.1). IQR shaded
+          band at alpha=0.06 is barely perceptible — wastes its visual communication
+          value.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single #009E73 series; excellent contrast on both backgrounds; CVD-safe'
+        comment: 'Single series, brand green #009E73. Good contrast in both themes.
+          CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well; balanced margins; data spans full x range
+        comment: Canvas gate passed. 3200x1800 confirmed. Plot fills ~80% of canvas
+          area, balanced margins, no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Test Score (points) with units; Cumulative Proportion descriptive
+        comment: 'X: ''Test Score (points)'' with units. Y: ''Cumulative Proportion''.
+          Title matches required format exactly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; light bg #FAF8F1, dark bg #1A1A17; all chrome
-          theme-adaptive'
+        comment: 'First series #009E73 (Imprint position 1). Backgrounds #FAF8F1 light
+          / #1A1A17 dark. All chrome tokens correctly adaptive.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -98,22 +113,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: brand green, panel border removed, reference
-          lines at statistically meaningful positions show design intent'
+        comment: 'Above default (4): IQR shading + quartile crosshairs + value annotations
+          show design intent and hierarchy. However IQR band execution is too faint
+          (alpha=0.06) to deliver its intended visual weight.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: panel_border=element_blank(), minor grid removed, subtle major grid
-          10% opacity, thin axis lines
+        comment: Clean theme_minimal base, no minor grid, subtle major grid. Panel
+          border removed, axis lines kept for readability. Six dotted reference lines
+          layered on a 10-line grid creates visual complexity that reduces refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Reference lines at y=0.5 and x=median create focal crosshair guiding
-          viewer to median; visual hierarchy established
+        comment: 'Above default (2): IQR band + quartile crosshairs + value labels
+          actively teach the viewer how to extract percentile information from the
+          step function. Effective pedagogical design for an ECDF.'
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step plot using geom_step
+        comment: stat_ecdf(geom='step') — correct ECDF step function implementation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function increases 1/n per point, y-axis 0-1 with explicit breaks,
-          grid lines present, distinct line style
+        comment: 'Step function, Y-axis 0-1, grid lines, distinct line style — all
+          present. Bonus: IQR shading and quartile annotations.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=test score values, Y=cumulative proportion; full 0-1 range displayed
+        comment: 'X: test scores (continuous), Y: cumulative proportion 0-1. 200 observations
+          within 50-500 ideal range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly ecdf-basic · plotnine · anyplot.ai; single-series no
-          legend needed
+        comment: Title 'ecdf-basic · python · plotnine · anyplot.ai' matches format
+          exactly. No legend needed for single series.
     data_quality:
       score: 15
       max: 15
@@ -153,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete ECDF from near-0 to 1.0; step structure clearly visible;
-          full distribution range
+        comment: Full ECDF range 0-1, IQR highlighted, quartile values shown. Comprehensive
+          feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Test scores in educational context; neutral, real-world plausible,
-          non-controversial
+        comment: Test scores (mean=50, std=15, n=200) — realistic, neutral, universally
+          relatable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean 50, std 15 — plausible exam score distribution; values range
-          ~10-87
+        comment: Test score range and distribution shape appropriate for a 100-point
+          exam scenario.
     code_quality:
       score: 10
       max: 10
@@ -178,34 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme tokens → data → ECDF → plot →
-          save'
+        comment: No functions or classes. Linear imports → data → plot → save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All plotnine imports are used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, Pythonic; ECDF computed cleanly in two lines
+        comment: Clean, Pythonic layered composition. No over-engineering. No fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave; current plotnine API
+        comment: Saves as plot-{THEME}.png via ggsave. Current plotnine API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -213,21 +232,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert plotnine: full grammar of graphics layering with geom_step+hline+vline+labs+scale+theme'
+        comment: stat_ecdf is the idiomatic plotnine/ggplot2 way to build ECDFs. Full
+          grammar-of-graphics layering (stat + geom + annotate + scale + theme) used
+          expertly.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Layered reference lines as separate geom layers; theme_minimal+theme
-          override pattern is distinctively plotnine
+        comment: stat_ecdf (the statistical transformation system) is a distinctive
+          plotnine feature. annotate('rect') for IQR shading is ggplot2-idiomatic.
+          Good use of library strengths but not exceptional.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
