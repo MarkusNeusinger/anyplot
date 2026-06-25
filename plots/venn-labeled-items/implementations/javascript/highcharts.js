@@ -43,9 +43,9 @@ const items = [
   // BC (Useful AND Secretly Loved)
   { label: 'Wikipedia',    x: 923, y: 495 },
   { label: 'RSS Feeds',    x: 924, y: 522 },
-  // ABC (all three)
-  { label: 'Podcasts',     x: 800, y: 435 },
-  { label: 'Sourdough',    x: 800, y: 462 },
+  // ABC (all three) — bold/larger to signal multi-zone status
+  { label: 'Podcasts',     x: 800, y: 435, abc: true },
+  { label: 'Sourdough',    x: 800, y: 462, abc: true },
 ];
 
 Highcharts.chart('container', {
@@ -86,22 +86,22 @@ Highcharts.chart('container', {
           this._venn.push(
             r.text(lb.text, lb.x, lb.y)
               .attr({ align: lb.align, zIndex: 6 })
-              .css({ color: t.ink, fontSize: '18px', fontWeight: '700' })
+              .css({ color: t.ink, fontSize: '18px', fontWeight: '700', fontFamily: 'Georgia, serif' })
               .add()
           );
         }, this);
 
-        // Item dot + label pairs
+        // Item labels — text-only placement (no dot markers)
         items.forEach(function (item) {
-          this._venn.push(
-            r.circle(item.x, item.y - 7, 2.5)
-              .attr({ fill: t.inkSoft, 'fill-opacity': 0.75, zIndex: 5 })
-              .add()
-          );
+          var isABC = item.abc;
           this._venn.push(
             r.text(item.label, item.x, item.y)
               .attr({ align: 'center', zIndex: 5 })
-              .css({ color: t.ink, fontSize: '13px' })
+              .css({
+                color: t.ink,
+                fontSize: isABC ? '16px' : '14px',
+                fontWeight: isABC ? '700' : '400',
+              })
               .add()
           );
         }, this);
