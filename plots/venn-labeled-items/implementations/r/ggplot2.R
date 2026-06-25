@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-06-25
 
 library(ggplot2)
 library(dplyr)
@@ -28,14 +27,11 @@ cx_a <- 0;       cy_a <- d / sqrt(3)
 cx_b <- -d / 2;  cy_b <- -d / (2 * sqrt(3))
 cx_c <-  d / 2;  cy_c <- -d / (2 * sqrt(3))
 
-make_circle <- function(cx, cy, r, n = 360) {
-  theta <- seq(0, 2 * pi, length.out = n + 1)
-  data.frame(x = cx + r * cos(theta), y = cy + r * sin(theta))
-}
-
-circ_a <- make_circle(cx_a, cy_a, r)
-circ_b <- make_circle(cx_b, cy_b, r)
-circ_c <- make_circle(cx_c, cy_c, r)
+# Circle coordinates — inlined
+theta  <- seq(0, 2 * pi, length.out = 361)
+circ_a <- data.frame(x = cx_a + r * cos(theta), y = cy_a + r * sin(theta))
+circ_b <- data.frame(x = cx_b + r * cos(theta), y = cy_b + r * sin(theta))
+circ_c <- data.frame(x = cx_c + r * cos(theta), y = cy_c + r * sin(theta))
 
 # Tech trends 2025 items per zone
 items <- data.frame(
@@ -94,22 +90,22 @@ p <- ggplot() +
     data     = items,
     aes(x = lx, y = ly, label = label),
     color    = INK,
-    size     = 2.8,
+    size     = 3.2,
     fontface = "plain"
   ) +
   # Category names positioned outside each circle
   annotate("text", x = 0,           y = cy_a + r + 0.65,
            label = "Buzzworthy",       color = IMPRINT_PALETTE[1],
-           size = 4.0, fontface = "bold", hjust = 0.5) +
+           size = 4.0, fontface = "bold", hjust = 0.5, family = "serif") +
   annotate("text", x = cx_b - 0.4,  y = cy_b - r - 0.60,
            label = "Actually Useful",  color = IMPRINT_PALETTE[2],
-           size = 4.0, fontface = "bold", hjust = 1.0) +
+           size = 4.0, fontface = "bold", hjust = 1.0, family = "serif") +
   annotate("text", x = cx_c + 0.4,  y = cy_c - r - 0.60,
            label = "Everyone Uses It", color = IMPRINT_PALETTE[3],
-           size = 4.0, fontface = "bold", hjust = 0.0) +
+           size = 4.0, fontface = "bold", hjust = 0.0, family = "serif") +
   coord_fixed(
     xlim = c(-5.5, 5.5),
-    ylim = c(-5.5, 5.5)
+    ylim = c(-6.5, 5.5)
   ) +
   labs(title = plot_title) +
   theme_void() +
