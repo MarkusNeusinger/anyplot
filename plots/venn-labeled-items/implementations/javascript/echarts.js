@@ -1,38 +1,35 @@
 // anyplot.ai
 // venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-// Library: echarts 5.5.1 | JavaScript 22.23.0
-// Quality: 89/100 | Created: 2026-06-25
-//# anyplot-orientation: square
-// anyplot.ai
-// venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-25
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
 // --- Geometry (CSS px in 1200×1200 mount → 2400×2400 PNG at dpr=2) ---------
 // Three-circle Venn: equilateral triangle arrangement, R=225, D=145 from centroid
+// Diagram shifted down ~90px vs initial to vertically center on the canvas
 const R   = 225;
-const cAx = 600, cAy = 425;   // Overhyped      (top)
-const cBx = 474, cBy = 643;   // Actually Useful (bottom-left)
-const cCx = 726, cCy = 643;   // Secretly Loved  (bottom-right)
+const cAx = 600, cAy = 515;   // Overhyped      (top)
+const cBx = 474, cBy = 733;   // Actually Useful (bottom-left)
+const cCx = 726, cCy = 733;   // Secretly Loved  (bottom-right)
 
 // --- Data -------------------------------------------------------------------
 // Zone item placement centers — each verified to sit inside the correct region(s)
 //   A-only : dist<R from A, dist>R from B and C
 //   AB-only : dist<R from A and B, dist>R from C
 //   ABC    : dist<R from all three
-const ITEM_FS = 13;   // item font size (CSS px)
-const ITEM_LS = 23;   // vertical line spacing
+const ITEM_FS = 14;   // item font size (CSS px)
+const ITEM_LS = 24;   // vertical line spacing
 
 const zoneData = [
-  { x: 600, y: 308, items: ['NFTs', 'Metaverse', 'Web3'] },           // A only
-  { x: 370, y: 728, items: ['Google Maps', 'Spreadsheets', 'Git'] },  // B only
-  { x: 830, y: 728, items: ['Wikipedia', 'RSS Feeds', 'Notepad'] },   // C only
-  { x: 500, y: 475, items: ['AI Assistants', 'Cloud Storage'] },      // AB only
-  { x: 700, y: 475, items: ['Twitter / X', 'Crypto Wallets'] },       // AC only
-  { x: 600, y: 726, items: ['Linux Terminal', 'Plain Text'] },        // BC only
-  { x: 600, y: 568, items: ['Markdown'] },                            // ABC
+  { x: 600, y: 398, items: ['NFTs', 'Metaverse', 'Web3'] },           // A only
+  { x: 370, y: 818, items: ['Google Maps', 'Spreadsheets', 'Git'] },  // B only
+  { x: 830, y: 818, items: ['Wikipedia', 'RSS Feeds', 'Notepad'] },   // C only
+  { x: 500, y: 565, items: ['AI Assistants', 'Cloud Storage'] },      // AB only
+  { x: 700, y: 565, items: ['Twitter / X', 'Crypto Wallets'] },       // AC only
+  { x: 600, y: 816, items: ['Linux Terminal', 'Plain Text'] },        // BC only
+  { x: 600, y: 658, items: ['Markdown'] },                            // ABC
 ];
 
 // --- Init -------------------------------------------------------------------
@@ -54,9 +51,9 @@ const circleGraphics = [
 
 // Category labels outside each circle — serif for editorial feel
 const catLabelGraphics = [
-  { text: 'Overhyped',       x: 600, y: 166, color: '#009E73' },
-  { text: 'Actually Useful', x: 330, y: 895, color: '#C475FD' },
-  { text: 'Secretly Loved',  x: 870, y: 895, color: '#4467A3' },
+  { text: 'Overhyped',       x: 600, y: 256, color: '#009E73' },
+  { text: 'Actually Useful', x: 330, y: 985, color: '#C475FD' },
+  { text: 'Secretly Loved',  x: 870, y: 985, color: '#4467A3' },
 ].map(l => ({
   type: 'text',
   z: 20,
