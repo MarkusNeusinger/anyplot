@@ -2,109 +2,103 @@ library: altair
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T21:55:57Z'
-generated_by: claude-opus
-workflow_run: 24860303745
+updated: '2026-06-25T01:37:19Z'
+generated_by: claude-sonnet
+workflow_run: 28140478506
 issue: 611
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set to guideline values; both
-    themes fully legible with no chrome failures'
-  - Correct Okabe-Ito brand green as the sole data color; backgrounds and chrome tokens
-    exactly match theme spec
-  - Informative Pearson r subtitle adds storytelling without annotations — a thoughtful
-    editorial choice
-  - White stroke on markers (stroke=PAGE_BG) provides excellent definition for overlapping
-    points
-  - 'Idiomatic Altair: proper type annotations, alt.Title, configure_* chain, .interactive()
-    for HTML'
-  - 'Complete output: both PNG (scale_factor=3.0 → 4800×2700) and HTML artifacts'
+  - Clean Imprint palette usage with brand green (#009E73) markers and white stroke
+    for definition
+  - Altair-native transform_regression() showcases declarative grammar — regression
+    computed inside the chart spec without pre-processing
+  - Informative subtitle (n=180, Pearson r=0.77) immediately communicates the correlation
+    story
+  - Very subtle grid (opacity=0.10) and disabled domain/tick lines produce a refined
+    look
+  - Full theme-adaptive chrome — all text, grid, and background tokens flip correctly
+    between light and dark renders
+  - Canvas sizing (width=620, height=320) and PIL padding logic correctly targets
+    the 3200×1800 canonical size
   weaknesses:
-  - 'DE-01 (5/8): Design is clean but not yet publication-ready — lacks a second layer
-    (e.g., regression line) or other design elements that would elevate it beyond
-    a polished single-series scatter'
-  - 'DE-02 (4/6): Minor: could further refine by removing bottom/left domain lines
-    for a spine-free minimal look, or removing the grid entirely'
-  - 'DE-03 (4/6): No visual hierarchy within the data — a trend/regression line would
-    reinforce the r=0.92 story shown in the subtitle and create a clear focal point'
-  - 'DQ-01 (5/6): Correlation r=0.92 is stronger than the spec''s suggested ~0.7 moderate
-    correlation; increasing noise would produce a more representative moderate-scatter
-    pattern'
-  - 'CQ-01 (2/3): The importlib/sys.path workaround is functional but adds complexity
-    relative to a direct import'
+  - DE-01 could be elevated further — the white marker stroke and regression line
+    are good touches but the overall composition stays close to a well-configured
+    default; consider sizing variation or a more intentional focal-point emphasis
+  - LM-02 has headroom — transform_regression is a strong Altair-specific feature
+    but adding a selection or parameter-driven highlight could push this to 5/5
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-basic · altair · anyplot.ai" in dark ink #1A1A17 (top-left, anchor=start); subtitle "n = 180 · Pearson r = 0.92" in muted tertiary ink; X-axis label "Study Hours per Week" and Y-axis label "Exam Score (%)" in dark ink; tick numbers in INK_SOFT — all clearly readable
-      Data: 180 circles in #009E73 (brand green / Okabe-Ito position 1), size=170, opacity=0.7, white edge strokes; clear upward-trending positive correlation; subtle grid lines at 10% opacity
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-basic · python · altair · anyplot.ai" in dark (#1A1A17) text, left-aligned, clearly readable. Subtitle "n = 180 · Pearson r = 0.77" in muted dark text, smaller but readable. X-axis label "Study Hours per Week" and Y-axis label "Exam Score (%)" both clearly visible in dark ink. Tick labels on both axes readable. Grid lines are very subtle (opacity=0.10), present on both axes.
+      Data: 180 scatter points in brand green (#009E73) with a thin warm-background stroke for definition. Opacity=0.7 shows overlapping points via transparency. Dashed regression line in INK_SOFT color (dark gray) overlaid on the scatter.
+      Legibility verdict: PASS — all text readable, no dark-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: All chrome elements flip to light: title in #F0EFE8, subtitle and tick labels in #B8B7B0; axis labels in light ink — all fully readable against the dark surface; no dark-on-dark failures detected
-      Data: Identical #009E73 markers — same hue, size, opacity as light render; only background and text colors change between themes
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle rendered in light (#F0EFE8) text — clearly readable against dark surface. X-axis and Y-axis labels in light text, fully visible. Tick labels in light/muted tones, readable. Grid lines faint but visible against the dark background. Dashed regression line adapts to INK_SOFT dark-theme value (#B8B7B0 — light gray), visible.
+      Data: 180 scatter points still in brand green (#009E73) — colors are identical to light render. Opacity=0.7 preserved.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is appropriately light-colored on the dark background
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28px, axis labels 22px, tick labels
-          18px; fully readable in both themes'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10). Well-proportioned,
+          readable in both themes. Subtitle at 10px is compact but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; tick labels well-spaced; subtitle and title cleanly
-          separated
+        comment: No text or marker overlaps. 180 points with opacity=0.7 handle point-on-point
+          overlap gracefully.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 180 points at size=170, opacity=0.7; appropriately scaled for data
-          density
+        comment: mark_circle(size=140, opacity=0.7) well-calibrated for 180 data points.
+          Markers prominent but not oversize.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series; good contrast on both surfaces; no red-green
-          reliance
+        comment: Single series in brand green — CVD-safe, good contrast on both warm-cream
+          and warm-black backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~75% of canvas; balanced margins; nothing cut off; editorial
-          title placement
+        comment: Canvas gate passed. Plot centered on 3200x1800 with balanced padding.
+          Good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Study Hours per Week, Y: Exam Score (%) — both descriptive with
-          units'
+        comment: Study Hours per Week (X) and Exam Score (%) (Y) — descriptive with
+          units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; chrome tokens
-          correct in both renders'
+        comment: 'First (only) series uses #009E73 (Imprint position 1). Background
+          #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -114,22 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: left-aligned title, Pearson r subtitle, no view
-          stroke, white edge strokes on markers. Not yet publication-ready.'
+        comment: 'Above default (4): brand green markers with white stroke, dashed
+          regression line, informative subtitle with statistics. Not at FiveThirtyEight
+          publication level but clearly thoughtful.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Ticks disabled, view stroke=None, grid at 10% opacity, generous padding.
-          Could reach 6 with trend line or spine-free treatment.
+        comment: 'Refined: gridOpacity=0.10 (very subtle), domain=False, ticks=False,
+          no frame border (stroke=None). Multiple deliberate refinements visible.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Pearson r subtitle and real-world scenario carry narrative weight.
-          No visual hierarchy within data cloud itself (no regression line).
+        comment: Regression line + Pearson r subtitle together create a clear narrative
+          about the positive correlation. Viewer immediately grasps the trend and
+          its strength.
     spec_compliance:
       score: 15
       max: 15
@@ -139,91 +135,91 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot using mark_circle()
+        comment: Correct scatter plot using mark_circle().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Transparency 0.7, axis labels, grid lines, appropriate point sizing
-          — all present
+        comment: 'All spec requirements met: transparency (opacity=0.7), descriptive
+          axis labels, grid lines, balanced point sizing.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Independent (study hours) on X, dependent (exam score) on Y; full
-          range displayed
+        comment: X=Study Hours (independent), Y=Exam Score (dependent). All 180 points
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'scatter-basic · altair · anyplot.ai'; single-series, no legend
-          needed
+        comment: Title exactly 'scatter-basic · python · altair · anyplot.ai'. No
+          legend needed (single series).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 180 scattered points with clear positive correlation and spread.
-          Pearson r=0.92 stronger than spec's ~0.7 target — scatter cloud tighter
-          than typical moderate correlation.
+        comment: 180 points demonstrate positive correlation, scatter spread, outliers,
+          and the trend — full feature coverage for a basic scatter plot.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Study hours vs. exam scores: immediately relatable, neutral educational
-          scenario'
+        comment: Study hours per week vs exam scores — realistic, neutral educational
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Study hours 1-12 hr/week, exam scores 30-100%: both realistic and
-          within expected ranges'
+        comment: 1-12 hours/week and 30-100% scores are realistic ranges. r≈0.77 is
+          plausible for this domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Linear, no functions/classes. importlib/sys.path workaround adds
-          minor complexity (needed to avoid naming conflict).
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (os, sys, alt, np, pd, PIL.Image) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean chained Altair API; no fake UI; appropriate complexity
+        comment: Clean declarative Altair code, appropriate complexity. PIL padding
+          follows canonical pattern from altair.md.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
+          used throughout.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -231,25 +227,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert: mark_circle with :Q annotations, alt.X/alt.Y with alt.Axis/alt.Scale,
-          alt.Title with subtitle, configure_* chain, .interactive()'
+        comment: 'Expertly uses Altair''s high-level API: mark_circle with encode,
+          alt.layer, configure_axis/view, alt.Title with anchor and subtitle.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Tooltips with format specs and .interactive() leverage Altair's declarative
-          grammar. A second layer with transform_regression would showcase Altair's
-          unique layering strength.
-  verdict: REJECTED
+        comment: transform_regression() is distinctively declarative — computed inside
+          the chart spec without pre-processing. alt.layer() for composition. Strongly
+          Altair-idiomatic.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
