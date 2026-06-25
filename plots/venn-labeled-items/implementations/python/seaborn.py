@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-25
@@ -130,7 +130,7 @@ sns.scatterplot(
     y="y",
     hue="overlap",
     size="overlap",
-    sizes={"outside": 15, "1 circle": 28, "2 circles": 60, "3 circles": 105},
+    sizes={"outside": 55, "1 circle": 75, "2 circles": 110, "3 circles": 160},
     palette=DEPTH_PALETTE,
     hue_order=OVERLAP_ORDER,
     size_order=OVERLAP_ORDER,
@@ -198,7 +198,7 @@ ax.text(
 )
 
 # Item labels placed slightly above their dot markers
-label_offset = 0.055
+label_offset = 0.07
 for _, row in items_df.iterrows():
     is_triple = row["overlap"] == "3 circles"
     is_outside = row["overlap"] == "outside"
@@ -208,7 +208,7 @@ for _, row in items_df.iterrows():
         row["label"],
         ha="center",
         va="bottom",
-        fontsize=11 if is_triple else 9,
+        fontsize=11 if is_triple else 10,
         fontweight="bold" if is_triple else "normal",
         color=INK_MUTED if is_outside else INK,
         style="italic" if is_outside else "normal",
@@ -235,7 +235,7 @@ fig.text(
 )
 
 ax.set_xlim(-2.35, 2.35)
-ax.set_ylim(-2.05, 1.85)
+ax.set_ylim(-1.50, 1.85)
 ax.axis("off")
 
 # Save — bbox_inches omitted (defaults to None) to preserve the exact 2400×2400 canvas
