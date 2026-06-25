@@ -1,3 +1,7 @@
+// anyplot.ai
+// contour-basic: Basic Contour Plot
+// Library: echarts 5.5.1 | JavaScript 22.23.0
+// Quality: 78/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 
 // anyplot.ai
