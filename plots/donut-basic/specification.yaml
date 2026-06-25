@@ -6,7 +6,7 @@ title: Basic Donut Chart
 
 # Specification tracking
 created: 2025-12-14T10:07:43Z
-updated: 2025-12-14T10:07:43Z
+updated: 2026-06-25T05:31:38Z
 issue: 733
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - donut
-    - pie
   data_type:
     - categorical
     - numeric
