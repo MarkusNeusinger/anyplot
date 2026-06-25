@@ -1,12 +1,8 @@
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
-// Library: echarts 5.5.1 | JavaScript 22.23.0
-// Quality: 88/100 | Created: 2026-06-25
-//# anyplot-orientation: square
-// anyplot.ai
-// sudoku-basic: Basic Sudoku Grid
 // Library: echarts 5.5.1 | JavaScript 22
 // Quality: pending | Created: 2026-06-25
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;
@@ -29,7 +25,10 @@ const puzzle = [
 
 // --- Theme tokens -----------------------------------------------------------
 const INK = t.ink;
-const CELL_BG = THEME === "light" ? "#FFFFFF" : t.elevatedBg;
+const CELL_BG = t.elevatedBg;
+const BOX_ALT_BG = THEME === "light"
+  ? "rgba(26,26,23,0.04)"
+  : "rgba(240,239,232,0.06)";
 const THIN_LINE = THEME === "light"
   ? "rgba(26,26,23,0.30)"
   : "rgba(240,239,232,0.30)";
@@ -41,18 +40,37 @@ const GRID_SIZE = Math.min(W - 2 * PAD, H - TITLE_H - PAD);
 const OFFSET_X = Math.round((W - GRID_SIZE) / 2);
 const OFFSET_Y = TITLE_H + Math.round((H - TITLE_H - PAD - GRID_SIZE) / 2);
 const CELL = GRID_SIZE / 9;
+const BOX = CELL * 3;
 const NUM_FONT = Math.round(CELL * 0.50);
 
 // --- Build graphic elements -------------------------------------------------
 const els = [];
 
-// 1. Cell background fill
+// 1. Cell background fill (base)
 els.push({
   type: "rect",
   shape: { x: OFFSET_X, y: OFFSET_Y, width: GRID_SIZE, height: GRID_SIZE },
   style: { fill: CELL_BG, stroke: "none" },
   z: 1,
 });
+
+// 1b. Alternating 3×3 box tonal overlay to reinforce box region grouping
+for (let br = 0; br < 3; br++) {
+  for (let bc = 0; bc < 3; bc++) {
+    if ((br + bc) % 2 === 0) continue;
+    els.push({
+      type: "rect",
+      shape: {
+        x: OFFSET_X + bc * BOX,
+        y: OFFSET_Y + br * BOX,
+        width: BOX,
+        height: BOX,
+      },
+      style: { fill: BOX_ALT_BG, stroke: "none" },
+      z: 1,
+    });
+  }
+}
 
 // 2. Thin cell lines (skip box boundaries at multiples of 3)
 for (let i = 1; i < 9; i++) {
