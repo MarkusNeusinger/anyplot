@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -16,7 +16,7 @@ sys.path = [p for p in sys.path if Path(p).resolve() != Path(__file__).resolve()
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import BoxAnnotation, ColumnDataSource, CrosshairTool, HoverTool, Label, Span
+from bokeh.models import BoxAnnotation, ColumnDataSource, CrosshairTool, CustomJSHover, HoverTool, Label, Span
 from bokeh.plotting import figure
 from PIL import Image
 from selenium import webdriver
@@ -93,17 +93,35 @@ for q_val, q_lbl, y_pos in percentile_annotations:
             x=q_val,
             y=y_pos,
             text=f"{q_lbl}: {q_val:.0f} min",
-            text_font_size="26pt",
-            text_color=INK_SOFT,
+            text_font_size="30pt",
+            text_color=INK,
             text_font_style="italic",
             x_offset=14,
+            background_fill_color=ELEVATED_BG,
+            background_fill_alpha=0.88,
+            border_line_color=INK_SOFT,
+            border_line_alpha=0.35,
+            padding=10,
         )
     )
+
+# Custom JS hover formatters — distinctively Bokeh: show runner count alongside percentage
+fmt_time = CustomJSHover(code="return value.toFixed(0) + ' min'")
+fmt_pct = CustomJSHover(
+    code=f"""
+    const pct = (value * 100).toFixed(1);
+    const runners = Math.round(value * {n_runners});
+    return pct + '% — ' + runners + '/{n_runners} runners';
+"""
+)
 
 # Interactive tools — Bokeh strengths
 p.add_tools(
     HoverTool(
-        renderers=[step_renderer], tooltips=[("Finish Time", "@x{0.0} min"), ("Cumulative", "@y{0.0%}")], mode="vline"
+        renderers=[step_renderer],
+        tooltips=[("Finish Time", "@x{custom}"), ("Cumulative", "@y{custom}")],
+        formatters={"@x": fmt_time, "@y": fmt_pct},
+        mode="vline",
     )
 )
 p.add_tools(CrosshairTool(dimensions="both", line_color=INK_SOFT, line_alpha=0.45))
