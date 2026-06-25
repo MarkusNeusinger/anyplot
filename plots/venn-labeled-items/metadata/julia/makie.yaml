@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: venn-labeled-items
 created: '2026-06-25T11:43:06Z'
-updated: '2026-06-25T11:50:29Z'
+updated: '2026-06-25T12:04:48Z'
 generated_by: claude-sonnet
 workflow_run: 28166938084
 issue: 5364
@@ -15,93 +15,108 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all 7 Venn zones + outside populated with coherent,
-    witty tech-taxonomy items matching the editorial Chartgeist brief.'
-  - Correct full theme adaptation — INK, INK_SOFT, INK_MUTED tokens thread through
-    title, item labels, and separator in both renders with no dark-on-dark failures.
-  - 'Correct Imprint palette (#009E73 → #C475FD → #4467A3) in canonical order for
-    the three circles; semi-transparent fills with distinct strokes create clear circle
-    identity.'
-  - 'Idiomatic CairoMakie: poly! + DataAspect() for geometrically correct circles;
-    clean hidexdecorations!/hidespines! usage.'
-  - 'Excellent code quality: clean KISS structure, named geometry constants, no abstraction
-    overhead.'
+  - 'Perfect spec compliance: all 7 interior Venn zones populated plus outside zone,
+    18 items in the 10-25 range, semi-transparent circle fills, category labels positioned
+    outside each circle, and editorial separator ''— already gone —'' for outside
+    items'
+  - 'Full theme-adaptive chrome: INK/INK_SOFT/INK_MUTED/PAGE_BG tokens correctly wired
+    to both renders — no dark-on-dark failure in dark theme, background colors are
+    correct warm off-white and near-black'
+  - 'Genuine editorial voice and visual hierarchy: witty subtitle, font-size scaled
+    by overlap level (single=14, pair=15, triple=16), muted color for outside items,
+    and ''Tech Taxonomy'' framing echo the Chartgeist magazine aesthetic the spec
+    requested'
+  - 'Clean, idiomatic Makie code: KISS structure with one helper function (circle_poly),
+    proper Random.seed!(42), correct DataAspect() for equal-proportion circles, and
+    canonical save pattern'
   weaknesses:
-  - Bottom whitespace excessive (~20% of canvas below outside items empty) — tighten
-    ylims or shift the circle group down to balance top/bottom margins; try ylims!(ax,
-    -0.05f0, 1.05f0).
-  - Item labels have no visual hierarchy — all 18 items render at identical size and
-    colour (INK), missing the opportunity to emphasise multi-circle overlaps. Consider
-    slightly larger fontsize (14–15) for ABC/overlap zone items.
-  - No subtitle — spec explicitly mentions 'optional witty title/subtitle in a serif
-    editorial font'; adding a one-line editorial subtitle would significantly lift
-    the magazine aesthetic and DE score.
-  - Item label fontsize=13 (26px effective on 2400×2400) is on the small side for
-    mobile readability; bump to 14–15.
+  - Category label 'Actually Works' (right-aligned, left of diagram) sits very close
+    to item label 'PostgreSQL' — minor horizontal crowding; nudge the category label
+    further left (e.g. CX_B - r*0.85 - 0.05) or add a small y-offset to 'PostgreSQL'
+    to add breathing room
+  - The 'Still Around in 5 Years' category label on the right is placed close to the
+    canvas boundary; extend xlims to (-0.15, 1.25) or shift the label text anchor
+    slightly inward (right-align at CX_C + r*0.60 + 0.05) to add a comfortable margin
+  - LM-02 (Library Mastery / Distinctive Features) is modest — the implementation
+    uses basic Makie primitives (poly!, text!) but doesn't leverage anything distinctively
+    Makie-specific beyond DataAspect(); using Makie's Legend, custom recipe, or Observable-driven
+    scatter overlay would improve this
+  - Subtitle at fontsize=12 renders at effectively ~24 source-px, which becomes barely
+    legible when the catalog thumbnails are scaled to 400px mobile width — raise subtitle
+    to fontsize=13 or 14 for margin at mobile scale
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "Tech Taxonomy · venn-labeled-items · julia · makie · anyplot.ai" in dark INK visible at top; category labels "Goes Viral" (green), "Actually Works" (lavender), "Still Around in 5 Years" (blue) outside circles — all readable; item labels in dark INK inside zones; muted separator "— already gone —" in INK_MUTED
-      Data: three circles in Imprint order #009E73 (green), #C475FD (lavender), #4467A3 (blue) with 18% alpha fills and matching stroke outlines; 18 items distributed across all 7 zones + outside
-      Legibility verdict: PASS — all text readable against light background; slight concern about item fontsize=13 (26px) for mobile
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Tech Taxonomy · venn-labeled-items · julia · makie · anyplot.ai" in dark INK (#1A1A17), clearly readable; subtitle in muted INK_SOFT tone, readable; no axis labels or ticks (appropriate for Venn)
+      Data: Three overlapping circles — green (#009E73, top "Goes Viral"), lavender (#C475FD, bottom-left "Actually Works"), blue (#4467A3, bottom-right "Still Around in 5 Years") — all with semi-transparent fills (alpha≈0.18) showing overlap regions; item labels in dark INK distributed across all 7 zones plus outside; "— already gone —" separator below Google+ and Vine in muted color
+      Legibility verdict: PASS — all text readable; minor crowding between "Actually Works" category label and "PostgreSQL" item label at left side; "Still Around in 5 Years" label close to right canvas edge but no pixels clipped
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: title in light INK (#F0EFE8) clearly readable; category labels retain circle colours (green/lavender/blue) — readable against dark background; item labels render in light INK with no dark-on-dark failures; separator in dark-theme INK_MUTED (#A8A79F) subtly visible
-      Data: circle colours identical to light render (#009E73, #C475FD, #4467A3) — only chrome flipped
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable; data colours theme-invariant confirmed
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background; subtitle in light muted tone; all item labels render in light INK — no dark-on-dark failure observed; category labels in their respective Imprint colors (green, lavender, blue) all clearly visible
+      Data: Circle data colors identical to light render — green, lavender, blue fills and outlines unchanged, confirming only chrome flipped between themes; item labels (INK = #F0EFE8 in dark mode) readable throughout all zones including overlapping regions
+      Legibility verdict: PASS — both renders fully legible; no dark-on-dark failures; Imprint palette data colors are identical between themes as required
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; item labels
-          at fontsize=13 slightly small for mobile
+        comment: Font sizes explicitly set (titlesize=20, category=18, items=13-16,
+          subtitle=12); all text readable in both themes; subtitle at 12pt approaches
+          minimum for mobile scaling
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; items stacked cleanly within each zone
+        comment: Minor crowding between 'Actually Works' category label and 'PostgreSQL'
+          item on left side; no outright text collision but spacing is tighter than
+          ideal
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All circles, labels, and text clearly visible in both themes
+        comment: All three Venn circles clearly visible with strokewidth=2.5 outlines;
+          semi-transparent fills show overlapping regions; all 18 item labels distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; item labels use high-contrast INK token
+        comment: Three distinct Imprint hues (green/lavender/blue) with sufficient
+          separation; no red-green sole-signal use; item text in full-contrast INK
+          tokens
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct square canvas 2400x2400; ~20% empty whitespace below outside
-          items creates unbalanced bottom margin
+        comment: Square 2400x2400 canvas correct for symmetric Venn layout; good centering
+          and whitespace; 'Still Around in 5 Years' label sits close to right canvas
+          boundary (no clipping, but minimal breathing room)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed; descriptive title with editorial prefix
+        comment: Title in correct format 'Tech Taxonomy · venn-labeled-items · julia
+          · makie · anyplot.ai'; no traditional axis labels appropriate for Venn diagram
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First circle #009E73; canonical Imprint order; backgrounds #FAF8F1/#1A1A17;
-          data colours identical across themes'
+        comment: 'First circle = #009E73 (brand green); circles 2-3 use Imprint positions
+          2 and 3 (lavender, blue) in canonical order; PAGE_BG correct for both themes;
+          data colors theme-invariant'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,22 +124,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above bare default: editorial categories, colour-matched labels,
-          semi-transparent fills. No serif font, no subtitle, no item hierarchy.'
+        comment: Editorial framing with 'Tech Taxonomy' title and witty subtitle;
+          visual hierarchy via font-size-by-overlap-level is a thoughtful design choice;
+          Imprint palette applied cleanly; doesn't reach full sophistication but clearly
+          above generic defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, no grid; semi-transparent fills are deliberate refinement.
-          No further polish.
+        comment: All spines, ticks, and decorations hidden (hidespines!, hidexdecorations!,
+          hideydecorations!); no grid (correct for Venn); generous whitespace; circles
+          rendered cleanly with stroke and fill
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Coherent taxonomy narrative; outside zone with separator adds editorial
-          touch. No visual emphasis hierarchy among item labels.
+        comment: Items chosen (NFTs/Metaverse/Clubhouse viral-only; Git/Docker practical-survivors;
+          JavaScript in center) tell a coherent tech-longevity story; '— already gone
+          —' separator for outside items is a genuine editorial touch; visual hierarchy
+          reinforces the overlap narrative
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +154,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct three-circle symmetric Venn with labeled items
+        comment: Three-circle Venn diagram with labeled items in zones; editorial/Chartgeist
+          style as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 zones + outside; semi-transparent fills; category labels outside
-          circles; separator
+        comment: 'Semi-transparent fills; category names outside circles on outer
+          sides; item labels in correct zones; 18 items (spec: 10-25); outside zone
+          populated with Google+ and Vine; separator text for outside items'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Items correctly placed in declared zones; symmetric layout
+        comment: 'All 7 interior zones populated (A: NFTs/Metaverse/Clubhouse, B:
+          PostgreSQL/Nginx/Bash, C: Email/Excel/PDF, AB: ChatGPT/Figma, AC: Agile/The
+          Cloud, BC: Git/Docker, ABC: JavaScript); outside: Google+/Vine'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive Title · spec-id · julia · makie · anyplot.ai format correct;
-          no legend needed
+        comment: Title 'Tech Taxonomy · venn-labeled-items · julia · makie · anyplot.ai'
+          matches required format with descriptive prefix; category labels serve as
+          legend
     data_quality:
       score: 15
       max: 15
@@ -164,20 +189,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 zones + outside used; 18 items in spec range
+        comment: All 7 interior zones plus outside covered; diverse distribution across
+          zones; both pairwise and triple overlaps represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real neutral tech trends; editorial Chartgeist framing; no controversial
-          content
+        comment: Tech taxonomy is relatable, plausible, and neutral; items (NFTs,
+          ChatGPT, Git, JavaScript, etc.) are recognizable contemporary tech references;
+          not controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Circle geometry correct; item distribution balanced across zones
+        comment: 18 items within 10-25 spec range; distribution feels balanced across
+          zones without overcrowding any single region
     code_quality:
       score: 10
       max: 10
@@ -187,31 +215,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Constants → data → figure → save; minimal helper function
+        comment: Single-level script; only one helper function (circle_poly) which
+          is necessary and compact; no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) present; all data is deterministic constants
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random; all used
+        comment: CairoMakie, Colors, Random — all three used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic loop over items; named constants; no fake UI
+        comment: Clean iteration over items list; parametric circle generation is
+          elegant; color tuples for alpha blending are idiomatic Makie
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) correct
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; no bare plot.png
     library_mastery:
       score: 6
       max: 10
@@ -221,22 +251,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: poly! for polygon circles, DataAspect() for geometry, hidexdecorations!/hidespines!,
-          text! with alignment — idiomatic CairoMakie
+        comment: Uses poly! for polygon shapes, text! for labels, hidespines!/hidexdecorations!/hideydecorations!,
+          DataAspect(), xlims!/ylims! — all idiomatic Makie patterns; theme-adaptive
+          color tokens correctly applied
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: poly! + DataAspect() for circle geometry is Makie-distinctive. Does
-          not leverage Theme customisation or advanced layout utilities.
-  verdict: REJECTED
+        passed: false
+        comment: Uses basic Makie primitives (poly!, text!) without leveraging distinctively
+          Makie-specific features like the Observable system, custom recipes, or Legend
+          — implementation could work in any vector graphics library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - annotations
+  - patches
   patterns:
+  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
