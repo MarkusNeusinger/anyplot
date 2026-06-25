@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 88/100 | Updated: 2026-06-25
 """
 
 import os
@@ -15,6 +14,7 @@ sys.path = [p for p in sys.path if p not in ("", os.getcwd())]
 
 import numpy as np
 from bokeh.io import output_file, save
+from bokeh.models import HoverTool, Label, LinearColorMapper
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -51,7 +51,17 @@ elevation = (
 
 levels = np.linspace(elevation.min(), elevation.max(), 14)
 
-# Title — 62 chars, below 67-char baseline, no scaling needed
+# Locate the two peaks for annotations
+_ne_iy, _ne_ix = np.unravel_index(elevation.argmax(), elevation.shape)
+x_ne, y_ne = float(x[_ne_ix]), float(y[_ne_iy])
+ne_peak_elev = int(round(float(elevation[_ne_iy, _ne_ix])))
+
+_sw_elev = np.where((X < 5) & (Y < 6), elevation, 0)
+_sw_iy, _sw_ix = np.unravel_index(_sw_elev.argmax(), _sw_elev.shape)
+x_sw, y_sw = float(x[_sw_ix]), float(y[_sw_iy])
+sw_peak_elev = int(round(float(elevation[_sw_iy, _sw_ix])))
+
+# Title — 62 chars, below 67-char baseline
 title = "Mountain Terrain · contour-basic · python · bokeh · anyplot.ai"
 
 # Plot — canonical 3200×1800 landscape canvas
@@ -91,6 +101,61 @@ colorbar = contour.construct_color_bar(
 )
 p.add_layout(colorbar, "right")
 
+# Invisible image renderer — enables HoverTool elevation readout in the HTML artifact
+_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=elevation.min(), high=elevation.max())
+_img_r = p.image(image=[elevation], x=0, y=0, dw=10, dh=10, color_mapper=_mapper, alpha=0)
+p.add_tools(
+    HoverTool(
+        renderers=[_img_r], tooltips=[("Position", "($x{0.1f} km E, $y{0.1f} km N)"), ("Elevation", "@image{0} m")]
+    )
+)
+
+# Contour level labels — every 3rd level labels key isolines (spec: "label when practical")
+for _i in (1, 4, 7, 10):
+    _level_val = levels[_i]
+    _diff = np.abs(elevation - _level_val)
+    # Exclude borders and the right-side colorbar zone (x > ~8)
+    _diff[:4, :] = np.inf
+    _diff[-4:, :] = np.inf
+    _diff[:, :4] = np.inf
+    _diff[:, -18:] = np.inf
+    _iy, _ix = np.unravel_index(_diff.argmin(), _diff.shape)
+    if np.isfinite(_diff[_iy, _ix]):
+        p.add_layout(
+            Label(
+                x=float(x[_ix]),
+                y=float(y[_iy]),
+                text=f"{int(round(_level_val))}",
+                text_font_size="22pt",
+                text_color=INK,
+                text_align="center",
+                text_baseline="middle",
+                background_fill_color=PAGE_BG,
+                background_fill_alpha=0.8,
+                border_line_color=INK_SOFT,
+                border_line_alpha=0.4,
+            )
+        )
+
+# Summit annotations — storytelling focal points for the two elevation peaks
+for _x_pk, _y_pk, _elev_pk in ((x_ne, y_ne, ne_peak_elev), (x_sw, y_sw, sw_peak_elev)):
+    p.add_layout(
+        Label(
+            x=_x_pk,
+            y=_y_pk,
+            text=f"▲ {_elev_pk} m",
+            text_font_size="26pt",
+            text_color=INK,
+            text_align="center",
+            text_baseline="bottom",
+            x_offset=0,
+            y_offset=40,
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.8,
+            border_line_color=None,
+        )
+    )
+
 # Typography — sized for 3200×1800 canvas
 p.title.text_font_size = "50pt"
 p.title.text_font_style = "bold"
@@ -109,7 +174,7 @@ p.yaxis.axis_label_standoff = 28
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # frameless — cleaner minimalist look
 
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
