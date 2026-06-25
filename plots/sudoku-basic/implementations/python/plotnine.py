@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -77,12 +77,21 @@ for i in range(1, 9):
         thin_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
 df_thin = pd.DataFrame(thin_lines)
 
-# Thick grid lines (3×3 box boundaries + outer border)
-thick_lines = []
-for i in [0, 3, 6, 9]:
-    thick_lines.append({"x": i, "xend": i, "y": 0, "yend": 9})
-    thick_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
-df_thick = pd.DataFrame(thick_lines)
+# Interior box boundary lines (3×3 separators, not the outer border)
+box_lines = []
+for i in [3, 6]:
+    box_lines.append({"x": i, "xend": i, "y": 0, "yend": 9})
+    box_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
+df_box = pd.DataFrame(box_lines)
+
+# Outer border — slightly thicker than box lines for three-level visual hierarchy
+outer_border = [
+    {"x": 0, "xend": 9, "y": 0, "yend": 0},
+    {"x": 0, "xend": 9, "y": 9, "yend": 9},
+    {"x": 0, "xend": 0, "y": 0, "yend": 9},
+    {"x": 9, "xend": 9, "y": 0, "yend": 9},
+]
+df_outer = pd.DataFrame(outer_border)
 
 # Plot
 title = "sudoku-basic · python · plotnine · anyplot.ai"
@@ -93,7 +102,8 @@ plot = (
     + geom_segment(
         data=df_thin, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_MUTED, size=0.4, alpha=0.35
     )
-    + geom_segment(data=df_thick, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=1.5)
+    + geom_segment(data=df_box, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=1.5)
+    + geom_segment(data=df_outer, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=2.5)
     + geom_text(data=df_cells, mapping=aes(x="x", y="y", label="value"), size=13, color=INK, fontweight="bold")
     + labs(title=title)
     + coord_fixed(ratio=1, xlim=(-0.05, 9.05), ylim=(-0.05, 9.05))
