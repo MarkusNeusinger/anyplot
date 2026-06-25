@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: contour-basic
 created: '2025-12-23T10:03:27Z'
-updated: '2026-06-25T03:49:26Z'
+updated: '2026-06-25T03:59:19Z'
 generated_by: claude-sonnet
 workflow_run: 28145147957
 issue: 855
@@ -12,39 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: both filled contours (geom_contourf) and contour lines
-    (geom_contour) rendered as recommended, with correct colorbar'
-  - Correct imprint_div colormap with theme-adaptive midpoint — zero-crossing blends
-    naturally into background on both light and dark surfaces
-  - 'Full theme-adaptive chrome applied consistently: INK/INK_SOFT tokens used for
-    all title, axis, tick, and legend text elements'
-  - Clean, reproducible code — np.random.seed(42), flat linear script, no dead imports,
-    no fake interactivity
-  - 'Correct canvas dimensions: ggsize(800, 450) + scale=4 produces exact 3200x1800
-    output as required'
+  - Theme-adaptive diverging midpoint (mid=PAGE_BG) elegantly blends zero-crossing
+    regions into the background surface
+  - 'Excellent layer composition: geom_contourf + geom_contour + bold dashed zero-crossing
+    boundary + geom_text peak annotations'
+  - letsplot-distinctive interactive tooltips via layer_tooltips() — a genuine differentiating
+    feature
+  - HTML export alongside PNG
+  - 'Full code quality: clean imports, seed set, KISS structure, correct output filenames'
+  - 'Perfect palette compliance: imprint_div colors (#AE3030 / PAGE_BG / #4467A3)
+    and theme-adaptive chrome throughout'
   weaknesses:
-  - Design excellence is modest — no explicit spine removal beyond theme_minimal defaults,
-    no annotations or data callouts to guide the viewer to key features
-  - Near-zero surface regions become nearly invisible in both themes since midpoint
-    color matches PAGE_BG — adding a zero-contour line in a distinct style (e.g. dashed
-    or bolder weight) would clarify the diverging boundary
-  - LM-02 is low — no advanced lets-plot features (interactive tooltips, faceting)
-    are showcased beyond the basic geom_contourf + geom_contour combination
+  - 'Near-zero filled contour bands blend into the dark (#1A1A17) background making
+    the transition regions visually ambiguous in the dark render — consider setting
+    mid to a slightly lighter neutral (e.g. #2E2E2A) rather than the full PAGE_BG
+    to retain fill visibility at zero'
+  - Peak A annotation text (geom_text size=4mm) is hard to read in the dense contour
+    region at (1, 1.3) — increase to size=5 and add color=INK_SOFT or use a contrasting
+    background
+  - 'Spec requires labeling key contour levels: only peak names and the zero boundary
+    are identified, but no numeric iso-value labels appear on the contour lines —
+    add geom_text annotations or contour_label breaks for 3–4 representative levels
+    (e.g. 0.25, 0.5, 0.75)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "contour-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "X Coordinate" / "Y Coordinate" in INK (#1A1A17). Tick labels in INK_SOFT (#4A4A44), readable. Legend title "Surface Height" in INK, legend text in INK_SOFT — all readable.
-      Data: Two blue Gaussian peaks (upper-right and lower-left quadrants) and one small salmon/red depression near (-0.5, 1.5). Filled contours from AE3030 (negative) through PAGE_BG (zero) to 4467A3 (positive). Contour lines overlaid at alpha=0.4. First data series is blue (#4467A3 at high values) — this is a continuous plot, not categorical.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct PAGE_BG, no pure white
+      Chrome: Title "contour-basic · python · letsplot · anyplot.ai" in dark ink at top-left; "X Coordinate" and "Y Coordinate" axis labels in dark ink; tick labels in INK_SOFT (#4A4A44); legend "Surface Height" colorbar on right — all readable
+      Data: Two dominant positive Gaussian peaks rendered in deep blue (#4467A3 high), a small negative depression visible as a pink/salmon region near (0, 1.5), dashed contour lines overlaid, bold dashed zero-crossing boundary, "Peak A" and "Peak B" annotations in dark ink; diverging fill from #AE3030 (negative) through off-white (zero) to #4467A3 (positive)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels all in light text (INK/#F0EFE8 for primary, INK_SOFT/#B8B7B0 for secondary). All text clearly readable against dark background. No dark-on-dark failures detected. Legend text legible.
-      Data: Colors identical to light render — blue peaks and matte-red depression at same positions. Contour lines appear lighter (INK = #F0EFE8 at alpha=0.4 = subtle off-white strokes), correct for dark theme adaptation.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct PAGE_BG, no pure black
+      Chrome: Title in light (#F0EFE8) ink at top-left; axis labels in light ink; tick labels in B8B7B0 (INK_SOFT for dark); legend on right with dark-themed background — all readable, no dark-on-dark failures observed
+      Data: Colors are consistent with light render — deep blue peaks, red/dark negative depression, now with white dashed contour lines (higher contrast on dark background); the zero-crossing filled bands blend closely into the #1A1A17 background due to mid=PAGE_BG, making transition regions at z≈0 somewhat visually ambiguous — contour line structure compensates
+      Legibility verdict: PASS — all chrome text readable; note that near-zero fills are hard to distinguish from background but no text legibility failures
   criteria_checklist:
     visual_quality:
       score: 28
@@ -55,53 +59,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=16, axis_title=12, axis_text=10,
-          legend=10). All text readable in both themes. Title at ~40-45% width is
-          slightly below 50% guidance but not a deduction for a 46-char title.
+        comment: Title, axis labels, tick labels all readable in both themes; Peak
+          A annotation slightly small (size=4mm) in dense contour area
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Legend positioned in right margin without touching
-          data elements.
+        comment: No text-on-text or text-on-data overlaps
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Filled contours and lines clearly visible. Near-zero regions blend
-          into background (intentional midpoint=PAGE_BG) reducing contrast at zero-crossing
-          transition zones.
+        comment: Filled contours and lines visible; near-zero bands blend into dark
+          background due to mid=PAGE_BG
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red-neutral-blue is CVD-safe. Hue and lightness both encode
-          polarity.
+        comment: Red-blue diverging palette; no red-green confusion; adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (800x450 ggsize, scale=4). No overflow or
-          clipping.
+        comment: 3200x1800 canvas confirmed; good proportions; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Axis labels descriptive.
+        comment: Descriptive labels; colorbar labeled Surface Height; title in correct
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div colormap (#AE3030 → PAGE_BG → #4467A3) with theme-adaptive
-          midpoint. Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Imprint diverging palette (#AE3030 / PAGE_BG / #4467A3); PAGE_BG
+          backgrounds correct for both themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -109,25 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): correct imprint_div with theme-adaptive mid,
-          deliberate geom layering. No exceptional polish — no spine removal beyond
-          minimal defaults, no typographic hierarchy beyond sizes.'
+        comment: Theme-adaptive midpoint, multi-layer composition, interactive tooltips
+          — above default; not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_minimal base, minor grid removed, grid at size=0.3, elevated
-          legend fill. Adequate above defaults.
+        comment: Panel border removed, minor grid removed, major grid subtle, alpha-blended
+          contour lines — solid refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Two-peak + depression creates clear focal points. Diverging colormap
-          direction aids reading. No annotations or callouts.
+        comment: Zero-crossing boundary highlighted, peaks named — above default;
+          no subtitle or deeper narrative context
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geom_contourf + geom_contour as spec recommends.'
+        comment: Correct contour plot with both filled (geom_contourf) and line (geom_contour)
+          layers
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Colorbar present, both filled regions and contour lines, 80x80 grid
-          within 20x20-100x100 range.
+        comment: Diverging colormap, colorbar, filled+line contours, 80x80 grid —
+          good; spec asks to label key contour levels but only peaks annotated and
+          zero boundary highlighted, no numeric level labels on contour lines
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid -3 to 3, Z is Gaussian surface with peaks and depression;
-          all data shown.
+        comment: X/Y coordinates correctly mapped, Z drives fill and contours, full
+          [-3,3] range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'contour-basic · python · letsplot · anyplot.ai'. Legend
-          label 'Surface Height' descriptive.
+        comment: Title matches required format; Surface Height colorbar legend present
     data_quality:
       score: 15
       max: 15
@@ -166,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two positive peaks and one negative depression show full diverging
-          range. Multi-modal surface demonstrates contour plot capabilities.
+        comment: Shows positive and negative regions, multiple contour levels (bins=12),
+          diverging structure, zero-crossing, peaks
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematical Gaussian surface is standard, neutral scientific data.
-          No controversial content.
+        comment: 2D Gaussian surface with dual peaks and depression — mathematically
+          realistic, neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain [-3,3]x[-3,3] appropriate for unit-sigma Gaussians. Z range
-          ~-0.3 to 1.0 creates meaningful diverging signal.
+        comment: 80x80 grid within spec range (20x20–100x100); [-3,3] coordinate range;
+          Z in [-0.3, 1.0]
     code_quality:
       score: 10
       max: 10
@@ -191,34 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat linear script.
+        comment: No functions or classes; linear readable structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; data is fully deterministic via meshgrid
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used. No dead imports.
+        comment: All 14 lets_plot imports are used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake interactivity. Theme tokens cleanly
-          factored.
+        comment: No fake UI; real letsplot tooltips; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; scale=4 for correct
+          3200x1800 output
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -226,27 +226,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper grammar-of-graphics pattern. aes(fill='..level..') computed
-          aesthetic is idiomatic lets-plot. scale_fill_gradient2 correctly configured.
+        comment: Grammar of graphics pattern; proper ggplot+geoms+scales+theme composition;
+          ggsize and ggsave with scale
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export and computed aesthetic (..level..) demonstrate lets-plot
-          knowledge. No advanced features (tooltips, faceting, interactive layers)
-          leveraged.
+        passed: true
+        comment: layer_tooltips() for interactive hover (letsplot-distinctive); HTML
+          export; multiple layered geoms with breaks parameter
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - layer-composition
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
