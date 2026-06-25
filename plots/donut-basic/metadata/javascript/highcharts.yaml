@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: donut-basic
 created: '2026-06-25T05:53:52Z'
-updated: '2026-06-25T06:00:32Z'
+updated: '2026-06-25T06:12:46Z'
 generated_by: claude-sonnet
 workflow_run: 28149750794
 issue: 733
@@ -15,43 +15,44 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 quality_score: 88
 review:
   strengths:
-  - Correct donut chart with hollow center and all 6 spec-required features implemented
-  - Center annotation using Highcharts renderer API ($1.4M total + label) creates
-    a genuine focal point
-  - 'Imprint palette applied correctly via t.palette — first series R\u0026D is #009E73,
-    all 6 slots in canonical order'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes work correctly — data colors identical,
-    chrome flips cleanly
-  - 'Clean idiomatic JS: deterministic hardcoded data, chart.events.render for SVG
-    center text, destroy/recreate pattern prevents duplication on re-render'
-  - Square orientation directive correctly chosen for symmetric donut layout
-  - 'borderWidth: 0 and textOutline: none give clean segment rendering; connectorColor/connectorWidth
-    explicitly set'
+  - 'Spec-complete: all four spec notes (center metric, percentages, ordering, thick
+    ring) are implemented'
+  - Center text implemented correctly via Highcharts SVG renderer (this.renderer.text())
+    with proper re-render cleanup (destroy() pattern)
+  - Theme-adaptive chrome is fully correct — all text, connectors, and center labels
+    use t.ink / t.inkSoft tokens
+  - 'Imprint palette applied via colors: t.palette with brand green leading as first
+    series (R&D)'
+  - Responsive rule intelligently hides data labels and shows legend at mobile width
+    (<500px)
+  - R&D sliced segment creates visual emphasis that matches the data story (dominant
+    category)
+  - 'Zero borders on segments (borderWidth: 0) produces a clean, modern donut look'
   weaknesses:
-  - 'DE-01/DE-02: Design sophistication is above default but not exceptional — no
-    subtitle with context info, no segment emphasis for the dominant R\u0026D slice,
-    styling stays close to clean defaults; repair should add a descriptive subtitle
-    and consider highlighting the largest segment'
-  - 'VQ-01 mobile scale: data-label connectors at 13px CSS (26px native) scale to
-    ~2px at 400px mobile — consider bumping to 14-15px for connector labels'
-  - 'LM-02: Center text via renderer is Highcharts-distinctive, but no other uniquely-Highcharts
-    feature is used (e.g., point.events, custom render hooks for segment glow, or
-    a responsive.rules block for label visibility at small sizes)'
+  - 'Data label font (14px) for smallest segments (HR 6.1%) is borderline at full
+    resolution — bump to 15px with connectorWidth: 1.5 would help legibility'
+  - Left-side label column (IT/Marketing/Operations) shows mild crowding; increasing
+    distance from 28 to 36 would add breathing room
+  - Design Excellence ceiling limited by connector style — straight connectors are
+    functional but a crinkled/angled connector or direct label placement would be
+    more refined
+  - DE-03 could be elevated by making the R&D segment visually bolder (e.g., slight
+    highlight ring or brightness emphasis on the dominant slice beyond just slicedOffset)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "donut-basic · javascript · highcharts · anyplot.ai" in dark ink at 22px, clearly readable. Data labels (category name + percentage, e.g. "R&D / 30.0%") in dark ink with connector lines, legible at desktop scale. Center value "$1.4M" in bold 38px ink, "Total Budget" in 15px inkSoft — both readable.
-      Data: 6 segments in Imprint palette order: R&D = #009E73 (brand green), Sales = #C475FD (lavender), Operations = #4467A3 (blue), Marketing = #BD8233 (ochre), IT = #AE3030 (matte red), HR = #2ABCCD (cyan). First series is brand green — correct.
-      Legibility verdict: PASS. All elements clearly readable at desktop. Connector labels at 13px CSS may be challenging at extreme mobile scale (~400px).
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "donut-basic · javascript · highcharts · anyplot.ai" in dark ink (22px, bold), readable. Subtitle "FY 2024 Annual Budget Allocation by Department" in inkSoft, readable. Data labels (14px) show bold department name + percentage on second line, connected via thin inkSoft connector lines.
+      Data: 6 segments — R&D brand green #009E73 (30.0%, sliced out), Sales lavender, Operations blue, Marketing ochre, IT matte red, HR cyan. All Imprint palette in canonical order. Center shows "$1.4M" in large dark ink (38px bold) and "Total Budget" in inkSoft (15px).
+      Legibility verdict: PASS — all title, labels, and center text clearly readable; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light ink (#F0EFE8-family), clearly readable against dark background. Data label connectors in light ink, readable. Center "$1.4M" in light ink, "Total Budget" in lighter inkSoft — both visible and readable. No dark-on-dark failures observed.
-      Data: Segment colors are identical to the light render — R&D green, Sales lavender, Operations blue, Marketing ochre, IT red, HR cyan. Only chrome flips, data stays constant. Correct.
-      Legibility verdict: PASS. No text is dark-on-dark. All labels visible. No VQ-01 or VQ-07 failures from theme adaptation.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and subtitle rendered in light-colored text (t.ink = #F0EFE8) on dark background — fully readable. Data labels appear in light ink via theme tokens. Center "$1.4M" in off-white ink, "Total Budget" in inkSoft (#B8B7B0), both readable against the dark hollow center area.
+      Data: Segment colors are identical to light render — Imprint palette unchanged (green/lavender/blue/ochre/red/cyan). Only chrome elements have flipped. Brand green #009E73 is clearly visible on the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable; correct theme adaptation throughout
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -59,52 +60,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, labels 13px, center 38px/15px).
-          Readable in both themes. Minor concern: 13px connector labels at mobile
-          scale (~400px) approach illegibility.'
+        comment: 'Font sizes explicitly set (title 22px, labels 14px, center 38px).
+          Readable in both themes. Responsive rule hides labels at <500px for mobile.
+          Minor: HR 6.1% label borderline small at full res.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All data label connectors well-spaced, no text overlaps anywhere.
+        comment: No actual overlap — connector lines separate labels cleanly. Minor
+          crowding on left-side label column (IT/Marketing/Operations) but no collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 6 segments clearly visible, center annotation visible, connector
-          labels readable.
+        comment: All 6 segments visible including smallest HR slice. Imprint palette
+          provides strong perceptual separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; 6 categories at borderline ΔE but data
-          labels provide redundant encoding.
+        comment: Imprint palette is CVD-optimised. No red-green as sole distinguishing
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas correctly chosen. Donut fills >60% of canvas. No clipping,
-          generous whitespace.
+        comment: Square 2400x2400 orientation correct for donut. Canvas gate passed.
+          Donut well-centred with appropriate ring width.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed. Title correct. Category labels with percentages serve
-          as data labels.
+        comment: No axis labels (correct for pie). Title matches required format.
+          Subtitle provides descriptive context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette assigned to colors, first series R&D = #009E73. Transparent
-          background passes pageBg through. Both themes theme-correct.'
+        comment: 'colors: t.palette sets Imprint palette with brand green #009E73
+          first. chart.backgroundColor: transparent lets harness pageBg show. Data
+          colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,25 +115,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: center annotation via renderer API adds
-          genuine polish. Imprint palette applied. But no subtitle, no segment emphasis,
-          no distinctive typographic hierarchy. Not yet publication-ready.'
+        comment: Above default (4). Center metric via chart.renderer.text() adds informational
+          value. Subtitle provides domain framing. Sliced R&D for emphasis. Could
+          push further with label style variation.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'borderWidth: 0 and textOutline: none are refinements above defaults.
-          connectorColor/connectorWidth explicitly set. No grid (correct for donut).
-          Some refinement visible but stays close to defaults.'
+        comment: 'Above default (2). borderWidth: 0 removes borders. No box legend.
+          Thin connectorWidth: 1 lines. Connectors could be styled more elegantly.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Center $1.4M total creates a clear focal point and summary. Segments
-          ordered largest-to-smallest. Budget allocation context is immediately clear.
-          No highlighting of dominant R&D segment.
+        comment: Above default (2). Sliced R&D emphasises dominant category. Center
+          total contextualises the ring. Could improve with stronger visual contrast
+          on dominant slice.
     spec_compliance:
       score: 15
       max: 15
@@ -140,29 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct donut chart — pie type with innerSize: 55%.'
+        comment: 'Correct donut chart using type: pie with innerSize: 55%.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hollow center, center metric ($1.4M total), percentage labels on
-          segments, consistent segment ordering — all present.
+        comment: Center metric ($1.4M total), percentage labels, consistent ordering,
+          thick ring (55% inner) — all spec notes addressed.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories mapped to segments, values proportional. All 6 departments
-          shown.
+        comment: 6 categories within 3-8 range. Values are plausible proportional
+          budget figures.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''donut-basic · javascript · highcharts · anyplot.ai'' —
-          exact format. Legend disabled; data labels used instead (appropriate for
-          donut).'
+        comment: 'Title: donut-basic · javascript · highcharts · anyplot.ai matches
+          required format exactly. No legend appropriate (data labels serve this role).'
     data_quality:
       score: 15
       max: 15
@@ -172,22 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 segments (within 3-8 range), varying proportions, center metric,
-          percentage labels — all features of the plot type shown.
+        comment: Demonstrates ring format, hollow center metric, percentage labels,
+          connector lines, segment emphasis via slicing, 6-category split.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual budget allocation by department ($K) — real, neutral, business
-          context. Not abstract labels.
+        comment: FY 2024 department budget allocation is a prototypical real-world
+          donut chart use case. Values realistic and non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: R&D 30% largest, HR 6.1% smallest — realistic corporate budget distribution.
-          Total $1.4M plausible for department allocation ($K values).
+        comment: Dollar values in $K range summing to $1.4M plausible for annual department
+          budget.
     code_quality:
       score: 10
       max: 10
@@ -197,60 +198,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → chart call. No functions, no classes. Clean top-level flow.
+        comment: No helper functions or classes. Clean flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data. No RNG.
+        comment: All data hard-coded deterministically. No RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses Highcharts global correctly. Only t = window.ANYPLOT_TOKENS
-          used.
+        comment: No imports. Uses only harness-provided Highcharts global and window.ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean JS idiom. chart.events.render with destroy/recreate is the
-          correct Highcharts pattern for persistent SVG elements.
+        comment: Proper cleanup of center text elements on re-render (destroy() pattern).
+          No fake UI. Responsive config is a bonus.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Square orientation directive on line 1. No width/height override.
-          Correct .js file for JS harness.
+        comment: Harness handles output. Snippet is correctly self-contained.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct pie with innerSize for donut. chart.events.render lifecycle
+          hook used correctly. animation: false in both required places. credits disabled.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: pie type with innerSize, colorByPoint, dataLabels with connector,
-          chart.events.render — all Highcharts-idiomatic patterns used correctly.
-          Above default of 3.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Highcharts renderer API (this.renderer.text(), .css(), .add(), .destroy())
-          for custom SVG center text positioned via s.center — genuinely Highcharts-distinctive.
-          Above default of 1. No other distinctively-Highcharts features (responsive.rules,
-          point.events, etc.).
-  verdict: REJECTED
+        comment: 'SVG renderer (this.renderer.text()) for center text is a distinctive
+          Highcharts feature. sliced: true is Highcharts-specific. responsive.rules
+          and point.events.legendItemClick also library-specific. -1 pt: responsive
+          rule is minor addition.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns: []
+  - html-export
+  patterns:
+  - data-generation
   dataprep: []
   styling: []
