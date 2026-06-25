@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: plotly 6.7.0 | Python 3.14.4
-Quality: 89/100 | Updated: 2026-04-23
+Quality: 89/100 | Updated: 2026-06-25
 """
 
 import os
@@ -17,8 +17,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"  # Okabe-Ito position 1 — always first series
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — always first series
 
 # Data: study hours vs exam scores, moderate positive correlation
 np.random.seed(42)
@@ -36,13 +36,33 @@ point_alpha = 0.90 - 0.35 * density_rank  # sparse: 0.90, dense: 0.55
 # Percentile rank for richer hover context
 score_percentile = np.argsort(np.argsort(exam_scores)) / (n_students - 1) * 100
 
+# Linear regression trendline to make the positive correlation explicit
+slope, intercept = np.polyfit(study_hours, exam_scores, 1)
+x_line = np.array([1.0, 10.0])
+y_line = slope * x_line + intercept
+
 # Plot
-fig = go.Figure(
+fig = go.Figure()
+
+# Regression trendline (drawn first so scatter points appear on top)
+fig.add_trace(
+    go.Scatter(
+        x=x_line,
+        y=y_line,
+        mode="lines",
+        line={"color": INK_SOFT, "width": 2, "dash": "dot"},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Scatter points
+fig.add_trace(
     go.Scatter(
         x=study_hours,
         y=exam_scores,
         mode="markers",
-        marker={"size": 14, "color": BRAND, "opacity": point_alpha, "line": {"width": 1.2, "color": PAGE_BG}},
+        marker={"size": 10, "color": BRAND, "opacity": point_alpha, "line": {"width": 1.2, "color": PAGE_BG}},
         customdata=np.stack([score_percentile], axis=-1),
         hovertemplate=(
             "<b>Study Hours</b>: %{x:.1f} h/day<br>"
@@ -53,18 +73,19 @@ fig = go.Figure(
     )
 )
 
-# Style
+# Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "scatter-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "scatter-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.95,
     },
     xaxis={
-        "title": {"text": "Study Hours per Day", "font": {"size": 22, "color": INK}, "standoff": 12},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Study Hours per Day", "font": {"size": 12, "color": INK}, "standoff": 12},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
@@ -76,8 +97,8 @@ fig.update_layout(
         "ticksuffix": " h",
     },
     yaxis={
-        "title": {"text": "Exam Score (%)", "font": {"size": 22, "color": INK}, "standoff": 12},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Exam Score (%)", "font": {"size": 12, "color": INK}, "standoff": 12},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
         "linecolor": INK_SOFT,
@@ -91,13 +112,13 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK, "family": "Inter, Helvetica Neue, Arial, sans-serif"},
-    margin={"l": 100, "r": 70, "t": 110, "b": 90},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     hovermode="closest",
-    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 15}, "align": "left"},
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 13}, "align": "left"},
 )
 
-# Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save — landscape 3200×1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(
     f"plot-{THEME}.html",
     include_plotlyjs="cdn",
