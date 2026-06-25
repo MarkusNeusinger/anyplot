@@ -2,51 +2,55 @@ library: matplotlib
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T21:32:57Z'
-generated_by: claude-opus
-workflow_run: 24859480936
+updated: '2026-06-25T01:34:04Z'
+generated_by: claude-sonnet
+workflow_run: 28140194517
 issue: 611
-python_version: 3.14.4
-library_version: 3.10.8
+language_version: 3.13.14
+library_version: 3.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders pass readability check;
-    background, text, grid, and spine colors all flip correctly using the token pattern'
-  - All font sizes explicitly set at recommended values (24/20/16); zero legibility
-    issues in either theme
-  - Informative Pearson r footnote adds interpretive value beyond a plain scatter
-  - Thematic edgecolors=PAGE_BG is a nice technique that gives scatter points subtle
-    definition without visual noise
-  - 'Perfect code quality: flat KISS structure, seed set, clean imports, correct output
-    filenames'
-  - 'Full spec compliance: title format, axis labels with units, alpha transparency,
-    grid lines'
+  - Correct Imprint palette (#009E73 brand green as single series) with perfect theme-adaptive
+    chrome — both light (#FAF8F1 bg) and dark (#1A1A17 bg) renders are fully readable
+    with properly flipped text/grid/spine tokens
+  - 'Statistical enhancement beyond spec: OLS trend line with 95% confidence band
+    (fill_between) and Pearson r footnote (fig.text) elevate this above a basic scatter
+    — strong data storytelling'
+  - All font sizes explicitly set (title=12, axis labels=10, ticks=8, footnote=8)
+    and well-proportioned across both renders
+  - Top/right spines removed, tick marks length=0, subtle y-axis-only grid (alpha=0.12),
+    and marker PAGE_BG edges provide polished visual refinement
+  - KISS flat structure with np.random.seed(42), all imports used, no bare plot.png
+    — clean code throughout
+  - 'Idiomatic matplotlib usage: ax.* methods (not plt.*), mpl.rcParams.update, fig.text()
+    for figure-level annotation, correct savefig without bbox_inches=''tight'''
   weaknesses:
-  - Correlation r=0.92 is substantially higher than the spec's 'moderate r~0.7' —
-    increase noise sigma from 6.5 to ~12 so the scatter demonstrates typical uncertainty
-    rather than near-linear determinism
-  - 'No visual hierarchy or emphasis (DE-03): all points identical size/color; consider
-    adding a trend line (np.polyfit/np.poly1d) or using color/size variation to create
-    a focal point that guides the viewer'
-  - Marker size s=95 is functional but at the lower bound of the recommended 50-100
-    range for 180 points; s=120-150 would read better at full resolution
+  - Marker size s=130 is slightly above the recommended range (s=50-100) for 180 data
+    points per VQ-03 density guidelines — causes mild overplotting in the 1-3 hour
+    cluster. Reduce to s=80-100 to better reveal point density at high-overlap regions
+  - 'Y-axis only grid: the style guide recommends both axes for scatter plots (to
+    allow X and Y value estimation). Consider adding subtle x-axis grid at the same
+    alpha=0.12 to improve value reading'
+  - 'LM-02: While fill_between and fig.text are used well, more distinctive matplotlib
+    features could be showcased (e.g., matplotlib.ticker for custom tick formatting,
+    or mpl.transforms for precise annotation placement)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "scatter-basic · matplotlib · anyplot.ai" in dark ink, fontsize 24, clearly readable. Axis labels "Study Hours per Week" and "Exam Score (%)" in dark ink, fontsize 20, fully legible. Tick labels at fontsize 16 in muted dark tone, clearly readable. Subtle bi-axial grid at alpha=0.10. Top/right spines removed. Footnote "n = 180 · Pearson r = 0.92" in tertiary muted text, readable.
-      Data: 180 scatter points in brand green #009E73 with alpha=0.65. Positive upward trend clearly visible. Edge colors match PAGE_BG for subtle definition.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "scatter-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17) at top — fully readable. Axis labels "Study Hours per Week" (x) and "Exam Score (%)" (y) in dark ink at 10pt. Tick labels in INK_SOFT (#4A4A44) at 8pt — all visible. Footnote "n = 180 · Pearson r = 0.80" in INK_MUTED at bottom-right — readable. L-shaped spines (left+bottom only) in INK_SOFT. Subtle horizontal grid lines.
+      Data: 180 scatter points in #009E73 (brand green) with alpha=0.65 and PAGE_BG-colored edges. OLS trend line in gray (INK_SOFT) with 95% confidence band as a very subtle shaded fill. Clear positive correlation visible.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels all in light #F0EFE8/#B8B7B0 tones against dark surface — all clearly readable. No dark-on-dark failures detected. Grid lines subtle and visible. Footnote in muted light text, visible.
-      Data: Brand green #009E73 scatter points — identical to light render. Okabe-Ito data colors unchanged between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title in INK (#F0EFE8) — clearly visible against dark background. Axis labels in INK, tick labels in INK_SOFT (#B8B7B0) — all properly light-colored and readable. Footnote in INK_MUTED (#A8A79F) — visible. Spines in INK_SOFT. No dark-on-dark failures detected.
+      Data: Scatter points in same #009E73 green — identical to light render. Trend line in lighter gray (INK_SOFT dark variant #B8B7B0). Confidence band barely visible but present. Data colors are theme-invariant as required.
+      Legibility verdict: PASS — all text readable against dark background. No "dark on dark" failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,71 +61,82 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; readable
-          in both themes
+        comment: 'All font sizes explicitly set: title=12, axis labels=10, ticks=8,
+          footnote=8. Well-proportioned in both themes. Title is 43 chars so default
+          12pt applies without overflow.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; alpha=0.65 handles point density
+        comment: No text overlaps. Footnote well-positioned at bottom-right. Data
+          points overlap each other (expected for scatter density) but no label collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: s=95 with 180 points at lower end of 50-100 recommended range; visible
-          but could be slightly larger
+        comment: 180 points with s=130 alpha=0.65. Alpha is within recommended 0.5-0.7
+          range but s=130 exceeds recommended 50-100 for this density. Minor overplotting
+          in 1-3 hour cluster.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series; CVD-safe by design
+        comment: 'Single series in #009E73 (CVD-safe green). Good contrast on both
+          light and dark surfaces. Trend line in gray provides additional non-color
+          distinction.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions, generous margins, nothing cut off
+        comment: Canvas gate passed. subplots_adjust(left=0.09, right=0.97, top=0.90,
+          bottom=0.14) creates balanced margins. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Exam Score (%) and Study Hours per Week include units
+        comment: 'X: ''Study Hours per Week'', Y: ''Exam Score (%)'' with unit. Title
+          matches exact required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome flips
-          correctly'
+        comment: 'Primary series uses #009E73 (Imprint position 1). Backgrounds are
+          #FAF8F1 (light) and #1A1A17 (dark). All chrome tokens (INK, INK_SOFT, INK_MUTED)
+          properly theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured default: brand green, thematic edgecolors=PAGE_BG,
-          rcParams typography, Pearson r footnote. Not yet strong design level.'
+        comment: 'Strong design: Imprint palette, confidence band, Pearson r footnote,
+          marker PAGE_BG edges, theme-adaptive chrome. Clearly above defaults. Not
+          yet FiveThirtyEight-level publication quality.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, grid alpha=0.10, tick length=0, spine linewidth=0.8,
-          set_axisbelow(True). Clear refinement above default.
+        comment: Top/right spines removed, tick marks length=0, subtle y-axis grid
+          (alpha=0.12, linewidth=0.6), generous whitespace via subplots_adjust. Missing
+          x-axis grid for scatter value reading.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Pearson r footnote adds context above default, but no visual hierarchy:
-          all points same size/color, no trend line, no focal emphasis'
+        passed: true
+        comment: 'Visual hierarchy: prominent green scatter as primary layer, gray
+          trend line as guide, subtle confidence band as context, Pearson r annotation
+          as statistical summary. Clear positive correlation story.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +146,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot
+        comment: Correct 2D scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: alpha=0.65, axis labels with units, title, grid lines all present
+        comment: Moderate alpha transparency (0.65 ~0.7 spec), axis labels, title,
+          grid lines all present. Trend line/confidence band goes beyond spec requirements.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Study hours on x, exam scores on y; all 180 points visible
+        comment: Study hours on X (independent), exam scores on Y (dependent). All
+          180 data points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'scatter-basic · matplotlib · anyplot.ai'; single
-          series, no legend needed
+        comment: Title 'scatter-basic · python · matplotlib · anyplot.ai' exactly
+          matches required format. No legend (single series — correct omission).
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: r=0.92 considerably stronger than spec's moderate r~0.7; relationship
-          appears near-deterministic rather than showing typical scatter uncertainty
+        passed: true
+        comment: Shows correlation, noise/scatter around trend, full range from low
+          to high study hours, real distribution pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Study hours vs exam scores: classic neutral educational example'
+        comment: 'Education domain: study hours vs exam scores. Real-world, relatable,
+          neutral scenario.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours 1-12/week and exam scores 35-100% perfectly realistic
+        comment: Study hours 1-12/week plausible. Exam scores 35-100% realistic. Pearson
+          r=0.80 slightly higher than spec's r~0.7 but within plausible range.
     code_quality:
       score: 10
       max: 10
@@ -183,59 +202,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme tokens → data → plot → save'
+        comment: 'Flat: imports → tokens → data → plot → style → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib as mpl, matplotlib.pyplot as plt, numpy as np — all
-          used
+        comment: os, matplotlib, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Clean Pythonic code. Manual SE calculation is verbose but statistically
+          correct. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: f'plot-{THEME}.png' correct; no deprecated functions
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current matplotlib
+          3.11 API throughout.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes-method API, mpl.rcParams.update(), set_axisbelow(), ax.margins()
-          — well above generic usage
+        comment: Exclusively uses ax.* methods. Proper mpl.rcParams.update, fig.text()
+          for figure-level annotation, savefig without bbox_inches parameter — all
+          idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: mpl.rcParams.update() for typography, edgecolors=PAGE_BG for theme-adaptive
-          edges, set_axisbelow(), tick_params(length=0) — multiple matplotlib-specific
-          techniques
-  verdict: REJECTED
+        comment: fill_between for confidence band is a matplotlib-distinctive technique.
+          fig.text() for figure-level footnote and subplots_adjust for precise layout
+          control are library-specific. Could go further with custom tickers or matplotlib.transforms.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
