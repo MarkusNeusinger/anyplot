@@ -2,42 +2,47 @@ library: letsplot
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:25:24Z'
-updated: '2026-04-24T09:40:30Z'
-generated_by: claude-opus
-workflow_run: 24882626131
+updated: '2026-06-25T08:00:13Z'
+generated_by: claude-sonnet
+workflow_run: 28154916706
 issue: 1311
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all required features present (thick/thin line hierarchy,
-    blank empty cells, correct number placement)
-  - Excellent dark theme adaptation — INK/INK_SOFT tokens applied to all text and
-    lines; no dark-on-dark failures
-  - Clean minimal code with idiomatic ggplot grammar; theme_void() correctly strips
-    unwanted chrome
-  - Square 3600x3600 px output with proper scale=3 for correct high-res rendering
+  - Perfect spec compliance — all five required features (thick 3x3 borders, thin
+    cell dividers, centered numbers, blank empty cells, monochrome design) correctly
+    implemented.
+  - Theme adaptation is textbook correct — INK and INK_SOFT tokens used for grid lines,
+    text, and borders; PAGE_BG for cell fills; both light and dark renders look polished.
+  - layer_tooltips() intelligently exposes row, col, box, and status metadata — makes
+    the HTML export genuinely interactive without faking anything.
+  - Correct 2400x2400 square canvas via ggsize(600,600) + scale=4; coord_fixed(ratio=1)
+    ensures the grid stays perfectly square.
+  - Clean, minimal code with no unnecessary abstractions; fully deterministic data.
   weaknesses:
-  - Number font size (18pt) is small for 3600x3600 px canvas — closer to 22-24pt would
-    improve readability at full resolution
-  - No use of deeper lets-plot features in HTML export (e.g., tooltips, interactivity)
+  - ELEVATED_BG token is defined but never used in the plot — minor dead code (could
+    be removed or used for 3x3 box cell differentiation as a design enhancement).
+  - Design Excellence is constrained by the functional nature of the spec; no alternating
+    3x3 box shading or other visual refinements that could elevate the aesthetic beyond
+    a basic grid.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "sudoku-basic · letsplot · anyplot.ai" in bold dark text — clearly readable. No axis labels/ticks (theme_void).
-      Data: Bold dark numbers (#1A1A17) centered in cells. Thick dark lines for 3x3 box boundaries, thin lines for cell boundaries. Empty cells blank (no zero).
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "sudoku-basic · python · letsplot · anyplot.ai" in bold dark (#1A1A17) text centered above grid, ~55% of canvas width — readable. No axis labels or tick labels (theme_void). Thick near-black borders for 3x3 box boundaries; thinner soft-ink borders for cell dividers.
+      Data: Bold dark (#1A1A17) numbers centered in cells; empty cells are blank. Classic Sudoku puzzle values correctly positioned in 9x9 grid.
+      Legibility verdict: PASS — all text and numbers clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8) — clearly readable. No dark-on-dark issues detected.
-      Data: Numbers in near-white (#F0EFE8) on dark background — excellent contrast. Thin lines in #B8B7B0, thick lines in #F0EFE8. Data colors identical to light render (monochrome).
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black.
+      Chrome: Title flips to near-white/cream (#F0EFE8) text — fully readable on dark surface. Thick 3x3 box borders render in light (#F0EFE8); thin cell dividers in softer light (#B8B7B0). All chrome correctly adapts via INK tokens.
+      Data: Numbers render in near-white (#F0EFE8) on dark cell backgrounds — identical positions and values to light render. Only chrome (borders, text colors, background) flips between themes; data element positions are identical.
+      Legibility verdict: PASS — no dark-on-dark failure detected; all numbers and title are clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -48,68 +53,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt and numbers 18pt readable; slight room to go larger at
-          3600x3600px
+        comment: Title and numbers readable in both themes. Numbers slightly large
+          at size=9 (letsplot mm) but proportionate to cells.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All numbers centered cleanly, no collisions
+        comment: No text overlaps with other text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick and thin lines clearly visible in both themes
+        comment: Thick/thin line hierarchy clearly distinct; numbers bold and prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design, high contrast, no CVD concerns
+        comment: Monochrome design with full-contrast ink-on-background; no CVD issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600px, generous margins, proper aspect ratio
+        comment: Square 2400x2400 via ggsize(600,600)+scale=4; generous 40px margins;
+          grid well-proportioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; no axis labels needed
+        comment: Title in required format; no axis labels needed for this plot type.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1/#1A1A17; monochrome design needs no categorical
-          palette'
+        comment: 'Monochrome layout visualization; theme tokens (INK, PAGE_BG) correctly
+          applied. Backgrounds #FAF8F1 light / #1A1A17 dark.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean execution; constrained by monochrome printable spec
+        comment: Clean professional grid with intentional thick/thin hierarchy. Interactive
+          tooltips add context to HTML output.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void removes chrome, generous margins, good line-weight differentiation
+        comment: theme_void removes all chrome; generous margins; no decorative clutter.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Thick/thin line hierarchy communicates 3x3 structure; limited by
-          puzzle format
+        comment: Thick/thin hierarchy guides viewer to understand box vs cell structure;
+          bold numbers focus on given digits.
     spec_compliance:
       score: 15
       max: 15
@@ -119,26 +126,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9x9 sudoku grid
+        comment: Correct 9x9 Sudoku grid.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick box boundaries, thin cell boundaries, centered numbers, blank
-          empty cells
+        comment: Thick 3x3 borders, thin cell dividers, centered numbers, blank empty
+          cells, monochrome design — all implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All grid values correctly positioned
+        comment: Correct 9x9 layout; classic Sudoku puzzle values correctly placed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly
+        comment: Title is exactly 'sudoku-basic · python · letsplot · anyplot.ai';
+          no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -148,19 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: grid structure, numbers, empty cells, 3x3 regions'
+        comment: Full puzzle with both filled and empty cells demonstrating all aspects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic well-known sudoku puzzle; neutral content
+        comment: Classic well-known Sudoku puzzle; neutral data; no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 9x9, values 1-9 with 0 for empty
+        comment: Fixed 9x9 grid with values 1-9; correct scale for the domain.
     code_quality:
       score: 10
       max: 10
@@ -170,33 +178,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: No functions or classes; straightforward procedural code.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic grid
+        comment: Fully deterministic hardcoded puzzle grid; no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used
+        comment: All lets_plot imports used; os used for theme detection.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean list comprehensions, appropriate complexity
+        comment: Clean data construction; efficient dict-based data; layer_tooltips
+          adds interactive context.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current letsplot
+          API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -204,24 +214,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar, coord_fixed, theme_void+theme(), ggsave with
-          scale
+        comment: Proper ggplot grammar; coord_fixed; scale limits with expand=[0,0];
+          theme_void + custom overrides.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export present but no lets-plot-specific interactivity or tooltips
-          leveraged
+        passed: true
+        comment: layer_tooltips() is a distinctive letsplot feature; HTML export alongside
+          PNG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
-  - matrix-construction
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
