@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -16,6 +16,7 @@ from plotnine import (
     element_rect,
     element_text,
     geom_point,
+    geom_smooth,
     ggplot,
     labs,
     scale_x_continuous,
@@ -44,6 +45,7 @@ df = pd.DataFrame({"study_hours": study_hours, "exam_scores": exam_scores})
 title = "scatter-basic · python · plotnine · anyplot.ai"
 plot = (
     ggplot(df, aes(x="study_hours", y="exam_scores"))
+    + geom_smooth(method="lm", color=INK, fill=INK, alpha=0.08, size=1.2, se=True)
     + geom_point(shape="o", fill=BRAND, color=PAGE_BG, alpha=0.65, size=3.0, stroke=0.6)
     + scale_x_continuous(breaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], expand=(0.02, 0.02))
     + scale_y_continuous(breaks=[20, 30, 40, 50, 60, 70, 80, 90, 100], expand=(0.03, 0.03))
@@ -61,7 +63,7 @@ plot = (
         axis_line_x=element_line(color=INK_SOFT, size=0.6),
         axis_line_y=element_blank(),
         panel_grid_major_x=element_blank(),
-        panel_grid_major_y=element_line(color=GRID, size=0.4, alpha=0.10),
+        panel_grid_major_y=element_line(color=GRID, size=0.4, alpha=0.15),
         panel_grid_minor=element_blank(),
         panel_border=element_blank(),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
