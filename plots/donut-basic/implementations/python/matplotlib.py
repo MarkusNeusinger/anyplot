@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-basic: Basic Donut Chart
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -55,7 +55,7 @@ ax.text(0, -0.10, f"${total:,}K", ha="center", va="center", fontsize=22, fontwei
 
 ax.set_aspect("equal")
 
-title = "Budget by Department · donut-basic · matplotlib · anyplot.ai"
+title = "Budget by Department · donut-basic · python · matplotlib · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=14)
 
 # Value-enriched legend: shows category names with absolute budget amounts
