@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-basic: Basic Donut Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-06-25
@@ -51,8 +51,9 @@ total = sum(values)
 # Ring geometry
 INNER_R = 0.62
 OUTER_R = 1.00
-LABEL_R = 1.22  # category labels outside ring
-PCT_R = (INNER_R + OUTER_R) / 2  # pct labels at ring midpoint
+LABEL_R = 1.32  # category labels outside ring — pushed further out to prevent overlap
+PCT_R = 0.75  # pct labels slightly inside ring midpoint for better separation
+SMALL_THRESHOLD = 0.08  # segments under 8%: combine pct into category label
 
 wedge_rows = []
 label_rows = []
@@ -76,8 +77,14 @@ for category, value, color in zip(categories, values, IMPRINT, strict=True):
         wedge_rows.append({"x": x, "y": y, "segment": category, "order": order, "fill": color})
 
     mid = (start_angle + end_angle) / 2
-    label_rows.append({"x": LABEL_R * math.cos(mid), "y": LABEL_R * math.sin(mid), "label": category})
-    pct_rows.append({"x": PCT_R * math.cos(mid), "y": PCT_R * math.sin(mid), "label": f"{value / total * 100:.1f}%"})
+    pct = value / total
+    if pct < SMALL_THRESHOLD:
+        label_rows.append(
+            {"x": LABEL_R * math.cos(mid), "y": LABEL_R * math.sin(mid), "label": f"{category} {pct * 100:.1f}%"}
+        )
+    else:
+        label_rows.append({"x": LABEL_R * math.cos(mid), "y": LABEL_R * math.sin(mid), "label": category})
+        pct_rows.append({"x": PCT_R * math.cos(mid), "y": PCT_R * math.sin(mid), "label": f"{pct * 100:.1f}%"})
 
     start_angle = end_angle
 
@@ -105,8 +112,8 @@ plot = (
     + annotate("text", x=0, y=-0.10, label="Total Budget", size=14, color=INK_SOFT, ha="center")
     + scale_fill_identity()
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-1.50, 1.50))
-    + scale_y_continuous(limits=(-1.40, 1.40))
+    + scale_x_continuous(limits=(-1.65, 1.65))
+    + scale_y_continuous(limits=(-1.55, 1.55))
     + labs(title=TITLE)
     + theme(
         figure_size=(6, 6),
