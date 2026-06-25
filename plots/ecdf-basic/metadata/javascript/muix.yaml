@@ -1,0 +1,258 @@
+library: muix
+language: javascript
+specification_id: ecdf-basic
+created: '2026-06-25T09:55:55Z'
+updated: '2026-06-25T10:18:34Z'
+generated_by: claude-sonnet
+workflow_run: 28161685660
+issue: 976
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correct ECDF step function using curve:stepAfter with accurate 1/n increments
+  - Realistic two-group comparison (teaching methods) tells a clear educational story
+  - ChartsReferenceLine for median annotation adds genuine analytical value
+  - Proper Imprint palette usage (t.palette[0] and t.palette[1]) with correct theme-adaptive
+    chrome in both renders
+  - Deterministic seeded LCG is the correct browser-compatible approach for reproducible
+    data
+  - Explicit font sizing for tick labels (14px) and axis labels (16px) ensures consistent
+    rendering
+  weaknesses:
+  - Legend text font size is not explicitly set — relies on MUI X defaults; set fontSize
+    in slotProps.legend to match the axis sizing
+  - Helper functions (rand, randn, normalSorted, computeEcdf) increase structural
+    complexity beyond flat KISS; consider inlining the LCG into a single normalSorted
+    call or pre-generating hard-coded sorted arrays
+  - Title is rendered as an external HTML div rather than using MUI X chart title
+    slot — minor inconsistency with idiomatic MUI X patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface, not pure white
+      Chrome: Title "ecdf-basic · javascript · muix · anyplot.ai" in bold dark sans-serif at top-left, clearly visible; X-axis label "Exam Score" and Y-axis label "Cumulative Proportion" in dark text, readable; tick labels in dark text at 0%, 20%, 40%, 60%, 80%, 100% on Y and 30–100 on X — all readable; legend in top-center with green and lavender swatches; "Median (50th)" label at right end of dashed reference line — fully visible, not clipped
+      Data: First series (Traditional Teaching) in brand green #009E73; second series (Project-based Learning) in lavender #C475FD; both step-after ECDF curves clearly visible; dashed median reference line at y=50%; curves span ~40–100 exam score range
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black consistent with #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light/off-white text at top-left, clearly readable against dark background; axis labels and tick labels in light-colored text — all readable; legend text in light color; "Median (50th)" reference label in light gray — visible; no dark-on-dark failures; MUI X ThemeProvider correctly adapts chrome tokens
+      Data: First series (Traditional Teaching) in brand green #009E73 — identical to light render; second series (Project-based Learning) in lavender #C475FD — identical to light render; step curve shapes and relative positions unchanged from light render
+      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures; data colors unchanged between themes
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Tick labels (14px CSS) and axis labels (16px CSS) explicitly set;
+          title at 22px CSS bold; legend text size not explicitly set — minor gap
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between any text elements in either theme; 90px left margin
+          provides adequate separation between Y-axis label and tick labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Both ECDF step curves clearly visible at strokeWidth=2.5; median
+          reference line (dashed) clearly readable in both themes; N=80 step density
+          appropriate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint green (#009E73) and lavender (#C475FD) are CVD-safe with
+          high perceptual distance; no red-green dependency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good canvas utilization; balanced margins (90/36/20/100);
+          plot fills most of the canvas area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Exam Score and Cumulative Proportion are descriptive; title format
+          'ecdf-basic · javascript · muix · anyplot.ai' is correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series t.palette[0]=#009E73, second t.palette[1]=#C475FD; light
+          bg t.pageBg=#FAF8F1, dark bg t.pageBg=#1A1A17; chrome handled by ThemeProvider;
+          data colors identical across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: Imprint palette, median reference line
+          annotation, subtle opacity tuning on axis chrome; clean sans-serif typography
+          hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid (strokeOpacity 0.15), reduced axis line/tick
+          opacity (0.3), explicit margins; no explicit spine removal but MUI X defaults
+          are reasonably clean
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Median reference line + two-group teaching comparison creates clear
+          narrative; the rightward shift of project-based learning curve is immediately
+          visible; good visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ECDF step function using curve:'stepAfter'; proper 1/n step
+          increases
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function present; Y-axis 0-1 (as 0%-100%); distinct line colors;
+          horizontal grid lines for percentile reading
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Exam Score on X, Cumulative Proportion (0-1) on Y; both ECDF curves
+          show full range of data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''ecdf-basic · javascript · muix · anyplot.ai'' — exact required
+          format; legend labels ''Traditional Teaching'' and ''Project-based Learning''
+          match data series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full ECDF from 0% to 100% for both groups; two-group comparison demonstrates
+          ECDF's power for distribution comparison; clear separation visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores from two teaching methods (Traditional vs Project-based)
+          is a realistic, neutral educational comparison scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: μ=72/σ=12 (Traditional) and μ=78/σ=10 (Project-based) are realistic
+          exam score distributions; n=80 per group is a plausible study size
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Four helper functions (rand, randn, normalSorted, computeEcdf) add
+          structural complexity; necessary for browser-based deterministic data but
+          deviates from flat KISS ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) is the correct browser-compatible approach for
+          reproducible pseudo-random data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart and ChartsReferenceLine imported from @mui/x-charts;
+          both are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, purposeful code structure; no fake UI elements; appropriate
+          complexity for the visualization
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Community @mui/x-charts only; skipAnimation set; sized to window.ANYPLOT_SIZE;
+          no deprecated APIs
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Very idiomatic: LineChart with series configuration, ChartsReferenceLine,
+          sx prop for SVG styling, ANYPLOT_TOKENS integration; external HTML title
+          div slightly non-idiomatic'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine is MUI X-specific; curve:'stepAfter' and per-series
+          color from t.palette are leveraged effectively; valueFormatter for percentage
+          tick labels
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
