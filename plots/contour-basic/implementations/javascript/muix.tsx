@@ -1,3 +1,7 @@
+// anyplot.ai
+// contour-basic: Basic Contour Plot
+// Library: muix 7.29.1 | JavaScript 22.23.0
+// Quality: 76/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // contour-basic: Basic Contour Plot
