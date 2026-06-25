@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: d3 7.9.0 | JavaScript 22.22.3
-// Quality: 88/100 | Created: 2026-06-02
+// Quality: 94/100 | Updated: 2026-06-25
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
