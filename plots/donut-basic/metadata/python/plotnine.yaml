@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: donut-basic
 created: '2026-04-24T05:43:19Z'
-updated: '2026-06-25T06:03:18Z'
+updated: '2026-06-25T06:20:05Z'
 generated_by: claude-sonnet
 workflow_run: 28149599086
 issue: 733
@@ -12,104 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette (Engineering=brand green #009E73, then lavender/blue/ochre/red
-    in canonical order)'
-  - 'Satisfies spec: hollow ring, percentage labels on segments, center total metric,
-    consistent ordering'
-  - Square 2400×2400 canvas correctly chosen for a symmetric donut shape
-  - Dynamic title font-size formula correctly handles the 67-char mandated title
-  - 'Theme-adaptive chrome: background, ink, and soft-ink tokens used correctly in
-    both light and dark renders'
-  - geom_polygon approach to build ring segments from scratch — idiomatic for plotnine
-    which has no native pie/donut geom
-  - Center "$1,025K / Total Budget" creates a strong focal point and satisfies the
-    hollow-center requirement
+  - Correct Imprint palette with brand green (#009E73) for Engineering first, canonical
+    order through position 5
+  - Center metric ('$1,025K Total Budget') fulfills the spec hollow-center requirement
+    elegantly
+  - Threshold-based combined label for small Support segment (5.4%) prevents label
+    crowding
+  - Clean segment gap implementation using gap angle parameter
+  - Adaptive title font size correctly handles the 68-character title string
+  - Both themes correctly adapt all chrome (backgrounds, text, borders) while keeping
+    data colors identical
+  - 'All spec requirements met at perfect score: ring format, percentage labels, center
+    metric, consistent ordering'
+  - Realistic neutral business dataset with plausible proportions (Engineering-heavy
+    budget for a tech company)
+  - 'Idiomatic plotnine: geom_polygon + scale_fill_identity() + coord_fixed() for
+    custom donut shape'
   weaknesses:
-  - 'Percentage labels and category labels overlap on horizontally-crowded segments:
-    the right-side Engineering segment shows "46.8%" bleeding into "Engineering",
-    and the left-side Operations segment shows "15.1%" overlapping "Operations" —
-    increase PCT_R inward and/or LABEL_R outward to add separation, or rotate/offset
-    specific labels'
-  - LABEL_R=1.22 places category labels near the x-axis limit of 1.50, leaving little
-    breathing room for the right-side Engineering label — consider LABEL_R=1.30 to
-    push labels further from the ring
-  - 'Minor: the Support segment (5.4%) is small enough that the white "5.4%" label
-    inside the thin arc is cramped — consider moving it outside or using a leader
-    line for segments under ~8%'
+  - Title appears left-aligned rather than centered across the full figure width —
+    plotnine element_text(ha='center') for plot_title does not horizontally center
+    the title over the full canvas; try hjust=0.5 or a wider margin to shift it toward
+    center
+  - Slight crowding between inner percentage labels (PCT_R=0.75) and outer category
+    labels (LABEL_R=1.32) at the 3 o'clock and 9 o'clock positions — '46.8%' and 'Engineering'
+    are visually tight on the right side, 'Operations' and '15.1%' are tight on the
+    left; consider increasing PCT_R to 0.80 or LABEL_R to 1.38
+  - Data storytelling could be strengthened — the Engineering segment's dominance
+    (46.8%) is visible but not explicitly called out; a subtle annotation near the
+    center or a slightly bolder percentage label for the largest segment would improve
+    DE-03
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "Budget by Department · donut-basic · python · plotnine · anyplot.ai" is dark (#1A1A17) and clearly readable at top. No axis labels or tick labels (appropriate for donut chart). Category labels (Support, Sales, Operations, Marketing, Engineering) in dark ink outside the ring are legible. Center labels "$1,025K" (bold) and "Total Budget" (softer, #4A4A44 soft-ink) are both readable against the off-white donut hole.
-      Data: 5 Imprint-palette segments — Engineering (#009E73 brand green, ~46.8% arc, first and largest), Marketing (#C475FD lavender), Operations (#4467A3 blue), Sales (#BD8233 ochre), Support (#AE3030 matte red). White percentage labels in bold inside each segment. Gap between segments rendered in PAGE_BG color gives clean separation.
-      Overlap issue: Right-side Engineering segment — "46.8%" inside ring and "Engineering" outside ring are very close, appearing to visually overlap. Left-side Operations segment — "15.1%" and "Operations" similarly crowd together.
-      Legibility verdict: PASS overall, but label crowding on Engineering and Operations segments reduces clarity — two label pairs nearly merge.
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "Budget by Department · donut-basic · python · plotnine · anyplot.ai" at top; appears left-aligned rather than centered (plotnine element_text quirk). All text rendered in dark INK (#1A1A17) or INK_SOFT (#4A4A44) tones. Category labels (Engineering, Marketing, Operations, Sales) outside ring; "Support 5.4%" combined label (below threshold). Percentage labels inside ring (46.8%, 20.5%, 15.1%, 12.2%); white/cream LABEL_ON_WEDGE color is readable against the colored segments. Center shows bold "$1,025K" and softer "Total Budget".
+      Data: Five Imprint palette segments clockwise from 12 o'clock: Engineering (#009E73 green, ~46.8%), Marketing (#C475FD lavender, ~20.5%), Operations (#4467A3 blue, ~15.1%), Sales (#BD8233 ochre, ~12.2%), Support (#AE3030 matte red, ~5.4%). First series is #009E73 as required.
+      Notable: Slight crowding between "46.8%" (inside ring, right) and "Engineering" (outside ring, right), and between "Operations" / "15.1%" on the left, but the ring boundary provides visual separation and all labels are readable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title "Budget by Department · donut-basic · python · plotnine · anyplot.ai" is light (#F0EFE8) against the dark background — clearly readable, no dark-on-dark failure. Category labels outside the ring are light-colored and readable. Center "$1,025K" (bold white/near-white) and "Total Budget" (softer #B8B7B0) are both legible against the dark donut hole. No dark-on-dark failures detected.
-      Data: Segment colors are identical to the light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 — data colors are correctly theme-invariant. White percentage labels remain readable on the colored segments.
-      Overlap issue: Same label crowding as the light render — Engineering (46.8%/Engineering) and Operations (15.1%/Operations) labels nearly merge.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; only issue is the same label-overlap crowding seen in the light render.
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title and all category labels rendered in light INK (#F0EFE8 cream); "Total Budget" sub-label in INK_SOFT (#B8B7B0 warm gray) — both clearly visible against dark background. No dark-on-dark failures observed. Percentage labels inside ring use LABEL_ON_WEDGE (#F0EFE8) — readable against the colored segments on dark background.
+      Data: All five Imprint palette data colors are identical to the light render — Engineering #009E73, Marketing #C475FD, Operations #4467A3, Sales #BD8233, Support #AE3030. Only chrome flips, data colors are theme-invariant as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, center metric, and category labels all readable in both themes.
-          Overlap between pct labels and category labels on Engineering/Operations
-          segments reduces legibility slightly.
+        comment: All font sizes explicitly set (percentage labels size=16, category
+          labels size=14, center metric size=26, title adaptive 12pt). Readable in
+          both themes. Title appears left-aligned rather than centered due to plotnine
+          element_text behavior.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: 'Right-side Engineering segment: 46.8% (inside ring) and Engineering
-          (outside ring) visually overlap. Left-side Operations: 15.1% and Operations
-          also crowd together. Both renders affected.'
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 5 segments clearly visible. Small Support segment (5.4%) is thin
-          but retains a visible label. Percentage labels are bold and visible on all
-          segments.
+        comment: Very tight between 46.8%/Engineering (right) and Operations/15.1%
+          (left) — ring boundary provides visual separation and all text remains readable,
+          but slight crowding reduces score.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five segments clearly visible including small Support (5.4%).
+          Center metric and all text labels prominent and clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used; no red-green-only encoding as sole signal.
-          Brand green anchors the largest segment.
+        comment: Imprint palette is CVD-safe. Category labels provide redundant text
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for symmetric donut. Canvas gate
-          passed. No clipping at edges. Well-proportioned.
+        comment: Square 2400x2400 canvas appropriate for symmetric donut. Ring and
+          labels occupy canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (correct for donut). Title uses correct mandated format
-          with descriptive prefix.
+        comment: Descriptive title with chart context. No axis labels needed for donut
+          chart. Center metric provides quantitative summary.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint positions 1-5 used in canonical order. First series Engineering
-          = #009E73. Background #FAF8F1 light / #1A1A17 dark. Both renders theme-correct.'
+        comment: 'Engineering = #009E73 first. Canonical Imprint order through position
+          5. Light #FAF8F1 and dark #1A1A17 backgrounds correct. Chrome adapts correctly
+          in both renders.'
     design_excellence:
       score: 12
       max: 20
@@ -119,24 +124,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Non-trivial polygon-based donut construction, correct Imprint palette,
-          center metric focal point. Above default 4 due to clear intentional design
-          choices.
+        comment: 'Above standard defaults: center metric display, threshold-based
+          combined label for small segment, adaptive title sizing, clean ring gaps.
+          Well-executed standard donut chart but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: true
-        comment: All axes, ticks, and grid fully removed (appropriate for donut).
-          Gap between segments via PAGE_BG border adds refinement. Label crowding
-          detracts slightly.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Center $1,025K / Total Budget creates strong focal point. Percentage
-          labels guide viewer. Engineering dominance (46.8%) immediately apparent.
+        comment: 'All unnecessary chrome removed: no axes, ticks, grid lines, legend
+          box. Inline category labels replace separate legend. Minor: title left-aligned
+          rather than horizontally centered.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Center metric contextualizes total budget. Engineering dominance
+          visible through large green segment. No explicit callout or annotation highlighting
+          the key insight beyond natural geometry.
     spec_compliance:
       score: 15
       max: 15
@@ -146,28 +152,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut/ring chart with hollow center via geom_polygon construction.
+        comment: Correct donut/ring chart with hollow center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hollow center, percentage labels on segments, center key metric,
-          thick ring, consistent ordering — all present.
+        comment: Center key metric, percentage labels on all segments, consistent
+          clockwise ordering, thick ring width (0.38 units) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories (within 3-8 spec range), values correctly map to segment
-          arc lengths.
+        comment: 5 categories mapped to proportional ring segments. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Budget by Department · donut-basic · python · plotnine
-          · anyplot.ai''. No legend (direct labels used instead — correct substitution).'
+        comment: Title format correct with descriptive prefix. Inline labels replace
+          separate legend appropriately.
     data_quality:
       score: 15
       max: 15
@@ -177,21 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All key donut features shown: ring segments, hollow center, pct
-          labels, category labels, center total metric.'
+        comment: Varied sizes from 5.4% to 46.8% showcase full range including small-segment
+          edge case (combined label handling).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual budget by department is realistic, neutral, and plausible.
+        comment: Corporate department budget allocation is real, neutral, and recognizable.
+          Standard department names.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: USD thousand values are credible for a mid-sized company department
-          budget. Engineering largest at $480K is realistic.
+        comment: $1,025K total budget plausible for mid-sized tech company. Engineering
+          at 46.8% is realistic. All proportions credible.
     code_quality:
       score: 10
       max: 10
@@ -201,32 +207,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: Imports -> Data -> Geometry -> Plot -> Save, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic output.
+        comment: Deterministic hardcoded data, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path cleanup for plotnine shadowing is correct.
+        comment: All imports used including sys.path manipulation for execution context.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean construction. Dynamic title scaling formula is a nice touch.
-          No fake UI.
+        comment: Clean polygon geometry construction with threshold-based combined
+          label logic and adaptive title font sizing.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Correct plotnine save API.
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -236,17 +242,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: grammar-of-graphics approach, scale_fill_identity, coord_fixed, theme()
-          — all idiomatic. geom_polygon for custom shapes is the correct plotnine
-          approach.
+        comment: 'Idiomatic plotnine: geom_polygon + scale_fill_identity() + coord_fixed()
+          for custom donut. Grammar-of-graphics approach maintained. Clean use of
+          annotate() for center text.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Building a donut from polygon geometry is a distinctive plotnine
-          technique since no built-in pie/donut geom exists. coord_fixed ensures circle
-          proportions. Above default.
+        comment: Manual polygon construction for donut and scale_fill_identity() for
+          pre-assigned per-polygon colors are distinctively plotnine/ggplot2 patterns
+          not easily replicated in other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
