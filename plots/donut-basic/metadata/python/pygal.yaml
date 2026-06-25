@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: donut-basic
 created: '2025-12-23T00:49:16Z'
-updated: '2026-06-25T05:57:53Z'
+updated: '2026-06-25T06:06:44Z'
 generated_by: claude-sonnet
 workflow_run: 28149675241
 issue: 733
@@ -12,99 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - 'Perfect Imprint palette compliance — US Stocks correctly uses brand green #009E73
-    as the first series, followed by lavender, blue, ochre, and red in canonical order'
-  - Clever SVG injection for center metric — piggybacks on pygal's SVG render() output
-    to add the donut-hole label that pygal cannot natively produce
-  - 'Both themes render correctly: warm off-white #FAF8F1 background in light, warm
-    near-black #1A1A17 in dark; title and legend text adapt properly to each surface'
-  - 'All spec requirements met: hollow center with summary statistic ($1,000K total),
-    percentage labels on each segment, legend, and realistic portfolio allocation
-    domain'
-  - Dynamic title font size calculation (66 * 67/len(title)) prevents overflow for
-    the long mandated title
+  - Center metric ($1,000K total with Portfolio label and divider) creates a strong
+    focal point
+  - 'Perfect spec compliance: all required donut features implemented (center metric,
+    percentage labels, consistent ordering, hollow ring)'
+  - Complete Imprint palette compliance and theme-adaptive chrome — dark render passes
+    without any dark-on-dark failures
+  - Robust SVG center-text injection with geometric fallback handles pygal limitations
+    gracefully
+  - 'Clean code: linear structure, all imports used, deterministic data, HTML export
+    included'
   weaknesses:
-  - value_colors hardcoded to ["#F0EFE8"] * len(categories) regardless of theme —
-    works in practice (near-white has contrast on all Imprint segment colors) but
-    the semantic token INK should be used explicitly for dark-theme value readability
-  - Regex-based SVG parsing (plot_match / slice_match) to locate donut center is brittle
-    — would break silently if pygal changes its SVG structure; a safer fallback would
-    use a fixed geometric center (width/2, height/2 adjusted for title area)
-  - Design refinement is adequate but not exceptional — no spine removal applies to
-    a pie/donut, but the surrounding white-space management and center typographic
-    hierarchy could be more polished
+  - Title wraps to two lines in both renders — 64 chars at 66px font size hits the
+    margin in the 2400x2400 canvas; consider reducing title_font_size to 58-60 to
+    fit on one line
+  - Percentage labels on the two smallest segments (7.0% Cash, 8.0% Real Estate) are
+    tight due to small arc length — minor readability concern at thumbnail scale;
+    consider placing labels outside ring for segments under 10%
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Portfolio Allocation · donut-basic · python · pygal · anyplot.ai" wraps to two lines at the top, dark near-black text, fully readable. Legend at bottom shows US Stocks / Intl Stocks / Bonds / Real Estate / Cash with color swatches — all readable dark text.
-      Data: Five donut segments in Imprint canonical order — US Stocks #009E73 (brand green, 45%), Intl Stocks #C475FD (lavender, 20%), Bonds #4467A3 (blue, 20%), Real Estate #BD8233 (ochre, 8%), Cash #AE3030 (matte red, 7%). Percentage labels in near-white #F0EFE8 appear inside each segment. Center hole shows "Portfolio" (muted secondary label) and "$1,000K" (bold headline, dark ink) — injected via SVG manipulation.
-      Legibility verdict: PASS — all title, legend, and segment labels are clearly readable. Center metric text has good hierarchy and contrast.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "Portfolio Allocation · donut-basic · python · pygal · anyplot.ai" wraps to two lines, fully readable in dark ink; center "Portfolio" label in INK_SOFT muted tone, "$1,000K" in large bold INK; legend at bottom in dark text — all chrome readable
+      Data: First series (US Stocks) = brand green #009E73 (45%); Intl Stocks = lavender #C475FD (20%); Bonds = blue #4467A3 (20%); Real Estate = ochre #BD8233 (8%); Cash = red #AE3030 (7%); all Imprint palette canonical order
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title appears in light off-white text, fully readable against the dark surface. Legend text at bottom is also light-colored and readable — no dark-on-dark issues.
-      Data: Segment colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — only chrome flips. Center "Portfolio" text appears in muted #B8B7B0 and "$1,000K" in near-white #F0EFE8 — both readable against the dark interior.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark failures. Brand green #009E73 remains clearly visible.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in off-white light text, readable; center "Portfolio" in INK_SOFT (B8B7B0 tone), "$1,000K" in bold INK (F0EFE8) — both visible; legend text in light tone against dark background; no dark-on-dark issues
+      Data: Colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 unchanged across themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Title, legend, segment labels all readable in both themes. Minor:
-          value_colors hardcoded to near-white #F0EFE8 independent of theme; works
-          in practice but not explicitly theme-adaptive'
+        comment: Title wraps to two lines (readable); small segment labels (7%, 8%)
+          tight but legible in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. All segment labels, legend
-          entries, and center metric are well-spaced
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 segments clearly visible, ring thickness appropriate (inner_radius=0.58),
-          center metric prominently sized
+        comment: All five segments, center metric, and legend clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used — CVD-safe by design. No red-green sole encoding
-          (red is Cash, green is US Stocks but they are separated by 3 other segments)
+        comment: Imprint palette is CVD-safe; no red-green sole-signal issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for pie/donut. Title wraps gracefully
-          at top, legend at bottom is well-balanced. No overflow or clipping.
+        comment: 2400x2400 square canvas (gate passed), generous margins, bottom legend
+          cleanly positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for donut chart. Title includes descriptive
-          prefix + mandated format. Center label provides key metric context
+        comment: N/A for axes on donut; descriptive title with optional prefix and
+          mandated anyplot suffix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (US Stocks) = #009E73. Order: green/lavender/blue/ochre/red
-          matches Imprint canonical. Light bg #FAF8F1, dark bg #1A1A17 correct'
+        comment: 'First series #009E73, Imprint canonical order, backgrounds #FAF8F1/#1A1A17,
+          both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -112,24 +105,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, center metric adds sophistication. SVG injection
-          for center text shows craft above defaults. Not exceptional refinement overall.
+        comment: 'Above default: center metric with muted label + divider + bold total;
+          Imprint palette cleanly applied; professional'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean chart with no unnecessary chrome. Legend at bottom is appropriate
-          for square canvas. No spine removal applies to pie type; adequate but not
-          standout refinement.
+        comment: 'Above default: center divider line, font sizing hierarchy, inner_radius=0.58
+          well-chosen, legend column layout'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Center $1,000K total creates strong focal point. US Stocks dominance
-          (45%) starting at 12 o'clock is natural. Above default storytelling thanks
-          to center metric hierarchy.
+        comment: 'Above default: center $1,000K total as focal point; largest-first
+          segment ordering guides eye naturally'
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut chart using pygal.Pie with inner_radius=0.58
+        comment: Correct donut via pygal.Pie(inner_radius=0.58)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center space used for summary statistic, percentage labels on segments,
-          legend, consistent ordering, thick ring for readability
+        comment: Center space for key metric, percentage labels on segments, consistent
+          ordering, hollow center
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 5 categories correctly mapped. Proportional values correct. Ordered
-          consistently.
+        comment: Five categories with proportional values correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Portfolio Allocation · donut-basic · python · pygal · anyplot.ai''
-          matches {Descriptive} · {spec-id} · {language} · {library} · anyplot.ai
-          format. Legend labels match data categories.'
+        comment: Title format correct with optional descriptive prefix; legend labels
+          match categories
     data_quality:
       score: 15
       max: 15
@@ -171,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all donut chart features: proportional segments, percentage
-          labels, center metric, legend, hollow ring'
+        comment: Ring format, multi-category proportions, center summary, segment
+          labels — all key donut features shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Portfolio allocation by asset class is real-world plausible and neutral.
-          Values are realistic (US Stocks dominant at 45%).
+        comment: Model investment portfolio (US Stocks, Intl Stocks, Bonds, Real Estate,
+          Cash) — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $1,000K total portfolio with realistic per-asset allocations. Values
-          sum correctly.
+        comment: Values in USD thousands (70K-450K), total $1,000K — plausible for
+          a portfolio
     code_quality:
       score: 10
       max: 10
@@ -196,32 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary functions or classes
+        comment: No functions/classes; linear top-level code; sys.path fix necessary
+          and explained
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded — fully deterministic
+        comment: Fixed static data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, re, sys, cairosvg, pygal, Style — all used
+        comment: 'All imports used: os, re, sys, cairosvg, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Dynamic title font sizing, sys.path.pop(0) workaround documented,
-          value_formatter lambda for percentage display
+        comment: SVG center-text injection with regex fallback is correct approach;
+          value_formatter clean; HTML export included
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pygal 3.1.3 API is
+          current
     library_mastery:
       score: 7
       max: 10
@@ -231,22 +222,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.Pie with inner_radius, Style object, legend_at_bottom_columns,
-          value_formatter. Canvas at 2400x2400.
+        comment: Correct pygal.Pie + inner_radius, Style object for theming, chart.add()
+          loop, render()→SVG→cairosvg→PNG pipeline
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: SVG render pipeline with cairosvg, HTML interactive output, SVG injection
-          for center text — shows understanding of pygal's SVG-native architecture
+        comment: value_formatter for percentage display, print_values_position=inside,
+          legend_at_bottom with columns, HTML interactive export
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
-  - annotations
   patterns:
   - iteration-over-groups
   dataprep: []
