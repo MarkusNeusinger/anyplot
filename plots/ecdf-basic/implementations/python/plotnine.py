@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -47,7 +47,9 @@ BRAND = "#009E73"  # Imprint palette position 1
 # Data: test scores — normal distribution
 np.random.seed(42)
 scores = np.random.randn(200) * 15 + 50
+q1 = float(np.percentile(scores, 25))
 median_score = float(np.median(scores))
+q3 = float(np.percentile(scores, 75))
 
 df = pd.DataFrame({"score": scores})
 
@@ -56,12 +58,23 @@ title = "ecdf-basic · python · plotnine · anyplot.ai"
 # Plot — stat_ecdf computes ECDF internally via plotnine's stat layer
 plot = (
     ggplot(df, aes(x="score"))
-    + geom_hline(yintercept=0.5, color=INK_SOFT, size=0.6, linetype="dotted", alpha=0.7)
-    + geom_vline(xintercept=median_score, color=INK_SOFT, size=0.6, linetype="dotted", alpha=0.7)
-    + stat_ecdf(geom="step", color=BRAND, size=1.0)
+    # IQR shaded band — highlights the interquartile range (middle 50%)
+    + annotate("rect", xmin=q1, xmax=q3, ymin=0.0, ymax=1.0, fill=BRAND, alpha=0.06)
+    # Quartile reference crosshairs (Q1, median, Q3)
+    + geom_hline(yintercept=0.25, color=INK_SOFT, size=0.5, linetype="dotted", alpha=0.55)
+    + geom_hline(yintercept=0.50, color=INK_SOFT, size=0.6, linetype="dotted", alpha=0.70)
+    + geom_hline(yintercept=0.75, color=INK_SOFT, size=0.5, linetype="dotted", alpha=0.55)
+    + geom_vline(xintercept=q1, color=INK_SOFT, size=0.5, linetype="dotted", alpha=0.55)
+    + geom_vline(xintercept=median_score, color=INK_SOFT, size=0.6, linetype="dotted", alpha=0.70)
+    + geom_vline(xintercept=q3, color=INK_SOFT, size=0.5, linetype="dotted", alpha=0.55)
+    # ECDF step line — rendered on top of reference elements
+    + stat_ecdf(geom="step", color=BRAND, size=1.1)
+    # Quartile annotations — teach readers how to extract percentile information
+    + annotate("text", x=q1 + 1.5, y=0.16, label=f"Q1: {q1:.1f}", color=INK_SOFT, size=3.5, ha="left")
     + annotate(
-        "text", x=median_score + 2, y=0.08, label=f"Median: {median_score:.1f}", color=INK_MUTED, size=3.5, ha="left"
+        "text", x=median_score + 1.5, y=0.08, label=f"Median: {median_score:.1f}", color=INK_SOFT, size=4.0, ha="left"
     )
+    + annotate("text", x=q3 + 1.5, y=0.80, label=f"Q3: {q3:.1f}", color=INK_SOFT, size=3.5, ha="left")
     + labs(x="Test Score (points)", y="Cumulative Proportion", title=title)
     + scale_x_continuous(expand=(0.01, 0))
     + scale_y_continuous(limits=(0, 1), breaks=np.arange(0, 1.1, 0.1), expand=(0.01, 0))
