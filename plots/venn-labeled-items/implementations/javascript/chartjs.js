@@ -48,7 +48,7 @@ const vennPlugin = {
     // Layout geometry
     const cx = W * 0.5;
     const cy = H * 0.50;
-    const r  = Math.min(W, H) * 0.295;
+    const r  = Math.min(W, H) * 0.32;
     const d  = r * 0.58;
 
     // Circle centers — equilateral-triangle arrangement
@@ -60,7 +60,7 @@ const vennPlugin = {
     // Semi-transparent circle fills
     for (let i = 0; i < 3; i++) {
       ctx.save();
-      ctx.globalAlpha = 0.13;
+      ctx.globalAlpha = 0.21;
       ctx.beginPath();
       ctx.arc(ctrs[i].x, ctrs[i].y, r, 0, 2 * Math.PI);
       ctx.fillStyle = circles[i].color;
@@ -92,7 +92,7 @@ const vennPlugin = {
     };
 
     // Category name labels (outside each circle)
-    const catFontSize = Math.round(r * 0.11);
+    const catFontSize = Math.round(r * 0.13);
     ctx.font = `bold ${catFontSize}px Georgia, serif`;
     ctx.textBaseline = "middle";
     const catPos = [
@@ -113,7 +113,7 @@ const vennPlugin = {
     }
 
     // Item labels inside each zone
-    const itemFontSize = Math.round(r * 0.085);
+    const itemFontSize = Math.round(r * 0.095);
     const lineH = itemFontSize * 1.65;
     ctx.font = `${itemFontSize}px Georgia, serif`;
     ctx.textAlign = "center";
@@ -137,6 +137,12 @@ const vennPlugin = {
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     ctx.fillText(titleText, W / 2, H * 0.022);
+
+    // Subtitle
+    const subtitleSize = Math.max(10, Math.round(titleSize * 0.72));
+    ctx.font = `italic ${subtitleSize}px Georgia, serif`;
+    ctx.fillStyle = t.inkSoft;
+    ctx.fillText("Where does it live — hype, utility, or quiet devotion?", W / 2, H * 0.022 + titleSize * 1.5);
   },
 };
 
