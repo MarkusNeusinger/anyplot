@@ -1,13 +1,11 @@
-// anyplot.ai
-// venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 // Library: MUI X Charts | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-25
+
+import { ChartContainer } from "@mui/x-charts/ChartContainer";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -37,10 +35,10 @@ const ITEMS = [
   // B only
   { label: "Espresso",        x: 490,  y: 732 },
   { label: "Cappuccino",      x: 528,  y: 764 },
-  // BC
-  { label: "Diner Coffee",    x: 748,  y: 625 },
+  // BC — spread x-coords to reduce crowding
+  { label: "Diner Coffee",    x: 720,  y: 625 },
   { label: "Green Tea",       x: 800,  y: 665 },
-  { label: "Orange Juice",    x: 852,  y: 645 },
+  { label: "Orange Juice",    x: 880,  y: 645 },
   // C only
   { label: "Tap Water",       x: 1074, y: 732 },
   { label: "Herbal Tea",      x: 1112, y: 764 },
@@ -53,7 +51,13 @@ export default function Chart() {
   const H = window.ANYPLOT_SIZE.height;
 
   return (
-    <svg width={W} height={H} style={{ background: t.pageBg, display: "block" }}>
+    <ChartContainer
+      width={W}
+      height={H}
+      series={[]}
+      margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+      sx={{ background: t.pageBg, display: "block" }}
+    >
       {/* Two-line editorial title */}
       <text
         x={W / 2}
@@ -128,7 +132,7 @@ export default function Chart() {
             y={item.y - 10}
             textAnchor="middle"
             dominantBaseline="auto"
-            fontSize={14}
+            fontSize={15}
             fill={t.ink}
             fontFamily="Arial, Helvetica, sans-serif"
           >
@@ -136,6 +140,6 @@ export default function Chart() {
           </text>
         </g>
       ))}
-    </svg>
+    </ChartContainer>
   );
 }
