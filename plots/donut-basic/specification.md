@@ -16,6 +16,7 @@ A donut chart (ring chart) showing proportions of categorical data as segments o
 - `category` (string) - category labels
 - `value` (numeric) - values for each category
 - Size: 3-8 categories
+- Example: Categorical data with proportional values (e.g., budget allocation by department, market share by company)
 
 ## Notes
 
