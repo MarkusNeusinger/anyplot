@@ -1,3 +1,7 @@
+// anyplot.ai
+// venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
+// Library: echarts 5.5.1 | JavaScript 22.23.0
+// Quality: 89/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 // anyplot.ai
 // venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
