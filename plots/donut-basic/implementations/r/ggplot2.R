@@ -22,7 +22,9 @@ IMPRINT_PALETTE <- c(
   "#4467A3",  # 3 — blue
   "#BD8233",  # 4 — ochre
   "#AE3030",  # 5 — matte red
-  "#2ABCCD"   # 6 — cyan
+  "#2ABCCD",  # 6 — cyan
+  "#954477",  # 7 — rose
+  "#99B314"   # 8 — lime
 )
 
 # Data — annual budget allocation by department (millions USD)
@@ -90,16 +92,17 @@ p <- ggplot(df) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
-    plot.title        = element_text(
+    plot.title          = element_text(
       color  = INK,
       size   = 12,
       hjust  = 0.5,
       margin = margin(b = 10)
     ),
+    plot.title.position = "plot",
     legend.position   = "right",
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
-    legend.background = element_rect(fill = ELEVATED_BG, color = NA),
+    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.key.size   = unit(14, "pt"),
     plot.margin       = margin(20, 20, 20, 20)
   )
