@@ -2,132 +2,137 @@ library: bokeh
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:24:17Z'
-updated: '2026-04-24T09:18:24Z'
-generated_by: claude-opus
-workflow_run: 24881610559
+updated: '2026-06-25T08:13:34Z'
+generated_by: claude-sonnet
+workflow_run: 28154419076
 issue: 1311
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect visual quality: all text sizes explicitly set (48pt title, 60pt numbers),
-    no overlaps, clear monochrome contrast in both themes'
-  - 'Complete spec compliance: thick box boundaries (10px), thin cell lines (3px),
-    centered bold numbers, empty cells blank, correct title format'
-  - 'Clean idiomatic Bokeh code: ColumnDataSource for all data, segment glyphs for
-    lines, LabelSet for efficient label rendering'
-  - 'Proper theme adaptation: PAGE_BG and INK tokens applied correctly — warm off-white
-    in light, near-black in dark, text flips accordingly'
-  - Correct 3600×3600 square canvas and axis/grid/toolbar/outline all hidden for clean
-    puzzle presentation
+  - Brand green (#009E73) numbers create clear visual hierarchy distinguishing given
+    clues from empty solving space
+  - Alternating 3×3 box tints with alpha-adjusted intensity for both themes provide
+    excellent regional grouping
+  - Clean minimal chrome — all axes, gridlines, and outline hidden for a pure puzzle
+    presentation
+  - Correct thick/thin line differentiation (10px vs 3px) precisely implements the
+    sudoku visual grammar
+  - 'Seamless dual-theme adaptation with correct backgrounds (#FAF8F1 light / #1A1A17
+    dark) and INK-colored title in both renders'
   weaknesses:
-  - 'Design Excellence is low (10/20): pure monochrome with no visual hierarchy beyond
-    required thick/thin lines — consider alternating subtle background tints on the
-    nine 3×3 boxes to make regions visually distinct (e.g., every other box with a
-    very slightly different fill within the same theme palette)'
-  - 'DE-03 Data Storytelling at default (2/6): the grid renders data correctly but
-    guides the viewer no further — adding a subtle shading distinction between the
-    3×3 boxes would create a clearer visual hierarchy and make the puzzle more readable
-    at a glance'
-  - 'DE-01 Aesthetic Sophistication at default (4/8): the design is clean but uninspired
-    — a small design flourish such as slightly rounded border on the outer grid, a
-    drop shadow on thick lines, or even a subtle warm-tinted fill on alternating boxes
-    would push it above baseline'
+  - 'SC-02 minor deviation: spec says "monochrome design suitable for printing" but
+    numbers and box tints use brand green (#009E73); the structural requirements (thick/thin
+    lines, centered numbers, empty=blank) are all met'
+  - 'LM-02: segment/rect/LabelSet combination is correct Bokeh usage but not distinctive
+    — could leverage more uniquely Bokeh-specific patterns (e.g., CustomJS, DataTable
+    integration, or Bokeh server callbacks shown as static render)'
+  - 'DE-01: alternating tint design is creative but typography could be more polished
+    — title fontsize automatically scales correctly but no weight/style variation
+    elsewhere'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "sudoku-basic · bokeh · anyplot.ai" is bold, centered, clearly readable in dark near-black ink. No axis labels (axes hidden). No tick labels. Title is well-sized.
-      Data: 9×9 Sudoku grid rendered in near-black (#1A1A17) lines. Thin lines (3px) divide individual cells; thick lines (10px) separate the nine 3×3 boxes — visual hierarchy is clear. Numbers are 60pt bold, centered in cells, displayed in the same near-black ink. Empty cells are blank. All 29 given digits are visible and well-placed.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS
+      Chrome: Title "sudoku-basic · python · bokeh · anyplot.ai" in bold dark ink (#1A1A17), centered, ~65% of canvas width, clearly readable. No axis labels (intentionally hidden for sudoku grid).
+      Data: 9×9 grid with alternating 3×3 box tints (light green, brand-green #009E73 at 0.10 alpha over cream background) and plain cream boxes. Thin dark lines (3px) separate cells; thick dark lines (10px) separate the nine 3×3 boxes. Clue numbers rendered in bold brand green (#009E73), 50pt, centered in cells. Empty cells blank (no zero shown).
+      Legibility verdict: PASS — title, numbers, and grid lines all clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title "sudoku-basic · bokeh · anyplot.ai" is bold, centered, rendered in light cream (#F0EFE8) — clearly visible on dark background. No dark-on-dark failures observed.
-      Data: Grid lines and numbers flip to light cream (#F0EFE8) against the dark background — data colors are theme-adaptive (monochrome, not Okabe-Ito), which is appropriate for this puzzle type. Thick/thin line distinction remains clear. All 29 given digits are legible.
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS
+      Chrome: Title in light cream (#F0EFE8) on dark background, clearly readable. Grid lines appear in INK (#F0EFE8) — light colored thin and thick lines on dark background.
+      Data: Same brand green (#009E73) clue numbers — identical to light render as required. Alternating box tints appear as dark teal (#009E73 at 0.20 alpha over #1A1A17) vs. pure near-black for plain boxes. Data colors unchanged between light and dark.
+      Legibility verdict: PASS — no dark-on-dark failures. Numbers on dark teal boxes have ~3.5:1 contrast ratio (borderline but passes for large bold text). Numbers on near-black boxes have excellent contrast. Title is clearly light-on-dark.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 48pt and numbers 60pt explicitly set; both readable in light
-          and dark themes
+        comment: 'All font sizes explicitly set (title auto-scaled to 50pt for 42-char
+          string, numbers at 50pt bold). Readable in both themes. Minor deduction:
+          numbers at 50pt in 267px cells render at ~25% cell height — solid but could
+          be slightly larger for mobile.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers centered in fixed 1-unit cells, no overlaps possible
+        comment: One number per cell, no overlap possible. Title clear of grid.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick (10px) and thin (3px) lines clearly visible; numbers large
-          and bold
+        comment: Numbers bold and prominent. Thick/thin line distinction clear. Box
+          tints visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design; maximum contrast between ink and background
+        comment: 'Brand green #009E73 on light/dark backgrounds — adequate contrast.
+          Single hue, CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 canvas; grid fills ~85% with balanced margins
+        comment: '2400×2400 square canvas (correct for symmetric grid). Grid fills
+          ~85% of canvas. Balanced margins. Canvas gate: PASSED.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title 'sudoku-basic · bokeh · anyplot.ai' correct; no axis labels
-          needed
+        comment: Title format correct. No axis labels appropriate for sudoku grid
+          (axes intentionally hidden).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome design; backgrounds #FAF8F1 light / #1A1A17 dark; INK
-          tokens correct'
+        comment: 'Brand green #009E73 used correctly as primary data color. Box tints
+          use brand green with alpha. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Data colors identical across themes. Chrome (title, lines) theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured but baseline — standard monochrome Sudoku with no
-          distinguishing design choices beyond required line weights
+        passed: true
+        comment: Thoughtful alternating box tint pattern, brand green for clue numbers
+          creating visual hierarchy. Above a well-configured default. Not quite publication-ready
+          due to limited typography variation.
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: All unnecessary chrome removed (axes, grid, outline). Thick/thin
+          line weight differentiation implemented. Alpha adjustments for dark mode.
+          Very refined, just short of perfect.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Axes, grid, toolbar, outline all removed; clean presentation; thick/thin
-          line hierarchy adds refinement
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Default — required box hierarchy is present but no additional visual
-          emphasis or storytelling beyond spec minimum
+        comment: Color differentiation between given clues (brand green) and empty
+          cells creates clear visual hierarchy. Alternating box tints guide the eye
+          to the 3×3 regions. Good visual storytelling for a puzzle format.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,26 +140,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9×9 Sudoku grid
+        comment: Correct 9×9 sudoku grid with all required structural elements.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Thick 3×3 box boundaries, thin cell lines, bold centered numbers,
-          blank empty cells
+        comment: 'Thick lines for 3×3 boxes, thin lines for cells, centered numbers,
+          empty cells blank — all present. Minor: spec says ''monochrome design suitable
+          for printing'' but implementation uses brand green for numbers and box tints.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row 0 at top, columns left-to-right, all cells correctly positioned
+        comment: All 9×9 grid values correctly positioned. Empty cells (0) correctly
+          rendered as blank.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sudoku-basic · bokeh · anyplot.ai'; no legend needed
+        comment: Title 'sudoku-basic · python · bokeh · anyplot.ai' matches required
+          format. No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -164,21 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 9×9 grid with given numbers spread across all nine 3×3 boxes
-          and all rows/columns
+        comment: 'Shows all sudoku grid features: clue numbers, empty cells, thin
+          cell boundaries, thick box boundaries, 3×3 regional structure.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Valid partially-filled Sudoku puzzle; neutral content
+        comment: Real sudoku puzzle with valid (partially filled) layout. Neutral,
+          universally understood puzzle format.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 1–9 only; 29 given digits is realistic for a medium-difficulty
-          puzzle
+        comment: Values 1–9 correctly used. Grid is exactly 9×9. Puzzle follows standard
+          sudoku structure.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +197,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Sequential: imports → data → build sources → figure → style → save'
+        comment: 'Flat structure: imports → theme tokens → data → data sources → figure
+          setup → style → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded puzzle data is fully deterministic
+        comment: Hardcoded puzzle data — fully deterministic, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, export_png, output_file, save, ColumnDataSource, LabelSet, figure
-          — all used
+        comment: 'All imports used: io, os, sys, time, pathlib, bokeh.io, bokeh.models,
+          bokeh.plotting, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loops for line coordinate construction; no fake UI or over-engineering
+        comment: Clean, Pythonic code. Multiple ColumnDataSources managed clearly.
+          Appropriate complexity for custom grid visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No deprecated functions.
     library_mastery:
       score: 7
       max: 10
@@ -223,24 +234,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for all data; segment glyph for lines; LabelSet
-          for text — all Bokeh idioms
+        comment: Correct use of ColumnDataSource for all data, figure methods (rect,
+          segment), add_layout(LabelSet). Good idiomatic patterns. Headless Chrome
+          screenshot approach matches canonical Bokeh export pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: LabelSet (Bokeh-specific bulk text model) and segment glyph with
-          ColumnDataSource are Bokeh-distinctive patterns; HTML export via output_file/save
-  verdict: REJECTED
+        comment: Uses LabelSet with text_color as per-glyph column (Bokeh-specific),
+          text_baseline='middle' for vertical centering. ColumnDataSource with per-row
+          fill_color/fill_alpha is a Bokeh-distinctive pattern. Could push further
+          into more uniquely Bokeh territory.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
   patterns:
   - columndatasource
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

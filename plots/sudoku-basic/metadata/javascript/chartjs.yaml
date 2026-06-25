@@ -1,0 +1,240 @@
+library: chartjs
+language: javascript
+specification_id: sudoku-basic
+created: '2026-06-25T07:58:53Z'
+updated: '2026-06-25T08:16:03Z'
+generated_by: claude-sonnet
+workflow_run: 28155219913
+issue: 1311
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Custom Chart.js plugin using beforeDraw/afterDraw hooks is idiomatic and elegant
+    — proper use of chart.ctx and chartArea coordinates
+  - 'Perfect spec compliance: thick box boundaries, thin cell lines, numbers centered,
+    empty cells blank'
+  - Alternating 3×3 box region tints (pageBg vs elevatedBg) add subtle visual depth
+    and aid navigation
+  - Theme adaptation is correct throughout — t.ink for borders/title, t.pageBg for
+    background, t.palette[0] for clue numbers
+  - Square canvas orientation is the right choice for a symmetric 9×9 grid
+  - Hard-coded classic Wikipedia puzzle ensures reproducibility
+  - 'Zero chart chrome: all axes, ticks, and legend hidden — the grid is the entire
+    composition'
+  weaknesses:
+  - Title font size (24px CSS) is slightly conservative for a 2400×2400 canvas — consider
+    bumping to 26–28px for better visual weight at full resolution
+  - Green (#009E73) clue numbers deviate from the spec's 'monochrome design suitable
+    for printing' intent, though this is acceptable per anyplot palette rules and
+    actually improves visual hierarchy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "sudoku-basic · javascript · chartjs · anyplot.ai" appears in dark text above the grid, readable. No axis labels or tick marks (axes intentionally hidden).
+      Data: 9×9 Sudoku grid with thick dark borders demarcating the nine 3×3 boxes and thin gray cell-divider lines. Alternating box regions have a slightly lighter tint (elevatedBg vs pageBg). Clue numbers (5, 3, 7, 6, 1, 9, 5, 9, 8, 6, 8, 6, 3, 4, 8, 3, 1, 7, 2, 6, 6, 2, 8, 4, 1, 9, 5, 8, 7, 9) are rendered in bold brand green (#009E73), centered in their cells. Empty cells are blank. Grid fills the canvas cleanly with generous margins on all sides.
+      Legibility verdict: PASS — title and all numbers are clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title is rendered in light off-white text (t.ink = #F0EFE8 in dark theme), clearly readable against the dark background. Thick box borders are #F0EFE8 (near-white), creating high contrast against the dark cells. Thin cell dividers use #B8B7B0 (inkSoft), subtle but visible. Alternating box tints use #242420 (elevatedBg) vs #1A1A17 (pageBg), preserving the checker pattern.
+      Data: Clue numbers are identical green (#009E73) as in the light render — data colors are unchanged, only chrome flips. The green numbers read clearly against both box shading tones in dark.
+      Legibility verdict: PASS — no dark-on-dark failures; title, borders, and numbers all clearly legible in the dark render. Brand green #009E73 remains highly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and numbers clear in both themes; title slightly conservative
+          at 24px CSS for a 2400×2400 canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Numbers well-centered in cells; no collisions with grid lines or
+          other text
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Clue numbers bold and prominent; grid lines visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 on both warm-white and near-black backgrounds passes contrast;
+          CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correct for symmetric grid; good margins; grid well-centered
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format exactly; no axis labels needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: t.palette[0] (#009E73) for clue numbers; t.pageBg and t.ink theme-adaptive
+          backgrounds and borders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Intentional brand identity: green clue numbers as visual anchor;
+          alternating box tints; clean typographic hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All chart chrome removed; thick/thin line weight hierarchy polished;
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear 3-level visual hierarchy: box borders > cell dividers > empty
+          cells > green numbers draws the eye naturally to the clues'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 9×9 Sudoku grid with proper visual hierarchy
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thick box boundaries, thin cell lines, centered numbers, blank empty
+          cells — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 27 clue numbers from the data array placed correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'sudoku-basic · javascript · chartjs · anyplot.ai' correct;
+          no legend appropriate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All sudoku grid features shown: box regions, cell divisions, partial
+          fill'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic puzzle from Wikipedia's Sudoku article — real and recognizable,
+          neutral content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed 9×9 grid with values 1-9; canonical domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: plugin object + chart instantiation; no classes or
+          helper functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded puzzle array — deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only uses window.ANYPLOT_TOKENS and global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Plugin hooks use canvas 2D API cleanly; grid loops are efficient
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false present; responsive: true; maintainAspectRatio:
+          false — all required'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Plugin API (beforeDraw/afterDraw) is the correct Chart.js pattern
+          for custom drawing; chartArea used properly for coordinate space
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js custom plugin system and scatter-as-blank-canvas pattern
+          — Chart.js-specific approaches for non-standard chart types
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome
