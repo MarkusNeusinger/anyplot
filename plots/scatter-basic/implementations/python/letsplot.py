@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: letsplot 4.9.0 | Python 3.14.4
+Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
 """
 
