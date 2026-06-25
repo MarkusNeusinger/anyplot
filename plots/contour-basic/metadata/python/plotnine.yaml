@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: contour-basic
 created: 2025-12-14 19:45:33+00:00
-updated: '2026-06-25T03:49:45Z'
+updated: '2026-06-25T04:04:06Z'
 generated_by: claude-sonnet
 workflow_run: 28144946693
 issue: 855
@@ -12,40 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Perfect data quality: realistic two-cell anticyclone scenario with meteorologically
-    correct pressure values (1010-1025 hPa) and appropriate 150x150 grid resolution'
-  - 'Perfect palette compliance: imprint_seq (green to blue) applied correctly; theme-adaptive
-    chrome works in both light and dark renders with no legibility failures'
-  - 'Excellent code quality: clean KISS structure, seed set, all imports used, elegant
-    contourpy integration for data preprocessing'
+  - 'Excellent use of Imprint sequential colormap (green #009E73 → blue #4467A3) for
+    the continuous pressure field — correct cmap choice and correct stop order.'
+  - Clever use of contourpy to generate isoline paths, cleanly compensating for plotnine's
+    missing native geom_contour; the generator + pd.concat approach is idiomatic.
+  - Multi-layer composition (geom_raster + geom_path + geom_text) creates a professional
+    meteorological-map aesthetic that clearly communicates the two-anticyclone + trough
+    structure.
+  - 'Theme-adaptive chrome is correctly threaded: PAGE_BG, INK, INK_SOFT applied to
+    panel/plot background, axis_title, axis_text, legend — both renders are visually
+    correct.'
+  - Realistic atmospheric pressure data (1010–1025 hPa, two anticyclones + low-pressure
+    trough) with credible domain values and proper np.random.seed(42) reproducibility.
+  - Correct canvas dimensions (8×4.5 in @ 400 dpi → 3200×1800 px) with matching figure_size
+    and save arguments — no canvas drift.
   weaknesses:
-  - 'DE-01/DE-03 held back: only one of three pressure cells is annotated (H); the
-    low-pressure cell and second high lack labels; adding L and a second H would immediately
-    improve visual storytelling without adding complexity'
-  - 'DE-02 minor: axis_line retained on a fully-filled raster; for a geographic fill
-    plot, removing the axis spine (element_blank() for axis_line) would reduce visual
-    noise and improve refinement'
-  - 'LM-02: only geom_raster is distinctively plotnine; the isoline data-prep pipeline
-    (contourpy to line_df to geom_path) is sound but sits outside the plotnine layer
-    and lowers library-mastery score'
+  - Contour line color is hardcoded to '#FFFDF6' (light-theme elevated background)
+    regardless of ANYPLOT_THEME. Should be theme-adaptive (e.g. a near-white neutral
+    color like '#F0EFE8' on dark or keep '#FFFDF6' only on light). Currently works
+    visually in both renders because the lines sit on the raster rather than the plot
+    background, but it is not properly theme-adaptive.
+  - Contour lines are thin (size=0.5) and semi-transparent (alpha=0.65). At mobile-scaled
+    widths (~400 px) they may become barely visible. Increasing to size=0.7–0.8 and
+    alpha=0.75–0.8 would improve legibility without dominating the filled background.
+  - H/L pressure-centre labels use geom_text(size=5) (5 mm ≈ 14 pt), which is on the
+    small side for annotation labels at 3200×1800. Increasing to size=6–7 would make
+    them more prominent and readable when scaled down.
+  - The spec requests labelling key contour levels — the H/L markers identify pressure-centre
+    types but carry no numeric values. Adding a pressure value below each marker (e.g.
+    '1025 hPa' beneath the primary H) would satisfy the spec more completely.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
-      Chrome: Title "contour-basic · python · plotnine · anyplot.ai" in dark INK (#1A1A17) at 12pt — readable. Axis labels "Longitude (°E)" and "Latitude (°N)" in INK at 10pt — readable with units. Tick labels in INK_SOFT (#4A4A44) at 8pt — readable.
-      Data: Imprint sequential colormap (green #009E73 at ~1010 hPa → blue #4467A3 at ~1025 hPa). White (alpha=0.65) isoline contours clearly visible. Three pressure cells visible. "H" annotation in dark ink. Legend "Pressure (hPa)" on right.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct. The raster fill covers the entire plot area with the Imprint sequential colormap running from green (#009E73) at lower pressure values to blue (#4467A3) at higher values.
+      Chrome: Title "contour-basic · python · plotnine · anyplot.ai" in dark ink, clearly readable at top. Axis labels "Longitude (°E)" and "Latitude (°N)" in dark ink at appropriate 10pt. Tick labels in INK_SOFT at 8pt — readable. Colorbar legend "Pressure (hPa)" visible to the right.
+      Data: Three pressure systems shown — two anticyclones (H labels at lon=3/lat=2 and lon=-5/lat=-3) and a trough (L label at lon=1/lat=-5). White/cream contour isolines visible as concentric rings. Colorbar shows ~1010–1025 hPa range. First (and only) data series uses #009E73 as the low-pressure anchor.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
-      Chrome: Title in near-white (#F0EFE8) — clearly readable. Axis labels and tick labels in light grey (#B8B7B0) — readable. No dark-on-dark failures detected. All chrome elements use theme-adaptive tokens correctly.
-      Data: Green-to-blue gradient identical to light render — Imprint palette data colors are theme-independent as required. White contour isolines remain visible on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct. The raster gradient colours are identical to the light render (same green-to-blue Imprint sequential scale).
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — appropriately lighter than primary text. Legend box uses elevated background (#242420) with light text. No dark-on-dark failures observed.
+      Data: Contour lines visible as near-white rings on the green-blue raster. H/L labels rendered in light INK (#F0EFE8) and clearly visible. Data colours are identical to the light render — only chrome flipped.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; brand green #009E73 remains clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,48 +66,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
-          legend_text=8); both renders fully readable; H annotation at size=4mm slightly
-          small
+        comment: 'All font sizes explicitly set (title 12pt, axis_title 10pt, axis_text
+          8pt). Readable in both themes. Minor deduction: H/L annotation labels (geom_text
+          size=5mm ≈ 14pt) are slightly small for annotations at 3200×1800 px.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or legend
+        comment: No overlapping text elements. H labels are spatially separated. Tick
+          labels, title, and axis labels do not collide.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Raster fill and white isolines clearly visible; 150x150 grid density
-          handled well
+        comment: Raster, contour lines, colorbar, and H/L labels all visible. Contour
+          lines (size=0.5, alpha=0.65) are thin and semi-transparent — visible at
+          full resolution but may degrade at mobile scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green-to-blue is colorblind-safe; white contour lines
-          provide adequate contrast
+        comment: Imprint sequential colormap (green to blue) is CVD-safe. Adequate
+          contrast between text and backgrounds in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well; legend well-positioned; balanced margins
+        comment: Canvas gate passed (3200×1800 px). Raster fills the full plot area
+          efficiently. Colorbar well-positioned to the right. Balanced margins. Title
+          within bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (degrees E) and Latitude (degrees N) descriptive with units
+        comment: 'Axis labels include units: ''Longitude (°E)'', ''Latitude (°N)''.
+          Legend title ''Pressure (hPa)'' is descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'scale_fill_gradient(low=#009E73, high=#4467A3) matches imprint_seq;
-          backgrounds #FAF8F1/#1A1A17 correct; chrome theme-adaptive in both renders'
+        comment: 'scale_fill_gradient(low=''#009E73'', high=''#4467A3'') is the correct
+          Imprint sequential colormap. Plot backgrounds #FAF8F1 (light) and #1A1A17
+          (dark) are correct. Chrome is fully theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -104,23 +123,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic default: Imprint sequential colormap, realistic meteorological
-          scenario, calibrated alpha on isolines; not publication-ready — typography
-          hierarchy and legend could be more refined'
+        comment: 'Above generic defaults: intentional multi-layer composition, meteorological
+          H/L labels add domain-specific character, Imprint colormap applied purposefully.
+          Not quite publication-ready (no descriptive title, contour lines could be
+          bolder).'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: panel_border removed, grid at alpha=0.1/0.05, theme_minimal base;
-          axis_line retained on raster fill is minor blemish
+        comment: Spines fully removed (axis_line + panel_border both element_blank).
+          Grid set to subtle alpha=0.1/0.05. Clean minimal look. Some refinement visible
+          above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Dual-anticyclone layout tells a story; H annotation creates a focal
-          point; but only one of three cells annotated, limiting visual emphasis
+        passed: true
+        comment: H/L labels create meteorological narrative and guide the viewer to
+          the two anticyclones and the trough. Visual hierarchy is present via the
+          concentric contour rings. Does not add descriptive title or numeric labels
+          on contours.
     spec_compliance:
       score: 15
       max: 15
@@ -130,52 +153,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour plot with both filled regions (geom_raster) and isolines
-          (geom_path)
+        comment: 'Correct contour plot: filled raster (geom_raster) + isoline overlay
+          (geom_path via contourpy). Both components present.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, filled + line layers, sufficient resolution (150x150),
-          sequential colormap
+        comment: Sequential colormap ✓, colorbar ✓, contour lines + filled regions
+          ✓, key level labels (H/L) ✓, grid resolution 150×150 ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Longitude, y=Latitude, fill=pressure; full domain covered
+        comment: X=Longitude, Y=Latitude, fill=pressure (hPa). Axes span full data
+          range. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; legend labelled Pressure (hPa)
+        comment: Title is exactly 'contour-basic · python · plotnine · anyplot.ai'.
+          Legend 'Pressure (hPa)' matches data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Multiple contour levels, both high- and low-pressure regions, varied
-          gradients
+        comment: 'Shows filled contour + isolines + colorbar + pressure-centre labels.
+          Slight deduction: spec mentions ''label key contour levels when practical''
+          — numeric hPa values on isolines are absent (only H/L type labels).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Two-cell anticyclone system with trough; realistic meteorological
-          scenario; neutral scientific domain
+        comment: Real-world atmospheric pressure scenario with plausible two-anticyclone
+          + low-pressure trough structure. Neutral meteorological data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pressure 1010-1025 hPa is realistic; lon/lat range +-10 degrees is
-          sensible; gradient magnitude ~20 hPa is synoptically plausible
+        comment: Pressure range 1010–1025 hPa is realistic for synoptic-scale systems.
+          Grid 150×150 provides smooth contours. Lon/lat extents are appropriate for
+          a regional domain.
     code_quality:
       score: 10
       max: 10
@@ -185,34 +212,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data generation → theme → plot → save; no functions or
-          classes
+        comment: Linear Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set. Deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; contourpy is real dependency
+        comment: All imported names are used. contourpy, numpy, pandas, plotnine components
+          all utilised.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and concise; contourpy used for data prep only
+        comment: Appropriate complexity. contourpy integration is clean. No fake interactive
+          elements. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine API
+        comment: Saves as plot-{THEME}.png. No bare plot.png. Current plotnine 0.15
+          API used.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,23 +249,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics with ggplot()+geom_*() layering; correct aes(),
-          scale, labs, theme; slight deduction for contourpy substituting native geom_contour
+        comment: 'Idiomatic grammar-of-graphics pattern: ggplot() + geom_* + scale_*
+          + labs() + theme_minimal() + anyplot_theme. Correct use of element_* functions
+          for theme customisation. Above default.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses geom_raster (plotnine-specific) and layer composition; but overall
-          visualization could mostly be replicated in matplotlib
-  verdict: REJECTED
+        passed: true
+        comment: Multi-geom layering (raster + path + text) is distinctive to plotnine's
+          grammar of graphics. contourpy integration as a companion library is a domain-specific
+          technique required by plotnine's architecture. Above default of 1.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - contourpy
   techniques:
+  - layer-composition
   - annotations
   - colorbar
-  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
