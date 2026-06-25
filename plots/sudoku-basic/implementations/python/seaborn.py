@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.colors import ListedColormap
 
 
 # Theme tokens
@@ -17,6 +18,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Extended tonal palette for alternating box shading (monochrome, warm-toned)
+BOX_SHADE = "#EDE8DB" if THEME == "light" else "#242422"  # alternate 3×3 box fill
+CLUE_BG = "#DDD8CB" if THEME == "light" else "#2E2D29"  # given-number cell fill
 
 # Data (classic Sudoku puzzle; 0 = empty cell)
 grid = np.array(
@@ -34,6 +38,12 @@ grid = np.array(
 )
 clue_mask = (grid > 0).astype(float)
 annotations = np.where(grid == 0, "", grid.astype(str))
+
+# Three-level cell data: 0=empty+even-box, 0.5=empty+odd-box, 1=clue.
+# Alternating box parity encodes the checkerboard 3×3 grouping directly in the data.
+box_parity = np.array([[(r // 3 + c // 3) % 2 * 0.5 for c in range(9)] for r in range(9)], dtype=float)
+cell_data = np.where(clue_mask == 1, 1.0, box_parity)
+cmap = ListedColormap([PAGE_BG, BOX_SHADE, CLUE_BG])
 
 # Theme-adaptive seaborn chrome (matches seaborn.md template)
 sns.set_theme(
@@ -56,14 +66,14 @@ sns.set_theme(
 # Canvas: square 2400×2400 (symmetric 9×9 grid — no preferred horizontal axis)
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
-# Seaborn heatmap with annotated digit strings (fmt="" bypasses numeric formatting).
-# Binary cmap [PAGE_BG, ELEVATED_BG] gives given-number cells a distinct elevated fill.
-# Thin linewidths=0.6 keeps cell borders subordinate to the thick 3×3 box boundaries.
+# Seaborn heatmap: ListedColormap with 3 warm-toned stops maps directly to cell types.
+# Alternating box shading (even vs odd 3×3 boxes) reinforces the structural grouping
+# without coloring — preserving the monochrome constraint while lifting design quality.
 sns.heatmap(
-    clue_mask,
+    cell_data,
     annot=annotations,
     fmt="",
-    cmap=[PAGE_BG, ELEVATED_BG],
+    cmap=cmap,
     cbar=False,
     linewidths=0.6,
     linecolor=INK_SOFT,
@@ -72,7 +82,7 @@ sns.heatmap(
     yticklabels=False,
     vmin=0,
     vmax=1,
-    annot_kws={"size": 18, "weight": "bold", "color": INK},
+    annot_kws={"size": 16, "weight": "bold", "color": INK},
     ax=ax,
 )
 
