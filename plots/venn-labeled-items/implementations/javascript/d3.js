@@ -10,23 +10,27 @@ const THEME = window.ANYPLOT_THEME || "light";
 const inkMuted = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
 // --- Data ---
-// Three circles defining tech product categories
-const CIRCLES = [
-  { name: "Overhyped",       cx: 600, cy: 420, r: 270, color: t.palette[0] },
-  { name: "Actually Useful", cx: 738, cy: 658, r: 270, color: t.palette[1] },
-  { name: "Secretly Loved",  cx: 462, cy: 658, r: 270, color: t.palette[2] },
+const circleData = [
+  { name: "Overhyped",       cx: 600, cy: 480, r: 270 },
+  { name: "Actually Useful", cx: 738, cy: 718, r: 270 },
+  { name: "Secretly Loved",  cx: 462, cy: 718, r: 270 },
 ];
 
-// Centroid of each Venn zone for item placement
+// D3 ordinal scale maps category names to Imprint palette in canonical order
+const colorScale = d3.scaleOrdinal()
+  .domain(circleData.map(d => d.name))
+  .range(t.palette.slice(0, 3));
+
+// Centroid of each Venn zone for label placement
 const ZONE_CENTROIDS = {
-  A:       { x: 600, y: 254 },
-  B:       { x: 878, y: 740 },
-  C:       { x: 322, y: 740 },
-  AB:      { x: 730, y: 506 },
-  AC:      { x: 470, y: 506 },
-  BC:      { x: 600, y: 780 },
-  ABC:     { x: 600, y: 578 },
-  outside: { x: 975, y: 300 },
+  A:       { x: 600, y: 314 },
+  B:       { x: 878, y: 800 },
+  C:       { x: 322, y: 800 },
+  AB:      { x: 730, y: 566 },
+  AC:      { x: 470, y: 566 },
+  BC:      { x: 600, y: 840 },
+  ABC:     { x: 600, y: 638 },
+  outside: { x: 975, y: 360 },
 };
 
 const items = [
@@ -52,87 +56,80 @@ const items = [
   { label: "Landlines",         zone: "outside" },
 ];
 
+// Use d3.group to partition items by zone, then compute vertical stacking positions
+const SPACING = 24;
+const itemsByZone = d3.group(items, d => d.zone);
+
+itemsByZone.forEach((zoneItems, zone) => {
+  const { x: zx, y: zy } = ZONE_CENTROIDS[zone];
+  const totalH = (zoneItems.length - 1) * SPACING;
+  zoneItems.forEach((item, i) => {
+    item.x = zx;
+    item.y = zy - totalH / 2 + i * SPACING;
+  });
+});
+
 // --- SVG ---
 const svg = d3.select("#container").append("svg")
   .attr("width", width)
   .attr("height", height);
 
-// --- Circles (semi-transparent fills, colored strokes) ---
-CIRCLES.forEach(c => {
-  svg.append("circle")
-    .attr("cx", c.cx).attr("cy", c.cy).attr("r", c.r)
-    .attr("fill", c.color).attr("fill-opacity", 0.12)
-    .attr("stroke", c.color).attr("stroke-width", 2.5).attr("stroke-opacity", 0.65);
-});
+// --- Circles (data join, semi-transparent fills, colored strokes) ---
+svg.selectAll("circle.venn-circle").data(circleData).join("circle")
+  .attr("class", "venn-circle")
+  .attr("cx", d => d.cx).attr("cy", d => d.cy).attr("r", d => d.r)
+  .attr("fill", d => colorScale(d.name)).attr("fill-opacity", 0.12)
+  .attr("stroke", d => colorScale(d.name))
+  .attr("stroke-width", 2.5).attr("stroke-opacity", 0.65);
 
-// --- Category labels (outside each circle, editorial serif) ---
+// --- Category labels (data join per circle, editorial serif) ---
 const catFont = "Georgia, 'Times New Roman', serif";
 
-// Circle A: above
-svg.append("text")
-  .attr("x", CIRCLES[0].cx)
-  .attr("y", CIRCLES[0].cy - CIRCLES[0].r - 24)
+const catLabelDefs = [
+  { name: "Overhyped",       lines: ["Overhyped"],          x: circleData[0].cx,                        y: circleData[0].cy - circleData[0].r - 20, anchor: "middle" },
+  { name: "Actually Useful", lines: ["Actually", "Useful"], x: circleData[1].cx + circleData[1].r + 26, y: circleData[1].cy - 13,                  anchor: "start"  },
+  { name: "Secretly Loved",  lines: ["Secretly", "Loved"],  x: circleData[2].cx - circleData[2].r - 26, y: circleData[2].cy - 13,                  anchor: "end"    },
+];
+
+catLabelDefs.forEach(def => {
+  const catG = svg.append("g");
+  catG.selectAll("text").data(def.lines).join("text")
+    .attr("x", def.x)
+    .attr("y", (_, i) => def.y + i * 28)
+    .attr("text-anchor", def.anchor)
+    .attr("fill", colorScale(def.name))
+    .style("font-size", "20px").style("font-weight", "700")
+    .style("font-family", catFont)
+    .text(d => d);
+});
+
+// --- "outside all circles" annotation ---
+const outsideItems = items.filter(d => d.zone === "outside");
+if (outsideItems.length) {
+  svg.append("text")
+    .attr("x", ZONE_CENTROIDS.outside.x)
+    .attr("y", d3.min(outsideItems, d => d.y) - 22)
+    .attr("text-anchor", "middle").attr("fill", inkMuted)
+    .style("font-size", "14px").style("font-style", "italic")
+    .text("outside all circles");
+}
+
+// --- Items (data join over all items, positions from d3.group stacking) ---
+svg.selectAll("text.venn-item").data(items).join("text")
+  .attr("class", "venn-item")
+  .attr("x", d => d.x)
+  .attr("y", d => d.y)
   .attr("text-anchor", "middle")
-  .attr("fill", CIRCLES[0].color)
-  .style("font-size", "20px").style("font-weight", "700")
-  .style("font-family", catFont)
-  .text(CIRCLES[0].name);
-
-// Circle B: right side (two lines)
-const bx = CIRCLES[1].cx + CIRCLES[1].r + 26;
-["Actually", "Useful"].forEach((word, i) => {
-  svg.append("text")
-    .attr("x", bx).attr("y", CIRCLES[1].cy - 13 + i * 28)
-    .attr("text-anchor", "start").attr("fill", CIRCLES[1].color)
-    .style("font-size", "20px").style("font-weight", "700")
-    .style("font-family", catFont).text(word);
-});
-
-// Circle C: left side (two lines)
-const cx0 = CIRCLES[2].cx - CIRCLES[2].r - 26;
-["Secretly", "Loved"].forEach((word, i) => {
-  svg.append("text")
-    .attr("x", cx0).attr("y", CIRCLES[2].cy - 13 + i * 28)
-    .attr("text-anchor", "end").attr("fill", CIRCLES[2].color)
-    .style("font-size", "20px").style("font-weight", "700")
-    .style("font-family", catFont).text(word);
-});
-
-// --- Items (stacked vertically within each zone) ---
-const itemsByZone = d3.group(items, d => d.zone);
-const SPACING = 24;
-
-itemsByZone.forEach((zoneItems, zone) => {
-  const { x: zx, y: zy } = ZONE_CENTROIDS[zone];
-  const n = zoneItems.length;
-  const totalH = (n - 1) * SPACING;
-  const isOutside = zone === "outside";
-
-  if (isOutside) {
-    svg.append("text")
-      .attr("x", zx).attr("y", zy - totalH / 2 - 20)
-      .attr("text-anchor", "middle").attr("fill", inkMuted)
-      .style("font-size", "11px").style("font-style", "italic")
-      .text("outside all circles");
-  }
-
-  zoneItems.forEach((item, i) => {
-    const y = zy - totalH / 2 + i * SPACING;
-    svg.append("text")
-      .attr("x", zx).attr("y", y)
-      .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
-      .attr("fill", isOutside ? inkMuted : t.inkSoft)
-      .style("font-size", "14px")
-      .style("font-style", isOutside ? "italic" : "normal")
-      .style("font-family", "system-ui, -apple-system, sans-serif")
-      .text(item.label);
-  });
-});
+  .attr("dominant-baseline", "middle")
+  .attr("fill", d => d.zone === "outside" ? inkMuted : t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", d => d.zone === "outside" ? "italic" : "normal")
+  .style("font-family", "system-ui, -apple-system, sans-serif")
+  .text(d => d.label);
 
 // --- Title ---
-const titleText = "venn-labeled-items · javascript · d3 · anyplot.ai";
 svg.append("text")
   .attr("x", width / 2).attr("y", 46)
   .attr("text-anchor", "middle").attr("fill", t.ink)
   .style("font-size", "22px").style("font-weight", "600")
-  .text(titleText);
+  .text("venn-labeled-items · javascript · d3 · anyplot.ai");
