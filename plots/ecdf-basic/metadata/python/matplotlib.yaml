@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:01:58Z'
-updated: '2026-06-25T09:33:37Z'
+updated: '2026-06-25T09:45:38Z'
 generated_by: claude-sonnet
 workflow_run: 28160110432
 issue: 976
@@ -12,93 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - Uses matplotlib native ax.ecdf() method — idiomatic and showcases a library feature
-    added in 3.8+
-  - Thoughtful bimodal dataset (IoT sensor temperatures) creates an analytically interesting
-    distribution
-  - Quartile reference guides (Q1/Q2/Q3) add strong practical value for percentile
-    reading
-  - Complete theme-adaptive chrome — all text, spines, and grid tokens correctly flip
-    between light and dark renders
-  - Correct canvas (3200x1800), no bbox_inches tight, proper Imprint palette and background
-    colors
+  - Uses matplotlib's native ax.ecdf() function (3.8+ API) — not available in other
+    libraries without manual ECDF computation
+  - Bimodal IoT sensor temperature data with mode markers ('Server rooms' / 'Offices')
+    creates an immediately legible narrative
+  - Quartile reference guides (Q1/Q2/Q3 dotted lines + annotations) directly support
+    the spec requirement for percentile readability
+  - Subtle fill-under-curve (step='post', alpha=0.10) adds visual depth without distracting
+    from the ECDF line
+  - 'Perfect theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders
+    fully readable with no dark-on-dark failures'
+  - All font sizes explicitly set with proportional scaling (title_fs computed from
+    title length); canvas matches required 3200×1800 px exactly
   weaknesses:
-  - Design Excellence is functional but not exceptional — visual hierarchy could be
-    strengthened with a subtle fill under the ECDF curve or muted shading marking
-    the two modes
-  - The bimodal structure (office vs server rooms) is not explicitly highlighted —
-    secondary annotation or shading would elevate storytelling
-  - Quartile annotation fontsize=8 is at the minimum threshold; consider 9pt for better
-    readability at smaller display sizes
+  - Q-annotations use only xytext=(5, 5) offset points from the data intersection
+    — very small clearance that places annotation text close to the ECDF curve; a
+    larger offset (e.g. (8, 8) or (10, 10)) or a small callout line would improve
+    separation
+  - Fill-under-curve alpha=0.10 renders nearly invisible in the dark theme; increasing
+    to alpha=0.13–0.15 would make the fill readable in both themes without looking
+    heavy
+  - LM-02 could be raised by explicitly leveraging ax.ecdf()'s complementary=False/True
+    parameter or the 'data' kwarg — minor missed opportunity to showcase the full
+    API
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Sensor Temperatures · ecdf-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Temperature (°C)" and "Cumulative Proportion" in dark ink at 10pt, readable. Tick labels in secondary ink (#4A4A44) at 8pt, readable. Top and right spines removed; left and bottom spines in secondary ink color.
-      Data: ECDF step function in brand green (#009E73) at linewidth=2.5, clearly distinguishable from background. Three quartile cross-hair reference lines in muted gray (#6B6A63) at alpha=0.6, intentionally subtle. Quartile annotations "Q1 18.8°C", "Q2 20.7°C", "Q3 22.4°C" in muted gray at fontsize=8, readable at full resolution.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correctly not pure white.
+      Chrome: Title "Sensor Temperatures · ecdf-basic · python · matplotlib · anyplot.ai" at ~72% canvas width, dark #1A1A17 text, clearly readable. Axis labels "Temperature (°C)" and "Cumulative Proportion" in same dark ink at 10pt, visually balanced. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Y-axis spine and bottom spine in INK_SOFT; top and right removed.
+      Data: Single-series ECDF step line in brand green #009E73, linewidth=2.5, clearly visible. Subtle fill under curve in same green at alpha=0.10 — very light. Dashed vertical mode markers at 18.5°C ("Server rooms") and 22.0°C ("Offices") in INK_MUTED, appropriately subtle. Quartile dotted-line guides (Q1 18.8°C, Q2 20.7°C, Q3 22.4°C) with annotations in INK_MUTED. Y-axis horizontal grid at alpha=0.15.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
-      Chrome: Title in near-white (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in secondary light tone (#B8B7B0), readable. Quartile annotations in light muted gray (#A8A79F), readable. No dark-on-dark issues detected — all chrome tokens correctly adapted to dark theme.
-      Data: ECDF line color is identical brand green (#009E73) — unchanged from light render (data colors stay constant across themes). Quartile reference dotted lines in light muted gray, visible against dark background.
-      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correctly not pure black.
+      Chrome: Title in light #F0EFE8 ink — fully readable. Axis labels in same light ink, tick labels in #B8B7B0 (INK_SOFT), all visible against the dark surface. Spines in INK_SOFT. Subtle Y-axis grid visible.
+      Data: ECDF line remains #009E73 — identical to light render. Fill-under-curve nearly invisible at alpha=0.10 but the ECDF line itself is fully visible. Mode markers and quartile guides in #A8A79F (INK_MUTED) — readable.
+      Data colors are identical between light and dark; only chrome (text, background, grid, spines) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable against the warm near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title 12pt, axis labels 10pt, tick labels 8pt — all readable in both
-          themes. Quartile annotations at fontsize=8 are at the minimum readable threshold.
+        comment: 'All font sizes explicitly set: title_fs=12 (computed from 67-char
+          title), xlabel/ylabel=10pt, ticks=8pt, annotations=8-9pt. Readable in both
+          themes, proportions balanced.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, data, or annotation elements in either render
+        comment: No overlapping elements. Quartile annotations offset from data intersections;
+          mode labels at bottom well-separated from annotation cluster.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF line at linewidth=2.5 in brand green is clearly visible; quartile
-          reference lines intentionally subtle at alpha=0.6
+        comment: ECDF line at linewidth=2.5, clearly prominent. 250-point medium-density
+          dataset well-suited for step-function display without alpha adjustments.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series in CVD-safe brand green; no red-green conflict
+        comment: 'Single series in brand green #009E73 on warm bg — good luminance
+          contrast, CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); generous margins via subplots_adjust;
-          balanced proportions; no overflow or clipping
+        comment: Canvas gate passed. subplots_adjust(left=0.09, right=0.97, top=0.92,
+          bottom=0.12) provides balanced margins. Plot fills canvas well. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units; Cumulative Proportion — both descriptive.
-          Title includes descriptive prefix.
+        comment: '''Temperature (°C)'' with units; ''Cumulative Proportion'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for single series; backgrounds #FAF8F1/#1A1A17
-          correct; chrome fully theme-adaptive'
+        comment: 'ECDF and fill use BRAND=#009E73 (first series). Backgrounds #FAF8F1
+          (light) / #1A1A17 (dark). Full theme-adaptive chrome: INK/INK_SOFT/INK_MUTED
+          tokens throughout. Data colors identical across both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,24 +115,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: correct Imprint palette, theme-adaptive
-          chrome, thoughtful bimodal dataset. No exceptional design innovation beyond
-          expected structure.'
+        comment: 'Above configured-default (4): bimodal data concept + fill-under-curve
+          + quartile guides + mode markers show design intent. Not yet FiveThirtyEight-level
+          polish (6-8).'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; generous
-          whitespace. Correct but not highly refined beyond baseline.
+        comment: 'Good refinement: L-spine (top/right removed), y-axis-only grid (alpha=0.15,
+          linewidth=0.8), explicit subplots_adjust whitespace. Stops short of ''every
+          detail polished'' (6).'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Quartile reference guides aid percentile reading. Bimodal shape visible
-          in ECDF curve. Story is functional but two population modes not highlighted
-          explicitly.
+        comment: 'Good storytelling: bimodal structure + mode labels (''Server rooms''/''Offices'')
+          + quartile annotations create a narrative arc. Viewer immediately identifies
+          two populations. Stops short of ''excellent'' (6) since the story could
+          be made sharper.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function via ax.ecdf(); y-axis 0-1; step increments
-          by 1/n at each point
+        comment: Correct ECDF via ax.ecdf(); step function increases 1/n at each observation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, y-axis 0-1 range, grid lines for percentile reading,
-          distinct line style — all present
+        comment: 'All spec features: step function correct, Y-axis 0–1, distinct line
+          style, grid lines. Adds quartile guides and mode markers as enhancements.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: temperature values; Y-axis: cumulative proportion; all 250
-          data points represented'
+        comment: Temperature on X, cumulative proportion (0–1) on Y. Full data range
+          ~16.5–26.5°C visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix; single-series
-          legend correctly omitted
+        comment: 'Title ''Sensor Temperatures · ecdf-basic · python · matplotlib ·
+          anyplot.ai'' matches {Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai format. Single-series: no legend (correct — avoids spurious
+          legend warning).'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +177,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ECDF with quartile cross-hairs; bimodal mixture demonstrates
-          multiple distribution characteristics
+        comment: Bimodal distribution shows shape, spread, multiple populations, and
+          percentile readability — full ECDF feature coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: IoT sensor temperature data (office 22°C ± 1.8, server rooms 18.5°C
-          ± 0.9) is plausible and neutral
+        comment: 'IoT sensor temperatures in offices (22°C) and server rooms (18.5°C):
+          neutral, domain-appropriate, comprehensible scenario.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 250 points (within 50-500 spec range); temperature range 16-27°C
-          realistic for indoor environments
+        comment: Office ~22°C (sd=1.8) and server room ~18.5°C (sd=0.9) are plausible
+          real-world values; 250 observations within 50-500 recommended range.
     code_quality:
       score: 10
       max: 10
@@ -190,35 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Linear Imports → Data → Plot → Save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(7) set
+        comment: np.random.seed(7) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic; zip with strict=True; title fontsize scaling formula
-          applied
+        comment: Clean Pythonic code; zip(..., strict=True) is idiomatic Python 3.10+;
+          appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current ax.ecdf()
-          API
+        comment: Saves as plot-{THEME}.png; ax.ecdf() is current matplotlib 3.8+ API;
+          no bbox_inches='tight'.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -226,16 +238,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses ax.ecdf() (matplotlib 3.8+ native method); follows Axes-method
-          pattern; fig.subplots_adjust for layout
+        comment: ax.ecdf() is the high-level native API; axes methods throughout (no
+          pyplot); subplots_adjust over tight_layout.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: ax.ecdf() is a distinctive matplotlib-native feature. Quartile cross-hairs
-          via ax.plot() + ax.annotate() appropriate. One point held for limited showcase
-          of additional matplotlib-specific capabilities.
+        comment: ax.ecdf() is distinctive to matplotlib 3.8+ and unavailable in other
+          libraries without manual ECDF computation. fill_between with step='post'
+          mirrors ECDF step mode — library-specific idiom.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -244,7 +256,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
