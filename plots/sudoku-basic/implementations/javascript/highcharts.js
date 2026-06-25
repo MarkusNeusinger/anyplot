@@ -39,6 +39,25 @@ for (let i = 1; i <= 8; i++) {
   yPlotLines.push({ value: i, color: isBox ? t.ink : t.inkSoft, width: isBox ? 3 : 1, zIndex: 4 });
 }
 
+// Checkerboard shading: 5 alternate 3×3 boxes [boxRow, boxCol]
+const SHADED_BOXES = [[0, 0], [0, 2], [1, 1], [2, 0], [2, 2]];
+
+function drawBoxShades(chart) {
+  if (chart._boxShades) {
+    chart._boxShades.forEach((el) => el.destroy());
+  }
+  chart._boxShades = [];
+  const boxW = chart.plotWidth / 3;
+  const boxH = chart.plotHeight / 3;
+  SHADED_BOXES.forEach(([boxRow, boxCol]) => {
+    const el = chart.renderer
+      .rect(chart.plotLeft + boxCol * boxW, chart.plotTop + boxRow * boxH, boxW, boxH)
+      .attr({ fill: t.elevatedBg, zIndex: 1 })
+      .add();
+    chart._boxShades.push(el);
+  });
+}
+
 Highcharts.chart("container", {
   chart: {
     type: "scatter",
@@ -47,7 +66,11 @@ Highcharts.chart("container", {
     style: { fontFamily: "inherit" },
     plotBorderColor: t.ink,
     plotBorderWidth: 3,
-    margin: [80, 60, 40, 60],
+    margin: [80, 60, 60, 60],
+    events: {
+      load: function () { drawBoxShades(this); },
+      redraw: function () { drawBoxShades(this); },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
