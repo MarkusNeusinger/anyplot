@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 91/100 | Updated: 2026-06-25
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-25
 """
 
 import os
