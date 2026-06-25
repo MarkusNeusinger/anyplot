@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-25
@@ -81,15 +81,16 @@ MARGIN_T, MARGIN_B = 160, 180
 
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 
-# Peak marker colors: ochre (primary) and lavender (secondary) from Imprint palette.
-# Both contrast well against the green-to-blue imprint_seq fill surface.
+# Peak marker colors: INK (theme-adaptive neutral) treats peaks as structural
+# annotations rather than categorical data series, avoiding green-on-green invisibility
+# while using the correct semantic anchor for landmark overlays.
 custom_style = Style(
     background=PAGE_BG,
     plot_background="transparent",
     foreground=INK_SOFT,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=("#BD8233", "#C475FD"),
+    colors=(INK, INK_MUTED),
     font_family=font,
     title_font_family=font,
     label_font_family=font,
@@ -119,7 +120,7 @@ chart = pygal.XY(
     margin_bottom=MARGIN_B,
     xrange=(0, 10),
     range=(0, 10),
-    dots_size=15,
+    dots_size=24,
     stroke=False,
     truncate_label=-1,
 )
@@ -242,18 +243,22 @@ for lvl in all_levels:
 # Contour level labels — maximize distance from placed anchors.
 # A buffer ring of ghost points around the primary peak fans labels away from the
 # high-elevation crowding zone, reducing overlap near the 1200 m contour.
-label_font_px = 32
+label_font_px = 38
 placed_positions = [
     (p1x, p1y),
     (p2x, p2y),
-    (p1x - 70, p1y),
-    (p1x + 70, p1y),
-    (p1x, p1y - 70),
-    (p1x, p1y + 70),
-    (p1x - 50, p1y - 50),
-    (p1x + 50, p1y - 50),
-    (p1x - 50, p1y + 50),
-    (p1x + 50, p1y + 50),
+    (p1x - 110, p1y),
+    (p1x + 110, p1y),
+    (p1x, p1y - 110),
+    (p1x, p1y + 110),
+    (p1x - 80, p1y - 80),
+    (p1x + 80, p1y - 80),
+    (p1x - 80, p1y + 80),
+    (p1x + 80, p1y + 80),
+    (p1x - 140, p1y - 40),
+    (p1x + 140, p1y - 40),
+    (p1x - 40, p1y - 140),
+    (p1x + 40, p1y - 140),
 ]
 for lvl, segs in major_segments_by_level.items():
     if not segs:
@@ -378,6 +383,13 @@ svg_parts.append(
     f'style="font-size:40px;font-weight:500;font-family:{font}" '
     f'transform="rotate(90, {cb_title_x:.2f}, {cb_title_y:.2f})">Elevation (m)</text>'
 )
+
+# Peak marker halos — PAGE_BG ring makes INK dots visible against colored contour surface.
+# Rendered after fill/lines (on top in SVG order) but before pygal dots (which render last).
+for px, py in [(p1x, p1y), (p2x, p2y)]:
+    svg_parts.append(
+        f'<circle cx="{px:.2f}" cy="{py:.2f}" r="42" fill="{PAGE_BG}" stroke="{INK_SOFT}" stroke-width="2.5"/>'
+    )
 
 # Title
 title_text = "contour-basic · python · pygal · anyplot.ai"
