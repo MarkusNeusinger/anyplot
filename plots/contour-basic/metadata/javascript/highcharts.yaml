@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T04:02:35Z'
-updated: '2026-06-25T04:10:21Z'
+updated: '2026-06-25T04:25:46Z'
 generated_by: claude-sonnet
 workflow_run: 28145082435
 issue: 855
@@ -12,42 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correctly implements marching-squares contour algorithm in pure JS within the
-    Highcharts SVG renderer — a clever approach for a plot type with no native Highcharts
-    core series.
-  - Imprint seq palette (#009E73→#4467A3) correctly applied as continuous color gradient;
-    both themes render with identical data colors and theme-adaptive chrome.
-  - 'Full spec compliance: correct contour chart type, 10 well-spaced levels, descriptive
-    axis labels with units, exact required title format, and plausible topographic
-    data context.'
-  - 'Advanced Highcharts API usage: clipRect, renderer.g(), toPixels() — properly
-    clips SVG paths to the plot area.'
+  - Marching-squares algorithm implemented in pure JS within the Highcharts SVG renderer
+    — the correct approach for a plot type with no native core series
+  - Imprint seq (#009E73→#4467A3) correctly used as single-polarity continuous gradient;
+    data colors identical in both themes; all chrome theme-adaptive
+  - 'Full spec compliance: contour isolines, colorscale legend, labeled key levels,
+    correct title, descriptive axis labels with units'
+  - Spines fully removed (lineWidth:0, tickWidth:0) and grid subtle — clean professional
+    look
+  - Elevation labels with pill backgrounds at spread-out zones add readability without
+    cluttering
   weaknesses:
-  - 'Design refinement is minimal: axis lines and tick strokes are visible with no
-    suppression; set xAxis.lineWidth: 0, yAxis.lineWidth: 0, xAxis.tickWidth: 0, yAxis.tickWidth:
-    0 to remove spines for a cleaner look.'
-  - 'No filled contour regions: the spec suggests combining filled areas and isolines;
-    filled regions would significantly improve visual richness and data storytelling.'
-  - 'Contour lines are unlabeled: adding elevation value labels directly on key contour
-    lines would improve storytelling and reduce reliance on the side legend for reading
-    values.'
-  - Legend font at 13px is below the 14px guideline; increase to 14px.
-  - Data topology limited to two smooth Gaussian peaks; a saddle point or valley would
-    demonstrate the full range of contour plot features.
+  - Contour labels at 11px CSS (22px native) slightly below the 14px CSS guideline
+    — increase to 12–13px CSS for better mobile readability
+  - 'No filled contour regions: adding filled bands between isolines would significantly
+    increase visual richness, matching the spec suggestion to use both contour lines
+    and filled regions'
+  - Terrain topology still primarily Gaussian-peak based; a true depression/valley
+    would demonstrate the full range of contour features including closed inner contours
+    at minimum
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "contour-basic · javascript · highcharts · anyplot.ai" in dark bold text (readable); X/Y axis labels in muted gray (readable); tick labels visible; subtle grid lines present
-      Data: 10 contour isolines in Imprint seq gradient from #009E73 (green, low elevation) to #4467A3 (blue, high elevation); two distinct topographic peaks visible; legend on right with elevation values 157m-1181m
+      Chrome: Title "contour-basic · javascript · highcharts · anyplot.ai" in dark bold text at 22px (readable); X/Y axis labels "X (km)" / "Y (km)" in muted gray at 16px (readable); tick labels in muted gray at 14px; subtle grid lines; spines fully removed
+      Data: 10 contour isolines in Imprint seq gradient from #009E73 (green, low elevation) to #4467A3 (blue, high elevation); three-peak topology with oval outer contour and two interior peak regions; elevation pill-background labels at 5 spread zones (e.g. ~356m, ~582m, ~780m); vertical legend right-middle listing 153m–1070m levels
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and all axis labels rendered in light-colored text against dark background (readable); no dark-on-dark failures; grid lines subtle and appropriate
-      Data: Contour line colors identical to light render (same green-to-blue gradient); contrast is excellent on dark background; legend text readable
+      Chrome: Title and all axis labels in light-colored text against dark background (readable); no dark-on-dark failures; tick labels light; grid lines subtle and appropriate
+      Data: Contour line colors identical to light render (same green-to-blue Imprint seq gradient); pill-background labels use dark pageBg fill for readability; legend text in light gray; all contrast excellent on dark surface
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,49 +56,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis 16px, ticks 14px,
-          legend 13px); legend at 13px slightly below 14px guideline
+        comment: All primary font sizes explicitly set (title 22px, axis 16px, ticks
+          14px, legend 14px); contour value labels at 11px CSS slightly below 14px
+          guideline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element collisions in either render
+        comment: Zone-based label placement prevents all collisions; no text-data
+          overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Contour lines at 1.5px stroke clearly distinguishable; 10 levels
-          well-spaced
+        comment: Contour lines at 1.5px stroke clearly distinguishable at all 10 levels;
+          pill-background labels stand out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Imprint seq (green to blue) is CVD-safe with good luminance variation
+          across levels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well; legend correctly positioned right; no overflow
-          or clipping
+        comment: Canvas gate passed; contours fill plot area well; legend correctly
+          positioned right-middle; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X (km) and Y (km) are descriptive with units
+        comment: X (km) and Y (km) are descriptive with units; title is exact required
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint seq correctly used for single-polarity continuous data; transparent
-          background inherits correct page surface; chrome fully theme-adaptive
+        comment: Imprint seq (#009E73→#4467A3) correctly applied; transparent background
+          inherits page surface; chrome fully theme-adaptive via ANYPLOT_TOKENS
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,23 +110,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional and clean; Imprint seq gradient and custom marching-squares
-          are above library defaults; still fairly minimal (thin lines, grid visible,
-          no filled regions, no contour labels)
+        comment: Custom Imprint seq gradient, marching-squares, and elevation labels
+          with pill backgrounds are clearly above defaults; no filled contour regions
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid subtle via token but present; axis lines and ticks shown with
-          no spine suppression; between default and good refinement
+        passed: true
+        comment: Spines fully removed (lineWidth:0, tickWidth:0) and grid subtle via
+          t.grid token; whitespace generous
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color progression guides viewer to peaks but is passive; no annotations,
-          no emphasis aids, no labelled contour lines
+        passed: true
+        comment: Color progression guides viewer from low to high elevation; labeled
+          alternating contour lines identify specific values; three-peak topology
+          creates interesting terrain story
     spec_compliance:
       score: 15
       max: 15
@@ -141,21 +142,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Isolines at 10 levels, colorscale legend, 80x80 grid resolution
+        comment: 10 contour isolines, Imprint seq colorscale, elevation legend, labeled
+          key levels, 80x80 grid resolution
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapped to spatial coordinates; Z elevation drives contour placement
-          and color
+        comment: X/Y spatial coordinates with km units; Z elevation drives contour
+          placement and color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title is exact required format; legend shows elevation values in
-          meters
+          meters with correct color swatches
     data_quality:
       score: 13
       max: 15
@@ -165,22 +167,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Two distinct peaks with asymmetric topology; missing saddle point
-          or more complex structure
+        comment: Three asymmetric peaks (dominant, secondary, elongated ridge) show
+          varied topology including saddle-like features; no true depression/valley
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Topographic elevation with geographic units is classic and neutral;
-          Gaussian peaks slightly artificial
+        comment: Topographic elevation with geographic km units is classic neutral
+          scenario; plausible for hilly terrain, though purely mathematical basis
+          slightly artificial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation 100-1181m and extent +-5km / +-4km are plausible for hilly
-          terrain
+        comment: Elevation 100-1070m and spatial extent +-5km/+-4km are fully plausible
+          for real hilly terrain
     code_quality:
       score: 9
       max: 10
@@ -190,14 +193,15 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Multiple helper functions (rawElev, lerpColor, contourSegments, ep)
-          are necessary for marching-squares but add structural complexity
+        comment: Helper functions (rawElev, lerpColor, contourSegments, ep) are necessary
+          for marching-squares but add structural complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; mathematical functions with fixed parameters
+        comment: Fully deterministic; mathematical functions with fixed parameters,
+          no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,14 +213,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean and well-organized; helper functions well-named; no over-engineering
+        comment: Well-organized; helper functions clearly named; no over-engineering
           or fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart with correct animation flags; harness handles output
+        comment: Highcharts.chart with correct animation flags; harness handles output;
+          no explicit width/height
     library_mastery:
       score: 8
       max: 10
@@ -227,19 +232,20 @@ review:
         max: 5
         passed: true
         comment: Uses chart.renderer.clipRect(), renderer.g(), renderer.path(), and
-          xAxis[0].toPixels() — advanced idiomatic Highcharts API
+          xAxis[0].toPixels() — advanced idiomatic Highcharts SVG renderer API
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: SVG renderer for custom path drawing and toPixels() coordinate transform
-          are distinctively Highcharts features
-  verdict: REJECTED
+        comment: SVG renderer path drawing with clip groups, coordinate-to-pixel conversion
+          via axis API, and dummy series for legend are distinctively Highcharts features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
