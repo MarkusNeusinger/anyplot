@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -106,7 +106,7 @@ chart = (
         height=500,
         background=PAGE_BG,
         title=alt.Title(
-            "sudoku-basic · altair · anyplot.ai",
+            "sudoku-basic · python · altair · anyplot.ai",
             fontSize=16,
             fontWeight="normal",
             color=INK,
