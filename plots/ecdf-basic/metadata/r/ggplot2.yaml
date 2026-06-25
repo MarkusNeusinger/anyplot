@@ -1,0 +1,261 @@
+library: ggplot2
+language: r
+specification_id: ecdf-basic
+created: '2026-06-25T09:43:29Z'
+updated: '2026-06-25T10:03:56Z'
+generated_by: claude-sonnet
+workflow_run: 28161129829
+issue: 976
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Two-cohort ECDF comparison with stat_ecdf() and dual redundant encoding (color
+    + linetype) is CVD-safe and visually clear
+  - 'Thoughtful median annotation design: vertical droplines + intersection markers
+    + horizontal 50% reference creates a strong focal point and explicit data story'
+  - Informative subtitle states the key insight quantitatively (8-pt gap at the 50th
+    percentile)
+  - Perfect Imprint palette compliance with full theme-adaptive chrome — both renders
+    look correct
+  - Clean idiomatic ggplot2 code with combined legend pattern and correct title scaling
+    for long title
+  weaknesses:
+  - Title font (10pt) is the same size as axis labels (10pt), reducing typographic
+    hierarchy — plot.title could be 11-12pt and axis.title dropped to 9pt to create
+    clearer hierarchy without overflowing
+  - 'DE-01 ceiling: the median annotation design is good but the overall visual polish
+    stays just above default — consider adding geom_rug() under the x-axis to show
+    individual data point density alongside the ECDF curve'
+  - 'LM-02: The implementation does not exploit distinctive ggplot2 features beyond
+    stat_ecdf and the combined-legend trick — geom_rug(), facet_wrap(), or after_stat()
+    would demonstrate deeper grammar-of-graphics mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Exam Score Distribution by Curriculum Type · ecdf-basic · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), clearly readable. Subtitle in secondary ink (#4A4A44), readable. Axis labels "Exam Score" and "Cumulative Proportion" in dark ink (10pt). Tick labels in secondary ink (8pt). Legend "Student Cohort" with Class A / Class B entries in secondary ink. All chrome elements are dark on light — no legibility issues.
+      Data: Class A = solid green (#009E73) ECDF step curve; Class B = dashed lavender (#C475FD) ECDF step curve. Horizontal dotted reference at 50%. Vertical dotted droplines at median ~68 (green) and ~76 (lavender). Small circular markers at the ECDF-median intersections.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Subtitle and secondary text in #B8B7B0, readable. Axis labels and tick labels in appropriate light colors. Legend box uses elevated dark background (#242420) with muted border. No dark-on-dark failures — all text is light-colored on the dark surface.
+      Data: Colors are identical to light render — Class A = solid #009E73 (brand green), Class B = dashed #C475FD (lavender). Data colors confirm theme-independence; only chrome flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; title 10pt correctly scaled for 82-char
+          title; minor: title and axis labels share same 10pt size, reducing typographic
+          hierarchy; both renders fully readable'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step lines at linewidth=1.2 well-sized for 200-point ECDFs; median
+          markers and droplines clearly visible; redundant linetype encoding aids
+          visibility
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green + lavender CVD-safe; solid vs dashed linetype provides redundant
+          encoding beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; landscape layout fills canvas well with balanced
+          20px margins; legend at bottom correctly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Exam Score and Cumulative Proportion are descriptive; y-axis formatted
+          as percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); Class B = #C475FD (lavender,
+          position 2); light bg #FAF8F1, dark bg #1A1A17; data colors identical across
+          themes; chrome tokens fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: dual redundant encoding, clean Imprint
+          palette, quantitative subtitle. Not yet FiveThirtyEight-level — no typographic
+          hierarchy between title and axis labels'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed via panel.border=element_blank(); minor grid disabled;
+          major grid uses alpha-encoded color (~15% opacity); legend elevated background
+          with subtle border; margins set
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Median droplines + markers + horizontal 50% reference create clear
+          focal point; subtitle explicitly states 8-pt gap at 50th percentile; visual
+          hierarchy clear
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: stat_ecdf() correctly produces a step function ECDF
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function increases by 1/n; y-axis 0-1; distinct line style;
+          grid lines for percentile reading
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: continuous exam scores; Y: cumulative proportion 0-100%; two
+          cohorts correctly separated'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required {Descriptive Title} · {spec-id} · {lang} ·
+          {lib} · anyplot.ai format; legend title and labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-cohort ECDF comparison shows full distribution shapes with different
+          means and spreads; demonstrates all aspects of ECDF reading
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores comparing standard vs enriched curriculum cohorts — neutral,
+          educationally realistic; N=200 per cohort is realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score range ~20-110 realistic for exam context; distributions centered
+          at 68 and 76 with appropriate SD values; y-axis correctly 0-1
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports -> tokens -> data -> plot -> save; no
+          functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) used
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales (percent_format), ragg (device) — all three imports
+          are actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean readable code; no fake UI elements; combined legend via shared
+          name argument is concise idiomatic pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png device;
+          no deprecated APIs
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: stat_ecdf() canonical for ECDF; combined legend trick (same name=
+          for color and linetype scales); annotate() for geometric overlays; scales::percent_format()
+          integration — above default idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_ecdf is ggplot2-native statistical transformation; combined-legend-via-shared-name
+          is distinctly ggplot2. Could further leverage after_stat(), geom_rug(),
+          or faceting for deeper grammar-of-graphics mastery
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scales
+  - ragg
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
