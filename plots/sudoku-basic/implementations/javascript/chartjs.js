@@ -47,9 +47,19 @@ const sudokuPlugin = {
 
     ctx.save();
 
-    // Grid background
+    const boxSz = cell * 3;
+
+    // Grid background — full grid in pageBg
     ctx.fillStyle = t.pageBg;
     ctx.fillRect(startX, startY, gridSz, gridSz);
+
+    // Alternating 3×3 box region tints for visual depth
+    for (let br = 0; br < 3; br++) {
+      for (let bc = 0; bc < 3; bc++) {
+        ctx.fillStyle = (br + bc) % 2 === 1 ? t.elevatedBg : t.pageBg;
+        ctx.fillRect(startX + bc * boxSz, startY + br * boxSz, boxSz, boxSz);
+      }
+    }
 
     // Thin cell lines — skip every 3rd (those are box boundaries)
     ctx.strokeStyle = t.inkSoft;
@@ -118,7 +128,7 @@ new Chart(canvas, {
         display: true,
         text: "sudoku-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "normal" },
+        font: { size: 24, weight: "normal" },
         padding: { top: 12, bottom: 16 },
       },
       legend: { display: false },
