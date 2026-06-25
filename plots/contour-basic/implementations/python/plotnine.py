@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Created: 2026-06-25
@@ -20,16 +20,18 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
     element_blank,
     element_line,
     element_rect,
     element_text,
     geom_path,
     geom_raster,
+    geom_text,
     ggplot,
     labs,
     scale_fill_gradient,
+    scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -68,12 +70,16 @@ line_df = pd.concat(
     [pd.DataFrame({"lon": seg[:, 0], "lat": seg[:, 1], "group": gid}) for seg, gid in segments], ignore_index=True
 )
 
+# Pressure-centre labels: primary high (lon=3, lat=2), secondary high (lon=-5, lat=-3),
+# and low-pressure trough (lon=1, lat=-5)
+label_df = pd.DataFrame({"lon": [3.0, -5.0, 1.0], "lat": [2.5, -3.0, -5.5], "label": ["H", "H", "L"]})
+
 anyplot_theme = theme(
     figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_border=element_blank(),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line=element_blank(),
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.1),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
     axis_title=element_text(color=INK, size=10),
@@ -89,8 +95,10 @@ plot = (
     ggplot()
     + geom_raster(raster_df, aes(x="lon", y="lat", fill="hpa"))
     + geom_path(line_df, aes(x="lon", y="lat", group="group"), color="#FFFDF6", size=0.5, alpha=0.65)
-    + annotate("text", x=3.0, y=2.2, label="H", color=INK, size=4)
+    + geom_text(label_df, aes(x="lon", y="lat", label="label"), color=INK, size=5)
     + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pressure\n(hPa)")
+    + scale_x_continuous(expand=(0, 0))
+    + scale_y_continuous(expand=(0, 0))
     + labs(x="Longitude (°E)", y="Latitude (°N)", title="contour-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
