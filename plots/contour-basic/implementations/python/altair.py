@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-25
 """
 
 import importlib
+import math
 import os
 import sys
 
@@ -40,12 +41,11 @@ df_fill = pd.DataFrame({"x": X.ravel(), "y": Y.ravel(), "elevation": elevation.r
 # Contour line segments — marching squares
 levels = np.arange(400, 1251, 100)
 segments = []
-label_pts = {}  # major-level → midpoint nearest plot centre (5, 5)
+# Collect all midpoints per major level for angular spread placement
+level_midpts = {lv: [] for lv in range(400, 1201, 200)}
 
 for level in levels:
     lv = int(level)
-    best_dist = float("inf")
-    best_mid = None
     for i in range(len(y) - 1):
         for j in range(len(x) - 1):
             z00 = elevation[i, j]
@@ -76,16 +76,11 @@ for level in levels:
                 if lv % 200 == 0:
                     mx = (edges[0][0] + edges[1][0]) / 2
                     my = (edges[0][1] + edges[1][1]) / 2
-                    d = (mx - 5) ** 2 + (my - 5) ** 2
-                    if d < best_dist:
-                        best_dist = d
-                        best_mid = (mx, my)
+                    level_midpts[lv].append((mx, my))
                 if len(edges) == 4:
                     segments.append(
                         {"x1": edges[2][0], "y1": edges[2][1], "x2": edges[3][0], "y2": edges[3][1], "level": float(lv)}
                     )
-    if lv % 200 == 0 and best_mid is not None:
-        label_pts[lv] = best_mid
 
 df_lines = pd.DataFrame(segments)
 df_major = (
@@ -93,18 +88,40 @@ df_major = (
     if not df_lines.empty
     else pd.DataFrame(columns=["x1", "y1", "x2", "y2", "level"])
 )
+
+# Spread elevation labels at distinct angles from main peak to avoid clustering
+PEAK_X, PEAK_Y = 7.0, 7.0
+# Each level targets a different angular direction from the main peak (degrees)
+spread_targets = {400: 0, 600: 72, 800: 144, 1000: 216, 1200: 288}
+label_pts = {}
+for lv, pts in sorted(level_midpts.items()):
+    if not pts:
+        continue
+    target_rad = math.radians(spread_targets[lv])
+    best_score = float("inf")
+    best_pt = None
+    for mx, my in pts:
+        ang = math.atan2(my - PEAK_Y, mx - PEAK_X)
+        diff = abs(ang - target_rad)
+        diff = min(diff, 2 * math.pi - diff)
+        if diff < best_score:
+            best_score = diff
+            best_pt = (mx, my)
+    if best_pt:
+        label_pts[lv] = best_pt
+
 df_labels = pd.DataFrame([{"x": v[0], "y": v[1], "label": f"{k} m"} for k, v in sorted(label_pts.items())])
 
 # Plot title — 64 chars ≤ 67-char baseline, no font-size reduction needed
 title_str = "Mountain Terrain · contour-basic · python · altair · anyplot.ai"
 
-# Filled contour — Imprint sequential colormap (brand green → blue)
+# Filled contour — step=0.125 matches data spacing (80 pts / 10 km) to minimize pixelation
 filled = (
     alt.Chart(df_fill)
     .mark_rect()
     .encode(
-        x=alt.X("x:Q", bin=alt.Bin(maxbins=80), title="Distance East (km)"),
-        y=alt.Y("y:Q", bin=alt.Bin(maxbins=80), title="Distance North (km)"),
+        x=alt.X("x:Q", bin=alt.Bin(step=0.125), title="Distance East (km)"),
+        y=alt.Y("y:Q", bin=alt.Bin(step=0.125), title="Distance North (km)"),
         color=alt.Color(
             "mean(elevation):Q",
             scale=alt.Scale(range=["#009E73", "#4467A3"]),
@@ -133,7 +150,7 @@ major_lines = (
     .encode(x="x1:Q", y="y1:Q", x2="x2:Q", y2="y2:Q")
 )
 
-# Elevation labels at major contour levels — placed nearest to plot centre
+# Elevation labels spread radially across the field to avoid clustering at peak
 level_labels = (
     alt.Chart(df_labels)
     .mark_text(fontSize=11, fontWeight="bold", color=INK, dx=4, dy=-5)
@@ -143,7 +160,7 @@ level_labels = (
 chart = (
     (filled + lines + major_lines + level_labels)
     .properties(
-        width=620, height=320, title=alt.Title(title_str, fontSize=16, anchor="middle", color=INK), background=PAGE_BG
+        width=620, height=340, title=alt.Title(title_str, fontSize=16, anchor="middle", color=INK), background=PAGE_BG
     )
     .interactive()
     .configure_view(fill=PAGE_BG, stroke=None)
