@@ -38,9 +38,40 @@ df <- data.frame(
   cohort = rep(c("Class A", "Class B"), each = n)
 )
 
+# Medians for reference annotations
+median_a <- median(scores_a)
+median_b <- median(scores_b)
+gap <- round(median_b - median_a)
+
 # Plot
 p <- ggplot(df, aes(x = score, color = cohort, linetype = cohort)) +
+  # Horizontal dotted reference at 50th percentile for reading medians
+  geom_hline(
+    yintercept = 0.5,
+    color      = INK_SOFT,
+    linewidth  = 0.4,
+    linetype   = "dotted"
+  ) +
+  # ECDF step lines
   stat_ecdf(linewidth = 1.2, pad = FALSE) +
+  # Vertical droplines from x-axis to 50th percentile for each cohort
+  annotate("segment",
+    x = median_a, xend = median_a, y = 0, yend = 0.5,
+    color = IMPRINT_PALETTE[1], linewidth = 0.5, linetype = "dotted", alpha = 0.8
+  ) +
+  annotate("segment",
+    x = median_b, xend = median_b, y = 0, yend = 0.5,
+    color = IMPRINT_PALETTE[2], linewidth = 0.5, linetype = "dotted", alpha = 0.8
+  ) +
+  # Markers at median intersections on each ECDF curve
+  annotate("point",
+    x = median_a, y = 0.5,
+    color = IMPRINT_PALETTE[1], size = 2.0
+  ) +
+  annotate("point",
+    x = median_b, y = 0.5,
+    color = IMPRINT_PALETTE[2], size = 2.0
+  ) +
   scale_color_manual(
     name   = "Student Cohort",
     values = c("Class A" = IMPRINT_PALETTE[1], "Class B" = IMPRINT_PALETTE[2])
@@ -55,9 +86,13 @@ p <- ggplot(df, aes(x = score, color = cohort, linetype = cohort)) +
     breaks = seq(0, 1, by = 0.25)
   ) +
   labs(
-    title = "ecdf-basic · r · ggplot2 · anyplot.ai",
-    x     = "Exam Score",
-    y     = "Cumulative Proportion"
+    title    = "Exam Score Distribution by Curriculum Type · ecdf-basic · r · ggplot2 · anyplot.ai",
+    subtitle = sprintf(
+      "Median: Class A (standard) = %.0f pts vs. Class B (enriched) = %.0f pts — %+.0f-pt gap at the 50th percentile",
+      median_a, median_b, gap
+    ),
+    x = "Exam Score",
+    y = "Cumulative Proportion"
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -69,7 +104,8 @@ p <- ggplot(df, aes(x = score, color = cohort, linetype = cohort)) +
     axis.title        = element_text(color = INK, size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     axis.line         = element_line(color = INK_SOFT, linewidth = 0.5),
-    plot.title        = element_text(color = INK, size = 12),
+    plot.title        = element_text(color = INK, size = 10),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT, linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.title      = element_text(color = INK, size = 10),
