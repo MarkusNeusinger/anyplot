@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-06-25
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 85/100 | Created: 2026-06-25
 """
 
 import os
