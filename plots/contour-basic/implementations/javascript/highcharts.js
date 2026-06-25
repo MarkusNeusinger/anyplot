@@ -5,16 +5,16 @@
 
 const t = window.ANYPLOT_TOKENS;
 
-// --- Data (deterministic elevation field with two Gaussian peaks) -----------
+// --- Data (deterministic elevation: two peaks with saddle pass) --------------
 const N = 80;
 const xMin = -5, xMax = 5, yMin = -4, yMax = 4;
 const xs = Array.from({ length: N }, (_, i) => xMin + (xMax - xMin) * i / (N - 1));
 const ys = Array.from({ length: N }, (_, i) => yMin + (yMax - yMin) * i / (N - 1));
 
 function rawElev(x, y) {
-    const p1 = Math.exp(-((x - 1.2) ** 2 + (y - 0.8) ** 2) / 4);
-    const p2 = 0.70 * Math.exp(-((x + 1.8) ** 2 + (y + 0.6) ** 2) / 5);
-    const p3 = 0.42 * Math.exp(-(((x - 0.3) ** 2) / 6 + ((y - 2.2) ** 2) / 2));
+    const p1 = Math.exp(-((x - 1.4) ** 2 + (y - 0.9) ** 2) / 3.5);
+    const p2 = 0.84 * Math.exp(-((x + 1.6) ** 2 + (y + 0.5) ** 2) / 3.8);
+    const p3 = 0.40 * Math.exp(-(((x - 0.4) ** 2) / 6 + ((y - 2.6) ** 2) / 1.8));
     return p1 + p2 + p3;
 }
 
@@ -82,7 +82,7 @@ function contourSegments(level) {
     return segs;
 }
 
-// Dummy series (empty data) just to populate the legend
+// Dummy series for legend
 const legendSeries = levels.map((level, k) => ({
     type: 'line',
     name: Math.round(level) + ' m',
@@ -110,8 +110,8 @@ const chart = Highcharts.chart('container', {
         min: xMin,
         max: xMax,
         title: { text: 'X (km)', style: { color: t.inkSoft, fontSize: '16px' } },
-        lineColor: t.inkSoft,
-        tickColor: t.inkSoft,
+        lineWidth: 0,
+        tickWidth: 0,
         gridLineColor: t.grid,
         gridLineWidth: 1,
         labels: { style: { color: t.inkSoft, fontSize: '14px' } },
@@ -120,15 +120,15 @@ const chart = Highcharts.chart('container', {
         min: yMin,
         max: yMax,
         title: { text: 'Y (km)', style: { color: t.inkSoft, fontSize: '16px' } },
-        lineColor: t.inkSoft,
-        tickColor: t.inkSoft,
+        lineWidth: 0,
+        tickWidth: 0,
         gridLineColor: t.grid,
         gridLineWidth: 1,
         labels: { style: { color: t.inkSoft, fontSize: '14px' } },
     },
     legend: {
-        title: { text: 'Elevation', style: { color: t.inkSoft, fontSize: '13px' } },
-        itemStyle: { color: t.inkSoft, fontSize: '13px' },
+        title: { text: 'Elevation', style: { color: t.inkSoft, fontSize: '14px' } },
+        itemStyle: { color: t.inkSoft, fontSize: '14px' },
         itemHoverStyle: { color: t.ink },
         layout: 'vertical',
         align: 'right',
@@ -142,24 +142,67 @@ const chart = Highcharts.chart('container', {
 });
 
 // --- Draw contour lines via SVG renderer ------------------------------------
-// Clip to the plot area so lines don't overflow axes/title
 const clipRect = chart.renderer.clipRect(
     chart.plotLeft, chart.plotTop, chart.plotWidth, chart.plotHeight
 );
 const contourGroup = chart.renderer.g('contour-lines').clip(clipRect).add();
 
-levels.forEach((level, k) => {
-    const color = lerpColor(t.seq[0], t.seq[1], k / (NUM_LEVELS - 1));
-    const segs = contourSegments(level);
+// Pre-compute all segments
+const allSegs = levels.map(level => contourSegments(level));
 
+// Draw lines
+allSegs.forEach((segs, k) => {
+    const color = lerpColor(t.seq[0], t.seq[1], k / (NUM_LEVELS - 1));
     segs.forEach(([p1, p2]) => {
         const px1 = chart.xAxis[0].toPixels(p1[0]);
         const py1 = chart.yAxis[0].toPixels(p1[1]);
         const px2 = chart.xAxis[0].toPixels(p2[0]);
         const py2 = chart.yAxis[0].toPixels(p2[1]);
-
         chart.renderer.path(['M', px1, py1, 'L', px2, py2])
             .attr({ stroke: color, 'stroke-width': 1.5, zIndex: 5 })
             .add(contourGroup);
     });
+});
+
+// --- Add elevation labels on every other contour line ----------------------
+// Spread label target zones across the plot to avoid collisions
+const labelZones = [
+    { tx: -3.0, ty:  2.5 },
+    { tx:  0.0, ty: -2.0 },
+    { tx:  3.0, ty:  0.5 },
+    { tx: -2.5, ty: -1.0 },
+    { tx:  2.0, ty:  2.0 },
+];
+
+const labelGroup = chart.renderer.g('contour-labels').clip(clipRect).add();
+
+allSegs.forEach((segs, k) => {
+    if (k % 2 !== 0 || !segs.length) return;
+
+    const zone = labelZones[(k / 2) % labelZones.length];
+    let best = segs[0], bestDist = Infinity;
+    segs.forEach(([p1, p2]) => {
+        const mx = (p1[0] + p2[0]) / 2;
+        const my = (p1[1] + p2[1]) / 2;
+        const dist = (mx - zone.tx) ** 2 + (my - zone.ty) ** 2;
+        if (dist < bestDist) { bestDist = dist; best = [p1, p2]; }
+    });
+
+    const mx = (best[0][0] + best[1][0]) / 2;
+    const my = (best[0][1] + best[1][1]) / 2;
+    const px = chart.xAxis[0].toPixels(mx);
+    const py = chart.yAxis[0].toPixels(my);
+
+    const color = lerpColor(t.seq[0], t.seq[1], k / (NUM_LEVELS - 1));
+    const labelText = Math.round(levels[k]) + 'm';
+
+    // Pill background for readability
+    chart.renderer.rect(px - 23, py - 12, 46, 15, 3)
+        .attr({ fill: t.pageBg, opacity: 0.88, zIndex: 9 })
+        .add(labelGroup);
+
+    chart.renderer.text(labelText, px, py)
+        .attr({ align: 'center', zIndex: 10 })
+        .css({ color, fontSize: '11px', fontWeight: '700' })
+        .add(labelGroup);
 });
