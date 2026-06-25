@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 84/100 | Created: 2026-06-25
+// Quality: 87/100 | Created: 2026-06-25
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
