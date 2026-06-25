@@ -28,6 +28,10 @@ for (let i = 0; i < n; i++) {
   points.push([+h.toFixed(1), +w.toFixed(1)]);
 }
 
+// Trend line endpoints from population parameters (slope = r·σy/σx)
+const slope = r * (weightStd / heightStd);
+const intercept = weightMean - slope * heightMean;
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -96,6 +100,25 @@ chart.setOption({
       },
       blur: {
         itemStyle: { opacity: 0.25 },
+      },
+      // markLine: ECharts-native annotation that overlays the regression line
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.palette[0], opacity: 0.45, width: 2.5, type: "dashed" },
+        label: {
+          show: true,
+          formatter: "r ≈ 0.7",
+          position: "insideEndTop",
+          color: t.inkSoft,
+          fontSize: 13,
+        },
+        data: [
+          [
+            { coord: [140, +(intercept + slope * 140).toFixed(1)] },
+            { coord: [205, +(intercept + slope * 205).toFixed(1)] },
+          ],
+        ],
       },
     },
   ],
