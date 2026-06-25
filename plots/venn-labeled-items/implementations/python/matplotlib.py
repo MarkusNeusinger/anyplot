@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-Library: matplotlib 3.10.9 | Python 3.14.4
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 82/100 | Updated: 2026-06-25
 """
 
 import os
