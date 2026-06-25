@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: scatter-basic
+created: '2026-06-25T01:32:02Z'
+updated: '2026-06-25T01:48:01Z'
+generated_by: claude-sonnet
+workflow_run: 28140700957
+issue: 611
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Deterministic LCG data generation with seed=42 ensures reproducible renders across
+    both themes
+  - 'Excellent spec compliance: all required scatter-plot features present with correct
+    data mapping (120 points, opacity 0.65, grid, descriptive axis labels)'
+  - OLS regression trend line with explicit r≈0.7 legend label elevates the chart
+    from raw scatter to an analytical artifact
+  - 'Marker edge stroke (lineColor: t.pageBg) provides clean visual definition without
+    adding noise to dense scatter'
+  - 'Full Imprint palette compliance: brand green first series (palette[0]), lavender
+    second (palette[1]), transparent background delegating to theme-correct page surface
+    in both renders'
+  - 'Code is clean, linear, and idiomatic: zero fake UI, zero unnecessary abstractions,
+    two minimal helper functions for seeded normal distribution'
+  - Responsive rules included for adaptive font sizing at smaller viewports — a Highcharts-specific
+    quality-of-life feature
+  weaknesses:
+  - 'DE-02 (Visual Refinement): Spines/plot border not explicitly removed — add chart.plotBorderWidth:
+    0 inside the chart config to eliminate the visible frame around the plot area
+    and achieve cleaner minimal-chrome styling'
+  - 'DE-03 (Data Storytelling): Narrative stops at the trend line; adding a subtitle
+    (e.g. ''Marketing spend and revenue data for 120 companies'') would reinforce
+    the correlation story and create a stronger contextual anchor for the viewer'
+  - 'DE-01 (Aesthetic Sophistication): Typographic hierarchy is flat — axis labels
+    and tick labels share similar weights; reducing tick label visual weight relative
+    to axis titles would reinforce reading hierarchy without changing font sizes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — not pure white, correct theme surface
+      Chrome: Title "scatter-basic · javascript · highcharts · anyplot.ai" in dark text (~22px), fully readable. X-axis label "Marketing Spend ($ thousands)" and Y-axis label "Sales Revenue ($ thousands)" in secondary dark text (~16px), clearly readable. Tick labels at ~14px, legible. Legend at bottom with two entries readable.
+      Data: 120 scatter points in brand green (#009E73, palette[0]) with 0.65 opacity and page-bg-colored edge. Dashed lavender trend line (palette[1] #C475FD). Positive linear correlation clearly visible from lower-left to upper-right.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues detected
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — not pure black, correct theme surface
+      Chrome: Title in light text (t.ink = #F0EFE8), fully readable against dark background. Axis labels in secondary light text (t.inkSoft = #B8B7B0), clearly visible. Tick labels lighter-colored, readable. Legend text readable. No dark-on-dark failures observed.
+      Data: Identical colors to light render — same brand green scatter points (#009E73) and lavender dashed trend line (#C475FD). Only chrome elements (text, background) flipped to dark-theme values; data palette unchanged.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures detected
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all readable in both themes. Tick
+          label size (14px CSS) is at the lower bound of mobile-comfortable but acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data collisions. Scatter and trend line coexist
+          cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 120 points at radius 4 with 0.65 opacity is appropriate for medium
+          density. Page-bg edge stroke aids definition. Trend line at lineWidth 2.5
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing is CVD-safe; redundant encoding (circle markers
+          vs dashed line) adds a second distinguishing channel.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape orientation, no clipping, appropriate margins, canvas gate
+          passed. Title at ~60% plot width, well-proportioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units. Title matches exact required format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'colors: t.palette set globally; first series palette[0] (#009E73),
+          second palette[1] (#C475FD). Transparent background uses page surface tokens
+          correctly in both themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): intentional two-series hierarchy, edge-highlighted
+          markers, meaningful r≈0.7 legend annotation. Clean professional look. Not
+          exceptional — no special typography, annotations, or strong focal-point
+          design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): transparent background via tokens, subtle grid,
+          0.65 opacity, edge stroke on markers, responsive rules. Plot border/frame
+          not explicitly removed (chart.plotBorderWidth not set to 0).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): OLS trend line and r≈0.7 legend label make the
+          correlation narrative explicit. No subtitle, no annotated outliers, no focal-point
+          emphasis to guide the reader further.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct 2D scatter chart with type: scatter.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Transparency (0.65), axis labels, grid lines, balanced point size.
+          Trend line is a bonus.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=marketing spend, Y=sales revenue, 120 points in 50–500 range, all
+          data within axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title exactly: scatter-basic · javascript · highcharts · anyplot.ai.
+          Legend labels descriptive.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Positive correlation, scatter noise, trend line, and correlation
+          annotation together showcase core scatter plot capabilities.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing spend vs. sales revenue is neutral, widely-understood,
+          and plausible. No controversial elements.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 120 points within spec recommendation; spend $10k–$100k and revenue
+          $200k–$1.2M are plausible domain values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes. Two minimal helper functions (lcg, randn)
+          are the smallest needed for seeded normal distribution.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed=42 LCG ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only provided globals used (window.ANYPLOT_TOKENS, Highcharts).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: OLS computed inline in ~6 lines. Tooltip formatter cleanly suppresses
+          trend-line tooltip. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness controls output; snippet uses current Highcharts 12.x API
+          idioms correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct Highcharts.chart(''container'', ...), animation: false on
+          chart and plotOptions.series, credits: { enabled: false }, backgroundColor:
+          transparent, token-driven chrome — all canonical patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Above default (1): scatter+line multi-series combination, responsive.rules
+          for adaptive sizing, custom tooltip formatter with series-type guard, marker
+          lineColor edge styling.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

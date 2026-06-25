@@ -2,9 +2,9 @@ library: d3
 language: javascript
 specification_id: scatter-basic
 created: '2026-06-02T22:05:57Z'
-updated: '2026-06-02T22:52:07Z'
+updated: '2026-06-25T01:49:29Z'
 generated_by: claude-sonnet
-workflow_run: 26851886021
+workflow_run: 28141061637
 issue: 611
 language_version: 22.22.3
 library_version: 7.9.0
@@ -12,40 +12,30 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Correct Imprint palette with theme-adaptive chrome throughout both renders
-  - OLS regression line + 95% CI band using d3.area() adds statistical depth beyond
-    basic scatter
-  - Marginal rug marks on both axes give distribution context — idiomatic D3 detail
-  - All font sizes explicitly set; proportions well-balanced across title, axis labels,
-    and tick labels
-  - Marketing spend vs. sales revenue data is realistic, neutral, and correctly scaled
-  - Correlation annotation (r ≈ 0.81) creates immediate storytelling — viewer sees
-    the insight at a glance
+  - Analytical 95% CI band using d3.area() — technically sophisticated and distinctively
+    D3-idiomatic
+  - Marginal rug marks on both axes add distribution context without cluttering the
+    main plot
+  - Floating axes (domain + tick lines removed) give a clean editorial look
+  - Elevated-bg annotation callout for r and CI label is polished and theme-adaptive
+  - White-stroke circle markers prevent visual merging at moderate point density
   weaknesses:
-  - The CI band annotation text (r ≈ 0.81 / 95% confidence band) sits close to the
-    upper-right corner — consider adding a small inset box or slightly increasing
-    the annotation contrast for better legibility at small sizes
-  - DE-01 could be raised with a slightly more refined annotation style (e.g. a thin
-    border or elevated-bg callout box around the r annotation) to reach publication-ready
-    polish
-  - 'DE-02 deduction: the grid tick count (8 on X, 6 on Y) is acceptable but a light
-    axis-baseline rule or slightly reduced tick label fontsize (18 → 15 px) would
-    improve visual balance'
+  - DE-01/DE-02 are strong but not fully at publication level — very minor gap only
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
-      Chrome: Title "scatter-basic · javascript · d3 · anyplot.ai" in dark ink (#1A1A17) bold at 28px — fully readable. Axis labels "Marketing Spend ($K)" and "Sales Revenue ($M)" in secondary ink (#4A4A44) at 22px — readable. Tick labels (0K–160K, $0.0M–$8.0M) in secondary ink at 18px — readable. Correlation annotation "r ≈ 0.81" and "95% confidence band" in secondary ink at 16px — readable in the upper right.
-      Data: Markers in brand green #009E73 at fill-opacity=0.7, r=7, with page-bg stroke for definition. OLS trend line in #009E73 at stroke-width=3. 95% CI band in #009E73 at fill-opacity=0.12. Marginal rug marks on both axes in #009E73 at stroke-opacity=0.35. Grid lines subtle using t.grid token.
-      Legibility verdict: PASS — all text clearly readable against the light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-basic · javascript · d3 · anyplot.ai" bold dark text, fully readable. Axis labels "Marketing Spend ($K)" and "Sales Revenue ($M)" in medium dark text. Tick labels in muted dark text. All chrome readable against light background.
+      Data: 100 scatter points in brand green (#009E73) with white stroke rings, fill-opacity 0.7. OLS trend line in same green (stroke-opacity 0.8). Subtle semi-transparent CI band in green. Marginal rug marks in green (stroke-opacity 0.35) on both axes. Annotation callout box (upper right) shows r≈0.81 on elevated light background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light ink (#F0EFE8) bold — clearly readable against dark background. Axis labels in secondary light ink (#B8B7B0) — readable. Tick labels in secondary light ink — readable. Correlation annotation in light secondary ink — readable. Grid lines adapted to dark theme (light opacity lines). No dark-on-dark failures detected.
-      Data: Markers identical brand green #009E73 — same as light render, confirming data colors are theme-independent. OLS line, CI band, and rug marks all identical green. Background stroke on markers flips to dark page-bg (#1A1A17) — correct behavior.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark text failures; data colors identical between renders
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in bold light text, clearly readable. Axis labels in light text. Tick labels in light muted text. Annotation callout uses darkened elevated background (#242420) with light-gray text. No dark-on-dark failures detected.
+      Data: Colors identical to light render — scatter points, trend line, CI band, and rug marks all remain #009E73. CI band appears as a darker green fill, still distinguishable.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,49 +46,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px, annotations 16px. Both renders fully readable.'
+        comment: All font sizes explicitly set (title 28px, axis labels 22px, tick
+          labels 15px). Well-proportioned in both themes; title spans ~65% of width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap. Rug marks clear of tick
-          labels.
+        comment: No text collisions; annotation box clear of data clusters; rug marks
+          non-intrusive.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: '100 points: r=7, fill-opacity=0.7 — well calibrated. Trend line
-          stroke-width=3. CI band fill-opacity=0.12 visible.'
+        comment: r=7, fill-opacity=0.7 well-suited for 100 points; white stroke rings
+          prevent merging.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series, brand green #009E73 — CVD-safe. Page-bg marker stroke
-          aids definition.'
+        comment: 'Single #009E73 series on warm surfaces; strong luminance contrast;
+          CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Balanced margins (80/60/100/120). Chart fills
-          ~65% of canvas area.
+        comment: Canvas gate passed; plot fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Marketing Spend ($K) and Sales Revenue ($M) — descriptive with units.
+        comment: 'Both axis labels include units: Marketing Spend ($K), Sales Revenue
+          ($M).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette[0] = #009E73 for all data elements. t.pageBg, t.ink, t.inkSoft,
-          t.grid all theme-adaptive. Both renders correct.'
+        comment: 'Single series is #009E73; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark); chrome tokens adapt correctly.'
     design_excellence:
       score: 15
       max: 20
@@ -108,24 +98,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Imprint palette, intentional hierarchy, OLS+CI layer composition,
-          rug marks. Strong design — above defaults but not quite FiveThirtyEight
-          level.
+        comment: 'Clearly above defaults: analytical CI band, rug marks, floating
+          axes, white-stroke markers, polished annotation callout. Not quite FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: 'All domain lines removed, tick lines removed, subtle grid, generous
-          margins, marker strokes. Only minor: annotation could use callout box.'
+        comment: Domain lines removed, tick lines removed, subtle grid, white stroke
+          on markers, generous whitespace. Nearly perfect.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: r annotation + CI band + regression line creates immediate insight.
-          Viewer sees positive correlation at r=0.81. Visual hierarchy guides the
-          eye.
+        comment: OLS line + CI band + r annotation creates clear correlation narrative;
+          viewer immediately grasps the strong positive relationship.
     spec_compliance:
       score: 15
       max: 15
@@ -135,29 +123,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Basic 2D scatter plot with appropriate enhancements (OLS, CI, rug
-          marks).
+        comment: Correct scatter plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Transparency (0.7), axis labels, descriptive title, grid lines, appropriate
-          point size all present.
+        comment: Transparency (0.7), axis labels, grid lines, descriptive title all
+          present. Exceeds spec with trend line and CI band.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = marketing spend (independent), y = sales revenue (dependent).
-          100 points in 50-500 range. r≈0.81 positive correlation.
+        comment: X = independent variable (spend), Y = dependent (revenue); all 100
+          points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'scatter-basic · javascript · d3 · anyplot.ai'. Single series
-          — no legend needed.
+        comment: Title exactly 'scatter-basic · javascript · d3 · anyplot.ai'. Single
+          series; no redundant legend.
     data_quality:
       score: 15
       max: 15
@@ -167,22 +154,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter distribution, outliers, correlation pattern, range
-          of values.
+        comment: Full scatter pattern with variation, outliers, and spread demonstrating
+          typical correlation structure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing spend vs. sales revenue — classic neutral business context
-          with real units ($K, $M).
+        comment: Marketing spend vs. sales revenue is a clear, neutral, real-world
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Spend 10-150K, revenue 0.3-7M — plausible proportions for mid-market
-          campaigns.
+        comment: $10K-$150K spend and $0.3M-$7M revenue are plausible; r≈0.81 realistic
+          for this domain.
     code_quality:
       score: 10
       max: 10
@@ -192,33 +179,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: LCG helpers are the D3-mandated approach for deterministic data;
-          structure is flat and readable.
+        comment: Linear flow. LCG helpers are necessary for browser-side seeded RNG
+          per d3.md and are minimal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with seed=42 — fully deterministic.
+        comment: Deterministic LCG with seed=42; identical data across light and dark
+          runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (d3 is global). All window.ANYPLOT_* globals used correctly.
+        comment: No imports; uses only the d3 global and window.ANYPLOT_* globals
+          as required.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean D3 chaining, no fake UI, appropriate complexity.
+        comment: Appropriate complexity; no fake functionality; OLS and CI calculations
+          justified.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness writes files; SVG sized to window.ANYPLOT_SIZE. D3 7.9.0
-          API used correctly.
+        comment: D3 is in INTERACTIVE_LIBRARIES; harness writes plot-{theme}.png and
+          .html correctly.
     library_mastery:
       score: 9
       max: 10
@@ -228,21 +218,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert D3 usage: .join(), .call(), d3.area(), d3.line(), d3.scaleLinear().nice(),
-          d3.range(), chained axis customization.'
+        comment: Proper D3 selection, data join, scale construction with .nice(),
+          axis chaining via .call(), margin convention — exemplary idiomatic D3.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: CI band via d3.area() with custom y0/y1, rug marks as data-bound
-          SVG lines, floating-grid pattern. Clearly D3-distinctive.
+        comment: d3.area() for CI band, d3.line() for trend, scale+axis chaining,
+          DOM data-binding — distinctively D3. CI math itself is library-agnostic.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - html-export
   patterns:
   - data-generation
   dataprep:
@@ -250,4 +240,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
