@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-06-25
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 85/100 | Updated: 2026-06-25
 """
 
 import os
