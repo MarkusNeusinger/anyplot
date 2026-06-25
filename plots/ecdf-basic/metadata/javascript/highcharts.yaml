@@ -1,0 +1,274 @@
+library: highcharts
+language: javascript
+specification_id: ecdf-basic
+created: '2026-06-25T09:41:34Z'
+updated: '2026-06-25T10:02:53Z'
+generated_by: claude-sonnet
+workflow_run: 28160912734
+issue: 976
+language_version: 22.23.0
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Correct right-continuous ECDF step function using Highcharts step:right — exactly
+    the right built-in approach
+  - 'Two-series distribution comparison with clearly distinct Imprint palette colors
+    (green #009E73 + lavender #C475FD)'
+  - Informative subtitle with computed median values provides immediate analytical
+    context
+  - Median plotlines on X-axis and 50th-percentile reference on Y-axis create a genuinely
+    useful reading guide
+  - Very low fill opacity (0.08) adds depth without visual clutter or misleading overlap
+  - Deterministic data generation via LCG + Box-Muller transform — fully reproducible
+    without browser RNG
+  - All theme tokens correctly applied; both light and dark renders are clean and
+    legible
+  - 'Axis labels carry units: Plant Height (cm) / Cumulative Proportion displayed
+    as % formatter'
+  weaknesses:
+  - Helper functions (lcg, normalSamples, ecdfSeries) technically violate the KISS
+    no-functions guideline; for a future repair consider inlining ecdfSeries or at
+    least the simpler lcg call
+  - Plotline annotation labels are set at fontSize:11px CSS (22 actual px) — slightly
+    small at mobile widths; raising to 12px would improve mobile readability without
+    crowding
+  - Area fill overlap in the distribution crossing zone (~x=12–18) blends the two
+    fill colors slightly; this is cosmetically harmless at opacity 0.08 but could
+    be eliminated by using chart type line instead of area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface, clearly #FAF8F1 — matches the required light theme.
+      Chrome: Title "Plant Heights · ecdf-basic · javascript · highcharts · anyplot.ai" in bold dark text at ~22px, spanning ~65% of width — well-proportioned. Subtitle "Enhanced nutrients shift median height from 15.3 cm to 18.3 cm" in secondary gray (#4A4A44). X-axis label "Plant Height (cm)" and Y-axis label "Cumulative Proportion" are both in secondary gray at 16px. Tick labels in secondary gray at 14px, Y-axis formatted as percentages (0%, 25%, 50%, 75%, 100%). Legend at bottom shows "Standard Nutrients" (green) and "Enhanced Nutrients" (lavender) at 14px.
+      Data: Two ECDF step curves with area fills. Standard Nutrients in #009E73 (brand green), Enhanced Nutrients in #C475FD (Imprint lavender/position 2). Area fills at fillOpacity 0.08 — very subtle. Two dashed vertical plotlines mark each group's median (15.3 cm and 18.3 cm) with small colored labels. A dashed horizontal line marks the 50th percentile with a "50th percentile" label at the right edge.
+      Legibility verdict: PASS — all title, axis labels, tick labels, legend, and annotations are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface, clearly #1A1A17 — matches the required dark theme.
+      Chrome: Title in light cream text (#F0EFE8 / t.ink), clearly readable. Subtitle in secondary light gray (#B8B7B0 / t.inkSoft). Axis titles and tick labels in secondary light gray — fully readable. Legend text in secondary light gray. No dark-on-dark text failures observed.
+      Data: Data colors are identical to the light render — Standard Nutrients #009E73 (green), Enhanced Nutrients #C475FD (lavender). Both series retain full visual identity. The area fills at 0.08 opacity create subtle dark-tinted overlays that don't interfere with line legibility. Median plotlines and labels visible, "50th percentile" label readable at the right edge.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm near-black background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 16px axis labels, 14px
+          tick/legend/subtitle); both themes clear. Minor: plotline annotation labels
+          at 11px CSS are readable at full resolution but tight at mobile widths.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step-function lines (lineWidth 2.5/3.0) are clearly visible for 100-point
+          distributions. Area fills at opacity 0.08 add depth without obscuring data.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) have strong perceptual separation
+          including under CVD simulation. No red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good whitespace, balanced margins, title at ~65%
+          width, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Plant Height (cm)'' with unit; Y-axis: ''Cumulative Proportion''
+          formatted as %. Title uses optional descriptive prefix correctly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second series #C475FD (Imprint
+          position 2). Background #FAF8F1 light / #1A1A17 dark. Data colors identical
+          across themes. Chrome tokens correctly applied.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above the generic-default 4: thoughtful additions (median plotlines,
+          subtitle with calculated values, area fills at 0.08 opacity). Not yet at
+          ''strong design'' level 6 — area fill approach is subtle but the overall
+          look is a well-executed configured default.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Noticeable refinement: fill opacity 0.08 is well-judged, grid is
+          subtle via gridLineColor token, no top/right spines (Highcharts default
+          for this type). Above the library-defaults-only baseline.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Genuine storytelling: subtitle immediately states the key finding,
+          median plotlines make the distribution shift visually explicit, 50th-percentile
+          horizontal reference enables reading quantiles. The horizontal displacement
+          between curves tells a clear story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: ECDF step function correctly implemented with step:'right' (right-continuous
+          convention). Y-axis 0-1 as required. Step increases by 1/n at each data
+          point.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec requirements met: step function, y-axis 0-1, distinct line
+          styles for clarity, grid lines for reading percentile values.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X shows continuous variable (plant height cm), Y shows cumulative
+          proportion. Both axes show full data range including virtual starting point
+          at proportion=0.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Plant Heights · ecdf-basic · javascript · highcharts ·
+          anyplot.ai'' — correct format with optional descriptive prefix. Legend labels
+          match series names.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Two-series ECDF comparison demonstrates the primary use case: comparing
+          distributions. Shows distribution spread, median location, and group differences
+          — covers all key ECDF features.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plant heights under standard vs. enhanced nutrients — realistic,
+          neutral agricultural science scenario. Not abstract labels. Not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plant heights 7–23 cm range (consistent with mu=15/18.5, sigma=2.5/3.0
+          normal distributions). 100 samples each — within the spec's ideal 50–500
+          range.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions (lcg, normalSamples, ecdfSeries) technically
+          violate the no-functions guideline, though they are well-justified for the
+          deterministic data generation in JS context.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seeded with fixed seeds (42 and 137) via bitwise operations —
+          fully deterministic, no browser RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — correctly uses harness-provided globals (window.ANYPLOT_TOKENS,
+          Highcharts).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable JavaScript. No over-engineering. No fake interactive
+          elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct Highcharts API: chart.animation:false, plotOptions.series.animation:false,
+          credits disabled, no explicit width/height, landscape orientation directive.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Above the default: step:''right'' is the correct Highcharts built-in
+          for right-continuous ECDF; plotLines with labels is idiomatic Highcharts
+          annotation; fillOpacity for area series; Y-axis formatter() for % display.
+          All patterns use the library''s recommended API.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-distinctive features: step rendering mode (built-in,
+          not manual), plotLines on both axes (Highcharts annotation system), fillOpacity
+          for area type. These would require different approaches in other libraries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
