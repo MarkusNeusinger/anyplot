@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:23:44Z'
-updated: '2026-06-25T07:54:28Z'
+updated: '2026-06-25T08:04:52Z'
 generated_by: claude-sonnet
 workflow_run: 28154617854
 issue: 1311
@@ -12,34 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) surfaces render
-    correctly with full chrome token propagation'
-  - Visual hierarchy between thick box-boundary lines and thin cell-division lines
-    faithfully implements the spec
-  - Subtle alternating 3x3 box backgrounds (PAGE_BG/ELEVATED_BG checkerboard) add
-    spatial orientation beyond the spec minimum
-  - Flat, readable code with clean data-prep loops for each grid component
-  - Square canvas (2400x2400) is the correct choice for a symmetric 9x9 grid
+  - Clean theme-adaptive implementation — light and dark renders both look correct
+    and readable with no dark-on-dark or light-on-light failures
+  - Three-level line hierarchy (outer border size=2.5, box dividers size=1.5, thin
+    cell lines size=0.4 with alpha=0.35) clearly distinguishes visual levels
+  - 'Perfect spec compliance: bold/thick 3×3 box boundaries, thin cell lines, centered
+    bold numbers, blank empty cells, monochrome design'
+  - 'Excellent code quality: KISS top-level script, hardcoded deterministic data,
+    clean imports, correct plot-{THEME}.png output'
+  - Smart use of coord_fixed with slight padding (xlim=(-0.05,9.05)) to ensure outer
+    border is not clipped at canvas edges
   weaknesses:
-  - geom_segment calls use deprecated size= parameter; modern plotnine prefers linewidth=
-    (minor API hygiene, does not affect current output)
-  - Design Excellence ceiling is inherently limited by the spec's mandated monochrome
-    nature — no meaningful opportunity for storytelling or palette expression
+  - Alternating 3×3 box backgrounds (PAGE_BG vs ELEVATED_BG) differ by only a tiny
+    shade — the checkerboard distinction is very subtle in light mode and nearly invisible
+    in dark mode; a slightly greater contrast between the two box shades would improve
+    box-region legibility for solvers
+  - DE-03 is constrained by the spec nature — a functional puzzle grid leaves little
+    room for data storytelling or visual emphasis beyond the line-weight hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "sudoku-basic · python · plotnine · anyplot.ai" bold, centered, dark ink — fully readable. No axis labels (grid-based plot, none needed).
-      Data: Bold black sudoku numbers (INK #1A1A17) centered in cells; thick black lines for 3x3 box boundaries; thin light-gray lines (INK_MUTED at alpha=0.35) for cell divisions; alternating PAGE_BG/ELEVATED_BG checkerboard on 3x3 boxes.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Title "sudoku-basic · python · plotnine · anyplot.ai" is bold, centered, dark ink (#1A1A17), clearly readable. No axis labels (theme_void appropriate for this spec).
+      Data: Numbers (1–9) are bold, large (size=13mm ≈ 37pt), dark ink on warm-white cells — high contrast, perfectly readable. Three-level line hierarchy: outer border (size=2.5, INK), box dividers (size=1.5, INK), thin cell lines (size=0.4, INK_MUTED, alpha=0.35). Alternating 3×3 box checkerboard uses PAGE_BG (#FAF8F1) and ELEVATED_BG (#FFFDF6) — distinction is subtle but visible. Empty cells are correctly blank.
+      Legibility verdict: PASS — all text is clearly readable; no light-on-light issues detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Bold light-colored numbers (#F0EFE8) centered in cells; thick off-white lines for box boundaries; subtle light-gray thin lines for cell divisions; alternating #1A1A17/#242420 box backgrounds visible. Colors identical to light render (INK adapts, no categorical palette used).
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct, clearly not pure black
+      Chrome: Title in INK (#F0EFE8, light cream) — clearly readable against near-black background. No dark-on-dark issues detected.
+      Data: Numbers are in INK (#F0EFE8, light cream) — high contrast white-on-dark, very readable. Box dividers and outer border render in INK (#F0EFE8), providing strong contrast. Thin cell lines in INK_MUTED (#A8A79F, alpha=0.35) — visible as subtle gray lines. Alternating box backgrounds (#1A1A17 vs #242420) are very subtle but present. Data colors identical to light render (monochrome design — no categorical palette involved).
+      Legibility verdict: PASS — all text is clearly readable; no dark-on-dark failures; no color drift between themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,50 +54,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and sudoku numbers bold and clearly readable in both themes;
-          numbers well-proportioned within cells
+        comment: Title (12pt) and cell numbers (size=13mm ≈ 37pt) are bold and clearly
+          readable in both light and dark renders; no legibility failures
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: Numbers centered in cells with no collisions; grid lines do not overlap
+          with text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thick/thin line hierarchy clearly visible; numbers prominent; alternating
-          box shading present
+        comment: Three-level line hierarchy clearly distinguishable; numbers bold
+          and prominent in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design; high contrast between ink and backgrounds; no
-          CVD concerns
+        comment: Monochrome design (per spec) — maximum contrast, inherently CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct for grid layout; good margins; nothing
-          clipped
+        comment: Square canvas (2400×2400) appropriate for 9×9 grid; canvas gate passed;
+          good proportions and margins; coord_fixed ensures 1:1 aspect ratio
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (grid-based); title format correct
+        comment: No axis labels needed (theme_void, grid puzzle); title correctly
+          formatted as 'sudoku-basic · python · plotnine · anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome plot (no categorical series); backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark) correct; all chrome tokens theme-adaptive'
+        comment: 'Monochrome design is appropriate per spec (''clean black-and-white
+          design''); backgrounds correct #FAF8F1 (light) / #1A1A17 (dark); theme-adaptive
+          chrome used correctly'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -101,22 +107,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Alternating 3x3 box backgrounds add subtle visual orientation beyond
-          the spec minimum; intentional line-weight hierarchy shows design awareness
+        comment: 'Above default: alternating 3×3 box checkerboard and three distinct
+          line-weight levels show thoughtful design. Constrained by the monochrome
+          puzzle spec.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() eliminates all chart chrome; thin cell lines rendered
-          at alpha=0.35 for restraint; clean margins via plot_margin=0.04
+        comment: theme_void() removes all chart chrome; three carefully chosen line
+          weights (0.4/1.5/2.5) create clear visual hierarchy; appropriate margins
+          via plot_margin=0.04
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Thick/thin line contrast guides the solver's eye to box boundaries;
-          limited storytelling headroom in a monochrome grid-type plot
+        passed: false
+        comment: Default score — a functional puzzle grid has limited data storytelling
+          potential; line-weight hierarchy serves the solver but does not guide toward
+          a data insight
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard 9x9 Sudoku grid correctly implemented
+        comment: Correct 9×9 sudoku grid implementation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick box-boundary lines, thin cell lines, centered numbers, empty
-          cells blank (0 suppressed) — all present
+        comment: 'All features present: bold/thick 3×3 box boundaries, thin cell lines,
+          centered bold numbers, blank empty cells, monochrome design'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row 0 at top (y=8.5 offset correct), column/row mapping accurate
-          across all 81 cells
+        comment: Correct row/column layout; y=8.5-row mapping correctly places row
+          0 at top
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'sudoku-basic · python · plotnine · anyplot.ai'; no
-          legend needed
+        comment: Title correctly formatted; no legend needed for this plot type
     data_quality:
       score: 15
       max: 15
@@ -157,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 9x9 grid structure, 3x3 box regions, thin/thick
-          line hierarchy, populated starting numbers, blank empty cells'
+        comment: 'Full 9×9 grid with all sudoku features: filled numbers, blank cells,
+          correct three-level visual hierarchy'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic partially-filled Sudoku puzzle (recognizable starting position);
-          neutral, printable context
+        comment: Classic partially-filled sudoku puzzle (standard beginner difficulty);
+          neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 9x9 fixed grid with values 1-9; correct standard Sudoku dimensions
+        comment: Values 1-9 in correct 9×9 grid format — exactly the right scale for
+          sudoku
     code_quality:
       score: 10
       max: 10
@@ -181,35 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes; clean loop-based data generation
+        comment: Top-level script with no functions or classes; clear section comments
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic puzzle; no random elements
+        comment: Hardcoded deterministic puzzle data — fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path.pop(0) defensive measure justified (file
-          named plotnine.py)
+        comment: 'All imports used: sys (path fix), os, pandas, plotnine components'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized data prep; no fake UI; clear separation (boxes / thin
-          lines / thick lines / text)
+        comment: Clean, well-organized code with logical sections; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly; current API
+        comment: Saves as plot-{THEME}.png; current plotnine API; correct dpi=400,
+          width=6, height=6
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: geom_tile, geom_segment, geom_text, coord_fixed, theme_void — all
-          idiomatic plotnine patterns
+        comment: 'Idiomatic plotnine: coord_fixed for aspect ratio, theme_void() as
+          base, layer composition with multiple geoms, labs() for title'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: coord_fixed(ratio=1), theme_void(), and multi-layer geom composition
-          are plotnine-distinctive; no scale_* needed for this plot type
+        passed: false
+        comment: Uses coord_fixed and layer composition (ggplot2-distinctive features),
+          but no advanced plotnine-specific capabilities beyond the basics
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -233,6 +241,7 @@ impl_tags:
   - layer-composition
   patterns:
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
