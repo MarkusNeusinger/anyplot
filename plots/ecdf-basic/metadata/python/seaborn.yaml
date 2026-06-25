@@ -2,121 +2,143 @@ library: seaborn
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:20Z'
-updated: '2026-04-24T12:51:06Z'
-generated_by: claude-opus
-workflow_run: 24889970235
+updated: '2026-06-25T09:32:18Z'
+generated_by: claude-sonnet
+workflow_run: 28160225103
 issue: 976
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and theme-adaptive in both
-    renders
-  - 'Idiomatic seaborn: sns.ecdfplot() is the native seaborn function for this exact
-    chart type'
-  - Real neutral dataset (penguin flipper lengths) with physically plausible values
-    and deterministic loading
-  - 'Complete spec compliance: y-axis 0→1, grid for percentile reading, step function
-    clear'
-  - Theme-adaptive chrome correctly implemented via full token system
+  - Uses seaborn's native ecdfplot() with hue for idiomatic multi-species comparison
+  - Palmer Penguins dataset is real-world, neutral, and deterministic — perfect ECDF
+    use case
+  - Percentile reference lines at Q1/median/Q3 actively aid reading cumulative proportions
+    from the chart
+  - 'Imprint palette used in canonical order (#009E73 Adelie, #C475FD Chinstrap, #4467A3
+    Gentoo)'
+  - 'Full theme-adaptive chrome: INK/INK_SOFT/INK_MUTED tokens wired through title,
+    axes, ticks, legend, grid, and reference lines'
+  - Canvas matches 3200x1800 exactly (figsize=(8,4.5), dpi=400, no bbox_inches='tight')
+  - Legend styled with theme-adaptive ELEVATED_BG fill and INK_SOFT text — consistent
+    with both renders
+  - Title fontsize scaled via the 67/n formula to prevent overflow from the long descriptive
+    prefix
   weaknesses:
-  - No data storytelling — key percentiles (median, quartiles) not annotated or visually
-    emphasized
-  - Aesthetic sophistication stays at configured-default level — no subtitle, narrative,
-    fill, or emphasis beyond compliance
-  - Seaborn distinctive features underused — multi-hue ecdfplot, complementary ECDF,
-    or stat=count variant could show deeper library mastery
+  - 'DE-01/DE-02: Overall aesthetic is clean but not exceptional — no distinctive
+    seaborn-specific visual flourish beyond the defaults (e.g. no sns.despine() with
+    offset, no set_context tweak, no confidence bands or complementary statsmodels
+    layer)'
+  - 'LM-02: sns.despine() not used — spines removed manually via ax.spines[''top''].set_visible(False);
+    consider using sns.despine(ax=ax) which is the idiomatic seaborn approach'
+  - Reference lines use dashed linestyle which is already the grid dashes default
+    — a dotted or solid ultra-thin rule would better distinguish them visually from
+    the ECDF step curves
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, has a creamy/beige tone
-      Chrome: Title "Penguin Flipper Lengths · ecdf-basic · seaborn · anyplot.ai" in dark ink, fully readable; x-label "Flipper Length (mm)" and y-label "Cumulative Proportion" in dark ink, clearly readable; tick labels in muted dark tone (INK_SOFT), legible
-      Data: Single ECDF step line in brand green #009E73 at linewidth=3.5; rises from ~170mm to ~232mm with step increments; subtle grid on both axes
-      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Penguin Flipper Lengths · ecdf-basic · python · seaborn · anyplot.ai" in dark ink, spans ~75% of canvas width, fontsize scaled down from 12pt via 67/n formula — fully readable. Y-axis label "Cumulative Proportion" and X-axis label "Flipper Length (mm)" in dark ink at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44). Dashed percentile reference lines at 0.25/0.50/0.75 in muted gray. Legend box in ELEVATED_BG (#FFFDF6) with INK_SOFT text for "Species" header and three entries.
+      Data: Three ECDF step curves — Adelie in #009E73 (brand green), Chinstrap in #C475FD (lavender), Gentoo in #4467A3 (blue). Linewidth=2.5. All curves clearly visible with distinct step patterns. Species are spatially separated (Adelie 170-210mm, Chinstrap 175-210mm, Gentoo 203-232mm), clearly showing Gentoo has longer flippers. Y-axis ticks at 0, 0.25, 0.50, 0.75, 1.00.
+      Legibility verdict: PASS — all text is readable against the light background with no "light on light" issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black, has a slightly warm dark tone
-      Chrome: Title in off-white/light tone, fully readable against dark background; axis labels in light ink, clearly legible; tick labels in muted light tone (B8B7B0 equivalent), readable; no dark-on-dark failures detected
-      Data: ECDF step line in identical brand green #009E73 — same hue and linewidth as light render; data colors unchanged between themes
-      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light cream (#F0EFE8), fully readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0) against near-black background — no dark-on-dark failures. Dashed percentile reference lines visible in muted light gray. Legend box in dark ELEVATED_BG (#242420) with light INK_SOFT text — readable. No dark text on dark background anywhere.
+      Data: Data colors are identical to light render — Adelie #009E73 (green), Chinstrap #C475FD (lavender/bright purple), Gentoo #4467A3 (medium blue). All three curves remain clearly distinguishable on dark background. Brand green #009E73 is visually prominent on dark surface. Only chrome flips.
+      Legibility verdict: PASS — all text is readable against the dark background with no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, labels=20, ticks=16); INK/INK_SOFT
-          tokens applied; fully readable in both renders
+        comment: 'All font sizes explicitly set (title scaled via 67/n formula, labels
+          10pt, ticks 8pt, legend 8pt). Readable in both themes at full resolution.
+          Minor: title slightly smaller than nominal 12pt due to scaling — acceptable
+          tradeoff.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; tick labels well-spaced across both axes
+        comment: No text overlaps with other text or data elements. Legend placement
+          (upper left) avoids all ECDF curve content.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF step line at linewidth=3.5, crisp and prominent in both renders
+        comment: All three ECDF step curves clearly visible with linewidth=2.5. Three
+          Imprint colors are perceptually distinct. Reference lines (alpha=0.55) do
+          not obscure data.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, high contrast on both surfaces, CVD-safe
+        comment: Imprint palette positions 1-3 used — CVD-safe by design. Green/purple/blue
+          provide hue diversity.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas, tight_layout, nothing cut off, balanced margins
+        comment: Canvas gate passed (3200x1800). No clipping. Good proportions. Whitespace
+          generous. Title within expected 70-85% width range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Flipper Length (mm) includes units; Cumulative Proportion is descriptive
+        comment: 'X: ''Flipper Length (mm)'' with units. Y: ''Cumulative Proportion''
+          descriptive. Title: ''Penguin Flipper Lengths · ecdf-basic · python · seaborn
+          · anyplot.ai'' correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; chrome flips
-          correctly in both renders'
+        comment: 'First series (Adelie) = #009E73 brand green. Canonical Imprint order
+          1→3. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical in both themes.
+          Chrome flips correctly.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured library default: correct palette and spine removal,
-          but no distinguishing visual identity, no subtitle or narrative hook'
+        passed: true
+        comment: 'Above baseline: thoughtful choice of Palmer Penguins dataset, correct
+          Imprint palette application, percentile reference lines show design intentionality.
+          Not exceptional — no advanced visual hierarchy or focal emphasis.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed and color-adapted, custom grid (alpha=0.10, linewidth=0.8),
-          ax.set_axisbelow; above defaults but not fully polished
+        passed: true
+        comment: Top/right spines removed. Y-axis-only grid at alpha=0.12. Percentile
+          reference lines with dashed linestyle and alpha=0.55. Legend custom-styled.
+          Clean and well-refined, though spines removed manually (not via sns.despine).
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: ECDF displayed correctly but no emphasis on key percentiles, no annotations,
-          no focal points; viewer extracts insights independently
+        passed: true
+        comment: Species spatial separation tells a clear story about flipper length
+          differences. Percentile reference lines at Q1/median/Q3 explicitly aid reading.
+          Viewer is guided to compare distributions. Could be stronger with focal
+          emphasis on the Gentoo outlier-right curve.
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses sns.ecdfplot(), correct step-function ECDF
+        comment: Correct ECDF step function plot via sns.ecdfplot().
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Y-axis 0-1 via set_ylim; grid for percentile reading; distinct linewidth=3.5;
-          step behavior native
+        comment: Y-axis 0-1, step function, grid for percentile reading, multi-group
+          comparison — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=flipper_length_mm, Y=cumulative proportion; full data range visible
+        comment: 'X: flipper length (continuous). Y: cumulative proportion 0-1. All
+          species data shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: ecdf-basic · seaborn · anyplot.ai present in title; no legend needed
-          for single series
+        comment: 'Title: ''Penguin Flipper Lengths · ecdf-basic · python · seaborn
+          · anyplot.ai'' — correct format with descriptive prefix. Legend shows Species
+          with correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -156,21 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ECDF step function with ~342 data points shows distribution
-          shape, spread, and all percentile values
+        comment: Multi-group ECDF, cumulative distribution shape, percentile reading
+          via reference lines — all ECDF aspects demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Penguin flipper lengths: real scientific dataset, neutral, well-known,
-          not controversial'
+        comment: Palmer Penguins — widely-used scientific dataset, neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 170-232mm range is physically correct for penguin species
+        comment: Flipper lengths 170-232mm — biologically accurate. ~333 observations
+          — ideal for ECDF visualization.
     code_quality:
       score: 10
       max: 10
@@ -180,31 +204,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → theme → data → plot → style → save'
+        comment: No functions or classes. Linear, readable flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: sns.load_dataset('penguins') is deterministic
+        comment: sns.load_dataset('penguins') is deterministic — no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, seaborn — all three used
+        comment: os, matplotlib.pyplot, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no fake functionality, no over-engineering
+        comment: Clean, well-organized. No fake UI. Comments explain the why.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current seaborn API
+        comment: Saves plot-{THEME}.png. No bbox_inches='tight'. dpi=400.
     library_mastery:
       score: 8
       max: 10
@@ -214,23 +238,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: sns.ecdfplot() is the high-level seaborn function for ECDF; sns.load_dataset()
-          and sns.set_theme() are idiomatic seaborn patterns
+        comment: sns.ecdfplot() with hue is seaborn's canonical ECDF API. sns.set_theme()
+          for global theming. Axes-level pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: sns.ecdfplot() is seaborn-exclusive (matplotlib requires manual ECDF);
-          doesn't leverage multi-hue ecdfplot, complementary=True variant, or stat='count'
-          option
-  verdict: REJECTED
+        passed: true
+        comment: ecdfplot() is seaborn-distinctive and high-level. sns.load_dataset()
+          used. However, spines removed manually rather than sns.despine() — slightly
+          less idiomatic. No sns.set_context() or additional seaborn-specific refinements.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - manual-ticks
   patterns:
   - dataset-loading
   - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
