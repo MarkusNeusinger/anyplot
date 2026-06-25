@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-basic: Basic Scatter Plot
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 87/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
