@@ -1,7 +1,3 @@
-// anyplot.ai
-// ecdf-basic: Basic ECDF Plot
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 82/100 | Created: 2026-06-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // ecdf-basic: Basic ECDF Plot
@@ -10,6 +6,7 @@
 // Quality: pending | Created: 2026-06-25
 
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -50,11 +47,14 @@ const ecdfProj = computeEcdf(projectBased, allX);
 const TITLE_H = 52;
 
 export default function Chart() {
+  const W = window.ANYPLOT_SIZE.width;
+  const H = window.ANYPLOT_SIZE.height;
+
   return (
     <div
       style={{
-        width: window.ANYPLOT_SIZE.width,
-        height: window.ANYPLOT_SIZE.height,
+        width: W,
+        height: H,
         display: "flex",
         flexDirection: "column",
         backgroundColor: t.pageBg,
@@ -64,18 +64,19 @@ export default function Chart() {
         style={{
           padding: "18px 36px 0",
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
           color: t.ink,
           height: TITLE_H,
           boxSizing: "border-box",
           fontFamily: "sans-serif",
+          letterSpacing: "-0.3px",
         }}
       >
         ecdf-basic · javascript · muix · anyplot.ai
       </div>
       <LineChart
-        width={window.ANYPLOT_SIZE.width}
-        height={window.ANYPLOT_SIZE.height - TITLE_H}
+        width={W}
+        height={H - TITLE_H}
         skipAnimation
         series={[
           {
@@ -99,6 +100,8 @@ export default function Chart() {
             label: "Exam Score",
             tickMinStep: 10,
             valueFormatter: (v) => String(Math.round(v)),
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
           },
         ]}
         yAxis={[
@@ -108,15 +111,31 @@ export default function Chart() {
             label: "Cumulative Proportion",
             tickMinStep: 0.25,
             valueFormatter: (v) => `${Math.round(v * 100)}%`,
+            tickLabelStyle: { fontSize: 14 },
+            labelStyle: { fontSize: 16 },
           },
         ]}
         grid={{ horizontal: true }}
         sx={{
           "& .MuiLineElement-root": { strokeWidth: 2.5 },
-          "& .MuiChartsGrid-line": { strokeOpacity: 0.12 },
+          "& .MuiChartsGrid-line": { strokeOpacity: 0.15 },
+          "& .MuiChartsAxis-line": { strokeOpacity: 0.3 },
+          "& .MuiChartsAxis-tick": { strokeOpacity: 0.3 },
         }}
-        margin={{ left: 90, right: 30, top: 20, bottom: 100 }}
-      />
+        margin={{ left: 90, right: 36, top: 20, bottom: 100 }}
+      >
+        <ChartsReferenceLine
+          y={0.5}
+          label="Median (50th)"
+          labelAlign="end"
+          lineStyle={{
+            stroke: t.inkSoft,
+            strokeDasharray: "6 3",
+            strokeWidth: 1.5,
+          }}
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+        />
+      </LineChart>
     </div>
   );
 }
