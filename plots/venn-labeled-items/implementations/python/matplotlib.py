@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 91/100 | Created: 2026-04-25
 """
 
 import os
@@ -17,9 +16,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito categorical (canonical positions 1, 2, 3)
+# Imprint palette — positions 1, 2, 3
 COLOR_A = "#009E73"  # brand green — ALWAYS first series
-COLOR_B = "#C475FD"  # vermillion
+COLOR_B = "#C475FD"  # lavender
 COLOR_C = "#4467A3"  # blue
 
 # Data: three Chartgeist-style traits
@@ -57,11 +56,11 @@ items = [
     ("TikTok", 0.00, -0.32),
 ]
 
-# Plot
-fig, ax = plt.subplots(figsize=(13, 13), facecolor=PAGE_BG)
+# Plot — square 2400 × 2400 px (symmetric Venn diagram)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Three overlapping circles with semi-transparent fills
+# Three overlapping circles with semi-transparent Imprint palette fills
 for circle in circles:
     ax.add_patch(
         Circle(
@@ -75,25 +74,25 @@ for circle in circles:
         )
     )
 
-# Item labels
+# Item labels — data items inside each zone
 for label, x, y in items:
-    ax.text(x, y, label, fontsize=16, color=INK, ha="center", va="center", family="serif", zorder=3)
+    ax.text(x, y, label, fontsize=9, color=INK, ha="center", va="center", family="serif", zorder=3)
 
-# Category labels rendered outside each circle, on its outer side
+# Category labels outside each circle, on its outer side
 category_positions = [
     ("Overhyped", -2.55, 1.85, "right", COLOR_A),
     ("Actually Useful", 2.55, 1.85, "left", COLOR_B),
     ("Secretly Loved", 0.00, -2.85, "center", COLOR_C),
 ]
 for name, x, y, ha, color in category_positions:
-    ax.text(x, y, name, fontsize=24, color=color, ha=ha, va="center", family="serif", fontweight="bold", zorder=4)
+    ax.text(x, y, name, fontsize=12, color=color, ha=ha, va="center", family="serif", fontweight="bold", zorder=4)
 
-# Editorial title + canonical anyplot.ai title line
+# Editorial title + canonical anyplot.ai attribution line
 ax.text(
     0,
     3.05,
     "Chartgeist 2026",
-    fontsize=32,
+    fontsize=16,
     color=INK,
     ha="center",
     va="center",
@@ -105,14 +104,14 @@ ax.text(
     0,
     2.55,
     "venn-labeled-items · matplotlib · anyplot.ai",
-    fontsize=14,
+    fontsize=9,
     color=INK_MUTED,
     ha="center",
     va="center",
     family="serif",
 )
 
-# Frame
+# Frame — clean gridless composition
 ax.set_xlim(-3.5, 3.5)
 ax.set_ylim(-3.5, 3.5)
 ax.set_aspect("equal")
@@ -122,4 +121,5 @@ for spine in ax.spines.values():
     spine.set_visible(False)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
