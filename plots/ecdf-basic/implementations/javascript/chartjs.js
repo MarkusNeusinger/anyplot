@@ -34,11 +34,19 @@ function computeECDF(values) {
 const noviceECDF = computeECDF(noviceTimes);
 const experiencedECDF = computeECDF(experiencedTimes);
 
+// Median: x where ECDF first reaches 0.5
+function findMedian(ecdf) {
+  const pt = ecdf.find((p) => p.y >= 0.5);
+  return pt ? Math.round(pt.x) : null;
+}
+const noviceMedian = findMedian(noviceECDF);
+const experiencedMedian = findMedian(experiencedECDF);
+
 // Mount
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// Background plugin — fills canvas with pageBg before all drawing
+// Fill canvas with theme surface color before all drawing
 const bgPlugin = {
   id: "bg",
   beforeDraw(chart) {
@@ -50,9 +58,73 @@ const bgPlugin = {
   },
 };
 
+// Draw median reference line at y=0.5 with per-group callouts
+const medianPlugin = {
+  id: "medianRef",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    const y50 = scales.y.getPixelForValue(0.5);
+    ctx.save();
+
+    // Dashed horizontal reference line across full chart area
+    ctx.beginPath();
+    ctx.setLineDash([10, 6]);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = t.inkSoft;
+    ctx.moveTo(chartArea.left, y50);
+    ctx.lineTo(chartArea.right, y50);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // "median" label inside the chart above the reference line on the left
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("median", chartArea.left + 6, y50 - 4);
+
+    // Per-group callouts: dot at crossing + subtle vertical drop + minute label
+    [
+      { value: noviceMedian, color: t.palette[0] },
+      { value: experiencedMedian, color: t.palette[1] },
+    ].forEach(({ value, color }) => {
+      if (value == null) return;
+      const xPx = scales.x.getPixelForValue(value);
+
+      // Subtle vertical drop line from reference line to x-axis
+      ctx.beginPath();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.4;
+      ctx.moveTo(xPx, y50);
+      ctx.lineTo(xPx, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      // Filled dot at the median crossing
+      ctx.beginPath();
+      ctx.arc(xPx, y50, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Minute label above the dot
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillStyle = color;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(`${value} min`, xPx, y50 - 10);
+    });
+
+    ctx.restore();
+  },
+};
+
 new Chart(canvas, {
   type: "line",
-  plugins: [bgPlugin],
+  plugins: [bgPlugin, medianPlugin],
   data: {
     datasets: [
       {
@@ -70,6 +142,7 @@ new Chart(canvas, {
         borderColor: t.palette[1],
         backgroundColor: "transparent",
         borderWidth: 3,
+        borderDash: [10, 4],
         stepped: "before",
         pointRadius: 0,
       },
@@ -94,7 +167,7 @@ new Chart(canvas, {
     scales: {
       x: {
         type: "linear",
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: "Finish Time (minutes)",
@@ -102,12 +175,12 @@ new Chart(canvas, {
           font: { size: 16 },
         },
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
       y: {
         min: 0,
         max: 1,
-        border: { color: t.inkSoft },
+        border: { display: false },
         title: {
           display: true,
           text: "Cumulative Proportion",
