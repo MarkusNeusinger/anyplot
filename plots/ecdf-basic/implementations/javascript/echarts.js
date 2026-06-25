@@ -27,23 +27,24 @@ function normalSamples(n, mean, std, rng) {
   return out;
 }
 
-// Build ECDF as [x, cumulative_proportion] pairs; prepend a leading zero point
-function ecdf(data) {
-  const sorted = [...data].sort((a, b) => a - b);
-  const n = sorted.length;
-  const pad = (sorted[n - 1] - sorted[0]) * 0.03;
-  const start = [[+(sorted[0] - pad).toFixed(2), 0]];
-  const pts = sorted.map((x, i) => [+x.toFixed(2), +((i + 1) / n).toFixed(4)]);
-  return start.concat(pts);
-}
-
 // Data: exam scores for two student groups in a university statistics course
 const rng = lcg(42);
 const tutoringScores  = normalSamples(200, 75, 12, rng);  // weekly tutoring sessions
 const selfStudyScores = normalSamples(200, 63, 15, rng);  // independent study only
 
-const ecdfTutoring  = ecdf(tutoringScores);
-const ecdfSelfStudy = ecdf(selfStudyScores);
+// Build ECDF: sort and pair each value with its cumulative proportion
+const tSorted = [...tutoringScores].sort((a, b) => a - b);
+const sSorted = [...selfStudyScores].sort((a, b) => a - b);
+
+const toECDF = (s) => {
+  const n = s.length, pad = (s[n - 1] - s[0]) * 0.03;
+  return [[+(s[0] - pad).toFixed(2), 0], ...s.map((x, i) => [+x.toFixed(2), +((i + 1) / n).toFixed(4)])];
+};
+
+const tPts    = toECDF(tSorted);
+const sPts    = toECDF(sSorted);
+const tMedian = +tSorted[Math.floor(tSorted.length / 2)].toFixed(1);
+const sMedian = +sSorted[Math.floor(sSorted.length / 2)].toFixed(1);
 
 // Chart
 const chart = echarts.init(document.getElementById("container"));
@@ -56,7 +57,7 @@ chart.setOption({
     text: "ecdf-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 20,
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: "normal" },
+    textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" },
   },
   legend: {
     data: ["Tutoring (n=200)", "Self-Study (n=200)"],
@@ -65,6 +66,17 @@ chart.setOption({
     textStyle: { color: t.inkSoft, fontSize: 16 },
     itemWidth: 28,
     itemHeight: 3,
+    backgroundColor: t.elevatedBg,
+    borderRadius: 4,
+    padding: [8, 14],
+  },
+  tooltip: {
+    trigger: "axis",
+    formatter: (params) => {
+      const score = params[0].value[0].toFixed(1);
+      return `Score: ${score}<br/>` +
+        params.map(p => `${p.seriesName}: ${(p.value[1] * 100).toFixed(1)}%`).join("<br/>");
+    },
   },
   grid: { left: 100, right: 80, top: 110, bottom: 85 },
   xAxis: {
@@ -75,7 +87,7 @@ chart.setOption({
     nameTextStyle: { color: t.ink, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
     min: 15,
     max: 120,
@@ -86,9 +98,9 @@ chart.setOption({
     nameLocation: "center",
     nameGap: 60,
     nameTextStyle: { color: t.ink, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
+    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (v) => v.toFixed(1) },
     axisLine: { lineStyle: { color: t.inkSoft } },
-    axisTick: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
     min: 0,
     max: 1,
@@ -98,19 +110,35 @@ chart.setOption({
       name: "Tutoring (n=200)",
       type: "line",
       step: "end",
-      data: ecdfTutoring,
+      data: tPts,
       lineStyle: { color: t.palette[0], width: 3 },
       itemStyle: { color: t.palette[0] },
+      areaStyle: { color: t.palette[0], opacity: 0.12 },
       showSymbol: false,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.palette[0], type: "dashed", opacity: 0.55, width: 1.5 },
+        label: { formatter: `Median ${tMedian}`, color: t.inkSoft, fontSize: 12, position: "end" },
+        data: [{ xAxis: tMedian }],
+      },
     },
     {
       name: "Self-Study (n=200)",
       type: "line",
       step: "end",
-      data: ecdfSelfStudy,
-      lineStyle: { color: t.palette[1], width: 3 },
+      data: sPts,
+      lineStyle: { color: t.palette[1], width: 3, type: "dashed" },
       itemStyle: { color: t.palette[1] },
+      areaStyle: { color: t.palette[1], opacity: 0.10 },
       showSymbol: false,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.palette[1], type: "dashed", opacity: 0.55, width: 1.5 },
+        label: { formatter: `Median ${sMedian}`, color: t.inkSoft, fontSize: 12, position: "end" },
+        data: [{ xAxis: sMedian }],
+      },
     },
   ],
 });
