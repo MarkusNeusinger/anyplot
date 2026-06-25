@@ -44,8 +44,8 @@ fig = Figure(
 
 ax = Axis(
     fig[1, 1];
-    title              = "donut-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    title              = "R&D Budget Allocation · donut-basic · julia · makie · anyplot.ai",
+    titlesize          = 16,
     titlecolor         = INK,
     titlegap           = 10,
     backgroundcolor    = PAGE_BG,
@@ -72,15 +72,18 @@ for i in 1:n
 end
 
 # Percentage labels inside segments (skip very small slices)
+const dominant_i = argmax(proportions)
 for i in 1:n
     proportions[i] < 0.07 && continue
     θ_mid = (angles_start[i] + angles_end[i]) / 2
     r_mid = (OUTER_R + INNER_R) / 2
     pct   = round(Int, proportions[i] * 100)
+    is_dominant = (i == dominant_i)
     text!(ax, "$(pct)%";
           position = Point2f(r_mid * cos(θ_mid), r_mid * sin(θ_mid)),
           align    = (:center, :center),
-          fontsize = 16,
+          fontsize = is_dominant ? 20 : 16,
+          font     = is_dominant ? :bold : :regular,
           color    = RGBf(1.0, 1.0, 1.0))
 end
 
@@ -102,7 +105,7 @@ elems = [PolyElement(color=IMPRINT_PALETTE[i], strokecolor=:transparent, strokew
 Legend(fig[1, 2], elems, categories;
        labelsize       = 14.0f0,
        labelcolor      = INK,
-       framevisible    = true,
+       framevisible    = false,
        framecolor      = INK_SOFT,
        backgroundcolor = ELEVATED_BG,
        patchsize       = (20.0f0, 16.0f0),
