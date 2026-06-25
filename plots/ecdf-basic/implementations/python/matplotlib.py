@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -29,8 +29,18 @@ t_min = temps.min()
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# ECDF step function
+# Subtle fill under the ECDF curve for visual weight
+sorted_temps = np.sort(temps)
+ecdf_y = np.arange(1, len(sorted_temps) + 1) / len(sorted_temps)
+ax.fill_between(sorted_temps, 0, ecdf_y, step="post", alpha=0.10, color=BRAND)
+
+# ECDF step function (drawn on top of fill)
 ax.ecdf(temps, color=BRAND, linewidth=2.5)
+
+# Bimodal mode markers — highlight the two sensor populations
+for mode_temp, label in [(18.5, "Server\nrooms"), (22.0, "Offices")]:
+    ax.axvline(mode_temp, color=INK_MUTED, linestyle="--", linewidth=0.8, alpha=0.45)
+    ax.text(mode_temp + 0.2, 0.05, label, fontsize=8, color=INK_MUTED, va="bottom", ha="left")
 
 # Quartile reference guides (Q1, Q2, Q3)
 quartiles = [25, 50, 75]
@@ -40,7 +50,7 @@ for q, v in zip(quartiles, q_values, strict=True):
     ax.plot([t_min - 0.3, v], [yf, yf], color=INK_MUTED, linestyle=":", linewidth=0.8, alpha=0.6)
     ax.plot([v, v], [0, yf], color=INK_MUTED, linestyle=":", linewidth=0.8, alpha=0.6)
     ax.annotate(
-        f"Q{q // 25}  {v:.1f}°C", xy=(v, yf), xytext=(5, 5), textcoords="offset points", fontsize=8, color=INK_MUTED
+        f"Q{q // 25}  {v:.1f}°C", xy=(v, yf), xytext=(5, 5), textcoords="offset points", fontsize=9, color=INK_MUTED
     )
 
 # Chrome
