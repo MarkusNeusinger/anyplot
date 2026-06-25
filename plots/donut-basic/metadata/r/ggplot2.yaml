@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: donut-basic
 created: '2026-06-25T06:08:04Z'
-updated: '2026-06-25T06:13:29Z'
+updated: '2026-06-25T06:21:59Z'
 generated_by: claude-sonnet
 workflow_run: 28149907221
 issue: 733
@@ -12,44 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect Imprint palette adherence: canonical order positions 1-6, theme-correct
-    backgrounds (#FAF8F1 light / #1A1A17 dark) in both renders'
-  - Clever and correct label-positioning algorithm using reversed factor levels +
-    cumsum to align percentage labels with donut segments
-  - Center annotation ($10.0M Total Budget) fulfills the spec requirement and creates
-    a strong visual focal point
-  - 'Full spec compliance: all required donut features (hollow center, percent labels,
-    thick ring, legend with Department header) implemented'
-  - Clean, readable code with no unnecessary abstractions; set.seed(42) for reproducibility;
-    elegant flat script structure
+  - Correct donut chart implementation using ggplot2's coord_polar with proper hollow
+    center via scale_x_continuous limits
+  - Full Imprint palette applied in canonical order (Technology=green, Operations=lavender,
+    Marketing=blue, etc.)
+  - Center annotation '$10.0M Total Budget' satisfies the spec requirement for summary
+    info in the center hole
+  - Both light (#FAF8F1) and dark (#1A1A17) backgrounds are correct theme-adaptive
+    tokens — chrome flips correctly
+  - Accurate label midpoint computation accounting for geom_col reverse stacking order
+    ensures percentage labels land in their segments
+  - theme_void() removes all chart chrome appropriately for a donut chart
+  - Square canvas (2400×2400) is the right choice for a symmetric circular chart
   weaknesses:
-  - Title is visually left-of-center on the full canvas because ggplot2 centers the
-    title over the plot panel area, not the full figure width; adding plot.title.position
-    = 'plot' to the theme() call would center it over the full 2400x2400 canvas
-  - IMPRINT_PALETTE only defines 6 of 8 Imprint colors — harmless for 6-category data
-    but the full 8-color definition is preferred for consistency with the library
-    guide
-  - Legend lacks a defining border in dark mode (color = NA makes it blend with the
-    near-black background); a subtle stroke with color = INK_SOFT and linewidth =
-    0.3 on the legend.background element_rect would add clear separation
+  - The 7% R&D cyan segment is small and its label is slightly cramped — consider
+    reducing font size slightly for that label or ensuring geom_text size is calibrated
+    so small segments don't get clipped text
+  - Design excellence is functional but not particularly elevated — no additional
+    visual hierarchy, emphasis, or annotation beyond the basic donut format; segment
+    labels are plain white text without any subtle styling differentiation
+  - Legend is boxed with a border (legend.background rect), which is acceptable but
+    slightly old-fashioned — a subtler or no-border legend would refine the look further
+  - Title at size=12 centered on the plot appears somewhat small relative to the canvas
+    area — it fills roughly 40-45% of the width rather than the expected 50-70%
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
-      Chrome: Title "donut-basic · r · ggplot2 · anyplot.ai" in dark near-black ink, fully readable. No axis labels (theme_void appropriate). Legend labeled "Department" with light soft ink text on FFFDF6 elevated background.
-      Data: 6 donut segments in Imprint canonical order: Technology (#009E73 green, 28%), Operations (#C475FD lavender, 22%), Marketing (#4467A3 blue, 19%), Finance (#BD8233 ochre, 13%), HR (#AE3030 matte red, 11%), R&D (#2ABCCD cyan, 7%). Bold white percentage labels on each segment. Center annotation "$10.0M / Total Budget" in bold dark ink.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "donut-basic · r · ggplot2 · anyplot.ai" at top center, dark ink, clearly readable. No axis labels (theme_void). Legend on the right with "Department" heading and 6 colored swatches in dark ink/INK_SOFT text — all readable.
+      Data: Six donut segments in canonical Imprint order — Technology (#009E73 green, 28%), Operations (#C475FD lavender, 22%), Marketing (#4467A3 blue, 19%), Finance (#BD8233 ochre, 13%), HR (#AE3030 matte red, 11%), R&D (#2ABCCD cyan, 7%). White percentage labels on each segment. Center annotation "$10.0M / Total Budget" in dark INK text on the hollow center.
+      Legibility verdict: PASS — all text clearly readable; the 7% R&D segment label is slightly tight but visible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title in light cream text (#F0EFE8 INK token), fully readable against dark background. Center annotation "$10.0M Total Budget" adapts to white — no dark-on-dark issue. Legend text in soft light ink (#B8B7B0 INK_SOFT) on elevated dark (#242420) background.
-      Data: All 6 segment colors are identical to light render (Imprint palette is theme-invariant). White percentage labels remain white and readable on all segments. Brand green #009E73 (Technology) is clearly visible on dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against dark background.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Same centered title in light ink (#F0EFE8 equivalent), clearly readable against the dark background. Legend text in INK_SOFT (#B8B7B0), legend background uses ELEVATED_BG (#242420). All legend labels legible. Center annotation uses INK (#F0EFE8), readable against the dark donut hole.
+      Data: All six segment colors are identical to the light render (Imprint palette stays constant between themes). White percentage labels remain visible on segments. No dark-on-dark failures observed.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, legend, and center annotation text is visible against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +60,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title, legend, and segment labels all readable in both themes. Minor:
-          title not visually centered over full canvas due to ggplot2 panel-relative
-          title placement with right-side legend.'
+        comment: Title, legend, and center annotation all readable in both themes.
+          Percentage labels in white readable on segments; 7% R&D segment is slightly
+          cramped but visible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text collisions. Segment labels placed at computed midpoints without
+          overlap. Center annotation stays within the hollow.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 6 segments clearly visible with white dividers. R&D 7% segment
-          is small but labeled correctly.
+        comment: All six segments clearly distinguishable. PAGE_BG-colored segment
+          dividers add definition. All colors visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. White labels on colored segments provide
-          high contrast.
+        comment: Imprint palette is CVD-safe. Percentage labels are white providing
+          contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Square 2400x2400 canvas appropriate for donut. Generous margins.
-          Minor: title centers over plot panel, not full figure width.'
+        comment: Square 2400x2400 canvas correct for circular chart. Good proportions,
+          nothing cut off, generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (theme_void). Title follows exact mandated
-          format.
+        comment: No axis labels needed (theme_void donut). Title follows required
+          format. Center annotation provides key metric.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Technology) uses #009E73. All 6 use canonical Imprint
-          order. Light #FAF8F1, dark #1A1A17 backgrounds correct.'
+        comment: 'First series Technology = #009E73. All categories use canonical
+          Imprint order. Light bg #FAF8F1, dark bg #1A1A17 — both correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,22 +114,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4). Intentional design: Imprint palette, center budget
-          annotation, void theme, white segment dividers produce a professional result.'
+        comment: Custom Imprint palette applied. Center annotation with total budget
+          is an intentional design choice. Elevated legend background adds polish.
+          No dominant visual hierarchy beyond basic donut.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). theme_void removes chartjunk; white-on-color borders
-          add definition. Legend lacks border in dark mode.
+        comment: theme_void() removes all chrome elegantly. PAGE_BG segment dividers
+          are refined. Generous margins. Legend border is slightly heavy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Center total ($10.0M) is a strong focal point.
-          Percentage labels support direct comparison. Clear budget allocation narrative.
+        comment: Center '$10.0M Total Budget' communicates the key takeaway. Percentage
+          labels enable direct comparison. Budget allocation context is clear. No
+          additional emphasis or callout for top category.
     spec_compliance:
       score: 15
       max: 15
@@ -135,53 +141,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut chart via geom_col + coord_polar with x-axis limits
-          creating hollow center.
+        comment: Donut chart correctly implemented via coord_polar + geom_col with
+          hollowed center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center metric, percentage labels, consistent ordering, thick ring
-          width all present.
+        comment: Hollow center with summary stat, percentage labels on segments, consistent
+          ordering, thick ring width.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 6 categories shown with correctly computed proportional segments.
+        comment: 6 budget categories (within 3-8 range), proportional segment sizes,
+          all categories accounted for.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'donut-basic · r · ggplot2 · anyplot.ai'. Legend
-          labeled 'Department' with all 6 entries.
+        comment: Title 'donut-basic · r · ggplot2 · anyplot.ai' correct. Legend 'Department'
+          with matching category labels.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates full donut pattern: proportional ring segments, hollow
-          center with summary metric, percentage labels, multi-category legend.'
+        comment: 'Shows all donut chart aspects: ring shape, hollow center, proportional
+          segments, percentage labels, legend.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual budget allocation by department ($2.8M-$0.7M, total $10.0M)
-          is entirely plausible and neutral.
+        comment: Annual budget allocation by department is realistic and neutral.
+          Values (Technology > Operations > Marketing...) follow plausible priority
+          ordering.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Individual department budgets $0.7M-$2.8M realistic for a mid-sized
-          company with $10M total budget.
+        comment: $0.7M-$2.8M range with $10.0M total is appropriate for a mid-sized
+          company budget scenario.
     code_quality:
       score: 10
       max: 10
@@ -191,32 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script, no functions or classes.
+        comment: 'No unnecessary abstractions. Clean flow: tokens → data → plot →
+          save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present.
+        comment: set.seed(42) present. Data is fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2, dplyr, ragg imported; all used.
+        comment: ggplot2, dplyr, ragg — all imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant label-positioning algorithm using reversed factor levels
-          + cumsum + lag is the correct idiomatic approach.
+        comment: dplyr pipes used idiomatically. Label midpoint computation accounts
+          for ggplot2 reverse stacking — non-obvious but correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png. Correct output format.
+        comment: Saves as plot-{THEME}.png. Uses ragg::agg_png device. Current ggplot2
+          API (linewidth= not size=).
     library_mastery:
       score: 7
       max: 10
@@ -226,16 +236,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct geom_col + coord_polar for donut, scale_x_continuous limits
-          for hollow center, theme_void, setNames palette mapping — all idiomatic
-          ggplot2.
+        comment: coord_polar(theta='y') + geom_col is the idiomatic ggplot2 donut.
+          scale_x_continuous limits for hollow center. theme_void() appropriate choice.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_polar transformation (distinctive grammar-of-graphics approach),
-          theme_void, annotate() for center text, element_rect legend styling.
+        comment: Leverages ggplot2's grammar layering (geom_col + geom_text + annotate
+          in one plot). Manual reverse-order label midpoint computation demonstrates
+          deep understanding of ggplot2 stacking behavior.
   verdict: APPROVED
 impl_tags:
   dependencies: []
