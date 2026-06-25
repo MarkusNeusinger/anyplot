@@ -2,124 +2,142 @@ library: altair
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T05:34:06Z'
-updated: '2026-04-25T05:40:32Z'
-generated_by: claude-opus
-workflow_run: 24923425795
+updated: '2026-06-25T13:00:27Z'
+generated_by: claude-sonnet
+workflow_run: 28166305717
 issue: 5364
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Full editorial Chartgeist aesthetic: bold italic serif category labels in circle
-    colors, witty title, italic subtitle, gridless background'
-  - Correct Okabe-Ito palette for all three circles; both themes fully adapted with
-    no chrome failures
-  - Clean layer-composition approach using alt.layer() with six distinct layers
-  - All 14 items correctly placed across all seven Venn zones with vertical stacking
-    to avoid collisions
-  - Title format includes editorial prefix plus required spec-id, library, and anyplot.ai
-    elements
+  - 'Correct Imprint palette order: Overhyped=#009E73 (brand green), Actually Useful=#C475FD,
+    Secretly Loved=#4467A3 — canonical positions 1-3 in sequence'
+  - 'Fully theme-adaptive: PAGE_BG, INK, INK_SOFT all conditional, item labels use
+    INK so dark-render text is light (#F0EFE8) and readable'
+  - Editorial serif italic category labels match the spec's 'Chartgeist / WIRED magazine'
+    aesthetic exactly
+  - Semi-transparent filled circles (opacity=0.30) with styled outlines give professional
+    overlapping-region visibility
+  - All 7 interior Venn zones populated with plausible, witty pop-culture items; zone
+    stacking algorithm avoids label collision
+  - Canvas gate passed — 2400×2400 square target met via the PIL padding block
+  - 'Complete alt.layer() composition with no axes, no grid: minimal chrome appropriate
+    for editorial diagram'
+  - HTML output also saved alongside PNG
   weaknesses:
-  - Notable empty canvas space (~25% of vertical height) between the title and the
-    top of the Venn circles — zone_centers and circle positions should be shifted
-    upward to better center the diagram on the canvas
-  - Circle fills at opacity=0.22 are quite transparent; slightly higher opacity (0.28-0.35)
-    would make zone regions more visually distinct, especially the overlapping areas
-  - Item label fontSize=20 is on the smaller side for the 3600x3600 effective canvas;
-    22-24px would improve readability
+  - Item labels are fontSize=10; at scale_factor=4 that is 40 source-px in the 2400-px
+    PNG. When scaled to ~400 px mobile width they become ~6-7 effective px — borderline
+    illegible. Increase to fontSize=12 (48 source-px) for better small-screen readability.
+  - Significant empty vertical space between the subtitle and the Venn circles in
+    both renders. The diagram is shifted downward by center_y=240 in a 460-unit view,
+    leaving ~100 coordinate units of blank area above the circles. Either increase
+    center_y to ~260 or shrink CANVAS_H to ~420 to tighten the whitespace.
+  - 'Minor crowding in the central intersection cluster: ABC centroid (250,254) and
+    AB centroid (250,290) are only 29 px apart at coord scale; with LINE_HEIGHT=14
+    and 2 items each the closest labels are 22 units apart (~88 source-px), which
+    is tight. Could be improved by nudging AB downward to (250, 305).'
+  - Category label 'Actually Useful' (label_b) appears very close to the right edge
+    of the 500-unit coordinate space; at scale_factor=4 this lands near the canvas
+    edge. Verify it is not at risk of clipping when title/legend padding is added
+    by vl-convert.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "Pop Culture Vibes · venn-labeled-items · altair · anyplot.ai" in dark bold serif, fully readable. Italic subtitle in muted gray. Category labels "Overhyped", "Actually Useful", "Secretly Loved" in bold italic serif colored in #009E73, #D55E00, #0072B2 respectively — all readable against light background.
-      Data: Three overlapping circles with semi-transparent fills (opacity 0.22). First circle is #009E73 (brand green) for "Overhyped", #D55E00 for "Actually Useful", #0072B2 for "Secretly Loved". 14 item labels in dark ink distributed across all 7 Venn zones.
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Pop Culture Vibes · venn-labeled-items · python · altair · anyplot.ai" renders in dark INK (#1A1A17) with serif font; subtitle "An opinionated three-circle taxonomy" in INK_SOFT italic. Both are fully legible against the light background.
+      Data: Three overlapping circles — Overhyped in brand green (#009E73), Actually Useful in lavender (#C475FD), Secretly Loved in steel blue (#4467A3). Fills are 30% opacity allowing overlap visibility; outlines at 85% opacity. Category labels outside circles are bold italic serif in their respective circle colors. Item labels (NFTs, Metaverse, ChatGPT, Smartphones, Sourdough, Coffee, etc.) are small dark text stacked within each zone — readable at full resolution.
+      Legibility verdict: PASS. All text elements are readable against the warm off-white background. Note: item labels at fontSize=10 are small; borderline at very small display sizes.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title and subtitle render in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark text failures detected. Category labels maintain their Okabe-Ito colors (green, orange, blue) which have sufficient luminance contrast on the dark surface.
-      Data: Data colors identical to light render — #009E73, #D55E00, #0072B2. Item labels render in light ink (#F0EFE8) — readable on dark background. Circle fills appear darker due to low opacity on dark base, but outlines remain visible.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and subtitle render in light (#F0EFE8) cream text — clearly legible against the dark surface. Category labels retain their Imprint palette colors (green/lavender/blue) which remain visible on dark.
+      Data: Circle fill and outline colors are identical to the light render (#009E73, #C475FD, #4467A3) — Imprint palette data colors unchanged. Item labels now render in #F0EFE8 (light) rather than the dark #1A1A17 used in the light render — the INK token flips correctly ensuring no dark-on-dark failure.
+      Legibility verdict: PASS. No dark-on-dark failures observed. Item labels inside the semi-transparent colored circles are visible as light text. Brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: Title 28px, category labels 30px, item labels 20px — all readable
-          in both themes; item labels slightly small for canvas size
+        comment: Title/subtitle/category labels all readable in both themes. Item
+          labels at fontSize=10 are borderline small at mobile widths (~6-7 effective
+          px at 400px display).
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Labels well-distributed across zones; ABC zone tight but not overlapping
+        comment: No visible overlap, but central cluster (ABC at y=254, AB at y=290)
+          is tight — closest labels ~22 coord-units apart, readable but cramped.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Circles and labels visible; 0.22 opacity fill could be higher for
-          better zone differentiation
+        comment: All three circles clearly visible with semi-transparent fills and
+          outlines. Colors well-distinguished.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, no red-green sole signal
+        comment: Imprint palette CVD-safe. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square canvas appropriate; notable ~25% empty space between title
-          and diagram top
+        comment: Canvas gate passed (2400x2400). Noticeable empty space above circles
+          between subtitle and diagram start. No edge clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for Venn diagram; title is descriptive
+        comment: No traditional axes needed. Title correctly formatted with descriptive
+          prefix. Subtitle descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First circle #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
-          both renders correct'
+        comment: 'First circle = #009E73 (brand green). Positions 2 and 3 = #C475FD,
+          #4467A3. Backgrounds #FAF8F1/#1A1A17 correct. Both themes pass.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Editorial serif typography, bold italic category labels in circle
-          colors, witty title, semi-transparent fills — solid Chartgeist-style execution
+        comment: Editorial serif italic category labels, semi-transparent circle fills
+          with styled outlines, witty title+subtitle with serif font — genuinely matches
+          the Chartgeist magazine aesthetic from the spec.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes, no grid, clean background; large whitespace gap above circles
-          reduces polish
+        comment: No axes/spines/grid (appropriate for editorial diagram), semi-transparent
+          fills for depth, theme-adaptive chrome throughout.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear three-axis taxonomy with witty categories; items logically
-          placed; subtitle adds editorial voice
+        comment: Opinionated zone names and witty item placement (NFTs=Overhyped,
+          Dolly Parton=BC overlap) create a clear cultural taxonomy narrative. Editorial
+          framing reinforces storytelling.
     spec_compliance:
       score: 15
       max: 15
@@ -129,50 +147,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Three-circle Venn diagram with labeled items inside zones
+        comment: Correct three-circle Venn with labeled items in zones, semi-transparent
+          fills, category labels outside circles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, category names outside circles, 14 items
-          across all 7 zones, symmetric layout
+        comment: 'All spec features present: symmetric layout, semi-transparent fills,
+          item labels in zones, category names outside, magazine aesthetic, stacking
+          to minimize collisions.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All items correctly placed in their assigned zones
+        comment: All 14 items correctly placed in their specified zones across all
+          7 interior regions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Pop Culture Vibes · venn-labeled-items · altair · anyplot.ai — all
-          required elements present
+        comment: Title 'Pop Culture Vibes · venn-labeled-items · python · altair ·
+          anyplot.ai' matches required format with descriptive prefix. Category labels
+          serve as visual legend.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones used; outside zone not used but is optional
-          per spec
+        comment: All 7 zones populated. Multiple items per zone in key overlaps. Varied
+          domains (tech, food, entertainment, music).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Pop culture items are neutral, relatable, and plausible
+        comment: Culturally plausible, witty, and neutral. Placements make intuitive
+          sense (NFTs=Overhyped, Google Maps=Useful+Loved, Sourdough=ABC).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 14 items within 10-25 range; 3 circles as required
+        comment: 14 items within spec range (10-25). Good zone distribution balance.
+          Circle size (RADIUS=90) fits coordinate space well.
     code_quality:
       score: 10
       max: 10
@@ -182,32 +206,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat script-level code
+        comment: No functions or classes. Top-to-bottom script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; no random generation needed
+        comment: Fully deterministic — no random data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib workaround is pipeline-standard
+        comment: 'All imported modules are used: importlib, math, os, sys, defaultdict,
+          altair, pandas, PIL.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Geometric calculations for zone placement are clean; defaultdict
-          grouping appropriate
+        comment: Clean variable names, clear zone_centers dict, well-structured layer
+          composition. sys.path manipulation is a CI-specific workaround but doesn't
+          reduce elegance.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png.
     library_mastery:
       score: 7
       max: 10
@@ -217,26 +243,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: alt.layer() composition, proper Q encoding, configure_view, alt.Title
-          object — idiomatic Altair patterns
+        comment: Good use of alt.layer(), proper :Q/:N encoding types, alt.Scale for
+          domain control, alt.Title with font configuration. Clean Altair grammar-of-graphics
+          approach.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Layer composition with multiple mark types, HTML export, declarative
-          encoding with scale domains
+        comment: Layer composition (key Altair feature) used creatively for Venn diagram
+          construction. Creative use of mark_point size-area semantics for circle
+          rendering.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - html-export
-  - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
