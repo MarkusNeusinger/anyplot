@@ -1,7 +1,7 @@
 // anyplot.ai
 // venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-25
+// Library: d3 7.9.0 | JavaScript 22.23.0
+// Quality: 87/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
