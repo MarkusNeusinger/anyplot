@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -9,6 +9,7 @@ import os
 import numpy as np
 import plotly.graph_objects as go
 from scipy.stats import gaussian_kde
+from scipy.stats import t as t_dist
 
 
 # Theme tokens
@@ -36,15 +37,35 @@ point_alpha = 0.90 - 0.35 * density_rank  # sparse: 0.90, dense: 0.55
 # Percentile rank for richer hover context
 score_percentile = np.argsort(np.argsort(exam_scores)) / (n_students - 1) * 100
 
-# Linear regression trendline to make the positive correlation explicit
+# Linear regression trendline + 95% CI band
 slope, intercept = np.polyfit(study_hours, exam_scores, 1)
-x_line = np.array([1.0, 10.0])
+x_line = np.linspace(1.0, 10.0, 100)
 y_line = slope * x_line + intercept
+xbar = np.mean(study_hours)
+Sxx = np.sum((study_hours - xbar) ** 2)
+y_hat = slope * study_hours + intercept
+s_res = np.sqrt(np.sum((exam_scores - y_hat) ** 2) / (n_students - 2))
+t_crit = t_dist.ppf(0.975, df=n_students - 2)
+se_ci = s_res * np.sqrt(1 / n_students + (x_line - xbar) ** 2 / Sxx)
+ci_half = t_crit * se_ci
 
 # Plot
 fig = go.Figure()
 
-# Regression trendline (drawn first so scatter points appear on top)
+# 95% CI band (drawn first, behind trendline and points)
+fig.add_trace(
+    go.Scatter(
+        x=np.concatenate([x_line, x_line[::-1]]),
+        y=np.concatenate([y_line + ci_half, (y_line - ci_half)[::-1]]),
+        fill="toself",
+        fillcolor="rgba(0,158,115,0.10)",
+        line={"color": "rgba(0,0,0,0)"},
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Regression trendline
 fig.add_trace(
     go.Scatter(
         x=x_line,
@@ -62,7 +83,7 @@ fig.add_trace(
         x=study_hours,
         y=exam_scores,
         mode="markers",
-        marker={"size": 10, "color": BRAND, "opacity": point_alpha, "line": {"width": 1.2, "color": PAGE_BG}},
+        marker={"size": 10, "color": BRAND, "opacity": point_alpha, "line": {"width": 1.2, "color": ELEVATED_BG}},
         customdata=np.stack([score_percentile], axis=-1),
         hovertemplate=(
             "<b>Study Hours</b>: %{x:.1f} h/day<br>"
@@ -88,10 +109,8 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
-        "linecolor": INK_SOFT,
         "zeroline": False,
-        "showline": True,
-        "mirror": False,
+        "showline": False,
         "range": [0, 11],
         "dtick": 2,
         "ticksuffix": " h",
@@ -101,10 +120,8 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
-        "linecolor": INK_SOFT,
         "zeroline": False,
-        "showline": True,
-        "mirror": False,
+        "showline": False,
         "range": [35, 105],
         "dtick": 10,
         "ticksuffix": "%",
