@@ -1,0 +1,276 @@
+library: muix
+language: javascript
+specification_id: contour-basic
+created: '2026-06-25T04:09:57Z'
+updated: '2026-06-25T04:40:35Z'
+generated_by: claude-sonnet
+workflow_run: 28145550483
+issue: 855
+language_version: 22.23.0
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Correct Imprint sequential colormap (t.seq[0]→t.seq[1]) for continuous elevation
+    data with first band at #009E73'
+  - Marching squares algorithm produces proper contour isolines — now both filled
+    regions AND level curves are present
+  - Creative useDrawingArea hook usage for SVG isoline overlay is a truly distinctive
+    MUI X community feature
+  - Fully deterministic two-Gaussian-peak topology creates compelling real-world-plausible
+    topographic data
+  - 'Both themes handled correctly: t.pageBg, t.ink, t.inkSoft throughout; data colors
+    identical across both renders'
+  - 'Perfect spec compliance: colorbar legend, filled regions, isolines, 60x60 grid
+    — all features present'
+  weaknesses:
+  - Scatter proxy creates jagged/serrated pixel edges at contour band boundaries and
+    at chart border — inherent limitation of the approach but detracts from visual
+    refinement
+  - Default MUI X chart border frame retained — removing or softening it (transparent
+    background / no border) would improve visual cleanliness
+  - 'DE-01 ceiling: the rough scatter edges prevent publication-ready polish even
+    though the algorithmic work is sophisticated'
+  - 'CQ-01: Module-level helper functions and a React sub-component (IsolineOverlay)
+    add necessary complexity but move away from flat KISS structure'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page background fills the outer padding area — correct theme surface. The chart area is transparent, showing the page bg through.
+      Chrome: Title "contour-basic · javascript · muix · anyplot.ai" centered at top in dark ink (#1A1A17) at 22px CSS — clearly readable. X-axis label "X" and rotated Y-axis label "Y" in dark ink at 15px CSS. Tick labels (-3 to 3 on both axes) at 14px CSS in inkSoft (#4A4A44) — readable at full resolution. Six-item legend with value-range labels on the right side in inkSoft at 13px.
+      Data: Brand green (#009E73) fills the outer/lowest-elevation band across most of the plot area. Two circular peak regions visible (upper-right taller, lower-left shorter), progressing through intermediate teal/teal-blue intermediate bands to deep blue (#4467A3) at the highest-elevation cores. Isoline level curves appear as thin dark hairlines (stroke: t.ink, opacity 0.5) overlaid on the filled bands — five isolines visible marking the five band boundaries. A diagonal ridge connecting the two peaks is clearly visible. Scatter proxy creates slightly jagged edges at band transitions and at chart border boundaries.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the outer padding area — correct theme surface.
+      Chrome: Title, axis labels, and tick labels rendered in light ink tones (t.ink = #F0EFE8, t.inkSoft = #B8B7B0) — all clearly readable against the dark background. No dark-on-dark failures. Legend labels readable on dark surface.
+      Data: Data colors are visually identical to the light render — brand green (#009E73) for base elevation, transitioning to blue (#4467A3) at peak cores. Isoline hairlines are light-colored (t.ink on dark bg) and clearly visible. Only the page background and axis chrome flipped between themes; both Gaussian elevation peaks remain clearly visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues observed.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, labels 15px, ticks 14px,
+          legend 13px). Readable in both themes at full res. Minor deduction: tick
+          label font size at 14px CSS is on the smaller side at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Title, legend, axis labels, and tick labels all
+          clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Two Gaussian peaks clearly visible with clean color gradient. Isoline
+          hairlines visible. Minor deduction: scatter proxy creates jagged/serrated
+          edges at band transitions and chart boundary.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential palette (green to blue) is CVD-safe with strong
+          luminance contrast across the gradient.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Chart occupies good canvas area with well-placed
+          right legend. Minor deduction for rough scatter boundary at chart edges
+          creating a slightly untidy frame appearance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X and Y are appropriate and descriptive labels for a mathematical
+          2D function (the spec literally uses x and y as variable names). Title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.seq[0] (#009E73) to t.seq[1] (#4467A3) — correct Imprint sequential
+          colormap for continuous elevation data. Background is t.pageBg. Chrome uses
+          t.ink / t.inkSoft. Both renders theme-correct.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Creative marching squares + scatter band workaround shows real algorithmic
+          sophistication well above defaults. Isoline overlay is elegant. The rough
+          scatter proxy edges prevent full publication-ready polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Axis lines disabled (disableLine: true). No grid (appropriate for
+          filled contour). Legend cleanly styled. However: default MUI X chart border
+          frame retained and rough scatter edges at band transitions detract from
+          overall refinement.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-peaked topography with connecting ridge creates clear visual
+          focal points. Color gradient naturally guides eye from low (green) to high
+          (blue). Viewer immediately identifies the two elevation summits.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Full contour plot: both filled contour regions (scatter proxy) AND
+          isoline level curves (marching squares + SVG overlay). All defining elements
+          of a contour plot present.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colormap ✓; colorbar legend with value ranges ✓; contour
+          isolines overlaid on filled regions ✓; 60x60 grid resolution ✓; diverging/sequential
+          colormap per spec note ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes span -3 to 3. Z encoded as color through both fill bands
+          and isolines. All data visible, no clipping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'contour-basic · javascript · muix · anyplot.ai' matches required
+          format exactly. Legend labels 6 elevation bands with numeric ranges showing
+          the value scale.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 2D scalar field, two distinct peaks of different
+          heights, diagonal ridge feature, elevation gradient, filled contour regions,
+          AND isoline level curves. Comprehensive demonstration.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Two Gaussian peaks + diagonal ridge is a realistic, neutral mathematical
+          elevation surface (classic test case for contour visualization). Slightly
+          abstract (pure math function) but clearly applicable to topographic contexts.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 60x60 = 3600 points for smooth coverage. Z range 0–1.15 appropriate
+          for normalized elevation function. Grid spans -3 to 3 on both axes.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Multiple module-level helper functions (elevation, seqColor, marchingSquares)
+          and a React sub-component (IsolineOverlay). Complexity is justified by the
+          visualization approach but moves away from flat KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed mathematical function, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ScatterChart, useDrawingArea, Box, Typography — all imported and
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Marching squares algorithm cleanly implemented. Array.from pipelines,
+          filter/map chains, seqColor interpolation all elegant. IsolineOverlay component
+          is a clean React pattern.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports component, sizes from window.ANYPLOT_SIZE, skipAnimation
+          set, tooltip disabled, harness handles output files.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: useDrawingArea hook, slotProps.legend for legend positioning, margin
+          configuration, xAxis/yAxis with labelStyle/tickLabelStyle — all standard
+          MUI X patterns correctly applied. Proper window.ANYPLOT_TOKENS integration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useDrawingArea hook for custom SVG overlay (IsolineOverlay) is a
+          genuinely distinctive MUI X community feature — provides precise drawing-area
+          coordinate mapping for custom children injected into the chart. This approach
+          is unique to MUI X's composition model.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - patches
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
