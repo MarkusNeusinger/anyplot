@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:50Z'
-updated: '2026-06-25T09:35:33Z'
+updated: '2026-06-25T09:43:55Z'
 generated_by: claude-sonnet
 workflow_run: 28160341179
 issue: 976
@@ -12,41 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Correct ECDF implementation using go.Scatter shape='hv' for proper step-function
-    semantics
-  - Realistic lognormal latency data with appropriate HTTP API domain context
-  - 'Perfect theme-adaptive chrome: all tokens correctly applied for both light and
-    dark renders'
-  - Clean, flat code with reproducible seed (np.random.seed(42)) and idiomatic Plotly
-    patterns
-  - Correct canvas size (3200x1800) and output files (PNG + HTML)
+  - Lognormal distribution for HTTP latency is a technically accurate data choice
+    that produces a realistic and instructive ECDF shape
+  - P50/P90/P99 annotated crosshairs transform a basic ECDF into an actionable performance
+    analysis tool — directly reads SLA thresholds
+  - Full theme-adaptive chrome using all correct tokens (INK, INK_SOFT, GRID, PAGE_BG,
+    ELEVATED_BG); dark render passes the dark-on-dark readability check cleanly
+  - sys.path manipulation is a legitimate and well-commented fix for the plotly.py
+    filename-shadowing issue
+  - Compact, well-structured code with no unnecessary abstraction
   weaknesses:
-  - No percentile reference lines or annotations (P50, P90, P99) — adding dashed horizontal
-    reference lines at key quantiles with text annotations showing ms values would
-    significantly boost storytelling for an API latency ECDF
-  - Visible axis spine lines (showline=True) add chrome without adding information
-    — set showline=False on both axes for cleaner minimalism
-  - Right portion of X-axis (~400-850ms) is nearly empty (contains only ~1% of data)
-    — consider trimming x-range to np.percentile(sorted_latency, 99.5) and annotating
-    the tail behavior
+  - P50 annotation ("P50 125 ms") placement at xanchor=left/yanchor=bottom at the
+    50% intersection point sits very close to the ECDF step line, causing minor visual
+    crowding — consider increasing yshift to 8-12 or xshift to 12-15 so the label
+    clears the step line
+  - Design excellence is solid but not at the top tier — adding a subtle shaded region
+    (e.g., fill between 0 and the ECDF line, or a shaded p90-p99 tail zone) could
+    elevate the storytelling and aesthetic sophistication further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "HTTP API Latency · ecdf-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), centered, clearly readable. Y-axis label "Cumulative Proportion of Requests" in dark ink, readable. X-axis label "Response Time (ms)" in dark ink, readable. Tick labels (0%-100% Y, 100-800 X) in secondary ink (#4A4A44), clearly legible. Subtle grid lines with 15% opacity.
-      Data: Single ECDF step-function line in brand green (#009E73), width 2.5px. Line rises steeply from ~50ms to ~350ms covering 0%-99%, then flattens across right tail to ~850ms. Shape="hv" creates correct horizontal-then-vertical step pattern.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures
+      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface
+      Chrome: Title "HTTP API Latency · ecdf-basic · python · plotly · anyplot.ai" centered, dark ink — clearly readable. Axis labels "Response Time (ms)" and "Cumulative Proportion of Requests" in dark ink. Tick labels in muted dark gray (INK_SOFT). Subtle grid lines (15% opacity) on both axes.
+      Data: Single ECDF step line in #009E73 (brand green); rises from 0 to ~100% left to right. Three dotted crosshair reference lines (P50 at 125ms/50%, P90 at 220ms/90%, P99 at 364ms/99%) in muted gray with text annotations.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in near-white (#F0EFE8), clearly readable against dark background. Axis labels in near-white, clearly readable. Tick labels in secondary dark-theme ink (#B8B7B0), legible. Grid lines subtle with appropriate light-on-dark opacity. No dark-on-dark failures detected.
-      Data: Brand green (#009E73) ECDF line is identical in color and shape to light render — only chrome elements flipped to light. Brand green reads well on the dark surface.
-      Legibility verdict: PASS — all text readable against warm near-black background, no dark-on-dark failures
+      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface
+      Chrome: Title and axis labels rendered in light warm-cream text (INK dark variant #F0EFE8). Tick labels in muted light gray (INK_SOFT dark variant #B8B7B0). Grid lines faint on dark surface. All chrome correctly flipped for dark theme.
+      Data: ECDF step line remains identical #009E73 green — data color unchanged from light render. Percentile annotations and crosshairs render in muted light gray, readable against dark background.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures; brand green #009E73 fully visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,51 +54,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Title, axis labels, tick labels all readable in both themes. Font
-          sizes follow style-guide defaults (title 16px, axis labels 12px, ticks 10px).
-          Minor: Y-axis rotated label could benefit from slightly more weight.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=10);
+          proportions balanced; both themes legible. Minor crowding of P50 annotation
+          near ECDF line.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No element collisions. Clean spacing throughout.
+        comment: Minor visual crowding where P50 annotation sits close to the ECDF
+          step line at the 50% intersection. All text readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Medium-density 400-point data rendered as a line — appropriate. Brand
-          green reads crisply in both themes. Step function shape is clear.
+        comment: ECDF step line at width=2.5 is well-sized for 400 data points; sharp
+          and clear against both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green is CVD-safe. No red-green-only encoding.
+        comment: Single series with brand green; percentile lines in muted gray; no
+          red-green sole-distinction encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Correct margins (l=80, r=40, t=80,
-          b=60). No overflow or clipping.
+        comment: Canvas gate passed; margins appropriate; plot area well-utilized;
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) and Cumulative Proportion of Requests are descriptive
-          and include units.
+        comment: Response Time (ms) and Cumulative Proportion of Requests — both descriptive
+          with units/context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
-          All chrome tokens theme-adaptive.'
+        comment: 'First series is #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          all chrome tokens theme-adaptive; data color identical in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,23 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Realistic lognormal latency scenario elevates above generic. Clean
-          brand green on warm surface. No key-percentile annotations reduces polish.
+        comment: 'Above generic defaults: real-world domain, lognormal distribution,
+          P50/P90/P99 crosshairs add analytical value. Clean Inter typography. Not
+          yet at FiveThirtyEight publication-ready level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed (mirror=False). Grid uses 15% opacity token.
-          L-shaped frame. Room to remove axis lines (showline=False) for fuller minimalism.
+        comment: Spines removed (showline=False on both axes), subtle 15%-opacity
+          grid, explicit font family (Inter), theme-aware hover labels. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Lognormal latency tells a realistic story. Step function naturally
-          exposes percentiles but no P50/P90/P99 reference lines or annotations to
-          guide reader.
+        comment: P50/P90/P99 annotated percentile crosshairs actively guide viewer
+          to key SLA-relevant percentiles. Lognormal shows realistic long right tail.
+          Viewer immediately sees where 90th and 99th percentiles fall.
     spec_compliance:
       score: 15
       max: 15
@@ -132,28 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function using go.Scatter with shape=hv.
+        comment: Correct ECDF step function using go.Scatter with shape=hv (horizontal-then-vertical);
+          cumulative proportion mapped to y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function increases by 1/n at each point; Y-axis 0-1 (0%-100%);
-          grid lines present; 2.5px line for clarity.
+        comment: Step function increasing by 1/n; y-axis 0-1 range; grid lines present;
+          distinct line style; percentile reference lines add value beyond spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = sorted latency values; Y = cumulative proportion. All 400 data
-          points covered.
+        comment: 'X: sorted latency values (continuous); Y: cumulative proportion
+          (0-1); all 400 data points represented.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title HTTP API Latency · ecdf-basic · python · plotly · anyplot.ai
-          follows required format with descriptive prefix. No legend for single series.
+        comment: Title follows optional-prefix format correctly. No legend (single
+          series, showlegend=False) — appropriate.
     data_quality:
       score: 15
       max: 15
@@ -163,22 +167,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ECDF range (0%-100%), step function shape clearly visible, Y-axis
-          correctly range-locked with dtick=0.1.
+        comment: Demonstrates full ECDF shape, long right tail from lognormal distribution,
+          and direct percentile reading at P50/P90/P99.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: HTTP API response latency is a canonical ECDF use case. Lognormal
-          distribution models real-world latency well. Neutral, professional.
+        comment: HTTP API response latency is highly realistic, business-relevant
+          scenario. Lognormal distribution is the standard model for real-world latency.
+          Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 requests, latency range ~40-850ms is realistic for a web API.
-          seed=42 reproducible.
+        comment: P50~125ms, P90~220ms, P99~364ms — completely plausible for a web
+          service API. 400 requests realistic for a benchmark sample.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear flow: imports -> sys.path fix -> data -> ECDF -> shapes/annotations
+          -> layout -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, numpy, plotly.graph_objects — all used.
+        comment: os, sys, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: sys.path manipulation to avoid script shadowing the plotly package
-          is well-handled. Appropriate complexity.
+        comment: Clean loop for percentile reference lines; sys.path manipulation
+          is necessary and commented; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Plotly
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -223,25 +230,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Scatter with line.shape=hv is correct Plotly idiom for ECDF. hovertemplate
-          and hovermode=x unified well-configured. px.ecdf() exists as a higher-level
-          ECDF convenience but manual approach is also valid.
+        comment: 'add_trace/add_shape/add_annotation idiom; hovermode=x unified; hovertemplate
+          with <extra></extra>; update_layout pattern. Very idiomatic. Minor: px.ecdf()
+          would be even higher-level.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses hover tooltips with formatted template, unified hover mode,
-          HTML export with custom modeBar config. Genuinely Plotly-distinctive features
-          not available in static libraries.
+        comment: line.shape=hv (native Plotly step rendering); hovermode=x unified
+          (synchronized hover); custom modeBar config in HTML export; theme-aware
+          hoverlabel — multiple Plotly-specific features used.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
-  styling: []
+  dataprep: []
+  styling:
+  - minimal-chrome
