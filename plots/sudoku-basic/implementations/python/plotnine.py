@@ -1,8 +1,13 @@
 """ anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 89/100 | Updated: 2026-04-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-25
 """
+
+import sys
+
+
+sys.path.pop(0)  # prevent this file from shadowing the plotnine package
 
 import os
 
@@ -25,11 +30,11 @@ from plotnine import (
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Data - A valid partially filled Sudoku puzzle
+# Data - a classic partially filled Sudoku puzzle
 grid = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -42,7 +47,7 @@ grid = [
     [0, 0, 0, 0, 8, 0, 0, 7, 9],
 ]
 
-# Build cell number DataFrame
+# Cell number positions (row 0 at top → y=8.5)
 cells = []
 for row in range(9):
     for col in range(9):
@@ -50,7 +55,21 @@ for row in range(9):
         cells.append({"x": col + 0.5, "y": 8.5 - row, "value": str(value) if value != 0 else ""})
 df_cells = pd.DataFrame(cells)
 
-# Thin grid lines (internal cell boundaries, skipping the 3x3 box positions)
+# Alternating 3×3 box backgrounds — subtle checkerboard for visual box differentiation
+boxes_a = []  # PAGE_BG shade
+boxes_b = []  # ELEVATED_BG shade
+for br in range(3):
+    for bc in range(3):
+        cx = bc * 3 + 1.5
+        cy = (2 - br) * 3 + 1.5
+        if (br + bc) % 2 == 0:
+            boxes_a.append({"x": cx, "y": cy})
+        else:
+            boxes_b.append({"x": cx, "y": cy})
+df_boxes_a = pd.DataFrame(boxes_a)
+df_boxes_b = pd.DataFrame(boxes_b)
+
+# Thin grid lines (cell divisions only — skips 3×3 box positions)
 thin_lines = []
 for i in range(1, 9):
     if i % 3 != 0:
@@ -58,36 +77,45 @@ for i in range(1, 9):
         thin_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
 df_thin = pd.DataFrame(thin_lines)
 
-# Thick grid lines (3x3 box boundaries and outer border)
-thick_lines = []
-for i in [0, 3, 6, 9]:
-    thick_lines.append({"x": i, "xend": i, "y": 0, "yend": 9})
-    thick_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
-df_thick = pd.DataFrame(thick_lines)
+# Interior box boundary lines (3×3 separators, not the outer border)
+box_lines = []
+for i in [3, 6]:
+    box_lines.append({"x": i, "xend": i, "y": 0, "yend": 9})
+    box_lines.append({"x": 0, "xend": 9, "y": i, "yend": i})
+df_box = pd.DataFrame(box_lines)
 
-# Cell background tiles (ensures panel fill matches theme uniformly across cells)
-df_tiles = pd.DataFrame([{"x": col + 0.5, "y": row + 0.5} for row in range(9) for col in range(9)])
+# Outer border — slightly thicker than box lines for three-level visual hierarchy
+outer_border = [
+    {"x": 0, "xend": 9, "y": 0, "yend": 0},
+    {"x": 0, "xend": 9, "y": 9, "yend": 9},
+    {"x": 0, "xend": 0, "y": 0, "yend": 9},
+    {"x": 9, "xend": 9, "y": 0, "yend": 9},
+]
+df_outer = pd.DataFrame(outer_border)
 
 # Plot
+title = "sudoku-basic · python · plotnine · anyplot.ai"
 plot = (
     ggplot()
-    + geom_tile(data=df_tiles, mapping=aes(x="x", y="y"), fill=PAGE_BG, color="none", width=1, height=1)
+    + geom_tile(data=df_boxes_a, mapping=aes(x="x", y="y"), fill=PAGE_BG, color="none", width=3, height=3)
+    + geom_tile(data=df_boxes_b, mapping=aes(x="x", y="y"), fill=ELEVATED_BG, color="none", width=3, height=3)
     + geom_segment(
-        data=df_thin, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_MUTED, size=0.6, alpha=0.55
+        data=df_thin, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK_MUTED, size=0.4, alpha=0.35
     )
-    + geom_segment(data=df_thick, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=2.4)
-    + geom_text(data=df_cells, mapping=aes(x="x", y="y", label="value"), size=30, color=INK, fontweight="bold")
-    + labs(title="sudoku-basic · plotnine · anyplot.ai")
+    + geom_segment(data=df_box, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=1.5)
+    + geom_segment(data=df_outer, mapping=aes(x="x", y="y", xend="xend", yend="yend"), color=INK, size=2.5)
+    + geom_text(data=df_cells, mapping=aes(x="x", y="y", label="value"), size=13, color=INK, fontweight="bold")
+    + labs(title=title)
     + coord_fixed(ratio=1, xlim=(-0.05, 9.05), ylim=(-0.05, 9.05))
     + theme_void()
     + theme(
-        figure_size=(14, 14),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=26, ha="center", weight="bold", color=INK, margin={"b": 24}),
+        plot_title=element_text(size=12, ha="center", weight="bold", color=INK, margin={"b": 10}),
         plot_margin=0.04,
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=14, height=14, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
