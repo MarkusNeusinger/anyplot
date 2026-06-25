@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: contour-basic
 created: '2025-12-23T10:00:08Z'
-updated: '2026-06-25T03:44:54Z'
+updated: '2026-06-25T03:58:44Z'
 generated_by: claude-sonnet
 workflow_run: 28144808804
 issue: 855
@@ -12,43 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Correct Imprint sequential colormap (imprint_seq: #009E73→#4467A3) built manually
-    and correctly applied to contour fill'
-  - Bokeh native p.contour() API used idiomatically with construct_color_bar()
-  - Full theme-adaptive chrome via INK/INK_SOFT/PAGE_BG tokens applied to all text,
-    axis, colorbar, and background elements
-  - Realistic mountain terrain data with two peaks and a saddle — visually interesting
-    elevation surface
-  - All axis labels and colorbar titled with units (km and m)
-  - 'Correct title format: Mountain Terrain · contour-basic · python · bokeh · anyplot.ai'
-  - KISS structure — no functions or classes, deterministic data generation
+  - 'Imprint sequential colormap applied correctly (#009E73 → #4467A3) matching imprint_seq
+    spec for single-polarity elevation data'
+  - All font sizes explicitly set (50pt title, 42pt axis labels, 34pt tick labels,
+    26pt summit annotations) with well-proportioned typographic hierarchy
+  - 'Full spec compliance: filled contour regions, isolines, colorbar with units,
+    key contour level labels, 90×90 grid for smooth rendering'
+  - 'Idiomatic Bokeh usage: p.contour() API with construct_color_bar() directly from
+    the contour glyph renderer, HoverTool on invisible image renderer for HTML artifact'
+  - Realistic topographic scenario with two annotated mountain peaks and plausible
+    elevation values creates clear visual narrative
   weaknesses:
-  - 'Missing contour level labels: spec says "Label key contour levels when practical"
-    — Bokeh supports annotation_renderers or label overlays for this'
-  - 'Design excellence is moderate: colorbar outline removal and plot frame removal
-    (outline_line_color=None) would improve minimalism'
-  - No visual storytelling elements highlight the two peaks or saddle — a subtle callout
-    or title note about peak elevation would elevate DE-03
-  - 'LM-02 could be stronger: Bokeh hover tooltips (HoverTool) on contour regions
-    are possible and would be a distinctive interactive touch in the HTML artifact'
-  - match_aspect=True wastes some horizontal canvas space in the 16:9 format for a
-    square 0-10×0-10 domain — consider expanding axis ranges or using 2400×2400 square
-    canvas
+  - 'DE-01/DE-02 could be elevated further: the annotation boxes (summit labels) share
+    the same PAGE_BG fill as the plot background in dark mode, making the border invisible
+    — a subtle ELEVATED_BG fill would add depth and polish'
+  - 'LM-02 slightly limited: while p.contour() and construct_color_bar() are Bokeh-specific,
+    incorporating a Span or Band annotation or using Bokeh layout (e.g., row/column)
+    would further showcase library-distinctive features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white margins (#FAF8F1) clearly visible around all four sides — correct light theme surface.
-      Chrome: Title "Mountain Terrain · contour-basic · python · bokeh · anyplot.ai" rendered in dark near-black text (#1A1A17), bold, centered at top — fully readable. X-axis label "Distance East (km)" and Y-axis label "Distance North (km)" in dark text — readable and descriptive with units. Tick labels (0–10 on both axes) in medium-dark ink (#4A4A44 INK_SOFT) — clear. Colorbar on right with title "Elevation (m)" and numeric labels from ~322 to ~1221 m — all readable.
-      Data: Filled contour plot covering the full 10×10 km domain. Colors range from brand green (#009E73) at low elevations through mid-range teal to blue (#4467A3) at high elevations — correct imprint_seq sequential colormap. Two distinct elevation peaks visible: a larger peak (NE, ~1221 m) and a smaller one (SW, ~820 m), with a saddle region between them. Contour isolines rendered in off-white (PAGE_BG) at 45% alpha — subtle but discernible boundaries between levels. No grid lines (intentionally disabled for filled contour — correct design choice).
-      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface.
+      Chrome: Title "Mountain Terrain · contour-basic · python · bokeh · anyplot.ai" centered in dark INK (#1A1A17) at 50pt — clearly readable; axis labels "Distance East (km)" / "Distance North (km)" in INK at 42pt; tick labels (0–10) in INK_SOFT (#4A4A44) at 34pt; colorbar title "Elevation (m)" and its tick labels readable.
+      Data: Imprint sequential colormap from brand green (#009E73) at low elevations (~322m) to blue (#4467A3) at high elevations (~1221m). Two summit annotation boxes ("▲ 1221 m", "▲ 881 m") with PAGE_BG fill and INK text. Four contour level labels (small, 22pt) placed on key isolines. No grid (correct for filled contour). Contour isolines in PAGE_BG color separate levels clearly.
+      Legibility verdict: PASS — all text readable; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black margins (#1A1A17) visible around all four sides — correct dark theme surface.
-      Chrome: Title in light cream text (#F0EFE8 INK) against dark background — readable. Axis labels and tick labels in medium-light gray (#B8B7B0 INK_SOFT) — visible and legible against the dark background. Colorbar title and numeric labels also in light colors — readable. No dark-on-dark failures observed; theme token application appears correct throughout.
-      Data: Data colors are identical to the light render — same green-to-blue imprint_seq gradient, same two peaks at identical positions and intensities. Contour isolines now rendered in near-black (PAGE_BG = #1A1A17) at 45% alpha — slightly less visible than in the light render since the line color blends with the dark background at the edges. Colorbar strip shows the same hue range.
-      Legibility verdict: PASS — text is readable against the dark background; the INK/INK_SOFT tokens are correctly applied to all chrome elements. Contour lines in dark mode are marginally less visible (dark lines on dark-edged fills) but data legibility is not impaired.
+      Background: Near-black (#1A1A17) — correct Imprint dark surface.
+      Chrome: Title and axis labels in light cream (#F0EFE8 INK token) — clearly readable against dark background. Tick labels in #B8B7B0 (INK_SOFT dark). Colorbar title and tick values in light colors. No dark-on-dark failures observed.
+      Data: Identical Imprint sequential colormap (green → blue) — data colors match light render exactly. Summit annotations with PAGE_BG fill (#1A1A17 in dark) and light INK text — readable. Contour level labels appear as light text on the dark surface.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,83 +54,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set per bokeh.md guide: 50pt title, 42pt
-          axis labels, 34pt tick labels, 26pt colorbar title, 22pt colorbar labels.
-          Readable in both light and dark renders.'
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks); proportions well-balanced; both themes readable
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Tick labels well-spaced, title clear,
-          colorbar labels non-overlapping.
+        comment: No overlapping elements; contour level labels placed algorithmically
+          to avoid borders and other labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contour regions cover the entire data domain with clear color
-          variation. Contour isolines visible as subtle separators.
+        comment: Filled contour regions, isolines, colorbar, and annotations all clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (#009E73 to #4467A3) is CVD-safe. Sequential range provides
-          good luminance contrast from low to high elevation.'
+        comment: Imprint sequential palette is CVD-safe; sequential green-to-blue
+          distinguishable without hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. match_aspect=True appropriate for topographic
-          map. Colorbar on right, axis labels with generous min_border reservations.
-          No content cut off.
+        comment: match_aspect=True creates proportional square data area; colorbar
+          integrated right; min_border settings prevent clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance East (km), Distance North (km), and Elevation (m) colorbar
-          — all descriptive with units.
+        comment: Distance East (km), Distance North (km), Elevation (m) — all descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'ANYPLOT_SEQ256 correctly interpolates #009E73→#4467A3 (imprint_seq).
-          Background is #FAF8F1 (light) / #1A1A17 (dark). Chrome uses INK/INK_SOFT
-          tokens. No forbidden colormaps used.'
+        comment: 'imprint_seq used (#009E73 → #4467A3); backgrounds #FAF8F1/#1A1A17;
+          chrome adapts correctly in both themes'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: 'Above default quality: correct Imprint palette, clean colorbar with
-          theme-matching colors, descriptive title. Not exceptional — no distinctive
-          aesthetic choices beyond spec compliance.'
+        passed: true
+        comment: 'Strong design: Imprint sequential palette, frameless minimal chrome,
+          two-tier annotation system (peaks + level labels), clearly above generic
+          defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid disabled (good choice for filled contour), theme-adaptive chrome
-          applied throughout. Plot outline (outline_line_color=INK_SOFT) adds a frame
-          that could be removed for cleaner look.
+        passed: true
+        comment: Grid disabled (optimal for filled contour), outline_line_color=None
+          (frameless), generous min_border, subtle annotation box borders
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Mountain terrain with two peaks creates a natural visual story through
-          the green-to-blue elevation gradient. No explicit annotations or focal point
-          highlights for the peaks or saddle.
+        passed: true
+        comment: Two annotated mountain peaks with elevation values, sequential colormap
+          conveying gradient, contour level labels creating visual hierarchy
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,30 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour plot with both filled regions (fill_color) and isolines
-          (line_color). Proper 2D scalar field visualization.
+        comment: Correct basic contour plot with filled regions and isolines
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Sequential colormap ✓, colorbar ✓, both filled and lines ✓. Missing:
-          contour level labels — spec says ''Label key contour levels when practical''.'
+        passed: true
+        comment: Contour lines, filled regions, colorbar, key level labels, 90×90
+          grid resolution — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Distance East, Y=Distance North, Z=Elevation correctly mapped.
-          Full 0-10 km range displayed.
+        comment: X=Distance East, Y=Distance North, Z=Elevation correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Mountain Terrain · contour-basic · python · bokeh · anyplot.ai'
-          matches required format. Colorbar serves as legend — no separate legend
-          needed.
+        comment: 'Title format: ''Mountain Terrain · contour-basic · python · bokeh
+          · anyplot.ai'' — correct with optional descriptive prefix'
     data_quality:
       score: 15
       max: 15
@@ -176,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full 2D scalar field with two peaks, a saddle/depression, and
-          a gradient slope. 14 contour levels cover the full elevation range. Dense
-          90×90 grid ensures smooth contours.
+        comment: Multiple contour levels, two distinct peaks, valley between them,
+          gradient encoding — shows all aspects of contour plots
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mountain terrain topographic elevation map — realistic, neutral,
-          scientifically meaningful scenario.
+        comment: Mountain terrain topography is a neutral, real-world scenario; 10km×10km
+          area with annotated peaks
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range 322–1221 m over 10×10 km is realistic for a mountain
-          region. Mathematical formula produces plausible terrain features.
+        comment: Elevation range 322–1221m and 10km×10km area are geographically realistic
+          for mountain terrain
     code_quality:
       score: 10
       max: 10
@@ -202,66 +188,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean Imports → Data → Plot → Save flow.
+        comment: Linear imports→data→plot→save structure; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Purely deterministic mathematical data generation — no random seed
-          needed.
+        comment: Fully deterministic mathematical data generation — no random seed
+          needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: os, sys, time, pathlib.Path, numpy, bokeh.io,
-          bokeh.plotting, selenium.'
+        comment: 'All imported symbols used: HoverTool, Label, LinearColorMapper,
+          selenium'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. ANYPLOT_SEQ256 construction is slightly verbose
-          but clear. sys.path manipulation is documented and necessary.
+        comment: Clean Pythonic code; HoverTool on invisible renderer is valid Bokeh
+          technique for HTML artifact; not fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Bokeh
+          API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: p.contour() high-level API, construct_color_bar() from glyph renderer,
+          proper min_border reservations, HoverTool patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses p.contour() high-level API, construct_color_bar() from the renderer,
-          add_layout() for colorbar placement. Selenium screenshot follows bokeh.md
-          guide exactly.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Bokeh's native p.contour() renderer with construct_color_bar() is
-          genuinely Bokeh-specific. HoverTool on contour regions (possible in Bokeh,
-          distinctive in the HTML artifact) is not leveraged.
-  verdict: REJECTED
+        comment: p.contour() and construct_color_bar() are Bokeh-specific; invisible
+          image renderer for elevation hover readout is clever Bokeh pattern; CDP
+          override for exact pixel output
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - colorbar
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
   - alpha-blending
