@@ -1,7 +1,7 @@
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
 // Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 88/100 | Created: 2026-06-25
+// Quality: 91/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
