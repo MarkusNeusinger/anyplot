@@ -2,12 +2,12 @@ library: altair
 language: python
 specification_id: contour-basic
 created: '2025-12-23T10:00:33Z'
-updated: '2026-04-24T01:37:35Z'
-generated_by: claude-opus
-workflow_run: 24867307514
+updated: '2026-06-25T04:05:18Z'
+generated_by: claude-sonnet
+workflow_run: 28144875326
 issue: 855
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/altair/plot-light.html
@@ -15,92 +15,105 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-b
 quality_score: 86
 review:
   strengths:
-  - Viridis colormap correctly chosen for sequential continuous elevation data — perceptually
-    uniform and colorblind-safe
-  - Major/minor contour line distinction (100m thin 35% opacity vs. 200m thick 95%
-    opacity) is a deliberate design choice that adds genuine visual hierarchy
-  - Full theme-adaptive chrome correctly implemented with all five tokens (PAGE_BG,
-    ELEVATED_BG, INK, INK_SOFT) — both renders pass readability checks
-  - Realistic topographic scenario with plausible elevation values and two peaks of
-    different heights demonstrates all core contour features
-  - Declarative aggregation (mean(elevation):Q with alt.Bin) to create the filled
-    contour effect is a clever Altair-idiomatic approach
+  - 'Correctly applies imprint_seq (#009E73 → #4467A3) for sequential elevation data
+    — single-polarity continuous cmap rule satisfied'
+  - 'Both themes fully adaptive: INK/INK_SOFT/ELEVATED_BG/PAGE_BG tokens wired through
+    title, axis, legend, and elevation labels — no dark-on-dark or light-on-light
+    failures'
+  - Layered Altair composition (mark_rect fill + minor mark_rule lines + major mark_rule
+    lines + mark_text labels) is idiomatic and showcases the library well
+  - Manual marching-squares contour line extraction is technically sound and a necessary
+    workaround for Altairʼs lack of a native contour mark
+  - Radial label-spread algorithm places major-level labels (every 200 m) at distinct
+    angular directions from the main peak, reducing clustering
+  - 'Spec fully satisfied: filled contour regions + isolines + colorbar + labeled
+    key levels, 80×80 grid within the 20-100 spec range'
+  - Perfect spec and data quality scores — topographic mountain terrain context is
+    plausible, neutral, and at realistic scale
   weaknesses:
-  - 'Canvas undersize: width=1420, height=785 produces 4260x2355 px; altair.md guide
-    specifies width=1600, height=900 to hit 4800x2700 px standard'
-  - No contour level labels despite spec recommending them when practical
-  - 'Altair''s distinctive interactive features not utilized: HTML output is generated
-    but neither .interactive() nor tooltip encoding is added'
-  - Marching squares implementation adds 45+ lines of dense bit-manipulation code
-    making the code verbose
+  - 1000 m and 1200 m elevation labels render very close together near the peak center
+    in both renders — spread angle targets (216° vs 288°) are not far enough apart
+    at this proximity to avoid near-overlap; consider adding a minimum-distance filter
+    or choosing wider angular spread for the innermost labels
+  - mark_rect binning at step=0.125 creates visible rectangular cell structure in
+    the filled contour — the pixelation is apparent at full canvas resolution; a finer
+    step (0.0625) or alternative approach (e.g., binStep on a higher-resolution flatten)
+    would smooth the fill without significantly increasing data volume
+  - DE-01/DE-02 are above-default but not exceptional — no spine configuration (Altairʼs
+    view has an implicit frame), and the label placement algorithm, while clever,
+    serves correctness rather than pure aesthetic elevation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) visible in margins — correct theme surface, not pure white
-      Chrome: Title "Mountain Terrain · contour-basic · altair · anyplot.ai" in dark ink at top-center; axis labels "Distance East (km)" and "Distance North (km)" in dark ink; decimal tick labels (0.00–9.60) clearly legible; colorbar title "Elevation (m)" readable
-      Data: Viridis colormap fill (purple ~350m low elevations transitioning through blue-green to yellow ~1250m peak); two mountain peaks visible (upper-right larger, lower-left smaller); white contour lines overlaid — thin semi-transparent minor lines at 100m intervals and thicker near-opaque major lines at 200m intervals; first data color is viridis (continuous data — Okabe-Ito not applicable)
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "Mountain Terrain · contour-basic · python · altair · anyplot.ai" at fontSize=16 rendered in dark ink, clearly readable. Axis labels "Distance East (km)" and "Distance North (km)" in dark INK, both readable. Tick labels in INK_SOFT, clearly legible. Colorbar "Elevation (m)" legend in elevated-bg fill, readable.
+      Data: Filled contour uses imprint_seq (#009E73 teal-green at low elevation → #4467A3 blue at high elevation). Two mountain peaks clearly visible — large peak in upper-right quadrant (~7,7), smaller peak in lower-left (~2.5,3). White minor contour lines at 35% opacity and thicker major contour lines at 90% opacity visible throughout. Elevation labels (400 m, 600 m, 800 m, 1000 m, 1200 m) in dark INK, spread across the field.
+      Label issue: "1000 m" and "1200 m" labels are placed very close together near the center of the right peak — near-overlap visible.
+      Legibility verdict: PASS — all chrome elements readable. Minor concern: 1000/1200 m label proximity.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) visible in margins — correct theme surface, not pure black
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background; colorbar labels and title are light-colored and legible; tick labels in light ink — no dark-on-dark failures observed
-      Data: Viridis colormap colors identical to light render (same purple-to-yellow gradient) — only chrome flipped, data colors unchanged; white contour lines remain clearly visible against dark-themed background
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, no pure black.
+      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — light-colored, fully readable. No dark-on-dark failures detected. Colorbar legend in ELEVATED_BG (#242420) fill with light label text.
+      Data: Filled contour colors are IDENTICAL to light render — same teal-green to blue gradient for elevation. White contour lines visible against the colored fill. Elevation labels rendered in light INK (#F0EFE8), readable against the colored fill background.
+      Legibility verdict: PASS — both themes correctly themed, no dark-on-dark issues. Same label proximity issue as light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px, legend title 22px/labels 18px — readable in both themes'
+        comment: Font sizes explicitly set (title=16, axis=12, ticks=10, labels=11).
+          All text readable in both themes. Elevation label contrast against colored
+          fill is adequate but could be tighter in mid-blue zones.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Tick labels dense on x-axis (13 values) but no actual overlap at
-          rendered size
+        comment: 1000 m and 1200 m labels render very close together near the main
+          peak center — near-overlap. Other labels well separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled viridis contours and both minor/major white contour lines
-          clearly distinguishable
+        comment: Filled contour, contour lines, colorbar, and labels all clearly visible.
+          White lines contrast well against the colored fill.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe; white contour
-          lines provide high contrast
+        comment: imprint_seq (#009E73→#4467A3) is CVD-safe. White contour lines have
+          strong contrast against fill.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas 1420x785 -> 4260x2355 px output, below 4800x2700 standard;
-          guide specifies width=1600, height=900
+        passed: true
+        comment: Canvas gate passed (3200×1800). Proportions well balanced. Colorbar
+          on right is appropriately sized. No edge clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance East (km), Distance North (km), colorbar Elevation (m) —
-          all descriptive with units
+        comment: 'Descriptive labels with units: Distance East (km), Distance North
+          (km), Elevation (m) colorbar title. Title uses optional descriptive prefix
+          correctly.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly applied for sequential continuous data; #FAF8F1/#1A1A17
-          backgrounds correct; theme-adaptive chrome correct in both renders'
+        comment: 'imprint_seq (#009E73→#4467A3) used for single-polarity continuous
+          elevation data — correct. Backgrounds #FAF8F1 / #1A1A17 correct. Data colors
+          identical between both renders.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -108,24 +121,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Thoughtful: viridis fill + major/minor contour distinction with
-          different opacity/weight; above defaults but not publication-ready'
+        comment: Custom imprint_seq palette, major/minor contour line distinction
+          (width + opacity), radial label spread algorithm, realistic topographic
+          context. Above default but not exceptional.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: stroke=None removes border, grid opacity 0.10 very subtle, theme-adaptive
-          tick/label/domain colors
+        comment: Subtle grid at 10% opacity, clean legend with fill/stroke styling,
+          major/minor line differentiation. Altair view frame implicit (no explicit
+          spine removal). Above default.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Two peaks immediately apparent via viridis; major/minor contour distinction
-          guides elevation band reading; visual hierarchy works
+        comment: Mountain terrain story clear — two peaks, elevation gradient, labeled
+          isolines create readable topographic narrative. Above default.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,29 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled contour background (mark_rect + viridis) layered
-          with isoline segments (mark_rule)'
+        comment: Correct contour plot with filled regions (mark_rect) + isolines (mark_rule
+          from marching squares).
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Spec says label key contour levels when practical — not implemented;
-          colorbar, filled+lines, grid resolution all present
+        passed: true
+        comment: Colorbar present, both filled regions and contour lines, labeled
+          key levels (every 200 m), 80×80 grid within spec's 20-100 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=Distance East km, y=Distance North km, z=Elevation m — all correctly
-          mapped; axes show full 0-10 km range
+        comment: X/Y coordinates mapped correctly, elevation shown via fill color
+          and contour lines. Mathematical function on regular grid as specified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mountain Terrain · contour-basic · altair · anyplot.ai format correct;
-          colorbar titled Elevation (m) correct
+        comment: Title 'Mountain Terrain · contour-basic · python · altair · anyplot.ai'
+          uses correct format with descriptive prefix. Legend labels match.
     data_quality:
       score: 15
       max: 15
@@ -165,24 +180,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two peaks at different elevations, saddle valley, linear slope —
-          demonstrates all core contour features
+        comment: Filled contour + isolines (major and minor) + colorbar + elevation
+          labels — covers all aspects of a basic contour plot.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Topographic elevation map of 10km x 10km mountain region; neutral
-          scientific scenario
+        comment: Mountain terrain elevation (400-1250 m) is real-world plausible and
+          neutral. Two Gaussian peaks create a believable landscape.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation 350-1250m (realistic), 80x80 grid (within spec range),
-          contour intervals 100m (standard topographic)
+        comment: 80×80 grid within spec range. Elevation range 400-1250 m realistic
+          for a mountain region.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -190,37 +205,38 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> theme tokens -> data -> marching squares -> plot -> save;
-          no functions or classes
+        comment: Flat script, no functions or classes. Marching squares algorithm
+          is inline and complex but structurally flat.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: mathematical functions of x,y with no random
-          elements'
+        comment: Fully deterministic mathematical data generation — no random seed
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules (alt, np, pd, os, sys) are used; importlib pattern
-          justified by path isolation
+        comment: PIL (for padding), importlib, math, os, sys — all used. No unused
+          imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Marching squares implementation is 45+ lines of nested loops with
-          bit manipulation; acceptable given Altair constraints but verbose
+        passed: true
+        comment: Complex marching squares is necessary for Altair's lack of native
+          contour. Label radial-spread algorithm is well-structured. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API
+          used.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,27 +244,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Layer composition (+), declarative aggregation mean(elevation):Q,
-          alt.Bin, mark_rule with x2/y2, configure_*() chain — idiomatic Altair patterns
+        comment: Proper use of layer composition, encoding types (Q/N), alt.Scale,
+          alt.Legend, alt.Title, configure_axis, configure_legend. Good idiomatic
+          Altair.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Layer composition and declarative aggregation+binning are Altair-specific,
-          but core contour extraction is vanilla Python; no interactivity (tooltips,
-          zoom/pan) despite HTML output
-  verdict: REJECTED
+        passed: true
+        comment: Layer composition (4 chart layers), tooltips with format strings,
+          .interactive() for zoom/pan, mark_rule for contour segments (creative use).
+          Above the 1/5 default.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - colorbar
   - layer-composition
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
