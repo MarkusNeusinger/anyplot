@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T05:10:07Z'
-updated: '2026-06-25T11:31:57Z'
+updated: '2026-06-25T11:41:01Z'
 generated_by: claude-sonnet
 workflow_run: 28165984825
 issue: 5364
@@ -12,55 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Full spec compliance: all 7 Venn zones populated (A, B, C, AB, AC, BC, ABC) plus
-    outside zone, with 16 items total matching spec range'
-  - 'Imprint palette used correctly: Venn circles at positions 1-3 (#009E73/#C475FD/#4467A3),
-    scatter depth uses positions 4-5 (#BD8233/#AE3030) plus semantic muted anchors
-    — coherent design logic'
-  - 'Both themes handled correctly: light (#FAF8F1) and dark (#1A1A17) backgrounds,
-    all chrome tokens adapted, no dark-on-dark failures'
-  - Clever use of seaborn hue+size dual encoding to convey overlap depth — effective
-    visual hierarchy where Sourdough (triple-overlap) is immediately prominent as
-    the focal point
-  - 'Editorial aesthetic well-executed: serif font, italic subtitle, color-coded category
-    labels, semi-transparent circle fills, subtle dashed accent on the triple-overlap
-    zone'
-  - 'Perfect code quality: KISS structure, deterministic data, clean imports, no fake
-    UI elements'
+  - Three-circle Venn layout is symmetric, correctly sized, and uses semi-transparent
+    Imprint palette fills (positions 1-3) for the circles
+  - Dual hue+size seaborn encoding for overlap depth creates clear visual hierarchy
+    with 'Sourdough' appropriately emphasized in bold red
+  - Serif editorial font and colored category labels outside the circles echo the
+    Chartgeist/magazine aesthetic specified
+  - All 8 zones (A, B, C, AB, AC, BC, ABC, outside) are populated with relatable,
+    witty tech-and-culture items
+  - 'Correct Imprint palette throughout: circles use positions 1-3, scatter depth
+    uses positions 4-5, semantic anchors for outside/baseline items'
+  - Theme-adaptive chrome works correctly in both renders — dark render flips background/text
+    with no dark-on-dark failures
+  - Code is clean flat KISS structure with all font sizes explicitly set and no bbox_inches='tight'
   weaknesses:
-  - 'Canvas underutilization: ~30% of the square canvas is empty whitespace below
-    the Venn diagram. The y-axis limit extends to -2.05 but the bottom of the diagram
-    (lowest circle center y=-0.275 minus radius 0.85) is at y=-1.125, leaving ~0.93
-    units of dead space. Fix: tighten ylim to around (-1.50, 1.85) or shift diagram
-    downward to better center the content on the 2400x2400 canvas'
-  - 'Library Mastery is constrained: seaborn is used only for the scatter depth-encoding
-    layer; the entire Venn structure (circles, placement logic, text annotations)
-    is pure matplotlib. Consider making seaborn''s contribution more central — e.g.
-    using FacetGrid for structural layout or integrating more sns API calls'
-  - Item labels at 9pt are on the modest side for a 2400x2400 canvas (recommended
-    10pt+ for label text at this resolution). Increasing to 10-11pt for regular items
-    would improve mobile-scale readability
-  - The scatter marker sizes (s=15 for outside, s=28 for 1-circle) are very small
-    relative to the canvas — for ~16 total data points (< 30), markers should be larger
-    (s=60-100 range). Currently the dots serve as anchor points barely visible relative
-    to the text labels; enlarging them would improve visual weight and the depth hierarchy
-    contrast
+  - Approximately 20% of the bottom canvas is empty whitespace — the Venn geometry
+    (xlim ±2.35, ylim -1.50 to 1.85) creates a wide-but-short data footprint inside
+    a square canvas, leaving a band below the 'Actually Useful' / 'Secretly Loved'
+    labels; consider extending ylim bottom to -1.15 and shifting elements up slightly
+    to reduce waste
+  - Legend and outside-hint text sizes (7pt and 8pt) are marginally small — at ~400px
+    mobile scaling these approach the legibility floor; raising to 8pt and 9pt respectively
+    would help
+  - 'Minor visual crowding in the central AB/AC/ABC triangle: ''ChatGPT'' (AB) and
+    the bold ''Sourdough'' (ABC) text are close enough that the eye has to work to
+    separate them; a small horizontal nudge of AB items toward -0.65 would add breathing
+    room'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "venn-labeled-items · python · seaborn · anyplot.ai" in serif medium weight, ~70% canvas width — readable. Italic subtitle "Tech & Trends — a Chartgeist taxonomy of what we love, use, and overrate" in muted ink, clearly legible. No axis labels (axis off — correct for Venn). Category labels "Overhyped" (green #009E73), "Actually Useful" (lavender #C475FD), "Secretly Loved" (blue #4467A3) in bold 12pt outside each circle — all readable. Item labels (NFTs, Metaverse, Web3, Sourdough, etc.) in dark ink at 9pt, 11pt bold for Sourdough — all readable. Legend titled "Overlap depth" in upper right with ELEVATED_BG box — readable.
-      Data: Three semi-transparent overlapping circles using Imprint positions 1-3. Scatter markers: gray (outside/1-circle using muted chrome tokens), ochre #BD8233 (2-circle, position 4), matte red #AE3030 (3-circle, position 5). Sourdough dot (triple overlap) is largest and red — clear focal point. All 16 items distributed across all 8 zones. Subtle dashed circle accent around the triple-overlap zone.
-      Layout concern: Bottom ~30% of canvas is empty whitespace below the diagram; the Venn content clusters in the upper-center portion of the 2400x2400 square.
-      Legibility verdict: PASS — all text readable in light theme. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
+      Chrome: Title "venn-labeled-items · python · seaborn · anyplot.ai" in dark ink at 13pt serif, clearly readable. Italic subtitle in INK_SOFT color. Category labels "Overhyped" (green), "Actually Useful" (lavender), "Secretly Loved" (blue) rendered bold outside their respective circles. Overlap depth legend in upper-right corner with styled frame. "(outside all)" italic annotation in muted color near Jury Duty.
+      Data: Three overlapping circles — green (#009E73), lavender (#C475FD), blue (#4467A3) with alpha=0.18 fills. Scatter dots use Imprint ochre (#BD8233) for 2-circle items and matte red (#AE3030) for the 3-circle "Sourdough" item, with muted/soft chrome colors for outside and single-circle items. "Sourdough" rendered in bold larger text at center with prominent red dot. Item labels placed above their dot markers.
+      Legibility verdict: PASS — all text readable against light background; legend (7pt) and outside hint (8pt) are small but legible at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title and italic subtitle in light cream (#F0EFE8) — clearly readable against dark background. Category labels maintain their Imprint colors (green/lavender/blue) — all still readable. Item labels rendered in light cream text (#F0EFE8 INK token) — clearly readable against dark background. Legend box uses ELEVATED_BG (#242420) with light text — readable. No dark-on-dark failures observed.
-      Data: Circle colors are identical to light render — Imprint positions 1-3 visible (slightly deeper appearance on dark bg due to alpha=0.18 fill). Scatter marker colors identical: gray muted anchors, ochre, matte red. Data color fidelity confirmed — only chrome flipped.
-      Legibility verdict: PASS — all text readable in dark theme. No dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, subtitle, and all item labels flip to light-colored text (#F0EFE8 / #B8B7B0 range). Category labels retain their circle colors (green/lavender/blue) which read well on dark bg. Legend frame uses elevated dark background. No dark-on-dark failures observed — all text has adequate contrast.
+      Data: Circle colors are identical to light render — green, lavender, and blue circles with the same semi-transparent fills. Ochre and red scatter dots for 2- and 3-circle items unchanged. The visual depth hierarchy is maintained.
+      Legibility verdict: PASS — full theme adaptation successful; no unreadable elements; brand green #009E73 remains visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -71,96 +63,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes. Title
-          13pt serif ~70% width — correct. Category labels 12pt bold. Sourdough 11pt
-          bold. Item labels 9pt on 2400x2400 canvas are on the modest side but readable.
-          Subtitle 9pt italic legible.
+        comment: All font sizes explicitly set; readable in both themes; legend (7pt)
+          and outside-hint (8pt) marginally small at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Good separation overall with 0.20 spacing between stacked items within
-          each zone. Minor proximity between ChatGPT/Pumpkin Spice labels and the
-          central Sourdough label but no actual pixel overlap.
+        comment: Minor crowding in AB/AC/ABC intersection area; no actual pixel overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Depth hierarchy via size+color is effective. 3-circle marker (s=105)
-          is prominent as focal point. However, 1-circle markers (s=28) and outside
-          marker (s=15) are small relative to the 2400x2400 canvas and the sparse
-          dataset (~16 items). Marker sizes well below the s=200-400 guidance for
-          <30 points, though the text labels are the primary identifier.
+        comment: Marker sizes well-adapted to data density; all circles and dots clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is colorblind-safe. Dual hue+size encoding provides
-          redundant encoding for depth. No red-green-only signaling issues.
+        comment: CVD-safe Imprint palette; adequate luminance contrast between all
+          elements
       - id: VQ-05
         name: Layout & Canvas
         score: 2
         max: 4
-        passed: false
-        comment: Square canvas 2400x2400 but Venn diagram occupies approximately the
-          upper 65-70% of the canvas height. Bottom ~30% is empty whitespace. ylim
-          extends to -2.05 but diagram bottom is ~-1.125, leaving significant dead
-          space. Tightening ylim to ~-1.50 or shifting diagram downward would better
-          utilize the canvas.
+        passed: true
+        comment: ~20% empty whitespace at bottom of square canvas due to wide-but-short
+          Venn geometry; otherwise well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels appropriate for Venn type (axis off). Title in correct
-          mandated format. Category labels serve as the zone identifiers. Editorial
-          subtitle provides context.
+        comment: Axes off is correct for Venn; category labels serve as axis equivalents;
+          descriptive subtitle adds context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Venn circles use Imprint positions 1-3 (#009E73/#C475FD/#4467A3).
-          Scatter depth uses positions 4-5 (#BD8233/#AE3030) plus semantic muted/soft
-          chrome anchors (appropriate for depth/intensity). Both themes produce correct
-          backgrounds (#FAF8F1 light / #1A1A17 dark) and properly adaptive chrome.'
+        comment: Imprint positions 1-3 for circles, 4-5 for overlap depth; semantic
+          anchors for outside/baseline; correct backgrounds in both themes
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Clear editorial intent above defaults: serif font, italic subtitle,
-          color-coded bold category labels, semi-transparent fills, subtle dashed
-          triple-overlap accent, depth hierarchy via hue+size. Falls short of publication-ready
-          due to canvas underutilization and the diagram not being optimally positioned
-          on the square canvas.'
+        comment: 'Strong design: serif editorial font, colored category labels, dual
+          encoding hierarchy, dashed triple-overlap highlight ring'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis fully off (no frame, no ticks, no grid) — correct for editorial
-          Venn. Serif font throughout. Legend styled with elevated background and
-          thin border. The triple-overlap dashed accent shows attention to detail.
-          Deducted for the notable empty whitespace at the bottom which makes the
-          composition feel top-heavy.
+        comment: Axes off, no grid, styled legend frame, subtle dashed convergence
+          ring; good overall polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy guides the viewer to Sourdough at the triple intersection
-          (bold 11pt + largest marker + matte red color). The category names are witty
-          and opinionated per spec. Depth color coding (muted→ochre→red) creates a
-          meaningful progression. Solid storytelling within the Chartgeist editorial
-          aesthetic.
+        comment: Clear focal point on Sourdough (bold+red); overlap depth hierarchy
+          guides viewer; editorial categorization is memorable
     spec_compliance:
       score: 15
       max: 15
@@ -170,31 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Three-circle Venn diagram with labeled items — correct plot type
-          per spec.
+        comment: Correct three-circle Venn with all 7 interior zones and outside zone
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: 3 equal circles, semi-transparent fills,
-          labels in each of 7 zones, category names outside circles, outside zone
-          used, small markers, editorial aesthetic.'
+        comment: Semi-transparent fills, category names outside circles, item labels
+          with markers, outside zone handled
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 items correctly placed in their assigned zones (A, B, C, AB,
-          AC, BC, ABC, outside) matching the spec zone_centroids logic.
+        comment: All items correctly placed in their designated zones
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title is exact mandated format: ''venn-labeled-items · python ·
-          seaborn · anyplot.ai''. Overlap-depth legend is descriptive and correctly
-          labels the four depth categories.'
+        comment: Exact mandated title format; overlap depth legend properly labeled
     data_quality:
       score: 15
       max: 15
@@ -204,25 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All 7 interior zones populated plus outside zone. Good distribution:
-          3+2+2+2+2+3+1+1 = 16 items. Shows all intersection types from single-zone
-          to triple-overlap.'
+        comment: All 8 zones populated; full range from single-circle to triple-overlap
+          demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real pop-culture and tech taxonomy (NFTs, ChatGPT, Google Maps, Dolly
-          Parton, Sourdough, etc.). Witty editorial framing matches Chartgeist spec
-          intent. Not controversial — subjective cultural commentary is the point
-          of this plot type.
+        comment: Real tech & pop-culture items; witty but neutral categorization;
+          no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Categorical set-membership data — no numerical scale concerns. Zone
-          assignments are culturally plausible and well-distributed across all regions.
+        comment: 17 items within 10-25 spec range; zone assignments are editorially
+          plausible
     code_quality:
       score: 10
       max: 10
@@ -232,59 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data definitions
-          → figure creation → draw circles → scatter → legend → text labels → title
-          → save. No functions or classes.'
+        comment: 'Flat structure: imports → tokens → data → plot → styling → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data is hardcoded with no random elements.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, matplotlib.pyplot, pandas, seaborn, matplotlib.patches.Circle)
-          are used.
+        comment: All 5 imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Legend deduplication logic (seen set + zip loop)
-          is justified for seaborn's hue+size combined legend. No fake UI elements.
+        comment: Clean and idiomatic; legend dedup logic is correct and concise
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches=tight. Current
-          seaborn/matplotlib API throughout.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Correct idiomatic seaborn: sns.set_theme() for global theming, sns.scatterplot()
-          with hue+size+sizes+hue_order+size_order for dual encoding, get_legend_handles_labels()
-          for legend customization. However, the entire Venn structural layer (circles,
-          text placement) is pure matplotlib — seaborn is only the scatter overlay.'
+        comment: 'Good idiomatic seaborn: hue+size scatterplot, sns.set_theme rc dict,
+          legend handle dedup pattern; matplotlib patches for circles is the correct
+          approach'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'The hue+size dual-encoding combination is distinctive seaborn: coordinated
-          categorical palette and size scaling with automatic legend generation would
-          require significantly more manual code in pure matplotlib. The deduplication
-          approach using get_legend_handles_labels() is also seaborn-idiomatic.'
-  verdict: REJECTED
+        comment: Dual hue+size categorical encoding is a seaborn-distinctive pattern;
+          hue_order/size_order/sizes dict control are library-specific; but core Venn
+          structure is matplotlib-driven
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -292,9 +247,9 @@ impl_tags:
   - annotations
   - custom-legend
   patterns:
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
