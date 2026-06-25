@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -39,11 +39,18 @@ ax.set_facecolor(PAGE_BG)
 
 ax.scatter(study_hours, exam_scores, s=130, alpha=0.65, color=BRAND, edgecolors=PAGE_BG, linewidths=0.6, zorder=3)
 
-# Trend line guides the eye through the positive correlation
+# Trend line + 95% confidence band — showcase fill_between analytical capability
 coeffs = np.polyfit(study_hours, exam_scores, 1)
 x_line = np.linspace(study_hours.min(), study_hours.max(), 200)
 y_line = np.polyval(coeffs, x_line)
-ax.plot(x_line, y_line, color=INK_SOFT, linewidth=1.8, alpha=0.55, zorder=1)
+
+n_pts = len(study_hours)
+x_mean = np.mean(study_hours)
+Sxx = np.sum((study_hours - x_mean) ** 2)
+s_res = np.sqrt(np.sum((exam_scores - np.polyval(coeffs, study_hours)) ** 2) / (n_pts - 2))
+se_band = s_res * np.sqrt(1 / n_pts + (x_line - x_mean) ** 2 / Sxx)
+ax.fill_between(x_line, y_line - 1.96 * se_band, y_line + 1.96 * se_band, color=INK_SOFT, alpha=0.12, zorder=0)
+ax.plot(x_line, y_line, color=INK_SOFT, linewidth=2.2, alpha=0.75, zorder=1)
 
 # Style
 ax.set_xlabel("Study Hours per Week", fontsize=10, color=INK)
@@ -57,7 +64,7 @@ for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
     ax.spines[spine].set_linewidth(0.8)
 
-ax.grid(True, alpha=0.12, linewidth=0.6, color=INK)
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 ax.margins(x=0.04, y=0.08)
 
