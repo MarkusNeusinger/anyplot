@@ -7,7 +7,6 @@
 const t = window.ANYPLOT_TOKENS;
 
 // Data — marketing spend vs sales revenue, 120 companies, r ≈ 0.7
-// LCG for deterministic generation (no seeded RNG in browser)
 let seed = 42;
 function lcg() {
     seed = (seed * 1664525 + 1013904223) & 0xffffffff;
@@ -28,6 +27,21 @@ for (let i = 0; i < N; i++) {
         Math.round(revenue * 10) / 10
     ]);
 }
+
+// OLS regression line
+const sumX = data.reduce((s, [x]) => s + x, 0);
+const sumY = data.reduce((s, [, y]) => s + y, 0);
+const sumXY = data.reduce((s, [x, y]) => s + x * y, 0);
+const sumX2 = data.reduce((s, [x]) => s + x * x, 0);
+const slope = (N * sumXY - sumX * sumY) / (N * sumX2 - sumX * sumX);
+const intercept = (sumY - slope * sumX) / N;
+const xVals = data.map(([x]) => x);
+const xMin = Math.min.apply(null, xVals);
+const xMax = Math.max.apply(null, xVals);
+const trendLine = [
+    [Math.round(xMin * 10) / 10, Math.round((slope * xMin + intercept) * 10) / 10],
+    [Math.round(xMax * 10) / 10, Math.round((slope * xMax + intercept) * 10) / 10]
+];
 
 // Chart
 Highcharts.chart("container", {
@@ -64,20 +78,73 @@ Highcharts.chart("container", {
         gridLineColor: t.grid,
         labels: { style: { color: t.inkSoft, fontSize: "14px" } }
     },
-    legend: { enabled: false },
+    legend: {
+        enabled: true,
+        itemStyle: { color: t.inkSoft, fontSize: "13px" },
+        itemHoverStyle: { color: t.ink }
+    },
+    tooltip: {
+        backgroundColor: t.elevatedBg,
+        borderColor: t.grid,
+        style: { color: t.ink, fontSize: "13px" },
+        formatter: function () {
+            if (this.series.type === "line") {
+                return false;
+            }
+            return "<b>" + this.series.name + "</b><br>" +
+                   "Spend: <b>$" + this.x + "k</b><br>" +
+                   "Revenue: <b>$" + this.y + "k</b>";
+        }
+    },
     plotOptions: {
         series: { animation: false },
         scatter: {
-            opacity: 0.7,
+            opacity: 0.65,
             marker: {
-                radius: 5,
+                radius: 4,
+                symbol: "circle",
                 lineWidth: 1,
                 lineColor: t.pageBg
             }
+        },
+        line: {
+            marker: { enabled: false },
+            enableMouseTracking: false,
+            states: { hover: { lineWidthPlus: 0 } }
         }
     },
-    series: [{
-        name: "Companies",
-        data: data
-    }]
+    responsive: {
+        rules: [{
+            condition: { maxWidth: 800 },
+            chartOptions: {
+                title: { style: { fontSize: "16px" } },
+                xAxis: {
+                    title: { style: { fontSize: "12px" } },
+                    labels: { style: { fontSize: "11px" } }
+                },
+                yAxis: {
+                    title: { style: { fontSize: "12px" } },
+                    labels: { style: { fontSize: "11px" } }
+                }
+            }
+        }]
+    },
+    series: [
+        {
+            type: "scatter",
+            name: "Companies",
+            data: data,
+            color: t.palette[0]
+        },
+        {
+            type: "line",
+            name: "Trend (r ≈ 0.7)",
+            data: trendLine,
+            color: t.palette[1],
+            dashStyle: "LongDash",
+            lineWidth: 2.5,
+            marker: { enabled: false },
+            enableMouseTracking: false
+        }
+    ]
 });
