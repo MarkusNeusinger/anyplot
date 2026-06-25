@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-basic: Basic Donut Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-06-25
@@ -103,19 +103,21 @@ hover = HoverTool(
 )
 p.add_tools(hover)
 
-# Percentage labels at ring midpoint — contrast-adaptive text color
+# Percentage labels at ring midpoint — contrast-adaptive; dominant segment rendered larger
 cumulative_starts = np.cumsum([0.0] + angles[:-1])
-for pct, start, ang, lc in zip(percentages, cumulative_starts, angles, label_colors, strict=True):
+for i, (pct, start, ang, lc) in enumerate(zip(percentages, cumulative_starts, angles, label_colors, strict=True)):
     mid = start + ang / 2
     label_radius = 0.815
     lx = label_radius * cos(mid)
     ly = label_radius * sin(mid)
+    # Engineering (i=0) gets a larger label to signal its dominance
+    font_size = "52pt" if i == 0 else "34pt"
     p.add_layout(
         Label(
             x=lx,
             y=ly,
             text=pct,
-            text_font_size="34pt",
+            text_font_size=font_size,
             text_color=lc,
             text_font_style="bold",
             text_align="center",
@@ -123,11 +125,11 @@ for pct, start, ang, lc in zip(percentages, cumulative_starts, angles, label_col
         )
     )
 
-# Center metric — key summary in the hollow ring
+# Center metric — key summary in the hollow ring; Engineering callout for data storytelling
 p.add_layout(
     Label(
         x=0,
-        y=0.13,
+        y=0.21,
         text="Total budget",
         text_font_size="34pt",
         text_color=INK_SOFT,
@@ -138,10 +140,23 @@ p.add_layout(
 p.add_layout(
     Label(
         x=0,
-        y=-0.10,
+        y=0.03,
         text=f"${total:,}K",
         text_font_size="72pt",
         text_color=INK,
+        text_font_style="bold",
+        text_align="center",
+        text_baseline="middle",
+    )
+)
+# Callout: name the dominant segment so the viewer's eye is guided
+p.add_layout(
+    Label(
+        x=0,
+        y=-0.22,
+        text="Engineering leads · 46.8%",
+        text_font_size="30pt",
+        text_color=IMPRINT[0],
         text_font_style="bold",
         text_align="center",
         text_baseline="middle",
@@ -162,7 +177,7 @@ p.axis.visible = False
 p.grid.visible = False
 
 p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = None
+p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
 p.legend.label_text_font_size = "34pt"
 p.legend.location = "top_right"
@@ -187,6 +202,7 @@ for arg in (
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
