@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: pygal 3.1.0 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-04-23
 """
 
 import os
@@ -22,9 +21,20 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#8A8A82" if THEME == "light" else "#6E6D66"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette — canonical order; semantic positions used for pass/fail split
+# First series = brand green (#009E73), fail = matte red (#AE3030)
+IMPRINT = (
+    "#009E73",  # position 1: brand green → Passing
+    "#AE3030",  # position 5: matte red (semantic anchor for bad/fail) → Below 70%
+    "#C475FD",
+    "#4467A3",
+    "#BD8233",
+    "#2ABCCD",
+    "#954477",
+    "#99B314",
+)
 
 # Data — study hours vs exam scores, moderate positive correlation
 np.random.seed(42)
@@ -54,27 +64,27 @@ custom_style = Style(
     major_label_font_family=font,
     legend_font_family=font,
     tooltip_font_family=font,
-    title_font_size=52,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=34,
-    tooltip_font_size=28,
-    value_font_size=26,
-    opacity=0.7,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    tooltip_font_size=36,
+    value_font_size=36,
+    opacity=0.72,
     opacity_hover=0.95,
     stroke_opacity=1,
     stroke_opacity_hover=1,
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="scatter-basic · pygal · anyplot.ai",
     x_title="Study Hours per Week (hrs)",
     y_title="Exam Score (%)",
     stroke=False,
-    dots_size=17,
+    dots_size=12,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
