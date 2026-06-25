@@ -23,9 +23,15 @@ const portfolioData = [
 ];
 
 const TITLE = "donut-basic · javascript · muix · anyplot.ai";
-
-// Chart margins — top leaves room for title, bottom for legend
 const MARGIN = { top: 72, bottom: 120, left: 60, right: 60 };
+const INNER_RADIUS = 180;
+const OUTER_RADIUS = 360;
+
+// Per-segment label fill chosen for maximum WCAG contrast against each Imprint color.
+// Luminance (WCAG rel. lum.): green 0.26, lavender 0.31, ochre 0.27 → dark text wins;
+// blue 0.13, red 0.11 → white text wins. Fixed hex works in both light and dark themes
+// because segment colors are theme-invariant.
+const LABEL_FILLS = ["#1A1A17", "#1A1A17", "#FFFFFF", "#1A1A17", "#FFFFFF"];
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -70,8 +76,8 @@ export default function Chart() {
         series={[
           {
             data: portfolioData,
-            innerRadius: 180,
-            outerRadius: 360,
+            innerRadius: INNER_RADIUS,
+            outerRadius: OUTER_RADIUS,
             paddingAngle: 2,
             cornerRadius: 4,
             arcLabel: (item) => `${item.value}%`,
@@ -90,11 +96,13 @@ export default function Chart() {
           },
         }}
         sx={{
-          "& .MuiPieArcLabel-root": {
-            fill: "#FFFFFF",
-            fontSize: 15,
-            fontWeight: "bold",
-          },
+          "& .MuiPieArcLabel-root": { fontSize: 15, fontWeight: "bold" },
+          // Per-segment contrast-optimal fills — nth-child matches data render order
+          "& .MuiPieArcLabel-root:nth-child(1)": { fill: LABEL_FILLS[0] },
+          "& .MuiPieArcLabel-root:nth-child(2)": { fill: LABEL_FILLS[1] },
+          "& .MuiPieArcLabel-root:nth-child(3)": { fill: LABEL_FILLS[2] },
+          "& .MuiPieArcLabel-root:nth-child(4)": { fill: LABEL_FILLS[3] },
+          "& .MuiPieArcLabel-root:nth-child(5)": { fill: LABEL_FILLS[4] },
         }}
       />
 
@@ -110,7 +118,16 @@ export default function Chart() {
           lineHeight: 1.2,
         }}
       >
-        <div style={{ fontSize: 44, fontWeight: 700, color: t.ink }}>$500M</div>
+        <div
+          style={{
+            fontSize: 44,
+            fontWeight: 700,
+            color: t.ink,
+            textShadow: `0 1px 4px ${t.grid}`,
+          }}
+        >
+          $500M
+        </div>
         <div
           style={{
             fontSize: 13,
