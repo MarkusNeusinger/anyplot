@@ -1,0 +1,262 @@
+library: echarts
+language: javascript
+specification_id: venn-labeled-items
+created: '2026-06-25T11:45:58Z'
+updated: '2026-06-25T12:04:36Z'
+generated_by: claude-sonnet
+workflow_run: 28167251532
+issue: 5364
+language_version: 22.23.0
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/echarts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Editorial magazine aesthetic achieved: bold serif category labels in Imprint
+    palette colors, italic serif subtitle, and no-axes layout create a genuine WIRED
+    Chartgeist feel'
+  - All 7 Venn zones populated with recognizable, witty tech-culture items; 'Markdown'
+    in ABC and 'NFTs/Metaverse/Web3' in A are defensible and story-rich placements
+  - 'Correct square orientation (//# anyplot-orientation: square) with clean Imprint
+    palette usage: circles use positions 1-3 (#009E73, #C475FD, #4467A3), theme-adaptive
+    chrome works perfectly in both renders'
+  - ECharts graphic component used creatively to render a non-native chart type; semi-transparent
+    rgba fills for overlapping circle visibility are a nice touch
+  - 'Perfect code quality: deterministic hard-coded data, clean linear structure,
+    idiomatic zoneData.forEach pattern, no over-engineering'
+  weaknesses:
+  - Item label font size (14px CSS = 28px source) is on the smaller side for a 2400x2400
+    canvas; increasing to 15-16px CSS would improve mobile readability without causing
+    overlap
+  - The 'outside' zone defined in the spec is not used — adding 1-2 items clearly
+    outside all circles would demonstrate the full Venn model as specified
+  - 'DE-02 refinement could be pushed further: the graphic z-layering is functional
+    but the circle fills could use a slightly higher alpha (e.g. 0.22 instead of 0.18)
+    to make overlap zones more visually distinct'
+  - BC zone ('Linux Terminal', 'Plain Text') sits very close to the ABC zone ('Markdown')
+    — a slight y-offset tweak for the BC zone center would add breathing room
+  - 'LM-02: While the graphic component approach is appropriate, there is no ECharts-native
+    feature leveraged beyond raw primitives — using ECharts tooltip configuration
+    or series-level graphic marks would demonstrate deeper library mastery'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "venn-labeled-items · javascript · echarts · anyplot.ai" in dark ink, centered at top (22px, readable). Subtitle "Where hype, utility, and cult status overlap" in italic serif, smaller (14px, clearly readable). No axes or grid (appropriate for Venn diagram).
+      Data: Three overlapping circles with semi-transparent fills — Imprint position 1 (#009E73 green, "Overhyped" at top), position 2 (#C475FD lavender, "Actually Useful" bottom-left), position 3 (#4467A3 blue, "Secretly Loved" bottom-right). Category labels in bold serif font colored to match their circles, placed outside the circles. Item labels in soft ink (#4A4A44) distributed across all 7 zones: NFTs/Metaverse/Web3 (A), Google Maps/Spreadsheets/Git (B), Wikipedia/RSS Feeds/Notepad (C), AI Assistants/Cloud Storage (AB), Twitter/X/Crypto Wallets (AC), Linux Terminal/Plain Text (BC), Markdown (ABC). Bullet dot prefix on each item label for editorial style.
+      Legibility verdict: PASS — all text readable at full resolution. Item labels at 14px CSS are adequate but slightly small at mobile widths.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and subtitle render in light-colored text (F0EFE8/B8B7B0 tokens) clearly visible against the dark background. No dark-on-dark failures detected. Grid/axes absent (appropriate).
+      Data: Circle colors are identical to light render — #009E73 (green), #C475FD (lavender), #4467A3 (blue) — data colors unchanged as required. Circle strokes and category labels retain the same hues and are readable against the dark surface. Item labels render in the inkSoft dark token (B8B7B0), clearly legible on the near-black background. No light-on-light or dark-on-dark failures.
+      Legibility verdict: PASS — both themes fully legible. Chrome correctly flips between light and dark; data colors remain identical.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set with theme-adaptive colors. Category
+          labels 17px bold serif, item labels 14px sans-serif. Item labels adequate
+          but on the smaller side for mobile — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No visible overlaps. BC zone and ABC zone items sit close but remain
+          readable. Minor proximity in some zones.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles clearly visible with semi-transparent fills. Overlapping
+          regions visible. All item text readable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three Imprint palette colors well-separated under CVD. No red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good use of square canvas. Diagram fills ~65-70% of canvas area.
+          Slight whitespace excess above diagram, but within acceptable range. No
+          clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format. Subtitle adds editorial context. No axes needed
+          for Venn diagram.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint positions 1-3 used correctly (#009E73, #C475FD, #4467A3).
+          pageBg used for background (theme-adaptive). Both renders have correct chrome.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clearly above defaults. Editorial approach with bold serif category
+          labels matching circle colors, italic serif subtitle, no-axes clean layout.
+          Genuine magazine-print feel.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes or grid, transparent fills, clean background. Some refinement
+          visible. Could push further with slightly higher fill alpha for overlap
+          visibility.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Items and zone placements tell a coherent tech-culture story. 'Markdown'
+          in ABC and 'NFTs' in A are insightful choices. Subtitle reinforces the narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-circle Venn with labeled items, symmetric layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, category names outside circles, labeled items
+          inside zones, all 7 zones used, 16 items total.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Items correctly placed in their assigned zones.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct. No legend — categories directly labeled with
+          colored text.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All 7 interior zones used. 'Outside' zone (optional per spec) not
+          utilized — minor omission.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Recognizable tech/internet culture items, witty categorizations,
+          neutral content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16 items within 10-25 spec range. Natural distribution across zones.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: geometry constants → data → init → graphic
+          elements → option.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (uses echarts global).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, good use of .map() for graphic elements, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Square orientation correctly set, animation:false, harness handles
+          output.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good idiomatic ECharts graphic component usage, correct token mapping,
+          no explicit sizing. More manual than high-level API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of ECharts graphic component for non-native chart type.
+          Layered z-order composition is ECharts-specific. Could leverage more native
+          ECharts features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
