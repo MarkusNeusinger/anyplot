@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -60,8 +60,21 @@ p = figure(
 )
 
 scatter_renderer = p.scatter(
-    x="study_hours", y="exam_scores", source=source, size=28, color=BRAND, alpha=0.7, line_color=PAGE_BG, line_width=1.2
+    x="study_hours",
+    y="exam_scores",
+    source=source,
+    size=28,
+    color=BRAND,
+    alpha=0.7,
+    line_color=INK_SOFT,
+    line_width=1.2,
 )
+
+# Trend line — linear regression to show positive correlation
+coeffs = np.polyfit(study_hours, exam_scores, 1)
+x_trend = np.array([0.0, 10.5])
+y_trend = np.polyval(coeffs, x_trend)
+p.line(x=x_trend, y=y_trend, line_color=INK_SOFT, line_width=4, line_alpha=0.5, line_dash="dashed")
 
 # HoverTool — Bokeh's distinctive interactive feature (HTML only; PNG stays clean)
 hover = HoverTool(
@@ -88,7 +101,7 @@ p.yaxis.axis_label_standoff = 28
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
@@ -122,15 +135,12 @@ for arg in (
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    f"--window-size={W},{H + 200}",
+    f"--window-size={W},{H}",
     "--hide-scrollbars",
 ):
     opts.add_argument(arg)
 driver = webdriver.Chrome(options=opts)
-# Force exact viewport via CDP so browser chrome doesn't steal pixels
-driver.execute_cdp_cmd(
-    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
-)
+driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
