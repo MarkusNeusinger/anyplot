@@ -1,3 +1,7 @@
+// anyplot.ai
+// sudoku-basic: Basic Sudoku Grid
+// Library: muix 7.29.1 | JavaScript 22.22.3
+// Quality: 84/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
