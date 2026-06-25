@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: ecdf-basic
 created: 2025-12-17 02:24:24+00:00
-updated: '2026-06-25T09:46:25Z'
+updated: '2026-06-25T10:00:13Z'
 generated_by: claude-sonnet
 workflow_run: 28160799325
 issue: 976
@@ -12,45 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: correct ECDF step construction (1/n jumps), y-axis 0-1,
-    grid for percentile reading, quartile reference markers'
-  - 'Excellent domain: food delivery times with realistic gamma distribution; realistic,
-    neutral, and statistically sound'
-  - 'Clean code: flat KISS structure, seeded for reproducibility, proper theme-adaptive
-    tokens in both themes, no imports unused'
-  - 'Proper two-theme rendering: backgrounds, chrome, and text all flip correctly;
-    data colors remain constant (green + lavender)'
-  - 'Pygal idioms well used: per-series dot control, HTML output, formatter APIs,
-    js=[], truncate_legend=-1'
+  - Correct ECDF step function with proper 1/n jumps, well-constructed using explicit
+    (x,y) pairs for horizontal plateaus and vertical jumps
+  - Quartile markers (Q1, Median, Q3) with exact values in legend labels enhance distribution
+    readability directly from the chart
+  - 'Perfect Imprint palette compliance: brand green #009E73 as first series, then
+    positions 2–4 for markers, correct backgrounds in both themes'
+  - Both renders are fully theme-adaptive with no dark-on-dark or light-on-light failures
+  - Realistic food delivery time data using gamma distribution (right-skewed, mean
+    ~30 min) — neutral and scientifically appropriate
+  - All font sizes explicitly set in Style object matching pygal defaults from the
+    style guide
+  - Clean flat code with np.random.seed(42) and both PNG + HTML outputs correctly
+    saved
   weaknesses:
-  - stroke_width=10 is 4x the recommended pygal default (2.5); blurs fine staircase
-    steps for 120-point ECDF — reduce to 2.5-4 for cleaner step visibility
-  - 'Design excellence at defaults: no spine/frame removal, no visual hierarchy beyond
-    displaying data, no emphasis guiding viewer to key insight (right-skewed delivery
-    time distribution)'
-  - colors=(BRAND, ACCENT) passes only 2 hex values instead of the full IMPRINT_PALETTE
-    tuple — functionally equivalent for 2 series but not following library guide convention
-  - 'Quartile story could be stronger: add direct value labels on the three quartile
-    dots plotted as chart annotations so viewer reads percentiles without hunting
-    the legend'
+  - Design is competent but remains a well-configured default pygal aesthetic — no
+    distinctive visual sophistication beyond correct palette application (DE-01 at
+    default 4/8)
+  - Pygal's full border frame cannot be removed, limiting visual refinement; both
+    X and Y grid guides shown when Y-only would suffice for ECDF percentile reading
+    (DE-02 3/6)
+  - No design-level emphasis beyond the quartile dots — the step function and markers
+    have equal visual weight; a subtle fill under the ECDF curve or muted reference
+    lines could improve hierarchy
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ecdf-basic · python · pygal · anyplot.ai" in dark ink — readable. Axis labels "Delivery Time (minutes)" and "Cumulative Proportion" in dark text — readable. Tick labels (10–70 on x, 0.00–1.00 on y) in muted dark text — readable.
-      Data: ECDF step function in brand green #009E73 — correct first series. Three quartile markers in lavender #C475FD (Imprint position 2). Step function rises from 0 at x≈10 to 1.00 at x≈68. Grid lines (both axes) are subtle and visible.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Chrome: Title "ecdf-basic · python · pygal · anyplot.ai" in dark text at top, clearly readable. Y-axis label "Cumulative Proportion" in dark text on left, X-axis label "Delivery Time (minutes)" at bottom — both readable with units. Tick labels (10–70 on x, 0.00–1.00 on y) are clearly visible. Both-axis grid lines visible as subtle dashed lines.
+      Data: ECDF step function in brand green #009E73, rising from bottom-left (~10 min, 0%) to top-right (~70 min, 100%). Three quartile dots: lavender (Q1=22 min at 0.25), blue (Median=28 min at 0.50), ochre (Q3=35 min at 0.75) — Imprint palette positions 2, 3, 4 in canonical order. Legend at bottom with 4 entries, all readable.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels appear in light cream/white text — all clearly readable against dark surface. No dark-on-dark failures observed. Grid lines are subtle on dark background.
-      Data: ECDF step function remains brand green #009E73 — identical to light render. Three quartile dots remain lavender #C475FD — identical to light render. Data colors unchanged between themes (only chrome flips).
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures
+      Chrome: Title in light text at top, clearly readable. Y-axis label and X-axis label in light text, readable. Tick labels in light text, all visible. Grid lines are very subtle against dark background (near-invisible but appropriate — not competing with data).
+      Data: ECDF step function in identical brand green #009E73 as in light render. Three quartile dots in identical lavender, blue, ochre as light render — data colors are unchanged across themes. Legend at bottom with light text, readable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,52 +60,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, axis=56, ticks=44, legend=44).
-          Readable in both themes.
+        comment: All font sizes explicitly set in Style; title 66, labels 56, major
+          labels 44, legend 44. Proportional and readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend in sparse top-left region; no text collisions with data or
-          other labels.
+        comment: No overlapping elements; quartile markers spatially separated at
+          22, 28, 35 min.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: ECDF line clearly visible; stroke_width=10 (4x recommended 2.5) blurs
-          fine step detail for 120 data points. Quartile dots (dots_size=24) well-sized.
+        comment: ECDF line clearly visible in brand green; quartile dots prominent
+          at size=20.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
-          and CVD-safe.
+        comment: Imprint palette CVD-safe; green, lavender, blue, ochre are perceptually
+          distinct.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas 3200x1800 confirmed. Balanced margins, data occupies bulk
-          of plot area, nothing clipped.
+        comment: Canvas 3200x1800 correct; plot fills canvas well with margin=50;
+          legend at bottom neatly arranged.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Delivery Time (minutes) and Cumulative Proportion are descriptive
-          with units.
+        comment: 'X: ''Delivery Time (minutes)'', Y: ''Cumulative Proportion'' — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green). Second series #C475FD (Imprint
-          position 2). Backgrounds #FAF8F1/#1A1A17. Chrome correctly flips.'
+        comment: 'First series #009E73; quartile markers use Imprint positions 2–4;
+          backgrounds #FAF8F1/#1A1A17; both renders theme-correct.'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -111,23 +113,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default. Clean and correct but no design choices
-          beyond functional requirements.
+        comment: Competent Imprint palette application with thoughtful quartile markers,
+          but overall remains a well-configured default pygal aesthetic.
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Library defaults with minimal customization. Grid present (appropriate
-          for ECDF), but no spine removal, no legend styling.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: 'Above default: quartile markers at P25/P50/P75 with values in legend
-          provide distribution landmarks. But no visual hierarchy driving the eye
-          to a focal insight.'
+        comment: Custom style settings are clean; slight above-default for consistent
+          foreground/subtle token usage. Pygal's full border frame cannot be removed;
+          both-axis grid is slightly heavy for ECDF.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Quartile markers with exact values in legend entries create a self-reading
+          chart; viewer can immediately identify key percentiles.
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function using pygal.XY with manually constructed
-          step points.
+        comment: Correct ECDF step function.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function 1/n per observation, y-axis 0-1, grid lines, distinct
-          line style with quartile dots.
+        comment: Step function with 1/n jumps, Y-axis 0–1, grid lines, distinct line
+          style — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = delivery time minutes; Y = cumulative proportion; all 120 observations
-          visible.
+        comment: X=delivery time, Y=cumulative proportion; full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels ECDF and quartile summary
-          correct.
+        comment: Title 'ecdf-basic · python · pygal · anyplot.ai' correct; legend
+          entries descriptive with exact quartile values.
     data_quality:
       score: 15
       max: 15
@@ -169,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ECDF from 0 to 1 with proper step structure; quartile markers
-          highlight key distribution features.
+        comment: Complete ECDF from min to max; quartile markers add distribution
+          landmarks.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Food delivery times from gamma distribution (mean ~30 min, right-skewed)
-          is realistic and neutral.
+        comment: Food delivery times — neutral, real-world business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 observations within 50-500 ideal range; 10-70 min realistic for
-          food delivery; ECDF correctly reaches 1.0.
+        comment: Gamma(6,5) gives mean ~30 min, range ~10–70 min — realistic for delivery
+          times.
     code_quality:
       score: 10
       max: 10
@@ -194,32 +193,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens -> data -> chart -> save. No functions or classes.'
+        comment: 'Flat script: data generation → ECDF computation → style → chart
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports. sys.path.pop(0) documented with comment.
+        comment: All imports used; sys.path.pop(0) is necessary to avoid module name
+          collision.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean step function construction; appropriate complexity; no over-engineering.
+        comment: Clean and readable; step construction loop is functional and clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html (both required for pygal).
-          No bare plot.png.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -229,21 +229,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY for arbitrary coordinates; per-series dot control; truncate_legend=-1;
-          formatter APIs. Above default.
+        comment: Correct use of pygal.XY for arbitrary x,y coordinates; Style object
+          with full token mapping; legend_at_bottom; js=[] to disable tooltips.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: HTML interactive output, js=[] to suppress animations, per-series
-          stroke=False/dots_size, axis formatters. Could go further.
-  verdict: REJECTED
+        passed: true
+        comment: HTML interactive output is a distinctive pygal capability; per-series
+          stroke=False + show_dots for marker-only series.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
