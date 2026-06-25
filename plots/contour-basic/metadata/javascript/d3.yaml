@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T03:55:19Z'
-updated: '2026-06-25T04:01:31Z'
+updated: '2026-06-25T04:12:37Z'
 generated_by: claude-sonnet
 workflow_run: 28145418490
 issue: 855
@@ -12,43 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Idiomatic D3 contour pipeline: d3.contours() + d3.geoTransform + geoPath correctly
-    projects grid-space geometries into plot-space'
-  - Imprint diverging colormap (t.div via d3.interpolateRgbBasis) with theme-adaptive
-    midpoint — red/blue hues identical across themes, only the midpoint neutral flips
-  - Custom SVG linearGradient colorbar with styled axis using d3.axisRight — matches
-    plot tokens throughout
-  - Correct clipPath usage keeps contour fills contained within the plot border
-  - Deterministic mathematical peaks function (80×80 grid, Float64Array) — no randomness,
-    fully reproducible
-  - 'All theme-adaptive chrome correctly threaded: t.ink, t.inkSoft, t.grid applied
-    to every text, tick, and domain element'
+  - Excellent use of d3.contours() with d3.geoTransform()/d3.geoPath() coordinate
+    projection — idiomatic and distinctive D3 approach
+  - Imprint diverging colormap (t.div) correctly chosen for zero-centered data with
+    both positive and negative values
+  - Focal-point annotations (global max/min dashed circles) create immediate visual
+    hierarchy and guide the viewer
+  - Zero-crossing isoline emphasis is a subtle but effective storytelling choice
+  - 'Full theme-adaptivity: both light and dark renders are correct with no dark-on-dark
+    failures'
+  - Perfectly linear, reproducible deterministic code structure
   weaknesses:
-  - Contour isolines at stroke-width 0.7 and stroke-opacity 0.2 are nearly invisible
-    in the light render — increase stroke-opacity to ~0.35 and stroke-width to 1.0
-    so isolines add the clarity the spec intends
-  - No contour level labeling at key thresholds — the spec suggests labeling key levels
-    when practical; with a colorbar already present, at minimum the zero-crossing
-    isoline could be slightly thicker/more prominent to help locate the positive/negative
-    boundary
-  - 'DE-01/DE-03: No data narrative — the peaks function is mathematically complete
-    but lacks any callout or emphasis on the global maximum/minimum regions that would
-    guide the viewer to the most interesting features'
+  - Axis labels x and y are single characters with no descriptive context; a real-world
+    framing with meaningful axis labels would improve DQ-02 and VQ-06
+  - Focal-point annotation text is 11px CSS (22px in PNG) — readable at desktop but
+    slightly small at 400px mobile width; consider 12-13px
+  - DE-01 could be elevated with a subtle horizontal grid (y-axis only, opacity ~0.1)
+    to aid reading z-values off the colorbar
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct page surface, not pure white.
-      Chrome: Title "contour-basic · javascript · d3 · anyplot.ai" in bold dark ink, fully readable. X-axis label "x" and y-axis label "y" in dark ink at 16px, readable. Tick labels in inkSoft (#4A4A44) at 14px, clearly visible from -3 to 3 on both axes. Colorbar ticks at 12px with "z (field value)" rotated label — readable at full resolution.
-      Data: Diverging colormap from Imprint t.div — red (negative) through near-cream neutral midpoint to blue (positive). Four distinct features visible: large blue peak at upper-center (~y=1.5, x=0), deep red trough at lower-center (~y=-1.5, x=0), a secondary red region at left (~x=-1, y=0.3), and a smaller blue region at right (~x=1.1, y=0). 18 filled contour bands with very faint semi-transparent isolines overlaid. Custom gradient colorbar spanning full plot height on the right.
-      Legibility verdict: PASS
+      Background: Warm off-white consistent with #FAF8F1 — NOT pure white.
+      Chrome: Title "contour-basic · javascript · d3 · anyplot.ai" in dark ink at top — clearly readable. Axis labels "x" (bottom) and "y" (left, rotated) in dark ink at 16px — readable. Tick labels at 14px in dark secondary ink — readable. Colorbar label "z (field value)" rotated, 13px — readable.
+      Data: Filled contour bands using the Imprint diverging colormap (t.div): matte-red (#AE3030-family) for negative values, near-neutral midpoint, blue (#4467A3-family) for positive values. 18 contour levels; overlaid isolines with subtle opacity (0.35 normal, 0.6 at zero-crossing). Focal-point annotations mark global max (~8.1) and min (~-4.5) with dashed circles and text labels. Colorbar on right with gradient and tick labels.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface.
-      Chrome: Title in light cream ink, clearly readable against dark background. Axis labels and tick labels in light inkSoft (#B8B7B0) — readable, no dark-on-dark issue. Colorbar axis ticks and "z (field value)" label are in light color, readable.
-      Data: Same diverging colormap — the Imprint div midpoint adapts to dark (#1A1A17), so mid-range values appear as near-black rather than cream. Red negative regions and blue positive peaks remain fully visible and identical in hue to the light render. Isolines are slightly more visible in dark mode as thin light-gray lines.
-      Legibility verdict: PASS — no dark-on-dark failures detected.
+      Background: Warm near-black consistent with #1A1A17 — NOT pure black.
+      Chrome: Title in light ink (#F0EFE8-family) — clearly readable. Axis labels and tick labels in light secondary ink — all readable. Colorbar ticks and label in light ink — readable. No dark-on-dark failure detected.
+      Data: Colors are IDENTICAL to the light render — same diverging colormap from red through neutral to blue. Only chrome flipped (background, text, axis lines). Focal annotations now use light ink, still readable against the contour fill.
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background. No dark-on-dark issues.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -59,55 +54,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, ticks all theme-adaptive and readable in both
-          renders. Colorbar ticks at 12px CSS (24px native) are marginally small but
-          adequate.
+        comment: 'Font sizes explicitly set: 22px title, 16px axis labels, 14px ticks,
+          12px colorbar ticks, 11px focal annotations. Primary text well-proportioned.
+          Minor: focal annotations at 11px CSS are small at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlaps. Contour fills, isolines, and all text elements are spatially
-          separated.
+        comment: No text collision with other text or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Filled contour bands are bold and clear. Isolines at stroke-opacity
-          0.2 are barely visible in the light render — they add minimal clarity as
-          intended by the spec.
+        comment: Filled bands and isolines clearly visible; zero-crossing emphasis
+          effective. Focal markers clearly placed.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint diverging palette (red-blue) is CVD-safe. No red-green as
-          sole signal.
+        comment: Diverging red-to-blue is CVD-safe. Protanopia shifts red to orange-yellow;
+          blue stays blue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good margins (top:70, right:130, bottom:72, left:80).
-          Title ~60% width. Colorbar well-spaced.
+        comment: Good proportions, balanced margins, colorbar well-placed. Four-sides
+          border appropriate for contour field.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Single-letter 'x'/'y' labels appropriate for mathematical context.
-          Colorbar label 'z (field value)' is descriptive. Title format correct.
+        comment: Title correct. Colorbar label 'z (field value)' is descriptive. Axis
+          labels 'x' and 'y' appropriate for math function but no units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses t.div (Imprint diverging) via d3.interpolateRgbBasis — correct
-          for bipolar data. Theme-adaptive midpoint: cream in light, near-black in
-          dark. Backgrounds match #FAF8F1 / #1A1A17.'
+        comment: 'Continuous data uses t.div (Imprint diverging) — correct for zero-centered
+          diverging data. Backgrounds #FAF8F1/#1A1A17. Chrome theme-adaptive. Data
+          colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,25 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above default (4). Professional execution with coherent diverging
-          color narrative. Custom gradient colorbar, consistent Imprint token usage
-          throughout. No exceptional novelty.
+        comment: 'Above default: intentional zero-crossing emphasis, focal-point annotations,
+          polished colorbar, clip-path bounded rendering. Thoughtful above typical
+          default configuration.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Domain lines removed on both axes. Four-sided border kept (appropriate
-          for enclosed contour). Generous margins. Subtle isolines are a refinement
-          choice, though near-invisible at 0.2 opacity.
+        comment: Axis domain lines removed; isolines use subtle opacity; all-four-sides
+          border appropriate. Some further refinement possible.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Diverging colormap immediately communicates positive/negative polarity.
-          Multiple focal points are naturally revealed. No callouts or emphasis on
-          notable features (global max/min).
+        comment: Focal-point annotations for global max/min guide the viewer's eye.
+          Diverging colormap communicates polarity at a glance. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -143,31 +134,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct basic contour plot: filled contour bands (d3.contours) +
-          isoline overlay.'
+        comment: 'Correct: filled contour bands with overlaid isolines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap ✓, colorbar ✓, both filled regions and contour
-          lines ✓, 80×80 grid resolution ✓.
+        comment: Diverging colormap, colorbar, both filled regions and isolines, 80x80
+          grid resolution. All spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y both span [-3, 3] correctly. Z mapped to color via diverging
-          scale. Y-axis orientation correct (j=0 → y=3 at top).
+        comment: x/y axes span [-3,3]; colorbar maps z. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-basic · javascript · d3 · anyplot.ai' correct. Colorbar
-          serves as the value legend.
+        comment: 'Title: ''contour-basic · javascript · d3 · anyplot.ai'' — correct
+          format. Colorbar with ''z (field value)'' label serves as legend.'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -175,22 +164,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows filled bands + isolines, bipolar data (+ and - values), multiple
-          peaks/troughs, diverging colormap, colorbar.
+        comment: Classic peaks function showcases diverging data, multiple extrema,
+          zero-crossing, and gradient complexity. All aspects demonstrated.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Classic mathematical peaks function — standard, neutral, recognizable
-          in the contour plot domain.
+        comment: Mathematical function visualization is a plausible neutral scenario.
+          Axis labels are abstract ('x', 'y') rather than real-world dataset. Plausible
+          but not grounded in concrete real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain [-3, 3] × [-3, 3] standard for peaks function. Z range ~[-8,
-          8] correct. 80×80 grid within spec (20×20–100×100).
+        comment: Peaks function values span ~-8 to ~+8; domain [-3,3] is standard
+          convention. Proportions correct.
     code_quality:
       score: 10
       max: 10
@@ -200,32 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat, linear execution flow.
+        comment: 'Linear structure: data → SVG → contours → colorbar → annotations
+          → title. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical function, no randomness whatsoever.
+        comment: Fully deterministic mathematical function; no random number generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — d3 is a global. Only used APIs accessed.
+        comment: No imports needed; d3 is a global. All tokens properly referenced.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clean separation: data → SVG → contours → axes → colorbar → title.
-          No fake UI.'
+        comment: 'Clean idiomatic D3: d3.contours(), d3.geoTransform(), d3.geoPath(),
+          d3.scaleSequential(d3.interpolateRgbBasis(...)).'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: D3 7.9.0, current API. Harness handles PNG/HTML output. No bare plot.png.
+        comment: Output handled by harness (plot-light.png, plot-dark.png, plot-light.html,
+          plot-dark.html). No manual writes.
     library_mastery:
       score: 9
       max: 10
@@ -235,23 +227,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: d3.contours().size().thresholds() ✓. d3.geoTransform + geoPath for
-          contour projection ✓. d3.scaleSequential + d3.interpolateRgbBasis ✓. d3.axisRight
-          for colorbar ✓.
+        comment: Expertly uses d3.contours().size().thresholds(), d3.geoTransform()+d3.geoPath()
+          for coordinate projection, d3.scaleSequential(d3.interpolateRgbBasis()),
+          d3.axisRight() for colorbar. Clip path via defs. All idiomatic D3.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses the distinctive d3.contours() topology generator and geoPath
-          projection pattern (not a generic approach). Custom SVG linearGradient colorbar
-          and clipPath demonstrate D3-specific SVG mastery. Slightly short of exemplary
-          — no use of d3.format for tick styling or d3.line for emphasis.
+        comment: The geo-pipeline trick (d3.geoTransform + d3.geoPath for non-geographic
+          coordinate projection) is a distinctly D3 pattern. d3.contours() for field
+          visualization is also library-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
