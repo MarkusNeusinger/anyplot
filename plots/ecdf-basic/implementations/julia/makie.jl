@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -31,6 +32,11 @@ n = 200
 times_cached = randn(n) .* 0.20 .+ 0.80
 times_cdn    = randn(n) .* 0.30 .+ 1.40
 times_legacy = randn(n) .* 0.60 .+ 2.80
+
+# P50 (median) for each group — used for reference lines
+p50_c   = median(times_cached)
+p50_cdn = median(times_cdn)
+p50_l   = median(times_legacy)
 
 # Compute ECDFs: sort data, build cumulative proportions, extend tails for clean drawing
 sorted_c   = sort(times_cached)
@@ -58,7 +64,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "ecdf-basic · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 22,
     titlecolor         = INK,
     xlabel             = "Page Load Time (seconds)",
     ylabel             = "Cumulative Proportion",
@@ -84,6 +90,31 @@ ax = Axis(
     yticks             = 0.0:0.1:1.0,
 )
 
+# Horizontal reference at P50 (y=0.5) — reads off median directly
+hlines!(ax, [0.5];
+    color     = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.30),
+    linestyle = :dash,
+    linewidth = 1.0,
+)
+
+# Vertical drop lines at each group's P50
+vlines!(ax, [p50_c];
+    color     = RGBAf(IMPRINT_PALETTE[1].r, IMPRINT_PALETTE[1].g, IMPRINT_PALETTE[1].b, 0.45),
+    linestyle = :dash,
+    linewidth = 1.2,
+)
+vlines!(ax, [p50_cdn];
+    color     = RGBAf(IMPRINT_PALETTE[2].r, IMPRINT_PALETTE[2].g, IMPRINT_PALETTE[2].b, 0.45),
+    linestyle = :dash,
+    linewidth = 1.2,
+)
+vlines!(ax, [p50_l];
+    color     = RGBAf(IMPRINT_PALETTE[3].r, IMPRINT_PALETTE[3].g, IMPRINT_PALETTE[3].b, 0.45),
+    linestyle = :dash,
+    linewidth = 1.2,
+)
+
+# ECDF step curves
 stairs!(ax, xs_c, ys_c;
     step      = :post,
     color     = IMPRINT_PALETTE[1],
@@ -103,14 +134,33 @@ stairs!(ax, xs_l, ys_l;
     label     = "Legacy Server",
 )
 
+# P50 callout annotations — label each median crossing
+text!(ax, p50_c,   0.53;
+    text      = "P50: $(round(p50_c,   digits=2))s",
+    color     = IMPRINT_PALETTE[1],
+    fontsize  = 10,
+    align     = (:left, :bottom),
+)
+text!(ax, p50_cdn, 0.53;
+    text      = "P50: $(round(p50_cdn, digits=2))s",
+    color     = IMPRINT_PALETTE[2],
+    fontsize  = 10,
+    align     = (:left, :bottom),
+)
+text!(ax, p50_l,   0.53;
+    text      = "P50: $(round(p50_l,   digits=2))s",
+    color     = IMPRINT_PALETTE[3],
+    fontsize  = 10,
+    align     = (:left, :bottom),
+)
+
 ylims!(ax, -0.02, 1.05)
 
 axislegend(ax;
     position        = :lt,
     backgroundcolor = ELEVATED_BG,
     labelcolor      = INK_SOFT,
-    framecolor      = INK_SOFT,
-    framevisible    = true,
+    framevisible    = false,
     labelsize       = 12,
 )
 
