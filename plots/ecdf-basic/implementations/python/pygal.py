@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 87/100 | Created: 2026-04-24
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-06-25
 """
 
 import os
@@ -45,10 +45,13 @@ for i in range(n):
     x_next = float(sorted_values[i + 1]) if i + 1 < n else float(sorted_values[-1]) + 2.0
     step_points.append((x_next, float(ecdf_y[i])))
 
-# Quartile reference markers: P25, median, P75 — let readers read percentiles directly
+# Quartile reference markers: P25, median, P75
 p25 = float(np.percentile(delivery_times, 25))
 p50 = float(np.percentile(delivery_times, 50))
 p75 = float(np.percentile(delivery_times, 75))
+
+# Legend label encodes quartile values so they are visible in the static PNG
+quartile_label = f"P25={p25:.1f}  P50={p50:.1f}  P75={p75:.1f} min"
 
 font = "DejaVu Sans, Helvetica, Arial, sans-serif"
 
@@ -65,42 +68,43 @@ custom_style = Style(
     major_label_font_family=font,
     legend_font_family=font,
     tooltip_font_family=font,
-    title_font_size=72,
-    label_font_size=52,
+    title_font_size=66,
+    label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=40,
+    legend_font_size=44,
     tooltip_font_size=32,
     value_font_size=30,
     stroke_opacity=1,
     stroke_opacity_hover=1,
     opacity=1,
     opacity_hover=1,
-    stroke_width=28,
+    stroke_width=10,
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="ecdf-basic · pygal · anyplot.ai",
+    title="ecdf-basic · python · pygal · anyplot.ai",
     x_title="Delivery Time (minutes)",
     y_title="Cumulative Proportion",
     show_dots=False,
     show_x_guides=True,
     show_y_guides=True,
-    show_legend=False,
+    show_legend=True,
     range=(0, 1.05),
     x_labels_major_count=9,
     y_labels_major_count=6,
     value_formatter=lambda v: f"{v:.2f}",
     x_value_formatter=lambda v: f"{v:.0f}",
-    margin=60,
+    margin=50,
+    truncate_legend=-1,
     js=[],
 )
 
 chart.add("ECDF", step_points)
 chart.add(
-    "Quartiles",
+    quartile_label,
     [
         {"value": (p25, 0.25), "label": f"P25 = {p25:.1f} min"},
         {"value": (p50, 0.50), "label": f"Median = {p50:.1f} min"},
@@ -108,7 +112,7 @@ chart.add(
     ],
     stroke=False,
     show_dots=True,
-    dots_size=40,
+    dots_size=24,
 )
 
 chart.render_to_png(f"plot-{THEME}.png")
