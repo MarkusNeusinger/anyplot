@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -36,8 +36,26 @@ grid = [
 
 fig = go.Figure()
 
-# Subtle background fill for given-number cells — ELEVATED_BG distinguishes them from empty cells
 shapes = []
+
+# Center box (rows 3-5, cols 3-5) focal point — ELEVATED_BG on all cells creates a visual anchor
+for row in range(3, 6):
+    for col in range(3, 6):
+        if grid[row][col] == 0:
+            shapes.append(
+                {
+                    "type": "rect",
+                    "x0": col,
+                    "x1": col + 1,
+                    "y0": 8 - row,
+                    "y1": 9 - row,
+                    "fillcolor": ELEVATED_BG,
+                    "line": {"width": 0},
+                    "layer": "below",
+                }
+            )
+
+# Given-number cell fills — ELEVATED_BG background (below traces)
 for row in range(9):
     for col in range(9):
         if grid[row][col] != 0:
@@ -53,6 +71,39 @@ for row in range(9):
                     "layer": "below",
                 }
             )
+
+# Given-number cell accent borders (above traces) — clearly distinguishes givens from empty cells
+for row in range(9):
+    for col in range(9):
+        if grid[row][col] != 0:
+            shapes.append(
+                {
+                    "type": "rect",
+                    "x0": col,
+                    "x1": col + 1,
+                    "y0": 8 - row,
+                    "y1": 9 - row,
+                    "fillcolor": "rgba(0,0,0,0)",
+                    "line": {"color": INK_SOFT, "width": 1},
+                    "layer": "above",
+                }
+            )
+
+# Thick box boundaries via shapes API — rect shapes give clean corner joins (9 boxes)
+for box_row in range(3):
+    for box_col in range(3):
+        shapes.append(
+            {
+                "type": "rect",
+                "x0": box_col * 3,
+                "x1": (box_col + 1) * 3,
+                "y0": box_row * 3,
+                "y1": (box_row + 1) * 3,
+                "fillcolor": "rgba(0,0,0,0)",
+                "line": {"color": INK, "width": 5},
+                "layer": "above",
+            }
+        )
 
 # Cell numbers as annotations (36px × scale=4 → 144px rendered — fills cell nicely)
 annotations = []
@@ -91,24 +142,6 @@ fig.add_trace(
     )
 )
 
-# Thick lines for 3×3 box boundaries (ratio 1.5:9 makes box structure immediately obvious)
-thick_lines_x = []
-thick_lines_y = []
-for i in [0, 3, 6, 9]:
-    thick_lines_x.extend([i, i, None, 0, 9, None])
-    thick_lines_y.extend([0, 9, None, i, i, None])
-
-fig.add_trace(
-    go.Scatter(
-        x=thick_lines_x,
-        y=thick_lines_y,
-        mode="lines",
-        line={"color": INK, "width": 9},
-        hoverinfo="skip",
-        showlegend=False,
-    )
-)
-
 # Invisible hover layer — includes box number for richer cell context in HTML
 hover_x = [c + 0.5 for r in range(9) for c in range(9)]
 hover_y = [8 - r + 0.5 for r in range(9) for c in range(9)]
@@ -133,7 +166,7 @@ fig.add_trace(
 fig.update_layout(
     autosize=False,
     title={
-        "text": "sudoku-basic · plotly · anyplot.ai",
+        "text": "sudoku-basic · python · plotly · anyplot.ai",
         "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
