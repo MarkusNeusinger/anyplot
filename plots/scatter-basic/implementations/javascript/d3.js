@@ -131,28 +131,37 @@ g.selectAll("circle").data(data).join("circle")
 g.append("g").attr("transform", `translate(0,${ih})`)
   .call(d3.axisBottom(x).ticks(8).tickFormat((d) => `${d}K`))
   .call((ax) => ax.select(".domain").remove())
-  .call((ax) => ax.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "18px"))
+  .call((ax) => ax.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "15px"))
   .call((ax) => ax.selectAll(".tick line").remove());
 
 // --- Y axis (floating — domain removed for clean open look) ----------------
 g.append("g")
   .call(d3.axisLeft(y).ticks(6).tickFormat((d) => `$${d.toFixed(1)}M`))
   .call((ax) => ax.select(".domain").remove())
-  .call((ax) => ax.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "18px"))
+  .call((ax) => ax.selectAll(".tick text").attr("fill", t.inkSoft).style("font-size", "15px"))
   .call((ax) => ax.selectAll(".tick line").remove());
 
-// --- Correlation + CI annotation (upper-right) -----------------------------
-g.append("text")
-  .attr("x", iw - 8).attr("y", 22)
+// --- Correlation + CI annotation with elevated-bg callout box (upper-right)
+const annotG = g.append("g");
+annotG.append("rect")
+  .attr("x", iw - 205).attr("y", 4)
+  .attr("width", 201).attr("height", 56)
+  .attr("rx", 5).attr("ry", 5)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-opacity", 0.3)
+  .attr("stroke-width", 1);
+annotG.append("text")
+  .attr("x", iw - 14).attr("y", 28)
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
   .style("font-size", "16px").style("font-weight", "600")
   .text(`r ≈ ${r.toFixed(2)}`);
-g.append("text")
-  .attr("x", iw - 8).attr("y", 44)
+annotG.append("text")
+  .attr("x", iw - 14).attr("y", 50)
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
-  .style("font-size", "16px")
+  .style("font-size", "14px")
   .text("95% confidence band");
 
 // --- Axis labels -----------------------------------------------------------
