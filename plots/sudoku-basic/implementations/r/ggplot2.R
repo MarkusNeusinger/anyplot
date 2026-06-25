@@ -74,7 +74,7 @@ p <- ggplot() +
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
     plot.title = element_text(
-      color = INK, size = 12, hjust = 0.5, face = "plain",
+      color = INK, size = 12, hjust = 0.5, face = "bold",
       margin = margin(t = 15, b = 15)
     ),
     plot.margin = margin(20, 40, 20, 40)
