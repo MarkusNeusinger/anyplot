@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:44:46Z'
-updated: '2026-06-25T07:51:35Z'
+updated: '2026-06-25T08:06:10Z'
 generated_by: claude-sonnet
 workflow_run: 28154518644
 issue: 1311
@@ -15,33 +15,35 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-ba
 quality_score: 88
 review:
   strengths:
-  - Clean Altair layer composition using mark_rect, mark_rule, and mark_text stacked
-    with alt.layer()
-  - Alternating 3×3 checkerboard shading (7% opacity) elegantly demarcates box regions
-    without visual noise
-  - Thick/thin stroke distinction (strokeWidth=4.5 vs 1.0) immediately conveys Sudoku
-    grid hierarchy
-  - 'Fully theme-adaptive chrome: correct PAGE_BG (#FAF8F1 / #1A1A17), INK tokens
-    propagated through all layers'
-  - Interactive tooltips (row, col, digit, box) in HTML export — idiomatic use of
-    Altair interactivity
-  - Proper PIL padding-only approach to reach 2400×2400 target without cropping
+  - Perfect spec compliance across all Sudoku requirements
+  - Alternating 3x3 box checkerboard shading is an elegant, unobtrusive design choice
+  - 'Both themes render flawlessly with correct #FAF8F1/#1A1A17 backgrounds and full
+    INK token propagation'
+  - Tooltips in HTML output (row, column, digit, box) genuinely leverage Altair interactivity
+    advantage
+  - 'Correct canvas handling: 2400x2400 square format with proper pad-to-target via
+    PIL'
+  - KISS code structure with clean list comprehensions for data preparation
   weaknesses:
-  - 'Title missing the language token: actual is "sudoku-basic · altair · anyplot.ai",
-    required is "sudoku-basic · python · altair · anyplot.ai" — add · python · between
-    spec-id and library'
+  - Title fontsize (16px) produces 64px effective height on a 2400px canvas; bumping
+    to 18px would add visual weight appropriate to the large grid
+  - 'LM-02 ceiling: multi-layer mark_rule grid is strong Altair idiom but could go
+    further — alt.condition() tinting clue vs. deduced cells or selection-based box
+    highlighting would push library distinctiveness higher'
+  - DE checkerboard shading at fillOpacity=0.07 is very subtle; 0.10-0.12 would add
+    more perceptible depth without disturbing the monochrome aesthetic
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, clearly not pure white
-      Chrome: Title "sudoku-basic · altair · anyplot.ai" in dark ink at top centre, readable. No axis labels or tick labels (intentionally hidden — appropriate for a grid puzzle).
-      Data: 9×9 Sudoku grid. Thick dark borders (strokeWidth=4.5, INK #1A1A17) separate the nine 3×3 boxes. Thin borders (strokeWidth=1.0, INK_SOFT #4A4A44) divide individual cells. Alternating checkerboard shading (INK at 7% opacity) creates subtle visual groupings for the 3×3 regions. Pre-filled digits in bold dark ink (fontSize=40) centred in their cells; empty cells remain blank. All 29 given digits visible without overlap.
-      Legibility verdict: PASS — title and all digits clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "sudoku-basic · python · altair · anyplot.ai" in small normal-weight near-black text at top center. No axis labels or tick labels (intentionally absent for a grid chart). All text readable against light background.
+      Data: 9x9 Sudoku grid with bold/thick near-black lines for 3x3 box boundaries and thinner soft-gray lines for cell boundaries. Alternating 3x3 boxes shaded with ~7% gray checkerboard. Puzzle digits displayed in large bold near-black text centered in cells; empty cells blank.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, clearly not pure black
-      Chrome: Title "sudoku-basic · altair · anyplot.ai" renders in near-white (INK = #F0EFE8 on dark) — clearly readable. Thick box borders now appear as near-white lines. Thin cell dividers are visible as lighter strokes.
-      Data: Data colors/ink are correctly inverted — digits are near-white (#F0EFE8) on the dark cell backgrounds. The checkerboard shading darkens alternating boxes slightly (INK at 7% opacity on dark bg produces very subtle darker squares). All 29 digits fully visible. No dark-on-dark failure observed.
-      Legibility verdict: PASS — title and digits readable against the dark background; no dark-on-dark issues detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light off-white text (#F0EFE8), clearly readable against dark background. No axis labels or ticks. Grid separator lines flip to light off-white maintaining thick/thin hierarchy. No dark-on-dark failures anywhere.
+      Data: Same digit content as light render; digit colors use INK token (#F0EFE8 in dark mode) — light and clearly readable. Checkerboard shading subtly visible as darker/lighter alternating boxes. Grid structure fully intact.
+      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures; brand-correct theme inversion confirmed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -49,55 +51,52 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: fontSize=16 for title, fontSize=40 for digits — all explicitly set;
-          proportions well-balanced; readable in both themes at full and mobile scale
+        comment: 'fontSize=40 for digits, fontSize=16 for title — both explicitly
+          set; readable in both themes. Minor: title at 64px effective is small relative
+          to 2400px canvas.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; digits are well-spaced across cells; title clear
-          of the grid
+        comment: No overlap anywhere; digits well-centered in cells.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Digits at fontSize=40 are prominent and clearly visible; thick/thin
-          grid lines well-differentiated; box shading subtle but effective
+        comment: Digits at 160px effective; thick vs thin line distinction clear in
+          both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochromatic design; high contrast between digits and cell backgrounds
-          in both themes; fully CVD-safe
+        comment: Monochrome design with high contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid occupies ~80% of the 2400×2400 canvas with balanced margins;
-          title well-positioned; no content cut off
+        comment: Canvas gate passed; 2400x2400 square correctly chosen for symmetric
+          grid; grid fills canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'No axis labels (appropriate for a grid puzzle). Title is present
-          but missing the language token: ''sudoku-basic · altair · anyplot.ai'' instead
-          of ''sudoku-basic · python · altair · anyplot.ai'''
+        passed: true
+        comment: Title present and correct; axis labels intentionally absent (correct
+          for Sudoku).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochromatic grid — INK tokens used correctly for both themes.
-          PAGE_BG is #FAF8F1 (light) / #1A1A17 (dark) — both correct. No categorical
-          series to check; no forbidden colormaps used.'
+        comment: 'Monochrome design aligns with spec; backgrounds correct #FAF8F1/#1A1A17;
+          INK/INK_SOFT tokens applied correctly.'
     design_excellence:
       score: 12
       max: 20
@@ -107,26 +106,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Alternating checkerboard shading and thick/thin line hierarchy are
-          intentional, domain-appropriate design choices. Clean theme adaptation.
-          Above 'well-configured default' level but not quite 'strong design throughout'.
+        comment: Above 4/8 default. Checkerboard box shading at 7% opacity is tasteful
+          and intentional. Theme adaptation well-executed. Constrained by utility
+          nature of Sudoku grid.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes completely hidden (appropriate). No unnecessary chrome. Refined
-          thick/thin stroke system. Subtle opacity shading adds depth without noise.
+        comment: All axis chrome removed; thick/thin line hierarchy precisely calibrated;
+          generous whitespace. Meaningfully above 2/6 default.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: The thick/thin line visual hierarchy and checkerboard pattern guide
-          the viewer through the puzzle structure. Above default; however no focal
-          point or emphasis on specific puzzle features.
+        comment: 'Clear visual hierarchy: thick borders guide to 3x3 structure, digits
+          are focal points, checkerboard aids cognitive grouping. Above 2/6 default;
+          limited by genre.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,29 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9×9 Sudoku grid with 3×3 box regions
+        comment: Correct 9x9 Sudoku grid implementation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick box-boundary lines ✓, thin cell dividers ✓, numbers centred
-          ✓, empty cells blank ✓, monochrome design ✓
+        comment: Thick lines for box boundaries, thin lines for cells, numbers centered,
+          empty cells blank, monochrome design — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 29 given digits from the puzzle grid correctly positioned in
-          their cells
+        comment: 9x9 grid correctly mapped; row orientation correct via 8-row inversion;
+          all 81 cells accounted for.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title ''sudoku-basic · altair · anyplot.ai'' is missing the ''python''
-          language token. Required: ''sudoku-basic · python · altair · anyplot.ai''.
-          No legend present (correct for single-ink design).'
+        passed: true
+        comment: Title 'sudoku-basic · python · altair · anyplot.ai' — correct format.
+          No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -166,22 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Sudoku grid features: filled cells, empty cells, 3×3 box
-          groupings, valid partial puzzle'
+        comment: 'Shows all aspects: 3x3 box structure, thin cell lines, filled digits,
+          and empty cells all present.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Sudoku puzzle ('World's Hardest Sudoku') — authentic and neutral
-          content
+        comment: Uses the 'World's Hardest Sudoku' — a real, well-known, neutral puzzle.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All digits in valid range 1–9; valid Sudoku starting configuration
-          with no constraint violations
+        comment: All digit values 1-9 in valid positions; realistic fill ratio for
+          a hard puzzle.
     code_quality:
       score: 10
       max: 10
@@ -191,55 +188,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → layers → chart → save/pad'
+        comment: 'Pure sequential flow: tokens -> data -> chart layers -> save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — hardcoded Sudoku grid data, no random elements
+        comment: Fully deterministic; hardcoded grid data, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, pandas, PIL.Image — all four imports used
+        comment: os, altair, pandas, PIL — all actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant use of list comprehensions for grid data construction and
-          line generation. No over-engineering.
+        comment: List comprehensions for data prep are clean and Pythonic; layering
+          logic is clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PAD-only approach to
-          reach 2400×2400; current Altair API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct altair 6.x
+          API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expertly uses alt.layer() composition, mark_rect/mark_rule/mark_text
-          marks, alt.Tooltip, configure_view/axis/scale — highly idiomatic Altair
-          grammar of graphics approach
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Layer composition (grammar-of-graphics approach unique to Altair),
-          tooltip metadata (row/col/digit/box), HTML interactivity export — distinctly
-          Altair features. Minor deduction: grid drawing is somewhat manual (mark_rule
-          per line) rather than using Altair''s declarative grid system.'
-  verdict: REJECTED
+        comment: Excellent alt.layer() composition; mark_rule with x2/y2 for line
+          segments is idiomatic Altair; configure_axis/configure_view/configure_scale
+          used correctly. Above 3/5 default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multi-layer (mark_rect + mark_rule x2 + mark_text) showcases grammar-of-graphics
+          strength; tooltips in HTML leverage native Altair interactivity. Above 1/5
+          default; could push further with alt.condition() for conditional encoding.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -247,8 +244,8 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
-  - alpha-blending

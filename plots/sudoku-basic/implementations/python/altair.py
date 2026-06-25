@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
