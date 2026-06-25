@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 88/100 | Updated: 2026-06-25
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-25
 """
 
 import os
