@@ -1,7 +1,3 @@
-// anyplot.ai
-// sudoku-basic: Basic Sudoku Grid
-// Library: muix 7.29.1 | JavaScript 22.22.3
-// Quality: 85/100 | Created: 2026-06-25
 //# anyplot-orientation: square
 // anyplot.ai
 // sudoku-basic: Basic Sudoku Grid
@@ -9,9 +5,12 @@
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
 // Quality: pending | Created: 2026-06-25
 
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+
 const t = window.ANYPLOT_TOKENS;
 
-// Classic Sudoku starting puzzle — 0 = empty cell
+// Classic Sudoku puzzle — 0 = empty cell
 const PUZZLE = [
   [5, 3, 0, 0, 7, 0, 0, 0, 0],
   [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -38,38 +37,26 @@ export default function Chart() {
   const THIN = 0.7;
   const THICK = 3;
 
-  // Inner cell division lines (thin, drawn first)
+  // Inner cell division lines (thin)
   const thinLines = [];
   for (let i = 1; i <= 8; i++) {
     if (i % 3 === 0) continue;
     thinLines.push(
-      <line key={`v${i}`}
-        x1={gx + i * cell} y1={gy}
-        x2={gx + i * cell} y2={gy + gridSize}
-        stroke={t.inkSoft} strokeWidth={THIN}
-      />,
-      <line key={`h${i}`}
-        x1={gx} y1={gy + i * cell}
-        x2={gx + gridSize} y2={gy + i * cell}
-        stroke={t.inkSoft} strokeWidth={THIN}
-      />
+      <line key={`v${i}`} x1={i * cell} y1={0} x2={i * cell} y2={gridSize}
+        stroke={t.inkSoft} strokeWidth={THIN} />,
+      <line key={`h${i}`} x1={0} y1={i * cell} x2={gridSize} y2={i * cell}
+        stroke={t.inkSoft} strokeWidth={THIN} />
     );
   }
 
-  // 3×3 box boundary lines (thick, drawn on top of thin lines)
+  // 3×3 box boundary lines (thick)
   const thickLines = [];
   for (let i = 0; i <= 9; i += 3) {
     thickLines.push(
-      <line key={`bv${i}`}
-        x1={gx + i * cell} y1={gy}
-        x2={gx + i * cell} y2={gy + gridSize}
-        stroke={t.ink} strokeWidth={THICK}
-      />,
-      <line key={`bh${i}`}
-        x1={gx} y1={gy + i * cell}
-        x2={gx + gridSize} y2={gy + i * cell}
-        stroke={t.ink} strokeWidth={THICK}
-      />
+      <line key={`bv${i}`} x1={i * cell} y1={0} x2={i * cell} y2={gridSize}
+        stroke={t.ink} strokeWidth={THICK} />,
+      <line key={`bh${i}`} x1={0} y1={i * cell} x2={gridSize} y2={i * cell}
+        stroke={t.ink} strokeWidth={THICK} />
     );
   }
 
@@ -78,12 +65,9 @@ export default function Chart() {
     row.map((val, c) => {
       if (val === 0) return null;
       return (
-        <text
-          key={`n${r}${c}`}
-          x={gx + c * cell + cell / 2}
-          y={gy + r * cell + cell / 2}
-          textAnchor="middle"
-          dominantBaseline="central"
+        <text key={`n${r}${c}`}
+          x={c * cell + cell / 2} y={r * cell + cell / 2}
+          textAnchor="middle" dominantBaseline="central"
           fontSize={cell * 0.52}
           fontFamily='"Helvetica Neue", Helvetica, Arial, sans-serif'
           fontWeight="700"
@@ -96,35 +80,49 @@ export default function Chart() {
   ).filter(Boolean);
 
   return (
-    <svg
-      width={W}
-      height={H}
-      style={{ display: "block", background: t.pageBg }}
+    <Box
+      sx={{
+        position: "relative",
+        width: W,
+        height: H,
+        bgcolor: t.pageBg,
+        overflow: "hidden",
+      }}
     >
-      {/* Title */}
-      <text
-        x={W / 2}
-        y={titleH / 2}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={22}
-        fontFamily='"Helvetica Neue", Helvetica, Arial, sans-serif'
-        fill={t.ink}
+      {/* MUI Typography for theme-aware title */}
+      <Typography
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: titleH,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 22,
+          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+          color: t.ink,
+          lineHeight: 1,
+          m: 0,
+          p: 0,
+        }}
       >
         sudoku-basic · javascript · muix · anyplot.ai
-      </text>
+      </Typography>
 
-      {/* Grid background */}
-      <rect x={gx} y={gy} width={gridSize} height={gridSize} fill={t.pageBg} />
-
-      {/* Cell dividers */}
-      {thinLines}
-
-      {/* Box borders */}
-      {thickLines}
-
-      {/* Given numbers */}
-      {numbers}
-    </svg>
+      {/* SVG grid rendered via MUI Box component bridge */}
+      <Box
+        component="svg"
+        sx={{ position: "absolute", top: gy, left: gx, display: "block" }}
+        width={gridSize}
+        height={gridSize}
+      >
+        <rect width={gridSize} height={gridSize} fill={t.pageBg} />
+        {thinLines}
+        {thickLines}
+        {numbers}
+      </Box>
+    </Box>
   );
 }
