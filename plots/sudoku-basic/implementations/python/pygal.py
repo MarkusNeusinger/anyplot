@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -24,7 +24,6 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
 
 # Data: classic Sudoku puzzle (0 = empty cell)
 grid = [
@@ -49,7 +48,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND,),
+    colors=(INK,),  # monochrome — spec requires clean black-and-white design
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
@@ -73,12 +72,13 @@ chart = pygal.Bar(
     show_y_guides=False,
     margin=50,
     margin_top=150,
+    no_data_text="",
 )
-chart.add("", [0])
 
+# No data added — pygal renders title + background; render_tree() gives us the SVG to extend
 svg_root = chart.render_tree()
 
-# Strip pygal's plot/overlay groups — title + page background are all we keep
+# Clear any pygal plot/overlay groups (no-data placeholder, empty chart frame)
 SVG_NS = "{http://www.w3.org/2000/svg}"
 for plot_group in list(svg_root.iter(f"{SVG_NS}g")):
     cls = plot_group.attrib.get("class", "")
@@ -193,7 +193,7 @@ ET.SubElement(
     },
 )
 
-# Numbers — Imprint brand green, bold, centered within cells
+# Numbers — monochrome ink, bold, centered within cells (dominant-baseline for precise alignment)
 font_size = int(CELL * 0.55)
 for row in range(9):
     for col in range(9):
@@ -201,7 +201,7 @@ for row in range(9):
         if value == 0:
             continue
         cx = GRID_X + col * CELL + CELL / 2
-        cy = GRID_Y + row * CELL + CELL / 2 + font_size * 0.35
+        cy = GRID_Y + row * CELL + CELL / 2
         text_node = ET.SubElement(
             sudoku,
             "text",
@@ -209,7 +209,8 @@ for row in range(9):
                 "x": str(cx),
                 "y": str(cy),
                 "text-anchor": "middle",
-                "fill": BRAND,
+                "dominant-baseline": "central",
+                "fill": INK,
                 "style": f"font-size:{font_size}px;font-weight:bold;font-family:DejaVu Sans,Arial,sans-serif;",
             },
         )
