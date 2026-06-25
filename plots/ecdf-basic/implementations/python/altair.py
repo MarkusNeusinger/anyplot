@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -34,34 +34,41 @@ np.random.seed(42)
 response_times_ms = np.random.normal(loc=120, scale=35, size=250)
 response_times_ms = np.clip(response_times_ms, 20, None)
 
-sorted_latency = np.sort(response_times_ms)
-cumulative_proportion = np.arange(1, len(sorted_latency) + 1) / len(sorted_latency)
-df = pd.DataFrame({"latency_ms": sorted_latency, "cumulative": cumulative_proportion})
+# Raw data frame — ECDF computed declaratively via Vega-Lite window transform
+df = pd.DataFrame({"latency_ms": response_times_ms})
 
-# Reference values at quartiles for focal emphasis
+# Reference values at quartiles for focal emphasis and text annotations
 p25_ms = float(np.percentile(response_times_ms, 25))
 p50_ms = float(np.median(response_times_ms))
 p75_ms = float(np.percentile(response_times_ms, 75))
-ref_df = pd.DataFrame({"latency_ms": [p25_ms, p50_ms, p75_ms], "cumulative": [0.25, 0.50, 0.75]})
+ref_df = pd.DataFrame(
+    {
+        "latency_ms": [p25_ms, p50_ms, p75_ms],
+        "cumulative": [0.25, 0.50, 0.75],
+        "label": [f"~{p25_ms:.0f}ms", f"~{p50_ms:.0f}ms", f"~{p75_ms:.0f}ms"],
+    }
+)
 
 # Title
 title_str = "ecdf-basic · python · altair · anyplot.ai"
 
-# ECDF step function — mark_line with step-after interpolation
+# ECDF step function — cume_dist() window transform computes the ECDF declaratively
+# in Vega-Lite without numpy preprocessing; step-after gives the correct step shape
 ecdf_line = (
     alt.Chart(df)
+    .transform_window(ecdf="cume_dist()", sort=[alt.SortField("latency_ms")])
     .mark_line(interpolate="step-after", strokeWidth=3.5, color=BRAND)
     .encode(
         x=alt.X("latency_ms:Q", title="API Response Time (ms)", scale=alt.Scale(nice=True)),
         y=alt.Y(
-            "cumulative:Q",
+            "ecdf:Q",
             title="Cumulative Proportion",
             scale=alt.Scale(domain=[0, 1]),
             axis=alt.Axis(format=".0%", tickCount=11),
         ),
         tooltip=[
             alt.Tooltip("latency_ms:Q", title="Latency (ms)", format=".1f"),
-            alt.Tooltip("cumulative:Q", title="Proportion", format=".3f"),
+            alt.Tooltip("ecdf:Q", title="Proportion", format=".3f"),
         ],
     )
 )
@@ -93,9 +100,16 @@ focal_pts = (
     )
 )
 
+# Text annotations at focal points for at-a-glance percentile reading without hover
+focal_labels = (
+    alt.Chart(ref_df)
+    .mark_text(align="left", dx=8, dy=-5, fontSize=9, color=INK_SOFT, fontWeight="bold")
+    .encode(x="latency_ms:Q", y="cumulative:Q", text="label:N")
+)
+
 # Compose layers and configure theme-adaptive chrome
 chart = (
-    alt.layer(ecdf_line, h_rules, v_rules, focal_pts)
+    alt.layer(ecdf_line, h_rules, v_rules, focal_pts, focal_labels)
     .interactive()
     .properties(
         width=620,
@@ -114,7 +128,7 @@ chart = (
         titleFontSize=12,
     )
     .configure_axisX(grid=False)
-    .configure_axisY(gridColor=INK, gridOpacity=0.10)
+    .configure_axisY(gridColor=INK, gridOpacity=0.13)
     .configure_title(color=INK)
 )
 
