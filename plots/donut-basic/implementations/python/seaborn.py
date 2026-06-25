@@ -1,11 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-basic: Basic Donut Chart
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-25
 """
 
 import os
+import sys
 
+
+# matplotlib.py in this directory (sibling impl) shadows the real package — remove it from path.
+_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.normpath(p or ".") != os.path.normpath(_dir)]
+
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -32,8 +38,9 @@ budget = pd.DataFrame(
 total = budget["amount"].sum()
 budget["share"] = budget["amount"] / total * 100
 
-# Theme — apply Imprint palette and background tokens via seaborn
+# Theme — apply Imprint palette and background tokens via seaborn; set_context scales text proportionally
 sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+sns.set_context("notebook", font_scale=0.85)
 wedge_colors = sns.color_palette(IMPRINT_PALETTE, n_colors=len(budget)).as_hex()
 
 # Plot — square canvas 2400×2400 (figsize=(6, 6) @ dpi=400)
@@ -51,6 +58,10 @@ wedges, _ = ax.pie(
     explode=explode,
     wedgeprops={"width": 0.38, "edgecolor": PAGE_BG, "linewidth": 2},
 )
+
+# Center card — subtle filled circle contains the metric and provides visual elevation
+center_circle = mpatches.Circle((0, 0), radius=0.52, facecolor=ELEVATED_BG, edgecolor=INK_SOFT, linewidth=0.5, zorder=2)
+ax.add_patch(center_circle)
 
 # External labels — staggered radii prevent crowding for small segments
 for wedge, dept, share in zip(wedges, budget["department"], budget["share"], strict=True):
@@ -101,10 +112,33 @@ for wedge, dept, share in zip(wedges, budget["department"], budget["share"], str
             linespacing=1.3,
         )
 
-# Center metric: label, thin separator, and bold total
-ax.text(0, 0.12, "Total Budget", ha="center", va="center", fontsize=8, color=INK_SOFT)
-ax.plot([-0.10, 0.10], [0.01, 0.01], color=INK_SOFT, linewidth=1.0, solid_capstyle="round")
-ax.text(0, -0.11, f"${total / 1_000_000:.2f}M", ha="center", va="center", fontsize=20, fontweight="bold", color=INK)
+# Center metric: label, separator, bold total, and narrative note (all zorder=3 to appear above circle)
+ax.text(0, 0.22, "Total Budget", ha="center", va="center", fontsize=8, color=INK_SOFT, zorder=3)
+ax.plot([-0.10, 0.10], [0.11, 0.11], color=INK_SOFT, linewidth=1.0, solid_capstyle="round", zorder=3)
+ax.text(
+    0,
+    -0.02,
+    f"${total / 1_000_000:.2f}M",
+    ha="center",
+    va="center",
+    fontsize=20,
+    fontweight="bold",
+    color=INK,
+    zorder=3,
+)
+# Narrative callout: top-2 segments dominate budget
+top2_pct = budget["share"].iloc[:2].sum()
+ax.text(
+    0,
+    -0.27,
+    f"Eng + Sales: {top2_pct:.0f}%",
+    ha="center",
+    va="center",
+    fontsize=7,
+    color=INK_SOFT,
+    style="italic",
+    zorder=3,
+)
 
 # Title — descriptive prefix adds context; n>67 chars so fontsize scaled down
 title = "FY2026 Budget Allocation · donut-basic · python · seaborn · anyplot.ai"
@@ -113,9 +147,10 @@ title_fontsize = max(8, round(12 * 67 / n)) if n > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=16)
 
 ax.set_aspect("equal")
-ax.set_xlim(-1.65, 1.65)
-ax.set_ylim(-1.65, 1.65)
+ax.set_xlim(-1.55, 1.55)
+ax.set_ylim(-1.55, 1.55)
+sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
 ax.set_axis_off()
 
-fig.subplots_adjust(top=0.90, bottom=0.04, left=0.04, right=0.96)
+fig.subplots_adjust(top=0.88, bottom=0.06, left=0.05, right=0.95)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
