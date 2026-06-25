@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
-Library: seaborn 0.13.2 | Python 3.14.4
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-25
 """
 
 import os
