@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: contour-basic
 created: '2025-12-23T10:00:31Z'
-updated: '2026-06-25T03:34:50Z'
+updated: '2026-06-25T03:48:08Z'
 generated_by: claude-sonnet
 workflow_run: 28144606078
 issue: 855
@@ -12,92 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct use of imprint_seq colormap for single-polarity continuous elevation data
-  - Three-layer contour approach (fine minor lines + bolder major lines + clabel inline
-    labels) creates excellent visual hierarchy
-  - Theme-adaptive chrome works correctly in both renders — all text readable in light
-    and dark modes
-  - 'Perfect spec compliance: filled contours, contour lines, labeled isolines, colorbar
-    all present'
-  - Clean deterministic code with no random elements, idiomatic ax.* API usage throughout
+  - Dual-summit topographic narrative with labeled elevation annotations creates a
+    clear focal point and data story
+  - Correct application of imprint_seq colormap for single-polarity continuous data,
+    with perfectly theme-adaptive chrome in both renders
+  - Alpha-differentiated contour lines (0.30 minor / 0.65 major) add sophisticated
+    depth cue without cluttering the plot
+  - 'Perfect spec compliance: all five spec features (colormap, colorbar, filled +
+    lines, labeled levels, sufficient resolution) implemented'
+  - Deterministic, KISS code structure with no wasted complexity
   weaknesses:
-  - 600 m contour label on the northeast summit is very close to the top axis boundary
-    (y≈9.4 in a y=[0,10] plot) — consider reducing the grid extent slightly or adjusting
-    pad so clabel has more room
-  - Fine minor contour lines at linewidth=0.25 and alpha=0.20 are nearly invisible
-    at reduced display sizes — slightly heavier (0.4 pt) or alpha=0.30 would preserve
-    the subtle texture while remaining discernible
-  - No design choices beyond expected contour plot defaults — no summit annotations,
-    no peak labels, no emphasis on the elevation differential between the two peaks
+  - Inline contour labels at 7pt and annotation text at 6.5pt are borderline small
+    for mobile readability (~5 px at 400 px viewport); increasing clabel to 8pt and
+    annotation fontsize to 7.5pt would improve legibility at small sizes
+  - DE-01 limited by the heavy green-dominant lower fill — lower elevation regions
+    (200-500 m) fill a large fraction of the plot in uniform near-#009E73 green; applying
+    PowerNorm(gamma=0.6) or lowering the elevation floor would reveal more gradient
+    detail and improve aesthetic sophistication
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, non-pure-white surface
-      Chrome: Title "contour-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable at ~60% width; "Distance East (km)" and "Distance North (km)" axis labels at fontsize=10 dark ink; tick labels (0–10 and 0–20) in INK_SOFT dark grey; colorbar label "Elevation (m)" and scale ticks (200–1250) in dark tones — all readable
-      Data: Filled contours using imprint_seq (brand green #009E73 at low elevations → blue #4467A3 at high elevations); two summit ellipses visible — NE summit reaching ~1250 m (deep blue core), SW summit ~820 m (teal/blue); fine minor contour lines (0.25 pt, alpha=0.20) provide subtle texture; bolder major contour lines at 400, 600, 800, 1000 m (0.8 pt, alpha=0.65); inline clabels: "400 m", "600 m" on SW summit, "800 m", "1000 m" on NE summit; colorbar with shrink=0.88 on right side
-      Legibility verdict: PASS — all chrome elements readable; note: "600 m" label on NE summit at y≈9.4 is close to the top axis boundary but pixels appear intact
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "contour-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), axis labels "Distance East (km)" / "Distance North (km)" at 10pt in dark ink, tick labels at 8pt in INK_SOFT (#4A4A44) — all clearly readable
+      Data: Filled contours using imprint_seq colormap (#009E73 brand-green at low elevations → #4467A3 blue at high elevations). Minor contour lines at α=0.30, major lines at α=0.65 with inline elevation labels (7pt). Two summit triangle markers with rounded callout boxes (ELEVATED_BG #FFFDF6): "SW Summit ~815 m" and "NE Summit ~1,220 m". Colorbar on right with "Elevation (m)" label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface
-      Chrome: Title and axis labels rendered in light #F0EFE8 INK token; tick labels in #B8B7B0 INK_SOFT token; colorbar label and ticks in light tones — all clearly readable against dark background; no dark-on-dark failures detected
-      Data: Filled contour colors identical to light render (green→blue imprint_seq gradient); minor contour lines now appear white/light (INK token flips); major contour lines also light-colored with same opacity hierarchy; clabels (400, 600, 800, 1000 m) visible in light color
-      Legibility verdict: PASS — both renders pass theme-readability check; data colors are identical between light and dark as required (only chrome flips)
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8), axis labels and tick labels in #B8B7B0 (INK_SOFT dark) — all clearly readable against dark background. Annotation boxes use #242420 (ELEVATED_BG dark) with light text and arrows. Colorbar label and ticks in light color. No dark-on-dark failures observed.
+      Data: Imprint sequential colormap colors are IDENTICAL to light render — only chrome elements flipped. Contour lines appear lighter against dark background. Summit markers visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All text readable in both themes; inline clabels at 7pt are small
-          but legible at full resolution; minor: 600m label on NE summit is close
-          to top axis boundary'
+        comment: All font sizes explicitly set but inline contour labels (7pt) and
+          annotation text (6.5pt) scale to ~5px at 400px mobile viewport — borderline
+          for smallest elements
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps detected; inline labels well spaced
+        comment: No overlap between annotation boxes, contour labels, axis labels,
+          or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Filled contours and major lines clearly visible; fine minor contour
-          lines at 0.25pt/alpha=0.20 are nearly invisible at small display sizes
+        comment: Filled contours, overlaid contour lines, summit markers, and colorbar
+          all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe; no red-green encoding
+        comment: Imprint sequential cmap has strong luminance difference across range;
+          CVD-safe green-to-blue gradient
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions overall; canvas gate passed; slight layout tightness
-          at NE summit top boundary where 600m clabel approaches y=10
+        comment: subplots_adjust produces balanced margins with colorbar; canvas exactly
+          3200x1800; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (km, m); correct title format
+        comment: Distance East (km), Distance North (km), Elevation (m) on colorbar
+          — all descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq used correctly for single-polarity continuous data;
-          backgrounds #FAF8F1 / #1A1A17; chrome flips correctly between themes'
+        comment: 'imprint_seq correctly applied for single-polarity elevation data;
+          backgrounds #FAF8F1/#1A1A17; all chrome adapts correctly; data colors identical
+          across both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,24 +109,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): multi-layer contour approach with distinct linewidths/alphas
-          shows design care; inline clabels add sophistication; lacks peak summit
-          annotations or emphasis on the height differential'
+        comment: 'Above well-configured default: custom Imprint colormap, alpha-differentiated
+          contour lines, styled summit callout boxes. Heavy green-dominant lower fill
+          limits sophistication ceiling.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): top/right spines removed; colorbar outline styled;
-          no grid (appropriate for contour); manual subplots_adjust for clean margins'
+        comment: Top/right spines removed, INK_SOFT spine colors, alpha-differentiated
+          contour lines (0.30/0.65), ELEVATED_BG annotation boxes. No grid appropriate
+          for contour plot.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): two peaks clearly differentiated in color, size,
-          and elevation; viewer can read height contrast naturally; no additional
-          storytelling elements (annotations, peak labels)'
+        comment: Clear dual-summit narrative with focal point markers and annotated
+          elevations. Major contour labels guide quantitative reading. Visual hierarchy
+          present.
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour plot with both filled regions (contourf) and contour
-          lines (contour)
+        comment: 'Correct: contourf (filled regions) + contour (isolines)'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Colorbar, contour lines, filled regions, labeled key contour levels
-          — all present
+        comment: Sequential Imprint colormap, colorbar, both filled+lines, key levels
+          labeled via clabel, sufficient grid resolution (120x60)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y/Z correctly mapped; meshgrid covers full 20x10 km range; sufficient
-          resolution (120x60)
+        comment: X=east distance, Y=north distance, Z=elevation via colormap. Axes
+          span full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'contour-basic · python · matplotlib · anyplot.ai' — correct
-          format; colorbar serves as legend
+        comment: Title exactly 'contour-basic · python · matplotlib · anyplot.ai';
+          no categorical legend needed (single continuous variable with colorbar)
     data_quality:
       score: 15
       max: 15
@@ -164,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all contour plot features: filled areas, line contours at
-          multiple densities, inline labels, colorbar scale'
+        comment: Two-peak topography demonstrates gradient variation, local maxima/minima,
+          saddle between peaks, and varying contour density showing slope steepness
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated topographic elevation of a mountain range — plausible and
-          neutral context
+        comment: Simulated topographic elevation of a 20x10 km mountain range — clear,
+          neutral, real-world scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20x10 km range, 200-1250 m elevation — realistic alpine terrain values
+        comment: 20x10 km footprint, 200-1220 m elevation range, 815 m and 1220 m
+          summits — all plausible for a mid-elevation alpine range
     code_quality:
       score: 10
       max: 10
@@ -188,56 +193,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat sequential script
+        comment: 'Linear: theme tokens -> data -> contourf -> contour -> clabel ->
+          markers -> annotate -> colorbar -> style -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — mathematical function, no random elements
+        comment: 'Fully deterministic: mathematical Gaussian functions on fixed meshgrid.
+          No random seed needed.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, LinearSegmentedColormap — all used
+        comment: os, matplotlib.pyplot, numpy, LinearSegmentedColormap — all used,
+          nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; no fake UI
+        comment: Clean, Pythonic; appropriate complexity for a multi-layer contour
+          plot; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
+        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', no deprecated
           API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: All ax.* methods (not plt.*); contourf/contour/clabel/colorbar used
-          idiomatically
+        comment: 'Uses Axes methods (ax.contourf, ax.contour, ax.clabel, ax.annotate),
+          fig.colorbar() with ax= argument, fig.subplots_adjust for padding. Correct
+          and idiomatic. Minor gap: ax.tick_params uses colors= rather than explicit
+          labelcolor=.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Above default (1): clabel with inline=True, LinearSegmentedColormap.from_list,
-          layered contour calls at distinct linewidths — good use of matplotlib-specific
-          capabilities'
+        comment: ax.clabel(inline=True, fmt='%d m') for inline contour labeling is
+          distinctive matplotlib; LinearSegmentedColormap.from_list() for custom two-stop
+          cmap; ax.annotate() with arrowprops dict. Could push to 4 with PathEffects
+          on contour labels.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
