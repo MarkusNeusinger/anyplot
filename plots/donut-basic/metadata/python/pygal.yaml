@@ -2,45 +2,47 @@ library: pygal
 language: python
 specification_id: donut-basic
 created: '2025-12-23T00:49:16Z'
-updated: '2026-04-24T05:53:36Z'
-generated_by: claude-opus
-workflow_run: 24874228294
+updated: '2026-06-25T06:06:44Z'
+generated_by: claude-sonnet
+workflow_run: 28149675241
 issue: 733
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Clean donut implementation with correct Okabe-Ito palette and proper theme-adaptive
-    chrome in both renders
-  - Center metric ('Total Budget / $1,025K') injected via SVG manipulation — adds
-    significant spec value and demonstrates advanced pygal knowledge
-  - 'Full spec compliance: all required features present (hollow center, percentage
-    labels, thick ring, center summary)'
-  - Interactive HTML output correctly produced alongside PNG artifacts
-  - Flat, reproducible code with idiomatic pygal patterns throughout
+  - Center metric ($1,000K total with Portfolio label and divider) creates a strong
+    focal point
+  - 'Perfect spec compliance: all required donut features implemented (center metric,
+    percentage labels, consistent ordering, hollow ring)'
+  - Complete Imprint palette compliance and theme-adaptive chrome — dark render passes
+    without any dark-on-dark failures
+  - Robust SVG center-text injection with geometric fallback handles pygal limitations
+    gracefully
+  - 'Clean code: linear structure, all imports used, deterministic data, HTML export
+    included'
   weaknesses:
-  - value_colors is hardcoded to ['#F0EFE8'] regardless of theme — works visually
-    since labels are on colored segments, but is not semantically theme-adaptive
-  - Title font size (72px) relative to a 3600px canvas is slightly modest; a value
-    around 90-100px would give the title more visual authority
-  - 'DE-02 refinement could be pushed: no legend border suppression, no explicit segment
-    stroke/gap styling for crisper ring edges'
+  - Title wraps to two lines in both renders — 64 chars at 66px font size hits the
+    margin in the 2400x2400 canvas; consider reducing title_font_size to 58-60 to
+    fit on one line
+  - Percentage labels on the two smallest segments (7.0% Cash, 8.0% Real Estate) are
+    tight due to small arc length — minor readability concern at thumbnail scale;
+    consider placing labels outside ring for segments under 10%
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "Budget by Department · donut-basic · pygal · anyplot.ai" in dark text (#1A1A17) — clearly readable. Legend text in muted dark tone at bottom — readable. Center "Total Budget" in INK_SOFT (#4A4A44) and "$1,025K" headline in INK (#1A1A17) — both clearly readable on off-white background.
-      Data: Five segments in Okabe-Ito order: Engineering 46.8% (#009E73 brand green), Operations 20.5% (#D55E00 vermillion), Marketing 15.1% (#0072B2 blue), Sales 12.2% (#CC79A7 reddish purple), Support 5.4% (#E69F00 orange). White percentage labels inside each segment — readable against the saturated segment colors.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "Portfolio Allocation · donut-basic · python · pygal · anyplot.ai" wraps to two lines, fully readable in dark ink; center "Portfolio" label in INK_SOFT muted tone, "$1,000K" in large bold INK; legend at bottom in dark text — all chrome readable
+      Data: First series (US Stocks) = brand green #009E73 (45%); Intl Stocks = lavender #C475FD (20%); Bonds = blue #4467A3 (20%); Real Estate = ochre #BD8233 (8%); Cash = red #AE3030 (7%); all Imprint palette canonical order
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title visible in light text (#F0EFE8) — clearly readable against dark background. Legend text in light tones at bottom — readable. Center "Total Budget" in INK_SOFT (#B8B7B0) and "$1,025K" in INK (#F0EFE8) — both clearly readable. No dark-on-dark failures detected.
-      Data: All five Okabe-Ito segment colors are identical to the light render — only chrome flips. White (#F0EFE8) percentage labels inside segments remain readable against the saturated colors.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in off-white light text, readable; center "Portfolio" in INK_SOFT (B8B7B0 tone), "$1,000K" in bold INK (F0EFE8) — both visible; legend text in light tone against dark background; no dark-on-dark issues
+      Data: Colors identical to light render — #009E73, #C475FD, #4467A3, #BD8233, #AE3030 unchanged across themes
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -49,51 +51,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All text legible in both themes; font sizes well-scaled for 3600x3600
-          canvas. Title slightly modest at 72px.
+        comment: Title wraps to two lines (readable); small segment labels (7%, 8%)
+          tight but legible in both renders
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Labels fit inside segments cleanly. 5.4% Support wedge is narrow
-          but label fits.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five segments clearly distinct; ring thickness appropriate.
+        comment: All five segments, center metric, and legend clearly visible in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe.
+        comment: Imprint palette is CVD-safe; no red-green sole-signal issue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 suits circular chart; legend at bottom is clean.
+        comment: 2400x2400 square canvas (gate passed), generous margins, bottom legend
+          cleanly positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows correct format; no axis labels needed for donut.
+        comment: N/A for axes on donut; descriptive title with optional prefix and
+          mandated anyplot suffix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; all follow Okabe-Ito order; backgrounds
-          are #FAF8F1 / #1A1A17.'
+        comment: 'First series #009E73, Imprint canonical order, backgrounds #FAF8F1/#1A1A17,
+          both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -101,22 +105,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Center metric via SVG injection is distinctive; theme-adaptive colors;
-          value formatter. Clean but not exceptional.
+        comment: 'Above default: center metric with muted label + divider + bold total;
+          Imprint palette cleanly applied; professional'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No axes/spines correct; no grid correct; compact legend. Could suppress
-          legend border and add segment strokes.
+        comment: 'Above default: center divider line, font sizing hierarchy, inner_radius=0.58
+          well-chosen, legend column layout'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Engineering dominance immediately visible; center metric contextualizes
-          total. Could be stronger with emphasis on largest segment.
+        comment: 'Above default: center $1,000K total as focal point; largest-first
+          segment ordering guides eye naturally'
     spec_compliance:
       score: 15
       max: 15
@@ -126,48 +130,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut chart via pygal.Pie with inner_radius=0.58.
+        comment: Correct donut via pygal.Pie(inner_radius=0.58)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hollow center, total in center, percentage labels, consistent ordering,
-          thick ring — all present.
+        comment: Center space for key metric, percentage labels on segments, consistent
+          ordering, hollow center
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories correctly mapped; segment sizes proportional.
+        comment: Five categories with proportional values correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match all five categories.
+        comment: Title format correct with optional descriptive prefix; legend labels
+          match categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All typical donut features shown. Missing explicit segment gap styling.
+        comment: Ring format, multi-category proportions, center summary, segment
+          labels — all key donut features shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation by department — realistic, neutral, plausible.
+        comment: Model investment portfolio (US Stocks, Intl Stocks, Bonds, Real Estate,
+          Cash) — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 55-480K span meaningful range; total $1,025K plausible.
+        comment: Values in USD thousands (70K-450K), total $1,000K — plausible for
+          a portfolio
     code_quality:
       score: 10
       max: 10
@@ -177,34 +185,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat procedural script.
+        comment: No functions/classes; linear top-level code; sys.path fix necessary
+          and explained
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static hardcoded data; fully deterministic.
+        comment: Fixed static data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, re, sys, cairosvg, pygal, Style.'
+        comment: 'All imports used: os, re, sys, cairosvg, pygal, pygal.style.Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: SVG regex injection is a legitimate workaround; zip with strict=True
-          is idiomatic.
+        comment: SVG center-text injection with regex fallback is correct approach;
+          value_formatter clean; HTML export included
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no bare plot.png.
-    library_features:
-      score: 8
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; pygal 3.1.3 API is
+          current
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -212,22 +222,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Pie+inner_radius, Style theming, render() for HTML. value_formatter
-          and legend_at_bottom_columns show API fluency. value_colors hardcoded (minor).
+        comment: Correct pygal.Pie + inner_radius, Style object for theming, chart.add()
+          loop, render()→SVG→cairosvg→PNG pipeline
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output; SVG center-label injection; opacity_hover
-          and transition leverage pygal's JS interactivity tokens.
+        comment: value_formatter for percentage display, print_values_position=inside,
+          legend_at_bottom with columns, HTML interactive export
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
-  - annotations
   patterns:
   - iteration-over-groups
   dataprep: []
