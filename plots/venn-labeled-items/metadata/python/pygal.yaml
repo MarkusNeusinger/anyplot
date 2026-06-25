@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T06:01:58Z'
-updated: '2026-06-25T12:06:01Z'
+updated: '2026-06-25T12:14:48Z'
 generated_by: claude-sonnet
 workflow_run: 28166518718
 issue: 5364
@@ -12,45 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Correct three-circle symmetric Venn layout using pygal.XY coordinate system with
-    clever SVG post-processing for circle fills
-  - 'Imprint palette applied correctly: green (#009E73) for TREND REPORT, lavender
-    (#C475FD) for WARDROBE STAPLE, blue (#4467A3) for GUILTY CLOSET'
-  - 'Editorial aesthetic well-executed: bold italic serif category labels in circle
-    colors, ABC zone items bolded for hierarchy emphasis'
-  - Both themes fully correct — warm off-white (#FAF8F1) light background, near-black
-    (#1A1A17) dark background; all text readable in both renders
-  - All 16 items distributed across 7 zones with no significant overlapping; editorial
-    subtitle adds story context
-  - 'Complete output: SVG + HTML (interactive) + PNG for both themes'
-  - Data is realistic and witty (fashion micro-trends taxonomy) matching spec editorial
-    intent
+  - 'Full spec compliance: all 7 Venn zones populated, editorial aesthetic matches
+    WIRED Chartgeist intent exactly'
+  - Creative SVG post-processing to achieve semi-transparent circle fills that pygal
+    cannot do natively
+  - 'Excellent data quality: real fashion domain, plausible categorizations, ABC emphasis
+    on most interesting intersection'
+  - Theme-adaptive chrome correctly applied in both renders (INK tokens, INK_SOFT
+    subtitle, correct backgrounds)
+  - Editorial serif typography and bold italic colored category labels create genuine
+    magazine-print polish
   weaknesses:
-  - 'Title missing python language designator: actual is "Fashion Micro-Trends 2026
-    · venn-labeled-items · pygal · anyplot.ai" but required format is "{Descriptive}
-    · {spec-id} · {language} · {library} · anyplot.ai" — add python between spec-id
-    and library'
-  - Title wraps to two lines with orphaned · anyplot.ai on line 2 — reduce title_font_size
-    or shorten the descriptive prefix so the full title fits on one line at 2400px
-    width
-  - Minor label crowding in AC intersection zone (Cottagecore / Tie-Dye) adjacent
-    to bold ABC zone items — increase LINE_HEIGHT slightly or adjust AC zone centroid
-    further from ABC center
+  - Four helper functions (fill_circle_path, restyle_label, emphasize_abc, circle_outline)
+    break the KISS linear structure expected for these implementations
+  - Library Mastery limited because most visual differentiation is achieved via SVG
+    regex manipulation rather than pygal's native styling API
+  - Minor potential crowding in AC/BC zones at full resolution; LINE_HEIGHT=0.13 may
+    be tight when 2+ items occupy a small intersection region
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "Fashion Micro-Trends 2026 · venn-labeled-items · pygal · anyplot.ai" in dark serif font, wraps to two lines (orphaned "· anyplot.ai" on line 2). Category labels GUILTY CLOSET (blue), TREND REPORT (green), WARDROBE STAPLE (lavender) in bold italic serif, matching their circle color, clearly readable. No axis ticks or gridlines. Italic editorial subtitle at bottom in muted ink.
-      Data: Three overlapping circles with semi-transparent fills (18% opacity): green (TREND REPORT, bottom-left), lavender (WARDROBE STAPLE, bottom-right), blue (GUILTY CLOSET, top). Items distributed across all 7 zones. ABC items "Quiet Luxury" and "Ballet Flats" rendered in bold. First series (#009E73) is brand green as required.
-      Legibility verdict: PASS — all text readable against warm off-white background. No light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Fashion Micro-Trends 2026 · venn-labeled-items · python · pygal · anyplot.ai" wraps to two lines, dark ink readable. Category labels (TREND REPORT/WARDROBE STAPLE/GUILTY CLOSET) in bold italic serif in their respective Imprint colors — all readable. Editorial subtitle in INK_SOFT (#4A4A44) at bottom — readable.
+      Data: Three overlapping circles with semi-transparent fills at 18% opacity: #009E73 (green/TREND REPORT), #C475FD (lavender/WARDROBE STAPLE), #4467A3 (blue/GUILTY CLOSET). All 16 fashion item labels distributed across 7 Venn zones. "Quiet Luxury" and "Ballet Flats" in ABC zone are bold. First series is correct brand green #009E73.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct warm near-black.
-      Chrome: Same title in light/warm-white serif text, clearly readable. Category labels same bold italic in their circle colors, remaining legible on dark background (green and lavender highly visible; blue slightly lower contrast but still readable). Editorial subtitle in muted light tone at bottom.
-      Data: Circle fills adapt to dark background — fills appear darker/richer with the same semi-transparent fills over the near-black surface. Data colors identical to light render: brand green, lavender, blue. Item labels rendered in warm-white text, clearly legible against dark fills and dark background.
-      Legibility verdict: PASS — no dark-on-dark failures. All item labels are light-colored in dark theme. Brand green #009E73 clearly visible.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and subtitle readable in light cream (#F0EFE8 INK for dark mode). Category labels retain colored bold italic styling (same Imprint colors) — all visible on dark surface. INK token correctly overrides pygal's CSS .text-overlay .color-N text fill to #F0EFE8.
+      Data: Circle fill colors identical to light render (#009E73, #C475FD, #4467A3) at 18% opacity over dark background — Imprint data colors unchanged between themes as required. Item labels appear in light cream against dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; INK token application is correct
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,49 +54,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All labels readable in both themes; title wraps to 2 lines with orphaned
-          bullet, mildly suboptimal
+        comment: All font sizes explicitly set; title wraps to two lines at 50px (intentional
+          for long 78-char title); item labels bumped to 52px via SVG; category labels
+          at 56px. All readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Items well-distributed; minor crowding in AC zone adjacent to bold
-          ABC center items
+        comment: Items distributed via vertical stacking with LINE_HEIGHT=0.13; minor
+          potential crowding in AC/BC zones at full resolution but no hard overlaps
+          observed.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All circles, labels, and items clearly visible in both themes
+        comment: Text-only labels (dots_size=0) are readable. Circle fills at 0.18
+          opacity clearly show overlapping regions. All 16 items visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; semi-transparent fills reduce saturation
-          clash
+        comment: Imprint positions 1-3 are CVD-safe (green/purple/blue perceptually
+          distinct). Semi-transparent fills allow overlap visibility.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate; good whitespace; title wrapping takes
-          extra vertical space
+        comment: Canvas gate passed (2400x2400 square). Venn occupies ~65% of canvas
+          with balanced margins. Editorial subtitle anchors bottom space well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for Venn; category labels serve label role; title
-          follows required pattern
+        comment: N/A for traditional axes on a Venn. Title has descriptive prefix.
+          Category labels serve as descriptive region identifiers.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, positions 1-3 in canonical Imprint order;
-          backgrounds correct in both themes'
+        comment: 'Imprint positions 1-3 (#009E73, #C475FD, #4467A3) for three circles.
+          Background #FAF8F1 light / #1A1A17 dark. INK tokens correctly applied.'
     design_excellence:
       score: 14
       max: 20
@@ -113,24 +109,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong editorial look — custom SVG fill post-processing, colored
-          bold-italic category labels, serif fonts throughout
+        comment: Editorial serif typography, bold italic colored category labels,
+          ABC emphasis, editorial subtitle, gridless/frameless composition show deliberate
+          design well above defaults. Matches WIRED Chartgeist spec intent.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All chrome removed (no axes/gridlines/ticks), semi-transparent fills,
-          generous whitespace
+        comment: No grid, no axes, no spines, semi-transparent fills at 0.18 opacity,
+          INK_SOFT subtitle. Some residual pygal chrome. Generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: ABC zone emphasis via bold text, editorial subtitle, color links
-          between labels and circles
+        comment: Bold ABC items create focal point. Editorial subtitle provides narrative.
+          Witty category names create editorial taxonomy matching magazine-commentary
+          spec intent.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -138,28 +136,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct symmetric three-circle Venn diagram
+        comment: Correct three-circle symmetric Venn with all seven interior zones
+          populated.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, labels inside zones, category names outside,
-          all 7 zones populated, editorial subtitle
+        comment: Semi-transparent fills, category labels outside circles, items inside
+          each zone, text-only placement, editorial subtitle, gridless background,
+          all 7 interior zones used.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 items in correct zones; zone centroids accurately positioned
+        comment: All 16 items correctly placed in assigned zones (A/B/C/AB/AC/BC/ABC)
+          via zone_centers positioning logic.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Missing python language designator — title is '{Descriptive} · {spec-id}
-          · {library} · anyplot.ai' but must be '{Descriptive} · {spec-id} · python
-          · {library} · anyplot.ai'
+        passed: true
+        comment: Title is 'Fashion Micro-Trends 2026 · venn-labeled-items · python
+          · pygal · anyplot.ai' — correct descriptive prefix + required format. No
+          legend (appropriate).
     data_quality:
       score: 15
       max: 15
@@ -169,81 +170,92 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones populated; semi-transparent overlaps visible;
-          triple intersection emphasized
+        comment: All seven interior Venn zones populated. ABC emphasis demonstrates
+          the most interesting intersection. Full coverage of plot type's expressive
+          range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fashion micro-trends is a plausible editorial use case; categories
-          are witty and on-brand; neutral content
+        comment: Fashion micro-trends 2026 is a real-world neutral domain matching
+          spec's pop-culture editorial intent. Items are real and relevant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 items (within spec's 10-25); 2-3 items per zone; sensible distribution
+        comment: Category assignments are plausible and editorially defensible (Fast
+          Fashion → GUILTY CLOSET, White Sneakers → WARDROBE STAPLE, Digital Fashion
+          → TREND REPORT).
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat structure with small, focused helpers for SVG post-processing
+        comment: Four helper functions defined (circle_outline, fill_circle_path,
+          restyle_label, emphasize_abc). Necessary for SVG post-processing but breaks
+          pure linear structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: No randomness; all data hardcoded; fully deterministic
+        comment: Data fully hardcoded; deterministic circle geometry via math. No
+          randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; correct importlib workaround for pygal name conflict
+        comment: All imports used (importlib, math, os, re, sys, defaultdict, pygal,
+          Style, cairosvg).
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: SVG post-processing is the correct approach for pygal; regex patterns
-          are clean and focused
+        comment: SVG post-processing via multiple regex passes is necessary but creates
+          a complex chain with 5+ separate SVG mutations. Creative given pygal's constraints
+          but slightly over-engineered.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg, .html, and .png; pygal interactive HTML correctly
-          included
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.html, and plot-{THEME}.png correctly.
+          Uses current cairosvg API.
     library_mastery:
-      score: 8
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct Style object usage, XY chart for coordinates, importlib workaround,
-          cairosvg for PNG
+        comment: pygal.XY is correct chart type for coordinate-based placement. Style
+          object used properly. However majority of visual differentiation comes from
+          SVG post-processing rather than native API.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
         passed: true
-        comment: Leverages pygal's SVG-first output for circle fills and label restyling;
-          HTML interactive export
+        comment: Uses pygal's SVG output nature for post-processing fills and label
+          restyling — pygal-specific technique. Interactive HTML output is also distinctive.
+          However most visual work bypasses the library.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
+  - annotations
   patterns:
   - iteration-over-groups
   dataprep: []
