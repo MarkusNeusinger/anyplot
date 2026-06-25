@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -25,8 +25,8 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+BRAND_GREEN = "#009E73"
 
 # Data - 9x9 Sudoku puzzle (0 = empty)
 grid = [
@@ -41,20 +41,29 @@ grid = [
     [7, 0, 3, 0, 1, 8, 0, 0, 0],
 ]
 
-# Alternating 3x3 box fills — checkerboard tint to visually distinguish regions
-box_rects = {"x": [], "y": [], "fill_color": []}
+# Alternating 3x3 box fills — brand-green alpha tint for clear regional contrast
+# Higher alpha in dark mode compensates for the lower ambient contrast
+BOX_TINT_ALPHA = 0.10 if THEME == "light" else 0.20
+box_rects = {"x": [], "y": [], "fill_color": [], "fill_alpha": []}
 for box_row in range(3):
     for box_col in range(3):
         cx = box_col * 3 + 1.5
         cy = (2 - box_row) * 3 + 1.5
-        color = ELEVATED_BG if (box_row + box_col) % 2 == 0 else PAGE_BG
+        if (box_row + box_col) % 2 == 0:
+            color = BRAND_GREEN
+            alpha = BOX_TINT_ALPHA
+        else:
+            color = PAGE_BG
+            alpha = 1.0
         box_rects["x"].append(cx)
         box_rects["y"].append(cy)
         box_rects["fill_color"].append(color)
+        box_rects["fill_alpha"].append(alpha)
 box_source = ColumnDataSource(box_rects)
 
-# Number labels (row 0 at top → y = 8 - row)
-number_rows = {"x": [], "y": [], "text": []}
+# Number labels — given clue numbers in brand green to visually distinguish
+# pre-filled cells from empty solving space
+number_rows = {"x": [], "y": [], "text": [], "text_color": []}
 for row in range(9):
     for col in range(9):
         value = grid[row][col]
@@ -62,6 +71,7 @@ for row in range(9):
             number_rows["x"].append(col + 0.5)
             number_rows["y"].append(8 - row + 0.5)
             number_rows["text"].append(str(value))
+            number_rows["text_color"].append(BRAND_GREEN)
 numbers = ColumnDataSource(number_rows)
 
 # Thin lines for individual cells
@@ -100,19 +110,28 @@ p = figure(
     background_fill_color=PAGE_BG,
     border_fill_color=PAGE_BG,
     min_border_top=120,
-    min_border_bottom=40,
-    min_border_left=40,
-    min_border_right=40,
+    min_border_bottom=80,
+    min_border_left=80,
+    min_border_right=80,
 )
 
 # Draw alternating box tints first (underneath grid lines)
-p.rect(x="x", y="y", width=3, height=3, fill_color="fill_color", line_color=None, source=box_source)
+p.rect(
+    x="x",
+    y="y",
+    width=3,
+    height=3,
+    fill_color="fill_color",
+    fill_alpha="fill_alpha",
+    line_color=None,
+    source=box_source,
+)
 
 # Thin cell lines, then thick box boundaries on top
 p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=thin_lines, line_width=3, line_color=INK)
 p.segment(x0="x0", y0="y0", x1="x1", y1="y1", source=thick_lines, line_width=10, line_color=INK)
 
-# Centered bold numbers
+# Centered bold numbers — text_color per-glyph from source (brand green for given clues)
 p.add_layout(
     LabelSet(
         x="x",
@@ -123,7 +142,7 @@ p.add_layout(
         text_font_style="bold",
         text_align="center",
         text_baseline="middle",
-        text_color=INK,
+        text_color="text_color",
     )
 )
 
