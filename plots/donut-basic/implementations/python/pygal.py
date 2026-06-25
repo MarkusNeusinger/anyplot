@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-basic: Basic Donut Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -60,7 +60,7 @@ custom_style = Style(
     legend_font_size=44,
     tooltip_font_size=36,
     value_font_size=44,
-    value_colors=["#F0EFE8"] * len(categories),
+    value_colors=[INK] * len(categories),
     opacity=1,
     opacity_hover=0.85,
     transition="200ms ease-in",
@@ -91,27 +91,39 @@ for cat, val in zip(categories, values, strict=True):
 # Render to SVG, then inject center-label text (pygal has no native donut-hole label).
 svg_text = chart.render(is_unicode=True)
 
-# Locate plot-group translate and the first slice's top-of-arc to compute donut center.
+# Locate donut center from SVG; fall back to fixed geometric calculation.
 plot_match = re.search(r'<g transform="translate\(([\d.\-]+),\s*([\d.\-]+)\)"\s+class="plot"', svg_text)
-plot_x = float(plot_match.group(1))
-plot_y = float(plot_match.group(2))
-
 slice_match = re.search(r'<path d="M([\d.\-]+)\s+([\d.\-]+)\s+A([\d.\-]+)', svg_text)
-top_x = float(slice_match.group(1))
-top_y = float(slice_match.group(2))
-outer_r = float(slice_match.group(3))
 
-cx = plot_x + top_x
-cy = plot_y + top_y + outer_r
+if plot_match and slice_match:
+    plot_x = float(plot_match.group(1))
+    plot_y = float(plot_match.group(2))
+    top_x = float(slice_match.group(1))
+    top_y = float(slice_match.group(2))
+    outer_r = float(slice_match.group(3))
+    cx = plot_x + top_x
+    cy = plot_y + top_y + outer_r
+else:
+    # Fixed geometric center for 2400×2400 canvas: title ~280px top, legend ~160px bottom
+    cx = 2400 / 2
+    cy = 280 + (2400 - 280 - 160) / 2
 
-# Center metric: secondary label above center, headline value below.
+# Center metric: muted label + divider + bold headline value.
+label_y = cy - 110
+divider_y = cy - 30
+value_y = cy + 110
+divider_half = 90
+
 center_text = (
     f'<g class="center-metric">'
-    f'<text x="{cx:.2f}" y="{cy - 80:.2f}" text-anchor="middle" '
-    f'fill="{INK_SOFT}" style="font-size:52px;letter-spacing:3px;'
+    f'<text x="{cx:.2f}" y="{label_y:.2f}" text-anchor="middle" '
+    f'fill="{INK_SOFT}" style="font-size:50px;letter-spacing:4px;'
     f'text-transform:uppercase;font-family:{font};">Portfolio</text>'
-    f'<text x="{cx:.2f}" y="{cy + 90:.2f}" text-anchor="middle" '
-    f'fill="{INK}" style="font-size:150px;font-weight:700;font-family:{font};">${total:,}K</text>'
+    f'<line x1="{cx - divider_half:.2f}" y1="{divider_y:.2f}" '
+    f'x2="{cx + divider_half:.2f}" y2="{divider_y:.2f}" '
+    f'stroke="{INK_MUTED}" stroke-width="1.5" opacity="0.5"/>'
+    f'<text x="{cx:.2f}" y="{value_y:.2f}" text-anchor="middle" '
+    f'fill="{INK}" style="font-size:148px;font-weight:700;font-family:{font};">${total:,}K</text>'
     f"</g>"
 )
 
