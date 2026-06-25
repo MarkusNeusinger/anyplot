@@ -1,0 +1,262 @@
+library: echarts
+language: javascript
+specification_id: ecdf-basic
+created: '2026-06-25T09:52:54Z'
+updated: '2026-06-25T10:11:39Z'
+generated_by: claude-sonnet
+workflow_run: 28161574489
+issue: 976
+language_version: 22.23.0
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: correct ECDF step function (step: ''end''), Y-axis 0–1,
+    grid lines for percentile reading, and two-group comparison'
+  - 'Excellent use of ECharts-distinctive features: markLine for median reference
+    lines with labels, areaStyle fills, and redundant line encoding (solid vs dashed)
+    for CVD accessibility'
+  - Deterministic LCG + Box-Muller data generation is idiomatic for browser-only JS
+    with no seeded Math.random()
+  - 'Both renders fully theme-adaptive: background transparent (falls through to pageBg),
+    all chrome uses t.ink/t.inkSoft/t.grid/t.elevatedBg tokens, data colors identical
+    across themes'
+  - 'Strong data storytelling: median reference lines (76 vs 62.3) create clear focal
+    points revealing the tutoring effect, area fills make the distribution comparison
+    intuitive'
+  weaknesses:
+  - 'DE-01 moderate: design is polished but not yet publication-level — the area fills
+    and median lines are good but typography hierarchy could be further refined (e.g.,
+    bolder title weight differentiation, slightly larger median line label font ≥14px)'
+  - 'DE-02: tick marks already removed (good), but grid is shown on both axes simultaneously;
+    for a line chart an X-axis-only or Y-axis-only grid would reduce visual noise
+    and improve refinement'
+  - 'CQ-01: three helper functions (lcg, normalSamples, toECDF) deviate from KISS
+    flat structure; in JS the LCG is necessary for reproducibility but toECDF could
+    be inlined'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "ecdf-basic · javascript · echarts · anyplot.ai" in bold dark text at center-top, ~55% of plot width — well-proportioned. Y-axis label "Cumulative Proportion" vertical on left, X-axis label "Exam Score" centered below ticks — both dark text, readable. Tick labels (0.0–1.0 on Y, 15–120 on X) in dark ink at fontSize 14, clearly visible. Legend top-right with elevated background box showing solid green line "Tutoring (n=200)" and dashed lavender line "Self-Study (n=200)" — all text readable.
+      Data: Two ECDF step-function lines — solid green (#009E73, first Imprint slot) for tutoring and dashed lavender (#C475FD, second Imprint slot) for self-study. Transparent area fills below each curve (green opacity 0.12, lavender opacity 0.10) with overlapping blend region. Dashed vertical median reference lines with labels "Median 62.3" (lavender, at ~x=63) and "Median 76" (green, at ~x=76) at top of lines.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background with no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light colors (t.ink = #F0EFE8 / t.inkSoft = #B8B7B0) — clearly visible against the dark surface. Legend box uses t.elevatedBg (#242420), subtly distinct from the page background. "Median 62.3" and "Median 76" labels visible in inkSoft tone. No dark-on-dark failures observed.
+      Data: Green (#009E73) and lavender (#C475FD) are identical to the light render — data colors unchanged. The overlapping area fill creates a deep indigo-green blend on the dark background, which is visually coherent. Grid lines visible in subtle t.grid color.
+      Legibility verdict: PASS — all text is readable against the near-black background; no dark-on-dark text issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title:22, axis names:16, ticks:14,
+          legend:16); median line labels at fontSize 12 are functional but slightly
+          small for the canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; median labels horizontally separated;
+          tick labels spaced appropriately
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step lines at width 3 are clearly visible; area fills add depth without
+          obscuring curves; both series distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Dual encoding: color + linestyle (solid vs dashed) ensures CVD safety;
+          green and lavender are perceptually distinct'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; generous grid margins (left:100, right:80, top:110,
+          bottom:85); plot fills canvas well with balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Cumulative Proportion'' (proportion is unitless), X: ''Exam
+          Score'' — both descriptive and appropriate'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (t.palette[0]), second #C475FD (t.palette[1]);
+          background transparent (pageBg shows through); all chrome uses t.ink/t.inkSoft/t.grid
+          tokens; data colors identical across both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: area fills, median reference lines, elevated legend
+          box, redundant encoding. Not yet publication-level typography hierarchy'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed, theme-appropriate grid color, transparent background,
+          generous margins. Grid on both axes simultaneously adds slight noise
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Median reference lines (76 vs 62.3) create clear focal points; area
+          fills visualize overlap region; the distribution separation clearly communicates
+          the tutoring effect
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ECDF step function using step:'end'; Y-axis 0–1; each step
+          increases by 1/n
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function present, Y-axis 0–1, distinct line styles, grid lines
+          for percentile reading — all spec requirements met
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: continuous exam score values; Y: cumulative proportion 0–1; all
+          data visible within axis range'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'ecdf-basic · javascript · echarts · anyplot.ai' matches required
+          format; legend labels descriptive with sample sizes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two groups with different distributions demonstrate comparison; different
+          location (medians 76 vs 62.3) and spread; S-curve ECDF shape visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores comparing tutoring vs self-study students — realistic
+          educational context, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Tutoring mean=75 std=12, self-study mean=63 std=15 — plausible academic
+          score distributions; x-range 15–120 accommodates realistic tail values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions (lcg, normalSamples, toECDF) deviate from
+          pure flat structure; LCG is necessary for browser reproducibility, but toECDF
+          could be inlined
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seeded with 42, Box-Muller transform — fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No explicit imports; all globals (window.ANYPLOT_TOKENS, echarts)
+          are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean organization, no over-engineering, no fake UI; helper functions
+          are compact and well-named
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false, echarts.init without explicit size/DPR, correct
+          harness contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct setOption pattern, step:'end' for step functions, markLine
+          for reference lines, areaStyle, color array from tokens — all idiomatic
+          ECharts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'ECharts-specific: step:''end'' line type, markLine with vertical
+          reference lines + labels, areaStyle fills, legend backgroundColor with borderRadius
+          — multiple distinctive ECharts features'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
