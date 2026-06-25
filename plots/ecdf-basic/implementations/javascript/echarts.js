@@ -1,7 +1,7 @@
 // anyplot.ai
 // ecdf-basic: Basic ECDF Plot
 // Library: echarts 5.5.1 | JavaScript 22.23.0
-// Quality: 84/100 | Created: 2026-06-25
+// Quality: 90/100 | Created: 2026-06-25
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
