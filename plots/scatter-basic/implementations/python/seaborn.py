@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-25
@@ -53,17 +53,21 @@ sns.set_theme(
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-sns.scatterplot(
+# regplot adds regression line + 95% CI band — seaborn's distinctive statistical layer
+sns.regplot(
     data=df,
     x="Marketing Spend ($ thousands)",
     y="Quarterly Revenue ($ thousands)",
     ax=ax,
     color=BRAND,
-    s=100,
-    alpha=0.7,
-    edgecolor=PAGE_BG,
-    linewidth=0.9,
+    scatter_kws={"s": 72, "alpha": 0.55, "edgecolors": PAGE_BG},
+    line_kws={"linewidth": 2.0},
+    ci=95,
 )
+
+# Pearson r annotation surfaces the correlation insight
+r = np.corrcoef(marketing_spend, sales_revenue)[0, 1]
+ax.annotate(f"r = {r:.2f}", xy=(0.97, 0.06), xycoords="axes fraction", ha="right", fontsize=8, color=INK_SOFT)
 
 # Style
 ax.set_title("scatter-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
