@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-25
@@ -66,7 +66,7 @@ zone_anchors = {
 # Spread offsets when multiple items share a zone (in data units, spread vertically)
 zone_offsets = {
     1: [(0.0, 0.0)],
-    2: [(0.0, 0.12), (0.0, -0.12)],
+    2: [(0.0, 0.18), (0.0, -0.18)],
     3: [(0.0, 0.28), (0.0, 0.0), (0.0, -0.28)],
     4: [(0.0, 0.42), (0.0, 0.14), (0.0, -0.14), (0.0, -0.42)],
 }
@@ -112,7 +112,7 @@ for tpos in sorted({p[4] for p in placed}):
             x=[p[0] for p in pts],
             y=[p[1] for p in pts],
             mode="markers+text",
-            marker={"size": 8, "color": INK, "line": {"width": 0}},
+            marker={"size": 11, "color": INK, "line": {"width": 0}},
             text=[f" {p[2]} " for p in pts],
             textposition=tpos,
             textfont={"family": "Georgia, 'Times New Roman', serif", "size": 13, "color": INK},
@@ -166,12 +166,12 @@ fig.add_annotation(
 
 # Use explicit x/y ranges with equal pixel density (no scaleanchor) so circles render round.
 # Base canvas: 600×600, margins l=80 r=40 t=100 b=60 → plot area 480×440 px.
-# x range 5.2 units → 480/5.2 ≈ 92.3 px/unit; y range 4.77 units → 440/4.77 ≈ 92.2 px/unit.
-# Ranges centered on diagram content to eliminate the bottom empty-space imbalance.
+# x range 5.2 units → 480/5.2 ≈ 92.3 px/unit; y range 4.76 units → 440/4.76 ≈ 92.4 px/unit.
+# y range shifted up 0.41 units to centre diagram and eliminate bottom dead space.
 fig.update_layout(
     autosize=False,
     title={
-        "text": "<b>CHARTGEIST</b>  ·  venn-labeled-items · plotly · anyplot.ai",
+        "text": "<b>CHARTGEIST</b>  ·  venn-labeled-items · python · plotly · anyplot.ai",
         "font": {"family": "Georgia, 'Times New Roman', serif", "size": 20, "color": INK},
         "x": 0.5,
         "xanchor": "center",
@@ -181,7 +181,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     showlegend=False,
     xaxis={"visible": False, "range": [-3.0, 2.2]},
-    yaxis={"visible": False, "range": [-2.11, 2.66]},
+    yaxis={"visible": False, "range": [-1.7, 3.06]},
     margin={"l": 80, "r": 40, "t": 100, "b": 60},
     font={"family": "Georgia, 'Times New Roman', serif", "color": INK},
 )
