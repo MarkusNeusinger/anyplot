@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-basic: Basic Donut Chart
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-06-25
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 83/100 | Updated: 2026-06-25
 """
 
 import math
