@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-06-25
@@ -6,6 +6,7 @@ Quality: 82/100 | Updated: 2026-06-25
 
 import os
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 
@@ -41,8 +42,8 @@ items = [
     ("Spreadsheets", 2.10, 0.55),
     ("Calendar Apps", 2.00, 0.05),
     # C only — Secretly Loved
-    ("Roller Skating", -0.70, -2.10),
-    ("Soap Operas", 0.70, -2.10),
+    ("Roller Skating", -0.65, -2.25),
+    ("Soap Operas", 0.65, -1.80),
     # A ∩ B
     ("ChatGPT", 0.00, 1.20),
     ("Smartwatches", 0.00, 0.85),
@@ -75,9 +76,10 @@ for circle in circles:
         )
     )
 
-# Item labels — data items inside each zone
+# Item labels with knockout stroke so text stays readable inside colored overlap regions
 for label, x, y in items:
-    ax.text(x, y, label, fontsize=9, color=INK, ha="center", va="center", family="serif", zorder=3)
+    txt = ax.text(x, y, label, fontsize=10, color=INK, ha="center", va="center", family="serif", zorder=3)
+    txt.set_path_effects([pe.withStroke(linewidth=2.5, foreground=PAGE_BG)])
 
 # Category labels outside each circle, on its outer side
 category_positions = [
@@ -104,7 +106,7 @@ ax.text(
 ax.text(
     0,
     2.55,
-    "venn-labeled-items · matplotlib · anyplot.ai",
+    "venn-labeled-items · python · matplotlib · anyplot.ai",
     fontsize=9,
     color=INK_MUTED,
     ha="center",
@@ -114,7 +116,7 @@ ax.text(
 
 # Frame — clean gridless composition
 ax.set_xlim(-3.5, 3.5)
-ax.set_ylim(-3.5, 3.5)
+ax.set_ylim(-3.2, 3.5)
 ax.set_aspect("equal")
 ax.set_xticks([])
 ax.set_yticks([])
