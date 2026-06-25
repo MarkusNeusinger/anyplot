@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: contour-basic
 created: '2026-06-25T03:56:26Z'
-updated: '2026-06-25T04:02:17Z'
+updated: '2026-06-25T04:26:50Z'
 generated_by: claude-sonnet
 workflow_run: 28145485941
 issue: 855
@@ -12,96 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/javascript/echarts/plot-dark.html
-quality_score: 78
+quality_score: 84
 review:
   strengths:
-  - 'Excellent theme adaptation: all chrome tokens (t.ink, t.inkSoft, t.seq) correctly
-    mapped; dark render fully readable with no dark-on-dark failures.'
-  - Correct imprint_seq colormap (t.seq) for continuous data — palette compliant.
-  - Square orientation is appropriate for the symmetric 2D grid.
-  - Fully deterministic data (mathematical bivariate Gaussian, no RNG); ideal for
-    reproducibility.
-  - 'Clean, idiomatic ECharts heatmap with animation: false, no explicit size/dpr,
-    emphasis: { disabled: true }.'
+  - Dual-layer visualization (heatmap fill + marching squares isolines) correctly
+    implements the spec's suggestion to use both filled regions and contour lines
+  - Custom series with renderItem group elements for the isoline labels is sophisticated
+    idiomatic ECharts usage
+  - Contour label background boxes (pageBg fill at 0.78 opacity) prevent text legibility
+    issues over the colored heatmap surface in both themes
+  - Full Imprint sequential palette compliance (t.seq = green to blue) for the continuous
+    colormap
+  - Saddle-point disambiguation in marching squares (center-value heuristic for 4-crossing
+    cells) is technically correct
   weaknesses:
-  - 'The implementation is a heatmap, not a contour plot. The spec''s defining feature
-    — isolines (level curves) connecting points of equal value — is completely absent.
-    ECharts has no native contour series, but isolines can be approximated: compute
-    contour level thresholds (e.g., 10 evenly-spaced values between minVal and maxVal),
-    then for each threshold draw polyline segments along cell boundaries where the
-    density crosses that value. Overlay them as a lines series on top of the heatmap
-    with a semi-transparent ink-color stroke and optional text labels.'
-  - No labeled contour levels. Even without full isolines, adding text annotations
-    for a few key density values (e.g., the peak value and a mid-range level) would
-    improve informativeness.
-  - 'Minor: colorbar bar width is narrow; consider increasing the visualMap itemWidth
-    to 20-25 for better visibility at small display sizes.'
+  - Contour labels 0.22-0.78 all cluster in the saddle region between the two peaks;
+    the label-placement algorithm selects segments nearest to grid center, which concentrates
+    all middle-value labels in the same small area — a better heuristic would spread
+    labels along the longest segment or around the peak perimeters
+  - Contour isolines at opacity 0.5 are slightly faint over the vibrant heatmap background;
+    increase to 0.75-0.85 for better isoline legibility
+  - Axis labels 'X' and 'Y' are minimal; more descriptive labels like 'X Coordinate'
+    and 'Y Coordinate' would improve clarity
+  - Contour lines appear angular/octagonal due to the 61-point grid step (0.1); a
+    finer grid (step 0.05, ~120 points) would produce smoother isolines
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light surface
-      Chrome: Title "contour-basic · javascript · echarts · anyplot.ai" in bold dark ink, clearly readable. Axis labels "X" (bottom) and "Y" (left) in ink-soft token, readable. Tick labels -3.0 to 3.0 on both axes in ink-soft, readable. Colorbar "High"/"Low" labels visible and readable.
-      Data: Smooth color-gradient heatmap from brand green #009E73 (low density) to muted blue-purple (high density peaks), consistent with imprint_seq. Two distinct Gaussian density peaks visible. Colorbar vertical on right side.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "contour-basic · javascript · echarts · anyplot.ai" bold centered in dark ink, fully readable. X-axis label "X" and Y-axis label "Y" in inkSoft color, readable. Axis tick labels (-3.0 to 3.0 at interval 9) in inkSoft at 14px, readable. Colorbar text "High"/"Low" in inkSoft, readable.
+      Data: Heatmap using Imprint sequential colormap (t.seq: green #009E73 at min → blue #4467A3 at max). Two Gaussian peaks visible — primary in upper-right (~1.3, 1.0), secondary in lower-left (~-1.0, -1.0). Eight contour isolines overlaid via marching squares in dark ink at 0.5 opacity, each with a small label box. Six labels cluster in the saddle region between peaks.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title flips to near-white light ink, clearly visible. Tick labels (-3.0 to 3.0) rendered in light ink-soft token, clearly readable against dark background. Axis name labels "X" and "Y" in light ink-soft, readable. Colorbar "High"/"Low" text in light ink-soft, readable. No dark-on-dark failures observed.
-      Data: Data colors are identical to light render — same green-to-blue gradient for density peaks. Only chrome elements (background, text colors) flip for the dark theme.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light-colored ink (t.ink dark mode ≈ #F0EFE8), fully readable. Axis labels and tick labels in inkSoft dark mode (≈ #B8B7B0), readable. Colorbar "High"/"Low" labels readable. No dark-on-dark failures observed.
+      Data: Heatmap data colors identical to light render — same Imprint sequential green-to-blue gradient, same two-peak structure. Contour isolines are lighter (t.ink in dark mode) making them more visible against the dark heatmap. Label background boxes use t.pageBg (dark surface ≈ #1A1A17), text fill in t.ink (light), correct dark-mode appearance.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor: Y-axis nameGap of 55 places
-          the Y label close to left canvas edge but all pixels visible.'
+        comment: All font sizes explicitly set (title 24px, axis names 16px, tick
+          labels 14px). Contour labels at 10px are functional but borderline for mobile
+          scaling.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: Labels 0.22-0.78 cluster tightly in the saddle region between the
+          two peaks; no full overlap due to background boxes but crowded.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Two Gaussian density peaks clearly distinguishable. Colorbar gradient
-          bar is narrow — more width would help at small sizes.
+        comment: Heatmap clearly visible. Contour lines at opacity 0.5 are visible
+          but slightly faint over the vibrant heatmap background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient is CVD-safe.
+        comment: Imprint sequential palette (green to blue) is colorblind-safe; no
+          red-green issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (square 2400x2400). Good proportions, nothing
-          cut off, generous margins.
+        comment: Square canvas correctly chosen; balanced margins; plot fills canvas
+          well including colorbar.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Title in correct mandated format. X/Y axis labels appropriate for
-          mathematical grid plot.
+        comment: Title format correct. Axis labels 'X' and 'Y' are technically correct
+          for mathematical coordinates but minimal.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: t.seq used for continuous data (imprint_seq). Chrome tokens correctly
-          applied. Background transparent showing correct page surface.
+        comment: Uses t.seq (imprint_seq, green to blue) correctly for single-polarity
+          density heatmap. Transparent background, all chrome theme-adaptive in both
+          renders.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,145 +113,146 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean square layout with two-peak Gaussian. Color gradient elegant.
-          Could be elevated with contour line overlays.
+        comment: Dual-layer heatmap+isoline approach is above default sophistication.
+          Contour label backgrounds show attention to detail. Isolines appear somewhat
+          angular due to 0.1-step grid discretization.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No unnecessary grid, transparent background, minimal chrome. Emphasis
-          disabled for heatmap cells.
+        comment: No grid lines, no axis ticks, transparent background, contour label
+          boxes — clean composition above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Two density peaks provide focal point but no contour lines means
-          level-curve information is lost.
+        passed: true
+        comment: Two-peak topology immediately readable. Color gradient provides intuitive
+          high/low signal. Labeled isolines add quantitative reference. Clear visual
+          hierarchy between peak and saddle zones.
     spec_compliance:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Implementation is a heatmap, not a contour plot. Isolines (level
-          curves) — the defining feature of a contour plot — are completely absent.
+        passed: true
+        comment: Correct contour plot with both filled regions (heatmap) and isolines
+          (custom marching squares series).
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Colorbar present, 2D scalar field visible. Missing: contour isolines,
-          labeled contour levels.'
+        passed: true
+        comment: Contour lines, filled regions, colorbar, and labeled contour levels
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates span -3 to 3 correctly. Z values correctly mapped
-          to color intensity. Full data range visible.
+        comment: X and Y axes span -3.0 to 3.0; 61x61 grid within spec range; Z is
+          bivariate density function.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'contour-basic · javascript · echarts · anyplot.ai'.
-          No categorical legend needed; colorbar is appropriate.
+        comment: Title is exactly 'contour-basic · javascript · echarts · anyplot.ai'.
+          Colorbar labeled 'High'/'Low' with decimal formatter.
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Bivariate Gaussian with two distinct peaks demonstrates 2D scalar
-          field variation. Without contour lines, some features (gradient steepness,
-          exact level boundaries) are only approximated.
+        comment: Shows two asymmetric peaks, density gradient, saddle region, full
+          value range. Comprehensive contour topology demonstration.
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Bivariate Gaussian density is realistic and neutral for a statistical
-          distribution demo.
+        comment: Bivariate Gaussian is a classic probability density scenario — plausible
+          and appropriate, but not a fully labeled real-world context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -3 to 3 range with 61 grid points is appropriate. Smooth density
-          function fills the range sensibly.
+        comment: 61x61 grid at step 0.1 produces adequate resolution. Density values
+          0-1.0 appropriate for probability density analogue.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear code with small density helper function. No classes. Clear
-          data -> option -> render flow.
+        comment: Two helper functions (density, contourSegments) are defined; justified
+          by marching squares complexity but add indirection.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: mathematical function, no RNG, no fetch.'
+        comment: Pure mathematical function; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports (ECharts is a global). All globals used appropriately.
+        comment: No imports; echarts is a global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI or simulated interactivity.
+        comment: Clean, well-structured, no fake interactive elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. echarts.init without explicit size/dpr. Harness
-          handles PNG/HTML output.'
+        comment: 'animation: false, no explicit size/devicePixelRatio, correct echarts.init
+          pattern.'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert combination of heatmap series, visualMap colorbar, and custom
+          series with renderItem — all idiomatic ECharts patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Heatmap series with visualMap is the correct ECharts pattern. emphasis:
-          { disabled: true } correctly suppresses hover glow. Category axes with pre-computed
-          labels is correct.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Standard heatmap usage. No use of ECharts-distinctive features like
-          custom series, renderer switching, or advanced visual map interactions.
-          visualMap formatter is a nice touch.
+        comment: Custom series with renderItem returning group elements (line + rect
+          + text) is a distinctive ECharts capability for custom geometry overlaid
+          on a coordinate system.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - html-export
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
+  - alpha-blending
