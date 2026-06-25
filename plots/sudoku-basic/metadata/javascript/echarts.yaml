@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: sudoku-basic
 created: '2026-06-25T08:08:23Z'
-updated: '2026-06-25T08:14:37Z'
+updated: '2026-06-25T08:24:13Z'
 generated_by: claude-sonnet
 workflow_run: 28155426622
 issue: 1311
@@ -12,102 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: thick box-boundary lines, thin cell lines, bold centered
-    numbers, blank empty cells, monochrome design — all required features present'
-  - 'Excellent theme adaptation: dark render uses t.elevatedBg for cell fill and t.ink
-    for text/borders, producing a clean near-black grid with fully readable cream-colored
-    numbers'
-  - 'Correct ECharts idioms: animation:false, no explicit width/height in echarts.init(),
-    transparent backgroundColor, ANYPLOT_TOKENS consumed correctly'
-  - Smart use of ECharts graphic component with z-layering (z:1-5) to correctly stack
-    background, thin lines, thick lines, outer border, and numbers without conflicts
-  - Outer border (4px) slightly heavier than box-boundary lines (3px) which are heavier
-    than thin cell lines (1px) — three-level visual hierarchy correctly implemented
-  - 'Font sizing is data-adaptive: NUM_FONT = Math.round(CELL * 0.50) ensures numbers
-    scale proportionally to grid size regardless of canvas dimensions'
+  - Three-tier line weight hierarchy (cell 1px / box 3px / outer 4px) creates clean
+    visual structure matching the sudoku spec exactly.
+  - Alternating 3x3 box tonal overlays add visual differentiation beyond the spec
+    minimum, improving readability.
+  - 'Theme-adaptive throughout: INK, CELL_BG, BOX_ALT_BG, and THIN_LINE all respond
+    correctly to light/dark.'
+  - 'Perfect data fidelity: classic puzzle correctly rendered with all zeros suppressed.'
+  - Excellent use of ECharts graphic API with z-index layering for clean element composition.
   weaknesses:
-  - 'Light-mode cell background is pure #FFFFFF rather than the warm off-white #FAF8F1;
-    while defensible for a printable Sudoku (white cells are conventional), the style
-    guide explicitly prohibits pure white — consider using #FEFCF5 or #FFFDF6 (elevated
-    bg) instead of #FFFFFF'
-  - 'DE-01/DE-02: Design is functional and appropriate but lacks optional polish opportunities
-    — e.g., subtle drop shadow on the outer grid border or slight tonal variation
-    for the 3×3 box fill to visually reinforce box regions'
-  - 'LM-02: Only the ECharts graphic component is used; no ECharts-specific features
-    like tooltip, visualMap, or rich text labels are showcased beyond what''s strictly
-    required'
+  - Title fontSize 22 is slightly modest for a 2400x2400 square canvas; 24-26 px would
+    better fill ~50-65% of canvas width.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) outer canvas; cell interiors are pure white (#FFFFFF) — conventional for a printable Sudoku grid.
-      Chrome: Title "sudoku-basic · javascript · echarts · anyplot.ai" rendered in dark ink at the top-center; fully readable.
-      Grid structure: 9×9 grid is centered on the canvas with 75px (CSS) side margins and 90px top for the title. Outer border (4px dark ink), box-boundary lines at cols/rows 3 and 6 (3px dark ink), individual cell lines (1px semi-transparent). Three-level line-weight hierarchy clearly visible.
-      Data: 23 given clues (non-zero cells) rendered as bold dark numbers, large (~58px CSS = ~116 native px), centered horizontally and vertically in each cell. Empty cells show as blank. Numbers are crisp and unambiguous.
-      Legibility verdict: PASS — all text (title and puzzle numbers) is clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "sudoku-basic · javascript · echarts · anyplot.ai" in dark ink, centered at top; no axis labels (grid graphic). All text clearly readable against light background.
+      Data: Monochrome grid. Thin grey-tinted cell lines (~30% opacity); thick black box lines (3px); heavier outer border (4px). Alternating 3x3 box tonal overlays (subtle warm tint on checkerboard boxes). Bold black numbers centered in cells.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) outer canvas; cell interiors use t.elevatedBg (#242420) — slightly elevated so the grid boundary is visible against the outer background.
-      Chrome: Title rendered in t.ink (#F0EFE8, cream-white) — fully readable against near-black. Grid borders and box-boundary lines are the same t.ink cream color; thin lines use a lighter opacity variant. All structural lines visible.
-      Data: Same 23 clues in bold cream/off-white (#F0EFE8) on the dark cell background (#242420). Adequate contrast; no dark-on-dark issue. Data colors are identical in character to the light render — monochrome ink style, only the specific hex flips with the theme.
-      Legibility verdict: PASS — title and all puzzle numbers are clearly readable against the dark background. No dark-on-dark failure observed.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title switches to near-white (#F0EFE8) text; grid lines flip to near-white. All text clearly readable against dark background. No dark-on-dark issues detected.
+      Data: Colors identical to light render structurally — grid lines are now white/light (using ink token), numbers are bright near-white bold text. Alternating box backgrounds use a slightly lighter dark tint. Same puzzle layout and number positions.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All fonts explicitly set; title 22px CSS, numbers ~58px CSS (adaptive
-          via CELL*0.50). Readable at full res and mobile in both themes.
+        comment: Numbers bold and clearly sized at ~50% cell height; title at fontSize
+          22 readable but slightly modest for 2400x2400 canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers well-centered in cells; no overlap with grid lines or adjacent
-          numbers.
+        comment: Numbers isolated in cells, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold numbers at ~50% of cell size are highly prominent. Thick/thin
-          line distinction is clear in both themes.
+        comment: Grid lines, box backgrounds, and numbers all visually distinct in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design; ink-on-white (light) and cream-on-dark (dark)
-          both provide high contrast ratios.
+        comment: Monochrome design with high-contrast ink tokens; no CVD concerns
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Grid occupies ~86% of canvas height with balanced
-          75px margins. Title has clear breathing room above. No overflow or clipping.
+        comment: Canvas gate passed (2400x2400 square); grid well-centred with generous
+          margins; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'No axis labels (correct for a grid). Title follows required format:
-          ''sudoku-basic · javascript · echarts · anyplot.ai''.'
+        comment: Title format exact; no axis labels required for grid graphic
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome spec; no categorical palette required. Chrome is fully
-          theme-adaptive (t.ink, t.elevatedBg). Cell background #FFFFFF in light is
-          conventional for printable Sudoku and spec-justified (''monochrome design
-          suitable for printing'').'
+        comment: 'Monochrome spec; page backgrounds use #FAF8F1 / #1A1A17 via transparent
+          overlay — theme-correct'
     design_excellence:
       score: 11
       max: 20
@@ -117,25 +98,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clear three-level visual hierarchy (outer border 4px > box lines
-          3px > cell lines 1px). Font choice (Helvetica Neue) is clean and appropriate.
-          Appropriately minimal for the printing use case.
+        comment: Three-tier line hierarchy and alternating 3x3 tonal overlays demonstrate
+          genuine design intent
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: No unnecessary decorations. The subtle outer-border vs box-boundary
-          line weight distinction is a refined touch. Generous margins provide breathing
-          room.
+        comment: Functional and clean; alternating backgrounds subtle
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Thick/thin line hierarchy naturally guides the eye to 3×3 box regions,
-          which is the key structural insight of Sudoku. No additional storytelling
-          elements but the visual design serves the puzzle's logic well.
+        comment: Visual hierarchy guides eye from box structure to cells to numbers;
+          alternating overlays reinforce logical grouping
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: 9×9 Sudoku grid with proper 3×3 box region structure.'
+        comment: Correct 9x9 Sudoku grid with 3x3 box regions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: thick box-boundary lines, thin cell lines, centered
-          bold numbers, blank empty cells, monochrome design.'
+        comment: Thick box-boundary lines, thin cell lines, bold centered numbers,
+          blank empty cells, monochrome design — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Classic 9×9 puzzle correctly mapped; all 23 given clues in correct
-          positions; 0-values correctly suppressed.
+        comment: Classic puzzle data correctly mapped; zeros suppressed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sudoku-basic · javascript · echarts · anyplot.ai' is correct.
-          No legend needed (no series).
+        comment: Title exactly 'sudoku-basic · javascript · echarts · anyplot.ai';
+          no legend required
     data_quality:
       score: 15
       max: 15
@@ -176,22 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all Sudoku grid features: 9×9 layout, 3×3 box grouping,
-          given numbers, empty cells, full visual hierarchy.'
+        comment: Full 9x9 grid, 3x3 region distinction, given numbers, empty cell
+          handling all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic Sudoku puzzle (widely recognized starting configuration).
-          Real-world plausible and neutral.
+        comment: Classic Sudoku puzzle — widely recognised and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 9×9 grid with digits 1-9. Correct scale for the domain; puzzle density
-          (23 given clues / 81 cells ≈ 28%) is typical for medium difficulty.
+        comment: Fixed 9x9 grid, values 1-9 — canonical Sudoku dimensions
     code_quality:
       score: 10
       max: 10
@@ -201,63 +175,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes. Clear section comments (Data,
-          Theme tokens, Layout, Build elements, Init).
+        comment: No functions or classes; flat imperative code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Puzzle data is fully hardcoded; fully deterministic.
+        comment: Hard-coded puzzle data; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: JavaScript, no imports. Only uses the ECharts global and ANYPLOT_TOKENS,
-          ANYPLOT_THEME, ANYPLOT_SIZE globals provided by the harness.
+        comment: No imports; uses window globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loops for building grid lines (skipping box boundaries via
-          i%3===0) and number elements. No over-engineering.
+        comment: Well-sectioned; loop-based generation; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No file output (harness handles it). animation:false present. echarts.init(el)
-          called with no explicit size. No devicePixelRatio override.
+        comment: 'animation: false, no explicit init dimensions, square orientation
+          directive present'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct echarts.init, setOption, animation: false, ANYPLOT_TOKENS
+          theming'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ECharts idioms: animation:false, transparent backgroundColor,
-          ANYPLOT_TOKENS consumed, no explicit size in init. Appropriate use of graphic
-          component (the right ECharts tool for custom grid rendering).'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Exploits ECharts graphic component with declarative z-layered shapes
-          (rect, line, text) — a distinctive ECharts capability not available in most
-          other charting libraries. Z-ordering (1-5) cleanly separates rendering layers.
+        comment: Uses ECharts graphic composition API (rect/line/text with z-layer
+          ordering) — ECharts-specific feature
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - html-export
   patterns:
-  - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - minimal-chrome
