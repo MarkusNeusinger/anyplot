@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-06-25T01:37:51Z'
+updated: '2026-06-25T01:46:07Z'
 generated_by: claude-sonnet
 workflow_run: 28140771159
 issue: 611
@@ -12,119 +12,125 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: correct chart type, data mapping, alpha transparency,
-    grid lines, and title format'
-  - 'Both themes fully functional with correct warm backgrounds (#FAF8F1 / #1A1A17)
-    and adaptive chrome tokens'
-  - shape=21 with PAGE_BG stroke elegantly separates overlapping markers — a refined
-    lets-plot idiom
-  - geom_smooth LM trend + confidence band adds genuine storytelling without oversimplifying
-  - Clean, flat code with proper seed, all imports used, correct canvas (3200x1800)
-  - Subtitle provides contextual narrative that guides the reader directly to the
-    insight
+  - 'Complete theme-adaptive implementation with correct warm #FAF8F1/#1A1A17 backgrounds
+    and all chrome tokens properly assigned to INK/INK_SOFT'
+  - Pre-blended GRID color workaround for lets-plot's element_line alpha limitation
+    demonstrates library expertise
+  - Subtitle + geom_smooth(lm) combination creates compelling data storytelling without
+    annotations
+  - Realistic, relatable educational dataset with convincing statistical properties
+    (r~0.7, clipped score range)
+  - layer_tooltips() with formatted custom lines leverages lets-plot's interactive
+    HTML output distinctively
+  - shape=21 with PAGE_BG stroke provides clean marker definition across both theme
+    surfaces
   weaknesses:
-  - subtitle fontsize (11pt) is slightly below axis label fontsize (12pt), creating
-    a minor hierarchy inversion — raising subtitle to 12pt or adjusting axis labels
-    to 11pt would restore proper hierarchy
-  - 'LM-02 could go further: lets-plot supports tooltips, geom_jitter, and interactive
-    HTML customisation that would better showcase the library''s distinctive features'
+  - 'DE-01: Not yet publication-ready — the layout could be pushed further toward
+    editorial quality (e.g., more intentional whitespace distribution, bolder typographic
+    contrast between title and subtitle weights)'
+  - 'DE-02: The confidence interval alpha (0.12) nearly disappears in dark mode against
+    the dark GRID — slight increase to 0.15-0.18 would improve dark-render legibility
+    of the CI band'
+  - 'LM-02: Does not use faceting, scale transforms, or additional lets-plot-specific
+    layers (e.g., geom_text/geom_label for annotation, stat_summary) that would further
+    differentiate from a basic ggplot2 port'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Bold dark title "scatter-basic · python · letsplot · anyplot.ai" clearly readable; subtitle in secondary ink readable; axis labels "Study Hours per Day" and "Exam Score (points)" in dark ink; tick labels in INK_SOFT (#4A4A44) clearly readable; subtle grid lines visible
-      Data: 180 brand-green (#009E73) filled circles with white stroke; dark gray linear trend line with light-gray confidence band; data colors at full saturation
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
+      Chrome: Title "scatter-basic · python · letsplot · anyplot.ai" bold dark text ~80% width (expected for mandated format). Subtitle in secondary gray. Axis labels "Study Hours per Day" and "Exam Score (points)" in dark INK. Tick labels in INK_SOFT gray. All text readable.
+      Data: 180 scatter points in Imprint brand green #009E73, shape=21 with cream stroke. Linear trend line in INK_SOFT dark gray. Confidence interval as subtle light gray band (alpha=0.12). Major gridlines subtle and light.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and subtitle in light ink (#F0EFE8) clearly readable; axis labels and tick labels in INK_SOFT (#B8B7B0) clearly readable; grid lines subtle but visible; NO dark-on-dark failures
-      Data: Brand green (#009E73) identical to light render; trend line adapts to light silver (INK_SOFT dark = #B8B7B0); confidence band visible as subtle darker-than-background fill
-      Legibility verdict: PASS — all text clearly readable against dark background; theme adaptation correct throughout
+      Chrome: Title and subtitle in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Axis labels and tick labels light-colored and legible. No dark-on-dark text failures anywhere. Gridlines very subtle (pre-blended #2F2F2C) but perceptible. Trend line in lighter gray.
+      Data: 180 scatter points in identical Imprint brand green #009E73 — data colors unchanged from light render. CI band slightly less visible at alpha=0.12 on dark background but present.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Good hierarchy and size across both themes; subtitle at 11pt is slightly
-          below axis label size (12pt) — minor hierarchy inversion but all text fully
-          readable
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          subtitle=12). Both renders fully readable. Title at ~80% width is expected
+          for mandated long format.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions or data/label overlaps in either render
+        comment: No text or data element overlaps. Points have alpha=0.75.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 180 points at size=2.5 is density-appropriate; alpha=0.75 provides
-          overlap clarity; white-stroke (shape=21) separates overlapping markers
+        comment: 180 data points at size=2.5 (x scale=4 ~10px) with alpha=0.75 well-sized
+          for density. Trend line with CI adds clarity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in CVD-safe brand green; white stroke aids marker definition;
-          no red-green signal conflict
+        comment: 'Single-series Imprint green #009E73 with excellent contrast on both
+          surfaces. CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title occupies ~55-60% of plot width;
-          generous margins; no clipping or overflow
+        comment: Canvas gate passed (3200x1800). Plot fills ~70% of canvas with balanced
+          margins. No cut-off content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; X label and Y label are descriptive
-          with units
+        comment: 'Descriptive labels with units: Study Hours per Day and Exam Score
+          (points).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Only series uses #009E73 (Imprint position 1); backgrounds are #FAF8F1
-          / #1A1A17; data colors identical across themes; chrome flips correctly'
+        comment: 'First series is #009E73. Backgrounds #FAF8F1 light / #1A1A17 dark.
+          Theme-adaptive chrome correct. Data colors identical across renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Uses Imprint palette correctly; shape=21 filled circles with PAGE_BG
-          stroke is polished; subtitle adds contextual layer; above default (4) but
-          not exceptional
+        comment: 'Clearly above library defaults: Imprint palette, theme-adaptive
+          chrome, removed minor gridlines and tick marks. Strong design but not FiveThirtyEight-level
+          editorial quality.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes top/right spines; minor grid blanked; tick
-          marks explicitly removed; axis lines kept thin; white stroke on markers
-          prevents overlap blur
+        comment: Minor grid removed, axis ticks blanked, grid pre-blended for both
+          themes (lets-plot workaround for no element_line alpha). Clean result above
+          defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Trend line + confidence interval makes positive correlation immediately
-          visible; subtitle articulates the takeaway; clear focal point along the
-          diagonal
+        comment: 'Subtitle narrates the insight. Trend line with CI creates clear
+          visual focal point. Visual hierarchy: CI band -> trend -> data points establishes
+          reading order.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot
+        comment: Correct 2D scatter plot using geom_point.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Alpha ~0.75, axis labels, grid lines, descriptive title, appropriate
-          point size for density
+        comment: Transparency (alpha=0.75), axis labels and title, grid lines, appropriate
+          point size all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: study_hours (independent), Y: exam_scores (dependent); 180 points
-          within 50-500 recommended; positive correlation ~0.7 as specified'
+        comment: 'X: study_hours (independent), Y: exam_scores (dependent). All 180
+          points visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'scatter-basic · python · letsplot · anyplot.ai';
-          no legend needed for single series (correctly omitted)
+        comment: Title is exactly 'scatter-basic · python · letsplot · anyplot.ai'.
+          No legend needed for single-series.
     data_quality:
       score: 15
       max: 15
@@ -165,20 +171,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Demonstrates scatter distribution, correlation pattern, outliers,
-          and data density
+        comment: 180 points spanning full range (1-10 hours, 30-105 scores). Shows
+          scatter, outliers, and moderate positive correlation across entire domain.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam scores is realistic, neutral, and broadly relatable
+        comment: Study hours vs exam scores is a real-world, relatable, neutral educational
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hours 1-10/day and scores 30-105 (clipped) are domain-sensible values
+        comment: Study hours 1-10/day realistic. Exam scores 30-105 matches real testing
+          distributions. Slope ~6.8 pts/hour and noise +/-7.5 produce convincing r~0.7
+          pattern.
     code_quality:
       score: 10
       max: 10
@@ -188,58 +197,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Linear: imports -> constants -> data -> plot -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 17 imported symbols are used in the script
+        comment: All imported symbols used. os, numpy, pandas, and all lets_plot components
+          referenced.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean ggplot grammar composition; no fake UI elements; appropriate
-          complexity
+        comment: Clean, Pythonic. No fake UI elements. Pre-blended GRID comment informative
+          and correct.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct ggsave API
-          with scale=4
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API. Correct
+          scale=4 for 3200x1800.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering; proper aes() mapping; ggsize()/ggsave(scale=4)
-          per lets-plot canvas spec; element_* theme functions used correctly
+        comment: Expert ggplot grammar with + composition. geom_smooth(method='lm',
+          se=True) idiomatic. theme_minimal() + theme() override correct. ggsize()
+          for canvas control.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: geom_smooth(method='lm', se=True) leverages lets-plot's built-in
-          LM fitting with confidence band; shape=21 with independent fill/stroke colors
-          exploits lets-plot's shape system; HTML output generated; could go further
-          with tooltips or jitter
+        passed: true
+        comment: layer_tooltips() for formatted interactive HTML is distinctively
+          lets-plot. shape=21 with fill/color/stroke/stroke_width exploits letsplot
+          API. Pre-blended GRID workaround shows library-specific knowledge.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
