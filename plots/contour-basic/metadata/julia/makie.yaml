@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: contour-basic
 created: '2026-06-25T03:52:17Z'
-updated: '2026-06-25T03:58:44Z'
+updated: '2026-06-25T04:07:50Z'
 generated_by: claude-sonnet
 workflow_run: 28145279954
 issue: 855
@@ -12,43 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct imprint_div diverging colormap with theme-adaptive midpoint — textbook
-    implementation of the anyplot continuous colormap spec
-  - Meaningful climate-science dataset (temperature anomaly) with appropriate real-world
-    units and axis labels (Longitude °E / Latitude °N / Temperature Anomaly °C)
-  - Both filled contours (contourf!) and overlay contour lines (contour!) combine
-    cleanly; 0.35 alpha on lines prevents them from overpowering the fills
-  - 'Full Makie layout integration: fig[1, 1] + fig[1, 2] with colorbar linked to
-    the contourf plot object via the cf handle'
-  - 'Complete theme-adaptive chrome: all text elements (title, labels, ticks, colorbar)
-    use INK/INK_SOFT tokens; backgrounds correct (#FAF8F1 light / #1A1A17 dark)'
+  - 'Excellent spec compliance: both filled contours and contour lines present, colorbar
+    correctly labeled with units, imprint_div colormap is exactly right for signed
+    anomaly data'
+  - Theme-adaptive implementation is correct and thorough — midpoint of imprint_div
+    flips with the theme, INK/INK_SOFT tokens applied to all chrome elements in both
+    renders
+  - Scientifically realistic and narratively interesting dataset (two opposing anomaly
+    centers) that showcases the contour plot's ability to reveal spatial structure
+  - 'Perfect code quality: KISS structure, deterministic with seed, all imports used,
+    modern Makie API (size= not deprecated resolution=)'
   weaknesses:
-  - xtickcolor and ytickcolor not set in the Axis constructor — these are in the canonical
-    Makie chrome template (makie.md) and should be included for complete theme-adaptive
-    coverage of tick marks
-  - Colorbar tick range (ticks = -2:1:2) does not cover the full contour level range
-    (±2.5); consider -2.5:0.5:2.5 or adding limits to ensure full alignment with data
-    range
-  - No inline contour level labels — spec notes 'Label key contour levels when practical';
-    adding them would increase feature coverage and DQ-01 score
+  - 'DE-01 moderate: design follows the standard template closely without distinctive
+    layout or typographic choices; adding a heavier zero-anomaly reference contour
+    or labeling the two anomaly centers would elevate from 5 to 6+'
+  - DE-02 could be enhanced with more generous padding between plot area and colorbar,
+    or slightly wider figure margins for breathing room
+  - LM-01 does not demonstrate advanced Makie capabilities such as custom recipes,
+    Observables-driven elements, or Layoutable compositions
+  - 'VQ-01 minor: colorbar vertical label (labelsize=14) renders slightly compact
+    at mobile thumbnail widths; bumping to 16 would improve readability'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "contour-basic · julia · makie · anyplot.ai" bold dark text, clearly readable. Axis labels "Longitude (°E)" and "Latitude (°N)" in dark INK color, readable. Tick labels in INK_SOFT (#4A4A44), readable. Colorbar label "Temperature Anomaly (°C)" rotated on right side, readable.
-      Data: Diverging colormap (matte red #AE3030 ↔ warm off-white ↔ blue #4467A3). Warm positive pole (~+2°C) lower-left in deep red. Cool negative pole (~-2°C) upper-right in deep blue. Near-zero regions in very light warm tones blending toward background. Contour lines overlaid at 0.35 alpha providing level structure. 11 contour levels visible.
-      Legibility verdict: PASS — all text clearly readable, data well-distinguished from background
+      Chrome: Title "contour-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly readable. X-axis label "Longitude (°E)" and Y-axis label "Latitude (°N)" in dark ink (#1A1A17). Tick labels in dark secondary ink (#4A4A44 / INK_SOFT). Colorbar label "Temperature Anomaly (°C)" in dark ink. Top/right spines removed; no grid.
+      Data: Filled contour regions using imprint_div — matte red (#AE3030) for positive anomalies, near-neutral warm cream at zero (blends into background), blue (#4467A3) for negative anomalies. Semi-transparent contour line overlay (0.35 alpha) delineates levels. Two anomaly centers visible: warm (lower-left), cool (upper-right).
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light failures
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title light-colored text on dark background, clearly readable. Axis labels and tick labels in INK_SOFT (#B8B7B0 for dark), clearly readable. Colorbar label visible. Left/bottom spines visible as subtle light lines. No dark-on-dark failures.
-      Data: Data colors identical to light render — warm red pole lower-left, cool blue pole upper-right unchanged. Near-zero contour regions blend with dark background (intentional: theme-adaptive midpoint = #1A1A17 for dark). This emphasises the anomaly extremes but makes mid-range contour boundaries less distinct.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed
+      Chrome: Title in light cream (#F0EFE8 / INK), clearly readable against dark background. Axis labels in same light ink. Tick labels in #B8B7B0 (INK_SOFT dark), readable. Colorbar label and ticks in correct light colors. No dark-on-dark failures observed.
+      Data: Same red-blue diverging pattern as light render — data colors are identical. Near-zero regions blend into the dark background (imprint_div midpoint is #1A1A17 in dark theme). Contour line overlay still visible.
+      Legibility verdict: PASS — all text readable against dark background, theme-adaptive chrome correctly applied
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -56,53 +57,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set for all elements; readable in both themes.
-          Minor: xtickcolor/ytickcolor not set in Axis constructor.'
+        comment: 'All font sizes explicitly set (titlesize=20, axis labels=14, tick
+          labels=12, colorbar label=14). Both renders readable. Minor: colorbar vertical
+          label slightly compact at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlap. Colorbar and axis labels cleanly
-          separated.
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Contour poles clearly visible in both themes. Near-zero regions blend
-          with dark background by design (theme-adaptive midpoint); slightly reduces
-          mid-range boundary clarity in dark render.
+        comment: Filled contours and contour lines clearly visible. 80x80 grid provides
+          smooth contouring.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Diverging red-blue colormap is CVD-safe (not red-green); colorbar
-          provides full value scale.
+        comment: Imprint diverging colormap is perceptually uniform and CVD-safe.
+          Contour line overlay adds redundant encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape confirmed (gate passed). Good proportions, generous
-          margins, no overflow or clipping.
+        comment: Canvas gate passed (3200x1800). Colorbar well-positioned. Balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Axis labels descriptive with units (°E/°N).
-          Colorbar labeled with units (°C).
+        comment: Longitude (°E), Latitude (°N), Temperature Anomaly (°C) — all descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div: cgrad([#AE3030, theme-midpoint, #4467A3]) correct.
-          Theme-adaptive midpoint. Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: 'Correct imprint_div for diverging data. Theme-adaptive midpoint
+          correct. Background #FAF8F1/#1A1A17. All chrome tokens applied.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,22 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: meaningful climate-science data, well-chosen diverging
-          palette, subtle contour overlay. Not exceptional enough for higher score.'
+        comment: 'Above defaults: contour overlay at 0.35 alpha is deliberate professional
+          choice. Follows template closely; not reaching strong design level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: top/right spines removed, no grid (appropriate),
-          thin contour overlay lines (linewidth=0.8).'
+        comment: No grid, top/right spines removed, colorbar width=20, contour lines
+          at 0.35 alpha. Could improve with more generous padding.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default: diverging colormap reinforces warm/cool anomaly narrative;
-          two clear focal poles guide the viewer.'
+        comment: Two opposing anomaly centers create immediate visual hierarchy. Diverging
+          colormap makes narrative instantly readable.
     spec_compliance:
       score: 15
       max: 15
@@ -135,53 +135,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled contour + contour lines overlay.
+        comment: 'Correct: contourf (filled) + contour (lines overlay) — exactly as
+          spec recommends.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap, colorbar, filled+lines, 80x80 grid resolution
-          all present. Labeled contour levels is advisory.
+        comment: Colorbar present, both filled + line contours, imprint_div appropriate
+          for anomaly data, 80x80 grid in 20-100 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y spatial coords, Z temperature anomaly; levels cover full range
-          (-2.5 to 2.5).
+        comment: X/Y axes correctly mapped. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Colorbar is appropriate scale reference
-          (no separate legend needed).
+        comment: Title 'contour-basic · julia · makie · anyplot.ai' — correct format.
+          Colorbar is appropriate for continuous data (no categorical legend needed).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Filled contours, level lines, colorbar, two-pole anomaly field.
-          Minor: no inline contour level labels.'
+        comment: 'Full range shown: strong positive anomalies, strong negative anomalies,
+          near-zero transitions, multiple centers.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Temperature anomaly with °C units in geospatial (lon/lat) context
-          is highly realistic and neutral.
+        comment: Surface temperature anomaly relative to 30-year climatology mean
+          is scientifically credible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ±2.5°C range realistic for climate anomalies; 80x80 grid produces
-          smooth contours.
+        comment: Anomaly range -2.5 to 2.5°C physically realistic. Spatial domain
+          -5° to 5° appropriate for regional study.
     code_quality:
       score: 10
       max: 10
@@ -191,32 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes.
+        comment: 'Clean: imports → theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) at top.
+        comment: Random.seed!(42) set. Mathematical function deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (CairoMakie, Colors, ColorSchemes, Random) are used.
+        comment: CairoMakie, Colors, ColorSchemes, Random — all four used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code; appropriate complexity; no fake UI.
+        comment: Clean idiomatic Julia/Makie. No over-engineering. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct format
-          and API.
+        comment: Saves as plot-$(THEME).png using modern size= API.
     library_mastery:
       score: 7
       max: 10
@@ -226,16 +226,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: contourf!+contour! combination idiomatic; Colorbar(fig[1,2], cf)
-          layout-linked pattern correct; RGBAf for typed color construction is Makie-idiomatic.
+        comment: Proper use of contourf!, contour!, Colorbar, Figure/Axis layout,
+          cgrad. Correct but no advanced Makie patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses cgrad from ColorSchemes.jl; Figure GridLayout fig[1,1]/fig[1,2]
-          is distinctively Makie; colorant"" syntax from Colors.jl is Julia/Makie
-          ecosystem style.
+        comment: Uses cgrad (Makie-specific), RGBAf for alpha-composited contour lines,
+          fig[1,2] layout system, contourf+contour layering idiom.
   verdict: APPROVED
 impl_tags:
   dependencies: []
