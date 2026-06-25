@@ -42,29 +42,30 @@ const col_A = IMPRINT_PALETTE[1]   # green — Goes Viral
 const col_B = IMPRINT_PALETTE[2]   # lavender — Actually Works
 const col_C = IMPRINT_PALETTE[3]   # blue — Still Around in 5 Years
 
-# Items: (x, y, label) — pre-distributed across the seven interior zones + outside
+# Items: (x, y, label, overlap) — overlap: 0=outside, 1=single-circle, 2=pair, 3=triple
 const items = [
-    (0.50f0,  0.83f0, "NFTs"),           # A only
-    (0.50f0,  0.78f0, "Metaverse"),      # A only
-    (0.50f0,  0.73f0, "Clubhouse"),      # A only
-    (0.155f0, 0.47f0, "PostgreSQL"),     # B only
-    (0.145f0, 0.40f0, "Nginx"),          # B only
-    (0.155f0, 0.33f0, "Bash"),           # B only
-    (0.845f0, 0.47f0, "Email"),          # C only
-    (0.855f0, 0.40f0, "Excel"),          # C only
-    (0.845f0, 0.33f0, "PDF"),            # C only
-    (0.385f0, 0.58f0, "ChatGPT"),        # AB
-    (0.38f0,  0.53f0, "Figma"),          # AB
-    (0.615f0, 0.58f0, "Agile"),          # AC
-    (0.62f0,  0.53f0, "The Cloud"),      # AC
-    (0.50f0,  0.35f0, "Git"),            # BC
-    (0.50f0,  0.30f0, "Docker"),         # BC
-    (0.50f0,  0.48f0, "JavaScript"),     # ABC
-    (0.15f0,  0.10f0, "Google+"),        # outside
-    (0.85f0,  0.10f0, "Vine"),           # outside
+    (0.50f0,  0.83f0, "NFTs",         1),
+    (0.50f0,  0.78f0, "Metaverse",    1),
+    (0.50f0,  0.73f0, "Clubhouse",    1),
+    (0.155f0, 0.47f0, "PostgreSQL",   1),
+    (0.145f0, 0.40f0, "Nginx",        1),
+    (0.155f0, 0.33f0, "Bash",         1),
+    (0.845f0, 0.47f0, "Email",        1),
+    (0.855f0, 0.40f0, "Excel",        1),
+    (0.845f0, 0.33f0, "PDF",          1),
+    (0.385f0, 0.58f0, "ChatGPT",      2),
+    (0.38f0,  0.53f0, "Figma",        2),
+    (0.615f0, 0.58f0, "Agile",        2),
+    (0.62f0,  0.53f0, "The Cloud",    2),
+    (0.50f0,  0.35f0, "Git",          2),
+    (0.50f0,  0.30f0, "Docker",       2),
+    (0.50f0,  0.48f0, "JavaScript",   3),
+    (0.15f0,  0.10f0, "Google+",      0),
+    (0.85f0,  0.10f0, "Vine",         0),
 ]
 
-const title_str = "Tech Taxonomy · venn-labeled-items · julia · makie · anyplot.ai"
+const title_str    = "Tech Taxonomy · venn-labeled-items · julia · makie · anyplot.ai"
+const subtitle_str = "Going viral is easy. Actually working is hard. Surviving is rarer still."
 
 fig = Figure(
     resolution      = (1200, 1200),
@@ -82,7 +83,7 @@ ax = Axis(
 )
 
 xlims!(ax, -0.15f0, 1.15f0)
-ylims!(ax, -0.15f0, 1.15f0)
+ylims!(ax, -0.05f0, 1.05f0)
 hidexdecorations!(ax)
 hideydecorations!(ax)
 hidespines!(ax)
@@ -106,9 +107,16 @@ text!(ax, CX_C + r * 0.70f0 + 0.05f0, CY_C + 0.07f0;
       text = "Still Around\nin 5 Years", color = col_C,
       align = (:left, :center), fontsize = 18)
 
-# Item labels inside zones
-for (x, y, label) in items
-    text!(ax, x, y; text = label, color = INK, align = (:center, :center), fontsize = 13)
+# Editorial subtitle — below the title, above the diagram
+text!(ax, 0.50f0, 0.98f0;
+      text = subtitle_str, color = INK_SOFT,
+      align = (:center, :center), fontsize = 12)
+
+# Item labels with visual hierarchy: larger font for items in more overlapping zones
+for (x, y, label, overlap) in items
+    fs    = overlap == 0 ? 13 : overlap == 1 ? 14 : overlap == 2 ? 15 : 16
+    color = overlap == 0 ? INK_MUTED : INK
+    text!(ax, x, y; text = label, color = color, align = (:center, :center), fontsize = fs)
 end
 
 # Separator for outside items
