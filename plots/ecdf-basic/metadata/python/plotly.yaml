@@ -2,12 +2,12 @@ library: plotly
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:50Z'
-updated: '2026-04-24T12:56:00Z'
-generated_by: claude-opus
-workflow_run: 24890176082
+updated: '2026-06-25T09:43:55Z'
+generated_by: claude-sonnet
+workflow_run: 28160341179
 issue: 976
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.8.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/plotly/plot-light.html
@@ -15,118 +15,117 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 quality_score: 88
 review:
   strengths:
-  - Perfect theme-adaptive chrome in both renders — all INK/INK_SOFT/PAGE_BG tokens
-    correctly applied to title, axis labels, tick labels, and backgrounds
-  - Correct ECDF step function using Plotly's idiomatic line shape='hv' with proper
-    1/n cumulative proportion calculation
-  - Clean, reproducible code with seed(42), no functions/classes, and well-structured
-    KISS flow
-  - Realistic marathon finishing times data (mean=240min, std=32min) — neutrally scoped
-    and domain-appropriate
-  - 'Excellent interactive layer: x-unified hovertemplate with percentage-formatted
-    tooltip and custom modeBar config'
-  - 'All font sizes explicitly set: title=28px, axis labels=22px, tick labels=18px'
+  - Lognormal distribution for HTTP latency is a technically accurate data choice
+    that produces a realistic and instructive ECDF shape
+  - P50/P90/P99 annotated crosshairs transform a basic ECDF into an actionable performance
+    analysis tool — directly reads SLA thresholds
+  - Full theme-adaptive chrome using all correct tokens (INK, INK_SOFT, GRID, PAGE_BG,
+    ELEVATED_BG); dark render passes the dark-on-dark readability check cleanly
+  - sys.path manipulation is a legitimate and well-commented fix for the plotly.py
+    filename-shadowing issue
+  - Compact, well-structured code with no unnecessary abstraction
   weaknesses:
-  - No visual storytelling — missing percentile reference lines (Q1/median/Q3) that
-    would guide the viewer to key statistical moments of the distribution
-  - Design lacks a focal point — the ECDF curve is plotted raw with no emphasis on
-    the central region of highest density (the S-curve inflection around the median)
-  - Grid appears on both axes; for ECDF reads (vertical look-up), y-axis-only grid
-    or a lighter opacity would reduce visual noise without losing utility
-  - No area fill under the ECDF curve — a semi-transparent fill would add aesthetic
-    depth and better convey the cumulative nature of the statistic
+  - P50 annotation ("P50 125 ms") placement at xanchor=left/yanchor=bottom at the
+    50% intersection point sits very close to the ECDF step line, causing minor visual
+    crowding — consider increasing yshift to 8-12 or xshift to 12-15 so the label
+    clears the step line
+  - Design excellence is solid but not at the top tier — adding a subtle shaded region
+    (e.g., fill between 0 and the ECDF line, or a shaded p90-p99 tail zone) could
+    elevate the storytelling and aesthetic sophistication further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Marathon Finishing Times · ecdf-basic · plotly · anyplot.ai" in dark INK (#1A1A17), centered at top, clearly readable. X-axis label "Finishing Time (minutes)" and Y-axis label "Cumulative Proportion of Runners" in dark INK, both readable. Tick labels in INK_SOFT (#4A4A44) with "min" suffix on x-axis and percentage format on y-axis. All text readable.
-      Data: Single ECDF step-function line in #009E73 (brand green), line width 3.5px, following hv (horizontal-then-vertical) step pattern. Covers ~130 to ~370 min on x-axis, 0% to 100% on y-axis. S-curve shape consistent with normal distribution.
-      Grid: Subtle light grid on both axes. Left and bottom axis lines shown (no top/right spines).
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1) — correct Imprint light surface
+      Chrome: Title "HTTP API Latency · ecdf-basic · python · plotly · anyplot.ai" centered, dark ink — clearly readable. Axis labels "Response Time (ms)" and "Cumulative Proportion of Requests" in dark ink. Tick labels in muted dark gray (INK_SOFT). Subtle grid lines (15% opacity) on both axes.
+      Data: Single ECDF step line in #009E73 (brand green); rises from 0 to ~100% left to right. Three dotted crosshair reference lines (P50 at 125ms/50%, P90 at 220ms/90%, P99 at 364ms/99%) in muted gray with text annotations.
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in off-white light text (#F0EFE8), clearly readable against dark background. Axis labels in #F0EFE8 (INK for dark theme). Tick labels in #B8B7B0 (INK_SOFT for dark theme) — clearly readable. No dark-on-dark failures observed.
-      Data: ECDF line identical to light render — same #009E73 green, same shape, same data range. Correct: only chrome flips between themes, data colors are unchanged.
-      Grid: Very subtle light grid (rgba(240,239,232,0.10)) visible against dark background. Left and bottom axis lines visible.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17) — correct Imprint dark surface
+      Chrome: Title and axis labels rendered in light warm-cream text (INK dark variant #F0EFE8). Tick labels in muted light gray (INK_SOFT dark variant #B8B7B0). Grid lines faint on dark surface. All chrome correctly flipped for dark theme.
+      Data: ECDF step line remains identical #009E73 green — data color unchanged from light render. Percentile annotations and crosshairs render in muted light gray, readable against dark background.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures; brand green #009E73 fully visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28px, axis labels=22px, tick
-          labels=18px. Readable in both themes.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=10);
+          proportions balanced; both themes legible. Minor crowding of P50 annotation
+          near ECDF line.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text elements in either render.
+        comment: Minor visual crowding where P50 annotation sits close to the ECDF
+          step line at the 50% intersection. All text readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF line at width=3.5 clearly visible on both backgrounds.
+        comment: ECDF step line at width=2.5 is well-sized for 400 data points; sharp
+          and clear against both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73 with high contrast against both backgrounds.
-          CVD-safe.'
+        comment: Single series with brand green; percentile lines in muted gray; no
+          red-green sole-distinction encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins (l=110, r=70, t=110, b=90), canvas well-utilized.
+        comment: Canvas gate passed; margins appropriate; plot area well-utilized;
+          no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Finishing Time (minutes)'' with units; Y: ''Cumulative Proportion
-          of Runners'' — descriptive and appropriate.'
+        comment: Response Time (ms) and Cumulative Proportion of Requests — both descriptive
+          with units/context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73. PAGE_BG correct for both themes.
-          All chrome tokens (INK, INK_SOFT, GRID) properly applied.'
+        comment: 'First series is #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark);
+          all chrome tokens theme-adaptive; data color identical in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured defaults with correct theme tokens and Inter font
-          family. No distinctive design choices (no area fill, no percentile reference
-          lines, no emphasis).
+        passed: true
+        comment: 'Above generic defaults: real-world domain, lognormal distribution,
+          P50/P90/P99 crosshairs add analytical value. Clean Inter typography. Not
+          yet at FiveThirtyEight publication-ready level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid on both axes (appropriate for percentile look-ups), left+bottom
-          axis lines only, generous margins. Could refine further with y-axis-only
-          grid.
+        passed: true
+        comment: Spines removed (showline=False on both axes), subtle 15%-opacity
+          grid, explicit font family (Inter), theme-aware hover labels. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Raw ECDF displayed without emphasis. No reference lines for median/quartiles,
-          no annotation of key percentile values, no visual focal point.
+        passed: true
+        comment: P50/P90/P99 annotated percentile crosshairs actively guide viewer
+          to key SLA-relevant percentiles. Lognormal shows realistic long right tail.
+          Viewer immediately sees where 90th and 99th percentiles fall.
     spec_compliance:
       score: 15
       max: 15
@@ -136,29 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function using shape='hv'. Y-axis 0–1.02 range.
-          Step increases by 1/n at each point.
+        comment: Correct ECDF step function using go.Scatter with shape=hv (horizontal-then-vertical);
+          cumulative proportion mapped to y-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function present, y-axis 0–1, grid lines visible, distinct line
-          style in brand green.
+        comment: Step function increasing by 1/n; y-axis 0-1 range; grid lines present;
+          distinct line style; percentile reference lines add value beyond spec.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = finish time values, Y = cumulative proportion. All data visible.
+        comment: 'X: sorted latency values (continuous); Y: cumulative proportion
+          (0-1); all 400 data points represented.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Marathon Finishing Times · ecdf-basic · plotly · anyplot.ai'
-          contains spec-id, library, and anyplot.ai. No legend (showlegend=False)
-          — correct for single series.
+        comment: Title follows optional-prefix format correctly. No legend (single
+          series, showlegend=False) — appropriate.
     data_quality:
       score: 15
       max: 15
@@ -168,21 +167,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 300 points produce a smooth S-curve showing the full distribution
-          shape including tails and central slope.
+        comment: Demonstrates full ECDF shape, long right tail from lognormal distribution,
+          and direct percentile reading at P50/P90/P99.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finishing times — real-world, neutral, comprehensible domain.
+        comment: HTTP API response latency is highly realistic, business-relevant
+          scenario. Lognormal distribution is the standard model for real-world latency.
+          Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean=240min (4 hours), std=32min — realistic marathon finishing time
-          distribution.
+        comment: P50~125ms, P90~220ms, P99~364ms — completely plausible for a web
+          service API. 400 requests realistic for a benchmark sample.
     code_quality:
       score: 10
       max: 10
@@ -192,60 +193,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → theme tokens → data → ECDF computation → plot
-          → save. No functions/classes.'
+        comment: 'Linear flow: imports -> sys.path fix -> data -> ECDF -> shapes/annotations
+          -> layout -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used.
+        comment: os, sys, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering. No fake UI elements.
+        comment: Clean loop for percentile reference lines; sys.path manipulation
+          is necessary and commented; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct output format.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with current Plotly
+          API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Correctly uses go.Scatter with line={''shape'': ''hv''} for step
-          function, hovertemplate, hovermode=''x unified'', and update_layout pattern
-          — all idiomatic Plotly.'
+        comment: 'add_trace/add_shape/add_annotation idiom; hovermode=x unified; hovertemplate
+          with <extra></extra>; update_layout pattern. Very idiomatic. Minor: px.ecdf()
+          would be even higher-level.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'Uses Plotly-specific features: line shape=''hv'' step function,
-          x-unified hover mode, hovertemplate percentage formatting, HTML export with
-          custom modeBar. Solid use but not exceptional.'
-  verdict: REJECTED
+        passed: true
+        comment: line.shape=hv (native Plotly step rendering); hovermode=x unified
+          (synchronized hover); custom modeBar config in HTML export; theme-aware
+          hoverlabel — multiple Plotly-specific features used.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
-  styling: []
+  dataprep: []
+  styling:
+  - minimal-chrome
