@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-25
@@ -20,6 +20,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     theme,
     theme_minimal,
 )
@@ -48,7 +49,15 @@ df = pd.DataFrame({"study_hours": study_hours, "exam_scores": exam_scores})
 plot = (
     ggplot(df, aes(x="study_hours", y="exam_scores"))
     + geom_smooth(method="lm", se=True, color=INK_SOFT, fill=INK_SOFT, alpha=0.12, size=1.0)
-    + geom_point(shape=21, fill=BRAND, color=PAGE_BG, size=2.5, alpha=0.75, stroke=0.8)
+    + geom_point(
+        shape=21,
+        fill=BRAND,
+        color=PAGE_BG,
+        size=2.5,
+        alpha=0.75,
+        stroke=0.8,
+        tooltips=layer_tooltips().line("Study Hours: @study_hours h").line("Exam Score: @exam_scores pts"),
+    )
     + labs(
         x="Study Hours per Day",
         y="Exam Score (points)",
@@ -67,7 +76,7 @@ plot = (
         axis_line=element_line(color=INK_SOFT, size=0.4),
         axis_ticks=element_blank(),
         plot_title=element_text(size=16, color=INK, face="bold"),
-        plot_subtitle=element_text(size=11, color=INK_SOFT),
+        plot_subtitle=element_text(size=12, color=INK_SOFT),
     )
 )
 
