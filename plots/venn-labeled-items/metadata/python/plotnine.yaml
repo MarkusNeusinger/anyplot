@@ -2,43 +2,63 @@ library: plotnine
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T05:30:42Z'
-updated: '2026-04-25T05:39:05Z'
-generated_by: claude-opus
-workflow_run: 24923512026
+updated: '2026-06-25T12:09:49Z'
+generated_by: claude-sonnet
+workflow_run: 28166407185
 issue: 5364
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all 7 Venn zones populated with witty, thematically
-    coherent pop-culture items
-  - 'Strong editorial aesthetic: italic serif title, bold colored category labels,
-    and semi-transparent Okabe-Ito fills faithfully reproduce the WIRED/Chartgeist
-    magazine style the spec requests'
-  - Dual-theme implementation is correct — theme tokens applied throughout, both renders
-    pass the legibility check, data colors are identical across themes
+  - Correct three-circle symmetric Venn layout with semi-transparent Imprint palette
+    fills (alpha=0.22)
+  - 'Excellent editorial aesthetic: italic bold serif title ''Food Trend Taxonomy''
+    matches the WIRED Chartgeist spec brief'
+  - Color-matched category labels (geom_text) use scale_color_identity() tied directly
+    to circle colors — elegant and redundant encoding
+  - geom_label with label_size=0 and label_padding=0.12 produces clean floating-box
+    item labels with no visible border
+  - All 7 interior Venn zones populated with culturally plausible food-trend items;
+    triple-intersection items (Sourdough, Matcha) are genuinely appropriate
+  - 'Comprehensive theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT, INK_MUTED
+    all flip correctly between light and dark'
+  - 'Perfectly flat KISS structure: no functions or classes; data flows top-to-bottom'
+  - 'Idiomatic plotnine: uses geom_polygon for circles (no geom_circle in plotnine),
+    coord_fixed() for equal aspect, scale_fill_identity() / scale_color_identity()'
   weaknesses:
-  - Item labels (size=13) and subtitle (size=12) are below the 16pt minimum for secondary
-    text at 3600x3600; increase to >=16pt for item labels and >=14pt for subtitle
-  - Three separate single-item DataFrames and three duplicate geom_text calls for
-    category labels — consolidate into one DataFrame and one geom_text layer
+  - 'Dark render shows label-box overlap: ''Butterfly Pea Tea'' is partially obscured
+    by the adjacent ''Cronuts'' label box (shows as ''Butterfly Pea''), and ''Lentil
+    Soup'' is partially obscured by the ''Greek Yogurt'' label box (shows as ''til
+    Soup''). In the light render the same-color elevated backgrounds mask the overlap
+    visually, but in dark mode the dark elevated boxes make the collision obvious.
+    Fix: reduce geom_label size from 11 to ~9, and/or adjust item coordinates for
+    zone A∩C items (Cronuts to ~-1.05,-0.65 and Dirty Soda to ~-1.05,-1.10) and zone
+    B-only items (Lentil Soup to ~2.35,-0.35) to increase spacing.'
+  - 'LM-01 (Idiomatic Usage): geom_polygon for circles requires manually computing
+    240 theta points per circle, adding ~720 rows of geometry data. A slightly more
+    idiomatic approach would use annotate(''path'') or a custom stat, but geom_polygon
+    is a reasonable workaround given plotnine lacks geom_circle.'
+  - 'DE-03 (Data Storytelling): no visual emphasis distinguishes the triple-intersection
+    zone (Sourdough, Matcha) as the most interesting region. Adding a subtle annotation
+    arrow or slightly larger labels in the ABC zone would guide the viewer to the
+    insight.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Chartgeist 2026" in bold italic serif — clearly readable. Subtitle "venn-labeled-items · plotnine · anyplot.ai" in small muted text — readable but small (12pt). Category labels in bold colored serif (size 22) outside circles — clearly readable.
-      Data: Three overlapping circles in Okabe-Ito #009E73 (green/Overhyped), #D55E00 (orange-red/Actually Useful), #0072B2 (blue/Secretly Loved). Semi-transparent fills (alpha=0.22) allow zone visibility. Item labels in dark #1A1A17 ink serif (size 13) placed inside zones.
-      Legibility verdict: PASS — all text readable; item labels (13pt) and subtitle (12pt) are below 16pt minimum but still legible
+      Background: Warm off-white #FAF8F1 — correct theme surface, clearly not pure white.
+      Chrome: Bold italic serif title "Food Trend Taxonomy" in near-black INK (#1A1A17) reads cleanly at the top. Subtitle "venn-labeled-items · python · plotnine · anyplot.ai" in muted INK_MUTED below the title is readable. No axis labels or tick marks (correct for a Venn diagram). Category labels "Peak Instagram" (green), "Actually Nutritious" (lavender), "Surprisingly Addictive" (blue) are bold serif, large, and clearly visible.
+      Data: Three overlapping circles filled with Imprint palette colors #009E73 (green, Peak Instagram), #C475FD (lavender, Actually Nutritious), #4467A3 (blue, Surprisingly Addictive) at alpha=0.22, giving visible overlap blending. 17 food items rendered as geom_label boxes with #FFFDF6 elevated background and no visible border. Items span all 7 zones: Cloud Bread/Charcoal Ice Cream/Butterfly Pea Tea in A, Sardines/Kimchi/Lentil Soup in B, Takis/Boba Tea/Funyuns in C, Avocado Toast/Overnight Oats in AB, Cronuts/Dirty Soda in AC, Greek Yogurt/Edamame in BC, Sourdough/Matcha in ABC. All label text is dark on light-elevated background — readable.
+      Legibility verdict: PASS — all text readable in light render; label overlaps not visually apparent due to same-color elevated boxes.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8 — clearly readable. Subtitle in muted light ink — readable. Category labels in their respective Okabe-Ito circle colors (green, orange, blue) — all sufficiently bright on dark surface, no dark-on-dark failures. Item labels in light #F0EFE8 — readable.
-      Data: Circle outlines in identical Okabe-Ito colors (#009E73, #D55E00, #0072B2) — same as light render. Semi-transparent fills create dark blended zones on the near-black background. Triple-overlap center is very dark but item text remains legible due to light ink color.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title "Food Trend Taxonomy" in near-white (#F0EFE8) is fully readable. Subtitle in muted light tone is readable. Category labels retain the same Imprint palette hues — confirming data colors are identical to light render.
+      Data: Circle fills are identical Imprint palette colors (#009E73, #C475FD, #4467A3) — unchanged from light render. Item label boxes use dark elevated background #242420, which creates visible overlap collisions: "Butterfly Pea Tea" appears as "Butterfly Pea" (the "Tea" portion covered by the "Cronuts" label box), and "Lentil Soup" appears as "til Soup" (the "Len" portion covered by the "Greek Yogurt" label box). These are the only two collisions; remaining items are readable.
+      Legibility verdict: PARTIAL FAIL — two item labels partially obscured by adjacent label-box overlap in dark mode. No dark-on-dark failure for title or category labels; those are clearly light text on dark background.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -46,54 +66,61 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set; item labels (13pt) and subtitle (12pt) below
-          16pt minimum for secondary text at 3600x3600
+        comment: Font sizes explicitly set (item labels size=11, category labels size=18,
+          title size=26, subtitle size=14). Well-proportioned in light render. Dark
+          render has two overlap-induced partial obscurings (Butterfly Pea Tea, Lentil
+          Soup) that reduce to 7.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Minor crowding in A∩B∩C zone and near zone boundaries, all labels
-          readable
+        passed: false
+        comment: 'Dark render: ''Butterfly Pea Tea'' shows as ''Butterfly Pea'' and
+          ''Lentil Soup'' shows as ''til Soup'' due to dark elevated label boxes overlapping
+          adjacent items. Light render looks clean because same-color backgrounds
+          mask the collision.'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Circles and labels clearly visible; triple-overlap center very dark
-          in dark render but text legible
+        comment: Circles visible with alpha=0.22 semi-transparent fills. Label boxes
+          clearly legible. Category labels prominent at size=18 bold.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3 are CVD-safe, adequate luminance contrast
+        comment: Imprint palette colors are CVD-safe. Semi-transparent circle fills
+          provide visual distinction. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 12x12 @ 300 DPI = 3600x3600 square format; diagram fills canvas well,
-          nothing cut off
+        comment: Square 2400x2400 canvas appropriate for symmetric Venn. Canvas gate
+          passed. Diagram fills canvas well. No edge clipping. Category labels and
+          items all within canvas bounds.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Editorial title + subtitle with spec-id/library/anyplot.ai; no axes
-          needed for Venn
+        comment: N/A for Venn diagram — no traditional axes. Full credit. Category
+          names serve as semantic labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First circle #009E73; multi-series Okabe-Ito order; backgrounds
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: 'First circle #009E73 (brand green). Second #C475FD (lavender, Imprint
+          pos 2). Third #4467A3 (blue, Imprint pos 3). Light bg #FAF8F1, dark bg #1A1A17.
+          Theme-adaptive chrome correct in both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -101,22 +128,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong editorial aesthetic: italic serif title, bold colored category
-          labels, witty pop-culture categories echo the WIRED Chartgeist spec'
+        comment: 'Strong editorial design: italic bold serif title, color-matched
+          bold category labels, clean geom_label boxes with no visible border. Clearly
+          above library defaults. Witty ''Food Trend Taxonomy'' framing fits the WIRED
+          Chartgeist spec brief.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All axes, ticks, grid lines, and spines removed. Clean composition
-          with generous whitespace
+        comment: 'No grid, no axes, no spines — correct for this chart type. Generous
+          whitespace. Semi-transparent circles with well-chosen alpha. Minor gap:
+          no explicit panel margin tuning.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Triple-overlap center acts as natural focal point; item placement
-          makes implicit editorial commentary; coherent cultural narrative
+        comment: 'Category names are witty and editorial. Item placements are culturally
+          accurate (Sourdough/Matcha in triple intersection is the insight). Color
+          hierarchy guides navigation. Missing: explicit visual emphasis on the triple-intersection
+          zone to direct viewer attention.'
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +158,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct three-circle Venn diagram with labeled items
+        comment: Three-circle symmetric Venn diagram with labeled items in zones.
+          Correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, items in all 7 zones, category labels outside
-          circles, symmetric layout
+        comment: 'Three circles with semi-transparent fills, labeled items in all
+          7 zones (10-25 range: 17 items), category names outside circles, gridless
+          background, editorial title.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All items correctly placed in their assigned zones
+        comment: Items correctly placed in their assigned Venn zones based on geometric
+          calculations.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Subtitle: venn-labeled-items · plotnine · anyplot.ai; editorial
-          title adds polish; no legend needed'
+        comment: 'Title: ''Food Trend Taxonomy'' (descriptive prefix) + ''venn-labeled-items
+          · python · plotnine · anyplot.ai'' (spec identifier). Full required format
+          present. No legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -156,23 +192,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones populated; varied item counts per zone; no empty
-          regions
+        comment: All 7 interior Venn zones populated (A, B, C, AB, AC, BC, ABC). 2-3
+          items per zone. Demonstrates full Venn structure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Witty, neutral pop-culture items; editorial categories avoid controversy;
-          real-world plausible scenario
+        comment: Food trend taxonomy is relatable and neutral. Items are real contemporary
+          food trends. Categories are witty but grounded. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 items across 7 zones (2-3 per zone); appropriate density for readability
+        comment: 'Item placements culturally accurate: Sourdough/Matcha in triple
+          intersection, Sardines/Kimchi in Actually Nutritious, Takis/Boba Tea in
+          Surprisingly Addictive are all defensible and accurate.'
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -180,34 +218,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> Data -> Plot -> Save; no functions or classes
+        comment: 'Flat structure: imports → theme tokens → geometry → data → plot
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random data
+        comment: All data is deterministic (hardcoded coordinates). No random generation;
+          no seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All 12 plotnine imports are used. numpy and pandas used. No unused
+          imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Three separate single-item DataFrames and three identical geom_text
-          calls for category labels; could be one DataFrame + one geom_text
+        passed: true
+        comment: Clean, well-organized. Consolidated category labels into single DataFrame
+          (noted in comment). No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png. Current plotnine 0.15.7 API used.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -215,22 +256,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of scale_fill_identity/scale_color_identity for direct color
-          mapping, coord_fixed for square coordinates, proper layer composition
+        comment: Uses ggplot() grammar with layered geoms, scale_fill_identity() /
+          scale_color_identity() for direct hex mapping, coord_fixed() for equal aspect
+          ratio. geom_polygon for circles is the correct plotnine idiom (no geom_circle).
+          Slightly verbose circle geometry construction.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: geom_polygon for circle approximation and identity scales are plotnine-specific;
-          overall approach is fairly generic
-  verdict: REJECTED
+        passed: true
+        comment: Uses geom_label with label_size=0 (no border) and label_padding for
+          custom floating boxes — a plotnine/ggplot2-specific API. scale_fill_identity()
+          and coord_fixed() are distinctive ggplot idioms. Not a feature uniquely
+          impossible in other libraries, but idiomatically plotnine.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
