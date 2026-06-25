@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -81,7 +81,7 @@ chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
-    title="scatter-basic · pygal · anyplot.ai",
+    title="scatter-basic · python · pygal · anyplot.ai",
     x_title="Study Hours per Week (hrs)",
     y_title="Exam Score (%)",
     stroke=False,
