@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: venn-labeled-items
 created: '2026-06-25T11:47:44Z'
-updated: '2026-06-25T11:53:51Z'
+updated: '2026-06-25T12:13:44Z'
 generated_by: claude-sonnet
 workflow_run: 28167044348
 issue: 5364
@@ -12,53 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - 'Full spec coverage: all 7 interior Venn zones (A, B, C, AB, AC, BC, ABC) are
-    populated with 2 items each'
-  - 'Correct Imprint palette: green (#009E73) for circle A, lavender (#C475FD) for
-    circle B, blue (#4467A3) for circle C — in canonical order'
-  - 'Editorial ''Chartgeist'' tone nailed: Georgia serif, witty tech-zeitgeist items,
-    magazine-print aesthetic'
-  - 'Idiomatic Chart.js plugin pattern: afterDraw hook for custom canvas drawing is
-    the correct approach for non-standard chart types'
-  - 'Theme-adaptive chrome: pageBg, ink, inkSoft all read from tokens — both renders
-    are clean and readable'
-  - Proportional font sizing via Math.round(r * factor) scales gracefully with canvas
-    dimensions
-  - 'Title uses correct extended format: ''Tech Zeitgeist · venn-labeled-items · javascript
-    · chartjs · anyplot.ai'''
+  - Three-circle Venn diagram correctly implements all 7 interior zones with appropriate
+    items in each
+  - Editorial Georgia serif typography creates a genuine WIRED Chartgeist feel — deliberate
+    and consistent
+  - Semi-transparent circle fills (alpha 0.21) with separate outline alpha (0.60)
+    creates professional depth
+  - Title scaling formula (22 * 67 / titleLength) correctly handles the long mandated
+    title
+  - Witty subtitle "Where does it live — hype, utility, or quiet devotion?" frames
+    the editorial narrative
+  - Imprint palette positions 1-3 correctly assigned to circles; theme-adaptive chrome
+    (pageBg, ink, inkSoft) in both renders
+  - Deterministic hardcoded data — no randomness, fully reproducible
+  - Chart.js plugin system (afterDraw) used as the correct idiom for extending Chart.js
+    with a custom chart type not in the 8 native types
   weaknesses:
-  - Circle fills (globalAlpha=0.13) are too faint — at dark theme the region boundaries
-    barely read as distinct zones; raise alpha to 0.20-0.22 for both fills
-  - Canvas utilization is moderate — the Venn occupies ~55% of canvas width with visible
-    empty margins left/right; increase radius coefficient from 0.295 to 0.32 and shift
-    centers to better use the landscape canvas
-  - Item label font size (r * 0.085) is slightly small relative to the canvas size;
-    raise to r * 0.095 for better readability at mobile widths
-  - 'Design polish gap: no optional witty subtitle (the spec permits one), category-name
-    labels could be larger (r * 0.13 instead of r * 0.11) and positioned with a bit
-    more separation from the circles'
-  - 'LM-02: core Venn geometry is raw Canvas 2D API inside the afterDraw hook; the
-    Chart.js-specific contribution is just the plugin lifecycle — a more library-distinctive
-    implementation would use Chart.js annotation plugin patterns or dataset-driven
-    scatter to position items'
+  - '"Secretly Beloved" category label center is at y≈886px CSS in a 900px canvas
+    with ~37px font — bottom of descenders approach the canvas boundary; reduce `r`
+    by 5-8% or shift the C-circle downward to restore safe margin'
+  - Triple intersection (ABC) zone is geometrically small and holds 2 items ("The
+    Internet", "Coffee") stacked with only 1.65× lineHeight, leaving them visually
+    cramped; consider a slightly lower itemFontSize for zones with ≥2 items
+  - 'LM-02 improvement opportunity: the implementation uses raw canvas 2D drawing
+    inside the plugin rather than composing Chart.js datasets — using Chart.js bubble/scatter
+    datasets with plugin-drawn circle arcs would show deeper library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light surface
-      Chrome: Bold title "Tech Zeitgeist · venn-labeled-items · javascript · chartjs · anyplot.ai" at top in dark ink (#1A1A17), fully readable. Category labels "Hyped Online" (green), "Actually Useful" (lavender), "Secretly Beloved" (blue) appear boldly outside their respective circles in serif Georgia. All text clearly readable against light background.
-      Data: Three overlapping circles in Imprint palette order (green / lavender / blue). Fills at 13% alpha are quite subtle but distinguishable. Outlines at 60% alpha are clearly visible. Item labels (NFTs, Metaverse, ChatGPT, Slack, TikTok, Vinyl Records, etc.) render in dark inkSoft (~#4A4A44), readable in all 7 zones. ABC zone ("The Internet", "Coffee") centered cleanly.
-      Legibility verdict: PASS — all text is readable against the warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface; NOT pure white
+      Chrome: Title "Tech Zeitgeist · venn-labeled-items · javascript · chartjs · anyplot.ai" in dark ink at top center; italic subtitle "Where does it live — hype, utility, or quiet devotion?" below in inkSoft; all readable
+      Data: Three overlapping circles — green (#009E73, Imprint pos 1), lavender (#C475FD, pos 2), blue (#4467A3, pos 3) — with semi-transparent fills (alpha 0.21) and colored outlines (alpha 0.60). Category labels "Hyped Online" (green), "Actually Useful" (lavender), "Secretly Beloved" (blue) appear outside each circle in their respective colors. Item labels (NFTs, Metaverse, Spreadsheets, Google Maps, RSS Feeds, Fax Machines, ChatGPT, Slack, TikTok, Vinyl Records, Wikipedia, Duct Tape, The Internet, Coffee) appear in all 7 zones in inkSoft gray Georgia serif.
+      Legibility verdict: PASS — all text clearly readable; "Secretly Beloved" at bottom is close to canvas edge but pixels are complete
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface
-      Chrome: Title and all item labels appear in light off-white tones (t.inkSoft = #B8B7B0 in dark theme). No dark-on-dark issues. Category labels retain their Imprint palette colors (green/lavender/blue) which all read well on the dark background.
-      Data: Data colors (circle outlines and fills) are visually identical to the light render — the Imprint palette positions are theme-independent as required. The 13% alpha fills appear very dark against the near-black background (blending makes them nearly invisible), but the 60% outlines keep the zones legible.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures observed
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface; NOT pure black
+      Chrome: Title and subtitle text appear in light ink (#F0EFE8) — clearly readable against dark background. Category labels maintain their Imprint circle colors (green, lavender, blue). Item labels in #B8B7B0 (inkSoft dark) — light gray text on near-black: fully readable. NO dark-on-dark failures.
+      Data: Circle fill/outline colors are identical to light render — green #009E73, lavender #C475FD, blue #4467A3. Data colors correctly unchanged between themes. Only chrome (background, text) flipped.
+      Legibility verdict: PASS — all elements readable; theme adaptation correct; no black-on-black text
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -66,55 +62,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via proportional formulas (r*0.11,
-          r*0.085, dynamic title scaling). Well-proportioned in both renders. Item
-          labels could be slightly larger at mobile widths.
+        comment: 'All font sizes explicitly set via formula; category ~37px CSS, items
+          ~27px CSS, title ~21px CSS scaled for length. Legible in both themes. Minor:
+          bottom category label approaches canvas edge.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps observed. Items stacked vertically within zones
-          with appropriate line spacing.
+        comment: Generally clean placement; minor crowding in ABC triple intersection
+          zone with 2 stacked items at 1.65x lineHeight.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Item labels and outlines are clearly visible. Circle fills at 13%
-          alpha are quite faint — zone boundaries are less distinct than they could
-          be, especially in dark theme where fills nearly vanish.
+        comment: Circles visible with semi-transparent fills; outlines at alpha 0.60
+          provide clear boundaries; labels clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used (green/lavender/blue) — CVD-safe by design.
-          Sufficient contrast.
+        comment: Imprint palette positions 1-3 are CVD-safe; item labels use inkSoft
+          (adaptive neutral); no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Venn occupies ~55-60% of canvas width with visible empty margins
-          on left and right. Good vertical usage. Could fill more of the landscape
-          canvas.
+        comment: Venn fills approximately 60-65% of canvas; balanced left/right; 'Secretly
+          Beloved' label center at y~886px CSS in 900px canvas is very close to bottom
+          edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for Venn. Title is descriptive with correct
-          extended format. Circle category labels serve as semantic labels outside
-          each circle.
+        comment: Descriptive prefixed title + spec-id + javascript + chartjs + anyplot.ai
+          format correct; thematic subtitle adds context. No traditional axes needed.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Circles use Imprint positions 1-3 (#009E73, #C475FD, #4467A3) in
-          canonical order. Background reads t.pageBg (#FAF8F1 / #1A1A17). Text uses
-          t.ink / t.inkSoft — all theme-adaptive. Data colors identical between themes.'
+        comment: 'First circle #009E73 (Imprint pos 1); positions 2 and 3 correct;
+          pageBg used for background (theme-adaptive); ink/inkSoft chrome theme-adaptive
+          in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -124,27 +118,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Georgia serif font delivers the editorial 'Chartgeist' aesthetic
-          specified in the spec. Imprint palette with intentional semantic placement.
-          Above generic defaults (4). Not yet publication-ready — could add subtitle,
-          more deliberate label positioning.
+        comment: Deliberate editorial Georgia serif throughout; alpha-layered circles
+          with calculated opacities; witty subtitle. Above 'well-configured default'
+          (4) but not publication-ready (6/8) — layout is competent without being
+          striking.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, no axes, clean Venn. Subtle fills (13% alpha) and moderate
-          outlines (60% alpha) are tasteful. Good whitespace. Slightly more fill visibility
-          would improve the dark theme.
+        comment: No grid, no spurious axes; semi-transparent fills (0.21) and outlines
+          (0.60) show deliberate alpha tuning; clean whitespace. Good refinement above
+          library defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Witty, coherent tech-zeitgeist taxonomy: NFTs/Metaverse as overhyped,
-          Coffee/The Internet as universally loved. Zone placement is defensible and
-          tells a recognizable cultural story. Visual hierarchy clear through colored
-          bold category labels.'
+        comment: Subtitle frames the editorial question; opinionated categories (Hyped
+          Online, Actually Useful, Secretly Beloved) create a narrative lens; items
+          like NFTs/Metaverse vs Google Maps vs RSS Feeds tell a recognizable tech-culture
+          story.
     spec_compliance:
       score: 15
       max: 15
@@ -154,31 +148,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Three-circle Venn with labeled items, semi-transparent fills, symmetric
-          layout — exactly as specified.
+        comment: Three-circle symmetric Venn diagram with labeled items in all 7 interior
+          zones.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 3 circles, category labels outside, item labels
-          inside, semi-transparent fills, all 7 interior zones populated, magazine-print
-          aesthetic.'
+        comment: Semi-transparent fills, category names outside circles, item labels
+          inside zones, gridless editorial background — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Items correctly placed in their declared zones. Zone geometry computed
-          to match the circle-overlap geometry.
+        comment: All 7 zones populated; 14 items within spec's 10-25 range; zone assignments
+          correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Tech Zeitgeist · venn-labeled-items · javascript · chartjs
-          · anyplot.ai' matches extended format {Descriptive} · {spec-id} · {language}
-          · {library} · anyplot.ai.
+        comment: 'Title: ''Tech Zeitgeist · venn-labeled-items · javascript · chartjs
+          · anyplot.ai'' — correct {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
+          format.'
     data_quality:
       score: 15
       max: 15
@@ -188,22 +181,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones populated (A, B, C, AB, AC, BC, ABC) with 2
-          items each — full zone coverage.
+        comment: All 7 Venn zones (A, B, C, AB, AC, BC, ABC) populated; covers every
+          intersection pattern the plot type can show.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Relatable tech-cultural commentary. Items are real products/concepts
-          with defensible zone placements. Neutral, non-controversial topic.
+        comment: Real tech culture references (NFTs, Google Maps, ChatGPT, Wikipedia,
+          etc.); neutral — no controversial political/social topics; genuine editorial
+          voice.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Placements are factually plausible: NFTs/Metaverse as hype-only,
-          Google Maps as purely useful, The Internet and Coffee as universally beloved.'
+        comment: 14 items within 10-25 spec range; items per zone (1-2 each) appropriate
+          for label legibility.
     code_quality:
       score: 10
       max: 10
@@ -213,56 +207,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: Data → Mount → Plugin → Chart. The vennPlugin object is
-          the correct Chart.js plugin API pattern, not a function/class.'
+        comment: No classes/functions; clear data → mount → plugin → chart sequence.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data is hardcoded.
+        comment: Fully hardcoded deterministic data; no randomness needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports. All globals (window.ANYPLOT_TOKENS, window.Chart)
-          are used.
+        comment: No imports — Chart is a harness-provided global; clean.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake UI elements. Good use of proportional
-          sizing constants.
+        comment: Clean zone geometry calculations; iteration-over-groups pattern for
+          label rendering; no over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. Canvas appended to #container. No explicit
-          save needed — harness handles it.'
+        comment: 'animation: false set; responsive: true; maintainAspectRatio: false;
+          no manual file writes — harness handles output correctly.'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: afterDraw plugin with chart.ctx is the idiomatic Chart.js approach
-          for non-native chart types. Correct options (responsive, maintainAspectRatio,
-          animation:false). Good.
+        comment: Correct use of Chart.js plugin system (afterDraw hook) as the idiomatic
+          way to extend Chart.js beyond its 8 native chart types. Using a scatter
+          chart with empty dataset as a canvas container is the accepted Chart.js
+          pattern for custom layouts.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Chart.js plugin lifecycle (afterDraw) distinctively. However
-          the core Venn drawing is raw Canvas 2D API — the Chart.js-specific contribution
-          is mostly the plugin hook architecture.
-  verdict: REJECTED
+        comment: Chart.js afterDraw plugin lifecycle hook is library-specific; the
+          approach of intercepting the render pipeline to draw custom geometry leverages
+          Chart.js extensibility architecture that is distinctive to this library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
