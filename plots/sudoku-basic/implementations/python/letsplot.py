@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-25
@@ -104,7 +104,7 @@ plot = (
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=[-0.1, 9.1], expand=[0, 0])
     + scale_y_continuous(limits=[-0.1, 9.1], expand=[0, 0])
-    + labs(title="sudoku-basic · letsplot · anyplot.ai")
+    + labs(title="sudoku-basic · python · letsplot · anyplot.ai")
     + theme_void()
     + theme(
         plot_title=element_text(size=16, color=INK, hjust=0.5, face="bold"),
