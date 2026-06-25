@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-25
@@ -121,7 +121,7 @@ custom_style = Style(
     stroke_width=5,
     stroke_opacity=".90",
     stroke_opacity_hover=".90",
-    title_font_size=66,
+    title_font_size=50,
     label_font_size=22,
     major_label_font_size=22,
     legend_font_size=22,
@@ -141,7 +141,7 @@ chart = pygal.XY(
     width=2400,
     height=2400,
     style=custom_style,
-    title="Fashion Micro-Trends 2026 · venn-labeled-items · pygal · anyplot.ai",
+    title="Fashion Micro-Trends 2026 · venn-labeled-items · python · pygal · anyplot.ai",
     show_legend=False,
     show_x_labels=False,
     show_y_labels=False,
