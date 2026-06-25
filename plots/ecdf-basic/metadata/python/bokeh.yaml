@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:55Z'
-updated: '2026-06-25T09:44:35Z'
+updated: '2026-06-25T09:56:46Z'
 generated_by: claude-sonnet
 workflow_run: 28160456663
 issue: 976
@@ -15,97 +15,101 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 quality_score: 89
 review:
   strengths:
-  - Correct ECDF step function with mode=after producing accurate 1/n increments
-  - Realistic marathon finish times dataset (300 runners, mean 240 min) — plausible
-    and neutral
-  - IQR band + area fill + staggered percentile annotations create strong distribution
-    storytelling
-  - 'Excellent bokeh model usage: ColumnDataSource, HoverTool vline mode, BoxAnnotation,
-    Span, Label, varea'
-  - Perfect theme-adaptive chrome in both light and dark renders — no dark-on-dark
-    issues
-  - 'Perfect code quality: seed set, clean imports, KISS structure, correct file output'
+  - Correct ECDF step function (mode=after) with area fill and IQR band that highlight
+    distribution spread
+  - Staggered percentile annotation boxes (25th/50th/75th) with background fills enable
+    direct reading without overlap
+  - CustomJSHover shows both percentage and runner count (e.g. 63.5% — 191/300 runners)
+    — a distinctively Bokeh interactive feature
+  - 'Perfect theme adaptation: light (#FAF8F1) and dark (#1A1A17) backgrounds with
+    correct INK/INK_SOFT chrome tokens'
+  - Both HTML and PNG artifacts produced correctly via Selenium + PIL crop pipeline
+  - Y-only grid at 10% alpha and outline_line_color=None keep chrome minimal
+  - 'Clean code: seed(42) for reproducibility, ColumnDataSource, idiomatic Bokeh model
+    usage throughout'
   weaknesses:
-  - 'DE-01 (5/8): Design just misses the 6/8 threshold — IQR band and annotations
-    add clear value but overall presentation could be stronger. Consider increasing
-    title weight, adding a subtle note about distribution shape, or differentiating
-    the percentile annotation style more clearly from tick labels.'
-  - 'VQ-01 (7/8): Percentile annotation labels at 26pt are smaller than tick labels
-    (34pt), reducing mobile legibility when the PNG scales to ~400px. Increase to
-    30pt to ensure tertiary labels remain readable at thumbnail size.'
-  - 'LM-02 (3/5): HoverTool and CrosshairTool are used but somewhat generically. Consider
-    leveraging a TapTool, Slider widget, or custom JS callback to show more distinctively
-    Bokeh-specific interactivity.'
+  - Annotation label text is 30pt while tick labels are 34pt — inverted typography
+    hierarchy (annotations are secondary but should not be smaller than ticks; raise
+    to 36pt or match tick size)
+  - IQR band (fill_alpha=0.08) and area fill (fill_alpha=0.07) are extremely subtle
+    — borderline invisible in dark render; raise to 0.12–0.15 for the band and 0.10
+    for the area fill
+  - 'DE-02: grid_line_color is set to INK (dark #1A1A17 in light theme) rather than
+    using rgba(26,26,23,0.15) per style-guide; alpha=0.10 compensates but the colour
+    token is incorrect'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Marathon Finish Times · ecdf-basic · python · bokeh · anyplot.ai" in bold dark ink, fills ~70% of canvas width (expected for mandated title length). Y-axis label "Cumulative Proportion of Runners" and X-axis label "Finish Time (minutes)" in dark italic-styled axis labels at 42pt. Tick labels at 34pt in INK_SOFT (#4A4A44). All text clearly readable against the warm off-white background.
-      Data: Single ECDF step line in brand green #009E73 at 4.5pt width, rising from (150,0) to (375,1). Light-green area fill (alpha=0.07) under the curve. Slightly more opaque IQR box annotation (alpha=0.08) from Q1≈218 to Q3≈260. Dashed vertical lines at Q1/Q2/Q3. Staggered italic annotations "25th: 218 min", "50th (median): 242 min", "75th: 260 min" at y=0.03/0.09/0.15 in INK_SOFT. Horizontal dotted reference line at y=0.5.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — matches the required light surface.
+      Chrome: Title "Marathon Finish Times · ecdf-basic · python · bokeh · anyplot.ai" in bold dark INK (#1A1A17) at ~50pt, fully readable. X-axis label "Finish Time (minutes)" and Y-axis label "Cumulative Proportion of Runners" in INK at 42pt, both legible. Tick labels in INK_SOFT (#4A4A44) at 34pt, readable. Dashed-box annotation labels at 30pt (slightly smaller than ticks) are readable at full resolution.
+      Data: ECDF step line in brand green #009E73 at 4.5px — clearly visible. Subtle area fill in green at 7% alpha traces the curve shape. IQR band (Q25–Q75) in green at 8% alpha as a background emphasis zone. Dashed vertical Span lines at 25th/50th/75th percentiles in INK_SOFT. Staggered annotation boxes at y=0.03/0.09/0.15 labelled "25th: 218 min", "50th (median): 242 min", "75th: 260 min". Dotted horizontal median line at y=0.5 in INK_SOFT.
+      First series is #009E73 ✓. Y-only grid at 10% alpha — subtle and appropriate.
+      Legibility verdict: PASS — all text is readable against the warm off-white background. IQR band and area fill are very subtle but visible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light-colored text (#F0EFE8 for title/axis labels, #B8B7B0 for ticks and annotations). All text clearly readable against the dark background. No dark-on-dark issues.
-      Data: ECDF step line in identical brand green #009E73 — same color as light render, confirms data colors don't flip between themes. IQR band and area fill create subtle dark-greenish tones against the near-black background. Percentile annotation text in #B8B7B0 is clearly readable.
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable in dark theme
+      Background: Warm near-black #1A1A17 — matches the required dark surface.
+      Chrome: Title in light INK (#F0EFE8), axis labels and tick labels in INK/INK_SOFT light tokens — all clearly readable on dark background. No dark-on-dark text failures observed.
+      Data: ECDF step line retains the same brand green #009E73 as the light render — data color identity preserved ✓. Area fill and IQR band in green are extremely subtle at 7–8% alpha but faintly visible. Annotation boxes use ELEVATED_BG (#242420) fill, giving them a darker callout appearance. The staggered label text appears in INK (#F0EFE8) — readable.
+      Legibility verdict: PASS — all primary text (title, axis labels, ticks) is clearly readable against the dark background. Annotation box text is readable. IQR band and area fill are very faint and border on invisible in dark mode (alpha 0.07–0.08 is too low for dark surface). No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 50pt, axis 42pt, ticks 34pt,
-          annotations 26pt). Well-proportioned and readable at canvas size. Minor
-          deduction: 26pt percentile annotations are below tick label size (34pt)
-          — may be marginal at ~400px mobile scale.'
+        comment: Title, axis labels, and tick labels are legible in both themes. Annotation
+          text at 30pt is smaller than tick labels at 34pt — inverted typography hierarchy.
+          All primary text passes both light and dark readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Staggered annotations at y=0.03/0.09/0.15 cleanly separated. No text
-          overlaps data or other text elements.
+        comment: Staggered annotation boxes at y_pos=0.03/0.09/0.15 prevent overlap.
+          No text-on-text or text-on-data collisions observed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF line at 4.5pt is appropriately prominent for 300-point data.
-          Area fill and IQR band are supporting elements that do not obscure the main
-          step line.
+        comment: ECDF step line in brand green at 4.5px is clearly visible in both
+          themes. Area fill and IQR band are very subtle (7-8% alpha) but visible;
+          step line is the primary visual element and reads cleanly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series with brand green on warm off-white/near-black. High
-          contrast in both themes. No CVD issues.
+        comment: 'Single-series brand green #009E73 — CVD-safe by palette design.
+          No red-green sole signal.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No canvas gate failure. Generous min_border_* margins. Plot utilizes
-          canvas well with no overflow or clipping.
+        comment: Canvas gate passed. Title at 64 chars and 50pt spans ~70-75% of width
+          — expected. min_border settings (160/180/110/50) provide generous margins.
+          No clipping or overflow observed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'X: ''Finish Time (minutes)'' — descriptive with units. Y: ''Cumulative
-          Proportion of Runners'' — descriptive. Title in correct {Descriptive} ·
-          {spec-id} · {lang} · {lib} · anyplot.ai format.'
+          Proportion of Runners'' — descriptive. Title includes descriptive prefix
+          in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First/only series uses #009E73 brand green. Light background #FAF8F1,
-          dark background #1A1A17. All chrome tokens correctly flip between themes.'
+        comment: 'First and only series uses #009E73 (brand green) ✓. Light background
+          #FAF8F1 ✓, dark background #1A1A17 ✓. Chrome tokens (INK/INK_SOFT) adapt
+          correctly between themes ✓. Imprint palette data color identical in both
+          renders ✓.'
     design_excellence:
       score: 13
       max: 20
@@ -115,28 +119,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above ''well-configured default'' (4): IQR band, area fill, staggered
-          percentile annotations, and median reference line show intentional aesthetic
-          choices. Not yet ''strong design'' (6) — limited to single series, and the
-          overall visual feel is clean but not publication-ready.'
+        comment: 'Above default (4): IQR band as emphasis zone, area fill building
+          visual mass, staggered annotation callout boxes, median reference line.
+          Intentional multi-layer annotation system elevates beyond basic ECDF. Not
+          exceptional but clearly above-average.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: box outline removed (outline_line_color=None),
-          y-only grid at alpha=0.10 (very subtle), no minor ticks, no toolbar. Axis
-          lines remain (not full L-shape removal). Above default but not ''every detail
-          polished''.'
+        comment: 'Above default (2): Y-only grid at 10% alpha (ideal choice for ECDF),
+          outline_line_color=None (removes box border), minor ticks removed, generous
+          min_border margins. Grid color token uses INK instead of the rgba rule token
+          but alpha compensates.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good storytelling: IQR band creates focal emphasis on distribution
-          spread, staggered percentile annotations enable direct value reading, horizontal
-          reference at y=0.5 makes median reading effortless. Clearly above ''data
-          displayed but not interpreted'' (2).'
+        comment: 'Above default (2): Percentile annotations answer ''when do 25/50/75%
+          of runners finish?'' — active storytelling. IQR band frames the central
+          mass of the distribution. Median dotted reference line aids percentile reading.
+          Clear focal points across the S-curve.'
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +150,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF step function using p.step with mode='after' — accurate
-          1/n increments at each observation.
+        comment: Correct ECDF step function implemented with mode='after' — produces
+          proper non-parametric CDF steps increasing by 1/n at each data point.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, y-range 0-1.05, y-axis grid lines, distinct line style
-          — all present.
+        comment: Step function increasing by 1/n ✓. Y-axis 0-1 range ✓ (0 to 1.05).
+          Distinct line style ✓ (brand green 4.5px). Grid lines for percentile reading
+          ✓ (Y-only at 10% alpha).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=finish time (minutes), Y=cumulative proportion (0-1). All 300 data
-          points plotted.
+        comment: 'X: finish times (continuous numeric, 120-370 min range). Y: cumulative
+          proportion 0-1. Data correctly sorted and proportion computed as rank/n.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Marathon Finish Times · ecdf-basic · python · bokeh · anyplot.ai''
-          — correct format. No legend (single series, N/A).'
+          — correct optional-prefix format. No legend appropriate for single-series
+          plot.'
     data_quality:
       score: 15
       max: 15
@@ -178,23 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: ECDF with full distribution, IQR highlighted, percentile markers
-          (Q1/Q2/Q3), area fill — covers all key aspects of ECDF visualization.
+        comment: Full ECDF representation with IQR band, area fill, percentile markers
+          (Q1/Q2/Q3), and median reference line. Shows step function shape, spread,
+          and key percentile values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times for 300 recreational runners — real, neutral,
-          plausible domain. Normal distribution (mean=240min, SD=32min) is realistic.
+        comment: Marathon finish times for 300 recreational runners — highly plausible.
+          Mean=240min (4hr) is a realistic recreational marathon time. Std=32min gives
+          reasonable spread. Neutral, non-controversial subject.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 240 min (4h) mean with 32 min SD yields range ~150-375 min — factually
-          correct for recreational marathon times. 300 runners matches spec range
-          of 50-500.
+        comment: 300 data points — ideal for ECDF visualization (spec says 50-500).
+          Time range ~120-370 min covers realistic marathon finishing window. Cumulative
+          scale 0-1 correct.
     code_quality:
       score: 10
       max: 10
@@ -204,65 +212,69 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear top-level structure: imports → data → ECDF calc → plot →
-          save. No functions or classes.'
+        comment: 'Flat script, no functions or classes. Logical flow: seed → data
+          → ECDF calc → staircase → figure → annotations → tools → typography → chrome
+          → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: io, os, sys, time, Path, numpy, bokeh models,
-          PIL, selenium.'
+        comment: 'All imported names are used: BoxAnnotation (IQR band), ColumnDataSource,
+          CrosshairTool, CustomJSHover (x2), HoverTool, Label (annotations), Span
+          (reference lines), PIL Image (crop), selenium webdriver+Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. The staircase fill computation is appropriate.
-          No fake UI.
+        comment: Percentile annotation loop avoids repetition. CustomJSHover formatters
+          are clean. Staircase x/y construction is explicit and correct. No fake UI
+          elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves plot-{THEME}.html via output_file/save and plot-{THEME}.png
-          via Selenium + PIL crop. Correct naming.
+          via PIL crop. Both required artifacts produced.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Strong bokeh idioms: ColumnDataSource, HoverTool (vline mode), CrosshairTool,
-          BoxAnnotation, Span, Label, varea, step renderer with mode=''after''. Above
-          default (3).'
+        comment: ColumnDataSource, figure(), p.step(), p.varea(), p.add_layout(),
+          output_file()+save() — all idiomatic Bokeh patterns. Selenium+PIL crop follows
+          bokeh.md canonical save pattern.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with vline mode showing cumulative proportion and BoxAnnotation
-          for IQR are Bokeh-distinctive. Interactive HTML artifact alongside PNG is
-          Bokeh-specific. Above default (1) but could push further with more advanced
-          interactivity.
-  verdict: REJECTED
+        comment: CustomJSHover with runner-count format ('63.5% — 191/300 runners')
+          is distinctively Bokeh. CrosshairTool, BoxAnnotation, Span, Label are proper
+          Bokeh models. HTML interactive artifact is a Bokeh strength. Does not use
+          linked selections, tap callbacks, or server widgets — those would push to
+          4-5.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - columndatasource
@@ -270,4 +282,3 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
