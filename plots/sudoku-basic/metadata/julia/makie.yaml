@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: sudoku-basic
 created: '2026-06-25T07:57:30Z'
-updated: '2026-06-25T08:03:01Z'
+updated: '2026-06-25T08:12:41Z'
 generated_by: claude-sonnet
 workflow_run: 28155118376
 issue: 1311
@@ -12,90 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all five spec requirements (thick/thin lines, centered
-    numbers, blank empty cells, monochrome design) correctly implemented'
-  - 'Correct theme adaptation in both renders: INK and INK_SOFT tokens applied to
-    all text and line elements, chrome flips cleanly between light/dark'
-  - Correct 2400x2400 square canvas with DataAspect() ensuring perfectly square Sudoku
-    cells
-  - Elegant linesegments! segment construction via vcat + comprehensions — idiomatic
-    Makie pattern
-  - Fully deterministic code — no random seed needed for a fixed puzzle constant
+  - 'Perfect theme adaptation: INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens are threaded
+    correctly — dark render has fully legible light text on near-black background
+    with no dark-on-dark issues'
+  - 'Correct thick/thin line hierarchy: box boundaries at positions 0,3,6,9 use linewidth=3.5
+    and thin cell dividers use linewidth=1.0 — grid reads clearly at a glance'
+  - Elevated background for given cells (ELEVATED_BG vs PAGE_BG) is a thoughtful UX
+    touch that distinguishes clues from empty cells in both themes
+  - DataAspect() ensures perfect 1:1 square cell proportions — no distorted grid
+  - Deterministic puzzle data (hardcoded), no seed needed; code is linear and highly
+    readable
+  - linesegments! used efficiently for grid drawing — avoids N² individual line calls
+    by grouping all thin and all thick segments
   weaknesses:
-  - Cell numbers at fontsize=28 fill ~21% of cell height — increase to 32-34 for more
-    confident visual presence at print size
-  - 'LM-02 could be improved by using poly! to give given-number cells a subtly elevated
-    background (#FFFDF6 light / #242420 dark) to distinguish clue cells from blank
-    ones, demonstrating deeper Makie primitive usage'
+  - 'DE-01/DE-02: Design is clean but minimal — the elevated cell background is the
+    only design refinement beyond basic grid drawing; consider adding a subtle drop
+    shadow or slightly more prominent clue cell styling to lift aesthetic polish'
+  - 'LM-02: Primitive usage (poly!, linesegments!, text!) is correct but basic — no
+    Makie-distinctive feature such as recipes, observables, or custom Makie plot types
+    that would showcase Makie''s unique capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "sudoku-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17), clearly readable above the grid. No axis labels or tick labels (intentionally hidden for this plot type).
-      Data: 9x9 Sudoku grid with thick black borders (INK, linewidth=3.5) for outer edge and 3x3 box boundaries; thin soft-gray lines (INK_SOFT, linewidth=1.0) for individual cell dividers. Numbers centered in cells in dark ink; empty cells correctly blank.
-      Legibility verdict: PASS
+      Background: Warm off-white matching #FAF8F1 — correct PAGE_BG.
+      Chrome: Title "sudoku-basic · julia · makie · anyplot.ai" in dark INK color at top, clearly readable. No axis labels, tick labels, or spines — all correctly suppressed for this grid-based visualization.
+      Data: 9×9 sudoku grid with thick outer border and 3×3 box dividers in dark INK, thin inter-cell lines in softer INK_SOFT gray. Cells containing given numbers show a very subtly lighter ELEVATED_BG (#FFFDF6) background vs the empty PAGE_BG cells. Numbers rendered in dark INK, fontsize=33, well-centered in each cell. First number in top-left (5,3 in row 1) is clearly readable. Grid fills ~85% of the canvas with appropriate margins.
+      Legibility verdict: PASS — all text fully readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title in off-white (#F0EFE8 = INK in dark mode), clearly readable. Thick grid lines are off-white (INK), thin cell dividers are medium gray (#B8B7B0 = INK_SOFT in dark mode). No dark-on-dark failures observed.
-      Data: Identical puzzle numbers in the same positions as light render, rendered in off-white ink on dark background — all clearly readable. Colors/styling match the INK token correctly.
-      Legibility verdict: PASS
+      Background: Warm near-black matching #1A1A17 — correct PAGE_BG.
+      Chrome: Title in light #F0EFE8 text, clearly readable against near-black background. No axis labels or ticks — same correct suppression as light render. Grid thick lines appear in near-white INK, thin lines in medium-gray INK_SOFT. Elevated cell backgrounds subtly lighter (#242420 vs #1A1A17) — contrast is subtle but visible.
+      Data: Numbers rendered in INK (#F0EFE8) — bright and clearly visible against dark cells. Data colors (monochrome) are identical to light render — only chrome (background, text, grid lines) has flipped to dark.
+      Legibility verdict: PASS — all text clearly readable against near-black background. No dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title and cell numbers readable in both themes. fontsize=28 (56px
-          effective) fills cells adequately.
+        comment: Title titlesize=20 and number fontsize=33 explicitly set; well-proportioned
+          in both themes; readable at mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No overlapping elements; numbers centered in cells with ample whitespace
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Numbers and grid lines (thick and thin) clearly distinguishable in
-          both themes.
+        comment: Numbers clearly visible; thick/thin line hierarchy distinct and readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design, high-contrast ink-on-background. No CVD concerns.
+        comment: Monochrome design with high contrast INK-on-background; no color-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas. DataAspect() ensures square cells.
-          Adequate margin via limits!.
+        comment: Grid fills ~85% of square canvas with balanced margins; title fits
+          without clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct. Axis labels intentionally omitted (appropriate for
-          Sudoku).
+        comment: Title in correct format; no axis labels appropriate for sudoku grid
+          (not a data chart)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Monochrome spec. PAGE_BG correct. INK/INK_SOFT tokens applied. Chrome
-          flips correctly between themes.
+        comment: 'Monochrome sudoku — uses theme-adaptive tokens correctly; backgrounds
+          #FAF8F1/#1A1A17 correct; no categorical series requiring Imprint palette'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -103,22 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean intentional monochrome design appropriate for print-ready puzzle.
-          Visual hierarchy between thick/thin lines is well-executed.
+        comment: 'Above well-configured default: elevated cell background and proper
+          line hierarchy show intentional design; clean and professional for the domain'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: All spines removed, no axis decorations. Sparse ink-on-field design
-          creates clean publication-ready look.
+        comment: All spines/ticks/labels removed; clean minimal grid; no extraneous
+          decoration
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Thick/thin line hierarchy guides eye to 3x3 box regions. Filled vs
-          empty cells create natural puzzle narrative.
+        comment: Elevated background for given cells creates visual hierarchy distinguishing
+          clues from blanks; slightly above default storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9x9 Sudoku grid with 3x3 box region structure.
+        comment: Correct 9×9 sudoku grid with proper 3×3 box structure
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick box borders, thin cell dividers, centered numbers, blank empty
-          cells, monochrome design — all present.
+        comment: Thick box boundaries, thin cell dividers, centered numbers, empty
+          cells blank, monochrome design — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 9x9 grid fully rendered, row 1 at top, correct number placement.
+        comment: 9×9 grid correctly mapped; row 1 at top via 9-row coordinate flip;
+          all 81 cells accounted for
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'sudoku-basic · julia · makie · anyplot.ai'. No legend required.
+        comment: Title 'sudoku-basic · julia · makie · anyplot.ai' — correct format;
+          no legend needed (monochrome)
     data_quality:
       score: 15
       max: 15
@@ -157,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All Sudoku features: thick/thin line hierarchy, filled and empty
-          cells, all 9 rows/columns.'
+        comment: Shows full 9×9 grid with both filled clue cells and empty cells;
+          all 3×3 boxes represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic well-known Sudoku puzzle. Plausible, neutral, immediately
-          recognizable.
+        comment: Classic sudoku puzzle format — recognizable real-world use case;
+          neutral, educational content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fixed 9x9 grid with integers 1-9 as specified.
+        comment: Values 1-9 only (0 for empty) — correct sudoku constraints; starting
+          clue count (28) is realistic
     code_quality:
       score: 10
       max: 10
@@ -181,59 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear: tokens → data → figure → axis → draw → save. No functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (fixed puzzle constant, no randomness needed).
+        comment: Puzzle data is hardcoded — fully deterministic, no seed required
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors imported; both used.
+        comment: Only CairoMakie and Colors — both used (colorant macro from Colors)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant vcat + comprehensions for segment generation. Theme tokens
-          cleanly derived at top.
+        comment: linesegments! batching of grid lines is clean and efficient; comprehension
+          for segment generation is idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses current size=
-          API.
+        comment: Saves plot-$(THEME).png with px_per_unit=2; current CairoMakie API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of linesegments!, text!, DataAspect(), limits!. All spines
-          and ticks disabled via Axis kwargs.
+        comment: DataAspect() for 1:1 grid, Rect2f for cell polygons, linesegments!
+          for grid lines, text! for centered numbers — all idiomatic Makie primitives
+          used correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: DataAspect() and linesegments! are Makie-specific. Could use poly!
-          for cell backgrounds to demonstrate deeper library mastery.
+        passed: true
+        comment: DataAspect() and Rect2f/poly! combo is Makie-specific; linesegments!
+          batching is efficient; however no recipes, observables, or truly unique
+          Makie features leveraged
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   patterns:
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome

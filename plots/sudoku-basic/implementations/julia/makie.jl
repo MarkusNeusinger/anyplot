@@ -1,7 +1,7 @@
 # anyplot.ai
 # sudoku-basic: Basic Sudoku Grid
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-06-25
+# Quality: 90/100 | Created: 2026-06-25
 
 using CairoMakie
 using Colors
