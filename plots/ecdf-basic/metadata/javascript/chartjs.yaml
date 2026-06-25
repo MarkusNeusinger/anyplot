@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: ecdf-basic
 created: '2026-06-25T09:49:58Z'
-updated: '2026-06-25T09:56:05Z'
+updated: '2026-06-25T10:08:22Z'
 generated_by: claude-sonnet
 workflow_run: 28161354094
 issue: 976
@@ -15,119 +15,119 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 quality_score: 88
 review:
   strengths:
-  - Perfect Visual Quality (30/30) — every text element explicitly sized, both themes
-    render correctly with zero legibility issues
-  - 'Full Spec Compliance (15/15) — ECDF step function implemented precisely using
-    Chart.js native stepped: ''before'' option'
-  - Excellent data choice — marathon runner comparison makes distributional differences
-    immediately intuitive
-  - Clean LCG-based reproducibility solution for the browser's lack of seeded RNG
-  - Background fill plugin correctly anchors the chart to the theme surface color
-    via pageBg token
+  - Two-series ECDF step chart with proper stepped:before interpolation and 200-point
+    LCG-seeded deterministic data
+  - Median reference line plugin with per-group callout dots, minute labels, and vertical
+    drop lines adds real storytelling value
+  - 'Perfect palette compliance — green #009E73 for Novice (palette[0]), lavender
+    #C475FD for Experienced (palette[1]), identical data colors across both themes'
+  - Full theme-adaptive chrome via ANYPLOT_TOKENS; pageBg background plugin correctly
+    paints the canvas before rendering
+  - Redundant encoding (solid vs. dashed line) makes the two series distinguishable
+    without relying on color alone
+  - '100% spec compliance: Y-axis 0–1, step increments of 1/n, Y-axis grid for percentile
+    reading, axis labels with units'
   weaknesses:
-  - 'Design Excellence is only 10/20: no visual hierarchy beyond color assignment,
-    no percentile reference line at y=0.5 to anchor the median, X-axis grid clutters
-    ECDF reading (Y-axis grid is what matters for reading cumulative proportions)'
-  - 'DE-02: the full chart border box is not explicitly removed — removing it or matching
-    it to background gives a cleaner composition; set x.grid.display=false to remove
-    unnecessary X-axis gridlines'
-  - 'DE-03: no annotations or reference elements to guide the viewer to key insights
-    — add a horizontal dashed reference line at y=0.5 labeled with approximate median
-    finish time for each group to surface the distributional gap story'
+  - Median callout labels ("224 min" / "268 min") are drawn at 12px CSS — at 2× DPR
+    this is 24px native, which is noticeably smaller than axis labels (28px native)
+    and can feel cramped next to the dense step function; consider bumping to 13–14px
+  - The "median" label at the left edge is also 12px CSS — consistent with callouts
+    but could be slightly larger for balance
+  - Design is clean but functional rather than refined — no spine removal (Chart.js
+    border:false is used but x/y borders could both be hidden via borderColor:transparent
+    for a sharper L-frame look), and the Y-axis grid lacks explicit opacity tuning
+    (relies on t.grid token default)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "ecdf-basic · javascript · chartjs · anyplot.ai" in dark ink, ~60% width, no overflow. Y-axis label "Cumulative Proportion" rotated vertically, clearly readable. X-axis label "Finish Time (minutes)" clearly readable. Tick labels dark on light background — all legible.
-      Data: Two step function ECDF curves — green (#009E73, Novice Runners) and lavender (#C475FD, Experienced Runners). Lines at borderWidth 3 are crisp and clearly distinguishable. Y range 0.0-1.0, X range ~160-360 minutes. Subtle grid on both axes.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "ecdf-basic · javascript · chartjs · anyplot.ai" in dark ink at ~22px CSS, fully readable. Y-axis label "Cumulative Proportion" and X-axis label "Finish Time (minutes)" both at 16px CSS, dark ink, balanced and readable. Tick labels at 14px CSS in inkSoft (#4A4A44). Subtle horizontal grid lines on Y-axis only.
+      Data: Two ECDF step curves — Novice Runners in solid green (#009E73, palette[0]), Experienced Runners in dashed lavender (#C475FD, palette[1]). 200 points each. Median reference line at y=0.5 (dashed, inkSoft) with "224 min" callout (lavender) and "268 min" callout (green) above respective crossing dots, plus subtle vertical drop lines at 40% alpha.
+      Legibility verdict: PASS — all text readable; minor note that callout labels at 12px CSS are the smallest element on the chart.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title and all axis labels rendered in light ink color, clearly visible against dark background. Tick labels in light secondary ink — readable, no dark-on-dark failures detected. Legend text in light color. Grid lines are lighter strokes, subtle but visible.
-      Data: Colors identical to light render — green for Novice Runners, lavender for Experienced Runners. Both step function lines clearly visible against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, axis labels, and tick labels all rendered in light ink tokens (F0EFE8 / B8B7B0) — clearly readable against the dark background. No dark-on-dark failures observed. "median" annotation uses t.inkSoft (#B8B7B0) — visible. Grid lines use t.grid token — subtle on dark, appropriate.
+      Data: Data colors identical to light render — green #009E73 (Novice, solid) and lavender #C475FD (Experienced, dashed) — confirmed same data colors. Median callout labels use palette colors, remaining visible on dark background.
+      Legibility verdict: PASS — both series and all chrome elements clearly legible; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          14px, legend 16px). Both themes fully readable, no overflow.
+        comment: All text readable in both themes; callout labels at 12px CSS are
+          smallest elements — functional but slightly small
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render. Step function
-          curves clearly separated.
+        comment: Minor risk of callout labels overlapping step function near median
+          crossing but visually acceptable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step function lines at borderWidth 3 are well-sized for 200+ data
-          points. Correct choice to remove point markers.
+        comment: 200-point step curves at 3px borderWidth are well-matched to density;
+          solid vs dashed redundant encoding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs lavender provides good hue separation, CVD-safe by Imprint
-          palette design.
+        comment: Imprint palette positions 1+2; solid/dashed redundant encoding ensures
+          CVD safety
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed. Good canvas utilization, balanced margins,
-          no content cut-off.
+        comment: Canvas gate passed; good proportions, generous whitespace, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Finish Time (minutes) and Cumulative Proportion are descriptive with
-          clear context.
+        comment: 'Title correct; X: Finish Time (minutes), Y: Cumulative Proportion
+          — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Second series #C475FD in canonical
-          Imprint order. Backgrounds correct. Chrome fully theme-adaptive.'
+        comment: palette[0]=#009E73 first series, palette[1]=#C475FD second; pageBg
+          token used for backgrounds; data colors identical across themes
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults with correct tokens. Background
-          fill plugin is thoughtful but overall aesthetic is configured-default, not
-          distinctive.
+        passed: true
+        comment: 'Above default (4): median callout plugin adds real design intent;
+          redundant line style encoding shows care. Below max: overall aesthetic is
+          functional rather than artful.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Some refinement: subtle grid via t.grid token, axis border colors
-          via inkSoft, title padding, pointRadius disabled. Missing: chart box not
-          removed, X-axis grid not pruned, no extra whitespace polish.'
+        passed: true
+        comment: 'Above default (2): border:false on both axes is clean; Y-only grid
+          is appropriate for ECDF. Could be raised with explicit grid opacity tuning.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Marathon runner comparison is meaningful and the curve separation
-          tells a story. No reference lines at y=0.5 or annotations to anchor key
-          percentile insights.
+        passed: true
+        comment: 'Above default (2): median crossing callouts with minute values +
+          vertical drop lines guide comparison. Good focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct ECDF step function using stepped: before. Step increases
-          by 1/n at each observation.'
+        comment: Correct ECDF step function using stepped:before
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, Y-axis 0-1, grid lines, distinct line styles all present.
-          Left-tail y=0 anchor is spec-faithful.
+        comment: Y-axis 0-1, step increments 1/n, Y-axis grid, distinct line styles
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis maps finish times correctly, Y-axis shows cumulative proportion
-          0-1, all data visible.
+        comment: 'X: finish times, Y: cumulative proportion; full data range shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly ecdf-basic · javascript · chartjs · anyplot.ai.
-          Legend labels match data series.
+        comment: 'Title: ecdf-basic · javascript · chartjs · anyplot.ai; legend labels
+          match dataset labels'
     data_quality:
       score: 15
       max: 15
@@ -169,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two ECDF curves with different means and spreads showcase distributional
-          differences in location, spread, and shape.
+        comment: Two-group comparison demonstrates primary ECDF use case; median annotations
+          enhance feature coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times for novice vs experienced runners — real-world
-          neutral sports-science scenario.
+        comment: Marathon finish times (novice mean=265min, std=35; experienced mean=225min,
+          std=25) — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Novice mean 265 min (4h25m), experienced mean 225 min (3h45m) — factually
-          realistic marathon finish times with plausible standard deviations.
+        comment: 160-360 min range with medians at 224 and 268 min — plausible marathon/half-marathon
+          finishing times
     code_quality:
       score: 10
       max: 10
@@ -194,35 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions (lcg, randNormal, computeECDF) are minimal and justified
-          for browser reproducibility.
+        comment: No unnecessary abstractions; helper functions (lcg, randNormal, computeECDF,
+          findMedian) are minimal and justified
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: LCG with seed=42 provides deterministic pseudo-random generation,
-          correctly solving browser RNG constraint.
+        comment: Custom LCG with seed=42 ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed, Chart is global. Code uses only harness-provided
-          globals.
+        comment: No imports; Chart is a global — correct for the harness
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean organized code, no fake UI elements, no over-engineering.
+        comment: Well-commented, idiomatic Chart.js plugin usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows Chart.js harness contract: canvas to #container, current
-          Chart.js 4 API, animation: false.'
+        comment: No savefig/save calls; harness handles output — correct
     library_mastery:
       score: 8
       max: 10
@@ -232,21 +226,20 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert Chart.js usage: stepped: before for ECDF, background fill
-          via beforeDraw plugin hook, scale border API, correct mandatory settings.'
+        comment: responsive/maintainAspectRatio/animation:false all set; plugin registration
+          via plugins array; stepped:before is the correct Chart.js ECDF approach
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: 'stepped: before is Chart.js-specific and used correctly. Background
-          plugin uses Chart.js plugin API distinctively. Remaining config is theme-token
-          boilerplate.'
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw and beforeDraw plugins using Chart.js plugin
+          API; canvas-level drawing for annotations. Good but not exceptional.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
