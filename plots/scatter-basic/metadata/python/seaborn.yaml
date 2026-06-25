@@ -2,51 +2,53 @@ library: seaborn
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T21:35:58Z'
-generated_by: claude-opus
-workflow_run: 24859691916
+updated: '2026-06-25T01:36:12Z'
+generated_by: claude-sonnet
+workflow_run: 28140265428
 issue: 611
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance and data quality — marketing spend vs. revenue scenario
-    with realistic right-skewed distribution and natural noise
-  - Excellent code quality and theme adaptation — all chrome tokens correctly wired
-    through sns.set_theme rc params; both renders pass legibility checks
-  - 'Good visual refinements: sns.despine removes top/right spines, tick-length=0,
-    edgecolor=PAGE_BG for marker definition, subtle grid at alpha=0.10'
+  - Perfect theme-adaptive chrome across both light and dark renders — all text, background,
+    grid, and legend correctly themed
+  - sns.regplot with 95% CI band is an excellent seaborn-distinctive statistical feature
+    that adds real insight to a basic scatter
+  - Pearson r annotation explicitly surfaces the correlation story at bottom-right
+  - Axis labels include units on both axes — descriptive and clear
+  - Marker size (s=72) and alpha (0.55) correctly calibrated for 220-point density
+  - 'Clean KISS code structure: seed set, no functions/classes, explicit subplots_adjust
+    margins'
+  - Canvas gate passed at exactly 3200×1800 px — no bbox_inches drift
   weaknesses:
-  - 'DE-03 (2/6): No visual storytelling — positive correlation is the insight but
-    nothing guides the viewer toward it; a regression/trend line or correlation annotation
-    would make the story immediately legible'
-  - 'DE-01 (4/8): Single-color scatter with no secondary encoding is minimal viable
-    design; adding a regression line or marginal distributions would push beyond configured-defaults
-    territory'
-  - 'LM-02 (2/5): Seaborn''s most distinctive scatter feature (sns.regplot adds trend
-    line + CI band in one call; sns.jointplot adds marginal distributions) is unused'
-  - 'VQ-03 (5/6): Marker size s=130 is above recommended s=50-100 for 220 points —
-    reducing to ~90 with alpha=0.65 would reduce clutter in the dense region'
+  - Data correlation r=0.94 is notably higher than the spec suggests (~0.7, moderate)
+    — data generation noise is too small relative to signal, making the scatter too
+    tight to demonstrate typical scatter patterns
+  - CI band is barely visible in the dark render — the shaded region blends into the
+    near-black background, reducing its visual utility
+  - 'Design Excellence has room to grow: the aesthetic is professional but still seaborn-ish
+    in feel — stronger visual emphasis or data annotation could elevate to publication
+    quality'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly themed, not pure white
-      Chrome: Title "scatter-basic · seaborn · anyplot.ai" in dark ink, clearly readable; axis labels "Marketing Spend ($ thousands)" and "Quarterly Revenue ($ thousands)" in dark ink at appropriate size; tick labels in muted dark gray (INK_SOFT), all clearly readable
-      Data: ~220 teal-green scatter points in #009E73 (Okabe-Ito position 1); markers have PAGE_BG edge for definition; clear positive correlation visible; mild overlap in the dense lower-left region
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "scatter-basic · python · seaborn · anyplot.ai" in dark ink at ~65% plot width — clear and readable. X-axis label "Marketing Spend ($ thousands)" and Y-axis label "Quarterly Revenue ($ thousands)" both in dark INK at 10pt — balanced and descriptive. Tick labels in INK_SOFT at 8pt — clearly visible. Top and right spines removed; subtle grid at 10% opacity.
+      Data: 220 scatter points in #009E73 (brand green) with alpha=0.55 and PAGE_BG edge color. Regression line in bright #009E73 with a very light green CI band shaded around it. Pearson r=0.94 annotation in INK_SOFT at bottom-right.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background. No dark-on-dark issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correctly themed, not pure black
-      Chrome: Title in light text clearly readable; axis labels and tick labels in light/muted-light text — all readable against dark background; no dark-on-dark failures detected
-      Data: #009E73 teal-green scatter points are identical in color to light render — only chrome has flipped; data colors consistent across themes
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light (#F0EFE8 / #B8B7B0) — clearly visible against the dark background. Grid remains subtle. Regression line stands out clearly in #009E73. CI band shading is very faint in the dark render (almost invisible against near-black), slightly reducing its visual contribution.
+      Data: Scatter points remain in identical #009E73 — exactly matching the light render color. r=0.94 annotation visible in muted light text.
+      Legibility verdict: PASS — no dark-on-dark failures. All chrome correctly flips to light values. The only minor concern is the CI band shading (nearly invisible on the dark surface) but this does not cause a legibility failure for any text or data element.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -54,73 +56,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt explicitly set; both renders
-          fully legible
+        comment: All font sizes explicitly set (title=12, labels=10, ticks=8). Both
+          renders fully readable. Title spans ~65% of width — correct for this title
+          length.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; well-spaced axes and title
+        comment: No text-text or text-data overlaps observed in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: s=130 slightly above recommended s=50-100 for 220 points; moderate
-          overlap in dense lower-left; edgecolor mitigates
+        comment: s=72 and alpha=0.55 for 220 points — correctly within the 50-100
+          / 0.5-0.7 guideline for 100-300 point density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito color with alpha=0.7; CVD-safe, no red-green issue
+        comment: 'Single series in #009E73. No red-green encoding. CVD-safe.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 16:9 canvas well; tight_layout + bbox_inches=tight avoids
-          waste
+        comment: Canvas gate passed (3200x1800). subplots_adjust margins are explicit
+          and correct. No content cut off in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title matches required format
+        comment: 'Both axes have descriptive labels with units: ''Marketing Spend
+          ($ thousands)'' and ''Quarterly Revenue ($ thousands)''.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
-          chrome uses adaptive INK/INK_SOFT tokens'
+        comment: 'First (and only) series uses #009E73. Background #FAF8F1 (light)
+          / #1A1A17 (dark). All chrome tokens correctly applied. Data color identical
+          across themes.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured defaults: brand green, adaptive theme, clean font.
-          Solid but generic single-color scatter with no design differentiation beyond
-          compliance'
+        passed: true
+        comment: 'Above library defaults: theme-adaptive chrome, regplot statistical
+          layer, edgecolors set to PAGE_BG for marker separation. Professional but
+          not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good: sns.despine, grid alpha=0.10, tick length=0, edgecolor=PAGE_BG,
-          axes.axisbelow=True — not quite every detail polished'
+        passed: true
+        comment: Spines removed with sns.despine, grid alpha=0.10, tick marks removed
+          (length=0), explicit subplots_adjust, marker edge color set to background.
+          Good refinement but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly but not interpreted; no trend line, no emphasis
-          on the positive correlation; viewer must find the story themselves
+        passed: true
+        comment: Regression line + CI band creates visual focal point. r=0.94 annotation
+          explicitly surfaces the correlation insight. Business context (marketing
+          spend → revenue) is compelling.
     spec_compliance:
       score: 15
       max: 15
@@ -130,53 +137,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot via sns.scatterplot
+        comment: Correct scatter plot. sns.regplot adds regression layer beyond spec
+          requirements — an additive enhancement.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: alpha=0.7, grid lines, axis labels, descriptive title, point size
-          all present
+        comment: Scatter points, transparency (alpha), axis labels, grid, appropriate
+          point size — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data within canvas; positive correlation
-          visible
+        comment: X=Marketing Spend, Y=Revenue. All 220 points visible. Axes span full
+          data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; single-series needs no legend — correct
-          omission
+        comment: 'Title matches exact format: ''scatter-basic · python · seaborn ·
+          anyplot.ai''. No legend (correct for single series).'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Gamma-distributed spend creates realistic heteroscedasticity; 220
-          points show full scatter patterns; noise gives realistic variability
+        comment: Shows scatter relationship, spread, and correlation. However, r=0.94
+          means the 'scatter' is very tight — less noise demonstration than the spec's
+          r~0.7 intent.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing Spend vs. Quarterly Revenue is a neutral, real-world business
-          scenario
+        comment: Marketing spend vs. quarterly revenue is a textbook business analysis
+          scenario — neutral, plausible, and relatable.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Marketing spend $3-72K, revenue $5-310K — plausible B2B business
-          values
+        comment: Data values are plausible ($3-70k spend, $5-310k revenue). However,
+          actual r=0.94 exceeds the spec's 'moderate correlation (r~0.7)' intent —
+          noise std of 18 is too small relative to the signal range.
     code_quality:
       score: 10
       max: 10
@@ -186,55 +196,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → style → save; no functions
-          or classes'
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn) are used
+        comment: All 5 imports (os, matplotlib.pyplot, numpy, pandas, seaborn) are
+          actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity for the task
+        comment: Clean, Pythonic, appropriate complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current seaborn 0.13+ API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current seaborn
+          API.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: sns.regplot (high-level API), sns.set_theme, sns.despine — all idiomatic
+          seaborn patterns with proper axes-level usage (ax=ax).
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme with context=talk, axes-level sns.scatterplot, sns.despine
-          — idiomatic seaborn pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: sns.despine and set_theme context system are seaborn-distinctive,
-          but core visualization is bare scatter replicable in matplotlib. sns.regplot
-          statistical overlay unused.
-  verdict: REJECTED
+        comment: sns.regplot with automatic 95% CI band computation and rendering
+          is genuinely seaborn-distinctive — would require significant manual work
+          in matplotlib. Strong but not the most unique possible seaborn pattern.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - explicit-figure

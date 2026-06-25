@@ -2,53 +2,57 @@ library: pygal
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T22:06:20Z'
-generated_by: claude-opus
-workflow_run: 24860707249
+updated: '2026-06-25T01:41:01Z'
+generated_by: claude-sonnet
+workflow_run: 28140628180
 issue: 611
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Excellent data storytelling: splitting data at 70% passing threshold creates
-    a meaningful visual narrative that guides the viewer'
-  - Perfect Okabe-Ito palette compliance — brand green (#009E73) as first series,
-    orange (#D55E00) as second, consistent across both renders
-  - 'Both light and dark themes render cleanly: correct warm off-white (#FAF8F1) and
-    near-black (#1A1A17) backgrounds with all text readable in both'
-  - Clean, minimal code structure with deterministic seed (np.random.seed(42)) and
-    no functions or classes
-  - Interactive HTML output correctly generated alongside PNG, using js=[] to remove
-    external CDN dependencies for offline reliability
-  - Axis labels carry units ('hrs' and '%') and the data context (study hours vs exam
-    scores) is realistic and neutral
+  - 'Semantic Imprint palette use: brand green (#009E73) for Passing and matte red
+    (#AE3030) for Below 70% is a valid pass/fail semantic exception that immediately
+    communicates the story'
+  - All font sizes explicitly set (title_font_size=66, label_font_size=56, major_label_font_size=44,
+    legend_font_size=44) — well-proportioned in both renders
+  - 'Both themes render correctly: warm off-white (#FAF8F1) in light, warm near-black
+    (#1A1A17) in dark; all chrome is theme-adaptive'
+  - 'Intentional data storytelling: the 70% passing threshold split creates clear
+    visual hierarchy — viewer immediately grasps the study-hours → outcome narrative'
+  - 'Thorough pygal API usage: value_formatter, x_value_formatter, legend_at_bottom_columns,
+    range/xrange, js=[] optimization, plus interactive HTML alongside PNG'
+  - Reproducible (np.random.seed(42)) with realistic study-hours vs exam-scores domain
+    and np.clip for valid score bounds
+  - Clean KISS structure with documented sys.path workaround for package-name shadowing
   weaknesses:
-  - 'INK_MUTED for dark theme is #6E6D66, which deviates from the style guide value
-    #A8A79F — the dark value is too close to the background and may make grid lines/subtle
-    text less visible than intended'
-  - Font sizes (52px title, 40px labels) significantly exceed the pixel-based library
-    guideline of 28px/22px — renders look fine but are outside spec; may affect visual
-    proportions at different viewport sizes
-  - Minor point crowding in the low-study-hours / below-70% region; the 180 points
-    with opacity=0.7 reveal overlap reasonably, but larger dot sizes (dots_size=17)
-    amplify collision in dense areas
+  - Red-green is the sole hue-based distinguishing signal between the two series;
+    while spatial clustering provides some redundancy, deuteranopes cannot rely on
+    the color cue alone — consider adding a thin ink-color stroke on markers (stroke_width=1.5)
+    or distinct marker shapes if pygal supports them, to provide a non-hue redundant
+    encoding
+  - DE-02 is constrained by pygal's box-frame default (the full border around the
+    chart area cannot easily be removed); within that limit the layout is clean but
+    visual refinement is moderate
+  - Dots_size=12 produces somewhat large markers for 180 data points at 3200px canvas
+    — slight overplotting is visible in the 4–8 study-hour range; reducing to dots_size=9-10
+    would sharpen the middle-range scatter
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "scatter-basic · pygal · anyplot.ai" centered at top in dark ink, clearly readable. X-axis label "Study Hours per Week (hrs)" and Y-axis label "Exam Score (%)" both visible in dark text. Tick labels (1.0–14.0 hrs on X; 20%–100% on Y) rendered in dark secondary text against the light background — all legible. Grid lines are subtle but present on both axes.
-      Data: Two series — teal/green (#009E73, "Passing ≥ 70%") dots clustered in the upper-right, and orange (#D55E00, "Below 70%") dots clustered in the lower-left, with a clear positive correlation trend visible across 180 points. Dot size and 70% opacity balance visibility against overlap. Legend at bottom shows both series labels clearly.
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-basic · python · pygal · anyplot.ai" is dark text, clearly readable, spans ~55% of canvas width. X-axis label "Study Hours per Week (hrs)" and Y-axis label "Exam Score (%)" are dark, readable. Tick labels (1–14 on X, 20%–100% on Y) are dark, fully visible with no clipping.
+      Data: Two series — brand green (#009E73) dots for "Passing (≥ 70%)" clustered in upper-right; matte red (#AE3030) dots for "Below 70%" clustered in lower-left. Clear positive correlation visible. Opacity ~0.72 applied. Legend at bottom with two columns, color swatches correct.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title and axis labels rendered in light/off-white text (#F0EFE8), clearly readable against the dark background. Tick labels also appear as light text — no dark-on-dark failures observed. Grid lines are subtle but visible as slightly lighter lines against the dark background.
-      Data: Data colors are identical to the light render — same teal (#009E73) and orange (#D55E00) dots with the same distribution. Okabe-Ito positions 1–2 are unchanged between themes, confirming correct theme-adaptive implementation.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all render in light/cream text, clearly visible against dark background. No dark-on-dark failures observed. Grid lines visible but subtle.
+      Data: Data colors identical to light render — brand green (#009E73) and matte red (#AE3030) are both clearly visible against the dark background. Brand green reads well; matte red is fully distinguishable.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
       score: 28
@@ -56,50 +60,49 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes (52px title, 40px label)
-          above the 28px/22px guideline but renders look proportionate
+        comment: All font sizes explicitly set and well-proportioned in both renders
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Some point crowding in dense lower-left region; opacity=0.7 and dot
-          separation help but overlap is visible at dots_size=17
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Both series clearly visible with good marker size and Okabe-Ito contrast
+        comment: No overlapping text elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dots visible but dots_size=12 is slightly large for 180 points; some
+          overplotting in 4-8 hr range
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green/orange provide adequate contrast
+        comment: Semantic red-green exception valid for pass/fail; spatial clustering
+          provides some redundancy but hue is still primary distinguishing signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 landscape, generous margins, legend at bottom not obstructing
-          data
+        comment: 3200x1800 canvas, legend at bottom, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels include units (hrs, %)
+        comment: Study Hours per Week (hrs) and Exam Score (%) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; light #FAF8F1 and dark #1A1A17
-          backgrounds; data colors identical between themes'
+        comment: Imprint palette with valid pass/fail semantic exception; backgrounds
+          correct for both themes
     design_excellence:
       score: 12
       max: 20
@@ -109,22 +112,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional data split at 70% passing threshold adds narrative hierarchy
-          above generic defaults
+        comment: 'Above configured defaults: semantic color assignment, deliberate
+          typography hierarchy, intentional narrative through series split'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid appropriate for scatter, clean font family, bottom legend —
-          limited refinement options within pygal API
+        comment: Grid appropriate for scatter; legend well-placed; pygal box-frame
+          limitation constrains refinement ceiling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Pass/fail split creates clear focal point and communicates the study-hours-to-outcome
-          narrative effectively
+        comment: Pass/fail split with semantic colors creates clear narrative; spatial
+          clustering reinforces correlation story
     spec_compliance:
       score: 15
       max: 15
@@ -134,52 +137,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.XY() with stroke=False is the correct scatter plot type
+        comment: pygal.XY() is the correct scatter chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Transparency (opacity=0.7), axis labels, title, grid lines all present
+        comment: Transparency (opacity=0.72), axis labels, title, grid lines, appropriate
+          point size all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Study hours on X (independent), exam scores on Y (dependent), 180
-          points in range, positive correlation visible
+        comment: X=study hours, Y=exam scores; all 180 data points visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'scatter-basic · pygal · anyplot.ai'; legend labels 'Passing
-          (≥ 70%)' and 'Below 70%' match data series
+        comment: Title format correct; legend labels Passing (>= 70%) and Below 70%
+          are clear
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good coverage of scatter fundamentals; two-series split adds dimension;
-          no regression line or additional annotation layer
+        comment: Shows correlation, variability, outliers, and threshold effect
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam scores is classic, neutral, real-world scenario
-          with plausible ranges
+        comment: Study hours vs exam scores — real, neutral educational scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1–14 hours and 20–100% are realistic; 180 data points is within recommended
-          50–500 range
+        comment: 1.5-13.5 hrs/week, 20-100% scores with np.clip — realistic and bounded
     code_quality:
       score: 10
       max: 10
@@ -189,26 +189,25 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: 'Linear structure: sys fix, imports, tokens, data, chart, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys used for path manipulation workaround
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean structure; sys.path.pop(0) workaround is necessary and explained;
-          noqa comments justified
+        comment: Clean, Pythonic; sys.path workaround documented
       - id: CQ-05
         name: Output & API
         score: 1
@@ -224,15 +223,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct pygal.XY() for scatter, Style object for theming, xrange/range
-          for axis control, lambda formatters
+        comment: Uses Style object, formatters, range/xrange, tick count, legend positioning,
+          js=[] — thorough idiomatic usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive HTML output, opacity_hover for hover state, js=[] for
-          offline/CDN-free output, value_formatter for tooltip customization
+        comment: Interactive HTML output alongside PNG is pygal's signature feature;
+          value_formatter for tooltip customization
   verdict: APPROVED
 impl_tags:
   dependencies: []
