@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:22:59Z'
-updated: '2026-06-25T07:42:17Z'
+updated: '2026-06-25T07:52:27Z'
 generated_by: claude-sonnet
 workflow_run: 28154211880
 issue: 1311
@@ -12,111 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Perfect spec compliance — all five requirements (thick 3x3 borders, thin cell
-    borders, centered numbers, blank empty cells, monochrome design) satisfied
-  - Excellent theme adaptation — both light and dark renders are fully legible with
-    correct theme-adaptive tokens throughout
-  - Clever use of sns.heatmap with binary cmap for structural cell differentiation
-    without distracting colorbar or elements
-  - Canvas exactly 2400x2400 (correct square format); bbox_inches=None observed correctly
-  - Clean, flat, fully reproducible code with a classic canonical sudoku puzzle
+  - Classic Sudoku puzzle with warm-toned monochrome palette that adapts correctly
+    to both themes
+  - Excellent thick/thin line hierarchy (3px vs 0.6px) clearly delineating 3×3 boxes
+    from individual cells
+  - Clever 3-level cell encoding (empty-even-box / empty-odd-box / clue) using a ListedColormap
+    for subtle structural shading
+  - 'Perfect spec compliance: bold centered numbers, blank empty cells, all grid features
+    present'
+  - Clean and Pythonic code — deterministic data, all imports used, idiomatic sns.heatmap
+    with annot_kws
   weaknesses:
-  - Elevated fill distinction between clue cells (ELEVATED_BG vs PAGE_BG) is very
-    subtle — contrast could be slightly increased for better print readability, though
-    the spec does not require it
-  - Design excellence naturally constrained by puzzle genre — limited room for expressive
-    visual hierarchy beyond the functional thick/thin border approach
+  - 'Alternating box shading (BOX_SHADE vs PAGE_BG) is very subtle — nearly imperceptible
+    in the dark render where #242422 vs #1A1A17 barely differ; slightly more contrast
+    would reinforce the 3×3 grouping in dark mode'
+  - Thick boundary lines (axhline/axvline) rely on matplotlib overlays outside seaborn
+    API — a more seaborn-native approach would use linewidths per row/column grouping
+    in the heatmap parameters if possible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "sudoku-basic · python · seaborn · anyplot.ai" in dark ink (#1A1A17), clearly readable above grid; no axis labels or tick labels (correctly hidden)
-      Data: Bold dark-ink numbers (#1A1A17, fontsize 18pt) centered in clue cells; given cells have slightly elevated fill (#FFFDF6); empty cells show bare page surface; thin cell borders (#4A4A44, linewidth 0.6); thick 3x3 box borders (INK, linewidth 3)
-      Legibility verdict: PASS — all numbers and title are clearly readable against the light background; no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "sudoku-basic · python · seaborn · anyplot.ai" in medium-weight dark ink, clearly readable above the grid. No axis labels or tick labels (appropriate for this plot type).
+      Data: 9×9 grid with thick black lines (3px) at 3×3 box boundaries and thin lines (0.6px) for individual cells. Alternating 3×3 boxes show subtle warm-toned shading differences (PAGE_BG vs BOX_SHADE). Clue cells use a slightly darker warm fill (CLUE_BG). Numbers (1–9) are bold, dark ink, fontsize=16 — large and prominent.
+      Legibility verdict: PASS — all numbers clearly readable, title readable, no text/element clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in near-white (#F0EFE8), fully legible above grid; same layout as light render
-      Data: Numbers render in near-white #F0EFE8 on dark background; given cells shift to #242420 (elevated dark); empty cells remain #1A1A17; thin borders use #B8B7B0; thick box borders use #F0EFE8; theme-adaptive chrome only (no Imprint categorical colors, appropriate for monochrome puzzle)
-      Legibility verdict: PASS — all numbers and title are clearly readable against the dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black.
+      Chrome: Title visible in light cream (#F0EFE8), readable against dark background. Thick boundary lines render in light color, thin cell lines visible against dark cell backgrounds.
+      Data: Same puzzle data as light render. Numbers appear in light cream (#F0EFE8) against very dark cell backgrounds — strong contrast. The alternating box shading (BOX_SHADE=#242422 vs PAGE_BG=#1A1A17) is very subtle in dark mode, nearly imperceptible, though the thick/thin line hierarchy still carries the 3×3 structure clearly. Data colors are effectively monochrome in both themes (no Imprint categorical colors used — appropriate for a structural grid plot).
+      Legibility verdict: PASS — all numbers readable, title readable, no dark-on-dark failures. Thick boundary lines clearly visible in light tone.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title (12pt) and cell annotations (18pt bold) clearly readable in
-          both themes; annotation size slightly large but workable
+        comment: All font sizes explicitly set (title=12pt, annot fontsize=16 bold).
+          Readable at full size in both themes. Numbers large and prominent. No overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers centered in cells with no overlap; title clear of grid
+        comment: No overlapping text. Numbers centered in cells with adequate spacing.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All given numbers prominent; thick/thin border hierarchy immediately
-          clear
+        comment: Numbers are bold fontsize=16, clearly visible. Grid lines have distinct
+          thick/thin hierarchy (3px vs 0.6px).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design with high-contrast ink-on-surface; no CVD concerns
+        comment: Monochrome design with high luminance contrast. CVD-safe by design
+          — no color reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas correct for symmetric 9x9 grid; canvas gate
-          passed; generous margins; nothing clipped
+        comment: Square format correct for symmetric 9×9 grid. Grid fills ~80% of
+          canvas. Balanced margins. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; no axis labels needed for sudoku grid
+        comment: Title format correct. No axis labels needed for structural sudoku
+          grid.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome puzzle; only theme-adaptive chrome tokens used; correct
-          backgrounds #FAF8F1/#1A1A17'
+        comment: Monochrome structural plot — warm-toned backgrounds (#FAF8F1/#1A1A17)
+          correct. Chrome fully theme-adaptive. No categorical palette needed; ListedColormap
+          uses warm-toned neutrals appropriate for monochrome structural display.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean intentional monochrome design; binary cmap for clue-vs-empty
-          distinction is thoughtful; functionally constrained by puzzle genre
+        comment: 'Strong design: warm-toned monochrome palette, three-level cell encoding
+          (empty-even/empty-odd/clue), thick/thin line hierarchy — clearly above generic
+          defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Good grid design; all-four-spines correct for enclosed grid; subtle
-          elevated cell fill adds polish
+        comment: Custom linewidths (3px thick, 0.6px thin), tick labels hidden, good
+          title padding, theme-adaptive colors throughout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Thick/thin line hierarchy guides eye to 3x3 structure; monochrome
-          constraint respected
+        comment: Thick/thin line hierarchy clearly communicates 3×3 box structure.
+          Alternating shading reinforces grouping. Clue cells visually distinct from
+          empty cells.
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +134,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9x9 Sudoku grid visualization
+        comment: Correct 9×9 Sudoku grid visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Thick 3x3 borders, thin cell borders, bold centered numbers, blank
-          empty cells, monochrome design — all satisfied
+        comment: Thick lines for 3×3 boxes, thin lines for individual cells, centered
+          bold numbers, blank empty cells — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 81 cells rendered correctly; row orientation correct via ylim
-          inversion
+        comment: Classic Sudoku puzzle correctly mapped to 9×9 grid.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'sudoku-basic · python · seaborn · anyplot.ai'; no
-          legend needed
+        comment: 'Title: ''sudoku-basic · python · seaborn · anyplot.ai'' — correct
+          format. No legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -157,21 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: given numbers, empty cells, 9x9 structure, 3x3
-          box delineation'
+        comment: 'Shows all aspects: filled cells, empty cells, 3×3 box grouping,
+          individual cell boundaries.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic canonical sudoku puzzle (Wikipedia example); plausible and
-          neutral
+        comment: Classic Sudoku puzzle (Wikipedia example). Educational, neutral context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Fixed 9x9 standard scale; correct number of clues for valid puzzle
+        comment: Valid Sudoku puzzle with values 1–9, zeros for empty cells correctly
+          handled.
     code_quality:
       score: 10
       max: 10
@@ -181,49 +188,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: 'Clean linear structure: imports → data → theme → canvas → plot →
+          grid lines → formatting → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded static grid; fully deterministic
+        comment: Deterministic hardcoded puzzle data. No random numbers.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all used, none unused
+        comment: 'All imports used: os, plt, np, sns, ListedColormap.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI elements; clear stage separation
+        comment: Clever 3-level box_parity encoding. Clean Pythonic code. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png without bbox_inches='tight'
+        comment: Saves plot-{THEME}.png with dpi=400, no bbox_inches='tight'.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: sns.heatmap with annot= for digit strings; fmt='' bypasses numeric
-          formatting; square=True, cbar=False idiomatic
+        comment: Idiomatic sns.heatmap() with annot, fmt, cmap, cbar=False, square=True,
+          annot_kws — correct axes-level API usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Binary cmap from theme-adaptive tokens; composing seaborn heatmap
-          with matplotlib axhline/axvline for structural borders
+        comment: Clever use of heatmap annotation for cell number display. However,
+          thick boundary lines require matplotlib axhline/axvline outside seaborn
+          API.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -231,8 +240,8 @@ impl_tags:
   - annotations
   - manual-ticks
   patterns:
-  - explicit-figure
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
