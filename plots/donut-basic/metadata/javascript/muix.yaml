@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: donut-basic
 created: '2026-06-25T06:09:21Z'
-updated: '2026-06-25T06:14:43Z'
+updated: '2026-06-25T06:31:29Z'
 generated_by: claude-sonnet
 workflow_run: 28150302905
 issue: 733
@@ -12,43 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Correct donut chart with thick ring (innerRadius=180, outerRadius=360) for readability
-  - Center overlay with $500M total assets metric creates clear focal point
-  - Full Imprint palette compliance — Equities in brand green first, canonical order
-    followed
-  - Percentage arc labels with arcLabelMinAngle preventing crowded labels on small
-    segments
-  - Square orientation directive used appropriately for radial chart
-  - Clean legend at bottom with explicit spacing control
-  - 'Full spec compliance: center metric, percentage labels, thick ring, 5 categories
-    in 3-8 range'
-  - Theme-adaptive chrome via t.ink / t.inkSoft — both renders pass legibility checks
-  - skipAnimation and export default pattern followed correctly
-  - Center text overlay (absolute-positioned div over MUI X chart) is an idiomatic
-    approach for center-donut text since MUI X lacks native inner-label API
+  - Correct Imprint palette with brand green (#009E73) as first series (Equities)
+    and correct canonical order for all 5 categories
+  - Excellent use of center overlay with $500M total assets metric — fulfills spec
+    requirement for center space information
+  - Per-segment arc label fills with WCAG contrast optimization (dark text on light
+    segments, white text on dark segments) is thoughtful accessibility work
+  - Square canvas orientation correctly chosen for donut chart; ring proportions (innerRadius
+    180, outerRadius 360) provide thick, readable ring
+  - Both light and dark themes render correctly — data colors identical, chrome flips
+    appropriately, no dark-on-dark failures
+  - Clean, idiomatic MUI X PieChart usage with arcLabel, arcLabelMinAngle, slotProps.legend,
+    and skipAnimation
   weaknesses:
-  - 'Arc label color hardcoded to fill: #FFFFFF — white text on the lavender (Fixed
-    Income) segment reduces contrast compared to using a computed contrasting color'
-  - 'DE scores held back: the chart is a well-configured standard MUI X donut — more
-    design differentiation (e.g. custom tooltip slot, refined legend marks, or subtle
-    drop shadow on center text) would push DE-01 higher'
-  - LM-02 could be raised by using more distinctive MUI X community features such
-    as custom legend slots or the PieChart highlight callbacks
+  - Design Excellence could be elevated further — consider a slight drop-shadow or
+    glow on the dominant Equities segment to visually emphasize the largest allocation,
+    creating stronger data storytelling
+  - LM-02 could be improved by using MUI X-specific slot customization (e.g., custom
+    arc label component via slots.pieArcLabel) rather than generic CSS nth-child selectors
+    for per-segment label styling
+  - The title fontsize (22px CSS) occupies roughly 50% of the square canvas width
+    which is proportionally appropriate, but a slightly bolder weight would improve
+    desktop readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white — correct.
-      Chrome: Title "donut-basic · javascript · muix · anyplot.ai" in bold dark text at top-center, clearly readable. No axis labels (appropriate for donut). Legend at bottom in a single row: Equities / Fixed Income / Real Estate / Commodities / Cash & Equiv with color swatches, all readable.
-      Data: 5 segments in Imprint canonical order — Equities (42%) in brand green #009E73, Fixed Income (28%) in lavender #C475FD, Real Estate (14%) in blue #4467A3, Commodities (9%) in ochre #BD8233, Cash & Equiv (7%) in matte red #AE3030. Ring is thick with subtle corner radius and padding gaps. White percentage labels on each segment (arcLabelMinAngle suppresses labels on very small arcs). Center shows "$500M" in large bold dark text and "TOTAL ASSETS" in small uppercase secondary text.
-      Legibility verdict: PASS — all text readable, no light-on-light issues; white arc labels on lavender segment are readable but could have stronger contrast.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. Clean and warm.
+      Chrome: Title "donut-basic · javascript · muix · anyplot.ai" rendered in dark near-black text, clearly readable at top center. No axis labels (appropriate for donut chart). Legend at bottom row with dark text on warm background — all labels readable.
+      Data: Donut ring with 5 segments — Equities (42%) in brand green #009E73 (largest, immediately dominant), Fixed Income (28%) in lavender #C475FD, Real Estate (14%) in blue #4467A3, Commodities (9%) in ochre #BD8233, Cash & Equiv (7%) in matte red #AE3030. Canonical Imprint palette order 1-5 confirmed. Arc percentage labels visible on each segment. Center overlay shows "$500M" (large, bold) and "TOTAL ASSETS" (small caps) — excellent use of center space.
+      Legibility verdict: PASS — all text clearly readable. Per-segment contrast optimization (dark labels on green/lavender/ochre, white labels on blue/red) correctly applied.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black — correct.
-      Chrome: Title visible with light text (#F0EFE8). Legend entries in light text — fully readable. Center "$500M" in light ink adapts correctly. "TOTAL ASSETS" subtitle in inkSoft (light gray on dark) is readable. No dark-on-dark failures detected.
-      Data: All 5 Imprint palette colors are identical to the light render — brand green Equities, lavender Fixed Income, blue Real Estate, ochre Commodities, matte red Cash & Equiv. Data colors do not flip between themes, only chrome flips.
-      Legibility verdict: PASS — all text readable against the dark surface; no dark-on-dark failures; arc labels remain white and visible on colored segments.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light text clearly readable against dark background. Legend at bottom in light text — all 5 category labels readable. Center overlay "$500M" in light text and "TOTAL ASSETS" in muted light text — both readable against the dark donut center area.
+      Data: Data colors are identical to light render — brand green #009E73, lavender #C475FD, blue #4467A3, ochre #BD8233, matte red #AE3030 — all identical to the light render as required. Arc percentage labels use same per-segment contrast optimization (works correctly in dark mode too since segment colors are theme-invariant). No dark-on-dark failures.
+      Legibility verdict: PASS — all text clearly readable. Brand green #009E73 clearly visible against dark background. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,51 +59,58 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor: white arc labels on lavender
-          (28%) segment have lower contrast than ideal.'
+        comment: 'Font sizes explicitly set throughout (title:22px, arc labels:15px,
+          center $500M:44px, sub-label:13px). All text readable in both themes. Title
+          proportionally appropriate (~50% canvas width for square). Minor: center
+          sub-label at 13px is slightly small.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, segments, or legend elements.
+        comment: No overlapping text elements. Arc labels, center overlay, legend
+          all clearly separated. arcLabelMinAngle prevents label crowding on small
+          segments.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments clearly visible; thick ring well-sized; arcLabelMinAngle
-          prevents crowding on small segments.
+        comment: Ring width of 180px CSS (360px native) provides excellent visibility.
+          All segments clearly distinguishable. Rounded corners and padding angles
+          add visual clarity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; sequential ordering used; no red-green
-          sole-signal conflict.
+        comment: Imprint palette is CVD-safe by design. Per-segment label fills optimized
+          for WCAG contrast. No red-green only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas appropriate for donut; title, chart, and legend well-spaced;
-          no clipping or overflow.
+        comment: Square canvas (2400x2400) correctly chosen for donut. Donut ring
+          fills ~55-60% of canvas area. Well-balanced margins. Legend at bottom, title
+          at top. No content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: donut-basic · javascript · muix · anyplot.ai.
-          No axes needed for donut chart.'
+        comment: N/A for axis labels (donut chart). Title correctly formatted. Center
+          metric and legend provide all necessary labeling context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette used; Equities first in brand green; canonical Imprint
-          order. Backgrounds #FAF8F1 / #1A1A17.'
+        comment: 'First series (Equities) = #009E73 brand green. Full canonical Imprint
+          order for 5 categories. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
+          between themes. Chrome correctly theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,24 +118,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: center metric overlay adds polish, corner radius
-          and letterSpacing on subtitle show typographic attention. Not exceptional
-          — still a standard portfolio donut look.'
+        comment: 'Above library defaults: Imprint palette, per-segment WCAG label
+          contrast optimization, center overlay with dollar metric, rounded corners,
+          padding angles, explicit font stack with letter-spacing. Clearly above a
+          basic default but not quite ''strong design'' level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Explicit legend spacing (itemMarkWidth, itemMarkHeight, markGap,
-          itemGap), paddingAngle=2 for clean segment separation. Above default but
-          not highly refined.
+        comment: No grid (appropriate for donut), no spines, generous whitespace,
+          rounded corners (cornerRadius:4), segment gap (paddingAngle:2), refined
+          legend spacing (itemGap:20). Good refinement beyond defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: $500M Total Assets focal point in center creates clear data story.
-          Largest segment (Equities 42%) in brand green naturally draws first attention.
+        comment: Center overlay '$500M Total Assets' provides clear narrative context.
+          Dominant Equities (42%) in brand green naturally draws the eye. Percentage
+          labels enable quick comparison. Visual hierarchy is good. No explicit emphasis
+          technique to highlight a key insight.
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +148,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut chart with hollow center via innerRadius=180.
+        comment: Correct donut/ring chart with PieChart + innerRadius creating the
+          hollow center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center metric ($500M Total Assets), percentage labels on segments,
-          consistent ordering, thick ring.
+        comment: 'All spec features present: center space with key metric ($500M),
+          percentage labels on segments, consistent ordering, thick ring width (180px
+          inner, 360px outer).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories (within 3-8 range), values sum to 100%, categorical
-          proportions displayed correctly.
+        comment: 5 categories (within 3-8 spec range), values correctly proportioned
+          summing to 100%.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'donut-basic · javascript · muix · anyplot.ai'. Legend
-          labels match categories.
+        comment: Title 'donut-basic · javascript · muix · anyplot.ai' is correct format.
+          Legend labels match data categories.
     data_quality:
       score: 15
       max: 15
@@ -169,22 +181,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all donut chart aspects: segments, center info, percentage
-          labels, legend, 5 meaningful categories.'
+        comment: Shows diverse proportions (42% to 7%), all 5 segments visible, center
+          metric, percentage labels — covers all donut chart features.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Portfolio allocation by asset class is real-world plausible and professionally
-          neutral.
+        comment: Portfolio allocation by asset class is a real, neutral, business
+          scenario. All category names (Equities, Fixed Income, Real Estate, Commodities,
+          Cash & Equiv) are standard financial asset classes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100 (percentages); $500M total is realistic for institutional
-          portfolio context.
+        comment: Values sum to 100 (42+28+14+9+7=100). Proportions are realistic for
+          a diversified portfolio. $500M is a plausible institutional portfolio total.
     code_quality:
       score: 10
       max: 10
@@ -194,35 +207,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat structure, constants at top, single default export — no unnecessary
-          complexity.
+        comment: 'Clean structure: import → data/constants → component. No unnecessary
+          functions or classes beyond the required default export.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully hardcoded — deterministic, no RNG.
+        comment: Fully deterministic — data is hard-coded, no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only PieChart imported; window globals used correctly without unnecessary
-          imports.
+        comment: Only imports PieChart from @mui/x-charts/PieChart. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity for a donut chart. No fake
-          UI elements.
+        comment: Clean, idiomatic React/MUI X code. Per-segment sx rules are slightly
+          repetitive but appropriate for per-element styling. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Square orientation directive present, harness handles file output,
-          current @mui/x-charts API used.
+        comment: skipAnimation set, square orientation directive present, default
+          export component as required. Current MUI X API used.
     library_mastery:
       score: 7
       max: 10
@@ -232,22 +244,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: PieChart with innerRadius/outerRadius for donut, arcLabel callback,
-          arcLabelMinAngle, slotProps.legend, sx override — well beyond minimal usage.
+        comment: 'Idiomatic MUI X usage: PieChart with series array, innerRadius/outerRadius,
+          arcLabel with arcLabelMinAngle, slotProps.legend, colors prop with ANYPLOT_TOKENS.palette,
+          sx for SVG styling. Well above basic usage.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses arcLabelMinAngle, cornerRadius, paddingAngle, sx for arc label
-          styling. Center overlay via absolute div over MUI X chart is idiomatic workaround
-          for missing native inner-label API.
+        comment: 'Uses MUI X-specific features: arcLabel, arcLabelMinAngle, slotProps.legend
+          for detailed customization, and sx prop with CSS nth-child selectors for
+          per-arc-label styling. Center overlay composability demonstrates React-specific
+          MUI X advantage.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - annotations
+  - html-export
   patterns: []
   dataprep: []
   styling: []
