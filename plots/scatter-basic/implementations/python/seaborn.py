@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-basic: Basic Scatter Plot
-Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-23
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-25
 """
 
 import os
@@ -15,9 +15,10 @@ import seaborn as sns
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Imprint palette position 1
 
 # Data — marketing spend vs. quarterly sales revenue (r~0.75)
 np.random.seed(42)
@@ -30,7 +31,6 @@ df = pd.DataFrame({"Marketing Spend ($ thousands)": marketing_spend, "Quarterly 
 
 # Plot
 sns.set_theme(
-    context="talk",
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
@@ -45,30 +45,39 @@ sns.set_theme(
         "axes.linewidth": 0.9,
         "axes.grid": True,
         "axes.axisbelow": True,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-sns.scatterplot(
+# regplot adds regression line + 95% CI band — seaborn's distinctive statistical layer
+sns.regplot(
     data=df,
     x="Marketing Spend ($ thousands)",
     y="Quarterly Revenue ($ thousands)",
     ax=ax,
     color=BRAND,
-    s=130,
-    alpha=0.7,
-    edgecolor=PAGE_BG,
-    linewidth=0.9,
+    scatter_kws={"s": 72, "alpha": 0.55, "edgecolors": PAGE_BG},
+    line_kws={"linewidth": 2.0},
+    ci=95,
 )
 
+# Pearson r annotation surfaces the correlation insight
+r = np.corrcoef(marketing_spend, sales_revenue)[0, 1]
+ax.annotate(f"r = {r:.2f}", xy=(0.97, 0.06), xycoords="axes fraction", ha="right", fontsize=8, color=INK_SOFT)
+
 # Style
-ax.set_title("scatter-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
-ax.set_xlabel("Marketing Spend ($ thousands)", fontsize=20, color=INK, labelpad=12)
-ax.set_ylabel("Quarterly Revenue ($ thousands)", fontsize=20, color=INK, labelpad=12)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, length=0)
+ax.set_title("scatter-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
+ax.set_xlabel("Marketing Spend ($ thousands)", fontsize=10, color=INK, labelpad=10)
+ax.set_ylabel("Quarterly Revenue ($ thousands)", fontsize=10, color=INK, labelpad=10)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 ax.margins(x=0.04, y=0.06)
 sns.despine(ax=ax)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.11, right=0.97, top=0.93, bottom=0.13)
+
+# Save — no bbox_inches='tight' (would trim the 3200×1800 canvas)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
