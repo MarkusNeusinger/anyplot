@@ -2,53 +2,54 @@ library: matplotlib
 language: python
 specification_id: sudoku-basic
 created: '2025-12-23T12:22:32Z'
-updated: '2026-04-24T09:01:57Z'
-generated_by: claude-opus
-workflow_run: 24880988279
+updated: '2026-06-25T07:49:18Z'
+generated_by: claude-sonnet
+workflow_run: 28154111379
 issue: 1311
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (thick/thin line hierarchy,
-    centered numbers, empty cells blank, monochrome design)'
-  - 'Excellent theme adaptation: warm #FAF8F1 background on light, #1A1A17 on dark
-    — both fully readable, no dark-on-dark failures'
-  - Clean, KISS code structure with proper use of matplotlib idioms (solid_capstyle,
-    zorder layering, set_aspect)
-  - Deterministic hardcoded puzzle data — classic, neutral, realistic sudoku puzzle
-  - Correct title format and square canvas sized appropriately for a symmetric grid
+  - Perfect spec compliance — thick 3×3 box boundaries, thin cell lines, centered
+    bold numbers, and blank empty cells all correctly implemented
+  - Elegant alternating chessboard box shading enhances 3×3 region navigation — a
+    deliberate design choice beyond the spec minimum
+  - Crisp line corners via solid_capstyle='butt' show attention to matplotlib-specific
+    rendering detail
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are correctly themed with INK/INK_SOFT
+    tokens applied throughout
+  - Clean, minimal code — KISS structure with no functions/classes, deterministic
+    data, only necessary imports
+  - Square canvas (2400×2400 px) is correctly chosen for the symmetric 9×9 grid; canvas
+    gate passed
   weaknesses:
-  - 'DE-01 (4/8): Design is constrained by the monochrome spec but could show more
-    sophistication — e.g. slightly bolder outer border using Patch instead of overlapping
-    plot() calls, subtle cell shading variation for the 3x3 boxes to improve puzzle
-    navigation'
-  - 'DE-02 (4/6): The line rendering is clean but the thick boundary lines have slightly
-    inconsistent corner treatment where horizontal/vertical thick lines cross; consider
-    using Rectangle patches for the 3x3 boxes to achieve crisper corners'
-  - 'DE-03 (3/6): No visual emphasis distinguishes the given numbers from the implied
-    empty cells — could use slightly different font weight, shading, or color-tinting
-    for the 3x3 boxes to create visual hierarchy and improve solver UX'
-  - 'LM-02 (2/5): Only uses basic ax.plot and ax.text — could leverage matplotlib''s
-    Patch or PathPatch for cleaner box rendering, or use matplotlibs Line2D for the
-    grid in a more idiomatic way'
+  - 'DE-03: Visual hierarchy is functional (thick vs thin lines, bold numbers) but
+    the plot does not visually distinguish pre-filled clue numbers from conceptually
+    empty cells beyond them simply existing — a subtle shade or weight difference
+    on clue cells would elevate storytelling'
+  - 'DE-02: plt.tight_layout() is used instead of explicit fig.subplots_adjust() —
+    leaves marginal polish on the table compared to a hand-tuned layout'
+  - 'LM-02: solid_capstyle=''butt'' and zorder are useful but relatively modest distinctive
+    features; a LineCollection or PatchCollection approach would show deeper matplotlib
+    mastery for the grid-drawing pattern'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct, not pure white
-      Chrome: Title "sudoku-basic · matplotlib · anyplot.ai" in dark near-black ink at top — fully readable; no axis labels or tick labels (correctly hidden for this plot type)
-      Data: 9x9 sudoku grid with thin black lines for cell boundaries and thick black lines for 3x3 box separators; bold black numbers (fontsize=42) centered in cells; empty cells are blank — all 26 given numbers clearly visible against the warm off-white background
-      Legibility verdict: PASS — all text and numbers are clearly readable against the light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "sudoku-basic · python · matplotlib · anyplot.ai" at top in dark ink, clearly readable (~75% canvas width at fontsize=12). No axis labels, ticks, or spines (all hidden — appropriate for a grid-based plot).
+      Data: 9×9 Sudoku grid with thick outer and 3×3 boundary lines (~3.5pt, dark INK color) and thin inner cell lines (~1pt, INK_SOFT). Alternating chessboard box shading — every other 3×3 region has a very subtle light-gray tint (alpha=0.06 of INK). Bold black numbers (fontsize=28, INK color) centered in filled cells; empty cells left blank as specified. Numbers clearly distinguish from background.
+      Legibility verdict: PASS — all text (title + numbers) is clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct, not pure black
-      Chrome: Title in light off-white ink at top — fully readable; grid lines in the same light ink against dark background, clearly visible
-      Data: Same 9x9 grid layout with identical number placement as light render; grid lines appear in light ink (INK token adapted to #F0EFE8); bold light numbers clearly visible against the near-black background
-      Legibility verdict: PASS — all text and numbers clearly readable against the dark background; no dark-on-dark failures; INK token correctly applied to both title and cell numbers
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8) clearly visible at top. No axis elements.
+      Data: Same Sudoku grid; grid lines now appear as lighter strokes on the dark background. Alternating box shading produces a subtly lighter dark tint (INK=#F0EFE8 at alpha=0.06 on dark bg). Numbers rendered in light INK color (#F0EFE8) — clearly readable against the near-black background.
+      Data colors: Identical to light render — monochromatic design with no Imprint categorical colors needed; only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark issues. Numbers and title are fully legible in the dark theme.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,70 +60,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontsize=24, cell numbers fontsize=42 explicitly set; both
-          renders fully readable
+        comment: All font sizes explicitly set (title fontsize computed via formula,
+          numbers at 28pt). Both renders fully readable. No overflow. Well-proportioned
+          at 2400x2400.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Each number in its own cell; no overlapping text
+        comment: No overlapping elements — numbers well-centered in cells with no
+          collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Grid lines and bold numbers clearly visible in both themes
+        comment: Bold numbers (fontsize=28) are prominent and clearly visible. Grid
+          lines crisp with clear thick/thin differentiation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochromatic design — maximum contrast, no CVD concerns
+        comment: Monochromatic design with high-contrast ink-on-background. CVD-safe
+          by design.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600px canvas appropriate for 9x9 grid; nothing cut off
+        comment: Square canvas (2400x2400) is correct for symmetric 9x9 grid. Canvas
+          gate passed. Grid fills plot area well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; no axis labels needed for sudoku grid
+        comment: Title is exactly 'sudoku-basic · python · matplotlib · anyplot.ai'.
+          No axis labels needed for a Sudoku grid.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Monochrome plot; backgrounds #FAF8F1/#1A1A17 correct; INK token
-          flips correctly between themes'
+        comment: 'Theme-correct backgrounds: #FAF8F1 (light), #1A1A17 (dark). Monochromatic
+          design — no categorical palette needed. Chrome tokens correctly applied
+          in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured monochrome implementation constrained by spec; warm
-          background is a refinement but no additional design sophistication
+        passed: true
+        comment: 'Clearly above defaults: alternating chessboard box shading (deliberate
+          design choice, not a library default), theme-adaptive monochromatic styling,
+          butt-cap line corners for craft. Strong design for this visualization type.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines removed, ticks hidden, solid_capstyle detail shows care; line
-          intersections at 3x3 boundaries could be crisper
+        passed: true
+        comment: All four spines hidden, no ticks, no axis labels — full decoration
+          removal. Generous whitespace around grid. plt.tight_layout() instead of
+          hand-tuned subplots_adjust leaves some polish potential.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Thick/thin line hierarchy aids navigation; no additional visual emphasis
-          distinguishes given cells or 3x3 boxes visually
+        passed: true
+        comment: Clear visual hierarchy via thick (3.5pt) vs thin (1pt) line ratio.
+          Alternating shading guides the viewer to 3x3 regions. Bold numbers create
+          focal emphasis. Slightly above default — no explicit storytelling annotation
+          but hierarchy is present.
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 9x9 sudoku grid with proper visual hierarchy
+        comment: Correct Sudoku grid visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: thick lines for 3x3 boxes, thin for cells, centered
-          numbers, empty cells blank, monochrome'
+        comment: Thick 3x3 box boundaries, thin cell lines, centered bold numbers,
+          blank empty cells (no zeros displayed), monochrome design — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 81 cells correctly positioned with proper row/column mapping
+        comment: 9x9 grid correctly mapped. Coordinate transform (j+0.5, 8-i+0.5)
+          correctly places numbers in cells.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'sudoku-basic · matplotlib · anyplot.ai' exactly correct; no
-          legend needed
+        comment: Title exactly 'sudoku-basic · python · matplotlib · anyplot.ai'.
+          No legend needed for a single-element grid.
     data_quality:
       score: 15
       max: 15
@@ -162,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 9x9 grid shown; mix of filled (26) and empty cells; all 9 3x3
-          boxes represented
+        comment: 'Shows all Sudoku grid aspects: thick/thin line differentiation,
+          filled and empty cells, all 9x9 positions, 3x3 box structure.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic real sudoku puzzle; neutral content; actually solvable puzzle
-          data
+        comment: Uses the classic Wikipedia Sudoku example puzzle — the most recognizable
+          Sudoku grid, neutral and universally understood.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Valid sudoku values 1-9 with 0 for empty; appropriate cell count
-          for 'basic' puzzle
+        comment: All values correctly 0-9, exactly 9x9 cells. A valid partially-filled
+          Sudoku puzzle with a known solution.
     code_quality:
       score: 10
       max: 10
@@ -187,34 +200,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save; no functions or
-          classes'
+        comment: 'No functions or classes. Linear: imports -> theme tokens -> data
+          -> plot -> save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data array; no random numbers
+        comment: Fully deterministic — hardcoded puzzle data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic loops; appropriate complexity; no fake UI elements
+        comment: Clean, readable nested loops for grid drawing. No over-engineering,
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight' in savefig. Current
+          matplotlib API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -222,20 +237,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of ax methods, set_aspect('equal'), solid_capstyle, zorder;
-          correct OO interface
+        comment: Correct ax-method usage (not plt methods). Proper ax.set_aspect('equal')
+          for square grid. zorder management for correct layering. Above default.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: solid_capstyle and zorder are matplotlib-specific, but mostly uses
-          basic ax.plot/ax.text; could use Patch/PathPatch for 3x3 box rendering
-  verdict: REJECTED
+        passed: true
+        comment: solid_capstyle='butt' for crisp line corners is a matplotlib-specific
+          rendering feature. zorder layering with 4 distinct levels (fill, thin lines,
+          thick lines, text). Uses some library-specific features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - matrix-construction
   - explicit-figure
@@ -243,3 +260,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
