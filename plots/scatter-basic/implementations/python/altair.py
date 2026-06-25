@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-basic: Basic Scatter Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -73,7 +73,7 @@ chart = (
         height=320,
         background=PAGE_BG,
         title=alt.Title(
-            "scatter-basic · altair · anyplot.ai",
+            "scatter-basic · python · altair · anyplot.ai",
             subtitle=f"n = {n}  ·  Pearson r = {pearson_r:.2f}",
             fontSize=16,
             fontWeight="normal",
