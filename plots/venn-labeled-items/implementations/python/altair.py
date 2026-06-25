@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 49/100 | Updated: 2026-06-25
@@ -32,17 +32,17 @@ CANVAS_H = 460
 TARGET_W, TARGET_H = 2400, 2400
 
 # Symmetric three-circle Venn layout in a 500×460 coordinate space.
-# center_y=260 (above midpoint) reduces empty space below the title.
-center_x, center_y = 250.0, 260.0
+# center_y=240 (below midpoint) shifts diagram toward canvas bottom, reducing empty lower space.
+center_x, center_y = 250.0, 240.0
 RADIUS = 90.0
 OFFSET = RADIUS / math.sqrt(3)  # ≈ 51.96
 
 cx_a = center_x - OFFSET * math.sin(math.radians(60))  # ≈ 205
-cy_a = center_y + OFFSET * math.cos(math.radians(60))  # ≈ 286
+cy_a = center_y + OFFSET * math.cos(math.radians(60))  # ≈ 266
 cx_b = center_x + OFFSET * math.sin(math.radians(60))  # ≈ 295
 cy_b = cy_a
 cx_c = center_x  # 250
-cy_c = center_y - OFFSET  # ≈ 208
+cy_c = center_y - OFFSET  # ≈ 188
 
 df_circles = pd.DataFrame(
     [
@@ -77,18 +77,20 @@ items_raw = [
     ("Coffee", "ABC"),
 ]
 
-# Geometric centroids of each Venn region, verified to lie in the correct zone
+# Geometric centroids of each Venn region, verified to lie in the correct zone.
+# AC/BC pushed outward (x±50) and downward (y-41) from original to separate from
+# the ABC centroid, eliminating the collision in the densely-packed centre cluster.
 zone_centers = {
-    "A": (155.0, 272.0),
-    "B": (345.0, 272.0),
-    "C": (250.0, 155.0),
-    "AB": (250.0, 310.0),
-    "AC": (207.0, 247.0),
-    "BC": (293.0, 247.0),
-    "ABC": (250.0, 252.0),
+    "A": (155.0, 252.0),
+    "B": (345.0, 252.0),
+    "C": (250.0, 135.0),
+    "AB": (250.0, 290.0),
+    "AC": (200.0, 213.0),
+    "BC": (300.0, 213.0),
+    "ABC": (250.0, 254.0),
 }
 
-LINE_HEIGHT = 11.0
+LINE_HEIGHT = 14.0
 zone_to_items = defaultdict(list)
 for lbl, zone in items_raw:
     zone_to_items[zone].append(lbl)
@@ -185,7 +187,7 @@ label_c = (
 
 item_labels = (
     alt.Chart(df_items)
-    .mark_text(fontSize=11, color=INK, fontWeight="normal")
+    .mark_text(fontSize=10, color=INK, fontWeight="normal")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=domain_x), axis=None),
         y=alt.Y("y:Q", scale=alt.Scale(domain=domain_y), axis=None),
@@ -200,7 +202,7 @@ chart = (
         height=CANVAS_H,
         background=PAGE_BG,
         title=alt.Title(
-            text="Pop Culture Vibes · venn-labeled-items · altair · anyplot.ai",
+            text="Pop Culture Vibes · venn-labeled-items · python · altair · anyplot.ai",
             subtitle="An opinionated three-circle taxonomy",
             fontSize=16,
             subtitleFontSize=11,
