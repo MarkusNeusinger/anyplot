@@ -1,7 +1,7 @@
 """ anyplot.ai
 ecdf-basic: Basic ECDF Plot
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 87/100 | Created: 2026-04-24
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 88/100 | Created: 2026-06-25
 """
 
 import os
@@ -23,21 +23,21 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"
-ACCENT = "#C475FD"
 
-# Data — 120 food-delivery times (minutes); right-skewed gamma is realistic for
-# real order-to-door durations (mean ≈ 30 min, long right tail for outliers).
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# 120 food-delivery times (minutes); gamma is right-skewed, realistic for
+# order-to-door durations (mean ≈ 30 min, long tail for outliers).
 np.random.seed(42)
 delivery_times = np.random.gamma(shape=6.0, scale=5.0, size=120)
 
-# ECDF: sorted values on x, cumulative proportion (k/n) on y
+# ECDF: sorted values → cumulative proportion k/n
 sorted_values = np.sort(delivery_times)
 n = len(sorted_values)
 ecdf_y = np.arange(1, n + 1) / n
 
-# Step function: horizontal lead-in at y=0, then each observation adds a vertical
-# jump followed by a horizontal segment.
+# Step function: flat lead-in at 0, then a vertical jump + horizontal plateau
+# at each observation.
 x_lead = float(sorted_values[0]) - 2.0
 step_points = [(x_lead, 0.0), (float(sorted_values[0]), 0.0)]
 for i in range(n):
@@ -45,7 +45,7 @@ for i in range(n):
     x_next = float(sorted_values[i + 1]) if i + 1 < n else float(sorted_values[-1]) + 2.0
     step_points.append((x_next, float(ecdf_y[i])))
 
-# Quartile reference markers: P25, median, P75 — let readers read percentiles directly
+# Quartile markers for distribution landmarks
 p25 = float(np.percentile(delivery_times, 25))
 p50 = float(np.percentile(delivery_times, 50))
 p75 = float(np.percentile(delivery_times, 75))
@@ -58,57 +58,74 @@ custom_style = Style(
     foreground=INK_SOFT,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(BRAND, ACCENT),
+    colors=IMPRINT_PALETTE,
     font_family=font,
     title_font_family=font,
     label_font_family=font,
     major_label_font_family=font,
     legend_font_family=font,
     tooltip_font_family=font,
-    title_font_size=72,
-    label_font_size=52,
+    title_font_size=66,
+    label_font_size=56,
     major_label_font_size=44,
-    legend_font_size=40,
+    legend_font_size=44,
     tooltip_font_size=32,
     value_font_size=30,
     stroke_opacity=1,
     stroke_opacity_hover=1,
     opacity=1,
     opacity_hover=1,
-    stroke_width=28,
+    stroke_width=3,
 )
 
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="ecdf-basic · pygal · anyplot.ai",
+    title="ecdf-basic · python · pygal · anyplot.ai",
     x_title="Delivery Time (minutes)",
     y_title="Cumulative Proportion",
     show_dots=False,
     show_x_guides=True,
     show_y_guides=True,
-    show_legend=False,
+    show_legend=True,
     range=(0, 1.05),
     x_labels_major_count=9,
     y_labels_major_count=6,
     value_formatter=lambda v: f"{v:.2f}",
     x_value_formatter=lambda v: f"{v:.0f}",
-    margin=60,
+    margin=50,
+    truncate_legend=-1,
     js=[],
+    legend_at_bottom=True,
+    legend_at_bottom_columns=2,
 )
 
-chart.add("ECDF", step_points)
+# ECDF step function — series 1 uses brand green (#009E73)
+chart.add("ECDF — Delivery Times", step_points)
+
+# Three quartile markers as separate series so each gets a distinct Imprint color
+# and its own legend entry with the exact value, making percentiles directly readable.
 chart.add(
-    "Quartiles",
-    [
-        {"value": (p25, 0.25), "label": f"P25 = {p25:.1f} min"},
-        {"value": (p50, 0.50), "label": f"Median = {p50:.1f} min"},
-        {"value": (p75, 0.75), "label": f"P75 = {p75:.1f} min"},
-    ],
+    f"Q1 = {p25:.0f} min (25th percentile)",
+    [{"value": (p25, 0.25), "label": f"P25 = {p25:.1f} min"}],
     stroke=False,
     show_dots=True,
-    dots_size=40,
+    dots_size=20,
+)
+chart.add(
+    f"Median = {p50:.0f} min (50th percentile)",
+    [{"value": (p50, 0.50), "label": f"Median = {p50:.1f} min"}],
+    stroke=False,
+    show_dots=True,
+    dots_size=20,
+)
+chart.add(
+    f"Q3 = {p75:.0f} min (75th percentile)",
+    [{"value": (p75, 0.75), "label": f"P75 = {p75:.1f} min"}],
+    stroke=False,
+    show_dots=True,
+    dots_size=20,
 )
 
 chart.render_to_png(f"plot-{THEME}.png")
