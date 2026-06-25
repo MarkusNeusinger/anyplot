@@ -27,6 +27,17 @@ const vmin = d3.min(values);
 const vmax = d3.max(values);
 const absMax = Math.max(Math.abs(vmin), Math.abs(vmax));
 
+// Find grid indices of global max and min for focal-point annotations
+let maxIdx = 0, minIdx = 0;
+for (let k = 1; k < values.length; k++) {
+  if (values[k] > values[maxIdx]) maxIdx = k;
+  if (values[k] < values[minIdx]) minIdx = k;
+}
+const peakX = -3 + 6 * (maxIdx % nx) / (nx - 1);
+const peakY = 3 - 6 * Math.floor(maxIdx / nx) / (ny - 1);
+const troughX = -3 + 6 * (minIdx % nx) / (nx - 1);
+const troughY = 3 - 6 * Math.floor(minIdx / nx) / (ny - 1);
+
 // --- SVG mount ---
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const defs = svg.append("defs");
@@ -57,11 +68,14 @@ cg.selectAll(".cf").data(contoursData).join("path")
   .attr("class", "cf").attr("d", pathGen)
   .attr("fill", d => colorScale(d.value)).attr("stroke", "none");
 
-// --- Contour isolines (thin, semi-transparent) ---
+// --- Contour isolines: increased visibility; zero-crossing isoline emphasized ---
+const step = 2 * absMax / numLevels;
 cg.selectAll(".cl").data(contoursData).join("path")
   .attr("class", "cl").attr("d", pathGen)
   .attr("fill", "none")
-  .attr("stroke", t.ink).attr("stroke-width", 0.7).attr("stroke-opacity", 0.2);
+  .attr("stroke", t.ink)
+  .attr("stroke-width", d => Math.abs(d.value) < step ? 1.5 : 1.0)
+  .attr("stroke-opacity", d => Math.abs(d.value) < step ? 0.6 : 0.35);
 
 // --- Plot border (all four sides — standard for contour plots) ---
 g.append("rect").attr("width", iw).attr("height", ih)
@@ -123,6 +137,24 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft).style("font-size", "13px")
   .text("z (field value)");
+
+// --- Focal-point annotations: global max and min ---
+const focalPts = [
+  { x: peakX,   y: peakY,   label: `max ${values[maxIdx].toFixed(1)}` },
+  { x: troughX, y: troughY, label: `min ${values[minIdx].toFixed(1)}` },
+];
+cg.selectAll(".fp-ring").data(focalPts).join("circle")
+  .attr("class", "fp-ring")
+  .attr("cx", d => xScale(d.x)).attr("cy", d => yScale(d.y))
+  .attr("r", 7).attr("fill", "none")
+  .attr("stroke", t.ink).attr("stroke-width", 1.5).attr("stroke-dasharray", "3,2");
+
+cg.selectAll(".fp-lbl").data(focalPts).join("text")
+  .attr("class", "fp-lbl")
+  .attr("x", d => xScale(d.x)).attr("y", d => yScale(d.y) - 11)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink).style("font-size", "11px").style("font-weight", "600")
+  .text(d => d.label);
 
 // --- Title ---
 svg.append("text")
