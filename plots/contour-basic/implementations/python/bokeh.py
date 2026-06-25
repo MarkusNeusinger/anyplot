@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-basic: Basic Contour Plot
-Library: bokeh | Python 3.14.4
-Quality: 90/100 | Updated: 2026-06-25
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-25
 """
 
 import os
