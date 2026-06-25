@@ -2,51 +2,59 @@ library: seaborn
 language: python
 specification_id: contour-basic
 created: '2025-12-23T10:01:23Z'
-updated: '2026-04-24T01:17:08Z'
-generated_by: claude-opus
-workflow_run: 24866883188
+updated: '2026-06-25T03:46:58Z'
+generated_by: claude-sonnet
+workflow_run: 28144676999
 issue: 855
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Excellent data choice: bimodal meteorological KDE effectively demonstrates all
-    aspects of a contour plot'
-  - Fully theme-adaptive implementation with careful chrome handling in both renders
-    (colorbar frame, spines, tick params all themed)
-  - Dual-layer approach (filled KDE + isoline overlay) creates professional depth;
-    inline contour labels add navigability
-  - Perfect scores on Data Quality and Code Quality
+  - 'Perfect spec compliance: filled KDE + isoline overlay + labeled levels + colorbar
+    all implemented correctly'
+  - 'Excellent palette compliance: imprint_seq is exactly right for continuous density
+    data, and both theme backgrounds are correct (#FAF8F1 light / #1A1A17 dark)'
+  - Creative dual-layer approach (seaborn kdeplot fill + scipy contour overlay) is
+    architecturally sound despite requiring a workaround for labeled isolines
+  - 'Full theme adaptation: all chrome elements (title, labels, ticks, colorbar, axes)
+    use theme-adaptive tokens correctly — dark render passes the dark-on-dark check
+    completely'
+  - Clean, idiomatic seaborn code with reproducible seed (np.random.seed(42)) and
+    correct canvas size (figsize=(8,4.5), dpi=400, no bbox_inches='tight')
   weaknesses:
-  - Title format includes extra descriptive prefix ('Weather Regime Density ·') before
-    the spec-id, deviating from required {spec-id} · {library} · anyplot.ai format
-  - Inline contour label fontsize=13 is marginally small at 4800px canvas; consider
-    bumping to 15-16pt
-  - DE-01/DE-03 could be elevated by explicitly annotating the two distribution peaks
-    ('Cold Front' and 'Warm Front' text markers), creating a clearer visual narrative
-  - 'LM-02 low: seaborn''s JointGrid/jointplot could provide marginal distribution
-    histograms alongside the contour for a more distinctively seaborn contribution'
+  - Mode annotations ('Cold Front', 'Warm Front') at fontsize=8 and INK_SOFT color
+    have limited contrast against the dense blue-core fill in the light render — increase
+    fontsize to 9-10 and use INK (primary text color) for better legibility on the
+    fill
+  - Dotted reference line at 1017 hPa (alpha=0.5, linewidth=0.8) is nearly imperceptible
+    in both renders — either increase prominence (linewidth=1.2, alpha=0.7) or remove
+    it if it serves no measurable purpose
+  - X-axis extent shows negative wind speeds (~-2 m/s) due to multivariate normal
+    sampling — wind speed is non-negative meteorologically; clip data after sampling
+    or use a distribution that stays positive
+  - 'LM-02 limited: labeled isolines require a scipy/matplotlib workaround (gaussian_kde
+    + ax.contour + ax.clabel) because seaborn''s kdeplot cannot return a labeled ContourSet
+    natively'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Weather Regime Density · contour-basic · seaborn · anyplot.ai" in dark ink (24pt), axis labels "Wind Speed (m/s)" and "Barometric Pressure (hPa)" in dark ink (20pt), tick labels in INK_SOFT (16pt) — all clearly readable against light background
-      Data: Bivariate KDE contour using viridis colormap; two distinct density peaks (cold front ~5 m/s/1021 hPa, warm front ~11 m/s/1013 hPa); filled contours overlaid with thin light isoline curves; inline contour labels (13pt, #F0EFE8); colorbar on right labeled "Reading Density"
-      First series: viridis continuous colormap (not categorical — correct for KDE density data)
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "contour-basic · python · seaborn · anyplot.ai" in dark INK (#1A1A17) at fontsize=12 — clearly readable. Axis labels "Wind Speed (m/s)" and "Barometric Pressure (hPa)" in dark INK at fontsize=10 — readable. Tick labels in INK_SOFT (#4A4A44) at fontsize=8 — readable. Colorbar tick labels in INK_SOFT at fontsize=8 — readable.
+      Data: Bivariate KDE contour plot showing two density modes. Cold Front cluster at ~(4.8 m/s, 1021 hPa) and Warm Front cluster at ~(11.6 m/s, 1013 hPa). Imprint sequential colormap (#009E73 green at low density → #4467A3 blue at high density). Inline isoline labels (0.004, 0.010) in dark ink. "Cold Front" and "Warm Front" italic annotations at fontsize=8 in INK_SOFT — legible but limited contrast on dense blue fill core.
+      Legibility verdict: PASS — all primary text is readable; mode annotations have reduced but acceptable contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, tick labels all render in light ink (INK = #F0EFE8 for dark theme, INK_SOFT = #B8B7B0) — clearly readable against dark background. Colorbar frame uses INK_SOFT borders. No dark-on-dark failures observed.
-      Data: Viridis colormap colors are identical to light render — same purple-to-yellow distribution, same bimodal peaks. Contour labels displayed in hardcoded #F0EFE8 (light) which reads well on the viridis fill surface.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white #F0EFE8 — clearly readable against dark background. Axis labels in INK (#F0EFE8) — readable. Tick labels in INK_SOFT (#B8B7B0, light gray) — readable. No dark-on-dark failures detected. Colorbar tick labels adapt to light colors correctly.
+      Data: Identical Imprint sequential colormap (#009E73 → #4467A3) — data colors unchanged from light render. Isoline overlay switches to light/white strokes, visible against the fill. "Cold Front" and "Warm Front" annotations now in INK_SOFT (#B8B7B0, light gray) — better contrast on dark fill than light render.
+      Legibility verdict: PASS — all text readable, chrome adapts correctly, no dark-on-dark failure
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,46 +62,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt all explicitly set; inline contour
-          labels at 13pt slightly small for 4800px canvas
+        comment: All primary text readable in both themes. Mode annotations at fontsize=8
+          and INK_SOFT have somewhat limited contrast against dense blue-core fill
+          in light render.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Contour labels in cold-front peak slightly crowded but legible
+        comment: No text overlaps with other text or data elements; inline isoline
+          labels are well spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled contours and isolines at excellent density; both peaks clearly
-          visible
+        comment: Both density modes prominently visible; gradient and isolines clearly
+          distinguish density levels.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe and perceptually uniform
+        comment: Imprint sequential palette is CVD-safe; green-to-blue gradient maintains
+          luminance difference under deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas use; minor wasted space on left edge
+        comment: Correct 3200x1800 landscape canvas (figsize=(8,4.5), dpi=400, no
+          bbox_inches='tight'). Colorbar does not intrude. Good proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units (m/s, hPa)
+        comment: Title matches mandated format; axis labels include units (m/s, hPa);
+          colorbar labeled 'Reading Density'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis correct for continuous KDE; backgrounds #FAF8F1/#1A1A17;
-          chrome flips correctly in both renders'
+        comment: 'Uses imprint_seq (#009E73 to #4467A3) for continuous density data.
+          Backgrounds are #FAF8F1 / #1A1A17. Both renders theme-correct.'
     design_excellence:
       score: 13
       max: 20
@@ -103,25 +116,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful design with themed colorbar, inline contour labels, weather
-          data context; above generic default but not publication-ready
+        comment: Above default (4). Dual-layer KDE, mode annotations, theme-adaptive
+          colorbar chrome show genuine design intent. Annotations too small to be
+          clearly communicative.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines despined, tick marks removed, colorbar frame styled with INK_SOFT,
-          tight_layout applied
+        comment: Above default (2). Spines removed, tick marks hidden (length=0),
+          custom axes linewidth, subtle grid, colorbar chrome themed. Dotted reference
+          line barely perceptible.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal distribution communicates two meteorological regimes; contour
-          labels help navigate; visual hierarchy present but peaks not explicitly
-          annotated
+        comment: Above default (2). Bimodal structure communicates two synoptic regimes
+          with annotations and reference line. Annotations too small (fontsize=8)
+          to drive clear viewer guidance.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,29 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour plot with filled regions and isoline overlay
+        comment: Correct bivariate contour plot with filled regions and isoline overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled contours, isolines, colorbar, inline level labels all present;
-          viridis sequential colormap
+        comment: Contour lines, filled regions, colorbar, and labeled contour levels
+          via ax.clabel() all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, grid covers full data range
+        comment: Wind speed on X, barometric pressure on Y. Both axes show all data
+          with appropriate extent.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra 'Weather Regime Density ·' prefix before spec-id,
-          breaking required format {spec-id} · {library} · anyplot.ai
+        passed: true
+        comment: Title is exactly 'contour-basic · python · seaborn · anyplot.ai'.
+          Colorbar correctly labeled 'Reading Density'.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -159,22 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution showcases high/low density regions, gradients,
-          two distinct clusters with different shapes
+        comment: 'Comprehensive: filled KDE contours, isoline overlay, contour level
+          labels, colorbar, mode annotations, regime reference line.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Meteorological weather-station data (cold front vs warm front); wind
-          speed and barometric pressure are scientifically well-matched
+        comment: Weather-station readings (wind speed + barometric pressure) representing
+          cold and warm fronts — realistic, scientifically plausible, and neutral
+          domain.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Wind speed 0-20 m/s and pressure 1005-1030 hPa are realistic meteorological
-          ranges
+        passed: false
+        comment: Barometric pressure range accurate. Wind speed shows negative values
+          (~-2 m/s) on x-axis due to multivariate normal sampling — meteorologically
+          implausible (wind speed is non-negative).
     code_quality:
       score: 10
       max: 10
@@ -184,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → theme → plot →
-          style → save'
+        comment: No functions or classes; clean linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn all used
+        comment: All imports (os, matplotlib.pyplot, numpy, pandas, seaborn, LinearSegmentedColormap,
+          gaussian_kde) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; dual kdeplot call for fill + isoline is intentional
-          and well-commented
+        comment: Appropriate complexity for the visualization. No fake UI, no dummy
+          functions.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and facecolor
+        comment: Saves as plot-{THEME}.png with dpi=400, facecolor=PAGE_BG. No bbox_inches='tight'.
+          Current seaborn API.
     library_mastery:
       score: 8
       max: 10
@@ -220,18 +239,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: kdeplot with fill=True is idiomatic seaborn for 2D density contours;
-          sns.set_theme, sns.despine used correctly
+        comment: 'Excellent seaborn idioms: kdeplot with fill=True, cmap, thresh,
+          levels, integrated cbar=True, cbar_kws, sns.set_theme(style=''ticks'', rc={...}),
+          sns.despine().'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses seaborn's integrated cbar=True in kdeplot (distinctive); could
-          further leverage JointGrid for marginal distributions
-  verdict: REJECTED
+        comment: Uses seaborn's most distinctive kdeplot feature (integrated KDE colorbar
+          contour fill). However, labeled isolines require a scipy/matplotlib workaround
+          because seaborn's kdeplot cannot return a ContourSet for labeling.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - colorbar
   - annotations
@@ -243,3 +265,4 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
+  - grid-styling
