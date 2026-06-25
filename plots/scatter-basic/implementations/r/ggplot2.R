@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' scatter-basic: Basic Scatter Plot
-#' Library: ggplot2 | R
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 90/100 | Updated: 2026-06-25
 
 library(ggplot2)
 library(ragg)
