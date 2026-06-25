@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: donut-basic
 created: '2025-12-23T00:48:41Z'
-updated: '2026-06-25T05:57:23Z'
+updated: '2026-06-25T06:09:32Z'
 generated_by: claude-sonnet
 workflow_run: 28149446992
 issue: 733
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/bokeh/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Correct donut chart type using bokeh's annular_wedge with ring gap — idiomatic
-    Bokeh
-  - 'Full Imprint palette compliance: first segment #009E73 (Engineering), remaining
-    in canonical order'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes correctly implemented and fully
-    readable
-  - Center metric ('Total budget / $1,025K') fulfils spec requirement elegantly
-  - Contrast-adaptive percentage label colors computed per-segment luminance — genuinely
-    thoughtful
-  - HoverTool, cumsum transform, and Label annotations demonstrate Bokeh-distinctive
-    features
-  - Correct 2400×2400 square canvas for circular shape; canvas gate passed
+  - 'Correct Imprint categorical palette in canonical order with #009E73 first; both
+    light (#FAF8F1) and dark (#1A1A17) backgrounds render correctly with full theme-adaptive
+    chrome'
+  - 'Contrast-adaptive percentage label colors computed from perceived brightness
+    — dark labels on lighter segments (#C475FD ochre), light labels on darker segments
+    (#4467A3 blue, #AE3030 red, #009E73 green) — correct and working in both themes'
+  - 'Strong data storytelling: center hollow displays total budget ($1,025K), brand-green
+    callout ''Engineering leads · 46.8%'' guides the viewer to the dominant segment,
+    and the Engineering percentage label is rendered at 52pt vs 34pt for others to
+    create size hierarchy'
+  - 'Idiomatic Bokeh: uses annular_wedge for the donut ring, cumsum transform from
+    bokeh.transform for start/end angles, ColumnDataSource pattern, legend_field for
+    automatic legend, and HoverTool for interactive tooltips in the HTML artifact'
+  - 'Perfect spec compliance: hollow center with key metric, percentage labels on
+    all segments, 5 categories (within 3-8 range), thick ring width (inner_radius=0.62,
+    outer_radius=1.0), and consistent ordering'
   weaknesses:
-  - 'DE-01 LOW: No deliberate design hierarchy beyond segment size — consider highlighting
-    the dominant Engineering segment (e.g., slight offset, bolder label, or annotation
-    callout) to create a clear focal point and guide the viewer'
-  - 'DE-03 LOW: Data storytelling is minimal — the center metric helps but no emphasis
-    distinguishes Engineering''s ~47% dominance from the rest; a callout annotation
-    or contrasting label size for the largest slice would lift this'
-  - PIL padding workaround at the end (lines 199–206) suggests the headless-Chrome
-    screenshot occasionally drifts from 2400×2400 — investigate whether toolbar_location=None
-    plus driver.execute_cdp_cmd is sufficient, or if an explicit viewport lock is
-    needed before sleep(3)
-  - 'Legend border set to None and background ELEVATED_BG (#242420 dark / #FFFDF6
-    light) is barely distinguishable from PAGE_BG in dark theme — consider a subtle
-    INK_SOFT border to anchor the legend visually'
+  - Engineering percentage label at 52pt vs 34pt for all other segments creates a
+    prominent size imbalance — the differential is 53% larger which feels overstated;
+    consider a smaller emphasis gap (e.g. 42pt vs 34pt) to maintain the storytelling
+    intent without visual jarring
+  - Legend border uses full INK_SOFT border line which adds unnecessary weight to
+    the legend box; reducing border thickness or switching to a hairline border would
+    improve visual refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
-      Chrome: Bold title "Budget by Department · donut-basic · python · bokeh · anyplot.ai" in dark ink, centered, fully readable. No axis labels or tick labels (appropriate for donut). Legend top-right on slightly elevated #FFFDF6 box with dark ink_soft text — readable.
-      Data: Five-segment donut ring with Imprint palette in canonical order: Engineering #009E73 (46.8%), Operations #C475FD (20.5%), Marketing #4467A3 (15.1%), Sales #BD8233 (12.2%), Support #AE3030 (5.4%). Ring gap lines use PAGE_BG for clean separation. Center hollow displays "Total budget" (ink_soft) and "$1,025K" (ink, bold, large).
-      Percentage labels: contrast-adaptive — light text on green, blue, red segments; dark text on lavender, ochre. All readable.
-      Legibility verdict: PASS — all text elements clearly visible against light background, no dark-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct light surface, not pure white
+      Chrome: Title "Budget by Department · donut-basic · python · bokeh · anyplot.ai" in bold dark text, clearly readable. No axis labels (appropriately hidden). Legend in top-right with all 5 categories, styled with elevated background and INK_SOFT border.
+      Data: Donut chart with 5 segments — Engineering (#009E73 brand green, 46.8%), Operations (#C475FD lavender, 20.5%), Marketing (#4467A3 blue, 15.1%), Sales (#BD8233 ochre, 12.2%), Support (#AE3030 red, 5.4%). White dividers between segments. Percentage labels on each segment with contrast-adaptive colors (dark text on lighter segments, light text on darker). Center hollow shows "Total budget" (gray), "$1,025K" (bold dark), "Engineering leads · 46.8%" (brand green callout). Engineering label is 52pt; all others are 34pt.
+      Legibility verdict: PASS — all text readable, contrast-adaptive labels correct, center metric clear, legend readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface
-      Chrome: Same title in light/white ink (#F0EFE8), fully readable. Legend box has elevated dark background (#242420) with light ink_soft text (#B8B7B0) — readable against dark elevated surface.
-      Data: Identical Imprint data colors as light render — Engineering #009E73, Operations #C475FD, Marketing #4467A3, Sales #BD8233, Support #AE3030. All segments clearly distinguishable against dark background. Donut hole matches PAGE_BG (#1A1A17), center metric "$1,025K" in light ink and "Total budget" in light ink_soft — both visible.
-      Percentage labels: same contrast-adaptive colors — white text on green, blue, red; dark text on lavender, ochre. All readable on dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures. All chrome correctly flipped to light tokens. Data colors identical to light render.
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title and legend text are light-colored (F0EFE8/B8B7B0) on dark background — clearly readable. No dark-on-dark failures observed. Legend uses elevated dark background (#242420) with INK_SOFT light border.
+      Data: Segment colors are identical to light render — Engineering #009E73, Operations #C475FD, Marketing #4467A3, Sales #BD8233, Support #AE3030. Data colors are fully theme-independent as required. Center metric "$1,025K" renders in light INK color, "Total budget" in INK_SOFT light gray, "Engineering leads · 46.8%" in brand green #009E73 — all readable.
+      Legibility verdict: PASS — no dark-on-dark failures, all chrome elements flip correctly to light-on-dark, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,53 +61,59 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, center metric, and percentage labels all readable
-          in both themes. 34pt labels may be marginally small for 5.4% segment at
-          mobile (~400px) scale.
+        comment: All font sizes explicitly set; title, center metric, and legend readable
+          in both themes. Engineering segment label at 52pt vs 34pt for others is
+          intentional but creates a noticeable size imbalance.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions in either render. Labels positioned at ring midpoints
-          with adequate spacing.
+        comment: No text overlaps — percentage labels placed at ring midpoints do
+          not collide; center text is well-spaced vertically; legend does not overlap
+          the donut.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five segments clearly visible; ring width is prominent. PAGE_BG
-          gap lines cleanly separate slices.
+        comment: All donut segments clearly visible with white dividers; ring width
+          is generous (0.38 normalized units); all percentage labels readable with
+          contrast-adaptive colors.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-optimised. Contrast-adaptive label colors
-          improve per-segment readability.
+        comment: Imprint palette is CVD-safe; contrast-adaptive percentage label colors
+          (perceived brightness threshold) ensure labels are readable on each segment
+          color in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas appropriate for circular shape. Canvas gate
-          passed. No clipping or overflow.
+        comment: Square 2400x2400 canvas is appropriate for circular donut; canvas
+          gate passed; donut fills the canvas well; no clipping; legend positioned
+          cleanly in top-right without overlap.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (donut). Title is 'Budget by Department · donut-basic
-          · python · bokeh · anyplot.ai' — descriptive and correctly formatted.
+        comment: Axes hidden (correct for donut); title uses prescribed format with
+          descriptive prefix; center metric serves as the key label for the hollow
+          space.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order throughout. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Both themes correct.'
+        comment: 'First series Engineering uses #009E73; all 5 series follow Imprint
+          canonical order; light background #FAF8F1 and dark background #1A1A17 both
+          correct; all chrome elements are theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,23 +121,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Contrast-adaptive label coloring shows genuine design thought. Otherwise
-          standard donut aesthetics — no focal point, no hierarchy beyond segment
-          size.
+        comment: 'Above generic: contrast-adaptive label color calculation, dominant
+          segment size emphasis, brand-green callout, and themed legend are all intentional
+          design choices. Not yet at FiveThirtyEight publication level — no bespoke
+          typography treatment or compositional innovation.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grid/outline hidden, legend border removed, PAGE_BG gap lines
-          between slices. Clean minimalist execution.
+        comment: Axes and grid hidden (appropriate), white segment dividers for clean
+          separation, legend with elevated background and styled border, min_border
+          values set. Solid refinement above defaults but legend border adds slightly
+          too much visual weight.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Center metric provides useful summary. No deliberate emphasis on
-          dominant Engineering segment (47%). Viewer must interpret proportion unaided.
+        comment: 'Good visual hierarchy: center metric provides context ($1,025K total),
+          brand-green ''Engineering leads · 46.8%'' callout names the insight, and
+          larger Engineering label creates emphasis. Reader is guided to the dominant
+          segment immediately.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,27 +152,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut (ring) chart using annular_wedge with inner_radius=0.62.
+        comment: Correct donut/ring chart with hollow center using Bokeh's annular_wedge.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center metric with total, percentage labels on all segments, consistent
-          ordering, thick ring.
+        comment: 'All spec features present: hollow center with key metric, percentage
+          labels on segments, 5 categories (within 3-8 range), thick ring width, consistent
+          ordering.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values mapped to angles proportionally. All 5 categories shown.
+        comment: Category-to-segment mapping correct; all 5 categories shown; proportions
+          calculated correctly from values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Budget by Department · donut-basic · python · bokeh · anyplot.ai'
-          with correct descriptive prefix. Legend labels match categories.
+        comment: 'Title: ''Budget by Department · donut-basic · python · bokeh · anyplot.ai''
+          — correct format with descriptive prefix. Legend shows all 5 category labels.'
     data_quality:
       score: 15
       max: 15
@@ -175,22 +184,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all core donut features: proportional ring segments, hollow
-          center, percentage labels, legend, center metric.'
+        comment: 'Demonstrates all donut chart aspects: proportional segments spanning
+          a wide range (46.8% down to 5.4%), hollow center with metric, percentage
+          labels, legend, and center callout.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation by department is real-world plausible and politically
-          neutral. Realistic distribution.
+        comment: Annual budget allocation by department (USD thousands) is a realistic,
+          neutral business scenario. Engineering leading at ~47% is plausible for
+          a tech company.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Total $1,025K with Engineering 46.8% (largest) to Support 5.4% (smallest)
-          — realistic corporate budget spread.
+        comment: Values ($480K, $210K, $155K, $125K, $55K) total $1,025K — realistic
+          department budget scale. Distribution shows good variety without contrived
+          uniformity.
     code_quality:
       score: 10
       max: 10
@@ -200,65 +212,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Straight top-to-bottom script.
+        comment: 'Flat procedural structure: imports → theme tokens → data → figure
+          → annotations → styling → save. No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is fully hardcoded — deterministic, no random elements.
+        comment: Data is fully hardcoded — no randomness, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. math.cos/pi/sin, numpy, bokeh, selenium, PIL
-          — each appears in the code.
+        comment: 'All imports used: os/sys for path handling, math for angle calculations,
+          pathlib for file paths, numpy for cumsum, bokeh for plotting, selenium for
+          screenshot, PIL for image normalization.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and readable. PIL padding workaround is pragmatic (not a code
-          smell at this level). No fake UI.
+        comment: Clean and Pythonic; perceived brightness calculation is elegant;
+          no fake functionality; appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Bokeh
-          API.
+        comment: Saves plot-{THEME}.html (interactive) and plot-{THEME}.png (static);
+          uses current Bokeh API; PIL normalization ensures exact canvas dimensions.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: annular_wedge for donut, ColumnDataSource, cumsum transform, Label
-          for annotations — all idiomatic Bokeh patterns.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips, cumsum transform for angle accumulation,
-          execute_cdp_cmd for precise viewport control — all Bokeh/Selenium distinctives.
+        comment: Uses ColumnDataSource (idiomatic Bokeh data model), cumsum transform
+          from bokeh.transform (library-native data transform), annular_wedge (native
+          donut primitive), legend_field for automatic legend, HoverTool, Label models,
+          and output_file+save pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool providing interactive tooltips in HTML output (category,
+          budget, share) is distinctively Bokeh — not replicable in static libraries.
+          cumsum transform is a Bokeh-specific data transform API. These together
+          leverage Bokeh's HTML/JS rendering model.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
-  - data-generation
   - columndatasource
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - minimal-chrome
   - edge-highlighting
