@@ -1,27 +1,37 @@
 """ anyplot.ai
 contour-basic: Basic Contour Plot
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 80/100 | Created: 2026-04-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 86/100 | Created: 2026-06-25
 """
 
 import os
+import sys
+
+
+# Prevent this file from shadowing the installed plotnine package
+_here = os.path.dirname(os.path.abspath(__file__))
+if _here in sys.path:
+    sys.path.remove(_here)
+if "" in sys.path:
+    sys.path.remove("")
 
 import contourpy
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    annotate,
+    element_blank,
     element_line,
     element_rect,
     element_text,
     geom_path,
-    geom_point,
     geom_raster,
+    geom_text,
     ggplot,
-    ggsave,
     labs,
-    scale_fill_cmap,
+    scale_fill_gradient,
+    scale_x_continuous,
+    scale_y_continuous,
     theme,
     theme_minimal,
 )
@@ -33,60 +43,65 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Atmospheric pressure field: two-cell anticyclone system over a regional domain
 np.random.seed(42)
-x = np.linspace(-3, 3, 200)
-y = np.linspace(-3, 3, 200)
-X, Y = np.meshgrid(x, y)
-Z = (
-    np.exp(-((X - 1) ** 2 + (Y - 1) ** 2))
-    + 0.7 * np.exp(-((X + 1) ** 2 + (Y + 1) ** 2))
-    - 0.3 * np.exp(-(X**2 + (Y - 1.5) ** 2) / 0.5)
+lon = np.linspace(-10, 10, 150)
+lat = np.linspace(-8, 8, 150)
+Lon, Lat = np.meshgrid(lon, lat)
+
+pressure = (
+    1013.0
+    + 12.0 * np.exp(-((Lon - 3) ** 2 + (Lat - 2) ** 2) / 8)
+    + 7.0 * np.exp(-((Lon + 5) ** 2 + (Lat + 3) ** 2) / 10)
+    - 5.0 * np.exp(-((Lon - 1) ** 2 + (Lat + 5) ** 2) / 4)
 )
 
-tile_df = pd.DataFrame({"x": X.ravel(), "y": Y.ravel(), "z": Z.ravel()})
+raster_df = pd.DataFrame({"lon": Lon.ravel(), "lat": Lat.ravel(), "hpa": pressure.ravel()})
 
-# Extract contour isoline segments via contourpy, render as grouped paths
-levels = np.linspace(Z.min(), Z.max(), 10)
-generator = contourpy.contour_generator(x=X, y=Y, z=Z)
+# Extract isoline segments via contourpy (plotnine 0.15 lacks geom_contour)
+p_levels = np.linspace(pressure.min(), pressure.max(), 12)
+generator = contourpy.contour_generator(x=Lon, y=Lat, z=pressure)
 segments = [
     (np.asarray(seg), gid)
-    for gid, seg in enumerate(s for lvl in levels for s in generator.lines(lvl))
+    for gid, seg in enumerate(s for lvl in p_levels for s in generator.lines(lvl))
     if np.asarray(seg).shape[0] >= 2
 ]
 line_df = pd.concat(
-    [pd.DataFrame({"x": seg[:, 0], "y": seg[:, 1], "group": gid}) for seg, gid in segments], ignore_index=True
+    [pd.DataFrame({"lon": seg[:, 0], "lat": seg[:, 1], "group": gid}) for seg, gid in segments], ignore_index=True
 )
 
-peak_df = pd.DataFrame({"x": [1.0], "y": [1.0]})
+# Pressure-centre labels: primary high (lon=3, lat=2), secondary high (lon=-5, lat=-3),
+# and low-pressure trough (lon=1, lat=-5)
+label_df = pd.DataFrame({"lon": [3.0, -5.0, 1.0], "lat": [2.5, -3.0, -5.5], "label": ["H", "H", "L"]})
 
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
-    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.04),
-    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
-    axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24),
+    panel_border=element_blank(),
+    axis_line=element_blank(),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.1),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=8),
+    plot_title=element_text(color=INK, size=12),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    legend_title=element_text(color=INK, size=18),
+    legend_text=element_text(color=INK_SOFT, size=8),
+    legend_title=element_text(color=INK, size=10),
     legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
 )
 
 plot = (
     ggplot()
-    + geom_raster(tile_df, aes(x="x", y="y", fill="z"))
-    + geom_path(line_df, aes(x="x", y="y", group="group"), color="#FFFFFF", size=0.7, alpha=0.55)
-    + geom_point(peak_df, aes(x="x", y="y"), color="#1A1A17", size=3.5)
-    + annotate("segment", x=1.0, y=1.05, xend=1.0, yend=1.35, color="#1A1A17", size=0.6, alpha=0.8)
-    + annotate("text", x=1.0, y=1.5, label="Primary peak", color="#1A1A17", size=14, ha="center")
-    + scale_fill_cmap(cmap_name="viridis", name="Value")
-    + labs(x="X Coordinate", y="Y Coordinate", title="contour-basic · plotnine · anyplot.ai")
+    + geom_raster(raster_df, aes(x="lon", y="lat", fill="hpa"))
+    + geom_path(line_df, aes(x="lon", y="lat", group="group"), color="#FFFDF6", size=0.5, alpha=0.65)
+    + geom_text(label_df, aes(x="lon", y="lat", label="label"), color=INK, size=5)
+    + scale_fill_gradient(low="#009E73", high="#4467A3", name="Pressure\n(hPa)")
+    + scale_x_continuous(expand=(0, 0))
+    + scale_y_continuous(expand=(0, 0))
+    + labs(x="Longitude (°E)", y="Latitude (°N)", title="contour-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + anyplot_theme
 )
 
-ggsave(plot, filename=f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
