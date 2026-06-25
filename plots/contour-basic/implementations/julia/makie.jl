@@ -54,6 +54,8 @@ ax = Axis(
     yticklabelcolor    = INK_SOFT,
     xticklabelsize     = 12,
     yticklabelsize     = 12,
+    xtickcolor         = INK_SOFT,
+    ytickcolor         = INK_SOFT,
     backgroundcolor    = PAGE_BG,
     topspinevisible    = false,
     rightspinevisible  = false,
@@ -84,7 +86,7 @@ Colorbar(fig[1, 2], cf;
     tickcolor      = INK_SOFT,
     ticklabelcolor = INK_SOFT,
     ticklabelsize  = 12,
-    ticks          = -2:1:2,
+    ticks          = -2.5:0.5:2.5,
     width          = 20,
 )
 
