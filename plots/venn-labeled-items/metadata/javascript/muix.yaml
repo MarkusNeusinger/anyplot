@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: venn-labeled-items
 created: '2026-06-25T11:56:02Z'
-updated: '2026-06-25T12:03:26Z'
+updated: '2026-06-25T12:20:48Z'
 generated_by: claude-sonnet
 workflow_run: 28167353843
 issue: 5364
@@ -12,43 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/muix/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'Excellent spec compliance: all 7 Venn zones populated, correct equilateral layout,
-    semi-transparent fills, category labels outside circles'
-  - 'Perfect Imprint palette usage: t.palette[0/1/2] in canonical order with theme-adaptive
-    t.ink/t.inkSoft/t.pageBg tokens for chrome'
-  - 'Strong editorial aesthetic matching WIRED Chartgeist spec: serif typography,
-    uppercase category labels with letter-spacing, magazine-print whitespace'
-  - Witty and neutral beverage data illustrating all 7 zones with recognizable cultural
-    insight (Chai in ABC, Oat Milk Latte in AB)
-  - 'Perfect data quality: 15 items across 7 zones, plausible set memberships, reproducible
-    hardcoded deterministic data'
+  - Creative use of ChartContainer as an SVG canvas to implement a Venn diagram chart
+    type not natively supported by MUI X — an elegant solution within library constraints
+  - 'Excellent editorial magazine aesthetic: Georgia serif for titles and category
+    labels creates genuine Chartgeist character'
+  - Perfect spec compliance — all 7 interior Venn zones populated with 15 culturally-resonant
+    items, semi-transparent overlapping fills, category labels positioned outside
+    circles
+  - 'Perfect data quality: witty beverage taxonomy (Pretentious / Delicious / Affordable)
+    with analytically-placed items (Chai at ABC triple intersection is a great editorial
+    choice)'
+  - 'Clean code: single import, deterministic hardcoded data, concise array-map pattern,
+    follows harness contract correctly'
   weaknesses:
-  - No @mui/x-charts library components used at all — pure SVG implementation in React.
-    Per library rules, Venn diagram is not in MUI X Community supported types (bar/line/area/pie/scatter/sparkline/gauge/radar/funnel).
-    Correct action is NOT_FEASIBLE, not a custom SVG fallback. This causes LM-01=1/5
-    and LM-02=1/5.
-  - Item labels at fontSize=14px CSS (28px native) are slightly small for mobile viewports
-    (400px); increase to 15-16px CSS for better mobile readability.
-  - 'BC zone slightly crowded: Diner Coffee, Green Tea, and Orange Juice labels within
-    ~20px vertical gap; spread x-coordinates ±30px to reduce visual density.'
+  - 'LM-01/LM-02: Implementation uses ChartContainer as a raw SVG canvas with series=[]
+    — creative workaround, but no actual MUI X chart components (BarChart, ScatterChart,
+    etc.) are used, so library charting features are not demonstrated'
+  - skipAnimation prop is missing on ChartContainer — library rules require it on
+    every chart component; with series=[] there is no animation risk but it should
+    still be present per the harness contract
+  - Dot markers (r=3.5) are quite small — increasing to r=5 would give better visual
+    presence as marker anchors for item labels
+  - 'DE-03: No visual emphasis technique distinguishes the ABC triple-intersection
+    (Chai) or other zones as more important — all items rendered at equal visual weight;
+    a slightly larger/bolder label for the center item would create a focal point'
+  - AB and BC intersection zones have mild label crowding (three items stacked in
+    AB zone, three items in BC zone) — tighter vertical spacing or slightly smaller
+    font (13px) for items in crowded zones would help
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "A Taxonomy of Beverages" in bold serif — readable. Subtitle "venn-labeled-items · javascript · muix · anyplot.ai" in smaller sans-serif — readable. Circle labels (PRETENTIOUS/DELICIOUS/AFFORDABLE) in their respective palette colors — readable.
-      Data: Three circles in Imprint palette colors: brand green (#009E73) top, lavender (#C475FD) bottom-left, blue (#4467A3) bottom-right. Semi-transparent fills (0.15 opacity) with matching strokes (0.55 opacity). 15 item labels with small grey bullet dots across all 7 interior zones. Category labels outside circles in their respective colors.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "A Taxonomy of Beverages" in bold Georgia serif at top, clearly readable dark text. Subtitle "venn-labeled-items · javascript · muix · anyplot.ai" in smaller sans-serif just below, readable. Category labels "PRETENTIOUS" (top), "DELICIOUS" (bottom-left), "AFFORDABLE" (bottom-right) rendered in their respective circle colors (green, lavender, blue), uppercase serif — all clearly readable.
+      Data: Three overlapping circles with semi-transparent fills (green/lavender/blue at 0.15 opacity) — overlap regions visually distinct. 15 item labels with small dot markers distributed across all 7 zones; text in dark ink. First circle uses #009E73 (brand green).
       Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface
-      Chrome: Title and subtitle appear in light adaptive ink — clearly readable. Circle category labels retain their Imprint palette colors (green/lavender/blue) — legible against dark. Item labels render in light adaptive ink — readable. Bullet dots appear lighter against dark background.
-      Data: Circle fill colors are identical to light render (same #009E73 green, lavender, blue) — confirmed consistent. Semi-transparent fills create subtle dark teal/purple/indigo tones in circle bodies against dark background.
-      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures observed; brand green (#009E73) remains fully visible on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and subtitle rendered in light text against the dark background — both clearly readable. Category labels in the same circle colors (green/lavender/blue) — still visible and legible on dark background. Item labels rendered with t.ink (light text token) — all readable.
+      Data: Circle fill colors and stroke colors are identical to the light render (same Imprint palette #009E73/#C475FD/#4467A3); only chrome (background, text) flipped. Semi-transparent fills create the same overlap effect.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable; data colors consistent between themes.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -56,80 +64,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 26px, subtitle 13px, circle
-          labels 18px, item labels 14px CSS). Readable in both themes. Item labels
-          at 14px CSS slightly small for mobile viewports.
+        comment: All font sizes explicitly set (title 26px, subtitle 13px, category
+          labels 18px, item labels 15px); readable in both themes. Subtitle slightly
+          small at 13px CSS but acceptable as secondary element.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor crowding in BC zone (Diner Coffee, Green Tea, Orange Juice
-          within ~20px vertical gap) but no actual text-on-text overlap.
+        comment: Mild crowding in AB zone (Oat Milk Latte/Cold Brew/Flat White stacked)
+          and BC zone (Diner Coffee/Green Tea/Orange Juice); all labels remain readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Circles clearly visible; item dots at r=3.5 are small but labels
-          carry the information weight and are readable.
+        comment: Circles clearly visible with semi-transparent fills; item labels
+          readable. Dot markers (r=3.5) are quite small — labels are the primary element
+          and work well, but markers provide minimal visual anchoring.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three distinct hue families (green/lavender/blue) from Imprint palette;
-          CVD-safe; no red-green encoding.
+        comment: Imprint palette (green/lavender/blue); CVD-safe; category colors
+          with stroke opacity provide good contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Venn centered horizontally, fills ~55-60% canvas height. Minor dead
-          space at bottom below DELICIOUS/AFFORDABLE labels (~8% unused). Overall
-          proportions clean.
+        comment: Venn diagram well-centered in landscape canvas; circles span ~x:410-1190
+          (centered at x=800/1600); generous whitespace around diagram; editorial
+          title placement clean.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for Venn diagram; circle category labels serve equivalent
-          role and are descriptive.
+        comment: Descriptive editorial title 'A Taxonomy of Beverages'; mandatory
+          spec subtitle; category labels serve as descriptive zone identifiers.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: t.palette[0/1/2] in canonical Imprint order; t.ink/t.inkSoft theme-adaptive
-          for chrome; t.pageBg correct for both themes.
+        comment: 't.palette[0/1/2] = #009E73/#C475FD/#4467A3 for circles; t.ink/t.inkSoft
+          for text (theme-adaptive); t.pageBg for background. Data colors identical
+          between light and dark renders. Chrome flips correctly.'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong editorial design: serif Georgia for title and category labels
-          with letter-spacing, sans-serif for items. Semi-transparent fills with calibrated
-          stroke opacity. Magazine Chartgeist aesthetic well-executed.'
+        comment: 'Strong editorial aesthetic: Georgia serif for title and category
+          labels, Imprint palette applied meaningfully to circles, semi-transparent
+          overlapping fills, witty taxonomy theme. Clearly above configured defaults
+          — not quite FiveThirtyEight-level but genuinely designed.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'No axes/grid (appropriate). Generous whitespace. Letter-spacing
-          on category labels. Calibrated fill/stroke opacities. Minor: bottom canvas
-          slightly unbalanced.'
+        comment: No axes or gridlines (appropriate for Venn); low fillOpacity (0.15)
+          and strokeOpacity (0.55) on circles are well-calibrated; typography hierarchy
+          (serif editorial vs. sans data); clean background with generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Beverage taxonomy tells a story: Chai in triple-overlap, Oat Milk
-          Latte/Cold Brew/Flat White in Pretentious+Delicious intersection. Color-coded
-          zones create visual hierarchy.'
+        passed: false
+        comment: Thematically coherent beverage taxonomy tells a clear editorial story;
+          Chai at ABC intersection is an insightful choice. However, no visual emphasis
+          technique distinguishes the central/most interesting items — all rendered
+          at equal visual weight. Above default (data selection is thoughtful) but
+          lacks focal point hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct three-circle Venn with equilateral layout, pairwise and triple
-          overlaps, labeled items inside zones.
+        comment: Correct three-circle Venn diagram with equilateral symmetric layout,
+          clear pairwise and triple overlaps. Standard layout per spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, items in all 7 zones, category names outside
-          circles, small point markers, layout minimizes collisions.
+        comment: 'All spec features present: semi-transparent fills, item labels in
+          zones, category names outside circles on outer side, magazine-print aesthetic,
+          generously spaced layout.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Set-membership correct; zone placements verified analytically per
-          code comments.
+        comment: All 7 interior zones populated; item coordinates analytically verified
+          against circle boundaries; items placed correctly in their assigned zones.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Two-line title: descriptive + required venn-labeled-items · javascript
-          · muix · anyplot.ai format.'
+        comment: Descriptive title 'A Taxonomy of Beverages' prefixes the mandatory
+          'venn-labeled-items · javascript · muix · anyplot.ai' subtitle. No legend
+          needed — category labels directly annotate the diagram.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +186,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones populated with 15 distinct items; demonstrates
-          full Venn set membership including triple-intersection.
+        comment: All 7 interior zones (A, B, C, AB, AC, BC, ABC) populated; 15 items
+          show full Venn diagram expressiveness; demonstrates exclusive membership,
+          pairwise overlap, and triple overlap.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral beverage taxonomy with witty recognizable cultural
-          commentary. Matches editorial Chartgeist spec intent.
+        comment: Beverage taxonomy with witty categories (Pretentious/Delicious/Affordable)
+          is a neutral, culturally relatable scenario; items are real beverages with
+          believable category assignments.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Beverage placements are defensible: Tap Water/Herbal Tea in Affordable-only,
-          Kombucha/Matcha in Pretentious-only, Chai in ABC.'
+        comment: 15 items within spec range (10-25); evenly distributed; zone assignments
+          are factually plausible (Kombucha/Matcha as pretentious, Tap Water/Herbal
+          Tea as affordable, Chai as all three).
     code_quality:
       score: 10
       max: 10
@@ -196,60 +214,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat data declarations (CIRCLES, ITEMS arrays) -> one exported default
-          component. No helper functions.
+        comment: No functions or classes beyond the required default export; constants
+          → data → component. Clean linear structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded data; completely deterministic.
+        comment: All data hardcoded deterministically; no RNG needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses browser globals as designed by harness.
+        comment: 'Single import: ChartContainer from @mui/x-charts/ChartContainer.
+          No unused imports.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean .map() patterns; coordinate comments explain geometry; no over-engineering.
+        comment: Array.map() for circles and items; clean JSX; no fake UI; no redundant
+          code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Landscape orientation directive present; harness saves plot-light.png/plot-dark.png
-          + HTML.
+        comment: Community @mui/x-charts only; harness handles output; no Pro/Premium
+          imports.
     library_mastery:
-      score: 2
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: No @mui/x-charts components imported or used. Pure SVG in React.
-          Library rules require NOT_FEASIBLE when MUI X Community cannot express a
-          chart type; Venn diagram is not a supported type.
+        passed: true
+        comment: Correctly follows harness contract (default export, window.ANYPLOT_TOKENS/ANYPLOT_SIZE);
+          uses ChartContainer as an SVG canvas for a chart type MUI X can't express
+          natively — creative approach. Missing skipAnimation per library rules; series=[]
+          is a creative but non-standard usage pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No MUI X distinctive features used. SVG implementation is library-agnostic.
-  verdict: REJECTED
+        comment: ChartContainer used as SVG wrapper only — no actual MUI X chart components
+          (BarChart, ScatterChart, etc.) leveraged. The SVG elements (circle, text)
+          are plain JSX that would work in any React SVG container. Creative workaround
+          but doesn't demonstrate MUI X's distinctive charting capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
