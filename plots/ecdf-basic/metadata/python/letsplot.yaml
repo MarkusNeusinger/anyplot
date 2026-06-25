@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:02:33Z'
-updated: '2026-06-25T09:49:20Z'
+updated: '2026-06-25T10:05:16Z'
 generated_by: claude-sonnet
 workflow_run: 28161022176
 issue: 976
@@ -15,110 +15,127 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basi
 quality_score: 88
 review:
   strengths:
-  - Perfect visual quality across both themes — all chrome tokens applied correctly,
-    no legibility issues in either render
-  - 'Excellent data choice: bimodal web response time distribution creates an inherently
-    interesting ECDF shape'
-  - Perfect spec compliance and data quality; step function, y-axis 0-1, grid lines
-    all present
-  - Clean, reproducible code with KISS structure; no over-engineering
-  - 'Idiomatic lets-plot usage: stat_ecdf + layer_tooltips + HTML export'
+  - Bimodal web-service latency scenario (exponential fast-path + compute cluster)
+    is a realistic, analytically rich dataset that shows the ECDF shape-revealing
+    strengths
+  - Percentile reference lines with labeled ms values (P25/P50/P75) and amber inflection
+    marker create effective visual storytelling beyond raw data display
+  - layer_tooltips() with formatted tooltip spec string (@column{format}) is idiomatic
+    letsplot usage and a genuine distinctive feature
+  - 'Perfect spec compliance: Y-axis 0-1, step function correct, grid lines help percentile
+    reading'
+  - 'Perfect code quality: seed set, clean imports, KISS structure, and theme-adaptive
+    chrome all correctly implemented'
   weaknesses:
-  - 'DE-03: No visual storytelling — add reference lines at the 25th, 50th, and 75th
-    percentile positions (geom_hline at 0.25/0.5/0.75) with small text annotations
-    labeling the x-values to help viewers read key percentiles directly from the chart'
-  - 'DE-01: Design is correct but unremarkable — a vertical annotation or geom_segment
-    highlighting the bimodal inflection point (~40ms) would add a visual focal point'
-  - 'LM-02: Misses lets-plot-exclusive styling options such as plot_margin in theme()
-    for whitespace control, font_family in element_text, or panel_border styling'
+  - Full panel border (panel_border=element_rect) plus both X and Y major gridlines
+    makes the chrome busier than the minimal Imprint aesthetic — remove panel_border
+    and keep only Y-axis major grid lines to reduce visual noise competing with the
+    ECDF data
+  - 'Minor percentile annotation overlap: labels at P25/P50/P75 sit right at the ECDF
+    step with vjust=-0.5 — increase vjust to -0.8 or add nudge_y=0.02 for more breathing
+    room'
+  - P25 annotation at x=17ms is close to the left panel area; the leading P character
+    merges slightly with the green step — consider hjust=-0.1 or repositioning
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "ecdf-basic · python · letsplot · anyplot.ai" in dark ink — readable. Axis labels "Response Time (ms)" and "Cumulative Proportion" in dark INK. Tick labels in INK_SOFT at 10pt. All text readable.
-      Data: Single ECDF step line in brand green #009E73, size=1.5. Bimodal shape visible: steep early rise (exponential cluster ~10-50ms), plateau, second rise (~160-230ms). Subtle grid on both axes.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "ecdf-basic · python · letsplot · anyplot.ai" in dark ink, clearly readable. Y-axis label "Cumulative Proportion" and X-axis label "Response Time (ms)" in INK (#1A1A17). Tick labels in INK_SOFT (#4A4A44) using monospace font. Dashed horizontal reference lines in INK_SOFT at P25/P50/P75. All chrome elements readable.
+      Data: ECDF step line in brand green (#009E73) — first (only) series. Amber dotted vertical line at x=40ms. Small text annotations for percentile values in INK_SOFT; bimodal inflection annotation in amber (#DDCC77). Data colors match Imprint palette.
+      Legibility verdict: PASS — all text elements readable. Minor: P25 annotation at (17ms, 0.25) is small and its leading "P" character merges slightly with the green step line at this scale, but the full label is present.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title, axis labels, and tick labels all flipped to light ink (#F0EFE8 / #B8B7B0). All text clearly readable against dark background. No dark-on-dark failures. Grid lines subtle and light-toned.
-      Data: Brand green #009E73 step line — identical color to light render. Only chrome has flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title in light ink (#F0EFE8), clearly visible on dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0) — all readable. Grid lines adapted to dark theme. No dark-on-dark failures observed. All annotations (P25/P50/P75 labels) are clearly legible in the light INK_SOFT color.
+      Data: ECDF step line remains brand green (#009E73) — identical to light render. Amber inflection line and label also identical. Data colors are theme-independent as required.
+      Legibility verdict: PASS — all elements including small annotations are clearly readable on dark background. P25/P50/P75 labels distinct and readable.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10).
-          Well-proportioned in both themes.
+        comment: 'All font sizes explicitly set (plot_title=16, axis_title=12, axis_text=10,
+          geom_text=3.5mm). Both themes read cleanly. Minor: P25 label at x=17ms small
+          enough that P character merges slightly with ECDF step in light render at
+          full canvas scale.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: 'Minor: percentile annotation labels (P25/P50/P75) placed exactly
+          at step positions with vjust=-0.5, producing light contact with ECDF step
+          line in both renders. Intentional and readable, but not fully clear.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ECDF step line at size=1.5 clearly visible for ~200-point dataset.
+        comment: ECDF step line at size=1.5 perfectly adapted to 200-point dataset;
+          steps are crisp and unambiguous.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series on warm backgrounds; good contrast, CVD-safe.
+        comment: Single series in brand green; amber used as semantic anchor for inflection
+          marker — both CVD-safe and high-contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Well-balanced margins, data fills
-          plot area naturally.
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Plot fills
+          canvas proportionally with sensible margins; panel border contains data
+          cleanly.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) and Cumulative Proportion both descriptive; x-axis
-          includes units.
+        comment: Response Time (ms) and Cumulative Proportion — both descriptive with
+          units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Background #FAF8F1 (light) / #1A1A17 (dark).
-          Chrome correctly theme-adaptive.'
+        comment: 'First series = #009E73. Amber #DDCC77 as semantic anchor. Background
+          #FAF8F1 light / #1A1A17 dark. Theme-adaptive chrome in both renders.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured following anyplot style guide but no distinctive
-          design choices beyond correctly applying token system.
+        passed: true
+        comment: 'Clearly above configured defaults: brand green + amber semantic
+          anchor, monospace font for technical axis ticks, percentile storytelling
+          layer. Stops short of FiveThirtyEight-level polish due to full panel border
+          and busy X+Y gridlines.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: theme_minimal removes spines, minor grid suppressed, GRID token applied,
-          axis lines styled. Beyond defaults but not fully polished.
+        comment: theme_minimal() base, custom GRID colors, minor grid removed — good
+          start. But full panel border (element_rect) plus both X and Y major gridlines
+          make chrome busier than Imprint minimal aesthetic requires.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Bimodal data choice is thoughtful but no visual hierarchy highlights
-          it. No reference lines, no annotations. Viewer must interpret unguided.
+        passed: true
+        comment: 'Clear narrative: bimodal latency story, P25/P50/P75 annotations
+          with actual ms values, amber inflection marker at ~40ms actively guide the
+          viewer. Visual hierarchy: green ECDF → dashed reference lines → amber inflection
+          marker.'
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ECDF using stat_ecdf with geom=step.
+        comment: stat_ecdf(geom='step') — correct ECDF step function.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function present; y-axis 0-1 range with 0.25 breaks; grid lines;
-          distinct line style.
+        comment: Step function increasing by 1/n, Y-axis 0-1 with scale_y_continuous(limits=[0,1]),
+          distinct line style, grid lines for percentile reading.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = response time (numeric), Y = cumulative proportion (0-1). All
-          data visible.
+        comment: Response time on X, cumulative proportion on Y; full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title matches required format. Single-series: no legend needed.'
+        comment: Title exactly 'ecdf-basic · python · letsplot · anyplot.ai'. No legend
+          (single series) — appropriate omission.
     data_quality:
       score: 15
       max: 15
@@ -158,22 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Bimodal distribution exposes full ECDF behavior: steep rise, plateau,
-          second rise, long tail.'
+        comment: Bimodal distribution (exponential + normal) reveals ECDF shape features
+          (slope change at inflection), distinct percentile positions, full 0-1 cumulative
+          range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web service response times with exponential fast-path + normal computed-path.
-          Neutral, non-controversial.
+        comment: 'Web service response times: exponential tail for cached requests,
+          heavier normally-distributed cluster for compute-bound requests. Realistic,
+          neutral, technically plausible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 0-270ms with exponential scale=50ms and normal mean=200ms
-          sd=30ms are plausible for web services.
+        comment: P25=17ms, P50=49ms, P75=163ms; range 0-280ms — entirely plausible
+          latency profile for a mixed-workload API.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> plot -> save. No functions
-          or classes.'
+        comment: Imports → Tokens → Data → Percentile precompute → Plot layers → Save.
+          No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used. No unused modules.
+        comment: All imported symbols are used; no unused imports detected.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic, appropriate complexity. No over-engineering.
+        comment: Clean, Pythonic grammar-of-graphics composition. pct_df dataframe
+          for annotation data is appropriate. Well-commented section structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsave with scale=4.
-          Current API.
+        comment: ggsave(plot, filename=f'plot-{THEME}.png', path='.', scale=4) + HTML.
+          Correct letsplot API.
     library_mastery:
       score: 8
       max: 10
@@ -219,23 +239,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: stat_ecdf is idiomatic lets-plot stat for ECDF; layer_tooltips is
-          the recommended interactive API; ggplot grammar used correctly.
+        comment: stat_ecdf(geom='step') following ggplot2 grammar; scale_y_continuous
+          with explicit breaks; layered theme_minimal() + theme() override. Textbook
+          letsplot.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses layer_tooltips and HTML export — distinctive to lets-plot. Missing
-          advanced options like plot_margin, panel_border, or font_family in element_text.
-  verdict: REJECTED
+        passed: true
+        comment: 'layer_tooltips().line(''Response Time: @response_time{,.0f} ms'')
+          with formatted tooltip spec string is genuinely distinctive to letsplot.
+          HTML export alongside PNG leverages letsplot''s interactive-first design.
+          Stops short of 5 as these are somewhat expected for letsplot.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
