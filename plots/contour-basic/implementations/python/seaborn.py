@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -73,7 +73,18 @@ y_grid = np.linspace(y_vals.min() - 2, y_vals.max() + 2, 80)
 XX, YY = np.meshgrid(x_grid, y_grid)
 ZZ = kde(np.vstack([XX.ravel(), YY.ravel()])).reshape(XX.shape)
 cs = ax.contour(XX, YY, ZZ, levels=10, colors=INK, alpha=0.35, linewidths=0.7)
-ax.clabel(cs, levels=cs.levels[2::3], inline=True, fontsize=15, fmt="%.3f", colors=INK)
+ax.clabel(cs, levels=cs.levels[2::3], inline=True, fontsize=8, fmt="%.3f", colors=INK)
+
+# Subtle reference line separating the two regimes
+ax.axhline(1017, color=INK_SOFT, linewidth=0.8, linestyle=":", alpha=0.5)
+
+# Mode annotations to guide the viewer
+ax.text(4.8, 1020.2, "Cold Front", fontsize=8, color=INK_SOFT, ha="center", style="italic")
+ax.text(11.6, 1014.5, "Warm Front", fontsize=8, color=INK_SOFT, ha="center", style="italic")
+
+# Subtle grid for value reading aid
+ax.yaxis.grid(True, color=INK, alpha=0.12, linewidth=0.6, linestyle="--")
+ax.set_axisbelow(True)
 
 # Style
 title = "contour-basic · python · seaborn · anyplot.ai"
