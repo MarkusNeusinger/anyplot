@@ -1,7 +1,7 @@
 // anyplot.ai
 // venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 // Library: highcharts 12.6.0 | JavaScript 22.22.3
-// Quality: 89/100 | Created: 2026-06-25
+// Quality: 91/100 | Created: 2026-06-25
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
