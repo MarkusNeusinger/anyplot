@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: scatter-basic
 created: '2026-06-25T01:37:41Z'
-updated: '2026-06-25T01:44:02Z'
+updated: '2026-06-25T01:54:12Z'
 generated_by: claude-sonnet
 workflow_run: 28140918378
 issue: 611
@@ -12,41 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance and data quality — correct chart type, realistic health-study
-    data, physiologically accurate scales, correlation r≈0.71 matching spec target
-  - Flawless code quality — clean KISS structure, reproducible seed, only used imports
-  - 'Correct full-stack theme adaptation: PAGE_BG/INK/INK_SOFT propagated to every
-    chrome element including spine colors, grid alpha, and marker stroke; both renders
-    pass theme-readability check'
-  - strokecolor=PAGE_BG marker edge technique cleanly separates overlapping points
-    in both themes
+  - Thorough theme adaptation — every chrome token (INK, INK_SOFT, PAGE_BG, grid alpha)
+    correctly flips between light/dark; data colours stay constant
+  - Regression line + r-value subtitle creates a self-contained analytical narrative
+    that immediately communicates the correlation
+  - Uses Makie compositional fig[0,1] layout slot for the subtitle — idiomatic and
+    elegant, no manual coordinate hacks
+  - Realistic domain-appropriate synthetic data with sensible anthropometric ranges
+    (height ~145-195 cm, weight ~53-85 kg)
+  - White marker strokes (strokewidth=1, strokecolor=PAGE_BG) provide clean point
+    separation even at alpha=0.7
   weaknesses:
-  - Title at titlesize=20 renders at ~40-50% of canvas width for this 43-char title;
-    increase titlesize to 22-24 to reach the 50-70% target
-  - No data storytelling beyond raw display — add a trend line (lines! with regression
-    overlay) and/or a correlation annotation to guide the viewer to the positive relationship
-  - Tick marks remain visible; add xticksvisible=false, yticksvisible=false for a
-    cleaner minimal look
-  - No Makie-distinctive layout composition — consider adding a Label element for
-    subtitle or annotation using fig[0,1] grid slot
+  - Subtitle Label(fig[0,1],...) sits very close to the canvas top edge with minimal
+    top padding — add rowgap!(fig.layout, 0, 8) or increase Figure top padding to
+    give ~10-15 px clearance
+  - Regression line has no confidence band; a shaded 95% CI band would elevate DE-03
+    storytelling score
+  - No Legend widget for the regression line — a Legend labelling the dashed line
+    as OLS fit would be more idiomatic Makie
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "scatter-basic · julia · makie · anyplot.ai" in dark ink (#1A1A17), fills ~40-50% of canvas width; axis labels "Height (cm)" and "Weight (kg)" in dark ink with units; tick labels in softer dark (#4A4A44); L-shaped spines (top/right removed) in INK_SOFT; subtle grid at 15% opacity on both axes. All text clearly readable.
-      Data: 150 scatter points in brand green #009E73 at 70% alpha with 1px background-colored stroke for edge definition. Clear positive correlation visible with appropriate natural scatter.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "scatter-basic · julia · makie · anyplot.ai" in bold dark ink, clearly visible. Subtitle "Pearson r = 0.67 — positive correlation (height predicts weight, n=150)" in INK_SOFT (#4A4A44), readable but very close to canvas top edge with minimal padding. Axis labels "Height (cm)" / "Weight (kg)" in dark ink at 14pt. Tick labels in INK_SOFT at 12pt — all readable.
+      Data: 150 scatter points in brand green #009E73 at alpha=0.7; dashed dark-grey regression line (INK_SOFT). First series correctly uses #009E73.
+      Legibility verdict: PASS — all text readable against light background; minor concern is subtitle proximity to canvas top edge (not clipped, just tight margins)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark variant) — readable. Grid adapts via RGBAf(INK.r, INK.g, INK.b, 0.15) using the light ink decomposed for the dark theme. No dark-on-dark text failures.
-      Data: Scatter points remain identical #009E73 green (chrome-only flip confirmed). Markers clearly distinguishable against dark surface. Brand green reads well on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light cream (#F0EFE8), subtitle in #B8B7B0 — both clearly readable. Axis labels and tick labels flip to light tokens. No dark-on-dark failure detected anywhere. Grid lines are subtle off-white at 15% opacity.
+      Data: Scatter points remain the same #009E73 brand green — identical to light render. Regression line changes to dashed light-grey (INK_SOFT dark = #B8B7B0) and remains clearly visible. Data colours are confirmed identical between themes.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,75 +55,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=20, labels=14, ticks=12). Both
-          themes fully readable. Minor deduction: title ~40-50% canvas width for 43-char
-          title; slightly below 50-70% target.'
+        comment: All text readable in both themes; subtitle sits very close to canvas
+          top edge with minimal headroom
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions.
+        comment: No text or element collisions; regression line and scatter coexist
+          cleanly
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: markersize=12 at alpha=0.7 well-matched to 150 points; background
-          stroke cleanly separates overlapping markers.
+        comment: 150 points at markersize=12, alpha=0.7 appropriate for medium density;
+          dashed regression line distinct
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green; CVD-safe; alpha provides sufficient
-          contrast on both surfaces.
+        comment: 'Brand green #009E73 is CVD-safe; no red-green as sole signal'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 confirmed (canvas gate passed). Plot fills canvas well
-          with balanced margins.
+        comment: Canvas gate passed (3200x1800); good proportions overall; minor deduction
+          for subtitle flush against canvas top with negligible padding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Height (cm) and Weight (kg) are descriptive with units.
+        comment: Title in correct format; axis labels descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Background #FAF8F1 (light) / #1A1A17 (dark).
-          All chrome correctly theme-adaptive via INK/INK_SOFT tokens.'
+        comment: 'First series #009E73; backgrounds #FAF8F1 / #1A1A17; data colours
+          identical across themes; chrome correctly adapts'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. Imprint palette, L-spine, subtle
-          grid, marker stroke. No distinctive typography hierarchy or emphasis technique.
-          Polished but generic.
+        passed: true
+        comment: Professional polish; regression line adds analytical depth; thorough
+          theme adaptation; L-frame spines. Good but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spines trimmed, grid at 15% opacity, marker stroke for definition.
-          Good. Tick marks remain; no additional whitespace tuning beyond defaults.
+        passed: true
+        comment: Top/right spines removed; grid at 15% opacity; tick marks hidden;
+          white marker strokes for visual separation
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed accurately but not interpreted. Positive correlation
-          visible but no trend line, no correlation annotation, no focal emphasis.
+        passed: true
+        comment: r-value subtitle + regression line guides viewer to correlation story;
+          real-world domain reinforces legibility of relationship
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 2D scatter plot.
+        comment: Correct 2D scatter on Cartesian coordinate system
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Transparency (alpha=0.7), axis labels, grid lines, 150 points in
-          spec range, moderate positive correlation (r~0.71) all present.
+        comment: Transparency (alpha=0.7), axis labels, title, grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Height on X, Weight on Y; all data visible.
+        comment: Height (cm) on X, Weight (kg) on Y; all 150 points displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Single-series plot correctly omits
-          legend.
+        comment: Title is exactly 'scatter-basic · julia · makie · anyplot.ai'; no
+          legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -162,21 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows correlation, spread, natural outliers, and full range of scatter
-          patterns.
+        comment: Shows correlation, distribution, density, trend via scatter + regression;
+          r-value annotated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Adult height-vs-weight health study — real-world, neutral, comprehensible.
+        comment: Adult health study (height vs weight) is realistic and neutral; no
+          controversial framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Heights 145-195 cm, weights 53-84 kg physiologically accurate. r~0.71
-          matches spec target.
+        comment: Height ~145-195 cm, Weight ~53-85 kg — realistic adult anthropometric
+          ranges
     code_quality:
       score: 10
       max: 10
@@ -186,35 +185,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> seed -> tokens -> data -> plot -> save. No functions or
-          classes.
+        comment: No functions or classes; linear top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42).
+        comment: Random.seed!(42) before any random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three used.
+        comment: All four imports (CairoMakie, Colors, Random, Statistics) are actually
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Julia. Appropriate complexity.
+        comment: Appropriate complexity; OLS computed inline without unnecessary abstraction;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct filename
-          pattern, current Makie API.
+        comment: Saves as plot-$(THEME).png via save(..., px_per_unit=2)
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -222,25 +221,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Figure/Axis composition, bang-notation mutations, colorant""
-          for hex colors, RGBAf for alpha grid — all idiomatic Makie. Above default;
-          doesn't reach advanced recipe/theme-override level.
+        comment: Uses Makie !-mutating API; colorant string; RGBAf(); LinRange; save
+          with px_per_unit=2 — all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: strokecolor=PAGE_BG + strokewidth=1 for theme-aware marker edge definition
-          is Makie-specific. RGBAf with INK channel decomposition is elegant. Both
-          slightly above generic, but no Makie-unique layout composition or recipe
-          system used.
-  verdict: REJECTED
+        passed: true
+        comment: Label(fig[0,1],...) exploits Makie's unique compositional grid layout
+          for subtitle — distinctively Makie. Could go further with Legend widget,
+          Colorbar, or named Theme object.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
