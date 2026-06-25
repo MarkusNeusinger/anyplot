@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: venn-labeled-items
 created: '2026-06-25T11:44:36Z'
-updated: '2026-06-25T11:51:44Z'
+updated: '2026-06-25T12:15:23Z'
 generated_by: claude-sonnet
 workflow_run: 28167148901
 issue: 5364
@@ -15,35 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labe
 quality_score: 87
 review:
   strengths:
-  - Perfect spec compliance — all 7 zones + outside populated with witty, editorial-quality
-    tech items
-  - Excellent Imprint palette compliance — correct canonical order, theme-adaptive
-    chrome, identical data colors across renders
-  - Editorial serif (Georgia) category labels add genuine magazine personality matching
-    the Chartgeist-style spec intent
-  - Perfect code quality — flat, deterministic, clean, idiomatic d3.group() usage
-  - Both light and dark renders are fully readable with no theme-adaptation failures
+  - 'Perfect spec compliance: all seven zones plus outside populated, semi-transparent
+    fills, category labels outside circles in their correct colors'
+  - 'Excellent data quality: real witty editorial items with believable zone assignments
+    that fit the WIRED Chartgeist aesthetic'
+  - Clean idiomatic D3 using d3.group data joins and ANYPLOT_TOKENS/ANYPLOT_SIZE correctly
+  - 'Full theme adaptation: both light and dark renders pass readability with no dark-on-dark
+    failures'
+  - Serif category labels (Georgia) reinforce the editorial magazine aesthetic called
+    for in the spec
   weaknesses:
-  - '"outside all circles" annotation text is 11px CSS — below the 14px recommended
-    minimum; increase to 13-14px to match item label sizing'
-  - 'Notable empty space at the bottom (~23% of canvas height): shift the diagram
-    center upward by ~60-80px (lower all CIRCLES cy values and ZONE_CENTROIDS y values
-    by ~60) to better balance top/bottom whitespace'
-  - 'LM-02 limited: D3 is used mostly as an SVG helper; consider using d3.forceSimulation
-    for label placement or d3.arc for a more sophisticated circle-path approach to
-    showcase D3''s distinctive capabilities'
+  - Item labels at 14px are at the lower end for a 2400 px canvas — bumping to 15-16px
+    would improve mobile readability without crowding zones
+  - 'No visual hierarchy among items: all render identically (same color, size) —
+    consider slightly larger or bolder text for ABC intersection items (Sourdough,
+    Zoom) to make the triple-overlap punchline pop'
+  - Optional editorial subtitle absent — adding a light subtitle like 'A Cultural
+    Status Report' in smaller italic serif would elevate the editorial feel
+  - Zone centroids for outside items (x=975) sit close to the right canvas edge; a
+    small left-shift would provide more breathing room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "venn-labeled-items · javascript · d3 · anyplot.ai" at 22px bold, fully readable in dark ink. Category labels "Overhyped" (top), "Actually Useful" (right), "Secretly Loved" (left) in their respective Imprint colors at 20px serif (Georgia), all readable. Item labels at 14px system-ui, inkSoft color. "outside all circles" annotation at 11px italic (slightly small). "Landlines" at 14px italic.
-      Data: Three overlapping circles — green (#009E73) for Overhyped, lavender (#C475FD) for Actually Useful, blue (#4467A3) for Secretly Loved — with 12% opacity fills and colored strokes. First series correctly uses #009E73. 20 items distributed across all zones.
-      Legibility verdict: PASS (minor: "outside all circles" annotation is 11px, slightly below 14px floor)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "venn-labeled-items · javascript · d3 · anyplot.ai" at top in dark ink (22px, weight 600) — fully readable. Category labels in bold Georgia serif in their respective palette colors (green/lavender/blue) — clearly visible. No axis labels or tick labels (not applicable for Venn).
+      Data: Three overlapping circles — green (#009E73) for Overhyped, lavender (#C475FD) for Actually Useful, blue (#4467A3) for Secretly Loved. 12% opacity fills show overlapping regions. Item labels in 14px sans-serif using inkSoft token. Outside items in muted italic.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title visible in off-white ink (t.ink). Category labels retain their Imprint colors (green/lavender/blue) and are readable. Item labels appear in t.inkSoft (light-muted). "outside all circles" annotation uses dark inkMuted (#A8A79F) — readable. No dark-on-dark failures.
-      Data: Data colors are identical to the light render (green/lavender/blue circles unchanged). The overlapping regions appear darker but remain distinguishable.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and item labels switch to light-colored text (inkSoft token — light gray) — clearly readable against the dark surface. Category labels remain in the same palette colors (green/lavender/blue), all readable against dark background. No dark-on-dark failures detected.
+      Data: Data colors are identical to the light render — same green, lavender, and blue circle strokes and fills. The 12% opacity fills create subtle pools against the near-black background, maintaining overlap visibility.
+      Legibility verdict: PASS — all text readable; chrome correctly adapts to dark theme
   criteria_checklist:
     visual_quality:
       score: 28
@@ -54,48 +56,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; 'outside all circles' annotation at
-          11px CSS is below 14px floor
+        comment: 'All font sizes explicitly set (title 22px, category labels 20px
+          bold, items 14px). Readable in both themes. Minor: item labels at 14px are
+          at the lower bound for 2400px canvas.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Items stacked with 24px spacing; no zone collisions
+        comment: Vertical stacking with 24px spacing prevents any text collision across
+          all seven zones plus outside.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles, fills, strokes, and labels clearly visible in both themes
+        comment: Circle strokes clearly delineate rings; 12% fills appropriately transparent;
+          text-only items suit the editorial spec.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette CVD-safe; three distinct hue families
+        comment: Imprint palette is CVD-safe; semi-transparent fills let background
+          show through.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: ~23% canvas height unused below the diagram; slightly unbalanced
-          vertical margins
+        comment: 'Well-centered diagram filling ~70% of canvas. Minor: upper-right
+          outside zone leaves some empty space.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes; category labels descriptive; title correct
+        comment: No axes (correct for Venn); title in required format; category names
+          as clear zone labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: palette[0,1,2] in canonical order; theme-adaptive chrome; data colors
-          identical across themes
+        comment: 'First circle #009E73; positions 2-3 canonical Imprint order; background
+          #FAF8F1 light / #1A1A17 dark; chrome adapts correctly.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -103,23 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Editorial serif for category names, color-coded labels, restrained
-          fills show genuine design intent; above default (4) but not publication-level
-          (6+)
+        comment: 'Intentional editorial choices: bold Georgia serif for category labels,
+          italic for outside items, color-matched labels. Above defaults but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No grid, no spines, serif/sans hierarchy adds refinement; bottom
-          empty space reduces polish
+        comment: Gridless, no spines, generous whitespace, semi-transparent fills
+          with matching strokes. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Witty editorial item choices create coherent tech commentary story;
-          Landlines outside is a nice touch
+        passed: false
+        comment: Good editorial item choices but no visual hierarchy — all items render
+          identically, missing opportunity to emphasize the ABC triple-overlap punchline.
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Standard symmetric three-circle Venn with all seven interior zones
+        comment: Correct three-circle Venn with symmetric layout, equally-sized circles,
+          clear overlaps.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, colored strokes, item labels, category names
-          outside, outside-zone handling all present
+        comment: Semi-transparent fills, category names outside circles, items as
+          labeled text, all 7 zones + outside populated, gridless.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 20 items correctly placed; all zone centroids logical
+        comment: All items placed in correct zones; outside items separated from circles.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'venn-labeled-items · javascript · d3 · anyplot.ai'
+        comment: Title exactly 'venn-labeled-items · javascript · d3 · anyplot.ai'.
+          No series legend needed; category labels fulfill the role.
     data_quality:
       score: 15
       max: 15
@@ -158,21 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones + outside populated; 20 items within 10-25 spec
-          range
+        comment: All 7 zones plus outside populated; good distribution across zone
+          types.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world tech products with witty editorial categories; neutral,
-          relatable
+        comment: Real pop-culture items with believable editorial judgment; matches
+          WIRED Chartgeist aesthetic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 20 items distributed sensibly across zones
+        comment: Zone assignments are plausible and witty; NFTs/Metaverse as Overhyped,
+          GPS/Wikipedia as Actually Useful, Sourdough in all three.
     code_quality:
       score: 10
       max: 10
@@ -182,33 +191,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code; no functions or classes
+        comment: Data → SVG → circles → category labels → outside annotation → items
+          → title. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hard-coded; fully deterministic
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 is the only global
+        comment: d3 is the single global; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic; d3.group() used appropriately; no fake UI
+        comment: Uses d3.group for zone stacking, data joins throughout; clean and
+          idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Square orientation declared; harness handles output
+        comment: D3 interactive library; harness emits plot-{theme}.png + plot-{theme}.html
+          correctly.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -216,17 +228,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: D3 selection pattern, d3.group(), method chaining, ANYPLOT_TOKENS/SIZE
-          usage all idiomatic
+        comment: Good use of d3.group (D3 v6+ API), d3.scaleOrdinal, .data().join()
+          data-join, d3.min, correct ANYPLOT_TOKENS/ANYPLOT_SIZE usage.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: d3.group() is a nice use of D3 array utilities; otherwise primarily
-          SVG attribute manipulation; D3-distinctive features (scales, force simulation,
-          data-join) unused
-  verdict: REJECTED
+        passed: true
+        comment: d3.group for grouping/stacking is D3-idiomatic, but Venn geometry
+          is entirely manually positioned rather than algorithmically derived using
+          D3 math utilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -237,3 +249,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
