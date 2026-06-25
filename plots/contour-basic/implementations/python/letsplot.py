@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-basic: Basic Contour Plot
 Library: letsplot 4.10.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-25
@@ -17,9 +17,11 @@ from lets_plot import (
     element_text,
     geom_contour,
     geom_contourf,
+    geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_gradient2,
     theme,
     theme_minimal,
@@ -55,20 +57,30 @@ Z = (
 
 df = pd.DataFrame({"x": X.flatten(), "y": Y.flatten(), "z": Z.flatten()})
 
+# Gaussian peak centers for annotation
+peaks_df = pd.DataFrame({"x": [1.0, -1.0], "y": [1.3, -0.7], "label": ["Peak A", "Peak B"]})
+
 # Title: 46 chars < 67 baseline → no shrink needed; size stays at 16
 title = "contour-basic · python · letsplot · anyplot.ai"
 title_size = 16
 
 plot = (
     ggplot(df, aes(x="x", y="y", z="z"))
-    + geom_contourf(aes(fill="..level.."), bins=12)
-    + geom_contour(color=INK, size=0.4, alpha=0.4, bins=12)
+    # Filled contours with interactive tooltips — lets-plot distinctive feature
+    + geom_contourf(aes(fill="..level.."), bins=12, tooltips=layer_tooltips().line("Surface height: @..level.."))
+    # Subtle isocontour lines
+    + geom_contour(color=INK, size=0.4, alpha=0.35, bins=12)
+    # Zero-crossing boundary in bold dashed style to mark the diverging boundary
+    + geom_contour(color=INK, size=1.0, alpha=0.75, breaks=[0], linetype="dashed")
+    # Annotate the two positive peak centers
+    + geom_text(data=peaks_df, mapping=aes(x="x", y="y", label="label"), size=4, color=INK)
     + scale_fill_gradient2(low="#AE3030", mid=MID, high="#4467A3", midpoint=0, name="Surface Height")
     + labs(x="X Coordinate", y="Y Coordinate", title=title)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
         axis_line=element_line(color=INK_SOFT, size=0.5),
