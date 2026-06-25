@@ -1,0 +1,265 @@
+library: highcharts
+language: javascript
+specification_id: venn-labeled-items
+created: '2026-06-25T11:50:50Z'
+updated: '2026-06-25T12:11:45Z'
+generated_by: claude-sonnet
+workflow_run: 28166629238
+issue: 5364
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Perfect spec compliance — all 7 Venn zones populated with 16 culturally relevant
+    items
+  - Editorial serif (Georgia) for category labels matches the Chartgeist aesthetic
+    and elevates design above generic defaults
+  - Bold/larger text for ABC zone items (Podcasts, Sourdough) creates effective visual
+    hierarchy
+  - Idiomatic Highcharts SVG Renderer API usage (renderer.circle(), renderer.text())
+    with proper element cleanup in render event
+  - Clean code with deterministic data and no unnecessary abstractions
+  - Both themes render cleanly with no dark-on-dark issues; background correctly inherits
+    theme token
+  weaknesses:
+  - 'Non-canonical Imprint palette ordering: circles use palette[0], palette[2], palette[1]
+    (green, blue, lavender) instead of canonical order palette[0], palette[1], palette[2]
+    (green, lavender, blue) — swap circles[1] and circles[2] color assignments to
+    restore canonical order'
+  - Item labels at 14px CSS are on the small side; consider 15-16px for single-circle
+    zone items to improve mobile readability when image is scaled down
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correctly inherits theme token via transparent chart background.
+      Chrome: Title "venn-labeled-items · javascript · highcharts · anyplot.ai" in dark ink (#1A1A17) at 22px, fully readable. Italic subtitle "A Cultural Taxonomy of Technology Trends" in inkSoft at 14px, clearly visible. Category labels ("Overhyped", "Actually Useful", "Secretly Loved") in bold Georgia serif at 18px outside the circles — readable and editorial. Item labels (14–16px) across all 7 zones are legible. No axis labels (appropriate for a Venn diagram).
+      Data: Three semi-transparent filled circles — brand green (#009E73, palette[0]) for Overhyped, blue (#4467A3, palette[2]) for Actually Useful, lavender (#C475FD, palette[1]) for Secretly Loved. Fill opacity 18% with 60% stroke opacity allows overlapping regions to remain visible. ABC-zone items (Podcasts, Sourdough) are bold and slightly larger, creating clear visual hierarchy.
+      Legibility verdict: PASS — all text readable on the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correctly set via inherited theme background.
+      Chrome: Title, subtitle, category labels, and all item labels render in light ink (F0EFE8 / B8B7B0 tokens), clearly visible against the dark background. No dark-on-dark failures detected.
+      Data: Circle fill colors are identical to the light render — brand green, blue, lavender unchanged (only chrome flipped). Semi-transparent fills work well on the dark surface, with circle strokes remaining visible.
+      Legibility verdict: PASS — all text readable on the dark background. Brand green #009E73 clearly visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (22px title, 18px category labels, 14-16px
+          items). All text readable in both themes. Item labels at 14px CSS are slightly
+          small for mobile scaling but within guideline range.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements detected in either render. Vertically
+          stacked items within each zone are cleanly spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circles are clearly visible with appropriate semi-transparency (18%
+          fill, 60% stroke). All item labels and category labels readable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette colors (green, blue, lavender) are colorblind-safe
+          with adequate perceptual separation. Semi-transparent fills maintain distinguishability.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Venn diagram fills the canvas well in landscape orientation. Category
+          labels outside circles have adequate clearance. No content clipped at canvas
+          edges.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. No traditional axes (appropriate for Venn diagram).
+          Category labels outside circles serve descriptive function. Subtitle adds
+          context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First circle uses brand green #009E73 (palette[0]) correctly. However
+          circles use palette[0], palette[2], palette[1] — swapping canonical positions
+          2 and 3 (lavender and blue). All colors are from the Imprint palette but
+          not in canonical order.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Georgia serif font for editorial category labels, italic subtitle,
+          bold ABC items, and semi-transparent circle fills show clear design intent
+          above defaults. Matches Chartgeist editorial aesthetic from spec.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, no axes, good whitespace, refined opacity choices for fills
+          and strokes. Some additional refinement possible (e.g., more generous padding
+          around diagram).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold/larger ABC items create visual hierarchy. Culturally clever
+          data choices (NFTs=overhyped, Wikipedia=useful+loved, Podcasts=all three)
+          tell a coherent story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct three-circle Venn diagram with labeled items, exactly matching
+          spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 interior zones populated, semi-transparent fills, category
+          labels outside circles, item labels inside zones, 16 items within 10-25
+          range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All items correctly placed in their designated zones (A, B, C, AB,
+          AC, BC, ABC).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'venn-labeled-items · javascript · highcharts ·
+          anyplot.ai'. No legend (appropriate — circles identified by external category
+          labels).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 interior zones covered with varied item counts. Demonstrates
+          full Venn intersection structure.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real tech/culture items (NFTs, Git, Wikipedia, Podcasts) with plausible
+          category assignments. Neutral, no controversial topics.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Category assignments are culturally accurate (NFTs correctly in Overhyped,
+          Wikipedia correctly in Useful+SecretlyLoved, Podcasts in all three).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: data arrays then chart configuration. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded deterministic data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (Highcharts is a global). All window.ANYPLOT_TOKENS
+          references are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean use of chart.events.render pattern with proper element cleanup.
+          _venn array pattern for SVG element lifecycle management is idiomatic.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Calls Highcharts.chart('container', ...) correctly. animation:false
+          set in both chart and plotOptions.series. landscape orientation directive
+          present.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of Highcharts chart.events.render lifecycle, SVG renderer
+          API, and element cleanup pattern. Sets all required config (credits, animation,
+          transparent background, tokens).
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts SVG Renderer (r.circle(), r.text(), .css(), .attr(),
+          .destroy()) for custom diagram — a distinctively Highcharts approach to
+          custom visualizations.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
