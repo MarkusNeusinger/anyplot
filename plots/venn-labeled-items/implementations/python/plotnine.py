@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 venn-labeled-items: Chartgeist-Style Venn Diagram with Labeled Items
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-25
@@ -61,30 +61,30 @@ circles_df = pd.DataFrame(circle_rows)
 # Items placed in their assigned Venn zones
 items_df = pd.DataFrame(
     [
-        # A only — Peak Instagram
-        ("Cloud Bread", -2.10, 1.10),
-        ("Charcoal Ice Cream", -2.15, 0.55),
-        ("Butterfly Pea Tea", -2.05, 0.00),
-        # B only — Actually Nutritious
-        ("Sardines", 2.10, 1.10),
-        ("Kimchi", 2.15, 0.55),
-        ("Lentil Soup", 2.05, 0.00),
-        # C only — Surprisingly Addictive
-        ("Takis", -0.65, -2.15),
-        ("Boba Tea", 0.00, -2.40),
-        ("Funyuns", 0.65, -2.15),
-        # A ∩ B — photogenic and nutritious
-        ("Avocado Toast", 0.00, 1.20),
-        ("Overnight Oats", 0.00, 0.85),
-        # A ∩ C — photogenic and addictive
-        ("Cronuts", -1.28, -0.20),
-        ("Dirty Soda", -1.28, -0.65),
-        # B ∩ C — nutritious and addictive
-        ("Greek Yogurt", 1.28, -0.20),
-        ("Edamame", 1.28, -0.65),
-        # A ∩ B ∩ C
-        ("Sourdough", 0.00, 0.10),
-        ("Matcha", 0.00, -0.38),
+        # A only — Peak Instagram (upper-left)
+        ("Cloud Bread", -2.00, 1.30),
+        ("Charcoal Ice Cream", -2.30, 0.52),
+        ("Butterfly Pea Tea", -2.20, -0.05),
+        # B only — Actually Nutritious (upper-right)
+        ("Sardines", 2.00, 1.30),
+        ("Kimchi", 2.30, 0.52),
+        ("Lentil Soup", 2.20, -0.05),
+        # C only — Surprisingly Addictive (bottom)
+        ("Takis", -0.95, -2.25),
+        ("Boba Tea", 0.00, -2.58),
+        ("Funyuns", 0.95, -2.25),
+        # A ∩ B — photogenic and nutritious (top center)
+        ("Avocado Toast", 0.00, 1.35),
+        ("Overnight Oats", 0.00, 0.82),
+        # A ∩ C — photogenic and addictive (lower left, centered in zone)
+        ("Cronuts", -0.90, -0.55),
+        ("Dirty Soda", -0.90, -1.05),
+        # B ∩ C — nutritious and addictive (lower right, centered in zone)
+        ("Greek Yogurt", 0.90, -0.55),
+        ("Edamame", 0.90, -1.05),
+        # A ∩ B ∩ C (center)
+        ("Sourdough", 0.00, 0.28),
+        ("Matcha", 0.00, -0.22),
     ],
     columns=["label", "x", "y"],
 )
@@ -109,17 +109,17 @@ subtitle_df = pd.DataFrame(
 plot = (
     ggplot()
     + geom_polygon(
-        data=circles_df, mapping=aes(x="x", y="y", group="name", fill="fill", color="fill"), alpha=0.22, size=1.4
+        data=circles_df, mapping=aes(x="x", y="y", group="name", fill="fill"), color=INK_SOFT, alpha=0.22, size=0.6
     )
     # geom_label gives each item a clean background box — more readable in overlapping zones
     + geom_label(
         data=items_df,
         mapping=aes(x="x", y="y", label="label"),
-        size=16,
+        size=11,
         color=INK,
         fill=ELEVATED_BG,
         label_size=0,
-        label_padding=0.15,
+        label_padding=0.12,
         family="serif",
     )
     # Consolidated category label layer (was three separate geom_text calls)
