@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ecdf-basic: Basic ECDF Plot
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-25
@@ -24,6 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
+ANYPLOT_AMBER = "#DDCC77"  # annotation accent
 
 # Data: HTTP API response latencies (ms) for 400 requests to a web service
 np.random.seed(42)
@@ -35,8 +36,17 @@ latency_ms = np.random.lognormal(mean=4.8, sigma=0.5, size=n_requests)
 sorted_latency = np.sort(latency_ms)
 cumulative_proportion = np.arange(1, n_requests + 1) / n_requests
 
+# Key percentiles
+p50 = np.percentile(sorted_latency, 50)
+p90 = np.percentile(sorted_latency, 90)
+p99 = np.percentile(sorted_latency, 99)
+x_max = np.percentile(sorted_latency, 99.5)
+
 # Plot
-fig = go.Figure(
+fig = go.Figure()
+
+# ECDF line
+fig.add_trace(
     go.Scatter(
         x=sorted_latency,
         y=cumulative_proportion,
@@ -46,6 +56,38 @@ fig = go.Figure(
         showlegend=False,
     )
 )
+
+# Percentile reference lines (dashed horizontal)
+for pct_val, pct_label, y_pct in [(p50, "P50", 0.50), (p90, "P90", 0.90), (p99, "P99", 0.99)]:
+    fig.add_shape(
+        type="line",
+        x0=0,
+        x1=pct_val,
+        y0=y_pct,
+        y1=y_pct,
+        line={"color": INK_SOFT, "width": 1, "dash": "dot"},
+        layer="below",
+    )
+    fig.add_shape(
+        type="line",
+        x0=pct_val,
+        x1=pct_val,
+        y0=0,
+        y1=y_pct,
+        line={"color": INK_SOFT, "width": 1, "dash": "dot"},
+        layer="below",
+    )
+    fig.add_annotation(
+        x=pct_val,
+        y=y_pct,
+        text=f"<b>{pct_label}</b> {pct_val:.0f} ms",
+        showarrow=False,
+        xanchor="left",
+        yanchor="bottom",
+        xshift=6,
+        yshift=4,
+        font={"size": 10, "color": INK_SOFT},
+    )
 
 # Style
 title_text = "HTTP API Latency · ecdf-basic · python · plotly · anyplot.ai"
@@ -59,8 +101,9 @@ fig.update_layout(
         "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zeroline": False,
-        "showline": True,
+        "showline": False,
         "mirror": False,
+        "range": [0, x_max],
     },
     yaxis={
         "title": {"text": "Cumulative Proportion of Requests", "font": {"size": 12, "color": INK}, "standoff": 12},
@@ -69,7 +112,7 @@ fig.update_layout(
         "gridwidth": 1,
         "linecolor": INK_SOFT,
         "zeroline": False,
-        "showline": True,
+        "showline": False,
         "mirror": False,
         "range": [0, 1.02],
         "tickformat": ".0%",
