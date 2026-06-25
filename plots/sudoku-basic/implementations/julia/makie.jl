@@ -9,6 +9,7 @@ using Colors
 # Theme tokens
 const THEME       = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
@@ -51,6 +52,13 @@ ax = Axis(
     yticklabelsvisible = false,
 )
 
+# Elevated background for given (clue) cells — poly! highlights filled cells
+for row in 1:9, col in 1:9
+    if puzzle[row, col] != 0
+        poly!(ax, Rect2f(col - 1, 9 - row, 1.0, 1.0); color = ELEVATED_BG, strokewidth = 0)
+    end
+end
+
 # Thin cell dividers (positions 1,2,4,5,7,8 — skip box boundaries at 0,3,6,9)
 thin_segs = vcat(
     [Point2f(x, j) for x in [1, 2, 4, 5, 7, 8] for j in [0, 9]],
@@ -71,7 +79,7 @@ for row in 1:9, col in 1:9
     if val != 0
         text!(ax, string(val);
               position = Point2f(col - 0.5, 9.5 - row),
-              fontsize = 28,
+              fontsize = 33,
               color    = INK,
               align    = (:center, :center),
         )
