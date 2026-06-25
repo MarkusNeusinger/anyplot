@@ -43,43 +43,59 @@ g.append("rect")
   .attr("width", gridSize).attr("height", gridSize)
   .attr("fill", t.pageBg);
 
-// Grid lines: thin for cells, thick for 3×3 box boundaries
-for (let i = 0; i <= 9; i++) {
-  const isBox = i % 3 === 0;
-  const sw = isBox ? 2.5 : 0.75;
-  const stroke = isBox ? t.ink : t.inkSoft;
+// Alternating 3×3 box region fills — checkerboard subtle elevation
+g.selectAll("rect.box")
+  .data(d3.range(9).filter(i => ((i % 3) + Math.floor(i / 3)) % 2 === 0))
+  .join("rect")
+  .attr("class", "box")
+  .attr("x", i => (i % 3) * cellSize * 3)
+  .attr("y", i => Math.floor(i / 3) * cellSize * 3)
+  .attr("width", cellSize * 3)
+  .attr("height", cellSize * 3)
+  .attr("fill", t.elevatedBg)
+  .attr("opacity", 0.5);
 
-  g.append("line")
-    .attr("x1", i * cellSize).attr("y1", 0)
-    .attr("x2", i * cellSize).attr("y2", gridSize)
-    .attr("stroke", stroke).attr("stroke-width", sw)
-    .attr("stroke-linecap", "square");
+// Vertical grid lines — D3 data-join over line indices
+g.selectAll("line.v-line")
+  .data(d3.range(10))
+  .join("line")
+  .attr("class", "v-line")
+  .attr("x1", i => i * cellSize).attr("y1", 0)
+  .attr("x2", i => i * cellSize).attr("y2", gridSize)
+  .attr("stroke", i => i % 3 === 0 ? t.ink : t.inkSoft)
+  .attr("stroke-width", i => i % 3 === 0 ? 3.5 : 0.75)
+  .attr("stroke-linecap", "square");
 
-  g.append("line")
-    .attr("x1", 0).attr("y1", i * cellSize)
-    .attr("x2", gridSize).attr("y2", i * cellSize)
-    .attr("stroke", stroke).attr("stroke-width", sw)
-    .attr("stroke-linecap", "square");
-}
+// Horizontal grid lines — D3 data-join over line indices
+g.selectAll("line.h-line")
+  .data(d3.range(10))
+  .join("line")
+  .attr("class", "h-line")
+  .attr("x1", 0).attr("y1", i => i * cellSize)
+  .attr("x2", gridSize).attr("y2", i => i * cellSize)
+  .attr("stroke", i => i % 3 === 0 ? t.ink : t.inkSoft)
+  .attr("stroke-width", i => i % 3 === 0 ? 3.5 : 0.75)
+  .attr("stroke-linecap", "square");
 
-// Given numbers (clues) — Imprint palette position 1
+// Given numbers (clues) — D3 data-join over flat non-zero cells
+const cells = grid.flatMap((row, ri) =>
+  row.map((v, ci) => ({ v, ri, ci }))
+).filter(d => d.v !== 0);
+
 const fs = Math.round(cellSize * 0.52);
-grid.forEach((row, ri) => {
-  row.forEach((val, ci) => {
-    if (val !== 0) {
-      g.append("text")
-        .attr("x", ci * cellSize + cellSize / 2)
-        .attr("y", ri * cellSize + cellSize / 2)
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "central")
-        .attr("fill", t.palette[0])
-        .style("font-size", `${fs}px`)
-        .style("font-weight", "700")
-        .style("font-family", "Georgia, 'Times New Roman', serif")
-        .text(val);
-    }
-  });
-});
+g.selectAll("text.cell-num")
+  .data(cells)
+  .join("text")
+  .attr("class", "cell-num")
+  .attr("x", d => d.ci * cellSize + cellSize / 2)
+  .attr("y", d => d.ri * cellSize + cellSize / 2)
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "central")
+  .attr("fill", t.palette[0])
+  .style("font-size", `${fs}px`)
+  .style("font-weight", "700")
+  .style("font-family", "Georgia, 'Times New Roman', serif")
+  .text(d => d.v);
 
 // Title
 const titleText = "sudoku-basic · javascript · d3 · anyplot.ai";
