@@ -1,7 +1,7 @@
 """ anyplot.ai
 donut-basic: Basic Donut Chart
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 86/100 | Created: 2026-04-24
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-25
 """
 
 import math
@@ -9,8 +9,7 @@ import os
 import sys
 
 
-# Avoid name collision: drop this script's directory from sys.path
-# so `from plotnine import ...` resolves to the installed package.
+# Remove script directory from path to avoid shadowing the installed plotnine package
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _HERE]
 
@@ -39,58 +38,53 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette — positions 1–5; brand green is always first series
+IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 LABEL_ON_WEDGE = "#F0EFE8"
 
-# Okabe-Ito palette (first segment is always the brand green)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
-
-# Data - Annual budget allocation by department (USD thousands)
+# Data — annual budget allocation by department (USD thousands)
 categories = ["Engineering", "Marketing", "Operations", "Sales", "Support"]
 values = [480, 210, 155, 125, 55]
 total = sum(values)
 
-# Ring dimensions
-inner_radius = 0.62
-outer_radius = 1.0
-label_radius = 1.18
-pct_radius = (inner_radius + outer_radius) / 2
+# Ring geometry
+INNER_R = 0.62
+OUTER_R = 1.00
+LABEL_R = 1.32  # category labels outside ring — pushed further out to prevent overlap
+PCT_R = 0.75  # pct labels slightly inside ring midpoint for better separation
+SMALL_THRESHOLD = 0.08  # segments under 8%: combine pct into category label
 
-# Build annular-segment polygons for each category
 wedge_rows = []
 label_rows = []
 pct_rows = []
 
-start_angle = math.pi / 2  # Start at 12 o'clock
+start_angle = math.pi / 2  # Start at 12 o'clock, clockwise
 for category, value, color in zip(categories, values, IMPRINT, strict=True):
     sweep = (value / total) * 2 * math.pi
-    end_angle = start_angle - sweep  # Clockwise
+    end_angle = start_angle - sweep
 
-    # Slight gap between wedges for crisp separation
     gap = 0.008
-    a0 = end_angle + gap
-    a1 = start_angle - gap
+    a0, a1 = end_angle + gap, start_angle - gap
+    n_pts = 80
+    inner_arc = np.linspace(a0, a1, n_pts)
+    outer_arc = np.linspace(a1, a0, n_pts)
 
-    n = 80
-    inner_arc = np.linspace(a0, a1, n)
-    outer_arc = np.linspace(a1, a0, n)
-
-    points = [(inner_radius * math.cos(a), inner_radius * math.sin(a)) for a in inner_arc]
-    points += [(outer_radius * math.cos(a), outer_radius * math.sin(a)) for a in outer_arc]
+    points = [(INNER_R * math.cos(a), INNER_R * math.sin(a)) for a in inner_arc]
+    points += [(OUTER_R * math.cos(a), OUTER_R * math.sin(a)) for a in outer_arc]
 
     for order, (x, y) in enumerate(points):
         wedge_rows.append({"x": x, "y": y, "segment": category, "order": order, "fill": color})
 
-    mid_angle = (start_angle + end_angle) / 2
-    label_rows.append(
-        {"x": label_radius * math.cos(mid_angle), "y": label_radius * math.sin(mid_angle), "label": category}
-    )
-    pct_rows.append(
-        {
-            "x": pct_radius * math.cos(mid_angle),
-            "y": pct_radius * math.sin(mid_angle),
-            "label": f"{value / total * 100:.1f}%",
-        }
-    )
+    mid = (start_angle + end_angle) / 2
+    pct = value / total
+    if pct < SMALL_THRESHOLD:
+        label_rows.append(
+            {"x": LABEL_R * math.cos(mid), "y": LABEL_R * math.sin(mid), "label": f"{category} {pct * 100:.1f}%"}
+        )
+    else:
+        label_rows.append({"x": LABEL_R * math.cos(mid), "y": LABEL_R * math.sin(mid), "label": category})
+        pct_rows.append({"x": PCT_R * math.cos(mid), "y": PCT_R * math.sin(mid), "label": f"{pct * 100:.1f}%"})
 
     start_angle = end_angle
 
@@ -98,24 +92,34 @@ wedge_df = pd.DataFrame(wedge_rows)
 label_df = pd.DataFrame(label_rows)
 pct_df = pd.DataFrame(pct_rows)
 
+# Title with scaled fontsize for the mandated ~67-char title
+TITLE = "Budget by Department · donut-basic · python · plotnine · anyplot.ai"
+n = len(TITLE)
+ratio = 67 / n if n > 67 else 1.0
+title_size = max(8, round(12 * ratio))
+
 # Plot
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=wedge_df, color=PAGE_BG, size=1.2)
-    + geom_text(aes(x="x", y="y", label="label"), data=pct_df, size=14, fontweight="bold", color=LABEL_ON_WEDGE)
-    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK)
-    + annotate("text", x=0, y=0.13, label="Total budget", size=14, color=INK_SOFT)
-    + annotate("text", x=0, y=-0.08, label=f"${total:,}K", size=28, fontweight="bold", color=INK)
+    + geom_polygon(aes(x="x", y="y", group="segment", fill="fill"), data=wedge_df, color=PAGE_BG, size=1.0)
+    # Percentage labels inside ring — bold, on-wedge colour
+    + geom_text(aes(x="x", y="y", label="label"), data=pct_df, size=16, fontweight="bold", color=LABEL_ON_WEDGE)
+    # Category labels outside ring — regular weight, ink colour
+    + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=14, color=INK)
+    # Center metric — prominent value
+    + annotate("text", x=0, y=0.12, label=f"${total:,}K", size=26, fontweight="bold", color=INK, ha="center")
+    # Center sub-label — softer, smaller
+    + annotate("text", x=0, y=-0.10, label="Total Budget", size=14, color=INK_SOFT, ha="center")
     + scale_fill_identity()
     + coord_fixed(ratio=1)
-    + scale_x_continuous(limits=(-1.45, 1.45))
-    + scale_y_continuous(limits=(-1.35, 1.35))
-    + labs(title="Budget by Department · donut-basic · plotnine · anyplot.ai")
+    + scale_x_continuous(limits=(-1.65, 1.65))
+    + scale_y_continuous(limits=(-1.55, 1.55))
+    + labs(title=TITLE)
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=22, color=INK, ha="center", margin={"b": 18}),
+        plot_title=element_text(size=title_size, color=INK, ha="center", margin={"b": 16}),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -126,4 +130,5 @@ plot = (
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300)
+# Save — 2400×2400 px (square format for symmetric donut chart)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in")

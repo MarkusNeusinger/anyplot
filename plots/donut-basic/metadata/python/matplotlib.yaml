@@ -2,52 +2,58 @@ library: matplotlib
 language: python
 specification_id: donut-basic
 created: '2025-12-23T00:47:09Z'
-updated: '2026-04-24T05:22:18Z'
-generated_by: claude-opus
-workflow_run: 24873378694
+updated: '2026-06-25T05:59:09Z'
+generated_by: claude-sonnet
+workflow_run: 28149228320
 issue: 733
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required donut features present (center metric,
-    percentage labels, ring format, consistent ordering)'
-  - 'Correct theme adaptation: both light and dark renders pass all legibility checks,
-    with Okabe-Ito data colors identical across themes'
-  - 'Excellent code quality: deterministic, clean imports, no functions/classes, correct
-    output naming'
-  - Appropriate square canvas (3600x3600) for circular chart with correct text sizing
-    hierarchy
-  - 'Smart contrast choice: percentage labels use #F0EFE8 for readability against
-    colored wedge backgrounds in both themes'
+  - Correct donut chart with hollow center via wedgeprops width=0.42
+  - Center metric with 'Total budget' subtitle, thin divider rule, and bold $1,025K
+    total is an elegant design touch
+  - Value-enriched legend (category + $ amount) adds context without cluttering the
+    chart
+  - Slight explode on dominant Engineering segment creates clear visual focal point
+  - 'Imprint palette in canonical order starting with brand green #009E73'
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly with all chrome
+    adapting
+  - Percentage labels in fixed off-white (#F0EFE8) provide consistent contrast on
+    colored wedges in both themes
+  - Realistic budget allocation scenario with believable proportions for a mid-sized
+    company
+  - Clean KISS code structure with no functions/classes, deterministic hardcoded data
+  - Square 2400x2400 canvas is the correct choice for a symmetric circular plot
   weaknesses:
-  - Design Excellence is moderate — center metric is present but additional storytelling
-    (e.g., subtle visual emphasis on dominant Engineering segment, directional annotation)
-    would elevate the chart
-  - Label positioning at top (Support and Sales) is slightly crowded — could use labeldistance
-    tuning or adjusted startangle to give more breathing room
-  - LM-02 could use more distinctive matplotlib features (e.g., exploding dominant
-    segment, custom wedge arc styling, or legend with value labels)
+  - Percentage labels at fontsize=7.5pt (~42px) are on the small side for mobile readability
+    — the smallest segment (Support 5.4%) label could be hard to read at 400px mobile
+    width; consider increasing to 8.5-9pt
+  - plt.setp() is slightly non-idiomatic in a matplotlib axes-based code style — prefer
+    leg.get_texts() iteration or a direct set call
+  - 'DE-02 refinement: the ax.set_aspect(''equal'') call is correct but the implementation
+    lacks any grid removal call or spine visibility override (not needed for pie charts
+    where matplotlib auto-removes, but explicit is clearer)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "Budget by Department · donut-basic · matplotlib · anyplot.ai" in dark INK (#1A1A17), clearly readable. Category labels outside ring in INK — all readable. Center subtitle "Total budget" in INK_SOFT (#4A4A44), "$1,025K" in bold INK.
-      Data: Five Okabe-Ito segments — Engineering (#009E73 brand green ~47%), Marketing (#D55E00 ~21%), Operations (#0072B2 ~15%), Sales (#CC79A7 ~12%), Support (#E69F00 ~5%). Percentage labels in #F0EFE8 on wedges for contrast. White edges (PAGE_BG) separate wedges cleanly.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "Budget by Department · donut-basic · matplotlib · anyplot.ai" in dark ink, clearly readable at ~80% canvas width (expected for this 69-char title). Legend below chart in a lightly framed box with muted-ink text on elevated-bg (#FFFDF6). All chrome uses theme-correct dark-on-light colors.
+      Data: Five donut segments in Imprint palette order — Engineering (#009E73, 46.8%), Marketing (#C475FD, 20.5%), Operations (#4467A3, 15.1%), Sales (#BD8233, 12.2%), Support (#AE3030, 5.4%). Percentage labels in fixed off-white (#F0EFE8) sit on colored wedges. Center shows "Total budget" subtitle + thin divider rule + bold "$1,025K" in dark ink.
+      Legibility verdict: PASS — all text readable, no light-on-light issues. Pct labels at 7.5pt are slightly small but legible at full resolution.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background. Category labels in light INK — all readable. Center text adapted to dark theme tokens. No dark-on-dark failures detected.
-      Data: Data colors identical to light render — Engineering #009E73, Marketing #D55E00, Operations #0072B2, Sales #CC79A7, Support #E69F00. Only chrome elements flipped, not data colors.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title renders in light ink (#F0EFE8), clearly readable against the dark background. Legend frame uses elevated dark bg (#242420) with light-muted text (#B8B7B0) — readable. Center "Total budget" label in #B8B7B0 (INK_SOFT dark) and "$1,025K" in #F0EFE8 (INK dark) — both clearly readable on the near-black center hole.
+      Data: Imprint palette colors are identical to the light render — Engineering green, Marketing lavender, Operations blue, Sales ochre, Support red. Only chrome flipped; data colors unchanged.
+      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored against the dark background. Brand green #009E73 is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,69 +61,81 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set; all readable in both themes at 3600x3600
+        comment: 'All font sizes explicitly set; title 12pt, center total 22pt, pct
+          labels 7.5pt, legend 8pt. Minor: pct labels at 7.5pt (~42px) are slightly
+          small for mobile scaling.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Well-spaced labels; Support and Sales at top slightly crowded but
-          non-overlapping
+        comment: No overlapping elements in either render. Pct labels sit cleanly
+          on each wedge face.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All segments and labels clearly visible in both themes
+        comment: All wedge segments clearly visible. Segment sizes proportional to
+          values. Off-white pct labels contrast well on all colored wedges.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe
+        comment: Imprint palette is CVD-safe. Pct labels in high-contrast off-white
+          on colored wedges.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct square canvas 3600x3600; good proportions
+        comment: Square 2400x2400 canvas. Donut fills good portion of canvas. Legend
+          placed below with generous margins via subplots_adjust(left=0.05, right=0.95,
+          top=0.9, bottom=0.2). No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title with all required elements
+        comment: Donut chart with no x/y axes. Title descriptive with spec-id format.
+          Center metric provides clear data labeling.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First segment #009E73; Okabe-Ito order; correct backgrounds'
+        comment: 'First series Engineering is #009E73. All 5 positions use Imprint
+          canonical order. Light bg #FAF8F1, dark bg #1A1A17. Data colors identical
+          between themes. Chrome correctly flips.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default; center metric, white wedge edges, intentional typography
-          hierarchy
+        comment: 'Strong design: intentional center metric with subtitle+divider+bold
+          total, value-enriched legend, explode on dominant segment. Clearly above
+          defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default; clean minimal styling, white wedge separation via
-          PAGE_BG edges
+        comment: 'Good refinement: custom wedge edge colors, legend frame styling,
+          generous whitespace via subplots_adjust. No grid (appropriate for donut).
+          Well-polished details.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default; center metric guides viewer, Engineering dominance
-          clear
+        comment: 'Good storytelling: explode on dominant Engineering segment creates
+          focal point; center total ties the budget narrative together; legend shows
+          both category name and dollar value.'
     spec_compliance:
       score: 15
       max: 15
@@ -127,27 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct donut via wedgeprops width=0.42
+        comment: Correct donut chart via ax.pie() with wedgeprops width=0.42 creating
+          the hollow ring.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center metric, percentage labels, ring format, consistent ordering
-          all present
+        comment: Center metric present (Total budget + $1,025K), percentage labels
+          on segments, consistent ordering, thick ring width.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 categories (within 3-8), correct proportions
+        comment: 5 categories correctly mapped to proportional segments. All data
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains donut-basic · matplotlib · anyplot.ai; no legend needed
-          (direct labels)
+        comment: 'Title: ''Budget by Department · donut-basic · python · matplotlib
+          · anyplot.ai'' — valid optional descriptive prefix format. Legend shows
+          all 5 categories with $ amounts.'
     data_quality:
       score: 15
       max: 15
@@ -157,20 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All donut chart aspects shown: ring, hollow center, labels, percentages,
-          color'
+        comment: Shows dominant segment (47%), mid-range segments, and a small segment
+          (5.4%). Full range of proportional coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral business budget allocation — plausible and neutral
+        comment: Budget allocation by department is a real, neutral, comprehensible
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Total $1,025K with realistic distribution across 5 departments
+        comment: $1,025K total annual budget with Engineering dominant (~47%) is realistic
+          for a mid-sized company. All proportions are plausible.
     code_quality:
       score: 10
       max: 10
@@ -180,32 +203,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean sequential script
+        comment: 'Clean linear flow: imports → tokens → data → plot → legend → save.
+          No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded data
+        comment: Deterministic hardcoded data. No random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and matplotlib.pyplot; both used
+        comment: Only os and matplotlib.pyplot imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean loops; no fake UI
+        comment: Clean Pythonic code. Legend construction is appropriately detailed
+          for the customization level. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current matplotlib API
-    library_features:
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
+          API used.
+    library_mastery:
       score: 7
       max: 10
       items:
@@ -214,21 +240,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax.pie() with wedgeprops, pctdistance, labeldistance, textprops;
-          set_aspect('equal')
+        comment: 'Correct ax.pie() with wedgeprops for donut, autopct, startangle,
+          pctdistance. Minor: plt.setp() is slightly less idiomatic than direct iteration.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Donut via wedgeprops width (matplotlib-specific); pctdistance/labeldistance
-          control; ax.text() center
+        comment: 'Uses matplotlib-specific pie parameters: wedgeprops width for donut
+          effect, explode, pctdistance, startangle. These are distinctively matplotlib
+          pie chart features.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  patterns: []
+  - custom-legend
+  patterns:
+  - explicit-figure
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
