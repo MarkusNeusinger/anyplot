@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sudoku-basic: Basic Sudoku Grid
 Library: plotly 6.8.0 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-25
+Quality: 92/100 | Updated: 2026-06-25
 """
 
 import os
