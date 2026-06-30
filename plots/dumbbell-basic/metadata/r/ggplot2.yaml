@@ -1,0 +1,260 @@
+library: ggplot2
+language: r
+specification_id: dumbbell-basic
+created: '2026-06-30T22:58:30Z'
+updated: '2026-06-30T23:04:20Z'
+generated_by: claude-sonnet
+workflow_run: 28481084562
+issue: 945
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct horizontal dumbbell chart with geom_segment + two geom_point layers
+  - Perfect Imprint palette compliance — Before=#009E73, After=#C475FD, both themes
+    identical data colors
+  - All font sizes explicitly set (title=12pt, axis=10pt, ticks/legend=8pt) with clean
+    proportions
+  - 'Excellent spec compliance: horizontal orientation, sorted by improvement, distinct
+    colors, subtle connecting lines'
+  - Perfectly adapted theme-adaptive chrome — both light and dark renders are fully
+    readable
+  - Clean idiomatic ggplot2 code with KISS structure and set.seed(42)
+  weaknesses:
+  - 'Design Excellence could be improved: no visual emphasis on top/bottom performers
+    — annotations or color-coded gap labels would elevate storytelling above default
+    display'
+  - All improvement deltas are positive (7–16 pts); a more realistic dataset might
+    include one or two departments showing no improvement or slight decline, adding
+    more interesting variation
+  - 'LM-02: Dumbbell implementation uses standard geom_segment+geom_point approach
+    rather than ggforce or ggalt extensions that would better showcase ggplot2 ecosystem
+    depth'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "dumbbell-basic · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at ~60% plot width — well-proportioned. Y-axis category labels (Research, Engineering, Product, Finance, Design, Marketing, HR, Sales, Support, Operations) in INK_SOFT dark gray. X-axis tick labels (60, 70, 80) and "Wellness Score" axis label in dark gray — all clearly readable. Top-left legend with "Before" (green dot) and "After" (lavender dot) on elevated #FFFDF6 background.
+      Data: Before dots in brand green #009E73 (first series), After dots in lavender #C475FD (second series). Connecting lines in muted gray (INK_SOFT @ alpha=0.5), thin and subtle. Chart sorted by improvement magnitude (Research at top with largest gap, Operations at bottom with smallest). Vertical x-axis grid lines only — subtle and unobtrusive.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and all axis/tick labels rendered in light cream (#F0EFE8 / #B8B7B0), clearly visible against dark background. Legend on elevated #242420 panel with light-colored text. X-axis base line in INK_SOFT light gray.
+      Data: Before dots remain #009E73, After dots remain #C475FD — identical to light render as required. Connecting lines and grid lines adapt to dark chrome with appropriate contrast.
+      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored and clearly readable against the near-black background. Brand green #009E73 remains visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=12pt, axis.title=10pt, axis.text=8pt,
+          legend.text=8pt. Proportions well-balanced, no overflow, readable at both
+          desktop and mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere. 10 categories well-spaced on y-axis, no
+          collision between labels and data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 categories with size=3.5 dots — appropriate marker size for sparse
+          data. Connecting lines visible at linewidth=0.7, alpha=0.5. Both Before
+          and After dots clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          under CVD simulations. Large marker size compensates for luminance proximity.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas confirmed 3200x1800 (no gate failure). Plot fills 50-80% of
+          canvas with balanced margins. Legend positioned at top-left, close to data.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled 'Wellness Score' (descriptive, no unit needed for
+          a score). Y-axis NULL is intentional and correct for horizontal dumbbell
+          with self-explanatory category labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Before) = #009E73 brand green. Second series (After)
+          = #C475FD lavender. Light bg = #FAF8F1, Dark bg = #1A1A17. Data colors identical
+          across themes. Chrome flips correctly. Full compliance.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: Imprint palette applied correctly,
+          warm elevated legend background, clean theme tokens throughout. Not at FiveThirtyEight
+          publication-ready level — no strong visual hierarchy beyond sorting.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (top/right), y-axis grid blank, only subtle x-axis
+          grid, tick marks removed, elevated legend background, generous margins.
+          Nearly perfect refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Sorted by improvement magnitude — deliberate storytelling choice
+          that reveals which departments benefited most. Above default (2) but no
+          visual emphasis on top/bottom performers or annotations to anchor the story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal dumbbell chart with two dots connected by a line
+          per category.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal orientation, distinct colors for start/end, thin subtle
+          connecting lines, sorted by difference — all spec requirements met.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values on x-axis, categories on y-axis. All 10 data points visible.
+          Before and after both plotted correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'dumbbell-basic · r · ggplot2 · anyplot.ai'. Legend
+          labels 'Before' and 'After' with correct Imprint colors.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows before/after comparison across 10 categories with varied improvement
+          magnitudes (7–16 pts). All improvements are positive — no declining departments
+          reduces realistic variation slightly.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Workplace wellness scores across departments — real, comprehensible,
+          neutral business scenario. Excellent context for a dumbbell chart.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores range 58–88 on a 0–100 scale, improvements of 7–16 points
+          are realistic for a workplace initiative. Factually plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → theme tokens → data → plot → save.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present. Data is also deterministic by construction.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R. adjustcolor() for transparent grid color is a
+          nice R-native touch. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave with ragg::agg_png. Modern linewidth=
+          used (not deprecated size=).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot2 grammar: geom_segment for connectors, two
+          geom_point layers with scale_color_manual, factor reordering for y-axis
+          control, expansion() for axis padding, guides(override.aes) for legend sizing.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses ggplot2-specific idioms: factor level reordering, scale_color_manual
+          with named breaks, guides(color = guide_legend(override.aes)), expansion().
+          Standard approach — no ggforce/ggalt extensions.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
