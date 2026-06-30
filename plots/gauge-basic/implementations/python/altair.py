@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-30
@@ -104,7 +104,7 @@ range_labels_df = pd.DataFrame(
 )
 range_labels = (
     alt.Chart(range_labels_df)
-    .mark_text(fontSize=14, color=INK_SOFT, fontWeight="bold")
+    .mark_text(fontSize=16, color=INK_SOFT, fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -120,7 +120,7 @@ threshold_labels_df = pd.DataFrame(
 )
 threshold_labels = (
     alt.Chart(threshold_labels_df)
-    .mark_text(fontSize=14, color=INK_SOFT, fontWeight="bold", dy=-8)
+    .mark_text(fontSize=16, color=INK_SOFT, fontWeight="bold", dy=-8)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
