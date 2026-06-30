@@ -102,11 +102,11 @@ const needlePlugin = {
     ctx.fillText(`${value}`, x, y + innerRadius * 0.55);
 
     // --- Metric label below value ---
-    const lblSize = Math.round(outerRadius * 0.082);
+    const lblSize = Math.round(outerRadius * 0.072);
     ctx.font = `${lblSize}px system-ui, sans-serif`;
     ctx.fillStyle = t.inkSoft;
     ctx.textBaseline = "top";
-    ctx.fillText(metricLabel, x, y + innerRadius * 0.60);
+    ctx.fillText(metricLabel, x, y + innerRadius * 0.78);
 
     ctx.restore();
   },
