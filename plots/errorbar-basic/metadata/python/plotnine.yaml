@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:20Z'
-updated: '2026-06-30T20:37:49Z'
+updated: '2026-06-30T20:54:37Z'
 generated_by: claude-sonnet
 workflow_run: 28473397165
 issue: 973
@@ -15,49 +15,55 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - Clean idiomatic plotnine grammar-of-graphics approach using geom_errorbar + geom_point
-    layers with shared position_dodge
-  - 'Full theme-adaptive chrome: backgrounds, text, grid, and legend all correctly
-    switch between light (#FAF8F1) and dark (#1A1A17) themes'
-  - Imprint palette applied correctly — Automated=#009E73 (first series), Enhanced=#C475FD,
-    Standard=#4467A3 in canonical order
-  - 'Correct axis labels with units: Concentration (mg/L) vs Sampling Site'
-  - Sites sorted by Standard-method concentration to create a meaningful left-to-right
-    ascending visual pattern
-  - Error bars have visible caps (width=0.35) and are clearly distinguishable from
-    data points
-  - 'Excellent code quality: deterministic data, clean KISS structure, all imports
-    used, correct plot-{THEME}.png output'
+  - 'Perfect Imprint palette compliance: first series #009E73 (Automated/green), second
+    #C475FD (Enhanced/lavender), third #4467A3 (Standard/blue) in canonical order'
+  - 'Both renders theme-correct: warm off-white (#FAF8F1) light background, warm near-black
+    (#1A1A17) dark background, all chrome (text, grid, legend box) flipping correctly
+    with no dark-on-dark failures'
+  - 'All font sizes explicitly set with proper hierarchy: title 12pt bold, subtitle
+    9pt muted, axis titles 10pt, tick/legend labels 8pt — readable in both themes
+    at desktop and mobile'
+  - 'Good visual refinement: all border spines removed except bottom x-axis line,
+    tick marks removed, subtle y-axis-only grid (alpha=0.10), generous whitespace'
+  - Smart site ordering by Standard-method concentration creates a left-to-right trend
+    visible across all three methods simultaneously
+  - Realistic environmental science scenario (nitrate concentration at water sampling
+    sites, three analytical methods) with plausible SE values showing 3-4x wider uncertainty
+    for Automated method
+  - 'Idiomatic plotnine grammar-of-graphics: geom_crossbar + position_dodge + scale_color/fill_manual
+    + scale_x_discrete composed cleanly'
+  - Deterministic hardcoded data, clean KISS structure, all imports used — perfect
+    code quality
   weaknesses:
-  - Design storytelling is absent — no visual emphasis highlights the key insight
-    (Automated has widest uncertainty; all three methods show consistent site-to-site
-    ranking); consider annotating the highest-variability series or using visual emphasis
-    to guide the viewer
-  - DE-01 is at well-configured-default level (4/8) — adding intentional typographic
-    hierarchy, refining the legend frame with a subtle border (legend_box_color),
-    or using size variation between point and cap stroke could push design to DE-01=6
-  - DE-02 partially achieved — the legend lacks a border/frame distinction; adding
-    legend_box_color or legend_frame with a thin INK_SOFT rule would improve the detail
-    polish
-  - 'DQ-03: Dissolved oxygen concentrations of 36–69 mg/L are physically impossible
-    in water (real saturated DO ≈ 8–15 mg/L at sea level). Relabel the analyte (e.g.,
-    Total Suspended Solids, Nitrate, BOD) or use values in the physically plausible
-    range for DO (6–12 mg/L) to pass factual correctness'
-  - 'LM-02: Usage is correct but generic — does not leverage any distinctively plotnine
-    feature (e.g., stat_summary, facet_wrap for small multiples by method, or geom_crossbar
-    instead of bare geom_errorbar for a more information-dense render)'
+  - geom_crossbar renders a rectangular box rather than the canonical point-plus-whisker
+    error bar. The spec describes 'bars extending above and below each point' implying
+    a visible point marker. Consider geom_point + geom_errorbar or geom_pointrange
+    for a more traditional error bar appearance that matches reader expectations.
+  - DE-03 (Data Storytelling) is carried primarily by the subtitle text rather than
+    visual encoding. The plot itself shows three colored groups without additional
+    emphasis (no reference line, no highlighted worst/best group, no size variation
+    beyond the natural SE difference). Visual hierarchy improvements could reinforce
+    the story without needing to read the subtitle.
+  - 'LM-02 (Distinctive Features) limited: geom_crossbar and position_dodge are ggplot2-origin
+    features that work identically in ggplot2 R or lets-plot. No plotnine-specific
+    feature is exploited (e.g., theme composition pattern, facet_wrap for multi-panel,
+    specific scale extensions).'
+  - 'DE-01 moderate: the design is above defaults thanks to the Imprint palette and
+    refined chrome, but no exceptional design element elevates it to ''strong design''
+    — consider a reference line for regulatory limits or emphasizing the highest-uncertainty
+    method with a slightly larger crossbar width.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "errorbar-basic · python · plotnine · anyplot.ai" is bold, dark (#1A1A17), clearly legible, spans ~70% of width (expected for long title). Y-axis label "Concentration (mg/L)" and X-axis label "Sampling Site" are dark, well-sized at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44) are readable. Legend on right shows "Method" with three entries.
-      Data: Three series — Automated (#009E73 brand green, first series correct), Enhanced (#C475FD lavender), Standard (#4467A3 blue). Large circular markers (size=5) with error bars and visible horizontal caps. Y-grid only, very subtle. Bottom x-axis spine present; top/right removed; no tick marks.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white matching #FAF8F1 — not pure white, consistent with Imprint surface spec.
+      Chrome: Bold dark title "errorbar-basic · python · plotnine · anyplot.ai" ~60% canvas width, clearly visible. Muted grey subtitle "Automated sampling shows 3-4x wider uncertainty than Standard across all sites" readable. Axis labels "Sampling Site" (x) and "Nitrate Concentration (mg/L)" (y) in darker ink. Tick labels (site names, y-axis numbers) in INK_SOFT tone. Only bottom x-axis spine, no tick marks, subtle y-axis grid.
+      Data: Three groups of narrow crossbars dodged per site. Automated in #009E73 (brand green) — wide boxes ~10-13 mg/L tall. Enhanced in #C475FD (lavender) — medium boxes ~5-7 mg/L. Standard in #4467A3 (blue) — very narrow boxes ~3-4 mg/L. Semi-transparent fills (alpha=0.2). Middle bars (fatten=3) serve as point proxies. Legend box with ELEVATED_BG (#FFFDF6) and INK_SOFT border at right.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, all three method crossbars clearly distinguishable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title is light-colored (near #F0EFE8), clearly legible against dark background. Axis labels and tick labels are in light INK_SOFT (#B8B7B0), readable. Legend entries clearly visible in light text. No dark-on-dark failures observed.
-      Data: Colors are identical to light render — Automated (#009E73), Enhanced (#C475FD), Standard (#4467A3) — data colors unchanged across themes as required. Error bars and point markers clearly visible on dark surface.
-      Legibility verdict: PASS — all text clearly readable against near-black background; no dark-on-dark issues
+      Background: Warm near-black matching #1A1A17 — correctly NOT pure black.
+      Chrome: Title and subtitle rendered in light off-white/cream, fully readable against dark background. Axis labels and tick labels in lighter INK_SOFT (#B8B7B0) tone, all visible. No dark-on-dark failures. Subtle y-axis grid visible but not dominant. Legend box uses ELEVATED_BG (#242420) with subtle border, text readable.
+      Data: Crossbar colors (#009E73 green, #C475FD lavender, #4467A3 blue) IDENTICAL to light render — only chrome flips. Green Automated, lavender Enhanced, blue Standard all clearly distinguishable on dark surface.
+      Legibility verdict: PASS — all text readable against near-black background, no dark-on-dark failures, data colors unchanged across themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -68,52 +74,53 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
-          legend=8). Readable in both themes. Title ~70% width as expected for long
-          mandated format.
+        comment: All font sizes explicitly set (title 12pt bold, subtitle 9pt, axis_title
+          10pt, axis_text 8pt, legend 8pt). Well-proportioned in both renders. Readable
+          at desktop and mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between any elements. Dodged positions well-separated.
-          Tick labels spaced adequately.
+        comment: No text overlaps. position_dodge cleanly separates three method crossbars
+          per site. Legend in right margin with no data collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 18 data points (sparse). size=5 markers prominent, error bars size=1.4
-          clearly visible with caps. Excellent density-appropriate sizing.
+        comment: 18 data points, 6 sites x 3 methods. Crossbars appropriately sized
+          (width=0.18, fatten=3). Standard narrow boxes reflect tight SE — intentional,
+          accurate, not a defect.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is colorblind-safe. Green/lavender/blue have good
-          luminance separation. CVD-safe.
+        comment: Imprint palette positions 1-3. CVD-safe combination. Good luminance
+          contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~80% of canvas width. Balanced margins. Legend well-positioned
-          on right. No content cut off.
+        comment: Canvas gate passed (3200x1800). Plot occupies ~60% of width with
+          balanced margins. Legend correctly positioned in right margin. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Concentration (mg/L) — descriptive with units. X: Sampling Site
-          — descriptive.'
+        comment: 'X: ''Sampling Site'', Y: ''Nitrate Concentration (mg/L)'' — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Automated) = #009E73. Next two from Imprint canonical
-          order. Backgrounds #FAF8F1 light / #1A1A17 dark. Theme-adaptive chrome correct
-          in both renders.'
+        comment: 'First series #009E73 (Automated), second #C475FD (Enhanced), third
+          #4467A3 (Standard). Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Data
+          colors identical across themes. Chrome flips correctly.'
     design_excellence:
       score: 10
       max: 20
@@ -122,59 +129,64 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured library default. Imprint palette, minimal spines,
-          clean look — but no exceptional design thinking. Feels like a polished standard
-          chart, not publication-level design.
+        passed: true
+        comment: 'Well-configured above defaults: Imprint palette, refined chrome,
+          meaningful subtitle. Not yet ''strong design'' — no exceptional design element
+          (reference line, highlighted group, size variation) elevates it beyond a
+          polished default.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: x-grid removed, y-grid only at alpha=0.10, ticks
-          removed, spines minimized to bottom only, elevated legend background. Missing:
-          legend border rule, more whitespace optimization.'
+        passed: true
+        comment: 'Good refinement: all border spines removed except bottom x-axis,
+          tick marks removed, subtle y-axis-only grid (alpha=0.10), elevated legend
+          background. Stops short of perfect due to conventional legend box treatment.'
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed without editorial emphasis. The key insight (Automated
-          method has 3-4x more uncertainty than Standard) is visible but not highlighted.
-          No visual focal point or hierarchy toward a story.
+        comment: Story carried primarily by subtitle text, not visual encoding. Without
+          reading the subtitle, the viewer sees three colored groups but no additional
+          visual emphasis (no reference line, no highlighted method, no annotation)
+          to create hierarchy beyond the natural SE difference in bar height.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Correct error bar plot with centered points and caps.
+        comment: Crossbar is a valid ggplot2/plotnine range geom but significantly
+          departs from canonical error bar (point+whisker). Spec says 'bars extending
+          above and below each point' implying a visible point; crossbar's thick middle
+          bar (fatten=3) approximates this but is not the standard form.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps (width=0.35), consistent widths, different colors per
-          group, symmetric error bars from SE.
+        comment: Visible caps (crossbar top/bottom), consistent widths (width=0.18),
+          multiple colored groups (3 methods), SE-based error range shown.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=categorical sites, Y=concentration values, ymin/ymax for error
-          bars. All data visible.
+        comment: X=sampling sites (categorical), Y=nitrate concentration (mg/L), color=method.
+          All 6 sites and 3 methods shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''errorbar-basic · python · plotnine · anyplot.ai'' — correct
-          format. Legend: ''Method'' with Automated/Enhanced/Standard labels.'
+        comment: Title exactly 'errorbar-basic · python · plotnine · anyplot.ai'.
+          Legend labelled 'Method' with Automated/Enhanced/Standard.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -182,25 +194,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three methods with distinct SE magnitudes (Standard ±1.6–2.3, Enhanced
-          ±2.6–3.5, Automated ±4.8–7.2). Multiple sites with varying concentrations.
-          Good coverage.
+        comment: 'Shows all aspects: multiple groups with varied uncertainty (Standard
+          tight vs Automated wide), 6 sites for pattern consistency, grouped comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Water quality monitoring scenario comparing analytical methods across
-          sampling sites. Real-world scientific domain, neutral topic.
+        comment: Environmental monitoring — nitrate concentration at water sampling
+          sites using three analytical methods. Realistic, neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Dissolved oxygen (DO) concentrations of 36–69 mg/L are physically
-          impossible in water. Real DO at sea level saturates at ~14.6 mg/L (0°C)
-          and is typically 6–12 mg/L in field measurements. The data structure is
-          valid but the DO label is factually incorrect at these values.
+        passed: true
+        comment: Nitrate 34-76 mg/L with SE 1.6-7.2 mg/L. Plausible for environmental
+          water quality monitoring. 3-4x SE difference between methods is realistic.
     code_quality:
       score: 10
       max: 10
@@ -210,52 +219,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → constants → data → plot → save. No functions or classes.
+        comment: 'Clean linear structure: imports → constants → data → plot composition
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data — fully reproducible.
+        comment: Fully hardcoded data — deterministic, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports verified used. No unused imports.
+        comment: All 14 plotnine imports used. os and pandas used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. No fake UI elements.
+        comment: Clean, Pythonic. Appropriate complexity. No over-engineering or fake
+          UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API used.
+        comment: Saves as plot-{THEME}.png via plot.save() with dpi=400, width=8,
+          height=4.5, units='in'.
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Solid grammar-of-graphics approach: shared aesthetic mapping with
-          position_dodge across geom layers, scale_x_discrete for ordered categorical
-          axis, theme() customization throughout.'
+        comment: 'Exemplary grammar-of-graphics usage: geom_crossbar + position_dodge
+          + scale_color/fill_manual + scale_x_discrete + labs + theme composition.
+          Proper plotnine/ggplot2 idiom throughout.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: position_dodge with layered geoms is good but replicated easily in
-          ggplot2/letsplot. No distinctively plotnine feature used (e.g., stat_summary,
-          facet_wrap, geom_crossbar for richer representation).
-  verdict: REJECTED
+        comment: geom_crossbar and position_dodge are ggplot2-origin features identical
+          in ggplot2 R or lets-plot. Grammar of graphics layering is distinctive to
+          the ggplot family but not uniquely exploiting a plotnine-specific capability.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -263,5 +275,4 @@ impl_tags:
   patterns: []
   dataprep: []
   styling:
-  - minimal-chrome
-  - grid-styling
+  - alpha-blending
