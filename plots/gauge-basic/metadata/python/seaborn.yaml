@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:04:31Z'
-updated: '2026-06-30T21:35:43Z'
+updated: '2026-06-30T21:50:39Z'
 generated_by: claude-sonnet
 workflow_run: 28476480294
 issue: 857
@@ -12,42 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all gauge features (zones, needle, hub, value, scale,
-    context label) implemented correctly'
-  - 'Semantic Imprint palette usage: green/amber/red zones map to Imprint colour positions
-    with appropriate semantic reasoning (Normal=brand green, Moderate=amber anchor,
-    High=matte red anchor)'
-  - 'Theme-adaptive chrome is thorough: needle, hub, text colours, and zone-label
-    halos all adapt correctly between light and dark renders'
-  - Clean, deterministic code with no functions, no fake interactivity, correct output
-    file naming
-  - 'Strong visual hierarchy: large bold value reading + red needle position creates
-    an immediate, readable urgency story'
+  - Semantic Imprint color zones (green/amber/red) perfectly aligned with CPU health
+    semantics and explicitly justified in code comments
+  - Path effects on zone labels ensure white-text readability over colored arcs in
+    both themes — elegant theme-adaptive solution
+  - Seaborn sparkline adds genuine temporal context telling a compelling rising-CPU
+    story, going beyond the minimal spec requirement
+  - Theme-adaptive chrome applied throughout all elements; both renders pass legibility
+    check with no dark-on-dark failures
+  - Perfect spec and data quality — all required features present, realistic scenario,
+    correct Imprint palette
   weaknesses:
-  - 'Library Mastery is low: seaborn is only used for sns.set_theme() (theming), not
-    for any native seaborn plot function — the chart is pure matplotlib under the
-    hood; consider incorporating a genuine seaborn plot API element to push LM-01
-    and LM-02 higher'
-  - 'DE-02 canvas breathing room: the arc fills most of the upper canvas height; reduce
-    radius slightly (e.g. from 0.38 to 0.34) or add more top margin for better spatial
-    balance'
-  - CPU Utilization context label at fontsize=9 is very small — at 400px mobile scaling
-    this is near-illegible; increase to fontsize=11
+  - Sparkline tick labels at fontsize=6 are below mobile-readable threshold (~5.5
+    source-px at 400px display width) — increase to fontsize=8 for set_xticklabels
+    and set_yticklabels on ax_spark
+  - Sparkline Y-axis label is lowercase 'cpu' (auto-generated from DataFrame column
+    name) — add explicit ax_spark.set_ylabel('CPU %', fontsize=8, color=INK_SOFT)
+    for polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "gauge-basic · python · seaborn · anyplot.ai" in dark ink at top — clearly readable. Scale labels "0" and "100" in INK_SOFT at arc endpoints — readable. "CPU Utilization" context label in INK_MUTED below value — readable (small but acceptable for tertiary text). "83%" value in large bold dark ink — highly readable.
-      Data: Three zone arcs — green (#009E73) for Normal (0–40%), amber (#DDCC77) for Moderate (40–80%), matte red (#AE3030) for High (80–100%). Needle in dark ink pointing to ~83% (just inside High zone). Hub: dark hub disc at pivot. Zone labels "Normal"/"Moderate"/"High" in white bold with warm off-white PAGE_BG halos — readable on respective arc colours.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "gauge-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable. Min/max labels (0, 100) readable. "83%" in bold dark text at fontsize=32. "CPU Utilization" subtitle readable. Zone labels ("Normal", "Moderate", "High") in white with page-background halo — readable over arc. Sparkline tick labels (fontsize=6) small but visible at full canvas size.
+      Data: Three arc zones — green (#009E73, Normal 0-40%), amber (#DDCC77, Moderate 40-80%), red (#AE3030, High 80-100%). Black needle at ~83%. Sparkline shows rising CPU trend with red dot at current reading.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light off-white text — clearly readable against near-black. "0" and "100" scale labels in lighter gray (B8B7B0) — readable. "CPU Utilization" in muted light gray — readable. "83%" in bold light text — highly readable.
-      Data: Zone arc colours are IDENTICAL to light render — green (#009E73), amber (#DDCC77), matte red (#AE3030) — correct, only chrome flips. Needle switches to off-white/light colour (INK adapts to #F0EFE8 on dark). Hub disc switches to light. Zone labels remain white bold with near-black (#1A1A17) PAGE_BG halos — still readable on each arc colour.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light text (#F0EFE8), clearly readable. All labels and value display in light-colored text. No dark-on-dark failures detected. Sparkline tick labels faint but visible.
+      Data: Zone colors identical to light render (#009E73, #DDCC77, #AE3030 — all unchanged). Needle and hub rendered in light tone for contrast. Sparkline uses INK_SOFT (lighter tone for dark theme). Red dot still visible on sparkline.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,49 +54,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; proportions good in both themes; CPU
-          Utilization context label at fontsize=9 is small for mobile scaling
+        comment: All main elements explicitly sized; sparkline tick labels at fontsize=6
+          below mobile-readable threshold
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs, needle, hub, and zone labels all clearly visible and well-proportioned
+        comment: Gauge zones, needle, hub, sparkline all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Semantic zones supplemented with text labels and needle position
-          — redundant encoding beyond hue
+        comment: Red/green zones use text labels and position as redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 appropriate for gauge; canvas gate passed; balanced
-          composition
+        comment: Square 2400x2400 correct for gauge; good vertical split between gauge
+          and sparkline
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes off is correct for gauge; CPU Utilization context label and
-          min/max scale labels provide sufficient description
+        comment: CPU Utilization label and min/max endpoints provide context; title
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Normal=#009E73 (Imprint brand green), Moderate=#DDCC77 (amber anchor),
-          High=#AE3030 (matte red anchor); backgrounds #FAF8F1/#1A1A17; chrome theme-correct
-          in both renders'
+        comment: 'Imprint semantic anchors used (#009E73, #DDCC77, #AE3030); backgrounds
+          correct; data colors identical across themes'
     design_excellence:
       score: 14
       max: 20
@@ -110,24 +104,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: semantic colour zones, intentional visual hierarchy,
-          two-circle hub detail, theme-adaptive chrome throughout — clearly above
-          generic defaults'
+        comment: Strong design with semantic colors, path effects, custom needle/hub;
+          above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good: no axes/grid/spines, zone boundary dividers, path effects
-          on arc labels. Slightly lacking breathing room — arc fills most of upper
-          canvas'
+        comment: Gauge axis fully hidden, custom spine styling on sparkline; good
+          detail
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good: 83% in red zone tells immediate server-stress story; large
-          value + needle position guide viewer to urgency without annotation'
+        comment: 'Clear story: server CPU critically high, trending upward; sparkline
+          reinforces urgency narrative'
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Semi-circular speedometer gauge — correct chart type
+        comment: Correct semi-circular gauge chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single value, range 0-100, colour zones with thresholds at 40 and
-          80, needle, value label — all present
+        comment: 'All features: value display, min/max range, color zones, thresholds,
+          needle indicator'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value 83 maps correctly to needle angle; thresholds create correct
-          three zones; min/max shown
+        comment: 83% correctly placed at 83% of 180deg arc; min/max endpoints correctly
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is gauge-basic · python · seaborn · anyplot.ai; no legend needed
-          as zone labels are on arc
+        comment: Title is 'gauge-basic · python · seaborn · anyplot.ai'; zones labeled
+          directly
     data_quality:
       score: 15
       max: 15
@@ -168,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all gauge features: zone bands, threshold boundaries,
-          needle, value readout, scale endpoints'
+        comment: 'Shows all gauge aspects: value, zones, thresholds, needle, endpoints;
+          sparkline adds temporal coverage'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Production server CPU utilization — neutral, real-world technology
-          scenario
+        comment: Production server CPU utilization is a canonical gauge use case,
+          neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% range canonical for CPU; 83% high load plausible; thresholds
-          at 40%/80% match industry norms
+        comment: 83% CPU on 0-100 scale; thresholds at 40%/80% are standard sysadmin
+          conventions; sparkline values plausible
     code_quality:
       score: 10
       max: 10
@@ -193,36 +185,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot elements → save; no functions
-          or classes'
+        comment: Linear flow with no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded, fully deterministic
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported symbol is used (os, sys, pe, plt, np, sns, Circle,
-          Wedge)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; sys.path fixup has clear explanatory comment;
-          no fake UI
+        comment: Clean, well-structured; sys.path fix commented; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API
+        comment: Saves as plot-{THEME}.png; no deprecated functions
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,26 +219,27 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Correctly uses sns.set_theme() with rc dict for theme propagation.
-          However, entire chart built from matplotlib patches — seaborn plot functions
-          not used. Genuine constraint: no native gauge function in seaborn.'
+        comment: sns.set_theme() with custom rc is canonical; sns.lineplot() with
+          DataFrame idiomatic; gauge requires matplotlib patches by necessity
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Only seaborn element is sns.set_theme() which is equivalent to plt.rcParams.update().
-          Chart replicable in pure matplotlib with a one-line rcParams call. No seaborn-distinctive
-          plot function used.
-  verdict: REJECTED
+        passed: true
+        comment: Creative hybrid using sns.set_theme() for unified chrome + sns.lineplot()
+          sparkline in add_axes() layout; seaborn matplotlib interoperability leveraged
+          distinctively
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - patches
+  - annotations
+  - manual-ticks
   patterns:
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
