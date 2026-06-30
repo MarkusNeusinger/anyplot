@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 84/100 | Updated: 2026-06-30
@@ -13,12 +13,12 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
-    geom_errorbar,
-    geom_point,
+    geom_crossbar,
     ggplot,
     labs,
     position_dodge,
     scale_color_manual,
+    scale_fill_manual,
     scale_x_discrete,
     theme,
     theme_minimal,
@@ -30,10 +30,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
-# Data — three analytical methods measuring dissolved-oxygen across six sampling sites
+# Data — three analytical methods measuring nitrate concentration across six sampling sites
 data = pd.DataFrame(
     {
         "site": ["Site A", "Site B", "Site C", "Site D", "Site E", "Site F"] * 3,
@@ -46,7 +47,7 @@ data = pd.DataFrame(
             37.5,
             43.6,
             40.4,
-            # Enhanced: ~35 % higher detection
+            # Enhanced: ~35% higher detection
             48.5,
             52.3,
             55.7,
@@ -90,17 +91,18 @@ data["ymax"] = data["concentration"] + data["se"]
 # Sort sites by Standard-method concentration so all three methods trend upward left→right
 site_order = data[data["method"] == "Standard"].set_index("site")["concentration"].sort_values().index.tolist()
 
-dodge = position_dodge(width=0.55)
+dodge = position_dodge(width=0.6)
 
 title = "errorbar-basic · python · plotnine · anyplot.ai"
+subtitle = "Automated sampling shows 3–4× wider uncertainty than Standard across all sites"
 
 plot = (
-    ggplot(data, aes(x="site", y="concentration", color="method", group="method"))
-    + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.35, size=1.4, position=dodge)
-    + geom_point(size=5, position=dodge)
+    ggplot(data, aes(x="site", y="concentration", color="method", fill="method", group="method"))
+    + geom_crossbar(aes(ymin="ymin", ymax="ymax"), width=0.18, fatten=3, size=0.9, alpha=0.2, position=dodge)
     + scale_color_manual(values=IMPRINT, name="Method")
+    + scale_fill_manual(values=IMPRINT, name="Method")
     + scale_x_discrete(limits=site_order)
-    + labs(x="Sampling Site", y="Concentration (mg/L)", title=title)
+    + labs(x="Sampling Site", y="Nitrate Concentration (mg/L)", title=title, subtitle=subtitle)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
@@ -117,7 +119,8 @@ plot = (
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
         plot_title=element_text(size=12, color=INK, weight="bold"),
-        legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
+        plot_subtitle=element_text(size=9, color=INK_MUTED),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.4),
         legend_key=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_text=element_text(size=8, color=INK_SOFT),
         legend_title=element_text(size=8, color=INK),
