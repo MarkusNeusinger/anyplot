@@ -2,100 +2,107 @@ library: seaborn
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:10Z'
-updated: '2026-04-25T09:00:32Z'
-generated_by: claude-opus
-workflow_run: 24926867981
+updated: '2026-06-30T20:37:06Z'
+generated_by: claude-sonnet
+workflow_run: 28472936805
 issue: 973
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Perfect theme adaptation: all chrome tokens (background, text, grid, error bar
-    colors) correctly flip between light and dark via INK/PAGE_BG/ELEVATED_BG tokens'
-  - 'Intentional two-color storytelling: BRAND green for all groups + ACCENT orange
-    for top performer creates immediate visual hierarchy using Okabe-Ito palette correctly'
-  - Idiomatic seaborn 0.13+ usage with hue-based dict palette for per-bar colors,
-    native errorbar='sd' with capsize and err_kws
-  - 'Perfect spec compliance: correct title format, visible error bar caps, consistent
-    cap widths, multiple groups with varying error magnitudes'
+  - 'Complete spec compliance: error bars with visible caps, correct SD representation,
+    categorical grouping, proper title format'
+  - 'Effective two-color storytelling: lavender highlight on top performer creates
+    immediate visual focal point'
+  - 'Full theme-adaptive chrome: all non-data elements correctly flip between light
+    and dark; no dark-on-dark failures'
+  - 'Modern seaborn API usage throughout: errorbar=''sd'', hue/palette dict, capsize
+    — no deprecated patterns'
+  - Informative subtitle delivers the key insight without requiring reader effort
   weaknesses:
-  - No legend or annotation explaining why Treatment B is orange — the storytelling
-    intent ('best performer') is visually implicit but not explicitly communicated;
-    add a legend entry labeled 'Top Performer' or a text annotation above the bar
-  - DE-01 limited by absence of any subtitle or additional typographic refinement
-    — a fig.text() subtitle like 'Treatment B shows the highest symptom reduction
-    (SD)' would push into strong design territory
-  - Treatment labels 'Treatment A-E' are generic; using more specific names (drug
-    category abbreviations or intervention types) would improve DQ-02 realism
+  - 'DQ-01: All regular dose groups share the same brand green, reducing per-group
+    distinguishability — spec suggests considering distinct colors per group (could
+    use Imprint positions 1→5 for the 5 non-highlighted groups)'
+  - 'DE-01/DE-03: No direct value annotations on bars; readers must trace to y-axis
+    to get exact values — adding mean labels above each bar would strengthen data
+    storytelling'
+  - 'DE-02: Bar edges use INK_SOFT which creates subtle outlines, but the top/right
+    spine removal isn''t complemented by removing bottom tick marks — minor refinement
+    opportunity'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "errorbar-basic · seaborn · anyplot.ai" in dark text, clearly readable; axis labels "Treatment Group" (x) and "Symptom Reduction (%)" (y) in dark text at 20pt, readable; tick labels at 16pt in dark muted color, readable
-      Data: 5 bars in Okabe-Ito #009E73 (brand green), 1 bar (Treatment B) in Okabe-Ito #D55E00 (vermillion) as top performer highlight; error bars with caps using dark INK color; y-only subtle grid beneath bars
-      Legibility verdict: PASS — all text clearly visible against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title 'errorbar-basic · python · seaborn · anyplot.ai' in dark INK at 12pt; subtitle in INK_MUTED at 9pt; axis labels 'Dose Group' / 'Symptom Reduction (%)' in INK at 10pt; tick labels in INK_SOFT at 8pt — all readable
+      Data: Six bars — brand green (#009E73) for Control, Placebo, 10mg, 25mg, 100mg; lavender (#C475FD) for top performer 50mg. Error bars with horizontal caps visible in dark INK. Legend in lower-right with elevated background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light/cream text (#F0EFE8 / #B8B7B0), clearly readable; error bar caps flip to light/cream correctly via INK token; no dark-on-dark failures observed
-      Data: Data colors identical to light render — same #009E73 green bars and #D55E00 orange bar for Treatment B; color identity preserved across themes as required
-      Legibility verdict: PASS — all text clearly visible against dark surface; no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels in near-white (#F0EFE8 / #B8B7B0 tones) — all clearly readable against dark background. No dark-on-dark failures detected. Legend uses elevated dark surface (#242420).
+      Data: Colors identical to light render — same brand green and lavender bars. Error bars appear white/light-colored and clearly visible. Grid lines subtle and appropriate.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt — all explicitly set, readable
-          in both themes
+        comment: All text readable in both themes; 12pt title, 10pt axis labels, 8pt
+          ticks — all legible. Subtitle at 9pt is smallest element but clear at canvas
+          resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: x-axis labels well-spaced, no collisions
+        comment: Clean layout; legend not touching bars; all tick labels well-separated;
+          error bar caps do not clash with adjacent elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error bar caps clearly visible, well-proportioned
+        comment: Bars prominent, error bar caps clearly visible (capsize=0.25), lavender
+          top-performer bar immediately draws the eye.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green/orange pair has strong luminance
-          contrast
+        comment: Imprint positions 1 (green) and 2 (lavender) are CVD-safe; no red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, nothing cut off
+        comment: Canvas gate passed; 3200x1800 correct. subplots_adjust provides generous
+          headroom for two-line title/subtitle.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Symptom Reduction (%) includes units; axes are descriptive
+        comment: '''Dose Group'' and ''Symptom Reduction (%)'' are descriptive with
+          unit annotation.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          all chrome tokens theme-adaptive'
+        comment: 'First series #009E73, highlight uses Imprint position 2 (#C475FD).
+          Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -103,22 +110,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional BRAND+ACCENT two-color strategy for emphasis; clean composition;
-          above default but lacks subtitle or typographic refinement
+        comment: Clear intentional hierarchy via two-color strategy; subtitle encodes
+          data insight. Above defaults but no direct value labels.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: y-only grid, subtle alpha, set_axisbelow, bar edges set, top/right
-          spines removed; tick marks remain and grid linewidth unspecified
+        comment: Top/right spines removed; y-axis-only grid at alpha=0.15; subtle
+          bar edges; elevated legend background.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Accent bar creates focal point but no legend/annotation explains
-          WHY Treatment B is highlighted; storytelling intent incomplete
+        passed: true
+        comment: Lavender highlight creates focal point; subtitle delivers takeaway;
+          dose-response trend visible. No direct value annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -128,49 +135,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar-with-errorbar chart
+        comment: Bar chart with error bars is a correct standard form of error bar
+          plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, consistent cap widths, SD error bars, multiple groups
+        comment: Error bars with visible caps, consistent widths, SD-based uncertainty,
+          categorical grouping all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categorical x, numeric y, all 6 groups visible
+        comment: x=Dose categories, y=Symptom Reduction (%), error=SD via errorbar='sd'.
+          All 6 groups displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'errorbar-basic · seaborn · anyplot.ai'; no legend
-          needed for single-series
+        comment: Title follows 'errorbar-basic · python · seaborn · anyplot.ai' format.
+          Legend explains two-color scheme.
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 6 groups, different error magnitudes, control group, comparison story
+        comment: 'Error bars, caps, grouped categories, color differentiation present.
+          Minor gap: all non-top-performer groups share same green, reducing per-group
+          distinguishability.'
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Clinical trial is plausible neutral scenario; 'Treatment A-E' labels
-          are slightly generic
+        comment: Clinical trial dose-response scenario is realistic, neutral, and
+          professionally appropriate. Values plausible for pharmacological study.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Symptom reduction 43-61%, SD 4.5-7.1% — realistic clinical values
+        comment: Y-axis 0-70% range appropriately frames the data. Error magnitudes
+          proportional to group means.
     code_quality:
       score: 10
       max: 10
@@ -180,53 +193,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: imports → data → theme → plot → save; no functions or classes
+        comment: No functions or classes; clean top-level procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports used, no extras
+        comment: All imports used; no unnecessary packages.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic nested list comprehension, strict=True in zip, no over-engineering
+        comment: List comprehension for data generation, zip(strict=True), palette
+          dict — idiomatic and clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current seaborn 0.13+ API
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; uses current seaborn
+          0.12+ API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct seaborn 0.13+ hue+palette-dict pattern; errorbar='sd', err_kws;
-          sns.set_theme() for rcParams
+        comment: 'Modern seaborn API: errorbar=''sd'', hue+palette dict, capsize,
+          err_kws. sns.set_theme for global theming. Correct hue+legend=False pattern.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn-specific errorbar='sd', capsize, err_kws parameters
-          in barplot
-  verdict: REJECTED
+        comment: seaborn's built-in errorbar integration (errorbar='sd', capsize,
+          err_kws) is a genuine distinctive strength. Palette dict for semantic highlight
+          is seaborn-native.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
+  - annotations
+  - patches
   patterns:
   - data-generation
   - explicit-figure
