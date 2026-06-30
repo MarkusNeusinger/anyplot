@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Created: 2026-06-30
@@ -169,7 +169,7 @@ plot = (
     + geom_text(aes(x="x", y="y", label="label"), data=df_context, color=INK_MUTED, size=10)
     + scale_fill_manual(values=ZONE_COLORS, guide=None)
     + coord_fixed(ratio=1, xlim=(-1.40, 1.40), ylim=(-0.65, 1.50))
-    + labs(title="gauge-basic · plotnine · anyplot.ai")
+    + labs(title="gauge-basic · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         figure_size=(8, 4.5),
