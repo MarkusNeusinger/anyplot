@@ -2,51 +2,61 @@ library: plotnine
 language: python
 specification_id: gauge-basic
 created: 2025-12-14 19:46:12+00:00
-updated: '2026-04-25T13:01:46Z'
-generated_by: claude-opus
-workflow_run: 24931308844
+updated: '2026-06-30T21:56:06Z'
+generated_by: claude-sonnet
+workflow_run: 28476904347
 issue: 857
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all required gauge features (zones, needle, thresholds,
-    value label, title) present and correct'
-  - 'Excellent theme adaptation: needle inverts between dark/light, chrome tokens
-    applied throughout, data colors stable across themes'
-  - 'Strong data storytelling: three-zone Okabe-Ito coloring + large green ''72''
-    immediately communicates status'
-  - Fully deterministic code with clean KISS structure and no functions or classes
-  - 'Correct palette compliance: Okabe-Ito colors for zones, proper warm backgrounds
-    in both themes'
+  - Correct semi-circular gauge with needle, three color zones, tick marks, and prominent
+    value display — all spec requirements met
+  - 'Semantic Imprint palette use: brand red (#AE3030) for Low, amber (#DDCC77) for
+    Mid, brand green (#009E73) for High — intuitive traffic-light convention'
+  - 'Both themes handled correctly: warm off-white (#FAF8F1) light background and
+    near-black (#1A1A17) dark background with adaptive chrome throughout'
+  - 'Clear data storytelling: needle + large green ''72'' + green High zone immediately
+    communicate the KPI is in good territory'
+  - Idiomatic plotnine grammar with scale_color_identity() for hex-from-data text
+    coloring and layer composition for the custom gauge geometry
+  - Fully deterministic code, all font sizes explicitly set, clean imports, KISS structure
   weaknesses:
-  - 'Library Mastery limited: gauge built entirely from basic geoms (polygon, segment,
-    point, text) with manual arc math — no distinctively plotnine feature showcased;
-    consider adding zone labels using geom_text at arc midpoints'
-  - 'Canvas whitespace: 16:9 with semi-circle leaves significant horizontal dead space
-    on sides — tighten xlim or add zone labels in the empty arc space'
-  - Title size (size=24) is at minimum recommended floor — increase to 26-28 for better
-    visual hierarchy at 4800x2700
+  - 'DE-01 (5/8): Design is clean and correct but not yet publication-ready — the
+    traffic-light aesthetic is expected for a gauge; consider a subtle radial shadow/glow
+    on the needle cap or a thin zone-border highlight to elevate polish above ''well-configured
+    default'''
+  - 'DE-02 (4/6): Visual refinement is good (theme_void, subtle tick lengths) but
+    could be pushed further — zone arc edges could have a faint page-background hairline
+    separator instead of solid PAGE_BG color=, and the center cap could use a slightly
+    elevated fill (#FFFDF6 light / #242420 dark) for material depth'
+  - 'DE-03 (4/6): Storytelling is solid (needle+number+zone reinforce the same message)
+    but could be strengthened with a thin baseline arc behind the gauge showing the
+    full 0–100 range for context, making the zone proportions more immediately legible'
+  - 'LM-02 (2/5): scale_color_identity and layer composition are good plotnine uses,
+    but the gauge is built entirely from manual geometry — no plotnine-idiomatic coordinate
+    transform or stat is leveraged; a coord_polar approach or using annotate-style
+    features would raise distinctiveness'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "gauge-basic · plotnine · anyplot.ai" in dark ink, readable. Tick labels (0, 25, 50, 75, 100) in INK_SOFT (#4A4A44), clearly readable. "Current Sales" label in INK_MUTED (#6B6A63), readable. No light-on-light issues.
-      Data: Three arc zones — vermillion (#D55E00) bad zone (0-30), orange (#E69F00) warning zone (30-70), brand green (#009E73) good zone (70-100). Dark needle pointing just past 70 threshold. Large "72" in brand green. Zone separators use PAGE_BG color for clean boundaries.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "gauge-basic · python · plotnine · anyplot.ai" in dark near-black text at top, occupying ~70% canvas width — readable. Tick labels (0, 25, 50, 75, 100) in INK_SOFT (#4A4A44) around outer arc edge — readable. "Current Sales" in muted INK_MUTED (#6B6A63) below value — readable.
+      Data: Three zone arcs — Low (matte red #AE3030) from 0–30, Mid (amber #DDCC77) from 30–70, High (brand green #009E73) from 70–100. Zone labels "Low", "Mid", "High" in bold contrasting text within arcs. Needle in near-black pointing to ~72 (correctly in High zone). Center pivot cap (dark outer, light inner). Large bold "72" in brand green (#009E73) prominently centered below gauge.
+      Legibility verdict: PASS — all text elements clearly readable against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Tick labels in INK_SOFT (#B8B7B0), readable. "Current Sales" in INK_MUTED (#A8A79F), readable. Needle is white (adapts from INK token). Center cap is white outer / dark inner (correct inversion). No dark-on-dark failures detected.
-      Data: Zone colors identical to light render — vermillion, orange, green unchanged. "72" remains in brand green (#009E73). Data colors are fully theme-stable.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light/near-white text — readable. Tick labels in light gray (INK_SOFT #B8B7B0) — readable. "Current Sales" in muted light gray — readable. No dark-on-dark failures observed.
+      Data: Zone colors identical to light render — Low (#AE3030), Mid (#DDCC77), High (#009E73) unchanged. Needle now renders as white/light-colored against dark background — clearly visible. Center cap (light outer, dark inner). "72" remains in brand green (#009E73) — clearly readable against dark background.
+      Legibility verdict: PASS — all text elements clearly readable against near-black background; data colors consistent with light render; chrome correctly adapted.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -54,48 +64,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, value=56, ticks=18, context=20);
-          all readable in both themes. Title at minimum recommended size.
+        comment: 'All font sizes explicitly set; title 12pt, value 28mm, zone labels
+          8mm, ticks 9mm — readable and well-proportioned in both themes. Minor: tick
+          label sizing slightly large relative to gauge scale but not a deduction.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No text or element overlap; zone labels centered in arcs, tick labels
+          outside arc, value and context label well-separated below.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Gauge zones, needle, tick marks, and labels all clearly visible.
+        comment: Gauge arcs, needle, tick marks, center cap all clearly visible. Needle
+          adapts correctly to theme (dark light, white dark).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito zone colors are CVD-safe; zones distinguishable by luminance
-          not just hue.
+        comment: Traffic-light zones use distinct Imprint colors with redundant text
+          labels; CVD-safe with label encoding.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Semi-circle in 16:9 leaves notable horizontal whitespace on sides.
-          Layout is centered but gauge uses ~60% of horizontal space.
+        comment: Gauge fills canvas well with balanced margins. coord_fixed + xlim/ylim
+          provide appropriate whitespace. 3200x1800 canvas confirmed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; gauge context via 'Current Sales'
-          label.
+        comment: Gauge chart — no traditional axes needed. Value label 'Current Sales'
+          provides context. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green as good-zone color; Okabe-Ito zone colors; correct backgrounds
-          (#FAF8F1/#1A1A17); chrome adapts correctly.
+        comment: 'Imprint palette used semantically: #AE3030 red for Low, #DDCC77
+          amber for Mid, #009E73 green for High. Value in brand green. Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -105,23 +119,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: Okabe-Ito zone coloring, adaptive needle, large
-          value display in brand green, two-layer center cap. Not yet FiveThirtyEight-level
-          — lacks context annotations.'
+        comment: Clean semantic color usage, clear hierarchy, professional execution
+          — above 'well-configured default' (4) but not yet at FiveThirtyEight-level
+          polish (6+). Traffic-light gauge aesthetic is expected; design is competent
+          but not exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void base, PAGE_BG zone separators for clean boundaries, two-layer
-          cap. Genuine refinements in both renders.
+        comment: theme_void with subtle minor/major tick distinction and clean whitespace.
+          Good refinement with some room for elevated material depth on zone separators
+          and center cap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three-zone coloring + large green '72' + 'Current Sales' label guide
-          viewer; needle + value tell a clear status story.
+        comment: Needle + large green value + green zone create coherent 'good result'
+          narrative. Clear focal point. Could be strengthened with a full-range context
+          arc behind the zones.
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +148,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Semi-circular gauge with needle — correct chart type.
+        comment: Correct semi-circular gauge (speedometer) with needle indicator.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: value=72, min=0, max=100, thresholds=[30,70], three color zones,
-          needle, prominent value label all present.
+        comment: 'All spec features present: value display, min/max range, thresholds
+          at 30/70, three color zones, needle, prominent value label.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value correctly positioned; full range 0-100 displayed.
+        comment: value=72 correctly mapped to 72% of 0–100 arc; needle correctly lands
+          in High zone (70–100).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'gauge-basic · plotnine · anyplot.ai' correct; no legend needed
-          (zones self-explanatory).
+        comment: Title 'gauge-basic · python · plotnine · anyplot.ai' correct. No
+          legend needed; fill guide=None appropriate.
     data_quality:
       score: 15
       max: 15
@@ -161,22 +179,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all gauge aspects: three zones, threshold boundaries, needle
-          position, major/minor ticks, value label.'
+        comment: 'Shows all gauge features: zones, needle, ticks, value, context label,
+          center cap.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''Current Sales = 72'' against 0-100 target is a real, neutral,
-          comprehensible business KPI scenario.'
+        comment: Current Sales = 72/100 — real-world business KPI scenario, not abstract.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 range, thresholds at 30 and 70, value at 72 — all realistic
-          and sensible.
+        comment: 0–100 scale with value at 72 in the High zone — sensible proportions.
     code_quality:
       score: 10
       max: 10
@@ -186,65 +202,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → geometry → plot → save. No functions
-          or classes.'
+        comment: Imports → Data → Plot → Save, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random data.
+        comment: Fully deterministic — no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used; no unused symbols.
+        comment: All imported names are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Zone loop avoids code repetition. Tick generation
-          slightly verbose but acceptable.
+        comment: Appropriately complex for gauge geometry; no over-engineering, no
+          fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ANYPLOT_THEME env var. Current plotnine
-          API.
+        comment: Saves as plot-{THEME}.png with correct dimensions.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct grammar of graphics layering (ggplot + geom_* + scale_* +
-          coord_* + theme). Gauge requires substantial low-level trigonometry that
-          plotnine doesn't abstract — library's recommended statistical patterns not
-          leveraged.
+        comment: 'Correctly uses ggplot grammar with multiple geom layers, scale_color_identity,
+          coord_fixed, labs, theme. Minor: gauge built from low-level geometry rather
+          than any plotnine coordinate system.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: coord_fixed and scale_fill_manual are plotnine-idiomatic. Layer composition
-          is grammar-of-graphics pattern. However, same chart could be built in matplotlib
-          with near-identical effort; no distinctively plotnine feature (faceting,
-          stat_*, position_*) is used.
-  verdict: REJECTED
+        passed: true
+        comment: scale_color_identity for hex-from-data coloring is distinctive. Layer
+          composition is idiomatic. But no plotnine-specific coordinate transform
+          or stat is leveraged for the gauge geometry.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
   - annotations
+  - manual-ticks
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:

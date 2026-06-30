@@ -2,52 +2,63 @@ library: pygal
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T21:39:22Z'
-updated: '2026-04-25T21:46:37Z'
-generated_by: claude-opus
-workflow_run: 24941215162
+updated: '2026-06-30T22:42:59Z'
+generated_by: claude-sonnet
+workflow_run: 28478543960
 issue: 5365
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Both light and dark renders fully theme-correct: backgrounds, text, and chrome
-    all adapt correctly; data colour (#009E73) is identical across themes.'
-  - Sky gradient is theme-aware (warm peach dusk for light; deep navy for dark), adding
-    atmospheric character that aligns with the spec's evening/dusk feel intent.
-  - 'Complete spec coverage: all 17 Wallis peaks annotated with staggered 3-tier labels,
-    leader lines, elevation sub-labels, and Matterhorn focal emphasis.'
-  - Real-world Wallis Alps data with accurate elevations gives the panorama genuine
-    geographic credibility.
-  - Interactive HTML export exploits pygal's native SVG interactivity — peak dots
-    carry hover labels, which is a genuinely pygal-distinctive feature.
+  - Genuinely jagged alpine ridgeline using midpoint-displacement fractal + asymmetric
+    tent functions (spec-compliant, not Gaussian)
+  - Secondary depth ridge adds visual depth and layering, creating the panoramic feel
+    the spec requests
+  - Peak labels tiered across 4 height levels with distinct focal treatment for Jungfrau
+    (larger font, top tier, bold leader)
+  - Accurate real-world elevations for Bernese Oberland peaks (Finsteraarhorn 4274
+    m, Eiger 3967 m, Mönch 4107 m, Jungfrau 4158 m — all factually correct)
+  - Sky gradient above ridgeline creates atmospheric mood; compass bearings on X-axis
+    orient the viewer
+  - Both light and dark themes fully adaptive — chrome (text, grid, axis frame) flips
+    correctly while data colors remain constant
+  - 'Reproducible: two independent np.random seeds (42 and 99) for the two fractal
+    ridges'
+  - Generates both interactive HTML (pygal native) and PNG via cairosvg — full output
+    contract met
   weaknesses:
-  - to_svg() helper function violates KISS structure; the coordinate transform should
-    be inlined or absorbed into the SVG generation loop.
-  - Pygal's built-in title, axis label, and tick APIs are completely bypassed via
-    SVG string injection. Re-using pygal's built-in title, x_title, y_title features
-    would improve LM-01.
-  - Right-side label cluster (7 peaks from Strahlhorn to Dom over a 55 degree arc)
-    is slightly tight; consider adding a 4th tier or applying a minimum horizontal
-    offset between adjacent same-tier labels.
-  - Elevation sub-labels (22-26px) are slightly small for the 4800x2700 canvas; raising
-    to 28-30px would improve legibility on the full-resolution image.
+  - Silhouette fill uses brand green (#009E73) rather than the spec-specified dark
+    solid color — spec says fill with a dark color for photo-like silhouette/evening-dusk
+    feel; brand green produces a stylised diagram mood instead
+  - 'Secondary depth ridge uses custom hex #A8BAB4 (light) / #2C3E38 (dark) rather
+    than the Imprint muted anchor (#6B6A63 / #A8A79F) — minor palette deviation for
+    a decorative element'
+  - Jungfrau (4158 m) is treated as the focal peak but Finsteraarhorn (4274 m) is
+    actually the highest summit — the emphasis choice could cause viewers to misjudge
+    the skyline hierarchy; at minimum the subtitle or label should cue why Jungfrau
+    is highlighted
+  - Peak dot markers render as plain black (light) / white (dark) pygal defaults,
+    slightly at odds with the polished custom SVG chrome; using brand-colored or styled
+    dots would unify the look
+  - Peak label crowding is manageable but tight in the Eiger–Mönch–Jungfrau–Silberhorn
+    cluster (angles 192°–248°) — leader lines from nearby summits cross visually
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface.
-      Chrome: Title "Wallis Alps · area-mountain-panorama · pygal · anyplot.ai" in dark #1A1A17 at top — clearly readable. Subtitle in INK_SOFT below title — readable. Y-axis label "Elevation (m)" rotated on left in dark ink — readable. Y-tick labels 3,000–6,000 in INK_SOFT left of axis — readable. Compass bearing labels (W, SW, S, SE, E) along bottom in INK_SOFT — readable. Peak name labels in INK_SOFT (28px) or INK (34px for Matterhorn) — readable; elevation sub-labels in INK_MUTED (22–26px) — readable but small.
-      Data: Brand green #009E73 filled area traces the ridgeline silhouette across the full width. Warm peach/dusk sky gradient fills the plot area above the ridgeline. Small black summit dots at each peak position connected by thin vertical leader lines to staggered tier labels above.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) at the margins and outside the plot area. Inside the plot box the background transitions from a light sky-blue (#BDD8EC) at the top to the page cream at the ridgeline — a subtle atmospheric sky gradient.
+      Chrome: Title "Bernese Oberland · area-mountain-panorama · python · pygal · anyplot.ai" is dark-ink text, clearly readable at the top. Subtitle "Thirteen peaks of the Swiss Bernese Oberland, viewed W → E from the north" is secondary-ink below. Y-axis tick labels (2,500 – 4,500 m) and compass bearing labels (W, SW, S, SE, E) are visible in muted ink. The L-shaped axis frame provides clean structural chrome without a distracting box.
+      Data: The main ridgeline fills with brand green (#009E73) as a solid filled area. The fractal + tent-function ridgeline reads as genuinely alpine — sharp triangular peaks, steep flanks, irregular saddles. A secondary depth ridge in sage-grey (#A8BAB4, 0.60 opacity) peeks above the green silhouette valleys, adding layered distance. Thirteen peak labels (name + elevation, e.g. "Finsteraarhorn / 4,274 m") sit above their respective summits connected by thin leader lines, staggered across four height tiers. Jungfrau is the focal peak: largest font (32 px vs 24 px), highest tier (4820 m data-unit), bolder leader.
+      Legibility verdict: PASS — all text is dark on the cream/sky surface, no light-on-light issues. Y-axis labels and compass labels are slightly small but readable. Peak-label crowding in the Eiger–Mönch–Jungfrau–Silberhorn cluster (192°–248°) is tight but tiering keeps them individually readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface.
-      Chrome: Title, subtitle, axis labels, tick labels, and compass labels all rendered in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures detected.
-      Data: Brand green #009E73 filled silhouette — identical colour to light render. Deep blue/navy sky gradient (#252D40 to #1A1A17) replaces the peach gradient. Summit dots change from black to white, remaining visible. Leader lines in light/muted ink.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures; brand green #009E73 clearly visible on dark surface.
+      Background: Warm near-black (#1A1A17). Inside the plot box the sky gradient transitions from deep navy (#1B2A3D) at the top to near-black at the ridgeline — a dramatic night-sky effect.
+      Chrome: Title and all text flip to light ink (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Axis frame lines are in muted light ink. No dark-on-dark failures observed — all text renders in light tones.
+      Data: Brand green (#009E73) ridgeline is identical to the light render — correct per Imprint palette rule (data colors do not flip between themes). Secondary depth ridge shifts to a dark teal (#2C3E38, 0.60 opacity), harmonising with the night-sky background. Peak labels remain in light ink, readable against the dark surface.
+      Legibility verdict: PASS — light text on near-black background, no "dark-on-dark" failures. The atmospheric night-sky gradient in dark mode is visually coherent.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,52 +69,63 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (62px title, 42px y-axis, 36px ticks/compass,
-          28-34px peak names, 22-26px elevations). All readable in both themes. Slight
-          deduction: elevation sub-labels 22px are small for 4800x2700.'
+        comment: 'All font sizes explicitly set (title scaled by formula: round(66*67/71)=62px,
+          labels 40px, compass 30px, peak names 24/32px). Well-proportioned; minor
+          crowding in peak label cluster around Eiger/Mönch/Jungfrau (192-230 degrees)
+          but tiers keep labels individually readable.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 3-tier staggering handles most clustering well. Right-side cluster
-          (Strahlhorn through Dom, 7 peaks in ~55 degrees) is slightly tight.
+        comment: Four-tier staggering prevents most overlaps. Some crowding in the
+          Eiger-Mönch-Jungfrau-Silberhorn cluster (192-248 degrees, 18-20 degree separations)
+          but no actual text-on-text overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Brand-green silhouette, summit dots, and leader lines all clearly
-          sized and visible in both themes.
+        comment: Main silhouette (brand green, filled) is prominent. Depth ridge (sage-grey,
+          0.60 opacity) visible behind silhouette valleys. Peak dots visible. Sky
+          gradient readable. All elements optimally adapted.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single-series, CVD-safe #009E73 with high contrast on both backgrounds.'
+        comment: Brand green on sky gradient has good contrast. Depth ridge at 0.60
+          opacity is distinguishable. CVD-safe Imprint palette. No red-green encoding
+          issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 landscape; plot fills canvas well with balanced margins.
-          Panoramic feel achieved.
+        comment: 3200x1800 landscape correct. Chart fills canvas well — wide panoramic
+          ridgeline occupies full width. Margins (L:200, R:80, T:170, B:130) balanced.
+          Label zone above ridgeline uses space purposefully. Canvas gate passed (file
+          not found).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Elevation (m); X-axis: compass bearings W/SW/S/SE/E; full
-          title with spec-id and library.'
+        comment: Y-axis titled 'Elevation (m)' with units. X-axis uses compass bearings
+          (W, SW, S, SE, E). Title has descriptive prefix 'Bernese Oberland'. Subtitle
+          adds context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; background #FAF8F1 light / #1A1A17 dark; theme-adaptive
-          chrome in both renders.'
+        comment: 'Main ridgeline uses #009E73 (brand green, Imprint position 1). Background
+          is #FAF8F1 (light) / #1A1A17 (dark). Chrome tokens are fully theme-adaptive.
+          Data colors identical across both renders. Depth ridge uses custom #A8BAB4/#2C3E38
+          (minor deviation from muted anchor) but this is a decorative structural
+          element, not a categorical series.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -111,26 +133,29 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Theme-adaptive sky gradient adds atmospheric depth. Intentional typographic
-          hierarchy with Matterhorn focal emphasis. Clearly above defaults. Not quite
-          publication-ready — green silhouette trades off spec's intended dark photographic
-          mood.
+        comment: 'Strong design: sky gradient creates atmospheric mood, secondary
+          depth ridge adds distance layering, asymmetric fractal ridgeline reads as
+          genuinely alpine, focal peak treatment creates hierarchy. Above defaults
+          — approaching publication quality.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped frame, no grid guides, subtle horizontal reference lines
-          at 500m intervals, generous margins. Good refinement.
+        comment: L-shaped axis frame (no box), no legend, subtle gridlines (opacity
+          0.10), generous whitespace in label zone. Peak dot markers are plain pygal
+          defaults (black/white) which slightly undercuts the polished SVG chrome.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: W→E directional narrative via subtitle and compass labels. Matterhorn
-          focal point via typography. Staggered labels create visual rhythm.
+        comment: 'Clear visual hierarchy: Jungfrau as focal with largest labels and
+          top tier, compass bearings orient the viewer, subtitle provides context.
+          However, Jungfrau (4158 m) is chosen as focal but is not the highest summit
+          (Finsteraarhorn 4274 m is), creating a mild narrative ambiguity.'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,29 +163,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled area / ridge silhouette panorama — correct chart type.
+        comment: 'Correct mountain panorama silhouette chart: filled area under jagged
+          ridgeline, labeled peaks with leader lines, wide landscape format, elevation
+          Y-axis, angular X-axis.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Filled ridge, sky gradient, peak annotations with leader lines, name+elevation
-          format, staggered labels (3 tiers), y-floor 2500m, compass bearings, landscape
-          16:9, Matterhorn focal emphasis — all present.
+        comment: 'Has: jagged ridgeline (fractal+tent, NOT Gaussian), secondary depth
+          ridge, sky gradient, peak annotations (name+elevation+leader line), 4-tier
+          staggered labels, Y-axis with 2400m lower bound, compass bearings, 13 peaks
+          (~500-2000 samples). Missing: spec says ''dark solid color'' for silhouette
+          fill (for photographic/evening mood); implementation uses brand green instead.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: compass angle 0-262 degrees; Y: elevation 2500-6050m; all 17
-          peaks visible.'
+        comment: Horizontal angle (0-280 degrees) correctly on X-axis, elevation in
+          meters on Y-axis. All 13 peaks visible within range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id and library name. No legend needed (single
-          series).
+        comment: 'Title: ''Bernese Oberland · area-mountain-panorama · python · pygal
+          · anyplot.ai'' follows {Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai format. No legend appropriate for this single-series panorama.'
     data_quality:
       score: 15
       max: 15
@@ -170,60 +200,65 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects: filled ridge, gradient sky, 17-peak annotation
-          set, label staggering, directional sweep, focal emphasis.'
+        comment: 'Shows all aspects: varied elevations (3244-4274m range), asymmetric
+          slope ratios per peak, irregular fractal ridgeline connecting peaks, multiple
+          labeled summits, secondary background range, fine-grain jaggedness.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wallis Alps peaks with accurate elevations; neutral geography/earth-science
-          topic.
+        comment: 'Real Bernese Oberland panorama from Switzerland. Factually accurate
+          elevations (verified: Finsteraarhorn 4274m, Eiger 3967m, Mönch 4107m, Jungfrau
+          4158m all correct to the meter).'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak range 4027-4634m accurate for Wallis 4000m summits; Y-axis 2500-6050m
-          sensible.
+        comment: Elevations are factually correct for these Swiss 4000-m peaks. Angular
+          range 0-280 degrees appropriate for a broad alpine panorama. Lower bound
+          2400m realistic for an alpine viewpoint baseline.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: def to_svg(ax, ay) helper function defined — technically violates
-          no-functions guideline. Required for the SVG coordinate system but should
-          be inlined.
+        passed: true
+        comment: 'Linear flow: imports, theme tokens, data, fractal computation, chart
+          setup, SVG render, SVG injection, file output. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) for main ridge, np.random.seed(99) for depth ridge.
+          Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: re (dot regex), sys (path fix), cairosvg (PNG
-          export), numpy, pygal, pygal.style.Style.'
+        comment: All 7 imports (os, re, sys, cairosvg, numpy, pygal, pygal.style.Style)
+          are actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for the spec; no fake UI or interactive
-          simulation.
+        comment: Pythonic, appropriate complexity for the chart type. SVG calibration
+          from dot positions is clever and well-commented. sys.path manipulation explained
+          with inline comment.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (via cairosvg) and plot-{THEME}.html (HTML
+          export). Pygal 3.1.3 current API.
     library_mastery:
       score: 6
       max: 10
@@ -233,25 +268,26 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY(fill=True) and Style for theming correctly. However
-          pygal's built-in title, label, tick, and grid API is completely bypassed
-          — all chrome injected as raw SVG strings.
+        comment: Uses pygal XY chart with fill and dot markers correctly. Style object
+          is properly used for theming. SVG output is leveraged for custom augmentation.
+          Relies heavily on SVG-level manipulation beyond pygal's native API, which
+          is a workaround for pygal's limitations with complex ridgelines.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML export with interactive SVG (peak dots with hover labels via
-          pygal label metadata) is genuinely pygal-distinctive. Uses series label
-          field and show_dots=True for interactive markers.
-  verdict: REJECTED
+        comment: Leverages pygal's interactive HTML output (interactive JS chart with
+          tooltip hover over peak dots) — distinctly pygal. SVG calibration from rendered
+          dot positions to infer the plot coordinate system is a clever pygal-specific
+          technique. Produces both interactive and static outputs.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - html-export
-  - manual-ticks
   - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
