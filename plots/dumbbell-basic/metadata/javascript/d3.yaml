@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: dumbbell-basic
 created: '2026-06-30T23:07:35Z'
-updated: '2026-06-30T23:13:41Z'
+updated: '2026-06-30T23:28:23Z'
 generated_by: claude-sonnet
 workflow_run: 28481348050
 issue: 945
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Correct Imprint palette usage — #009E73 first series, #C475FD second; both colors
-    theme-identical across light and dark renders'
-  - 'Excellent data scenario: employee satisfaction before/after flexible work policy
-    is instantly relatable with realistic department names and plausible score ranges'
-  - Sorting by improvement magnitude (largest delta at top) adds genuine storytelling
-    value to the chart
-  - Stroke halos on dots (pageBg color) create clean visual separation, especially
-    where dots fall near gridlines
-  - Domain 50–100 makes efficient use of x-axis space — no wasted whitespace below
-    the data range
-  - Dynamic title font-size scaling correctly handles the long descriptive title to
-    avoid overflow
-  - 'Clean margins: left=175px generously accommodates ''Customer Success'' label;
-    connecting lines at 40% opacity are visible but non-distracting'
+  - SVG linearGradient with gradientUnits='userSpaceOnUse' creates a gradient connecting
+    line that tracks the data scale precisely — a genuinely D3/SVG-distinctive technique
+  - 'Excellent storytelling: sorted by delta, top-2 gains highlighted with bold lavender
+    labels + amber callout annotations create immediate visual hierarchy'
+  - 'Full theme compliance: pageBg strokes on dots, all chrome tokens (ink, inkSoft,
+    grid, amber) correctly applied, data colors identical across both renders'
+  - 'Clean minimal design: y-axis domain removed, tick marks removed (tickSize(0)),
+    vertical-only subtle grid, generous margins'
+  - 'Dynamic title font scaling (title.length > 67 ? Math.round(22 * 67 / title.length)
+    : 22) correctly handles the long descriptive title without overflow'
+  - d3.format('+d') for signed delta labels and delta labels on the right margin provide
+    precise numerical storytelling without cluttering the main chart area
   weaknesses:
-  - No annotations calling out standout data points — Research (+22 pts) and Engineering
-    (+19 pts) are the most striking improvements but are not highlighted, requiring
-    viewers to read individual tick positions to discover this
-  - Tick and category labels at 13px CSS are slightly below the d3 guide's recommended
-    14px floor — readable at full canvas size but marginally below spec
-  - 'LM-02 is below par: no distinctively D3 features beyond the canonical axis +
-    join + scaleBand pattern; could leverage D3 path generators, custom tick formatting,
-    or transition-safe static rendering patterns'
-  - Both before and after dots have equal visual weight — no size or opacity encoding
-    that reflects magnitude of improvement to guide the viewer's eye
+  - Callout annotation text is 12px, slightly below the 14px standard for consistency
+    at this canvas size — increasing to 13-14px would align it with tick/label sizing
+  - Gradient connecting line opacity is 0.65 — increasing to 0.80 would give slightly
+    better contrast on dark backgrounds while still looking subtle
+  - 'DE-03: The ''Runner-up'' amber annotation placement just below the Engineering
+    row''s dumbbell can visually crowd the gap between Engineering and Product rows
+    — a small dy offset or reduced font to 11px could help spacing clarity'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct anyplot surface
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · javascript · d3 · anyplot.ai" in bold dark text, clearly readable. Category labels (Research, Engineering, Product, IT Support, Design, Operations, Marketing, Customer Success, HR, Finance) on y-axis in dark text — all readable. X-axis tick labels (50, 60, 70, 80, 90, 100) in dark text — readable. X-axis label "Satisfaction Score (0–100)" and legend labels "Before Policy" / "After Policy" all clearly visible against the light background.
-      Data: Green (#009E73, Imprint palette[0]) dots for "Before Policy"; lavender (#C475FD, Imprint palette[1]) dots for "After Policy"; thin gray connecting lines at 40% opacity. Chart sorted by improvement with Research at top (+22 pts) and Finance at bottom (+7 pts). Dots have pageBg stroke halos for clean separation.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white
+      Chrome: Bold centered title "Employee Satisfaction · dumbbell-basic · javascript · d3 · anyplot.ai" in dark ink, readable. Y-axis category labels (Research, Engineering, Product, IT Support, Design, Operations, Marketing, Customer Success, HR, Finance) in inkSoft dark text, clearly readable. X-axis tick labels (50, 60, 70, 80, 90, 100) and "Satisfaction Score (0–100)" label in inkSoft, clearly readable. Legend "Before Policy" (green dot) and "After Policy" (lavender dot) centered below title. Delta labels on right in inkSoft, top-2 in bold lavender.
+      Data: Green (#009E73) dots for "before" values, lavender (#C475FD) dots for "after" values, gradient connecting lines (green→lavender at 0.65 opacity). Dots at r=10 are prominent. Amber (#DDCC77) callout annotations "▲ Highest gain" and "▲ Runner-up" visible below top 2 rows.
+      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — not pure black, correct anyplot dark surface
-      Chrome: Title renders as light text on dark background — clearly readable. Category labels, x-axis tick labels, x-axis label, and legend text all flip to light/white text — no dark-on-dark issues detected. Gridlines remain subtle against the dark surface.
-      Data: Data colors are identical to the light render — green (#009E73) and lavender (#C475FD) dots maintain the same appearance. Both colors read well on the dark surface. Connecting lines visible as mid-gray.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, clearly not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Y-axis category labels in light inkSoft (#B8B7B0), clearly readable — no dark-on-dark issues. X-axis tick labels and axis label in light inkSoft, clearly readable. Legend text in light inkSoft, readable. Delta labels in light inkSoft; top-2 in bold lavender (high contrast on dark). Amber annotations clearly visible.
+      Data: Identical green (#009E73) and lavender (#C475FD) dots — colors unchanged from light render as required. Gradient connecting lines still visible. Dots with pageBg stroke (now near-black) still render with definition.
+      Legibility verdict: PASS — all text clearly readable against #1A1A17 background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,79 +57,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; tick and category labels at 13px
-          CSS are slightly below the d3 guide's 14px recommendation but remain readable
-          at canvas size
+        comment: All font sizes explicitly set; tick/label/title all well-proportioned.
+          Callout annotations at 12px slightly below the 14px standard but still readable.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render; generous band padding prevents
-          category label collisions
+        comment: No text overlaps. Delta labels on right margin, annotations in inter-row
+          gaps, legend above plot area — all clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: r=10 dots are prominent for sparse 10-point data; connecting lines
-          at 40% opacity visible but non-distracting
+        comment: 10 data points (sparse), dots at r=10 are prominent, connecting lines
+          at 3px stroke width. Perfectly sized for data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 0 and 1 — both CVD-safe per palette design
+        comment: Imprint palette (green + lavender), CVD-safe, pageBg stroke on dots
+          adds definition. Amber annotations use semantic anchor correctly.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; margins generous; left=175px accommodates 'Customer
-          Success' label; no overflow or clipping
+        comment: Canvas gate passed. Generous margins (top:95 right:130 bottom:90
+          left:175). Nothing cut off. Plot fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label 'Satisfaction Score (0–100)' is descriptive with units;
-          categories are self-labeling
+        comment: '''Satisfaction Score (0–100)'' with units. Y-axis has self-labeling
+          categories — no Y label needed. Title descriptive with optional prefix.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (palette[0]), second series #C475FD (palette[1]);
-          light bg warm off-white, dark bg warm near-black; data colors identical
-          between themes'
+        comment: 'First series = palette[0] #009E73, second = palette[1] #C475FD.
+          Backgrounds #FAF8F1/#1A1A17 correct. Amber for annotations. Data colors
+          identical across themes.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean and professional; stroke halos on dots add depth; intentional
-          sorting by improvement shows design thought; no exceptional visual innovations
-          beyond fundamentals
+        comment: 'Strong design: SVG linearGradient with userSpaceOnUse encodes directionality
+          in the connecting line, top-2 highlight with bold lavender labels creates
+          intentional hierarchy. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis domain removed; tick marks removed; vertical gridlines appropriate
-          for horizontal chart orientation; opacity on connecting lines reduces visual
-          noise
+        comment: Y-axis domain removed, tick marks removed (tickSize(0)), vertical-only
+          subtle grid at t.grid stroke, generous whitespace, legend without box frame.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorting by improvement creates a narrative, but no annotations highlight
-          standout results (Research +22 pts, Engineering +19 pts); viewer must read
-          tick positions manually
+        passed: true
+        comment: Sorted by delta reveals the ranking immediately. Top-2 bold labels
+          + amber annotations guide the viewer. Gradient line encodes before→after
+          direction. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dumbbell / Cleveland dot plot implementation
+        comment: Correct horizontal dumbbell chart — two dots connected by a line,
+          categories on Y-axis, values on X-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct dot colors, thin subtle connecting line (stroke-width 2.5,
-          opacity 0.4), horizontal orientation, sorted by difference
+        comment: Two distinct colored dots, gradient connecting line, horizontal orientation,
+          sorted by difference (largest at top), distinct colors for start/end.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, satisfaction scores on x-axis, all 10 departments
-          shown
+        comment: X-axis = satisfaction score (50–100 domain), Y-axis = department
+          categories. Correct mapping per spec.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows {Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai format; legend labels 'Before Policy' / 'After Policy' are
-          clear
+        comment: 'Title: ''Employee Satisfaction · dumbbell-basic · javascript · d3
+          · anyplot.ai'' — correct format with optional descriptive prefix. Legend:
+          ''Before Policy'' / ''After Policy''.'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both before/after values shown, connecting lines, legend, sorting
-          by improvement, 10 categories within spec's 5-20 range
+        comment: Varied deltas (7–22 pts), different starting points (57–75 before,
+          69–91 after), all aspects of dumbbell chart type demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction before/after flexible work policy — realistic
-          neutral scenario; departments and score ranges (57-91) are plausible
+        comment: Employee satisfaction scores before/after flexible work policy —
+          specific, realistic, neutral business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Domain 50-100 chosen to avoid wasted whitespace below data range
-          while showing the full score scale context
+        comment: Scores in 57–91 range on 0–100 scale, deltas 7–22 pts, realistic
+          for a workplace satisfaction survey.
     code_quality:
       score: 10
       max: 10
@@ -201,34 +196,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear, direct code structure
+        comment: 'Flat script: data → SVG mount → scales → axes → connecting lines
+          → dots → delta labels → annotations → legend → title. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; no random elements; deterministic output
+        comment: Hard-coded inline data array — fully deterministic, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 correctly used as global per harness contract
+        comment: No explicit imports. D3 is a global from the harness, window.ANYPLOT_TOKENS
+          and window.ANYPLOT_SIZE used correctly.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Idiomatic D3 .join() pattern throughout; no fake UI elements
+        comment: Clean, idiomatic D3. Appropriate complexity for the chart. No fake
+          UI elements or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness-driven output; no manual file writes; correct browser harness
-          contract
+        comment: D3 is in INTERACTIVE_LIBRARIES — harness generates plot-{theme}.png
+          and plot-{theme}.html. Current D3 7.9 API throughout.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -236,21 +234,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: scaleBand + scaleLinear, axisBottom + axisLeft, .join() pattern,
-          window.ANYPLOT_TOKENS/ANYPLOT_SIZE correctly consumed; solid idiomatic D3
+        comment: d3.scaleLinear / d3.scaleBand, d3.axisBottom / axisLeft, data joins
+          via .data().join(), d3.format('+d') — all idiomatic D3 patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: No distinctively D3 features beyond the canonical axis + join + scaleBand
-          pattern; no D3 path generators, advanced tick formatting, or other library-specific
-          capabilities leveraged
+        passed: true
+        comment: 'SVG linearGradient with gradientUnits=''userSpaceOnUse'' is a D3/SVG-distinctive
+          technique: positions the gradient in user-space coordinates so it tracks
+          the data scale exactly.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
