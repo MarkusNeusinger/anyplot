@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-30
@@ -125,7 +125,7 @@ plot = (
     + geom_text(aes(x="x", y="y", label="label"), data=df_subtitle, size=7, color=INK_MUTED)
     + geom_text(aes(x="x", y="y", label="label"), data=df_min_max, size=7, color=INK_SOFT)
     + geom_text(aes(x="x", y="y", label="label"), data=df_zone_labels, size=7, color=INK_SOFT, fontface="bold")
-    + labs(title="gauge-basic · letsplot · anyplot.ai")
+    + labs(title="gauge-basic · python · letsplot · anyplot.ai")
     + xlim(-1.4, 1.4)
     + ylim(-0.55, 1.15)
     + theme(
