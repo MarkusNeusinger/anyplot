@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:03:31Z'
-updated: '2026-06-30T22:49:26Z'
+updated: '2026-06-30T23:00:27Z'
 generated_by: claude-sonnet
 workflow_run: 28480377208
 issue: 945
@@ -12,123 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: horizontal dumbbell with Imprint palette colors, sorted
-    by reduction, thin subtle connecting lines'
-  - 'Excellent theme adaptation: all chrome tokens applied via sns.set_theme rc dict;
-    both renders fully readable with no dark-on-dark failures'
-  - Realistic and neutral data context (web performance optimization) with factually
-    plausible before/after load times
-  - Clean, minimal code with no over-engineering; dot edgecolor=PAGE_BG is a polished
-    visual detail
-  - 'Perfect data quality: covers all dumbbell chart features, sensible scale, non-controversial
-    scenario'
+  - 'Correct Imprint palette: brand green (#009E73) for Before, lavender (#C475FD)
+    for After with correct canvas dimensions (3200×1800) and no bbox_inches clipping'
+  - Variable line widths encoding reduction magnitude adds intentional visual hierarchy
+    beyond generic defaults
+  - Delta annotations (−X.Xs) positioned precisely right of each Before dot provide
+    exact improvement values
+  - Data sorted by reduction magnitude reveals the performance story clearly
+  - 'Fully theme-adaptive chrome: background, text, grid, legend all correct in both
+    light (#FAF8F1) and dark (#1A1A17) renders'
+  - 'Spec fully satisfied: horizontal orientation, categories on y-axis, connecting
+    lines thin and subtle, distinct colors per endpoint'
+  - Clean idiomatic seaborn usage with sns.set_theme RC params, sns.scatterplot for
+    dots, sns.despine for spine removal
   weaknesses:
-  - Dot marker size s=90 is below the recommended 200-400 for sparse data (12 points);
-    increase to s=130-160 for better visual weight at the dumbbell endpoints on the
-    3200x1800 canvas
-  - No visual storytelling beyond sort order — add small delta labels (e.g. -4.5s)
-    at the right end of each connecting line in INK_MUTED color at 7-8pt to reveal
-    magnitude of improvement and create a clear focal point
-  - No visual hierarchy distinguishes high-impact vs low-impact pages — optionally
-    vary connecting-line linewidth proportional to reduction to encode magnitude redundantly
-  - Library Mastery constrained by chart type (no native seaborn dumbbell), but sns.set_context
-    or additional seaborn-specific features unexplored
+  - Marker size s=150 is below the style-guide recommendation of s=200-400 for sparse
+    data (< 30 points); increase to s=200-220 to give dots more visual prominence
+    on the 3200x1800 canvas
+  - Delta annotation fontsize=7 is very small; consider increasing to fontsize=8-9
+    for better readability when scaled to mobile widths (~400 px)
+  - LM-02 is modest because the dumbbell connecting lines rely on ax.plot() (matplotlib
+    primitive) since seaborn has no native dumbbell geom — consider using a more seaborn-forward
+    approach if available
+  - 'DE-01 could reach 6/8 with a minor typography upgrade: using fontweight=bold
+    on the title and adding subtle category separators or a thin reference line to
+    reinforce the ranking story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "dumbbell-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Page Load Time (seconds)" in dark ink at 10pt. Y-axis category labels (12 page names) in INK_SOFT at 8pt, all readable. X-axis tick labels (0-7) at 8pt, readable. Legend in lower-right with "Before optimisation" (green) and "After optimisation" (purple) at 8pt, readable.
-      Data: Green dots (#009E73) for Before optimisation (higher values, right side); lavender-purple dots (#C475FD) for After optimisation (lower values, left side). Thin grey connecting lines (alpha=0.45). X-axis vertical grid lines subtle. Spines removed top+right.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "dumbbell-basic · python · seaborn · anyplot.ai" at 12pt in dark ink (#1A1A17) — clearly readable, fills ~70% of width as expected for the long mandated title. Y-axis tick labels (page names) in dark ink at 8pt — readable. X-axis label "Page Load Time (seconds)" at 10pt with units — readable. X-tick labels (0–7) at 8pt — readable. All chrome uses dark ink on warm off-white; no legibility failures.
+      Data: 12 horizontal dumbbell entries. "Before optimisation" dots rendered in brand green #009E73 on the right (larger values, range 2.5–6.8s). "After optimisation" dots in Imprint lavender #C475FD on the left (smaller values, range 0.7–2.3s). Connecting lines in INK_SOFT gray at alpha=0.45 — subtle and thin as required. Variable line widths (0.8–2.2) encode reduction magnitude. Small delta annotations (e.g., "−4.5s") positioned right of each Before dot at fontsize=7 in INK_MUTED.
+      Layout: Sorted by reduction ascending (About Us at bottom, Product Listing at top). Legend in lower right with correct color swatches. Top/right spines removed; vertical x-axis grid lines are subtle (alpha=0.12).
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title, Y-axis labels, X-axis label, tick labels all rendered in light ink (F0EFE8/B8B7B0) on dark surface. Legend box uses elevated dark background (#242420). All chrome tokens correctly flipped.
-      Data: Green dots (#009E73) and lavender-purple dots (#C475FD) are IDENTICAL to light render — data colors unchanged between themes. Connecting lines and grid lines adapted with appropriate opacity.
-      Legibility verdict: PASS — no dark-on-dark text failures detected. All text clearly readable against the near-black background. Brand green #009E73 visible on dark surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Y-axis tick labels in light ink — readable. X-axis label in light ink with units — readable. X-tick labels in light INK_SOFT (#B8B7B0) — readable. Legend text set to INK (#F0EFE8) in dark theme via legend.get_texts() loop. Legend box uses ELEVATED_BG (#242420) — correct dark elevated surface. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — brand green #009E73 for Before, lavender #C475FD for After. Connecting lines in lighter INK_SOFT gray (#B8B7B0) at alpha=0.45 — appropriately subtle on dark bg. Brand green #009E73 remains clearly visible on dark surface.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures; data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
-          legend 8pt). Readable in both themes.
+        comment: 'All font sizes explicitly set (title 12pt, xlabel 10pt, ticks 8pt,
+          annotations 7pt). Readable in both themes. Minor: annotation fontsize=7
+          is slightly small at mobile widths.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 12 Y-axis categories evenly spaced, no overlapping labels, legend
-          does not occlude data.
+        comment: No overlapping text or data elements. Delta annotations placed at
+          Before+0.18 stay within xlim=8.5 without collision. Legend sits in empty
+          lower-right region.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Dots visible but s=90 is below recommended 200-400 for sparse data
-          (12 points). Dumbbell endpoints could be more prominent.
+        comment: Dots clearly visible. s=150 is below the style-guide recommendation
+          of s=200–400 for < 30 data points; minor undersize on high-res canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and lavender (#C475FD) have distinct hue AND luminance;
-          distinguishable under CVD simulation.
+        comment: Green vs. lavender — good luminance contrast, CVD-safe Imprint palette,
+          no red-green only reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. 3200x1800 correct. subplots_adjust gives balanced
-          margins. Plot uses ~75% of canvas.
+        comment: Canvas exactly 3200×1800. Plot fills ~65-70% of canvas area. Balanced
+          margins via subplots_adjust(left=0.18, right=0.95, top=0.93, bottom=0.12).
+          No elements cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: Page Load Time (seconds) with units. Y-axis empty (self-explanatory
-          categories). Title correctly formatted.'
+        comment: 'X-axis: ''Page Load Time (seconds)'' with units. Y-axis empty (appropriate
+          — category names are self-explanatory). Title correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #C475FD (Imprint pos 2). Backgrounds
-          #FAF8F1/#1A1A17. All chrome tokens theme-adaptive.'
+        comment: 'First series #009E73 (brand green) for Before. Second series #C475FD
+          (Imprint position 2) for After. Backgrounds correct (#FAF8F1 light / #1A1A17
+          dark). Full theme-adaptive chrome. Data colors identical between renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with correct palette and theme adaptation, dot edgecolor=PAGE_BG
-          is a nice touch. No emphasis techniques or visual hierarchy beyond data
-          layout.
+        passed: true
+        comment: 'Above well-configured default: Imprint palette, variable line widths
+          encoding magnitude, delta annotations, clean layout. Not yet FiveThirtyEight-level
+          — typography could be bolder and layout slightly more refined.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (sns.despine), x-axis grid only at alpha=0.12, connecting
-          lines alpha=0.45, dot edgecolor=PAGE_BG, generous margins.
+        comment: Top/right spines removed. X-axis only grid at alpha=0.12 (appropriate
+          for dumbbell). Generous whitespace via subplots_adjust. Legend with framealpha=1.0
+          is slightly heavy but acceptable.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorting by reduction (largest at top) is intentional storytelling.
-          Before/after narrative clear. No delta annotations or emphasis on highest-impact
-          pages.
+        passed: true
+        comment: 'Sorted by reduction reveals which pages improved most. Variable
+          line widths reinforce the magnitude story. Delta annotations provide exact
+          improvement. Clear narrative: ''Product Listing improved most (−4.5s), About
+          Us least (−1.8s)''.'
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct horizontal dumbbell/connected dot plot: two dots per category
-          connected by horizontal line.'
+        comment: 'Correct dumbbell/connected dot plot: two dots per category connected
+          by a line, horizontal orientation, categories on y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, distinct colors, sorted by difference, thin
-          connecting lines, 12 categories (within 5-20 range).
+        comment: 'All spec features present: two distinct colors, connecting lines
+          (thin/subtle), sorted by difference, horizontal layout with categories on
+          y-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y-axis, values on X-axis, both Before and After visible
-          for all 12 rows.
+        comment: 'X-axis: Page Load Time values. Y-axis: page category labels. Before/After
+          clearly mapped with distinct colors and legend.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: dumbbell-basic · python · seaborn · anyplot.ai. Legend: Before
-          optimisation / After optimisation.'
+        comment: 'Title: ''dumbbell-basic · python · seaborn · anyplot.ai'' — correct
+          format. Legend: ''Before optimisation'' / ''After optimisation'' with correct
+          color swatches.'
     data_quality:
       score: 15
       max: 15
@@ -170,23 +183,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dumbbell features: paired dots, connecting lines, horizontal
-          layout, sort-by-difference, variation in gap sizes.'
+        comment: 'Shows all dumbbell aspects: varied magnitudes (1.8–4.5s reductions),
+          both endpoints per category, connecting lines, and a clear before/after
+          comparison.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Web performance optimization is a real, neutral business scenario.
-          Page load times are a standard engineering metric.
+        comment: Page load times before/after performance optimization — real, neutral,
+          comprehensible business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Before times 2.5-6.8s realistic pre-optimization; After 0.7-2.3s
-          plausible post-optimization. Reductions 1.8-4.5s consistent with real-world
-          improvements.
+        comment: 'Before: 2.5–6.8s (realistic unoptimized web pages). After: 0.7–2.3s
+          (realistic after optimization). Reductions of 1.8–4.5s are factually plausible.'
     code_quality:
       score: 10
       max: 10
@@ -196,65 +209,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Sequential: imports -> tokens -> data -> sns.set_theme -> canvas
-          -> plot -> axes -> save. No functions or classes.'
+        comment: 'Linear: imports → theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully hardcoded (deterministic); no random seed required.
+        comment: Fully deterministic hardcoded data — no random generation needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 4 imports (os, matplotlib.pyplot, pandas, seaborn) actively used.
+        comment: os, matplotlib.pyplot, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Row-iteration for connecting lines is the appropriate
-          approach. No fake interactivity.
+        comment: Clean, Pythonic. Loop for connecting lines is necessary. Two scatterplot
+          calls is idiomatic for two-series dumbbell.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches=tight, current seaborn
-          0.13.2 API.
+        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
+          Current seaborn/matplotlib API.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.scatterplot, sns.set_theme with rc dict, sns.despine all idiomatic.
-          ax.plot for connecting lines is necessary (no native seaborn dumbbell).
-          Correct but does not leverage seaborn statistical features.
+        comment: 'Idiomatic seaborn: sns.set_theme with RC params for full theming,
+          sns.scatterplot with edgecolor for dot rendering, sns.despine for spine
+          removal. Correct axes-level API.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: sns.set_theme with full rc dict enabling adaptive chrome is seaborn-specific.
-          Dot edgecolor via sns.scatterplot is a nice integration. Chart type inherently
-          limits seaborn value-add (no native dumbbell API).
-  verdict: REJECTED
+        passed: true
+        comment: Uses seaborn-specific theming (sns.set_theme RC), scatter edgecolors,
+          and despine. However, the dumbbell connecting lines rely on ax.plot() (matplotlib
+          primitive) since seaborn has no native dumbbell geom — limits seaborn distinctiveness.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
-  - custom-legend
   patterns:
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
