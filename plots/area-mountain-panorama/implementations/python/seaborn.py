@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: seaborn | Python 3.13
-Quality: 88/100 | Updated: 2026-06-30
+Library: seaborn 0.13.2 | Python 3.13.14
+Quality: 83/100 | Updated: 2026-06-30
 """
 
 import os
