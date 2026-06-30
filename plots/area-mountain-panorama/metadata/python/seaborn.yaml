@@ -2,51 +2,57 @@ library: seaborn
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T01:08:52Z'
-updated: '2026-04-25T01:29:32Z'
-generated_by: claude-opus
-workflow_run: 24918698887
+updated: '2026-06-30T22:37:19Z'
+generated_by: claude-sonnet
+workflow_run: 28478048604
 issue: 5365
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: every required feature implemented, including staggered
-    labels, leader lines, focal Matterhorn highlight, and compass bearing ticks'
-  - Beautiful panoramic silhouette with realistic per-peak Gaussian bumps and textured
-    ridgeline — far above generic defaults
-  - 'Flawless theme adaptation: both light and dark renders are legible with correct
-    backgrounds and chrome tokens'
-  - 'Perfect data quality: real Swiss Alpine peaks with accurate elevations, natural
-    data context'
+  - Piecewise-linear tent functions with per-peak asymmetric flanks produce a convincingly
+    alpine jagged silhouette — not smooth Gaussian bumps
+  - Rocky texture noise (summed sine waves + Gaussian jitter with edge taper) adds
+    authentic rocky detail
+  - All 16 Wallis peaks with accurate elevations and correct geographic ordering W→E
+    from Gornergrat
+  - 3-level label stagger algorithm prevents collisions even in dense peak clusters
+  - Theme-adaptive chrome is fully correct across both renders; dark render sky gradient
+    creates a genuine night-sky dusk atmosphere
+  - np.random.seed(42) ensures reproducible renders; fig.subplots_adjust (not bbox_inches='tight')
+    correctly avoids canvas drift
   weaknesses:
-  - Elevation annotation labels at 11pt are slightly small for the 4800x2700 canvas;
-    raise to 13pt to match tertiary-text guidance
-  - 'Library Mastery is the main gap (4/10): almost all visualization logic is matplotlib;
-    seaborn adds only theming and one lineplot call — use sns.lineplot with fill=True
-    to replace fill_between + lineplot pair'
-  - Label crowding in the Breithorn/Pollux/Castor cluster (82-99 degrees) could be
-    tightened; the simple even/odd stagger occasionally produces same-height labels
-    within 10 degrees of each other
+  - Gridlines at 5000 m and 5500 m extend into the annotation zone despite ax.set_yticks([2500..4500])
+    intent — add FixedLocator or targeted ax.grid(axis='y') call to suppress auto-generated
+    ticks above the data ceiling
+  - 'Sky gradient alpha=0.6 is nearly invisible in the light render against #FAF8F1
+    — increase to 0.85–1.0 for the light theme or use brighter gradient colors so
+    the dusk atmosphere reads'
+  - Matterhorn focal emphasis is subtle relative to taller peaks (Dufourspitze 4634
+    m, Dom 4545 m appear higher) — strengthen with a background accent strip, larger
+    marker, or a dedicated callout annotation
+  - Elevation sub-labels at fontsize=7 may be too small at mobile scale — increase
+    to 7.5 or 8
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed correct, not pure white
-      Chrome: Title "Wallis 4000ers from Gornergrat · area-mountain-panorama · seaborn · anyplot.ai" in dark ink (24pt, fontweight=medium) — readable; Y-axis label "Elevation (m)" and X-axis label "Compass bearing" in dark ink (20pt) — readable; tick labels (16pt) and compass labels (W/SW/S/SE/E) in INK_SOFT — readable; peak name annotations (13-15pt) and elevation annotations (11pt) in INK/INK_MUTED — readable
-      Data: Single filled silhouette in #009E73 brand green from 2500m floor to ridgeline; Matterhorn highlighted with open circle marker; 16 peak labels with staggered leader lines
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "area-mountain-panorama · python · seaborn · anyplot.ai" in dark #1A1A17 at 12pt — clearly readable. Axis labels "Compass bearing" and "Elevation (m)" at 10pt in #1A1A17 — readable. Tick labels at 8pt in #4A4A44 — readable. Peak name labels at 8–9pt in #1A1A17 — readable. Elevation sub-labels at 7pt in #6B6A63 — legible at full res but small.
+      Data: Mountain silhouette filled in #009E73 (brand green) — identical to dark render. Ridgeline edge crisp. 16 peak labels staggered in 3 levels above the ridgeline with thin leader lines. Matterhorn distinguished with open circle marker and semibold label. Faint warm-amber dusk gradient barely visible in annotation zone at alpha=0.6. Faint gridlines visible at 5000 m and 5500 m extending into annotation zone.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed correct, not pure black
-      Chrome: Title, axis labels, and tick labels all render in light cream/soft-grey (INK=#F0EFE8, INK_SOFT=#B8B7B0) — all readable against dark background; no dark-on-dark failures observed; leader lines in muted ink visible
-      Data: Mountain fill color is identical #009E73 brand green — same as light render; Matterhorn circle marker visible
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all in light cream (#F0EFE8 / #B8B7B0 / #A8A79F) — all clearly readable against dark background. No dark-on-dark failures. Peak labels in light ink — readable.
+      Data: Mountain silhouette in #009E73 — color identical to light render (only chrome flipped). Dusk gradient (magenta-purple → indigo → near-black) clearly visible in annotation zone on dark surface. Matterhorn circle marker (PAGE_BG fill, BRAND edge) clearly visible. Brand green #009E73 reads well against dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,49 +60,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt explicitly set; elevation
-          annotations at 11pt slightly small for 4800x2700 canvas
+        comment: Title 12pt, axis labels 10pt, tick labels 8pt, peak names 8-9pt all
+          readable in both themes. Elevation sub-labels at 7pt legible at full res
+          but small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Staggered labels work well; minor crowding in Breithorn/Pollux/Castor
-          cluster within 10-degree span
+        comment: 3-level stagger prevents collisions. Tight in left cluster (angles
+          10-44 deg) but no actual text-on-text overlap observed.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Silhouette and ridgeline clearly visible; Matterhorn circle marker
-          visible
+        comment: Brand green silhouette dominates both renders. Crisp ridgeline edge.
+          Leader lines thin but visible. Matterhorn circle marker clear.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast in both themes; CVD-safe single-series brand green
+        comment: Single data series in brand green; no CVD concerns.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Panorama fills width beautifully; label zone and mountain zone well-proportioned
+        comment: 'Canvas gate passed (3200x1800). Good annotation zone. Deduction:
+          faint gridlines at 5000 and 5500 m extend into annotation zone despite set_yticks([2500..4500])
+          — matplotlib auto-tick interaction.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: Elevation (m) with units; X: compass labels give clear context'
+        comment: Compass bearing, Elevation (m) with units; correct mandatory title
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive
-          in both renders'
+        comment: 'Fill and line in #009E73; backgrounds #FAF8F1/#1A1A17; all chrome
+          theme-adaptive.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -104,22 +114,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: brand green silhouette, Matterhorn focal highlight,
-          infographic-style staggered annotations clearly above defaults'
+        comment: 'Above defaults: tent-function ridge with asymmetric flanks, rocky
+          texture noise, sky gradient, focal marker. Sky gradient nearly invisible
+          in light theme; Matterhorn emphasis mild vs taller peaks.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, tick marks hidden (length=0), compass labels,
-          y-axis grid at 0.10 alpha — polished
+        comment: 'Spines removed, grid alpha=0.10, tick marks suppressed, leader lines
+          alpha=0.55, warm backgrounds. Deduction: unintended grid in annotation zone;
+          gradient imperceptible in light theme.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point with Matterhorn bold text + circle; per-peak Gaussian
-          sigma makes prominent summits read taller; viewer guided
+        comment: 'Panoramic W-to-E compass sweep; all peaks labeled; Matterhorn focal
+          treatment. Deduction: Matterhorn emphasis could be stronger as the spec''s
+          primary focal summit.'
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +142,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled area panorama chart
+        comment: Correct filled-area mountain panorama; piecewise-linear jagged ridgeline
+          (not Gaussian); wide landscape.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fill under skyline, leader-line annotations, name+elevation labels,
-          staggered labels, 2500m floor, compass bearings, Matterhorn prominent
+        comment: All 16 Wallis peaks labeled with name+elevation; leader lines; staggered
+          labels; sky gradient; Y-floor at 2500m; compass bearings; Matterhorn focal
+          emphasis; fill in dark solid color.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: angle_deg (compass bearing), Y: elevation_m; full W to E sweep'
+        comment: Viewing angle on X, elevation on Y; upper-envelope algorithm correct;
+          ridgeline angular/jagged.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct spec-id · library · anyplot.ai format; no legend needed for
-          single series
+        comment: area-mountain-panorama · python · seaborn · anyplot.ai; no legend
+          (single series, correct).
     data_quality:
       score: 15
       max: 15
@@ -159,21 +175,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full panoramic sweep, 16 labeled peaks, varied sigma for distinct
-          silhouette shapes, rocky texture adds realism
+        comment: Ridgeline shape, individual peak shapes, jagged texture, saddles,
+          compass orientation, elevation scale, peak annotations — all spec features
+          present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wallis/Valais peaks from Gornergrat with accurate names and
-          elevations; neutral geographical context
+        comment: Real Swiss Alps peaks with accurate elevations; Wallis/Valais panorama;
+          realistic W-to-E sweep from Gornergrat.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2500m floor and 4027-4634m peak range accurate for this viewpoint
+        comment: 'Y: 2500-5630m captures all peaks (4027-4634m); floor at 2950m; X:
+          0-200 deg panoramic sweep.'
     code_quality:
       score: 10
       max: 10
@@ -183,50 +201,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save; no functions or classes
+        comment: Flat procedural code; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used
+        comment: All imports used; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Gaussian bump approach appropriate; texture code documented; no over-engineering
+        comment: Tent-function ridge construction mathematically clean; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png correctly
+        comment: plot-{THEME}.png; no bbox_inches='tight'; seaborn 0.13.2 current
+          API.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() and sns.lineplot() are correct patterns but fill_between,
-          scatter, text, plot are all raw matplotlib — seaborn used minimally
+        comment: sns.set_theme, sns.lineplot, sns.scatterplot, sns.despine all used
+          idiomatically at axes level. Theme token injection via rc dict is correct
+          seaborn pattern.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No seaborn-distinctive feature leveraged; core visualization is pure
-          matplotlib; seaborn contribution is theming and one lineplot
-  verdict: REJECTED
+        comment: seaborn contribution is primarily theming + 2 standard plot calls.
+          Core rendering (fill_between, imshow, plot, text) is matplotlib. Appropriate
+          given plot type but limits library-distinctiveness score.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -236,8 +257,8 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   - explicit-figure
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - alpha-blending
   - gradient-fill
+  - custom-colormap

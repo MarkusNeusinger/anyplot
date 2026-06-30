@@ -1,0 +1,269 @@
+library: d3
+language: javascript
+specification_id: area-mountain-panorama
+created: '2026-06-30T22:29:48Z'
+updated: '2026-06-30T22:40:31Z'
+generated_by: claude-sonnet
+workflow_run: 28479145287
+issue: 5365
+language_version: 22.23.0
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Stunning photographic sky gradient with correct theme-adaptive behavior: daytime
+    steel-blue sky (light render) vs. deep night-sky gradient (dark render) — exactly
+    what the spec calls for'
+  - Realistic rocky ridgeline via Park-Miller LCG noise blended above the valley floor;
+    tent-function asymmetric slopes per summit correctly avoid the forbidden Gaussian
+    bell-curve shape
+  - 'Real Wallis Alps data: 16 named 4000 m peaks with geographically accurate elevations,
+    realistic compass bearing range (SSW to NW through the Zermatt region)'
+  - Professional 4-level stagger annotation system with dashed leader lines, summit
+    dots, and two-line name/elevation format
+  - Dark silhouette gradient creates depth (lighter at crest, darker at base) for
+    a photographic alpine aesthetic
+  - Fixed-seed LCG (seed 42) makes the ridgeline noise fully deterministic and reproducible
+    across renders
+  weaknesses:
+  - Peak annotation labels use 12–13 CSS px (elevation sub-labels at 12 px, name labels
+    at 13 px), marginally below the D3 guide's 14 px minimum — these will be borderline-readable
+    when the 3200 px PNG is displayed at ~400 px mobile width
+  - Right-side annotation cluster (Dent Blanche 297°, Ob. Gabelhorn 305°, Zinalrothorn
+    314°) is horizontally dense; the stagger prevents overlap but label centers are
+    only ~85–95 CSS px apart with labels ~65–80 px wide — consider alternating x-offsets
+    or label pointers rather than pure vertical stagger for this cluster
+  - Matterhorn is not made visually more prominent than Monte Rosa despite the spec's
+    explicit directive that it 'should read as visually prominent — it is the focal
+    point'; consider a distinct leader-line color, slightly larger label fontsize,
+    or a subtle accent mark for the Matterhorn annotation
+  - Peak annotation loop uses manual forEach + svg.append() instead of D3's data-join
+    pattern (.data().join()); migrating to the data-join would improve LM-02 and be
+    more idiomatic D3
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white outer background (#FAF8F1); inner chart shows photographic sky gradient from steel blue (#6FB2D2) at top to near-white (#DCEEF8) at horizon
+      Chrome: Title "area-mountain-panorama · javascript · d3 · anyplot.ai" in dark bold text — clearly readable. Y-axis tick labels ("3200 m" through "4600 m") in dark secondary ink — readable. Compass bearing labels (SSW, SW, WSW, W, WNW, NW) in dark secondary ink — readable. Horizontal grid lines subtle.
+      Data: Mountain silhouette filled with dark navy gradient (#1E3044 at crest → #0C1520 at base). Ridgeline is angular with sharp triangular peaks. 12 labeled peaks with dashed leader lines and two-line name/elevation annotations in dark ink. Peak dots at summits.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black outer background (#1A1A17); inner chart shows deep night-sky gradient from near-black (#030A12) to very dark blue (#15283A)
+      Chrome: Title in light cream (#F0EFE8) — clearly readable. Y-axis ticks in secondary light tone (#B8B7B0) — readable. Compass labels in secondary light tone — readable. No dark-on-dark failures detected.
+      Data: Silhouette fill (same #1E3044–#0C1520 gradient) appears as a lighter steel-blue shape against the darker night sky — sufficient contrast to clearly see the ridgeline. Data colors are visually consistent with light render. Peak annotation text in light cream — readable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 13px labels, 12px elevation
+          sub-labels); slightly below D3 14px minimum for small elements; well-proportioned
+          at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 4-level stagger prevents pixel-level collision; right-side cluster
+          (Dent Blanche/Ob.Gabelhorn/Zinalrothorn) is horizontally dense at ~85-95
+          CSS px spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Silhouette clearly visible in both themes; summit dots and dashed
+          leader lines visible in both renders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: No red-green sole-signal; peak identification relies on text labels;
+          sky-vs-silhouette contrast CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format ideal for panorama; generous margins; canvas gate
+          passed; ~85% canvas utilization; no content cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis in meters with units, X-axis compass bearings, title format
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No categorical series; panorama silhouette uses spec-mandated artistic
+          fill; backgrounds #FAF8F1 light / #1A1A17 dark; chrome tokens applied throughout'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Theme-adaptive sky gradients, silhouette gradient for depth, LCG
+          noise for rocky texture, staggered dashed leader lines — strongly above
+          defaults. Misses top score due to absent Matterhorn focal-point emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No superfluous spines; subtle grid (stroke 0.7, t.grid token); smooth
+          gradients; ridgeline outline stroke; dashed leader lines at appropriate
+          weight; summit dot markers
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Genuine alpine infographic narrative with real Wallis data and compass
+          orientation. Loses points: Matterhorn (spec focal point) not visually distinguished
+          from Monte Rosa'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Mountain panorama silhouette with filled area, sky gradient, and
+          annotated peaks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Piecewise-linear tent functions, asymmetric slopes, LCG noise, dark
+          gradient fill, sky gradient, leader-line annotations, 4-level stagger, Y-axis
+          meters, compass bearings, landscape format
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: angle_deg (192–332°), Y: elevation_m (3050–5400 domain, 3200–4600
+          displayed), 900 samples, 16 Wallis peaks'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: area-mountain-panorama · javascript · d3 · anyplot.ai; no
+          legend needed'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 distinct summits, saddles, rocky noise, varied heights 4027–4634
+          m; all mountain-panorama features demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real Wallis Alps data: Matterhorn, Monte Rosa, Dom, Weisshorn, Liskamm
+          etc. with accurate elevations; neutral geographic topic'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Valley floor 3100 m (realistic high-Alpine cols); summits 4027–4634
+          m matching actual Wallis peaks; slope parameters produce plausible asymmetric
+          flanks
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: tokens → LCG → peak defs → skyline → SVG mount
+          → defs → fills → grid → axes → annotations → title'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed Park-Miller LCG (rngSeed=42); fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only d3 global; no external imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no over-engineering; no fake interactive
+          elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Output handled by harness; current D3 API (7.9.0); title format correct
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: window.ANYPLOT_TOKENS/SIZE globals; SVG defs (linearGradient, clipPath);
+          d3.scaleLinear; d3.axisLeft with tickValues/tickFormat; d3.area with y0/y1/curve;
+          proper margin/iw/ih pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'SVG linearGradient (sky + silhouette), clipPath for edge rendering,
+          d3.area() with dual y0/y1. Loses points: annotations and gridlines use forEach+append
+          instead of D3 data-join pattern (.data().join())'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
