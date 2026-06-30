@@ -2,54 +2,58 @@ library: matplotlib
 language: python
 specification_id: dumbbell-basic
 created: 2025-12-15 16:43:15+00:00
-updated: '2026-04-26T01:13:04Z'
-generated_by: claude-opus
-workflow_run: 24944791960
+updated: '2026-06-30T22:55:49Z'
+generated_by: claude-sonnet
+workflow_run: 28480287721
 issue: 945
-python_version: 3.14.4
-library_version: 3.10.9
+language_version: 3.13.14
+library_version: 3.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Full theme-adaptation: backgrounds, text, connecting lines, legend frame, and
-    dot halos (edgecolors=PAGE_BG) all flip correctly between light and dark renders'
-  - Correct Okabe-Ito palette with Before=#009E73 as first series and After=#D55E00
-    as second
-  - Data sorting by improvement size (largest at top) creates a natural visual narrative
-  - Connecting lines intentionally muted (alpha=0.55) so they do not overpower the
-    dots, per spec recommendation
-  - Deterministic, realistic, neutral example data (employee satisfaction across 8
-    departments, before/after policy changes)
-  - 'Perfect spec compliance: horizontal orientation, distinct colors, sorted by difference,
-    subtle connecting line, correct title format'
+  - 'Correct horizontal dumbbell chart with two Imprint palette colors (#009E73 and
+    #C475FD) for Before/After series'
+  - Variable line width encoding improvement magnitude is a clever data storytelling
+    technique
+  - Edge halos on scatter dots (edgecolors=PAGE_BG) give depth and improve contrast
+  - Data sorted by improvement magnitude — viewer immediately sees HR improved most,
+    Sales least
+  - Selective annotations on only top and bottom performers focus attention on the
+    extremes
+  - Both themes render correctly — data colors identical, chrome adapts cleanly (no
+    dark-on-dark)
+  - 'Perfect spec compliance: horizontal orientation, distinct colors for start/end,
+    sorted by difference, connecting lines'
+  - Clean KISS code structure with explicit sizing, no functions/classes, idiomatic
+    axes-based API
+  - Custom legend via empty-data scatter is the canonical matplotlib pattern
+  - Explicit subplots_adjust prevents canvas drift without using bbox_inches='tight'
   weaknesses:
-  - X-axis label 'Satisfaction Score' lacks a scale indicator — should be 'Satisfaction
-    Score (0-100)' to satisfy the units rubric
-  - No visual emphasis on notable data points — the highest-improvement department
-    (HR, +28 pts) and lowest (Sales, +6 pts) receive identical visual treatment; color
-    intensity variation, line thickness by improvement, or a value difference label
-    on the widest gap would elevate storytelling
-  - Library Mastery could be stronger — auto-generated legend from scatter labels
-    rather than custom handles (plt.scatter([], [], ...) or mlines.Line2D) misses
-    a matplotlib-specific opportunity for more control
-  - Data storytelling is limited to sorting; consider a subtle annotation or dot-size
-    variation to create a focal point and guide the viewer to the key insight
+  - Annotation text at fontsize=7 is below the readable floor at mobile widths (~400px);
+    consider raising to 8pt minimum
+  - Scatter dot size s=80 is below the style-guide recommendation of s=200-400 for
+    sparse data (<30 points); the connecting lines partially compensate but dots could
+    be more prominent — consider s=110-130 with corresponding edge halo adjustment
+  - 'DE-01 capped at 6 (strong but not FiveThirtyEight-level): visual hierarchy is
+    good but could be elevated further — e.g. a subtle fill between dots encoding
+    direction of change, or using a slightly thicker line for the top-performer row
+    as a highlight'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, not pure white
-      Chrome: Title "dumbbell-basic · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Satisfaction Score" and Y-axis label "Department" in dark ink, readable. Y-axis tick labels (HR, Customer Support, Engineering, Operations, Marketing, Product, Finance, Sales) and X-axis tick labels (30-100 range) all readable against the light background. Legend in lower right with warm elevated-BG frame and dark text.
-      Data: Before dots in #009E73 (Okabe-Ito 1), After dots in #D55E00 (Okabe-Ito 2). Connecting lines in muted gray with alpha=0.55. Dots have white/PAGE_BG halos. Data sorted with HR (largest improvement) at top, Sales (smallest improvement) at bottom.
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct brand surface, not pure white.
+      Chrome: Title "dumbbell-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Y-axis label "Department" and X-axis label "Satisfaction Score (0–100)" both dark, 10pt. Tick labels (department names, numeric x-ticks) in INK_SOFT. Subtle vertical grid lines at alpha=0.15. L-shaped spine frame (top+right removed). Legend bottom-right with ELEVATED_BG frame.
+      Data: 8 categories sorted by improvement magnitude (HR top, Sales bottom). Before-dots in #009E73 (brand green), After-dots in #C475FD (lavender). Connecting lines gray with variable width encoding magnitude (thicker = bigger improvement). Annotations "+28 pts" (HR, top) and "+6 pts" (Sales, bottom) in INK_MUTED.
+      Legibility verdict: PASS — all primary text readable; annotation text at 7pt is small but legible at full canvas resolution.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, not pure black
-      Chrome: Title in light off-white, clearly readable against dark background. Axis labels and tick labels all rendered in light colors, fully readable. Legend uses elevated dark background (#242420) with light edge and light text. No dark-on-dark failures detected.
-      Data: Before dots still #009E73 (identical to light render), After dots still #D55E00 (identical). Connecting lines appear as medium gray against dark surface. Dot halos use PAGE_BG (#1A1A17) so halos blend into background — intentional adaptive behavior.
-      Legibility verdict: PASS — all text readable, no dark-on-dark issues detected
+      Background: Warm near-black #1A1A17 — correct brand surface, not pure black.
+      Chrome: Title in #F0EFE8 (light ink), clearly readable against dark background. Y-axis and X-axis labels in light ink. Tick labels in B8B7B0 (INK_SOFT dark). Grid lines appropriately faint. Spines in INK_SOFT dark. Legend frame uses ELEVATED_BG (#242420), legend text in INK_SOFT.
+      Data: Data colors identical to light render — Before dots remain #009E73, After dots remain #C475FD. No hue shift. Connecting lines slightly more visible against dark surface.
+      Legibility verdict: PASS — no dark-on-dark failure. All text is light-colored against the near-black background. Brand green #009E73 reads clearly on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,74 +64,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, labels=20, ticks=16), all text
-          readable in both themes
+        comment: 'All font sizes explicitly set; title, axis labels, ticks all readable
+          in both themes. Minor: annotation text at 7pt is at the floor for mobile
+          readability.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All elements well-spaced, no collisions with 8 categories
+        comment: No overlapping text or data elements in either render. Annotations
+          placed cleanly via offset points.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Dot size s=320 optimal for 8 data points; connecting lines at linewidth=2.5
-          alpha=0.55 visible but appropriately subtle
+        comment: Dots visible and distinguishable; s=80 is below the <30-point guideline
+          (200-400) but edge halos partially compensate. Connecting lines clear at
+          variable widths.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; green vs vermillion distinguishable by
-          luminance
+        comment: Green and lavender have good luminance separation and are CVD-safe
+          in the Imprint palette. Not red-green only.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized, tight_layout applied, legend near data,
-          nothing cut off
+        comment: 3200x1800 landscape canvas confirmed (no gate failure). Explicit
+          subplots_adjust margins. Plot fills canvas well. No cut-off elements.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Satisfaction Score is descriptive but lacks units/scale indicator
-          (0-100)
+        passed: true
+        comment: 'X: ''Satisfaction Score (0-100)'' with units. Y: ''Department''
+          (categorical, no units needed). Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17
-          correct; full theme-adaptive chrome'
+        comment: 'Before=#009E73 (Imprint position 1), After=#C475FD (Imprint position
+          2). Light bg #FAF8F1, dark bg #1A1A17. Chrome adapts correctly in both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: 'Above default: correct palette, theme-adaptive dot halos, data sorting,
-          clean spine removal. Not yet publication-ready.'
+        passed: true
+        comment: 'Strong design: variable line widths encoding improvement magnitude,
+          edge halos on dots, selective annotations, sorted order. Clearly above well-configured
+          defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle x-axis grid (alpha~0.18), connecting
-          lines muted, legend frame styled
+        passed: true
+        comment: L-shaped spines, subtle grid at alpha=0.15, styled legend frame,
+          explicit margins. Refined treatment throughout; short of 'every detail polished'.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Sorting by improvement reveals pattern but no visual emphasis on
-          top/bottom performer; viewer must identify insights themselves
+        passed: true
+        comment: 'Sort + variable line widths + selective annotations create a clear
+          narrative: HR improved most, Sales least. Visual hierarchy guides the viewer
+          well.'
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dumbbell/connected dot chart
+        comment: 'Correct horizontal dumbbell chart: two dots per category connected
+          by a line, categories on y-axis, values on x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, distinct Before/After colors, sorted by difference,
-          subtle connecting line
+        comment: Distinct colors for start/end dots, sorted by difference, connecting
+          lines present, horizontal orientation.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, satisfaction values on x-axis, all data visible
+        comment: 'X: satisfaction scores (correct). Y: department categories (correct).
+          All 8 categories visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: dumbbell-basic · matplotlib · anyplot.ai; legend labels Before/After'
+        comment: 'Title: ''dumbbell-basic · python · matplotlib · anyplot.ai'' — exact
+          format. Legend: ''Before'' / ''After'' correctly labels both series.'
     data_quality:
       score: 15
       max: 15
@@ -166,21 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 departments with varying Before/After gaps, small and large improvements,
-          full range of dumbbell distances
+        comment: 'Shows all dumbbell chart aspects: before/after dots, connecting
+          lines, range variation across 8 categories with different improvement magnitudes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Employee satisfaction scores before/after workplace policy changes
-          — realistic, neutral business scenario
+          — real, neutral business scenario with named departments.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 40-88 on 30-100 axis, plausible for 0-100 satisfaction scale
+        comment: Satisfaction scores 40-88 on 0-100 scale. Improvements +6 to +28
+          are plausible for policy-driven changes. All values factually coherent.
     code_quality:
       score: 10
       max: 10
@@ -190,61 +203,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean Imports → Data → Sort → Plot → Save
-          flow
+        comment: 'Linear: data → sort → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: 'Fully deterministic: hardcoded arrays, no random generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: os (THEME env), matplotlib.pyplot, numpy — all used, none unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; zip with strict=True; no fake UI elements
+        comment: Clean Pythonic code; zip(strict=True) is a good py3.10+ pattern;
+          appropriate complexity. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor; current matplotlib API
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          functions.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses axes methods (not pyplot), custom legend via empty-data scatter
+          (canonical matplotlib pattern), tick_params and spines managed idiomatically.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct Axes API throughout; legend frame manipulation; tick_params;
-          set_axisbelow
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Theme-adaptive edgecolors=PAGE_BG for dot halos is distinctive; zorder
-          used intentionally. Auto-generated legend rather than custom handles limits
-          score.
-  verdict: REJECTED
+        comment: Empty-data scatter for legend handles, ax.annotate with textcoords='offset
+          points', edgecolors for marker halos, zorder layering — distinctly matplotlib
+          techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   - custom-legend
+  - manual-ticks
   patterns:
-  - data-generation
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
