@@ -2,125 +2,123 @@ library: altair
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:24Z'
-updated: '2026-04-25T09:00:55Z'
-generated_by: claude-opus
-workflow_run: 24927121489
+updated: '2026-06-30T20:39:46Z'
+generated_by: claude-sonnet
+workflow_run: 28473279872
 issue: 973
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Perfect visual quality: all font sizes explicitly set, both themes fully adapted,
-    no overlap or visibility issues'
-  - Asymmetric error bars with varied lower/upper bounds demonstrate feature coverage
-    and add realism
-  - 'Idiomatic Altair layer composition: three mark types layered cleanly with proper
-    encodings'
-  - Full theme adaptation with correct token usage throughout configure_* chain
+  - Conditional encoding (alt.condition with alt.datum) simultaneously controls color
+    and point size for Treatment D — idiomatic Altair creating immediate visual hierarchy
+  - Asymmetric error bars (separate error_lower/error_upper columns) correctly implement
+    the spec requirement for skewed distribution handling
+  - 'Full theme-adaptive chrome: background, axis labels, grid, and spines all switch
+    correctly between light and dark renders'
+  - PIL-based canvas padding with overflow guard (SystemExit on overshoot) ensures
+    exact 3200x1800 target is always hit safely
+  - Both HTML and PNG outputs saved correctly per the altair library spec
   weaknesses:
-  - 'DE-01 (5/8): No visual emphasis or typography hierarchy to highlight key contrasts
-    — all elements styled identically; adding size or opacity variation to the highest-value
-    or most-uncertain group would lift the design'
-  - 'DE-03 (3/6): The asymmetric error asymmetry is the story but the viewer is not
-    guided to it — a subtle reference line, annotation, or color accent on Treatment
-    D would create a focal point'
-  - 'DE-02 (4/6): Top/right axis domain lines remain visible; configure_axis domainOpacity=0
-    needed to achieve full L-spine removal'
-  - 'LM-02 (3/5): No use of Altair-specific interactive or declarative features beyond
-    the basic layer pattern — condition-based encoding or a selection highlight would
-    demonstrate deeper library mastery'
+  - Annotation 'Peak response' at fontSize=10 (italic) is the smallest text element
+    — at mobile scaling (~400px wide) it may be borderline readable; consider bumping
+    to fontSize=11-12
+  - No explicit configure_title(color=INK) call — title color set via alt.Title(color=INK)
+    which works but differs from the canonical library guide snippet; minor consistency
+    issue only
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "errorbar-basic · altair · anyplot.ai" in dark text (readable); Y-axis label "Response Value (units)" and X-axis label "Experimental Group" both readable in dark text; tick labels in medium gray (readable)
-      Data: All elements in brand green (#009E73) — error bar rules, horizontal cap ticks, center circles; six groups (Control, Treatment A–E); asymmetric errors visible with Treatment C showing wider lower bound
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "errorbar-basic · python · altair · anyplot.ai" in dark ink, left-aligned, clearly readable. Y-axis label "Response Value (units)" and X-axis label "Experimental Group" in dark INK, clearly readable. Tick labels (15, 20, 25, 30, 35, 40, 45, 50, 55 on Y; six group names on X) all readable in INK_SOFT. Subtle horizontal grid lines. Axis domain transparent (no visible spine frame). "Peak response" italic annotation in ochre above Treatment D is readable.
+      Data: Primary series in brand green #009E73; Treatment D (peak) in Imprint ochre #BD8233 with larger marker. Asymmetric error bars visible — Treatment C has wider downward extent. All caps (mark_tick) clearly visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title, axis labels, tick labels all render in light-colored text — correctly theme-adapted; no dark-on-dark failures detected
-      Data: Colors identical to light render — all elements remain #009E73; brand green clearly visible on dark surface
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all rendered in light-colored text (#F0EFE8 / #B8B7B0), clearly readable against the dark background. Grid lines are subtle. No dark-on-dark issues observed. "Peak response" annotation in ochre slightly low-contrast but identifiable.
+      Data: Colors identical to light render — brand green #009E73 and Imprint ochre #BD8233 unchanged between themes as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px; readable in both themes'
+        comment: 'All sizes explicitly set (title 16, axis 12, ticks 11, annotation
+          10). Minor deduction: annotation at fontSize=10 is small for mobile scaling.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Six category labels well-spaced at labelAngle=0, no collisions
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars (strokeWidth=3), caps (mark_tick size=22), circles (size=320)
-          all clearly visible
+        comment: Sparse data with well-sized markers (size 280/480) and strokeWidth=3
+          error bars.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe brand green with adequate contrast on both backgrounds
+        comment: Brand green and Imprint ochre are CVD-distinguishable. No red-green
+          reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas, balanced margins, nothing cut off
+        comment: Canvas gate passed. Balanced margins, good whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Value (units) with units; Experimental Group descriptive
+        comment: Response Value (units) includes units; Experimental Group is descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: 'First series #009E73, Treatment D uses Imprint ochre #BD8233. Correct
+          backgrounds. Chrome flips between themes.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: single coherent brand green, clean layout, asymmetric
-          errors show intent — but lacks focal emphasis or typography hierarchy'
+        comment: 'Strong design: conditional color+size, asymmetric errors, annotation,
+          theme-adaptive tokens. Clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid at 10% opacity well-tuned; view border removed; L-shaped axis
-          frame still present (domain lines not suppressed)
+        comment: domainOpacity=0 removes spines, gridOpacity=0.13 subtle grid, stroke=None
+          removes border. Clean layout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Asymmetric errors are a good data choice but no visual emphasis or
-          hierarchy guides viewer to key contrasts
+        passed: true
+        comment: Clear focal point on Treatment D via color, size, annotation. Asymmetric
+          error on Treatment C conveys variance story.
     spec_compliance:
       score: 15
       max: 15
@@ -130,53 +128,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: error bar plot with center points, bars, and caps'
+        comment: Correct error bar chart with center points, vertical rules, and capped
+          ends.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Caps (mark_tick), error bars (mark_rule), center points (mark_circle),
-          asymmetric errors all present
+        comment: Visible caps, consistent bar widths, asymmetric error bars, color
+          differentiation all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = categorical groups, Y = response value with error_lower/error_upper
-          encoding
+        comment: Categorical groups on x-axis, quantitative values on y-axis, error_lower/upper
+          correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is errorbar-basic · altair · anyplot.ai; no legend needed for
-          single series
+        comment: Title is exactly 'errorbar-basic · python · altair · anyplot.ai'.
+          Peak response annotation substitutes legend effectively.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows caps, bars, center points, asymmetric errors with visible variation;
-          asymmetric Treatment C is the best demonstration
+        comment: Shows symmetric and asymmetric errors, varying magnitudes, center
+          points, capped ends, color differentiation.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Control + Treatment A-E is recognizable experimental design; Response
-          Value (units) is generic rather than domain-specific
+        comment: Clinical trial scenario (Control + Treatment A-E) is real-world,
+          neutral, and scientifically plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 25-50 with errors 2-7 in range 15-55; realistic for clinical/experimental
-          data
+        comment: Values 25-48 with errors 2-6.5 units are plausible for experimental
+          response data.
     code_quality:
       score: 10
       max: 10
@@ -186,33 +185,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat sequential code; no functions or classes
+        comment: 'Linear: imports -> data -> plot -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: altair, numpy, pandas all used; os, sys used for path handling
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layer composition; no over-engineering
+        comment: alt.condition with alt.datum is clean and idiomatic. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png (PIL-padded to exact target) and plot-{THEME}.html.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -220,24 +219,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of alt.layer(), correct encoding types (N, Q), proper
-          Scale/sort
+        comment: Expert use of alt.layer(), shorthand encoding types, alt.condition(),
+          alt.datum predicate.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Layer composition of mark_rule+mark_tick+mark_circle is distinctly
-          Altair; tooltips and HTML export included — no condition-based encoding
-          or selections
-  verdict: REJECTED
+        comment: 'alt.condition(alt.datum.category == ''Treatment D'') with simultaneous
+          conditional color+size is distinctively Vega-Lite/Altair. Slight deduction:
+          no selections or multi-view binding.'
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
+  - annotations
   - layer-composition
   - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling: []
