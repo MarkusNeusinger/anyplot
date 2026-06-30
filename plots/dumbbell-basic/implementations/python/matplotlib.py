@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: matplotlib 3.11.0 | Python 3.13.14
-Quality: 88/100 | Created: 2026-06-30
+Quality: 91/100 | Created: 2026-06-30
 """
 
 import os
