@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:31Z'
-updated: '2026-06-30T23:00:35Z'
+updated: '2026-06-30T23:10:43Z'
 generated_by: claude-sonnet
 workflow_run: 28480823048
 issue: 945
@@ -12,45 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Perfect Imprint palette usage: brand green (#009E73) first, lavender (#C475FD)
-    second, connector uses theme-adaptive INK_SOFT'
-  - 'Strong data storytelling: sort-by-improvement plus delta labels in category names
-    gives at-a-glance ranking without reading the x-axis'
-  - Includes regression outlier (Legal -3) making the dataset realistic and narratively
-    interesting
-  - 'Full spec compliance: horizontal orientation, distinct two-color encoding, thin
-    connectors, sorted layout'
-  - 'Excellent code quality: deterministic, no dead code, idiomatic pygal patterns,
-    sys.path workaround clearly explained'
-  - Both themes render correctly with no dark-on-dark or light-on-light failures
+  - Delta annotations embedded in Y-axis category labels (e.g., '+24', '-3') provide
+    at-a-glance insight without cluttering the chart with separate annotation elements
+  - Sort by improvement descending creates a clear top-to-bottom narrative; Legal's
+    regression naturally falls to the bottom
+  - Semantically correct LOSS_COLOR (#AE3030) applied to regression connector, with
+    all improvement connectors using theme-adaptive neutral (INK_SOFT)
+  - Both PNG and interactive HTML generated, leveraging pygal's core differentiator
+  - 'Full theme-adaptive chrome: title, labels, ticks, connectors, and legend all
+    flip correctly between light (#FAF8F1) and dark (#1A1A17) surfaces'
   weaknesses:
-  - Bottom ~25% of the 1800px canvas is blank dead space below the legend — the chart
-    content only occupies roughly the top 75% of canvas height; tune margin/margin_bottom
-    to use the full canvas while staying at 3200x1800
-  - Legend swatch rendered flush against label text with no spacing (pygal rendering
-    quirk) — adjust margin or legend sizing to compensate
-  - No annotation or emphasis distinguishes the Legal regression outlier (-3) — consider
-    using Imprint matte red (#AE3030) for negative-delta connectors to improve data
-    storytelling
+  - The LOSS_COLOR red connector on the Legal (-3) regression row is ambiguous at
+    rendered scale — 5px connector width and muted red may not visually pop against
+    neutral connectors; consider wider stroke (width=8) for the regression case
+  - No X-axis grid guides (show_x_guides=False) reduces value-reading precision for
+    a comparison chart where exact score differences matter — enable show_x_guides=True
+    with subtle foreground_subtle color
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · python · pygal · anyplot.ai" in dark text, spans ~78% of plot width (expected for 70-char title). Y-axis label "Department" and x-axis label "Satisfaction Score (out of 100)" both dark and readable. Category tick labels with delta annotations (e.g. "Customer Support (+24)") clearly visible. Legend at bottom shows two swatches with labels "Before policy change" / "After policy change".
-      Data: Brand green (#009E73) dots for before-policy, Imprint lavender (#C475FD) dots for after-policy; thin gray INK_SOFT connector lines. 9 department rows sorted by improvement descending. All elements distinguishable from background.
-      Layout note: approximately bottom 25% of canvas is blank below the legend.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · python · pygal · anyplot.ai" in dark ink at ~75-80% plot width (expected for long mandated title). Y-axis category labels with embedded delta annotations (e.g., "Customer Support (+24)") in dark text. X-axis label "Satisfaction Score (out of 100)" readable. Y-axis title "Department" vertically rotated and readable. Tick labels (35, 40, 50, 60, 70, 80, 90) all visible. Legend at bottom: "Before policy change" / "After policy change" with matching swatches.
+      Data: Before-policy dots in brand green (#009E73); after-policy dots in lavender (#C475FD). Connector lines in neutral gray (INK_SOFT). Legal (-3) regression connector specified as LOSS_COLOR #AE3030 but may be ambiguous at render scale. Dots size=24 large and clearly visible.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title and all axis/tick/legend text render in light cream-white tones, clearly visible against dark background. No dark-on-dark failures. Connector lines appear as subtle medium-gray (INK_SOFT dark-theme value).
-      Data: Data colors identical to light render — brand green and lavender dots consistent; only chrome has flipped to dark-theme values. Brand green #009E73 clearly visible on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: All chrome elements correctly flipped to light text. Title, axis labels, tick labels, and legend text rendered in light-colored ink against the dark surface. No dark-on-dark failures observed.
+      Data: Data colors (green #009E73 and lavender #C475FD) visually identical to light render — only chrome flipped, consistent with Imprint palette rules. Brand green clearly visible on dark background.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -58,51 +53,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set and readable in both themes; title scales
-          correctly for 70-char title; minor: some mid-chart category labels appear
-          slightly lighter weight'
+        comment: 'All text readable in both themes. Title scaled to 63px for 70-char
+          length. Minor: ''Operations (+15)'' appears very slightly lighter in light
+          render, likely font-rendering artifact.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, data elements, or legend
+        comment: No text overlaps with other text or data elements. Category labels
+          well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 9 sparse data points with large dots (dots_size=24) are highly prominent;
-          connector lines thin and visible; both series colors clear on both backgrounds
+        comment: Dots at size=24 large and clearly visible for 9-category sparse data.
+          Connectors at width=5 appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette; green/lavender pair is CVD-safe; before/after encoding
-          uses positional differentiation not color alone
+        comment: Green (#009E73) and lavender (#C475FD) from Imprint palette, CVD-safe.
+          LOSS_COLOR not sole distinguishing signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correct 3200x1800; chart content fills only ~75% of canvas
-          height leaving ~25% blank below legend
+        comment: Canvas 3200x1800 gate passed. Title proportions correct. Balanced
+          axis labels. Generous margins. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units (out of 100); Y-axis label appropriate; title
-          follows descriptive-prefix format
+        comment: '''Satisfaction Score (out of 100)'' descriptive with units; ''Department''
+          clear. Title follows mandated format with optional descriptive prefix.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Before = #009E73 (Imprint position 1), After = #C475FD (Imprint
-          position 2); backgrounds correct #FAF8F1 / #1A1A17; data colors identical
-          across both renders'
+        comment: 'Before-dots: #009E73 (Imprint position 1). After-dots: #C475FD (Imprint
+          position 2). Connectors: theme-adaptive INK_SOFT. LOSS_COLOR: #AE3030 (Imprint
+          position 5) for regression. Backgrounds correct.'
     design_excellence:
       score: 12
       max: 20
@@ -112,24 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): delta annotations in category labels and sort-by-improvement
-          show intentional design; limited by pygal rendering options'
+        comment: Above default. Delta annotations in labels, intentional sort order,
+          semantic LOSS_COLOR, correct Imprint palette. Good design intent beyond
+          defaults.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Above default (2): no grid lines, warm backgrounds, subtle connectors;
-          legend swatch has no spacing before text (pygal quirk); bottom blank space
-          reduces refinement score'
+        comment: No grid lines appropriate for sparse data. Minimal framing. Legend
+          at bottom with 2-column layout. Better than minimal but not exceptional.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): sorted descending by improvement creates readable
-          ranking; Legal regression (-3) is strong narrative outlier; delta labels
-          scannable without x-axis; no annotation or color emphasis on outlier'
+        comment: 'Strong storytelling: sort by improvement top-to-bottom narrative,
+          delta labels for instant reading, semantic red on regression connector as
+          focal-point indicator.'
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dumbbell (connected dot plot) with two dots per
-          row linked by connector line
+        comment: 'Correct dumbbell chart: two dots per category connected by line,
+          horizontal orientation, categories on Y-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Horizontal orientation, distinct colors for start/end, sorted by
-          difference, thin subtle connectors — all present
+          difference, subtle connecting lines — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = satisfaction score (xrange 35-95 covers all data), Y = departments
-          (all 9 rows), two series mapped correctly
+        comment: Categories on Y-axis, scores on X-axis (35-95 range covers all data),
+          all 9 departments displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows descriptive+spec-id+python+pygal+anyplot.ai format;
-          legend labels are descriptive
+        comment: Title 'Employee Satisfaction · dumbbell-basic · python · pygal ·
+          anyplot.ai' with optional descriptive prefix. Legend shows correct series
+          names with matching swatches.
     data_quality:
       score: 15
       max: 15
@@ -171,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Two connected dots per category, includes both improvement and regression
-          cases, delta shown in labels
+        comment: Before/after dots, connecting lines, sort by delta, delta in labels,
+          LOSS_COLOR for regression, 9 categories (within 5-20 range). Complete coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction (0-100 scale) before/after policy change in
-          9 plausible corporate departments; neutral and realistic
+        comment: Employee satisfaction before/after workplace policy — neutral, plausible,
+          widely recognizable. Named real departments.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 45-85, deltas -3 to +24; 9 categories within spec's 5-20 optimal
-          range
+        comment: Scores 45-85 out of 100. Improvements +6 to +24, one regression -3
+          — realistic satisfaction survey magnitudes.
     code_quality:
       score: 10
       max: 10
@@ -196,33 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear structure; clean list comprehensions
+        comment: No functions or classes. Flat, sequential script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path manipulation justified with comment
+        comment: os, sys, pathlib.Path (for sys.path fix), pygal, pygal.style.Style
+          — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Title font scaling formula clear; zip-with-strict throughout; delta
-          label generation readable
+        comment: sys.path manipulation is a legitimate workaround for name collision,
+          correctly labeled. Title font-size scaling formula handles the long mandated
+          title. Dynamic delta-label generation clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; interactive HTML correctly
-          included
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 7
       max: 10
@@ -232,17 +230,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: pygal.XY used idiomatically for coordinate-based scatter; Style object
-          carries all theme tokens; per-series stroke/show_dots overrides are idiomatic
-          pygal
+        comment: pygal.XY for scatter-based dumbbell is correct. y_labels with dict
+          format (label/value) for categorical Y-axis is idiomatic. Per-series stroke/dots_size
+          overrides used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses y_labels dict with label/value for custom tick positioning;
-          truncate_label/legend=-1 to disable truncation; legend_at_bottom_columns=2;
-          HTML output exploits pygal interactive rendering
+        comment: Generates both PNG and interactive HTML (pygal's main differentiator).
+          Interactive tooltips via per-point label property. legend_at_bottom_columns
+          leverages pygal's layout API.
   verdict: APPROVED
 impl_tags:
   dependencies: []
