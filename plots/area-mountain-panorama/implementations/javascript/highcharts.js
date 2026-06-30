@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 // Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 89/100 | Created: 2026-06-30
+// Quality: 84/100 | Created: 2026-06-30
 
 //# anyplot-orientation: landscape
 
