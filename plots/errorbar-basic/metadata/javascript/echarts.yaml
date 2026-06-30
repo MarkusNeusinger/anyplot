@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: errorbar-basic
 created: '2026-06-30T20:45:22Z'
-updated: '2026-06-30T20:51:08Z'
+updated: '2026-06-30T21:08:56Z'
 generated_by: claude-sonnet
 workflow_run: 28474310772
 issue: 973
@@ -12,132 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - ECharts custom series with renderItem correctly renders error bar stems + top/bottom
-    caps with z-layered scatter markers on top — clean ECharts idiom for non-standard
-    chart elements
-  - 'All theme tokens applied correctly: t.ink for title, t.inkSoft for axis labels/ticks,
-    t.grid for gridlines, t.pageBg as marker border — both renders pass the theme-readability
-    check'
-  - Realistic, scientifically plausible dataset (wheat yield response to nitrogen
-    fertilization) with agronomically sensible yield values and growing error magnitudes
-  - 'Perfect spec compliance: correct chart type, visible caps, consistent bar widths,
-    center-value markers, proper title format'
-  - 'White-bordered markers (borderColor: t.pageBg, borderWidth: 2) give clear visual
-    definition of center values against the error bars'
+  - Custom ECharts renderItem correctly implements error bar stems with horizontal
+    caps — the idiomatic approach for this chart type in ECharts
+  - markArea 'Optimal N zone' annotation adds genuine storytelling context beyond
+    just displaying data
+  - Correct Imprint palette applied (brand green first, lavender second), both light
+    and dark themes render with proper chrome
+  - 'Clean chrome: axis lines and tick marks removed, only subtle y-axis grid via
+    t.grid token'
+  - Realistic and scientifically accurate agricultural data (wheat/barley N-response)
+    with appropriate error magnitudes and N response curves
+  - All font sizes explicitly set and well-proportioned; both renders fully legible
+    with no dark-on-dark failures
   weaknesses:
-  - Design storytelling is minimal — no annotation or visual cue highlighting the
-    peak yield point at N=200 kg/ha, which is the most informative feature of the
-    dose-response curve; adding a short annotation or emphasis marker would raise
-    DE-03
-  - Only a single series is shown; the spec explicitly notes 'Consider using different
-    colors to distinguish between groups when comparing multiple series' — adding
-    a second comparison series (e.g., a different crop variety or fertilizer type)
-    would improve DQ-01 Feature Coverage and demonstrate the palette
-  - DE-01 design sophistication is basic — the plot shows no intentional visual hierarchy
-    beyond z-index layering; subtle design improvements (e.g., a reference line at
-    the control/zero-dose baseline, or a shaded 'optimal range' band) would elevate
-    the chart
+  - Helper functions mkErrData and mkScatData deviate slightly from KISS; they could
+    be inlined into the series data arrays
+  - 'Y-axis min=0 leaves ~20% of chart height with no data below y≈1.5; setting min:
+    0.5 or 1 would tighten proportions and improve canvas utilization'
+  - DE-01 could reach the next tier with a heavier title font weight and typographic
+    hierarchy differentiating the primary series from secondary
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "errorbar-basic · javascript · echarts · anyplot.ai" in dark ink (#1A1A17), centered at top. Y-axis label "Wheat Yield (t/ha)" rotated 90° on left, X-axis label "Nitrogen Dose (kg N/ha)" at bottom — both in muted dark ink, clearly readable. Tick labels (0–7 on Y, 0/50/100/150/200/250/300 on X) in soft dark tone — all readable. Subtle horizontal grid lines only (Y-axis), no vertical gridlines.
-      Data: 7 error bars in brand green (#009E73) with vertical stems and visible horizontal caps at both ends. Circular center-value markers in the same brand green with a warm-white border (t.pageBg) for definition. The data pattern shows a clear dose-response curve: yields rise steeply from 0→150 kg N/ha, plateau around 150–200, then decline slightly.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Centered title "errorbar-basic · javascript · echarts · anyplot.ai" in dark ink, clearly readable. Legend at top shows "Wheat" (green circle) and "Barley" (lavender circle), legible. X-axis label "Nitrogen Dose (kg N/ha)" and Y-axis label "Grain Yield (t/ha)" both clearly visible. Tick labels 0–300 on x, 0–7 on y, all readable. Subtle horizontal grid lines.
+      Data: Wheat (#009E73, brand green) and Barley (#C475FD, lavender) each with 7 data points. Error bars have visible horizontal caps. Scatter markers with pageBg border. Light green shaded markArea "Optimal N zone (100–250 kg/ha)" at opacity 0.07.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title in near-white (t.ink = #F0EFE8), clearly visible. Axis labels and tick labels in light-grey (t.inkSoft = #B8B7B0) — readable against the near-black surface, no dark-on-dark failures. Grid lines appear as very subtle lighter lines on the dark surface.
-      Data: Error bars and center markers are identical green (#009E73) to the light render — only chrome flipped. White-bordered markers remain visible with the border adapting to t.pageBg which in dark mode renders as transparent/elevated dark.
-      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark text failures detected.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title switches to light-colored text, clearly readable. Legend labels light-colored. X and Y axis labels light-colored. Tick labels light-colored. No dark-on-dark failures observed. Grid lines appear as subtle light-gray lines against dark background. Zone annotation text readable.
+      Data: Wheat (#009E73) and Barley (#C475FD) colors are identical to light render — only chrome flips. Shaded optimal zone rendered in darker teal-green, distinguishable from background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title, axis labels, and tick labels
-          use correct t.ink/t.inkSoft tokens. Title at fontSize 22 CSS px is slightly
-          compact but per library guide defaults.
+        comment: 'All font sizes explicitly set: title 22px, legend 14px, axis names
+          16px, tick labels 14px, annotation 12px. Well-proportioned in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 7 well-spaced data points, no overlap between error bars, markers,
-          labels, or ticks.
+        comment: Two series close in value at x=0 but distinguished by color. No text
+          collisions anywhere.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars with caps clearly visible; center markers (symbolSize
-          16) prominent and well-defined with white border on sparse 7-point dataset.
+        comment: symbolSize=14 appropriate for 7 sparse data points. Error bars lineWidth=3
+          with 18px caps clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in brand green #009E73 — CVD-safe Imprint palette
-          position 1. White borders on markers provide additional contrast.'
+        comment: Green and lavender perceptually separated under CVD. No red-green
+          sole-signal issue.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Grid margins (left:120, right:60, top:90, bottom:90)
-          provide generous space for axis labels. All elements within canvas bounds.
+        comment: Good margins (left 120, right 80, top 100, bottom 90). Plot fills
+          canvas well. Y-axis from 0 is scientifically justified baseline.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Nitrogen Dose (kg N/ha)'' and Y: ''Wheat Yield (t/ha)'' — both
-          descriptive with units. Title matches required format exactly.'
+        comment: 'X: ''Nitrogen Dose (kg N/ha)'', Y: ''Grain Yield (t/ha)'' — descriptive
+          with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses #009E73 (t.palette[0]) — brand green first. backgroundColor:
-          transparent lets the correct page surface show. Both themes render with
-          correct warm backgrounds.'
+        comment: 'Wheat = #009E73 (brand green, first series). Barley = #C475FD (Imprint
+          palette[1]). Background #FAF8F1 light / #1A1A17 dark. Chrome flips correctly
+          via ANYPLOT_TOKENS.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above default (4): custom renderItem implementation shows craft;
-          white-bordered markers are a deliberate quality touch. Not raised further
-          — no intentional visual hierarchy beyond z-layering, no reference lines
-          or emphasis elements.'
+        passed: true
+        comment: 'Above configured default: custom renderItem, markArea zone annotation,
+          pageBg marker borders. Not yet at strong-design publication level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Above default (2): Y-only gridlines (X splitLine: false), all chrome
-          tokens applied correctly, no legend frame for single-series. Some refinement
-          present but no spine removal or whitespace optimization beyond defaults.'
+        passed: true
+        comment: 'Axis lines and tick marks removed. Y-axis-only subtle grid via t.grid
+          token. Generous margins. Minor: y-axis min=0 leaves ~20% chart height without
+          data.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Above default (2): Data tells a clear agronomic story (nitrogen
-          dose-response curve), white-bordered markers draw eye to central values.
-          Not raised further — no annotation highlighting the peak, no visual cues
-          guiding the viewer to the key insight.'
+        passed: true
+        comment: markArea Optimal N zone annotation guides viewer. Wheat/barley N-response
+          comparison tells coherent agronomic story. Above data-dump level but no
+          visual emphasis differentiating primary series.
     spec_compliance:
       score: 15
       max: 15
@@ -147,123 +137,119 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct error bar plot using ECharts custom series for stems+caps
-          and scatter overlay for center markers.
+        comment: Correct error bar plot with custom renderItem for stems/caps and
+          scatter for center markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps (capHW=20), consistent bar widths (lw=3 throughout),
-          center-value markers, symmetric error bars — all spec requirements met.
+        comment: Visible caps, consistent cap width (18px), different colors for groups,
+          7 groups in 3-20 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categorical nitrogen doses 0–300 kg N/ha; Y: wheat yield means
-          2.1–5.9 t/ha; error: symmetric ±0.4–1.0 t/ha. All axes show full data range.'
+        comment: X = nitrogen doses (categorical), Y = grain yield. All data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'errorbar-basic · javascript · echarts · anyplot.ai' exactly
-          matches required format. No legend appropriate for single-series.
+        comment: 'Title: ''errorbar-basic · javascript · echarts · anyplot.ai''. Legend:
+          Wheat and Barley with circle icons.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows error bars with caps and center values clearly. Single series
-          only — spec mentions multi-series comparison as a recommended feature, but
-          doesn't require it. Minor gap.
+        comment: Two-series comparison, symmetric error bars with caps, heteroscedastic
+          errors (sigma increases with N dose), N-response plateau — all key features
+          covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wheat yield response to nitrogen fertilization is an authentic agricultural
-          research context. Values (2.1–5.9 t/ha), error ranges (0.4–1.0), and dose-response
-          curve shape are agronomically plausible. Neutral, non-controversial.
+        comment: Wheat/barley grain yield response to nitrogen fertilization — established
+          agricultural science scenario, neutral and realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y range 0–7 t/ha appropriate for wheat. Seven dose levels within
-          the spec's 3–20 group guidance. Error magnitudes scale sensibly with dose.
+        comment: Wheat 2.1-5.9 t/ha, barley 1.8-4.3 t/ha, N doses 0-300 kg N/ha, errors
+          0.3-1.0 t/ha — all match real-world ranges.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No wrapper functions or classes. The renderItem callback is a required
-          ECharts API contract, not a structural choice. Clean flat organization.
+        comment: Three helper functions deviate from flat KISS; mkErrData and mkScatData
+          could be inlined. makeRenderItem factory is justified.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded deterministically. No random number generation.
+        comment: All data hardcoded as deterministic arrays; no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed — ECharts and ANYPLOT_TOKENS are globals per harness
-          contract. Only accesses what is needed.
+        comment: No imports in JS harness context. Only ANYPLOT_TOKENS and echarts
+          global used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic ECharts code. No fake interactivity. Comments explain
-          data context. Appropriate complexity for the task.
+        comment: Clean factory pattern, appropriate complexity, no over-engineering,
+          no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'ECharts is in INTERACTIVE_LIBRARIES — harness emits both .png and
-          .html. animation: false set. No explicit devicePixelRatio override. Uses
-          current ECharts 5 API.'
+        comment: 'Follows harness contract: echarts.init on #container, animation:
+          false, no explicit devicePixelRatio. Harness produces both .png and .html.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of type: custom with renderItem factory, encode/dimensions
+          pattern, markArea with silent annotation, z-ordering.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Correct echarts.init pattern, animation: false, no explicit size/DPR,
-          backgroundColor: transparent per library guide. Uses encode metadata on
-          custom series correctly.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ECharts' custom series type with renderItem — a distinctive
-          ECharts feature for non-native chart elements. Group primitive with children
-          array for composing multi-shape elements, z-index layering for render order
-          — all ECharts-specific patterns.
+        comment: 'Custom renderItem for error bar stems/caps is distinctly ECharts.
+          markArea zone highlighting is ECharts-specific. One point withheld: could
+          use richer label formatting or emphasis states.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-renderer
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - alpha-blending
