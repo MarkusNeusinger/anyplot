@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 83/100 | Updated: 2026-06-30
 """
 
 import os
@@ -10,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
@@ -39,29 +39,35 @@ sns.set_theme(
 )
 
 # Data — Wallis (Valais, Switzerland) panorama from Gornergrat, west → east sweep.
-# sigma controls angular half-width: smaller = sharper, more iconic summit profile.
+# left_slope / right_slope: angular half-width (degrees) per unit drop on each flank.
+# Smaller = steeper spike. Asymmetry per peak gives varied alpine silhouette.
+# Matterhorn gets very narrow slopes to create the iconic sharp spike even though it is
+# not the tallest peak — its narrow tent makes it visually pierce the ridgeline.
 peaks = pd.DataFrame(
     [
-        {"name": "Weisshorn", "angle_deg": 10.0, "elevation_m": 4506, "sigma": 4.6},
-        {"name": "Zinalrothorn", "angle_deg": 22.0, "elevation_m": 4221, "sigma": 4.2},
-        {"name": "Ober Gabelhorn", "angle_deg": 32.0, "elevation_m": 4063, "sigma": 5.4},
-        {"name": "Dent Blanche", "angle_deg": 44.0, "elevation_m": 4358, "sigma": 4.6},
-        {"name": "Matterhorn", "angle_deg": 62.0, "elevation_m": 4478, "sigma": 3.0},
-        {"name": "Breithorn", "angle_deg": 82.0, "elevation_m": 4164, "sigma": 7.0},
-        {"name": "Pollux", "angle_deg": 92.0, "elevation_m": 4092, "sigma": 3.6},
-        {"name": "Castor", "angle_deg": 99.0, "elevation_m": 4223, "sigma": 3.6},
-        {"name": "Liskamm", "angle_deg": 110.0, "elevation_m": 4527, "sigma": 6.5},
-        {"name": "Dufourspitze", "angle_deg": 124.0, "elevation_m": 4634, "sigma": 5.2},
-        {"name": "Strahlhorn", "angle_deg": 142.0, "elevation_m": 4190, "sigma": 5.0},
-        {"name": "Rimpfischhorn", "angle_deg": 152.0, "elevation_m": 4199, "sigma": 4.4},
-        {"name": "Allalinhorn", "angle_deg": 161.0, "elevation_m": 4027, "sigma": 5.2},
-        {"name": "Alphubel", "angle_deg": 171.0, "elevation_m": 4206, "sigma": 4.6},
-        {"name": "Täschhorn", "angle_deg": 181.0, "elevation_m": 4491, "sigma": 3.6},
-        {"name": "Dom", "angle_deg": 191.0, "elevation_m": 4545, "sigma": 3.4},
+        {"name": "Weisshorn", "angle_deg": 10.0, "elevation_m": 4506, "left_slope": 5.0, "right_slope": 7.0},
+        {"name": "Zinalrothorn", "angle_deg": 22.0, "elevation_m": 4221, "left_slope": 4.0, "right_slope": 5.5},
+        {"name": "Ober Gabelhorn", "angle_deg": 32.0, "elevation_m": 4063, "left_slope": 6.5, "right_slope": 4.5},
+        {"name": "Dent Blanche", "angle_deg": 44.0, "elevation_m": 4358, "left_slope": 5.5, "right_slope": 7.0},
+        {"name": "Matterhorn", "angle_deg": 62.0, "elevation_m": 4478, "left_slope": 2.8, "right_slope": 2.0},
+        {"name": "Breithorn", "angle_deg": 82.0, "elevation_m": 4164, "left_slope": 8.5, "right_slope": 6.5},
+        {"name": "Pollux", "angle_deg": 92.0, "elevation_m": 4092, "left_slope": 3.5, "right_slope": 4.5},
+        {"name": "Castor", "angle_deg": 99.0, "elevation_m": 4223, "left_slope": 3.5, "right_slope": 3.0},
+        {"name": "Liskamm", "angle_deg": 110.0, "elevation_m": 4527, "left_slope": 8.0, "right_slope": 5.5},
+        {"name": "Dufourspitze", "angle_deg": 124.0, "elevation_m": 4634, "left_slope": 6.5, "right_slope": 5.0},
+        {"name": "Strahlhorn", "angle_deg": 142.0, "elevation_m": 4190, "left_slope": 5.5, "right_slope": 6.0},
+        {"name": "Rimpfischhorn", "angle_deg": 152.0, "elevation_m": 4199, "left_slope": 4.0, "right_slope": 5.5},
+        {"name": "Allalinhorn", "angle_deg": 161.0, "elevation_m": 4027, "left_slope": 5.5, "right_slope": 4.0},
+        {"name": "Alphubel", "angle_deg": 171.0, "elevation_m": 4206, "left_slope": 6.0, "right_slope": 4.5},
+        {"name": "Täschhorn", "angle_deg": 181.0, "elevation_m": 4491, "left_slope": 4.5, "right_slope": 3.5},
+        {"name": "Dom", "angle_deg": 191.0, "elevation_m": 4545, "left_slope": 4.0, "right_slope": 5.5},
     ]
 )
 
-# Build skyline as upper envelope of per-peak Gaussian bumps over undulating valley floor
+# Build skyline as upper envelope of piecewise-linear tent functions over undulating valley floor.
+# Tent formula: bump = h * max(0, 1 - left_dist - right_dist)
+# Exactly one of {left_dist, right_dist} is nonzero at each sample — giving sharp apexes.
+# Saddles between peaks dip to the valley floor because tent is zero beyond slope*1 deg.
 np.random.seed(42)
 sample_angles = np.linspace(-5.0, 205.0, 1800)
 
@@ -71,34 +77,47 @@ ridge = np.copy(valley_floor)
 for _, row in peaks.iterrows():
     floor_at_peak = valley_floor[np.argmin(np.abs(sample_angles - row["angle_deg"]))]
     bump_height = row["elevation_m"] - floor_at_peak
-    bump = bump_height * np.exp(-0.5 * ((sample_angles - row["angle_deg"]) / row["sigma"]) ** 2)
-    ridge = np.maximum(ridge, valley_floor + bump)
+    left_dist = np.clip((row["angle_deg"] - sample_angles) / row["left_slope"], 0.0, None)
+    right_dist = np.clip((sample_angles - row["angle_deg"]) / row["right_slope"], 0.0, None)
+    tent = bump_height * np.maximum(0.0, 1.0 - left_dist - right_dist)
+    ridge = np.maximum(ridge, valley_floor + tent)
 
-# High-frequency rocky texture, tapered at panorama edges
+# Small rocky texture along ridgeline (jagged detail), tapered at panorama edges
 texture = (
-    35 * np.sin(sample_angles * 1.7 + 0.3)
-    + 22 * np.sin(sample_angles * 3.1 + 1.7)
-    + np.random.normal(0, 14, size=sample_angles.shape)
+    20 * np.sin(sample_angles * 1.7 + 0.3)
+    + 12 * np.sin(sample_angles * 3.1 + 1.7)
+    + np.random.normal(0, 9, size=sample_angles.shape)
 )
 edge_taper = np.clip((sample_angles - 0) / 6, 0, 1) * np.clip((200 - sample_angles) / 6, 0, 1)
 ridge = ridge + texture * edge_taper
 
 skyline = pd.DataFrame({"angle_deg": sample_angles, "elevation_m": ridge})
 
-# Plot — 3200×1800 px landscape canvas (figsize=(8,4.5) × dpi=400)
+# Canvas: 3200×1800 px (figsize=(8,4.5) × dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 Y_FLOOR = 2500
 LABEL_BASE_Y = 4880
 LABEL_STAGGER = 200
+Y_TOP = LABEL_BASE_Y + 2 * LABEL_STAGGER + 350  # 5630
 
-# Filled silhouette + crisp ridgeline edge via sns.lineplot
+# Dusk sky gradient above ridgeline — the mountain silhouette (zorder=2) covers below the ridge;
+# the gradient is visible in the sky and annotation zones above it.
+sky_colors = (
+    ["#FDDCB0", "#E8A870", "#A8C8E0"]  # warm amber → golden → soft sky blue
+    if THEME == "light"
+    else ["#6B2040", "#2A1860", "#0A1428"]  # magenta-purple → indigo → near-black
+)
+sky_cmap = LinearSegmentedColormap.from_list("sky_dusk", sky_colors)
+sky_arr = np.linspace(0, 1, 256).reshape(-1, 1)
+ax.imshow(sky_arr, aspect="auto", cmap=sky_cmap, origin="lower", extent=[0, 200, Y_FLOOR, Y_TOP], zorder=0, alpha=0.6)
+
+# Filled mountain silhouette + crisp ridgeline edge via sns.lineplot
 ax.fill_between(skyline["angle_deg"], skyline["elevation_m"], Y_FLOOR, color=BRAND, alpha=1.0, linewidth=0, zorder=2)
-sns.lineplot(data=skyline, x="angle_deg", y="elevation_m", color=BRAND, linewidth=1.2, ax=ax, legend=False)
+sns.lineplot(data=skyline, x="angle_deg", y="elevation_m", color=BRAND, linewidth=1.2, ax=ax, legend=False, zorder=2)
 
-# Assign 3-level stagger based on angular proximity (threshold 20°) to avoid
-# same-height labels when peaks cluster (e.g. Breithorn / Pollux / Castor).
+# 3-level stagger: prevents label collisions in dense clusters (Breithorn/Pollux/Castor etc.)
 peak_angles = peaks["angle_deg"].values
 label_levels = np.zeros(len(peaks), dtype=int)
 for i in range(1, len(peaks)):
@@ -110,7 +129,7 @@ for i in range(1, len(peaks)):
     else:
         label_levels[i] = i % 3
 
-# Peak labels with leader lines
+# Peak labels with semi-transparent leader lines
 for i, (_, row) in enumerate(peaks.iterrows()):
     is_anchor = row["name"] == "Matterhorn"
     label_y = LABEL_BASE_Y + label_levels[i] * LABEL_STAGGER
@@ -147,7 +166,7 @@ for i, (_, row) in enumerate(peaks.iterrows()):
         zorder=4,
     )
 
-# Matterhorn focal highlight via sns.scatterplot (open circle on summit)
+# Matterhorn focal marker — open circle at summit via sns.scatterplot
 matterhorn = peaks.loc[peaks["name"] == "Matterhorn"].iloc[0]
 sns.scatterplot(
     x=[matterhorn["angle_deg"]],
@@ -161,9 +180,9 @@ sns.scatterplot(
     legend=False,
 )
 
-# Style
+# Axes style
 ax.set_xlim(0, 200)
-ax.set_ylim(Y_FLOOR, LABEL_BASE_Y + 2 * LABEL_STAGGER + 350)
+ax.set_ylim(Y_FLOOR, Y_TOP)
 ax.set_xlabel("Compass bearing", fontsize=10, color=INK)
 ax.set_ylabel("Elevation (m)", fontsize=10, color=INK)
 ax.set_title(
@@ -172,14 +191,14 @@ ax.set_title(
 
 ax.set_xticks([0, 50, 100, 150, 200])
 ax.set_xticklabels(["W", "SW", "S", "SE", "E"])
+# Y ticks only in the data range — no grid lines extending into the annotation zone
+ax.set_yticks([2500, 3000, 3500, 4000, 4500])
 ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, length=0)
 ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT, length=0)
 
 sns.despine(ax=ax, top=True, right=True)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.6, color=INK)
-ax.set_axisbelow(True)
 
 fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.11)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
