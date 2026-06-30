@@ -1,10 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: matplotlib 3.10.9 | Python 3.14.4
-Quality: 91/100 | Updated: 2026-04-25
+Library: matplotlib | Python 3.14
+Quality: 91/100 | Updated: 2026-06-30
 """
 
 import os
+import sys
+
+
+# Script named matplotlib.py shadows the installed package when run from its own directory.
+# Removing the first sys.path entry (the script's directory) before any matplotlib import
+# restores the normal package lookup — the venv site-packages takes over.
+sys.path.pop(0)
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -14,34 +21,34 @@ import numpy as np
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint semantic anchors (red / amber / green traffic-light)
+# Imprint semantic anchors (red / amber / green traffic-light)
 ZONE_BAD = "#AE3030"  # matte red — semantic bad
 ZONE_WARN = "#DDCC77"  # amber — semantic warning
 ZONE_GOOD = "#009E73"  # brand green — semantic good
 
 # Data
-value = 72  # Current sales value
+value = 72
 min_value = 0
 max_value = 100
-thresholds = [30, 70]  # Boundaries for bad/warn/good zones
+thresholds = [30, 70]
 
-# Geometry: gauge spans from 180° (left) to 0° (right)
+# Gauge geometry: 180° arc (left=0, right=100)
 angle_range = 180
 value_normalized = (value - min_value) / (max_value - min_value)
 needle_angle = 180 - value_normalized * angle_range
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — square canvas (2400×2400) for optimal gauge proportions
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Background zone wedges
+# Color zones with labels
 zone_colors = [ZONE_BAD, ZONE_WARN, ZONE_GOOD]
 zone_boundaries = [min_value] + thresholds + [max_value]
+zone_labels = ["Poor", "Fair", "Good"]
 
 for i in range(len(zone_colors)):
     start_norm = (zone_boundaries[i] - min_value) / (max_value - min_value)
@@ -60,11 +67,26 @@ for i in range(len(zone_colors)):
     )
     ax.add_patch(wedge)
 
-# Inner cutout to clean the dial center (matches page background)
-inner_circle = mpatches.Wedge(center=(0, 0), r=0.65, theta1=0, theta2=180, facecolor=PAGE_BG, edgecolor="none")
-ax.add_patch(inner_circle)
+    # Zone label at arc midpoint (tangential orientation)
+    mid_norm = (start_norm + end_norm) / 2
+    mid_angle = 180 - mid_norm * angle_range
+    mid_rad = np.radians(mid_angle)
+    ax.text(
+        0.85 * np.cos(mid_rad),
+        0.85 * np.sin(mid_rad),
+        zone_labels[i],
+        ha="center",
+        va="center",
+        fontsize=8,
+        fontweight="bold",
+        color=PAGE_BG,
+        rotation=mid_angle - 90,
+    )
 
-# Tick marks: major (with labels) and minor (between)
+# Inner fill (matches page background, cleans dial center)
+ax.add_patch(mpatches.Wedge(center=(0, 0), r=0.65, theta1=0, theta2=180, facecolor=PAGE_BG, edgecolor="none"))
+
+# Tick marks: minor and major
 major_ticks = [0, 25, 50, 75, 100]
 minor_ticks = [t for t in range(0, 101, 5) if t not in major_ticks]
 
@@ -72,10 +94,9 @@ for tick in minor_ticks:
     tick_norm = (tick - min_value) / (max_value - min_value)
     tick_angle = 180 - tick_norm * angle_range
     tick_rad = np.radians(tick_angle)
-    inner_r, outer_r = 1.02, 1.05
     ax.plot(
-        [inner_r * np.cos(tick_rad), outer_r * np.cos(tick_rad)],
-        [inner_r * np.sin(tick_rad), outer_r * np.sin(tick_rad)],
+        [1.02 * np.cos(tick_rad), 1.05 * np.cos(tick_rad)],
+        [1.02 * np.sin(tick_rad), 1.05 * np.sin(tick_rad)],
         color=INK_SOFT,
         linewidth=1.5,
     )
@@ -84,48 +105,51 @@ for tick in major_ticks:
     tick_norm = (tick - min_value) / (max_value - min_value)
     tick_angle = 180 - tick_norm * angle_range
     tick_rad = np.radians(tick_angle)
-    inner_r, outer_r = 1.02, 1.09
     ax.plot(
-        [inner_r * np.cos(tick_rad), outer_r * np.cos(tick_rad)],
-        [inner_r * np.sin(tick_rad), outer_r * np.sin(tick_rad)],
+        [1.02 * np.cos(tick_rad), 1.09 * np.cos(tick_rad)],
+        [1.02 * np.sin(tick_rad), 1.09 * np.sin(tick_rad)],
         color=INK,
         linewidth=3,
     )
-    label_r = 1.19
     ax.text(
-        label_r * np.cos(tick_rad),
-        label_r * np.sin(tick_rad),
+        1.19 * np.cos(tick_rad),
+        1.19 * np.sin(tick_rad),
         str(tick),
         ha="center",
         va="center",
-        fontsize=18,
+        fontsize=16,
         fontweight="bold",
         color=INK_SOFT,
     )
 
 # Needle
 needle_rad = np.radians(needle_angle)
-needle_length = 0.78
-needle_x = needle_length * np.cos(needle_rad)
-needle_y = needle_length * np.sin(needle_rad)
-ax.plot([0, needle_x], [0, needle_y], color=INK, linewidth=6, solid_capstyle="round", zorder=9)
+ax.plot(
+    [0, 0.78 * np.cos(needle_rad)],
+    [0, 0.78 * np.sin(needle_rad)],
+    color=INK,
+    linewidth=5,
+    solid_capstyle="round",
+    zorder=9,
+)
 
 # Center cap (two-tone for definition)
 ax.add_patch(plt.Circle((0, 0), 0.09, facecolor=INK, edgecolor="none", zorder=10))
 ax.add_patch(plt.Circle((0, 0), 0.035, facecolor=PAGE_BG, edgecolor="none", zorder=11))
 
 # Value label and context
-ax.text(0, -0.25, f"{value}", ha="center", va="center", fontsize=56, fontweight="bold", color=ZONE_GOOD)
-ax.text(0, -0.47, "Current Sales", ha="center", va="center", fontsize=20, color=INK_MUTED)
+ax.text(0, -0.22, f"{value}", ha="center", va="center", fontsize=56, fontweight="bold", color=ZONE_GOOD)
+ax.text(0, -0.46, "Current Sales", ha="center", va="center", fontsize=18, color=INK_MUTED)
 
 # Title
-ax.set_title("gauge-basic · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+title = "gauge-basic · python · matplotlib · anyplot.ai"
+ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=20)
 
-# Frame
+# Frame — square axes to match square canvas
 ax.set_aspect("equal")
 ax.set_xlim(-1.5, 1.5)
-ax.set_ylim(-0.7, 1.5)
+ax.set_ylim(-1.15, 1.85)
 ax.axis("off")
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.03, right=0.97, top=0.88, bottom=0.05)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
