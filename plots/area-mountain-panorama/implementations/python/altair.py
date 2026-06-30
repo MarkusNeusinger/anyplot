@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-30
@@ -31,64 +31,92 @@ SKY_ZENITH = "#5C5078" if THEME == "light" else "#0C0E1A"
 # Alpenglow rim — warm gold / rose-copper at the sky-to-silhouette boundary
 ALPENGLOW = "#FFBA6A" if THEME == "light" else "#C88060"
 
-# Data — 6 major Wallis (Valais, CH) summits across a 180° horizontal sweep.
-# Ober Gabelhorn (30°) and Liskamm (97°) omitted: their 12° gaps to adjacent
-# peaks (Dent Blanche 42°, Monte Rosa 109°) prevent clean two-tier label stagger.
+BASE_ELEV = 2950
+
+# All 16 major Wallis (Valais, CH) summits across a 180° horizontal sweep.
+# left_slope / right_slope: m/degree for piecewise-linear tent flanks.
 peaks = pd.DataFrame(
     [
-        ("Weisshorn", 4506, 9),
-        ("Dent Blanche", 4358, 42),
-        ("Matterhorn", 4478, 56),
-        ("Monte Rosa", 4634, 109),
-        ("Alphubel", 4206, 148),
-        ("Dom", 4545, 168),
+        ("Weisshorn", 4506, 9, 280, 200),
+        ("Zinalrothorn", 4221, 22, 180, 250),
+        ("Ober Gabelhorn", 4063, 30, 220, 180),
+        ("Dent Blanche", 4358, 42, 200, 300),
+        ("Matterhorn", 4478, 56, 350, 280),  # focal point — steepest flanks
+        ("Breithorn", 4164, 72, 150, 160),
+        ("Pollux", 4092, 83, 200, 170),
+        ("Castor", 4223, 88, 180, 210),
+        ("Liskamm", 4527, 97, 200, 180),
+        ("Monte Rosa", 4634, 109, 180, 250),
+        ("Strahlhorn", 4190, 122, 200, 180),
+        ("Rimpfischhorn", 4199, 130, 220, 190),
+        ("Allalinhorn", 4027, 137, 180, 200),
+        ("Alphubel", 4206, 148, 160, 200),
+        ("Täschhorn", 4491, 155, 250, 180),
+        ("Dom", 4545, 168, 200, 280),
     ],
-    columns=["name", "elevation_m", "angle_deg"],
+    columns=["name", "elevation_m", "angle_deg", "left_slope", "right_slope"],
 )
 
-# Ridgeline — gaussian superposition: named summits + naturalistic minor relief
+# Ridgeline — piecewise-linear tent/triangle functions per spec.
+# Spec explicitly forbids Gaussian/bell-curve bumps; each summit uses two linear
+# flanks meeting at a sharp apex, with asymmetric slope steepness.
 np.random.seed(42)
 angles = np.linspace(-2, 182, 1500)
-ridge_elev = 2950 + 110 * np.sin(angles * 0.11) + 35 * np.sin(angles * 0.43 + 1.1)
 
-for _ in range(55):
+# Base ridge always at or above BASE_ELEV — positive-only sinusoidal undulation
+ridge_elev = BASE_ELEV + np.maximum(0, 70 * np.sin(angles * 0.12) + 22 * np.sin(angles * 0.47 + 1.1))
+
+# Rocky inter-peak jaggedness: 65 random tent functions (NOT Gaussian)
+for _ in range(65):
     pos = np.random.uniform(-2, 182)
-    height = np.random.uniform(150, 480)
-    width = np.random.uniform(1.4, 3.0)
-    ridge_elev = np.maximum(ridge_elev, 2950 + height * np.exp(-((angles - pos) ** 2) / (2 * width**2)))
+    height = np.random.uniform(60, 320)
+    lslope = np.random.uniform(60, 220)
+    rslope = np.random.uniform(60, 220)
+    tent = BASE_ELEV + height - np.where(angles <= pos, lslope * (pos - angles), rslope * (angles - pos))
+    ridge_elev = np.maximum(ridge_elev, np.maximum(BASE_ELEV, tent))
 
+# Named peaks: steep asymmetric tent functions — sharp apex + linear flanks
 for _, row in peaks.iterrows():
-    h = row["elevation_m"] - 2950
-    w = 2.0 + (row["elevation_m"] - 4000) * 0.0007
-    ridge_elev = np.maximum(ridge_elev, 2950 + h * np.exp(-((angles - row["angle_deg"]) ** 2) / (2 * w**2)))
+    pos, elev = row["angle_deg"], row["elevation_m"]
+    tent = elev - np.where(angles <= pos, row["left_slope"] * (pos - angles), row["right_slope"] * (angles - pos))
+    ridge_elev = np.maximum(ridge_elev, np.maximum(BASE_ELEV, tent))
 
 ridge = pd.DataFrame({"angle_deg": angles, "elevation_m": ridge_elev})
 
-# Two-tier label stagger + Matterhorn focal accent.
-# HIGH tier: Weisshorn/Monte Rosa/Dom — well-separated (≥59°).
-# LOW tier: Dent Blanche/Alphubel — well-separated (106°).
-# Dent Blanche uses right-align to avoid horizontal overlap with Matterhorn's
-# center-aligned SPECIAL label (14° / 48px gap between their anchor points).
+# Four label tiers assigned by round-robin for maximum same-tier angular separation
+# (minimum ~33° within each tier, preventing label collision).
+# TIER_A (5300): Weisshorn(9°), Liskamm(97°), Allalinhorn(137°)
+# TIER_B (5100): Zinalrothorn(22°), Breithorn(72°), Monte Rosa(109°), Alphubel(148°)
+# TIER_C (4900): Ober Gabelhorn(30°), Pollux(83°), Strahlhorn(122°), Täschhorn(155°)
+# TIER_D (4700): Dent Blanche(42°), Castor(88°), Rimpfischhorn(130°), Dom(168°)
+# MATTERHORN SPECIAL (5500): strongest focal accent
+TIER_A, TIER_B, TIER_C, TIER_D, TIER_MAT = 5300, 5100, 4900, 4700, 5500
 label_y_map = {
-    "Weisshorn": 4950,  # HIGH
-    "Dent Blanche": 4700,  # LOW  — right-aligned in text layers
-    "Matterhorn": 5050,  # SPECIAL focal
-    "Monte Rosa": 4950,  # HIGH
-    "Alphubel": 4700,  # LOW
-    "Dom": 4950,  # HIGH
+    "Weisshorn": TIER_A,
+    "Zinalrothorn": TIER_B,
+    "Ober Gabelhorn": TIER_C,
+    "Dent Blanche": TIER_D,
+    "Matterhorn": TIER_MAT,
+    "Breithorn": TIER_B,
+    "Pollux": TIER_C,
+    "Castor": TIER_D,
+    "Liskamm": TIER_A,
+    "Monte Rosa": TIER_B,
+    "Strahlhorn": TIER_C,
+    "Rimpfischhorn": TIER_D,
+    "Allalinhorn": TIER_A,
+    "Alphubel": TIER_B,
+    "Täschhorn": TIER_C,
+    "Dom": TIER_D,
 }
 peaks["label_y"] = peaks["name"].map(label_y_map)
 peaks["elev_label"] = peaks["elevation_m"].apply(lambda v: f"{v} m")
 
 matterhorn = peaks[peaks["name"] == "Matterhorn"]
-dent_blanche = peaks[peaks["name"] == "Dent Blanche"]
-others_center = peaks[(peaks["name"] != "Matterhorn") & (peaks["name"] != "Dent Blanche")]
+others = peaks[peaks["name"] != "Matterhorn"]
 
 # Coordinate system — only the sky layer carries the explicit scale + axis;
 # other layers share it implicitly via Vega-Lite layer scale resolution.
-# Adding alt.Scale to any secondary layer causes vl-convert to produce ~2× chart
-# height overhead (confirmed via systematic debug tests), making the output exceed
-# the 1800-source-px target even at height=190. Sky alone is the "anchor" layer.
 X_SCALE = alt.Scale(domain=[0, 180])
 Y_SCALE = alt.Scale(domain=[2900, 5800])
 Y_AXIS = alt.Axis(values=[3000, 3500, 4000, 4500, 5000])
@@ -129,60 +157,42 @@ alpenglow = (
     .encode(x="angle_deg:Q", y="elevation_m:Q")
 )
 
-_tooltip_others = [
-    alt.Tooltip("name:N", title="Peak"),
-    alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d"),
-]
-_tooltip_mat = [alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")]
+_tooltip = [alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")]
 
 # Layers 4–5: leader lines from summit apex to label anchor
 leaders = (
-    alt.Chart(pd.concat([others_center, dent_blanche]))
+    alt.Chart(others)
     .mark_rule(strokeWidth=1.0, opacity=0.55, color=INK_SOFT)
-    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip_others)
+    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip)
 )
 matterhorn_leader = (
     alt.Chart(matterhorn)
     .mark_rule(strokeWidth=2.5, opacity=0.9, color=INK)
-    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip_mat)
+    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip)
 )
 
-# Layers 6–7: center-aligned name/elev labels for non-Matterhorn, non-Dent-Blanche peaks
+# Layers 6–7: center-aligned name/elevation labels for all non-Matterhorn peaks
 name_labels = (
-    alt.Chart(others_center)
-    .mark_text(align="center", baseline="bottom", fontSize=12, fontWeight="bold", color=INK, dy=-28)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_others)
+    alt.Chart(others)
+    .mark_text(align="center", baseline="bottom", fontSize=10, fontWeight="bold", color=INK, dy=-22)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip)
 )
 elev_labels = (
-    alt.Chart(others_center)
-    .mark_text(align="center", baseline="bottom", fontSize=12, color=INK_SOFT, dy=-8)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_others)
+    alt.Chart(others)
+    .mark_text(align="center", baseline="bottom", fontSize=10, color=INK_SOFT, dy=-6)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip)
 )
 
-# Layers 8–9: right-aligned name/elev labels for Dent Blanche.
-# Right-align causes text to extend LEFT of x=42°, giving a 28px horizontal gap
-# to Matterhorn's center-aligned labels at x=56° and avoiding visual collision.
-db_name = (
-    alt.Chart(dent_blanche)
-    .mark_text(align="right", baseline="bottom", fontSize=12, fontWeight="bold", color=INK, dy=-28)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_others)
-)
-db_elev = (
-    alt.Chart(dent_blanche)
-    .mark_text(align="right", baseline="bottom", fontSize=12, color=INK_SOFT, dy=-8)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_others)
-)
-
-# Layers 10–11: Matterhorn focal accent — larger font, heavier weight, composition anchor
+# Layers 8–9: Matterhorn focal accent — larger font, heavier weight, composition anchor
 matterhorn_name = (
     alt.Chart(matterhorn)
-    .mark_text(align="center", baseline="bottom", fontSize=16, fontWeight="bold", color=INK, dy=-32)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_mat)
+    .mark_text(align="center", baseline="bottom", fontSize=15, fontWeight="bold", color=INK, dy=-28)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip)
 )
 matterhorn_elev = (
     alt.Chart(matterhorn)
     .mark_text(align="center", baseline="bottom", fontSize=12, fontWeight="bold", color=INK_SOFT, dy=-8)
-    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_mat)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip)
 )
 
 title_str = "Wallis Panorama · area-mountain-panorama · python · altair · anyplot.ai"
@@ -202,8 +212,6 @@ chart = (
         + matterhorn_leader
         + name_labels
         + elev_labels
-        + db_name
-        + db_elev
         + matterhorn_name
         + matterhorn_elev
     )
@@ -212,7 +220,7 @@ chart = (
         height=190,
         title=alt.Title(
             title_str,
-            subtitle="Six 4000-m summits along a 180° horizontal sweep, Valais Alps",
+            subtitle="Sixteen 4000-m summits along a 180° horizontal sweep, Valais Alps",
             subtitleColor=INK_SOFT,
             subtitleFontSize=13,
             fontSize=title_fs,
