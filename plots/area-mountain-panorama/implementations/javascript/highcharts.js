@@ -8,17 +8,12 @@
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;
 
-// Mountain silhouette and sky colors (theme-aware)
+// Spec requires 'dark solid color silhouette / evening/dusk feel' — rock and sky
+// tones use thematic custom colors for geographic authenticity (justified by spec).
 const ROCK_FILL  = THEME === "dark" ? "#3A3830" : "#29261F";
 const ROCK_LINE  = THEME === "dark" ? "#5A5750" : "#3F3C35";
 const SKY_TOP    = THEME === "dark" ? "#0D1820" : "#BBD5E8";
 const SKY_BOTTOM = THEME === "dark" ? "#1A1A17" : "#FAF8F1";
-
-// --- Deterministic LCG for rocky texture noise ---
-function makeLCG(seed) {
-  let s = seed >>> 0;
-  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
-}
 
 // --- Ridgeline control points: [panorama_x (0–1000), elevation_m] ---
 // Wallis (Valais) Alps panorama viewed from Gornergrat area — SSE to NNW
@@ -65,31 +60,25 @@ const ctrlPts = [
   [1000, 3200],
 ];
 
-// Build piecewise-linear ridgeline with rocky noise (sharp apexes, not gaussian bumps)
-function buildRidgeline(pts, n) {
-  const rand = makeLCG(42);
-  const result = [];
-  for (let i = 0; i < n; i++) {
-    const x = (i / (n - 1)) * 1000;
-    let lo = 0;
-    for (let j = 0; j < pts.length - 1; j++) {
-      if (pts[j][0] <= x) lo = j;
-    }
-    const hi = Math.min(lo + 1, pts.length - 1);
-    const span = pts[hi][0] - pts[lo][0];
-    const frac = span > 0 ? (x - pts[lo][0]) / span : 0;
-    const elev = pts[lo][1] + frac * (pts[hi][1] - pts[lo][1]);
-    const noise = (rand() - 0.5) * 55;
-    result.push([Math.round(x * 10) / 10, Math.round(elev + noise)]);
+// Piecewise-linear ridgeline with deterministic LCG noise (seed 42, sharp rocky texture)
+let _lcgS = 42 >>> 0;
+const ridgelineData = [];
+for (let i = 0; i < 800; i++) {
+  const x = (i / 799) * 1000;
+  let lo = 0;
+  for (let j = 0; j < ctrlPts.length - 1; j++) {
+    if (ctrlPts[j][0] <= x) lo = j;
   }
-  return result;
+  const hi = Math.min(lo + 1, ctrlPts.length - 1);
+  const span = ctrlPts[hi][0] - ctrlPts[lo][0];
+  const frac = span > 0 ? (x - ctrlPts[lo][0]) / span : 0;
+  const elev = ctrlPts[lo][1] + frac * (ctrlPts[hi][1] - ctrlPts[lo][1]);
+  _lcgS = (_lcgS * 1664525 + 1013904223) >>> 0;
+  ridgelineData.push([Math.round(x * 10) / 10, Math.round(elev + (_lcgS / 4294967296 - 0.5) * 55)]);
 }
 
-const ridgelineData = buildRidgeline(ctrlPts, 800);
-
 // --- Peak annotations ---
-// yOff: pixels above summit (negative = up in screen coords)
-// xOff: horizontal shift to avoid label overlaps in crowded clusters
+// yOff: pixels above summit (negative = up); xOff: horizontal shift to stagger clustered labels
 const annotatedPeaks = [
   { name: "Monte Rosa",     sub: "4634 m", x: 60,  elev: 4634, yOff: -65,  xOff: 0   },
   { name: "Liskamm",        sub: "4527 m", x: 130, elev: 4527, yOff: -90,  xOff: 0   },
@@ -104,12 +93,11 @@ const annotatedPeaks = [
   { name: "Dom",            sub: "4545 m", x: 820, elev: 4545, yOff: -65,  xOff: -45 },
   { name: "Täschhorn",      sub: "4491 m", x: 858, elev: 4491, yOff: -100, xOff: 25  },
   { name: "Alphubel",       sub: "4206 m", x: 890, elev: 4206, yOff: -68,  xOff: -35 },
-  { name: "Allalinhorn",    sub: "4027 m", x: 925, elev: 4027, yOff: -110, xOff: 30  },
-  { name: "Rimpfischhorn",  sub: "4199 m", x: 955, elev: 4199, yOff: -75,  xOff: -20 },
+  { name: "Allalinhorn",    sub: "4027 m", x: 925, elev: 4027, yOff: -130, xOff: -30 },
+  { name: "Rimpfischhorn",  sub: "4199 m", x: 955, elev: 4199, yOff: -80,  xOff: 25  },
   { name: "Strahlhorn",     sub: "4190 m", x: 980, elev: 4190, yOff: -120, xOff: 10  },
 ];
 
-// Title scaled for length: 84 chars → round(22 × 67/84) = 18 px
 const TITLE =
   "Wallis Alps Panorama · area-mountain-panorama · javascript · highcharts · anyplot.ai";
 
@@ -177,10 +165,11 @@ const chart = Highcharts.chart("container", {
 
 // --- Peak annotations: thin leader lines + two-line labels via SVGRenderer ---
 annotatedPeaks.forEach(function (peak) {
-  const px  = chart.xAxis[0].toPixels(peak.x, false);
-  const py  = chart.yAxis[0].toPixels(peak.elev, false);
-  const lx  = px + peak.xOff;
-  const ly  = py + peak.yOff;
+  const px = chart.xAxis[0].toPixels(peak.x, false);
+  const py = chart.yAxis[0].toPixels(peak.elev, false);
+  const lx = px + peak.xOff;
+  const ly = py + peak.yOff;
+  const isMatterhorn = peak.name === "Matterhorn";
 
   // Thin leader line from summit point to label anchor
   chart.renderer
@@ -188,14 +177,18 @@ annotatedPeaks.forEach(function (peak) {
     .attr({ stroke: t.inkSoft, "stroke-width": 0.8, zIndex: 4 })
     .add();
 
-  // Peak name
+  // Peak name — Matterhorn gets stronger visual weight as the focal peak
   chart.renderer
     .text(peak.name, lx, ly)
     .attr({ align: "center", zIndex: 5 })
-    .css({ color: t.ink, fontSize: "11px", fontWeight: "700" })
+    .css({
+      color: isMatterhorn ? t.ink : t.inkSoft,
+      fontSize: isMatterhorn ? "12px" : "11px",
+      fontWeight: isMatterhorn ? "800" : "700",
+    })
     .add();
 
-  // Elevation below the name
+  // Elevation sub-label
   chart.renderer
     .text(peak.sub, lx, ly + 14)
     .attr({ align: "center", zIndex: 5 })
