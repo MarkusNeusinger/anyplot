@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: area-mountain-panorama
+created: '2026-06-30T22:41:17Z'
+updated: '2026-06-30T23:10:01Z'
+generated_by: claude-sonnet
+workflow_run: 28479242619
+issue: 5365
+language_version: 22.23.0
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Authentic Wallis/Valais panorama data with factually correct Swiss Alps peak elevations
+  - Sharp piecewise-linear ridgeline correctly implements alpine silhouette (no Gaussian
+    bumps)
+  - Matterhorn focal point immediately reads via brand green (#009E73) — spec primary
+    design requirement fulfilled
+  - 'Sky gradient uses Imprint blue (palette[2] = #4467A3) keeping palette compliance
+    while adding atmospheric depth'
+  - chart.convertToPixel for dynamic leader-line positioning is the correct idiomatic
+    approach in ECharts
+  - Fully deterministic, self-contained implementation with animation:false and correct
+    ECharts init pattern
+  weaknesses:
+  - Peak elevation sub-labels at 11px are small; consider bumping to 12-13px for better
+    mobile readability when scaled to ~400px width
+  - Left cluster (Weisshorn, Zinalrothorn, Ober Gabelhorn) has tight horizontal spacing;
+    minor xShifts could improve visual breathing room
+  - Dark-mode silhouette inverts to white/cream (t.ink) — creative and visually compelling,
+    but slightly deviates from the spec dark solid color evening/dusk feel directive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Alpine Panorama · area-mountain-panorama · javascript · echarts · anyplot.ai" clearly visible in dark ink (#1A1A17). Y-axis label "Elevation (m)" and tick labels ("2600 m", "3000 m", etc.) readable in secondary ink (#4A4A44). X-axis hidden (correct per spec). Grid lines subtle and horizontal-only.
+      Data: Near-black mountain silhouette (t.ink = #1A1A17) fills lower portion. Sky gradient in Imprint blue (#4467A3 at 32% opacity) above ridgeline. 12 peak annotations with leader lines, staggered heights. Matterhorn highlighted with brand green (#009E73) dot and label text — clear focal point.
+      Legibility verdict: PASS — all text readable against light background; elevation sub-labels at 11px are small but acceptable at canvas size.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8), Y-axis labels in light gray (#B8B7B0), all readable against dark background. No dark-on-dark failures. Grid lines in dark-theme grid token (rgba(240,239,232,0.15)) very subtle.
+      Data: Mountain silhouette appears white/cream (#F0EFE8 = t.ink in dark mode), creating snow-mountain-on-night-sky aesthetic. Sky gradient more vivid (75% opacity Imprint blue at top). Matterhorn still in brand green (#009E73) — readable on dark background. Data colors identical to light render; only chrome flips.
+      Legibility verdict: PASS — all text readable against dark sky background; no dark-on-dark failures observed; brand green visible on dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; peak names 13-15px and elevations
+          11px readable at canvas size; elevation sub-labels small at mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Staggered yOffsets and xShifts for clustered pairs eliminate overlap
+          effectively
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mountain silhouette, summit dots, and leader lines clearly visible
+          in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette with brand green focal point; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape orientation ideal for panoramic view; generous top margin
+          for annotation space; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis Elevation (m) with units; title descriptive; X-axis hidden
+          per spec allowance
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: t.pageBg background, t.palette[0] for Matterhorn, Imprint blue for
+          sky gradient; both renders theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Visually striking: dark silhouette vs Imprint-blue sky gradient,
+          Matterhorn focal point in brand green; well above generic defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X-axis hidden, Y-axis-only subtle grid, generous annotation whitespace;
+          minor left-cluster spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear Matterhorn focal point via brand green; leader lines guide
+          viewer; real data provides authentic story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mountain panorama area chart with filled silhouette
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Piecewise-linear ridgeline, filled area, sky gradient, peak annotations
+          with leader lines, staggered labels, Matterhorn focal point, sensible Y-axis
+          lower bound
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Bearing on X, elevation on Y; all 12 peaks correctly placed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Alpine Panorama prefix + spec-id · javascript · echarts · anyplot.ai
+          format correct; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied peak heights, steep asymmetric flanks, cols between summits,
+          12 labeled peaks from Weisshorn to Rimpfischhorn
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Authentic Wallis (Valais) panorama from Zermatt with real peak names;
+          neutral geographic/alpine content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All elevations factually correct: Dufourspitze 4634m highest in
+          Switzerland, Matterhorn 4478m; Y-axis start 2600m matches Zermatt valley'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: constants → data → init → setOption → graphics loop;
+          no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded ridge and peak data; no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; echarts is a global; no unused declarations
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; two-pass setOption pattern is correct
+          ECharts idiom for graphic overlays
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init/setOption without explicit size/devicePixelRatio; animation:
+          false; harness handles file output'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ECharts use: graphic component for annotations, z-index series
+          layering, linear gradient in areaStyle, animation disabled'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.convertToPixel for data→pixel conversion is ECharts-distinctive;
+          two-step setOption for graphics overlay; z-layer control
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - gradient-fill
