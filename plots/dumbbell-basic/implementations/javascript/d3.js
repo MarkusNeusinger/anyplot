@@ -6,7 +6,7 @@
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
-const margin = { top: 95, right: 80, bottom: 90, left: 175 };
+const margin = { top: 95, right: 130, bottom: 90, left: 175 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -26,10 +26,26 @@ const rawData = [
 
 // Sort by improvement (largest gap at top)
 const data = rawData.slice().sort((a, b) => (b.after - b.before) - (a.after - a.before));
+data.forEach(d => { d.delta = d.after - d.before; });
 
 const svg = d3.select("#container").append("svg")
   .attr("width", width)
   .attr("height", height);
+
+// --- D3 SVG defs: linear gradient for connecting lines (green → lavender) ---
+// Defined in SVG user-space so position tracks the data scale exactly
+const defs = svg.append("defs");
+const grad = defs.append("linearGradient")
+  .attr("id", "line-grad")
+  .attr("gradientUnits", "userSpaceOnUse")
+  .attr("x1", margin.left)
+  .attr("x2", margin.left + iw)
+  .attr("y1", 0)
+  .attr("y2", 0);
+grad.append("stop").attr("offset", "0%")
+  .attr("stop-color", t.palette[0]).attr("stop-opacity", 0.65);
+grad.append("stop").attr("offset", "100%")
+  .attr("stop-color", t.palette[1]).attr("stop-opacity", 0.65);
 
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -51,29 +67,29 @@ g.selectAll(".vgrid")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
-// X-axis
+// X-axis — d3.format("d") produces clean integers with no decimal noise
 const xAxisG = g.append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(x).ticks(6).tickSize(0));
+  .call(d3.axisBottom(x).ticks(6).tickSize(0).tickFormat(d3.format("d")));
 
 xAxisG.select(".domain").attr("stroke", t.inkSoft);
 xAxisG.selectAll(".tick text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .attr("dy", "1.3em");
 xAxisG.selectAll(".tick line").remove();
 
-// Y-axis (no domain line — categories are self-labelling)
+// Y-axis (no domain line — categories self-label)
 const yAxisG = g.append("g")
   .call(d3.axisLeft(y).tickSize(0));
 
 yAxisG.select(".domain").remove();
 yAxisG.selectAll(".tick text")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .attr("dx", "-0.6em");
 
-// Connecting lines
+// Connecting lines — gradient stroke encodes before→after direction
 g.selectAll(".dumbbell-line")
   .data(data)
   .join("line")
@@ -81,9 +97,8 @@ g.selectAll(".dumbbell-line")
   .attr("x2", d => x(d.after))
   .attr("y1", d => y(d.dept) + y.bandwidth() / 2)
   .attr("y2", d => y(d.dept) + y.bandwidth() / 2)
-  .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 2.5)
-  .attr("opacity", 0.4);
+  .attr("stroke", "url(#line-grad)")
+  .attr("stroke-width", 3);
 
 // Before dots (Imprint palette[0] — brand green)
 g.selectAll(".dot-before")
@@ -106,6 +121,33 @@ g.selectAll(".dot-after")
   .attr("fill", t.palette[1])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
+
+// Delta labels — d3.format("+d") shows signed improvement for each row
+const deltaFmt = d3.format("+d");
+g.selectAll(".delta-label")
+  .data(data)
+  .join("text")
+  .attr("x", iw + 14)
+  .attr("y", d => y(d.dept) + y.bandwidth() / 2 + 5)
+  .attr("fill", (d, i) => i < 2 ? t.palette[1] : t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-weight", (d, i) => i < 2 ? "700" : "400")
+  .text(d => deltaFmt(d.delta) + " pts");
+
+// Callout annotations for top 2 improvements — placed in the gap below each band
+const annLabels = ["▲ Highest gain", "▲ Runner-up"];
+data.slice(0, 2).forEach((d, i) => {
+  const xMid = (x(d.before) + x(d.after)) / 2;
+  const yAnn = y(d.dept) + y.bandwidth() + 6;
+  g.append("text")
+    .attr("x", xMid)
+    .attr("y", yAnn + 10)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.amber)
+    .style("font-size", "12px")
+    .style("font-weight", "600")
+    .text(annLabels[i]);
+});
 
 // X-axis label
 g.append("text")
@@ -140,7 +182,7 @@ legendItems.forEach((item, i) => {
     .text(item.label);
 });
 
-// Title — font-size scaled for title length
+// Title — font-size scaled for long descriptive title
 const title = "Employee Satisfaction · dumbbell-basic · javascript · d3 · anyplot.ai";
 const titleFontSize = title.length > 67 ? Math.round(22 * 67 / title.length) : 22;
 
