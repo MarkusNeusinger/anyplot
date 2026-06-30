@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-30
@@ -29,14 +29,22 @@ max_value = 100
 thresholds = [30, 70]
 
 goal = thresholds[1]
-delta_pct = value - goal
 
 # Plot
 fig = go.Figure(
     go.Indicator(
-        mode="gauge+number",
+        mode="gauge+number+delta",
         value=value,
         number={"font": {"size": 48, "color": INK, "family": "Arial"}, "suffix": "%"},
+        delta={
+            "reference": goal,
+            "relative": False,
+            "valueformat": "+.0f",
+            "suffix": "pp vs. goal",
+            "font": {"size": 13, "color": INK, "family": "Arial"},
+            "increasing": {"color": ZONE_HIGH},
+            "decreasing": {"color": ZONE_LOW},
+        },
         title={
             "text": (
                 "<b>Sales Target Achievement</b>"
@@ -71,10 +79,7 @@ fig = go.Figure(
     )
 )
 
-delta_sign = "+" if delta_pct >= 0 else ""
-delta_color = ZONE_HIGH if delta_pct >= 0 else ZONE_LOW
-
-# Layout — page surface + delta context + zone legend + callout
+# Layout — page surface + zone legend + callout
 fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
@@ -82,16 +87,6 @@ fig.update_layout(
     autosize=False,
     margin={"l": 40, "r": 40, "t": 70, "b": 60},
     annotations=[
-        # Delta vs goal — typographic depth; shows margin above/below goal
-        {
-            "x": 0.5,
-            "y": 0.22,
-            "xref": "paper",
-            "yref": "paper",
-            "text": (f"<span style='color:{delta_color}'><b>{delta_sign}{delta_pct}pp vs. {goal}% goal</b></span>"),
-            "showarrow": False,
-            "font": {"size": 11, "color": delta_color, "family": "Arial"},
-        },
         # Zone legend row — three color-coded chips below the gauge
         {
             "x": 0.20,
@@ -99,12 +94,12 @@ fig.update_layout(
             "xref": "paper",
             "yref": "paper",
             "text": (
-                f"<span style='color:{ZONE_LOW};font-size:12px'>●</span>  "
+                f"<span style='color:{ZONE_LOW};font-size:13px'>●</span>  "
                 f"<b>At Risk</b>  "
                 f"<span style='color:{INK_MUTED}'>0–30%</span>"
             ),
             "showarrow": False,
-            "font": {"size": 10, "color": INK, "family": "Arial"},
+            "font": {"size": 12, "color": INK, "family": "Arial"},
         },
         {
             "x": 0.50,
@@ -112,12 +107,12 @@ fig.update_layout(
             "xref": "paper",
             "yref": "paper",
             "text": (
-                f"<span style='color:{ZONE_MID};font-size:12px'>●</span>  "
+                f"<span style='color:{ZONE_MID};font-size:13px'>●</span>  "
                 f"<b>On Track</b>  "
                 f"<span style='color:{INK_MUTED}'>30–70%</span>"
             ),
             "showarrow": False,
-            "font": {"size": 10, "color": INK, "family": "Arial"},
+            "font": {"size": 12, "color": INK, "family": "Arial"},
         },
         {
             "x": 0.80,
@@ -125,12 +120,12 @@ fig.update_layout(
             "xref": "paper",
             "yref": "paper",
             "text": (
-                f"<span style='color:{ZONE_HIGH};font-size:12px'>●</span>  "
+                f"<span style='color:{ZONE_HIGH};font-size:13px'>●</span>  "
                 f"<b>Exceeds Target</b>  "
                 f"<span style='color:{INK_MUTED}'>70–100%</span>"
             ),
             "showarrow": False,
-            "font": {"size": 10, "color": INK, "family": "Arial"},
+            "font": {"size": 12, "color": INK, "family": "Arial"},
         },
         # Target-exceeded callout — immediate data story
         {
@@ -140,7 +135,7 @@ fig.update_layout(
             "yref": "paper",
             "text": "<b>✓ Target Exceeded</b>  ·  72% surpasses the 70% goal",
             "showarrow": False,
-            "font": {"size": 11, "color": ZONE_HIGH, "family": "Arial"},
+            "font": {"size": 12, "color": ZONE_HIGH, "family": "Arial"},
             "bgcolor": ELEVATED_BG,
             "bordercolor": ZONE_HIGH,
             "borderwidth": 1,
