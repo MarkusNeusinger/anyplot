@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:02:46Z'
-updated: '2026-06-30T21:34:12Z'
+updated: '2026-06-30T21:47:17Z'
 generated_by: claude-sonnet
 workflow_run: 28476584859
 issue: 857
@@ -12,125 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - 'Perfect spec compliance — all required gauge features present: semi-circular
-    shape, three color zones (0–30/30–70/70–100), needle bar + threshold line at value,
-    and large prominent value display'
-  - 'Correct Imprint palette usage: semantic zone colors use palette anchors (matte
-    red #AE3030 for ''At Risk'', amber #DDCC77 for ''On Track'', brand green #009E73
-    for ''Exceeds Target'') — the spec''s traffic-light convention is the documented
-    semantic exception'
-  - Excellent theme adaptation — INK tokens correctly propagate to needle color, gauge
-    bordercolor, tick font, annotation text, and gauge background (ELEVATED_BG) in
-    both light and dark renders; no dark-on-dark text failures
-  - 'Rich data storytelling: delta annotation (+2pp vs. 70% goal), three-chip zone
-    legend with color dots, and a callout box (Target Exceeded) create a clear KPI
-    narrative beyond the bare gauge'
-  - 'Clean code: flat script with no functions/classes, fully deterministic hardcoded
-    data, only used imports, and correct write_image + write_html outputs'
+  - Semantic zone colors are correctly chosen from Imprint palette (ZONE_LOW=#AE3030
+    red, ZONE_MID=#DDCC77 amber, ZONE_HIGH=#009E73 brand green) and fully match the
+    traffic-light semantic-exception rule
+  - 'Excellent data storytelling: delta indicator (+2pp vs. goal), zone legend with
+    color bullets, and ''Target Exceeded'' callout box combine to create a clear,
+    immediate narrative'
+  - 'Both themes handled correctly — all chrome tokens (INK, INK_SOFT, INK_MUTED)
+    are theme-adaptive, data zone colors are identical across light and dark renders,
+    backgrounds are #FAF8F1 / #1A1A17'
+  - All font sizes are explicitly set throughout (number=48, delta=13, title=16, gauge
+    ticks=10, annotations=12) and result in well-proportioned text at the 3200×1800
+    canvas
+  - 'Idiomatic Plotly usage: go.Indicator with mode=''gauge+number+delta'', steps
+    array for zone coloring, threshold for arc marker, and HTML annotations — all
+    using the proper Plotly high-level API'
+  - Deterministic hardcoded data with a realistic sales-target business scenario (72%
+    vs. 70% goal) — immediately comprehensible, neutral, with accurate arithmetic
+    (+2pp delta)
   weaknesses:
-  - 'Missing Plotly''s built-in delta parameter: mode=''gauge+number+delta'' with
-    delta={''reference'': goal, ''valueformat'': ''.0f'', ''suffix'': ''pp''} would
-    be more idiomatic than the custom annotation at y=0.22; the custom annotation
-    works but bypasses the Indicator''s native delta rendering engine'
-  - Red (#AE3030) and green (#009E73) are the sole zone-color distinction; while text
-    labels provide some redundancy, direct arc labels or hatching would improve CVD
-    accessibility for deuteranopes who cannot distinguish the red and green arcs
-  - Annotation texts at fontsize=10–11 (40–44 source px after scale=4) sit at the
-    lower bound for mobile readability at 400 px display width; bumping to fontsize=12
-    would improve legibility at the srcset '400w' thumbnail
+  - Zone legend annotations (x=0.50 and x=0.80) may have very tight spacing — the
+    'On Track 30–70%' and '● Exceeds Target 70–100%' items are center-anchored at
+    only 0.30 paper-distance apart and the longer 'Exceeds Target' text may overlap
+    slightly; consider shifting to x=0.48 and x=0.78 or using xanchor='left' / 'right'
+    respectively
+  - 'DE-01 moderate gap: the design is polished but falls just short of publication-ready
+    — the gauge face could benefit from a subtle radial tick refinement or slightly
+    larger inner-chart domain to increase visual impact'
+  - 'DE-02 refinement opportunity: the elevated gauge background (ELEVATED_BG) adds
+    some depth but the overall composition could be further refined with subtle border-radius
+    on the callout annotation or a soft drop-shadow on the gauge face'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, NOT pure white.
-      Chrome: Bold title "Sales Target Achievement" clearly readable in dark (#1A1A17) ink; subtitle
-        "gauge-basic · python · plotly · anyplot.ai" in soft ink, readable. Tick labels (0%–100%
-        at 10% intervals) readable in INK_SOFT. Delta annotation "+2pp vs. 70% goal" in brand green,
-        readable. Zone legend chips and range text readable. Callout box "✓ Target Exceeded" in brand
-        green on elevated off-white background with green border, readable.
-      Data: Three gauge arcs — matte red #AE3030 (0–30%), amber #DDCC77 (30–70%), brand green
-        #009E73 (70–100%). Thin dark needle and threshold line at 72%. Large "72%" display prominent.
-      Legibility verdict: PASS — all text and data elements clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Sales Target Achievement" in bold dark ink (#1A1A17) at top center, subtitle "gauge-basic · python · plotly · anyplot.ai" in smaller muted gray below; gauge tick labels (0%–100% at 10% intervals) in INK_SOFT gray, all clearly readable against light background
+      Data: Semicircular gauge with three colored arcs — #AE3030 (Imprint matte red) for 0–30% At Risk zone, #DDCC77 (Imprint amber) for 30–70% On Track zone, #009E73 (Imprint brand green) for 70–100% Exceeds Target zone; slim dark needle pointing to 72%; thick threshold marker on arc at 72%; large "72%" center number in dark ink; green "+2pp vs. goal" delta indicator; zone legend row with colored bullets; "✓ Target Exceeded" callout box with green border
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, NOT pure black.
-      Chrome: Title "Sales Target Achievement" rendered in light ink (#F0EFE8), clearly readable on
-        dark background. Subtitle in lighter secondary ink, readable. Tick labels visible in INK_SOFT
-        light gray (#B8B7B0). Delta annotation in brand green, readable. Zone legend text in light
-        colors. Callout box readable on elevated dark (#242420) background.
-      Data: Zone arc colors are IDENTICAL to the light render — matte red, amber, and brand green
-        hues unchanged. Needle and threshold line render as near-white (#F0EFE8) against the dark
-        background. "72%" in light ink, prominent.
-      Legibility verdict: PASS — no dark-on-dark text failures; INK tokens correctly flip to light
-        values; all annotations and tick labels readable against the near-black surface.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle rendered in light off-white (#F0EFE8) and muted light gray (#B8B7B0) respectively; gauge tick labels in light INK_SOFT (#B8B7B0), all clearly readable against dark background; no dark-on-dark failures observed
+      Data: Zone arc colors are identical to light render (#AE3030 red / #DDCC77 amber / #009E73 green) — only chrome flips; needle is light-colored against dark gauge face; "72%" center number in light ink; callout box uses dark elevated background (#242420) with green border; zone legend bullets retain their data colors
+      Legibility verdict: PASS — all text readable in both renders, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set throughout (title=16, number=48, ticks=10,
-          annotations=10-11). Readable in both themes at full resolution. Minor deduction:
-          annotation text at fontsize=10-11 (40-44 source px) approaches mobile readability
-          floor at 400px.'
+        comment: All font sizes explicitly set (number=48, delta=13, title=16, gauge
+          ticks=10, annotations=12); well-proportioned at 3200×1800; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions. Zone legend chips evenly
-          spaced at x=0.20/0.50/0.80, delta annotation and callout box are vertically
-          stacked below gauge with clear separation.
+        comment: No definitive overlap; zone legend items are close at x=0.50/0.80
+          but readable in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All gauge zones clearly visible. Slim needle (thickness=0.06) visible
-          without obscuring zone arcs. Threshold line at 72% clearly marked. Data
-          colors strongly contrast against gauge background.
+        comment: Gauge arcs, needle, threshold marker, center value, delta, zone legend,
+          and callout all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Red (#AE3030) and green (#009E73) are the primary arc distinctions
-          — CVD concern for deuteranopes. Mitigated by zone legend text labels and
-          range annotations, but direct arc labels or redundant encoding would fully
-          resolve the concern.
+        comment: Red/amber/green semantic zones from CVD-safe Imprint palette; amber
+          buffer separates red and green; labels provide redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas confirmed (canvas gate passed). Gauge
-          domain [0.05,0.95] x [0.30,0.95] well-proportioned. Bottom section (delta/legend/callout)
-          uses y=0.03–0.22 paper coords cleanly. Margins l=40,r=40,t=70,b=60 appropriate.
-          No overflow or clipping observed.
+        comment: Gauge fills canvas well with domain [0.05,0.95]x[0.30,0.95]; zone
+          legend and callout box fill lower region; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Gauge axis has dtick=10 with ticksuffix='%' showing 0%–100% at every
-          10pp. Title 'Sales Target Achievement' is descriptive and meaningful. Spec-id
-          subtitle present.
+        comment: Title 'Sales Target Achievement' is descriptive; gauge ticks use
+          '%' suffix; zone labels are descriptive with ranges
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Zone colors use Imprint semantic anchors: matte red #AE3030 (risk),
-          amber #DDCC77 (caution), brand green #009E73 (success). Light bg=#FAF8F1,
-          dark bg=#1A1A17. Data colors identical between renders. Chrome correctly
-          inverts.'
+        comment: 'Zone colors from Imprint palette (matte red, amber anchor, brand
+          green) via valid semantic exception; backgrounds #FAF8F1/#1A1A17; all chrome
+          theme-adaptive'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -138,30 +122,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Intentional hierarchy: large 72% number as focal point, delta annotation
-          as secondary insight, zone legend and callout as supporting context. Custom
-          Imprint palette zone colors, HTML-formatted title with descriptive+spec-id
-          structure, slim needle for minimal visual interference. Above default (4)
-          with evidence.'
+        comment: 'Strong design: semantic zone colors, delta indicator, zone legend
+          with color bullets, callout box — clearly above defaults; falls just short
+          of FiveThirtyEight-level publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: ELEVATED_BG for gauge interior and callout box border adds depth.
-          Slim needle (thickness=0.06) reduces visual clutter over zone arcs. Callout
-          box with borderpad=6 and brand-green border is polished. Above default (2)
-          with clear evidence of deliberate choices.
+        comment: 'Good refinement: slim needle (thickness=0.06), elevated gauge background,
+          styled callout box with border; some details could be further polished'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: +2pp delta annotation creates an immediate performance benchmark.
-          '✓ Target Exceeded' callout with contextual sentence 'surpasses the 70%
-          goal' delivers a data narrative. Zone legend grounds the three regions.
-          Clear focal point at 72%. Above default (2); not maximum because the threshold
-          line and needle overlap slightly at the 72% mark.
+        comment: 'Excellent storytelling: current value + delta + color zones + ''Target
+          Exceeded'' callout create an immediate, clear narrative; viewer instantly
+          sees performance status'
     spec_compliance:
       score: 15
       max: 15
@@ -171,33 +149,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Indicator with mode='gauge+number' and shape='angular' implements
-          exactly the semi-circular speedometer gauge specified.
+        comment: Correct gauge chart using go.Indicator with mode='gauge+number+delta'
+          and angular (semicircular) shape
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: semi-circular gauge, three color zones
-          at spec-example thresholds [30,70], needle bar + threshold line indicator,
-          prominent value display (48px number with % suffix).'
+        comment: 'All spec features present: value=72, min=0, max=100, thresholds=[30,70],
+          three color zones, prominent value display, needle indicator'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value=72, min=0, max=100, thresholds=[30,70] match the spec example
-          exactly. Axis range correctly configured. Zone steps mapped correctly to
-          threshold boundaries.
+        comment: Single-value gauge correctly mapped; range, thresholds, and current
+          value all accurately represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title follows ''{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'' pattern: ''Sales Target Achievement'' + ''gauge-basic · python
-          · plotly · anyplot.ai''. Zone legend provides labeled color chips for each
-          region.'
+        comment: 'Two-line title: ''Sales Target Achievement'' (descriptive) + ''gauge-basic
+          · python · plotly · anyplot.ai'' (spec signature); zone legend labels match
+          data'
     data_quality:
       score: 15
       max: 15
@@ -207,25 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all gauge chart features: three zone regions with distinct
-          colors, needle indicator, threshold line, value display, delta vs. goal
-          context, zone legend, and callout narrative.'
+        comment: 'Shows all gauge features: three zones, threshold, needle, numeric
+          value, delta vs. goal, zone legend with ranges'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''Sales Target Achievement'' at 72% vs. 70% goal is a plausible,
-          neutral business KPI — one of the spec''s listed applications (executive
-          dashboards). No controversial framing.'
+        comment: Sales target achievement for the quarter — immediately comprehensible
+          business scenario, neutral, not abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0–100% scale with 30/70 thresholds is the canonical gauge chart range
-          for percentage metrics. Value 72 just above the goal threshold (70) creates
-          meaningful context.
+        comment: 0–100% range with thresholds at 30/70 is sensible for a KPI gauge;
+          72% vs. 70% goal gives accurate +2pp delta; all values factually consistent
     code_quality:
       score: 10
       max: 10
@@ -235,58 +207,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script with no functions, classes, or abstractions. Linear
-          flow: tokens → data → figure → layout → save.'
+        comment: 'Clean linear flow: imports → theme tokens → data → plot → layout
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded value=72, thresholds=[30,70]. No
-          random elements.'
+        comment: Fully deterministic hardcoded data; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os (used for ANYPLOT_THEME env var) and plotly.graph_objects
-          (used for Figure and Indicator).
+        comment: Only import os and import plotly.graph_objects as go — both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the task. No fake interactivity. Zone
-          legend as annotations is a reasonable approach.
+        comment: Clean, appropriately complex for a gauge with annotations; no over-engineering;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200x1800)
-          and plot-{THEME}.html. Current go.Indicator API used.
+        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4 → 3200×1800)
+          and plot-{THEME}.html; autosize=False; current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 'go.Indicator with mode=''gauge+number'' is the native Plotly gauge
-          implementation. HTML string in title is idiomatic Plotly. Minor deduction:
-          the built-in delta parameter (mode=''gauge+number+delta'') would be more
-          idiomatic than the custom annotation at y=0.22 for the +2pp display.'
+        comment: Expert use of go.Indicator with gauge mode; steps for zone coloring;
+          threshold marker; delta with direction-sensitive colors — all idiomatic
+          Plotly patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses Plotly-specific: go.Indicator gauge type (not available in
-          other libraries), HTML-formatted title text, gauge steps + threshold line
-          configuration, and write_html for interactive output. Misses the native
-          delta reference line and built-in delta rendering.'
+        comment: go.Indicator with combined gauge+number+delta mode is distinctly
+          Plotly; HTML in titles and annotations with color spans; annotation bgcolor/bordercolor
+          styling — uses several Plotly-specific capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
