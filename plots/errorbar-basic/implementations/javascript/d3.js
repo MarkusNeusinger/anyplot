@@ -29,16 +29,37 @@ const svg = d3.select("#container")
   .attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+// Ordinal color scale — each treatment gets a distinct Imprint palette color
+const color = d3.scaleOrdinal()
+  .domain(data.map((d) => d.treatment))
+  .range(t.palette);
+
 // Scales
 const x = d3.scaleBand()
   .domain(data.map((d) => d.treatment))
   .range([0, iw])
   .padding(0.35);
 
+const yMin = d3.min(data, (d) => d.mean - d.sd) - 0.5;
 const y = d3.scaleLinear()
-  .domain([0, d3.max(data, (d) => d.mean + d.sd) + 0.35])
+  .domain([yMin, d3.max(data, (d) => d.mean + d.sd) + 0.4])
   .nice()
   .range([ih, 0]);
+
+// Helper: horizontal center of each band
+const cx = (d) => x(d.treatment) + x.bandwidth() / 2;
+const capHalf = x.bandwidth() * 0.22;
+
+// Subtle column highlight behind the top-performing NPK treatment
+const npk = data.find((d) => d.treatment === "NPK");
+g.append("rect")
+  .attr("x", x("NPK") - 8)
+  .attr("y", 0)
+  .attr("width", x.bandwidth() + 16)
+  .attr("height", ih)
+  .attr("fill", color("NPK"))
+  .attr("opacity", 0.07)
+  .attr("rx", 4);
 
 // Horizontal gridlines (y-axis only)
 const gridG = g.append("g").attr("class", "grid");
@@ -60,17 +81,13 @@ for (const ax of [xAxis, yAxis]) {
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 
-// Helper: horizontal center of each band
-const cx = (d) => x(d.treatment) + x.bandwidth() / 2;
-const capHalf = x.bandwidth() * 0.22;
-
 // Vertical error bar stems
 g.selectAll(".errbar").data(data).join("line")
   .attr("class", "errbar")
   .attr("x1", cx).attr("x2", cx)
   .attr("y1", (d) => y(d.mean - d.sd))
   .attr("y2", (d) => y(d.mean + d.sd))
-  .attr("stroke", t.palette[0])
+  .attr("stroke", (d) => color(d.treatment))
   .attr("stroke-width", 2.5);
 
 // Upper caps
@@ -78,23 +95,44 @@ g.selectAll(".cap-top").data(data).join("line")
   .attr("class", "cap-top")
   .attr("x1", (d) => cx(d) - capHalf).attr("x2", (d) => cx(d) + capHalf)
   .attr("y1", (d) => y(d.mean + d.sd)).attr("y2", (d) => y(d.mean + d.sd))
-  .attr("stroke", t.palette[0]).attr("stroke-width", 2.5);
+  .attr("stroke", (d) => color(d.treatment)).attr("stroke-width", 2.5);
 
 // Lower caps
 g.selectAll(".cap-bot").data(data).join("line")
   .attr("class", "cap-bot")
   .attr("x1", (d) => cx(d) - capHalf).attr("x2", (d) => cx(d) + capHalf)
   .attr("y1", (d) => y(d.mean - d.sd)).attr("y2", (d) => y(d.mean - d.sd))
-  .attr("stroke", t.palette[0]).attr("stroke-width", 2.5);
+  .attr("stroke", (d) => color(d.treatment)).attr("stroke-width", 2.5);
 
 // Mean value circles
 g.selectAll("circle").data(data).join("circle")
   .attr("cx", cx)
   .attr("cy", (d) => y(d.mean))
   .attr("r", 9)
-  .attr("fill", t.palette[0])
+  .attr("fill", (d) => color(d.treatment))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2.5);
+
+// Mean value labels — shown below each circle for quick reading
+g.selectAll(".mean-val").data(data).join("text")
+  .attr("class", "mean-val")
+  .attr("x", cx)
+  .attr("y", (d) => y(d.mean) + 26)
+  .attr("text-anchor", "middle")
+  .attr("fill", (d) => color(d.treatment))
+  .style("font-size", "13px")
+  .style("font-weight", "500")
+  .text((d) => d.mean.toFixed(1));
+
+// NPK best-performer annotation
+g.append("text")
+  .attr("x", cx(npk))
+  .attr("y", y(npk.mean + npk.sd) - 16)
+  .attr("text-anchor", "middle")
+  .attr("fill", color("NPK"))
+  .style("font-size", "13px")
+  .style("font-weight", "700")
+  .text("★ Top yield");
 
 // Axis labels
 g.append("text")
