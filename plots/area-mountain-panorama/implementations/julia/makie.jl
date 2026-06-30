@@ -9,14 +9,14 @@ using Random
 
 Random.seed!(42)
 
-const THEME     = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const INK       = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT  = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
-const SKY_BG    = THEME == "light" ? colorant"#B8D8EF" : colorant"#0D1825"
-const MTN_FILL  = THEME == "light" ? colorant"#262623" : colorant"#1C2230"
-const BRAND     = colorant"#009E73"
+const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const SKY_BG   = THEME == "light" ? colorant"#B8D8EF" : colorant"#0D1825"
+# Dark-mode luminance bumped to #324060 so silhouette reads clearly against navy sky
+const MTN_FILL = THEME == "light" ? colorant"#262623" : colorant"#324060"
+const BRAND    = colorant"#009E73"
 
 # Peaks: (angle_deg, elevation_m, name, left_slope_deg, right_slope_deg)
 # Panorama from Gornergrat-area vantage, sweeping west to east
@@ -38,7 +38,7 @@ const PEAKS = [
     (178.0, 4634.0, "Monte Rosa",      8.0, 10.0),
 ]
 
-# Staggered label heights (alternating to avoid horizontal overlap)
+# Staggered label heights — alternating levels prevent overlap across 15 dense peaks
 const LABEL_YS = [
     5100.0,  # Weisshorn
     4870.0,  # Zinalrothorn
@@ -70,11 +70,11 @@ function tent(ang, pa, pe, lw, rw)
                     pe  - (pe  - BASELINE) * dx / rw
 end
 
-# Ridgeline = max of all tent functions (creates overlapping triangular peaks)
+# Ridgeline = max of all tent functions
 ridgeline = [maximum(tent(a, pa, pe, lw, rw) for (pa, pe, pname, lw, rw) in PEAKS)
              for a in angles]
 
-# Fractal jaggedness: midpoint-displacement-style noise, damped near summits
+# Midpoint-displacement jaggedness, damped near summits to preserve sharp apexes
 jitter = 30.0 .* (rand(N) .- 0.5)
 for (pa, pe, pname, lw, rw) in PEAKS
     for i in eachindex(angles)
@@ -90,63 +90,77 @@ for (pa, pe, pname, lw, rw) in PEAKS
 end
 ridgeline = max.(ridgeline, BASELINE)
 
-# Silhouette polygon: ridgeline + close at the bottom
+# Silhouette polygon: ridgeline + closed base
 sil_pts = [Point2f(a, r) for (a, r) in zip(angles, ridgeline)]
 push!(sil_pts, Point2f(Float32(angles[end]), 2400.0f0))
 push!(sil_pts, Point2f(Float32(angles[1]),   2400.0f0))
 
-# Figure
-fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
-
-title_str = "Wallis Peaks Panorama · area-mountain-panorama · julia · makie · anyplot.ai"
-title_sz  = max(11, round(Int, 20 * 67 / length(title_str)))
-
-ax = Axis(
-    fig[1, 1];
-    title              = title_str,
-    titlesize          = title_sz,
-    titlecolor         = INK,
-    xlabel             = "Bearing (°)",
-    ylabel             = "Elevation (m)",
-    xlabelsize         = 13,
-    ylabelsize         = 13,
-    xticklabelsize     = 11,
-    yticklabelsize     = 11,
-    xlabelcolor        = INK,
-    ylabelcolor        = INK,
-    xticklabelcolor    = INK_SOFT,
-    yticklabelcolor    = INK_SOFT,
-    xtickcolor         = INK_SOFT,
-    ytickcolor         = INK_SOFT,
-    backgroundcolor    = SKY_BG,
-    topspinevisible    = false,
-    rightspinevisible  = false,
-    leftspinecolor     = INK_SOFT,
-    bottomspinecolor   = INK_SOFT,
-    xgridvisible       = false,
-    ygridvisible       = false,
-    xticks             = 0:30:180,
-    yticks             = 2500:500:5000,
+# Composite Makie theme — consolidates all chrome into one reusable Theme object
+const ANYPLOT_MAKIE_THEME = Theme(
+    fontsize        = 14,
+    backgroundcolor = PAGE_BG,
+    Axis = (
+        backgroundcolor   = SKY_BG,
+        titlecolor        = INK,
+        xlabelcolor       = INK,
+        ylabelcolor       = INK,
+        xticklabelcolor   = INK_SOFT,
+        yticklabelcolor   = INK_SOFT,
+        xtickcolor        = INK_SOFT,
+        ytickcolor        = INK_SOFT,
+        leftspinecolor    = INK_SOFT,
+        bottomspinecolor  = INK_SOFT,
+        topspinevisible   = false,
+        rightspinevisible = false,
+        xgridvisible      = false,
+        ygridvisible      = false,
+    ),
 )
 
-xlims!(ax, -5.0, 185.0)
-ylims!(ax, 2450.0, 5350.0)
+with_theme(ANYPLOT_MAKIE_THEME) do
+    title_str = "Wallis Peaks Panorama · area-mountain-panorama · julia · makie · anyplot.ai"
+    title_sz  = max(11, round(Int, 20 * 67 / length(title_str)))
 
-# Mountain silhouette fill
-poly!(ax, sil_pts; color = MTN_FILL, strokewidth = 0)
+    fig = Figure(size = (1600, 900), backgroundcolor = PAGE_BG)
 
-# Peak markers and staggered labels with leader lines
-for (i, (pa, pe, name, lw, rw)) in enumerate(PEAKS)
-    is_matterhorn = (name == "Matterhorn")
-    ms = is_matterhorn ? 14 : 8
-    sw = is_matterhorn ? 1.5 : 0.0
-    scatter!(ax, [pa], [pe]; color = BRAND, markersize = ms,
-             strokewidth = sw, strokecolor = PAGE_BG)
+    # Makie layout: subtitle Label sits above the axis panel in row 0
+    Label(fig[0, 1], "Swiss Alps · Wallis Region · Gornergrat Vantage · 3100 m";
+          fontsize = 11, color = INK_SOFT, tellwidth = false)
+    rowgap!(fig.layout, 1, 2)
 
-    lh = LABEL_YS[i]
-    lines!(ax, [pa, pa], [pe + 30.0, lh - 150.0]; color = INK_SOFT, linewidth = 1.0)
-    text!(ax, pa, lh; text = "$(name)\n$(Int(pe)) m",
-          color = INK, fontsize = 9, align = (:center, :bottom))
+    ax = Axis(
+        fig[1, 1];
+        title          = title_str,
+        titlesize      = title_sz,
+        xlabel         = "Bearing (°)",
+        ylabel         = "Elevation (m)",
+        xlabelsize     = 13,
+        ylabelsize     = 13,
+        xticklabelsize = 11,
+        yticklabelsize = 11,
+        xticks         = 0:30:180,
+        yticks         = 2500:500:5000,
+    )
+
+    xlims!(ax, -5.0, 185.0)
+    ylims!(ax, 2450.0, 5350.0)
+
+    # Mountain silhouette fill
+    poly!(ax, sil_pts; color = MTN_FILL, strokewidth = 0)
+
+    # Peak markers and staggered labels with leader lines
+    for (i, (pa, pe, name, lw, rw)) in enumerate(PEAKS)
+        is_matterhorn = (name == "Matterhorn")
+        ms = is_matterhorn ? 14 : 8
+        sw = is_matterhorn ? 1.5 : 0.0
+        scatter!(ax, [pa], [pe]; color = BRAND, markersize = ms,
+                 strokewidth = sw, strokecolor = PAGE_BG)
+
+        lh = LABEL_YS[i]
+        lines!(ax, [pa, pa], [pe + 30.0, lh - 150.0]; color = INK_SOFT, linewidth = 1.0)
+        text!(ax, pa, lh; text = "$(name)\n$(Int(pe)) m",
+              color = INK, fontsize = 11, align = (:center, :bottom))
+    end
+
+    save("plot-$(THEME).png", fig; px_per_unit = 2)
 end
-
-save("plot-$(THEME).png", fig; px_per_unit = 2)
