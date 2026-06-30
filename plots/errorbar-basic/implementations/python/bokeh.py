@@ -1,15 +1,25 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: bokeh 3.9.0 | Python 3.14.4
-Quality: 88/100 | Updated: 2026-04-25
+Quality: 88/100 | Updated: 2026-06-30
 """
 
 import os
+import sys
+import time
+from pathlib import Path
+
+
+# Remove script dir from sys.path so 'bokeh.py' doesn't shadow the installed bokeh package
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != _here]
 
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Label, TeeHead, Whisker
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 # Theme tokens
@@ -20,7 +30,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito categorical palette (positions 1-6)
+# Imprint categorical palette (positions 1-6)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data — experimental measurements with associated uncertainties
@@ -40,16 +50,22 @@ source = ColumnDataSource(
     data={"categories": categories, "means": means, "upper": upper, "lower": lower, "colors": colors}
 )
 
-# Plot
+# Canvas: 3200×1800 (landscape) — hard rule, no deviation
+W, H = 3200, 1800
+
 p = figure(
-    width=4800,
-    height=2700,
+    width=W,
+    height=H,
     x_range=categories,
     title="errorbar-basic · bokeh · anyplot.ai",
     x_axis_label="Experimental Group",
     y_axis_label="Response Value (units)",
     toolbar_location=None,
     tools="",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Error bars (Whisker with TeeHead caps) — one whisker per group so each can take its own color
@@ -89,27 +105,27 @@ p.add_layout(focus_label)
 # Style — background and outline
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = None
+p.outline_line_color = INK_SOFT
 
 # Title
 p.title.text_color = INK
-p.title.text_font_size = "36pt"
+p.title.text_font_size = "50pt"
 p.title.text_font_style = "normal"
 p.title.align = "left"
 
 # Axis labels
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "32pt"
-p.yaxis.axis_label_text_font_size = "32pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_font_style = "normal"
 p.yaxis.axis_label_text_font_style = "normal"
 
 # Tick labels
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-p.xaxis.major_label_text_font_size = "24pt"
-p.yaxis.major_label_text_font_size = "24pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 
 # Axis lines and ticks
 p.xaxis.axis_line_color = INK_SOFT
@@ -121,7 +137,7 @@ p.yaxis.minor_tick_line_color = None
 
 # Subtle y-grid only
 p.ygrid.grid_line_color = INK
-p.ygrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.15
 p.xgrid.grid_line_color = None
 
 # Y-range trimmed to data — eliminates dead space below
@@ -131,7 +147,27 @@ y_pad = (y_max - y_min) * 0.15
 p.y_range.start = max(0.0, y_min - y_pad)
 p.y_range.end = y_max + y_pad
 
-# Save
-export_png(p, filename=f"plot-{THEME}.png")
+# Save HTML (required interactive artifact)
 output_file(f"plot-{THEME}.html", title="errorbar-basic · bokeh · anyplot.ai")
 save(p)
+
+# Screenshot with headless Chrome via Selenium — export_png uses chromedriver snap shim which fails
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# Use CDP to set exact viewport dimensions (--window-size alone can be 100-150px short due to browser chrome)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
