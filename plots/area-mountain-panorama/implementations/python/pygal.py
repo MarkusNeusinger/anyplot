@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 87/100 | Updated: 2026-06-30
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-06-30
 """
 
 import os
