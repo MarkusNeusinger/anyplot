@@ -1,14 +1,18 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: plotly 6.8.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-30
 """
 
+import importlib
 import os
+import sys
 
-import numpy as np
-import plotly.graph_objects as go
 
+# Drop script directory from sys.path so the `plotly` package resolves, not this file
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
+go = importlib.import_module("plotly.graph_objects")
+np = importlib.import_module("numpy")
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -44,7 +48,7 @@ fig.add_hline(y=float(means[0]), line_dash="dot", line_color=INK_MUTED, line_wid
 
 # Per-group traces — Imprint palette assigns each group a distinct hue
 for i, (group, x, mean, eu, el) in enumerate(
-    zip(groups, x_positions, means.tolist(), err_upper.tolist(), err_lower.tolist())
+    zip(groups, x_positions, means.tolist(), err_upper.tolist(), err_lower.tolist(), strict=False)
 ):
     color = IMPRINT_PALETTE[i]
     fig.add_trace(
@@ -52,17 +56,17 @@ for i, (group, x, mean, eu, el) in enumerate(
             x=[x],
             y=[mean],
             mode="markers",
-            marker=dict(size=20, color=color, line=dict(color=PAGE_BG, width=2)),
-            error_y=dict(
-                type="data",
-                symmetric=False,
-                array=[eu],
-                arrayminus=[el],
-                visible=True,
-                thickness=3,
-                width=12,
-                color=color,
-            ),
+            marker={"size": 20, "color": color, "line": {"color": PAGE_BG, "width": 2}},
+            error_y={
+                "type": "data",
+                "symmetric": False,
+                "array": [eu],
+                "arrayminus": [el],
+                "visible": True,
+                "thickness": 3,
+                "width": 12,
+                "color": color,
+            },
             name=group,
             customdata=[[group, round(mean - el, 1), round(mean + eu, 1)]],
             hovertemplate=(
@@ -85,7 +89,7 @@ fig.add_annotation(
     arrowwidth=1.5,
     ax=0,
     ay=-32,
-    font=dict(size=9, color=INK_SOFT),
+    font={"size": 10, "color": INK_SOFT},
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
     borderwidth=1,
@@ -99,7 +103,7 @@ fig.add_annotation(
     y=float(means[0]),
     text="Control<br>baseline",
     showarrow=False,
-    font=dict(size=8, color=INK_MUTED),
+    font={"size": 10, "color": INK_MUTED},
     xanchor="left",
     yanchor="middle",
     bgcolor=ELEVATED_BG,
@@ -108,50 +112,50 @@ fig.add_annotation(
 
 fig.update_layout(
     autosize=False,
-    title=dict(
-        text="Clinical Response by Group · errorbar-basic · plotly · anyplot.ai",
-        font=dict(size=16, color=INK),
-        x=0.5,
-        xanchor="center",
-    ),
-    xaxis=dict(
-        title=dict(text="Experimental Group", font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        tickmode="array",
-        tickvals=x_positions,
-        ticktext=groups,
-        showgrid=False,
-        linecolor=INK_SOFT,
-        zeroline=False,
-        ticks="",
-        range=[-0.6, 6.0],
-    ),
-    yaxis=dict(
-        title=dict(text="Response (mg/dL)", font=dict(size=12, color=INK)),
-        tickfont=dict(size=10, color=INK_SOFT),
-        gridcolor=GRID,
-        gridwidth=1,
-        linecolor=INK_SOFT,
-        zeroline=False,
-        range=[28, 88],
-        ticks="",
-    ),
+    title={
+        "text": "Clinical Response by Group · errorbar-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Experimental Group", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "tickmode": "array",
+        "tickvals": x_positions,
+        "ticktext": groups,
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+        "zeroline": False,
+        "ticks": "",
+        "range": [-0.6, 6.0],
+    },
+    yaxis={
+        "title": {"text": "Response (mg/dL)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zeroline": False,
+        "range": [28, 88],
+        "ticks": "",
+    },
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
-    margin=dict(l=80, r=80, t=80, b=60),
+    font={"color": INK},
+    margin={"l": 80, "r": 80, "t": 80, "b": 60},
     showlegend=True,
-    legend=dict(
-        font=dict(size=10, color=INK_SOFT),
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-        x=0.98,
-        y=0.98,
-        xanchor="right",
-        yanchor="top",
-    ),
-    hoverlabel=dict(bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, font=dict(color=INK, size=10)),
+    legend={
+        "font": {"size": 10, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "x": 0.98,
+        "y": 0.98,
+        "xanchor": "right",
+        "yanchor": "top",
+    },
+    hoverlabel={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 10}},
 )
 
 # Save — landscape 3200 × 1800 (width=800 × scale=4, height=450 × scale=4)
