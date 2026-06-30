@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 85/100 | Updated: 2026-06-30
+Quality: 84/100 | Updated: 2026-06-30
 """
 
 import importlib
