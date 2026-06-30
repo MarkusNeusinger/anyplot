@@ -1,0 +1,292 @@
+library: chartjs
+language: javascript
+specification_id: gauge-basic
+created: '2026-06-30T22:11:01Z'
+updated: '2026-06-30T22:38:11Z'
+generated_by: claude-sonnet
+workflow_run: 28477526173
+issue: 857
+language_version: 22.23.0
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Custom Chart.js needle plugin using afterDatasetsDraw hook with correct arc geometry
+    calculations (getDatasetMeta, getProps) — idiomatic and impressive
+  - 'Semantic color exception correctly applied: matte red (#AE3030) for Poor, amber
+    (#DDCC77) for Average, brand green (#009E73) for Good — exactly matching Imprint
+    palette anchors'
+  - 'Both themes render correctly: t.ink / t.inkSoft / t.pageBg tokens used throughout,
+    needle and hub flip to white on dark theme, data arc colors identical across themes'
+  - Prominent '72' value display + 'Customer Satisfaction Score' metric label inside
+    the gauge opening — strong UX decision that anchors the reading
+  - Threshold tick marks extending inside/outside the arc at 30 and 70 boundaries
+    add professional polish without clutter
+  - 'Square canvas (//# anyplot-orientation: square) correctly chosen for the symmetric
+    gauge shape'
+  - 'Realistic, neutral data context: Customer Satisfaction Score with value=72 just
+    above the 70 ''Good'' threshold — clear storytelling'
+  weaknesses:
+  - 'VQ-04 (Color Accessibility): Red-green zone combination requires the amber middle
+    zone and needle/value redundant encoding to be CVD-safe; consider adding zone
+    position labels (0, 100) at the arc endpoints to strengthen non-color-based reading'
+  - 'VQ-05 (Layout): Gauge opens to the right (C-shape) rather than the conventional
+    bottom-opening (D-shape / speedometer) orientation — slightly non-standard visual
+    metaphor for a gauge chart'
+  - 'DE-02 (Visual Refinement): ''Customer Satisfaction Score'' metric label inside
+    the gauge is sized at outerRadius*0.072 which renders noticeably large and extends
+    tightly toward the right arc edge — reducing the proportional factor slightly
+    (e.g. 0.055) would improve breathing room'
+  - 'CQ-01 (KISS): The arcAngle helper function and needlePlugin object are necessary
+    for Chart.js but deviate slightly from the flat KISS structure; well-justified
+    given the library constraints'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "gauge-basic · javascript · chartjs · anyplot.ai" at top in dark ink — clearly readable. Threshold labels "30" and "70" in inkSoft on the left side of the gauge. Legend at bottom with three swatches labeled "Poor (0–30)", "Average (30–70)", "Good (70–100)" — all text sharp and readable.
+      Data: Semi-circular gauge (C-shape opening right) with three arc zones: matte red (#AE3030) at lower-left (Poor zone, 30% of arc), amber/golden (#DDCC77) in the center (Average zone, 40% of arc), brand green (#009E73) at upper-right (Good zone, 30% of arc). Needle in dark ink (t.ink) points to approximately the 72/100 position, just above the amber-green boundary. Hub circle at arc center. Bold "72" displayed prominently below the hub. "Customer Satisfaction Score" label below the value.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues. VQ-07 background confirms warm off-white, not pure white.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light ink (t.ink = #F0EFE8) at top — clearly readable against the dark background. Threshold labels "30" and "70" in lighter inkSoft color. Legend text in light colors — readable. No dark-on-dark text failures.
+      Data: Arc zone colors are identical to the light render — matte red, amber, brand green in the same positions. Needle and hub rendered in the light ink color (t.ink = #F0EFE8/cream white) — clearly visible against the dark background. "72" value in light bold text. "Customer Satisfaction Score" in softer light text.
+      Legibility verdict: PASS — all text clearly readable against the near-black background. Chrome correctly flips to light colors. Data arc colors are identical to light render (only chrome flipped). No dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, legend 16px, needle plugin
+          uses proportional outerRadius-based sizing). All text readable in both themes.
+          Minor: proportional sizing in plugin makes absolute final px hard to verify
+          but visual result is clean.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected in either render. Title, threshold labels,
+          value display, metric label, and legend are all spatially separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Gauge arcs, needle, hub circle, threshold ticks all clearly visible.
+          Value '72' prominently displayed in bold. Zone colors have sufficient contrast
+          against background in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Spec explicitly calls for red/yellow/green traffic-light zones.
+          Amber middle zone helps differentiation. Needle position and numeric value
+          ''72'' provide non-color redundant encoding for CVD users. Score 1/2: acceptable
+          but red-green remains the primary zone signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square canvas correctly chosen. Gauge fills canvas well with balanced
+          margins. Minor: gauge opens to the right (C-shape) rather than conventional
+          bottom-opening (D-shape speedometer) which is slightly non-standard. Legend
+          is well-positioned at bottom.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''gauge-basic · javascript · chartjs · anyplot.ai''.
+          Metric label ''Customer Satisfaction Score'' is descriptive. Zone labels
+          in legend (''Poor (0–30)'', ''Average (30–70)'', ''Good (70–100)'') are
+          informative.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Colors: #AE3030 (Imprint matte red, slot 5), #DDCC77 (Imprint amber
+          anchor), #009E73 (Imprint brand green, slot 1). Semantic exception correctly
+          applied: bad→red, caution→amber, good→green. Background #FAF8F1 light /
+          #1A1A17 dark confirmed. Chrome uses t.ink / t.inkSoft — correctly theme-adaptive
+          in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom needle plugin with accurate geometry, semantic
+          color zones, typography hierarchy (bold large value, softer metric label),
+          threshold tick marks. Clearly above library defaults. Not quite publication-ready
+          FiveThirtyEight level (8) but solidly in the strong design (6) tier.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no grid (appropriate for gauge), clean zone transitions
+          (borderWidth:0), good padding, well-spaced legend (padding:24). Minor: metric
+          label inside gauge extends quite far to the right arc edge — could breathe
+          more. Not ''every detail polished'' (6) but clearly above library defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear focal point: value ''72'' at the amber-green boundary tells
+          an immediate story — ''just entered good territory''. Color zones create
+          instant context. Metric label grounds the number. Needle position reinforces
+          the reading. Strong storytelling, just short of exceptional.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct gauge chart implementation using Chart.js doughnut with rotation:180,
+          circumference:180, cutout:62% for the semi-circular shape. Custom needle
+          plugin adds the speedometer needle indicator.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: single value (72), min/max range (0-100),
+          thresholds ([30,70]) creating three zones, color zones following red/yellow/green
+          convention, needle indicator, prominent value display inside gauge.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Value 72 correctly mapped to needle position (fraction=0.72, arcAngle
+          calculation correct). Zone proportions correct: 30/40/30 matching thresholds
+          [30,70] on a 0-100 range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'gauge-basic · javascript · chartjs · anyplot.ai' — correct
+          format. Legend labels 'Poor (0–30)', 'Average (30–70)', 'Good (70–100)'
+          — descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all gauge chart aspects: three distinct zones, needle indicator,
+          threshold marks at zone boundaries, prominent value label, range (0-100),
+          zone labels. Complete feature demonstration.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Customer Satisfaction Score is a real, common KPI used in business
+          dashboards — exactly one of the spec's cited applications (NPS in business
+          analytics). Value 72 is realistic. Neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 range standard for satisfaction scores. Value 72 is realistic
+          for a company tracking NPS-style metric. Thresholds at 30 (poor/average)
+          and 70 (average/good) are reasonable divisions matching industry conventions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: arcAngle helper function and needlePlugin object are necessary for
+          Chart.js's plugin system — can't draw the needle otherwise. Well-justified
+          deviation from strict KISS. Code is well-organized.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded as constants (value=72, thresholds=[30,70]).
+          Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (Chart.js is a global per harness contract). No unused
+          variables. Clean code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized code. No fake UI elements. Plugin architecture
+          is appropriate for the complexity of needle rendering. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct orientation directive (//# anyplot-orientation: square).
+          No filesystem calls. animation:false set. Current Chart.js 4.x API used.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Chart.js usage: doughnut chart with rotation/circumference/cutout
+          for semi-circle, plugin lifecycle (afterDatasetsDraw), getDatasetMeta/getProps
+          for arc geometry, responsive:true + maintainAspectRatio:false + animation:false
+          all set correctly. Token theming applied throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Chart.js plugin using afterDatasetsDraw hook to draw needle
+          via canvas 2D API — distinctly Chart.js-specific. getDatasetMeta(0).data[0].getProps(['x','y','innerRadius','outerRadius'])
+          is a Chart.js-specific geometry access pattern. The doughnut+rotation+circumference
+          gauge technique is idiomatic Chart.js.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []
