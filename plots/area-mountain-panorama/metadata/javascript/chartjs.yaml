@@ -1,0 +1,288 @@
+library: chartjs
+language: javascript
+specification_id: area-mountain-panorama
+created: '2026-06-30T22:30:25Z'
+updated: '2026-06-30T22:53:24Z'
+generated_by: claude-sonnet
+workflow_run: 28479048136
+issue: 5365
+language_version: 22.23.0
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Beautiful sky gradient plugin creates authentic panoramic atmosphere — light render
+    uses blue sky gradient, dark render uses deep navy/night sky, creating a photographic
+    alpine mood
+  - 'Perfectly spec-compliant: piecewise-linear ridgeline with sharp jagged peaks,
+    layered background ridge for atmospheric depth, 12 annotated Valais summits with
+    name and elevation'
+  - Real-world Swiss Alps data with accurate elevations (Matterhorn 4478m, Monte Rosa/Dufourspitze
+    4634m, Dom 4545m, Liskamm 4527m, Weisshorn 4506m, etc.)
+  - 'Matterhorn clearly highlighted as focal peak: larger dot (7px vs 4px), outer
+    highlight ring, bold text — strong visual hierarchy per spec requirement'
+  - Deterministic sin-hash noise function (sinNoise) avoids Math.random() non-reproducibility
+    while still producing realistic jagged ridgeline texture
+  - 'Chart.js plugin system used expertly: skyPlugin (beforeDraw) for gradient background,
+    annotPlugin (afterDraw) with scales.getPixelForValue() for pixel-accurate annotation
+    placement'
+  - Staggered yOff values for annotation labels prevent overlap across the panorama;
+    dashed leader lines with text shadows maintain readability against the gradient
+    sky
+  weaknesses:
+  - Peak annotation name text (13-15px CSS = 26-30 source px) is on the small side
+    at full 3200x1800 resolution — increase name labels to 15-16px CSS and elevation
+    text to 13-14px CSS for better readability
+  - Left cluster (Weisshorn at 12°, Zinalrothorn at 20°, Ober Gabelhorn at 30°) labels
+    are somewhat horizontally crowded due to close bearings — the yOff staggering
+    helps but horizontal proximity still creates visual clustering on the left quarter
+    of the chart
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) canvas margins; chart area features a sky gradient from deep blue (#2e6fa8) at top through mid-blue (#7fb3d8) to pale blue-white (#d6eaf8) near the bottom — per spec "Optional sky-gradient background above the ridgeline".
+      Chrome: Title "area-mountain-panorama · javascript · chartjs · anyplot.ai" in dark ink (#1A1A17) at top — fully visible. Compass tick labels (W, WSW, SW, S, SSE, SE, E) in secondary ink on x-axis, elevation tick labels (2,500 m … 5,100 m) on y-axis — all readable. X-axis title "Bearing — Panorama from Gornergrat" and Y-axis title "Elevation (m)" in dark ink — clearly visible.
+      Data: Mountain silhouette filled near-black (rgba(26,24,20,0.94)) with jagged triangular peaks. Background ridge in lighter semi-transparent grey-blue for atmospheric depth. Summit markers in #009E73 brand green — Matterhorn has larger dot (7px radius) with highlight ring. Peak annotation labels in #FAF8F1 white with drop shadow — 12 peaks labeled from Weisshorn (W) to Täschhorn (E).
+      Legibility verdict: PASS — all text elements clearly readable against the warm light background; annotation labels readable against sky gradient with text shadows.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) canvas margins; chart area features a night sky gradient from very dark navy (#080d1f) at top through dark navy (#0f1a36) to the background color (#1A1A17) at bottom, creating a seamless transition into the dark canvas.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Compass tick labels and elevation tick labels in secondary light ink (#B8B7B0) — visible against dark background. Axis titles in light ink — readable. Subtle horizontal y-axis grid lines visible.
+      Data: Data colors are identical to light render — same near-black mountain silhouette fill with dark ridge, same #009E73 brand green summit markers, same white annotation text with drop shadows. No dark-on-dark text issues: all annotation labels and axis labels use light-colored text that reads clearly against the dark surfaces.
+      Legibility verdict: PASS — both themes render correctly. No dark-on-dark failures observed. Brand green #009E73 reads well on both light sky and dark night sky backgrounds.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set. Title (22px CSS), axis labels (14px
+          CSS), tick labels (13px CSS), annotation names (13-15px CSS = 26-30 source
+          px). All readable in both themes. Minor: annotation text could be slightly
+          larger for best mobile readability.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Staggered yOff values prevent label overlap across the panorama.
+          Minor visual crowding in left cluster (Weisshorn 12°, Zinalrothorn 20°,
+          Ober Gabelhorn 30°) due to close horizontal proximity, but labels remain
+          readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mountain silhouette clearly visible. Background ridge provides depth.
+          Summit markers (4-7px radius) well-sized. All 12 annotated peaks visible
+          with leader lines.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green summit markers (#009E73) contrast well against sky gradient.
+          White text with drop shadows ensures readability on both light and dark
+          backgrounds. No red-green-only signals.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Landscape orientation
+          appropriate for panorama. Chart fills canvas well with generous margins.
+          Nothing cut off at edges. Title at ~75% width — expected for this title
+          length.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Elevation (m)'' — descriptive with units. X-axis: ''Bearing
+          — Panorama from Gornergrat'' — descriptive and geographically contextual.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Summit markers use t.palette[0] (#009E73) correctly as first/only
+          data series. Sky gradient is spec-mandated (not a palette violation). Canvas
+          margins show correct #FAF8F1 (light) / #1A1A17 (dark). Chrome uses t.ink
+          / t.inkSoft — theme-adaptive and correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: sky gradient plugin creates
+          photographic alpine atmosphere, layered ridgeline adds depth, Matterhorn
+          focal point with highlighted dot and bold text shows intentional visual
+          hierarchy. Not at publication-ready 8 (lacks refined leader arrow styling,
+          elevation label backgrounds), but clearly ''Strong design''.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: legend hidden (appropriate), x-axis grid disabled,
+          y-axis grid subtle, tooltips disabled, text shadows on annotations. The
+          sky gradient chart area shows deliberate background design. Not minimal-chrome
+          (spines still visible) but clearly above default.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: Matterhorn highlighted as focal summit (larger
+          dot, outer ring, bold text), sky gradient conveys alpine dusk atmosphere,
+          compass bearings provide geographic narrative (W to E sweep), layered silhouettes
+          create depth and visual richness. Clear focal point guides the viewer.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: filled area chart of ridgeline elevation. Piecewise-linear
+          with triangular jagged peaks (tension: 0). Panoramic landscape orientation.
+          Background ridge layer for depth.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: filled area (dark silhouette), sky gradient background,
+          layered background ridge, peak annotations with name+elevation, dashed leader
+          lines, staggered label positions, Y_MIN=2500m, compass bearing x-axis, Matterhorn
+          as focal summit.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: bearing in degrees 0-180° (W to E) mapped to compass labels.
+          Y: elevation in meters 2500-5100m. 16 major Valais peaks from spec included.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''area-mountain-panorama · javascript · chartjs · anyplot.ai''
+          — matches required format exactly. No legend (appropriate for panorama with
+          custom annotations).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects of mountain panorama: jagged ridgeline with varied
+          peak heights, deep saddles between peaks, background ridge, annotated summits
+          with staggered labels, compass bearing axis.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Valais Alps panorama from Gornergrat — real, well-known alpine viewpoint.
+          Neutral geographic/educational context. Includes all peaks named in spec
+          example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Elevations factually accurate: Matterhorn 4478m, Monte Rosa 4634m
+          (highest), Dom 4545m, Liskamm 4527m, Weisshorn 4506m, Täschhorn 4491m. Y
+          range 2500-5100m appropriate for high-alpine terrain.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: data → helpers → mount → plugins → chart.
+          Two small utility functions (lerpElev, sinNoise) are necessary and compact.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: all data hardcoded, sinNoise() uses fixed math
+          constants (sin-hash) to avoid Math.random() non-reproducibility.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (Chart is a global, no npm packages used).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. Plugins are well-structured. No fake
+          interactivity (tooltip disabled, no simulated hover states).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct Chart.js 4.4.7 API. Harness handles PNG/HTML output. animation:
+          false set. responsive: true + maintainAspectRatio: false set correctly.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic: line chart with fill: ''start'' for area filling, parsing:
+          false for xy object data, tension: 0 for sharp angles, custom plugins via
+          beforeDraw/afterDraw hooks. Correct use of chart.scales.x/y.getPixelForValue()
+          in afterDraw.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js plugin lifecycle (beforeDraw for gradient, afterDraw
+          for annotations) — distinctively Chart.js. Scale pixel API (getPixelForValue)
+          is Chart.js-specific. The canvas2D drawing within afterDraw is standard
+          but the integration with Chart.js scales and lifecycle is library-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - gradient-fill
+  - alpha-blending
