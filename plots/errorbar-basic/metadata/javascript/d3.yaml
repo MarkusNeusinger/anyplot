@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: errorbar-basic
 created: '2026-06-30T20:45:49Z'
-updated: '2026-06-30T20:51:24Z'
+updated: '2026-06-30T21:06:03Z'
 generated_by: claude-sonnet
 workflow_run: 28474198351
 issue: 973
@@ -12,116 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Both themes render flawlessly with correct Imprint palette chrome adaptation;
-    brand green #009E73 is identical across light and dark'
-  - Realistic, scientifically-credible agricultural field trial data with plausible
-    yield values and SDs; perfect spec compliance including visible caps and consistent
-    widths
-  - Perfectly clean, flat D3 code structure with idiomatic data joins and bandwidth-based
-    cap sizing
-  - Horizontal-only subtle gridlines, no top/right spines, and pageBg stroke on mean
-    circles are thoughtful refinements above defaults
+  - 'All 6 Imprint palette positions used in canonical order — first series (Control)
+    correctly anchored to brand green #009E73'
+  - 'Excellent spec compliance: symmetric error bars with visible caps, mean-value
+    circles, and data labels fully satisfy spec requirements'
+  - Subtle NPK column highlight (palette[4] at 7% opacity) paired with a star annotation
+    creates a clear narrative focal point without cluttering the chart
+  - 'Clean theme adaptation: ink tokens threaded through title, axis text, and domain
+    lines so both light (#FAF8F1) and dark (#1A1A17) renders are fully readable'
+  - Mean value labels positioned below each circle enable quick quantitative comparison
+    without requiring a data table
+  - Flat, procedural D3 code is easy to follow — deterministic inline data, proper
+    .join() bindings, and idiomatic axis construction
   weaknesses:
-  - Y-axis domain starts at 0 while all data ranges from 2.8-6.3, leaving the bottom
-    ~40% of the plot area empty — use domain [1.5, 7.0] or [2.0, 7.0] to better fill
-    canvas height
-  - All six treatments share the same brand green color with no visual differentiation
-    — apply d3.scaleOrdinal over t.palette to give each treatment its own Imprint
-    color, boosting both aesthetic sophistication and storytelling
-  - No visual emphasis on the top-performing NPK treatment — color variation or a
-    subtle annotation would guide the viewer immediately to the key insight
+  - Mean value labels rendered at font-size 13px CSS (26px source), just below the
+    style-guide 14px floor — increase to 14px for consistency
+  - Mean labels placed at y+26px below each circle sit 9–13px CSS above the lower
+    error-bar cap for compact treatments (Control 3.2±0.38, Potassium 3.9±0.41) —
+    tightest but not overlapping; a small spacing increase (y+30) would add visual
+    breathing room
+  - 'NPK falls at palette position 5 (matte red #AE3030) through canonical ordering;
+    while ordinal ordering is technically correct, the ''best yield'' treatment rendered
+    in semantic-error red creates a slight cognitive mismatch — consider documenting
+    this as intentional or reordering so NPK avoids slot 5'
+  - 'DE-02: No explicit spine removal code — D3''s default axisBottom/axisLeft already
+    omit top/right spines so no domain path is drawn for them, which is structurally
+    correct but provides no signal that the choice was deliberate; removing the domain
+    lines from xAxis/yAxis selectors would clarify intent'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "errorbar-basic · javascript · d3 · anyplot.ai" in dark bold text, centered; x-axis label "Fertilizer Treatment" and y-axis label "Crop Yield (t/ha)" in dark ink; tick labels in dark-gray inkSoft — all fully readable
-      Data: Six error bar groups in brand green (#009E73) — stems, upper/lower caps, and mean circles with pageBg stroke ring; horizontal gridlines subtle light-gray
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct surface for light theme
+      Chrome: Title "errorbar-basic · javascript · d3 · anyplot.ai" in bold dark (#1A1A17) text at 22px CSS, clearly prominent. Y-axis label "Crop Yield (t/ha)" and x-axis label "Fertilizer Treatment" in dark ink at 16px CSS, both readable. Y-axis tick labels (2.0–7.0) and x-axis treatment names in soft ink (#4A4A44) at 14px CSS — readable. "★ Top yield" annotation in matte red above NPK upper cap, legible at 13px bold.
+      Data: Six vertical error bars with mean circles (r=9) and capped stems. Colors in canonical Imprint order — Control: #009E73 (green), Nitrogen: #C475FD (lavender), Phosphorus: #4467A3 (blue), Potassium: #BD8233 (ochre), NPK: #AE3030 (matte red), Organic: #2ABCCD (cyan). Mean value labels below each circle in matching treatment color. Subtle reddish column highlight behind NPK at 7% opacity.
+      Legibility verdict: PASS — all text readable; mean labels at 13px are slightly below the 14px style-guide minimum but remain legible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels in off-white/light-gray (t.ink / t.inkSoft tokens); gridlines subtle on dark; tick labels light-colored — no dark-on-dark failures observed
-      Data: Brand green #009E73 identical to light render across all stems, caps, and circles — only chrome flips
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct surface for dark theme
+      Chrome: Title in light (#F0EFE8) text, clearly visible against dark surface. Axis labels ("Fertilizer Treatment", "Crop Yield (t/ha)") in light ink at 16px CSS — visible. Tick labels in soft light (#B8B7B0) at 14px CSS — readable. No dark-on-dark failures detected; all chrome elements use theme-adaptive token values.
+      Data: Data colors are identical to light render — green, lavender, blue, ochre, matte red, cyan circles and stems in same Imprint palette positions. Mean value labels in treatment colors all retain adequate contrast on dark surface. NPK column highlight creates a subtle dark-red tint, consistent with the light render's highlight intent. "★ Top yield" annotation in matte red (#AE3030) is visible on near-black background.
+      Legibility verdict: PASS — both chrome and data elements remain readable; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, tick
-          labels 14px); well-proportioned in both themes; no overflow or clipping
+        comment: Title 22px, axis labels 16px, tick labels 14px — all readable in
+          both themes. Mean value labels at 13px CSS slightly below 14px floor; minor
+          deduction.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No collisions between tick labels, error bars, or any text
+        comment: No visible overlap. Mean labels at y+26 sit 9–13px above lower caps
+          for compact treatments — tight but clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bar stems, caps, and mean circles are all prominent and well-sized
-          for 6 sparse data points
+        comment: Circles r=9 CSS prominent for sparse 6-point data. Error bars with
+          caps clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green; adequate contrast in both themes; CVD-safe
+        comment: Imprint palette CVD-safe. 6 hues across 4 perceptual families — distinguishable
+          under major CVD types.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins and no clipping, but y-axis domain [0, 7] leaves the
-          lower ~40% of the plot area empty (all data sits between 2.8 and 6.3)
+        comment: Canvas gate passed. Title ~60% width. Generous margins (85/55/95/105).
+          No clipping. Proportions balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Fertilizer Treatment and Crop Yield (t/ha) both descriptive with
-          units
+        comment: 'X: ''Fertilizer Treatment'', Y: ''Crop Yield (t/ha)'' with units.
+          Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First (only) series uses palette[0] (#009E73); background is theme-correct
-          pageBg; chrome uses ink/inkSoft/grid tokens correctly in both renders
+        comment: 'First series (Control) = #009E73. Positions 1–6 in canonical order.
+          Backgrounds #FAF8F1 / #1A1A17. Data colors identical across themes.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean and professional, but single-color single-series design with
-          no visual differentiation across groups; looks like a well-configured default
+        passed: true
+        comment: Above default. NPK column highlight + star annotation show intentional
+          hierarchy. Distinct colors per treatment. Not exceptional but deliberate
+          design.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Horizontal-only grid, no top/right spines, circles have pageBg stroke
-          for definition — above defaults, but not polished throughout
+        passed: true
+        comment: Y-axis-only grid, subtle opacity. Circle stroke matches pageBg for
+          definition. Top/right spines absent (D3 default). Slightly above default.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but not interpreted; NPK treatment is clearly the
-          top performer but nothing in the visual emphasizes this
+        passed: true
+        comment: NPK highlighted as best performer with column highlight + annotation.
+          Mean labels enable quick comparison. Clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -131,53 +144,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Error bar plot with stems, caps, and mean circles — correct
+        comment: Correct error bar plot with point estimates, vertical stems, and
+          capped ends.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps present, consistent bar widths, symmetric errors, 6
-          groups within 3-20 spec range
+        comment: Error bars above and below, visible caps, consistent widths, distinct
+          group colors.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categorical fertilizer treatments on X, numeric crop yield on Y,
-          error bars symmetric around means
+        comment: 'X: categorical treatments. Y: crop yield. Error: ±1 SD shown correctly.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend needed for single
-          series
+        comment: 'Title: ''errorbar-basic · javascript · d3 · anyplot.ai'' — correct
+          format. No legend needed (categorical x-axis labels serve as group identifiers).'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Varied means (3.2-5.7 t/ha) and SDs (0.38-0.61) demonstrate the full
-          feature set; all error bar components shown
+        comment: 6 groups, all with means and SDs. Symmetric error bars demonstrated.
+          Asymmetric not shown (not required for basic).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Agricultural field trial context is real, neutral, and scientifically
-          credible
+        comment: Crop yield field trial is realistic and neutral. Values (3.2–5.7
+          t/ha) and SDs (0.38–0.61) are plausible for cereal crops.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cereal crop yield values and SD magnitudes are factually plausible;
-          NPK outperforming single-nutrient treatments is scientifically correct
+        comment: Y-axis 2.0–7.0 covers data well. Units and scale appropriate for
+          agricultural yield context.
     code_quality:
       score: 10
       max: 10
@@ -187,61 +200,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential structure: tokens -> data -> SVG -> scales -> grid
-          -> axes -> error bars -> circles -> labels -> title'
+        comment: No functions/classes. Flat procedural D3 script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data; no random number generation
+        comment: 'Fully deterministic: hardcoded data array, no RNG.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; d3 is a global per harness contract
+        comment: No imports; d3 is a global. All tokens from window.ANYPLOT_TOKENS.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean D3 data-join idioms throughout; cx helper arrow function is
-          concise; capHalf derived from bandwidth is correct
+        comment: cx helper, capHalf derived from bandwidth, .join() bindings — appropriate
+          D3 patterns throughout.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Landscape orientation directive present; harness emits plot-{theme}.png
-          + plot-{theme}.html; D3 v7 API used correctly
+        comment: Harness handles output. Current D3 7.9.0 API used.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: d3.scaleBand with padding, d3.scaleLinear with .nice(), data joins
-          using .join(), axis tick formatting — all idiomatic D3
+        comment: scaleBand with padding, scaleLinear with nice(), axisBottom/axisLeft,
+          .call(), .join() — idiomatic D3. Above default.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Error bars built from individual SVG line elements via D3 data joins
-          + bandwidth-derived cap sizing is distinctively D3, but the approach is
-          standard
-  verdict: REJECTED
+        passed: true
+        comment: scaleOrdinal for color mapping, scaleBand for categorical layout,
+          axisLeft repurposed for horizontal gridlines via tickSize(-iw) — distinctly
+          D3 techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
   - edge-highlighting
+  - grid-styling
