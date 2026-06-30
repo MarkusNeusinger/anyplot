@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai — Imprint palette
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: plotly 6.7.0 | Python 3.14.4
-Quality: 89/100 | Created: 2026-04-25
+Library: plotly | Python
 """
 
 import os
@@ -17,8 +16,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — mountain silhouette
+AMBER = "#DDCC77"  # semantic anchor — focal peak (Matterhorn) spotlight
+
+# Sky fill — Imprint cyan (light) / Imprint blue (dark) for atmospheric mood per spec
+SKY_FILL = "rgba(42,188,205,0.12)" if THEME == "light" else "rgba(68,103,163,0.22)"
 
 # Data — Wallis (Valais) panorama: peaks ordered along a 0–180° angular sweep
 peaks = [
@@ -74,15 +77,35 @@ for i in range(len(ctrl_x) - 1):
 ridge_x = np.concatenate(ridge_x)
 ridge_y = np.concatenate(ridge_y)
 
-# Anchor the silhouette polygon at the lower edge of the visible y-range
 Y_FLOOR = 2500
+Y_TOP = 5400
+
+# Anchor the silhouette polygon at the lower edge of the visible y-range
 poly_x = np.concatenate([[ridge_x[0]], ridge_x, [ridge_x[-1]]])
 poly_y = np.concatenate([[Y_FLOOR], ridge_y, [Y_FLOOR]])
+
+# Sky polygon above the ridgeline (fills from ridgeline to Y_TOP)
+sky_x = np.concatenate([[ridge_x[0]], ridge_x, [ridge_x[-1]]])
+sky_y = np.concatenate([[Y_TOP], ridge_y, [Y_TOP]])
 
 # Plot
 fig = go.Figure()
 
-# Mountain silhouette (first categorical series — brand green)
+# Sky fill behind silhouette — Imprint palette atmospheric tint per spec
+fig.add_trace(
+    go.Scatter(
+        x=sky_x,
+        y=sky_y,
+        mode="lines",
+        line={"color": "rgba(0,0,0,0)", "width": 0},
+        fill="toself",
+        fillcolor=SKY_FILL,
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Mountain silhouette (first categorical series — Imprint brand green)
 fig.add_trace(
     go.Scatter(
         x=poly_x,
@@ -115,20 +138,22 @@ for i, (name, ang, el) in enumerate(peaks):
         )
     )
 
-    # Summit dot (slightly larger for the focal peak)
+    # Summit dot — Matterhorn gets amber focal treatment for visual distinction
+    dot_color = AMBER if is_focal else INK_SOFT
+    dot_size = 12 if is_focal else 6
     fig.add_trace(
         go.Scatter(
             x=[ang],
             y=[el],
             mode="markers",
-            marker={"size": 10 if is_focal else 6, "color": INK if is_focal else INK_SOFT, "line": {"width": 0}},
+            marker={"size": dot_size, "color": dot_color, "line": {"width": 0}},
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
     # Label: name on top, elevation below
-    name_size = 17 if is_focal else 14
+    name_size = 14 if is_focal else 11
     weight = "700" if is_focal else "600"
     annotations.append(
         {
@@ -136,7 +161,7 @@ for i, (name, ang, el) in enumerate(peaks):
             "y": label_y,
             "text": (
                 f"<span style='font-size:{name_size}px;font-weight:{weight};color:{INK}'>{name}</span><br>"
-                f"<span style='font-size:13px;color:{INK_MUTED}'>{el:,} m</span>"
+                f"<span style='font-size:11px;color:{INK_MUTED}'>{el:,} m</span>"
             ),
             "showarrow": False,
             "align": "center",
@@ -145,27 +170,28 @@ for i, (name, ang, el) in enumerate(peaks):
         }
     )
 
-# Subtitle / footnote
+# Subtitle annotation
 annotations.append(
     {
         "x": 0.5,
-        "y": 1.08,
+        "y": 1.07,
         "xref": "paper",
         "yref": "paper",
         "text": f"<span style='color:{INK_SOFT}'>Wallis panorama — sixteen 4 000 m peaks of the Pennine Alps</span>",
         "showarrow": False,
-        "font": {"size": 18},
+        "font": {"size": 15},
         "xanchor": "center",
     }
 )
 
 fig.update_layout(
+    autosize=False,
     title={
         "text": "area-mountain-panorama · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "font": {"size": 22, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
+        "y": 0.97,
     },
     annotations=annotations,
     paper_bgcolor=PAGE_BG,
@@ -181,8 +207,8 @@ fig.update_layout(
         "fixedrange": True,
     },
     yaxis={
-        "title": {"text": "Elevation (m)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Elevation (m)", "font": {"size": 16, "color": INK}},
+        "tickfont": {"size": 14, "color": INK_SOFT},
         "tickvals": [2500, 3000, 3500, 4000, 4500, 5000],
         "ticksuffix": "  ",
         "gridcolor": GRID,
@@ -191,10 +217,10 @@ fig.update_layout(
         "zeroline": False,
         "showline": False,
         "ticks": "",
-        "range": [Y_FLOOR, 5400],
+        "range": [Y_FLOOR, Y_TOP],
     },
-    margin={"l": 120, "r": 80, "t": 160, "b": 60},
+    margin={"l": 100, "r": 60, "t": 130, "b": 50},
 )
 
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
