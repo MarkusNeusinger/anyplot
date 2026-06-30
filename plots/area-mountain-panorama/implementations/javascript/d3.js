@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-06-30
+// Library: d3 7.9.0 | JavaScript 22.23.0
+// Quality: 91/100 | Created: 2026-06-30
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
