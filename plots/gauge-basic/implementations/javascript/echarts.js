@@ -1,7 +1,7 @@
 // anyplot.ai
 // gauge-basic: Basic Gauge Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-30
+// Library: echarts 5.5.1 | JavaScript 22.23.0
+// Quality: 88/100 | Created: 2026-06-30
 
 //# anyplot-orientation: square
 
