@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:03:02Z'
-updated: '2026-06-30T20:31:18Z'
+updated: '2026-06-30T20:41:43Z'
 generated_by: claude-sonnet
 workflow_run: 28473166319
 issue: 973
@@ -12,43 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'Both light and dark themes render correctly with proper Imprint palette colors
-    — brand green #009E73 on Control, full palette in canonical order'
-  - Asymmetric error bars are elegantly implemented using Bokeh-native Whisker + TeeHead
-    models with per-group ColumnDataSource, enabling distinct colors per error bar
-  - Font sizes well-calibrated for 3200x1800 canvas (50pt title, 42pt axis labels,
-    34pt tick labels) — all text legible in both themes
-  - The 'highest variability' annotation on Treatment C provides genuine data storytelling
-    with idiomatic Bokeh Label model
-  - 'Excellent code quality: seed(42), clean imports, linear structure, no fake UI
-    or unnecessary abstractions'
+  - Per-group colored Whiskers + TeeHead caps via individual ColumnDataSources — an
+    elegant Bokeh-specific pattern enabling per-element color without manual glyph
+    hacks
+  - 'Full Imprint palette compliance in canonical order (#009E73 first); both theme
+    backgrounds correct (#FAF8F1 / #1A1A17); all chrome theme-adaptive with no dark-on-dark
+    failures in either render'
+  - All text sizes explicitly set with correct hierarchy (50pt title, 42pt axis labels,
+    34pt tick labels) — well-proportioned and readable at desktop and mobile widths
+    in both themes
+  - Asymmetric error bars correctly implemented with distinct lower and upper error
+    arrays demonstrating Treatment C high variability
+  - '"highest variability" annotation creates a clear focal point and elevates the
+    plot above a plain data display, guiding the viewer to the key insight'
   weaknesses:
-  - 'Title is missing the required ''python'' language component — actual: ''errorbar-basic
-    · bokeh · anyplot.ai'', required: ''errorbar-basic · python · bokeh · anyplot.ai'''
-  - outline_line_color = INK_SOFT creates a full rectangular box border around the
-    plot area; the style guide prefers an L-shaped frame (remove top and right spines).
-    In Bokeh this means setting p.outline_line_color = None and keeping only left/bottom
-    axis lines.
-  - Design is competent but not exceptional — the annotation provides some storytelling
-    but there is no strong visual hierarchy or emphasis technique beyond color differentiation
+  - The "highest variability" annotation has no visual connector (arrow or line) to
+    the error bar cap it references, which could be ambiguous when the plot is displayed
+    at small sizes
+  - Design lacks one standout finishing touch to reach 'strong design' tier — an annotation
+    arrow or a thin reference line at the Control mean would close the DE-01 gap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white
-      Chrome: Title "errorbar-basic · bokeh · anyplot.ai" in dark ink (#1A1A17), left-aligned at 50pt — clearly readable. X-axis label "Experimental Group" and Y-axis label "Response Value (units)" in dark ink at 42pt — readable. Tick labels in INK_SOFT (#4A4A44) at 34pt — readable. Subtle italic "highest variability" annotation in INK_MUTED — readable.
-      Data: 6 groups with Imprint palette colors in canonical order: Control=#009E73 (brand green), Treatment A=#C475FD (lavender), Treatment B=#4467A3 (blue), Treatment C=#BD8233 (ochre), Treatment D=#AE3030 (matte red), Treatment E=#2ABCCD (cyan). Error bars use Whisker+TeeHead with line_width=5 and TeeHead size=40 — prominent and clearly visible. Circular scatter markers size=28 with PAGE_BG edge. Y-only subtle grid. No x-grid.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "errorbar-basic · python · bokeh · anyplot.ai" in dark ink text, left-aligned, fully readable. Axis labels "Experimental Group" (x) and "Response Value (units)" (y) in dark ink, clearly visible. Tick labels (Control, Treatment A–E on x; 20–50 on y) in dark secondary ink, readable.
+      Data: Six groups with scatter points and Whisker error bars (TeeHead caps). Colors: Control=#009E73 (brand green), Treatment A=#C475FD (lavender), Treatment B=#4467A3 (blue), Treatment C=#BD8233 (ochre), Treatment D=#AE3030 (matte red), Treatment E=#2ABCCD (cyan). Scatter markers have page-background edge highlight. Error bar lines are thick (5px) with large caps (size=40). Asymmetric errors visible especially on Treatment C (largest lower extent). "highest variability" annotation in small italic muted text near Treatment C lower cap.
+      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct surface color, not pure black
-      Chrome: Title in light INK (#F0EFE8) — clearly readable against dark background. Axis labels in same light ink — readable. Tick labels in INK_SOFT (#B8B7B0) — readable. Annotation text in INK_MUTED (#A8A79F) — readable. No dark-on-dark failures detected.
-      Data: Colors are identical to the light render — all 6 Imprint palette colors (Control green, Treatment A lavender, Treatment B blue, Treatment C ochre, Treatment D red, Treatment E cyan) appear at the same brightness. Only chrome (background, text, grid) has flipped. Brand green #009E73 remains clearly visible on the dark surface.
-      Legibility verdict: PASS — all text clearly readable against the warm near-black background, no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light near-white text (#F0EFE8), clearly readable. Axis labels in light ink, clearly readable. Tick labels in secondary light text (#B8B7B0), readable. "highest variability" annotation visible in muted light text (#A8A79F). No dark-on-dark failures — all chrome elements use light theme-adaptive tokens.
+      Data: All six data series retain exact same Imprint palette colors as light render — brand green, lavender, blue, ochre, matte red, cyan are identical. Error bars and scatter points equally visible on dark surface. Brand green #009E73 clearly visible on near-black background.
+      Legibility verdict: PASS — all text clearly readable against #1A1A17 background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,50 +56,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          tick labels, 20pt annotation); readable in both light and dark themes
+        comment: 'All sizes explicitly set: 50pt title, 42pt axis labels, 34pt tick
+          labels; proportional in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data element overlaps detected in either render
+        comment: No collisions; annotation placed in clear area between Treatment
+          C and D
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Size=28 markers and line_width=5 whiskers with TeeHead size=40 are
-          very prominent — appropriate for 6 sparse data points
+        comment: size=28 scatter and line_width=5 whiskers with TeeHead size=40 are
+          prominent for 6 sparse groups
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used in canonical order — colorblind-safe by design
+        comment: Imprint palette is CVD-safe; scatter markers have page-background
+          edge highlight for additional contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 3200x1800 with min_border reservations; good
-          whitespace; no overflow
+        comment: 3200x1800 with calibrated min_border; no clipping; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Experimental Group'' and ''Response
-          Value (units)'''
+        comment: 'Descriptive labels with units: Experimental Group, Response Value
+          (units)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73; all 6 series use Imprint positions 1-6 in
-          canonical order; backgrounds #FAF8F1/#1A1A17'
+        comment: 'First series #009E73; canonical Imprint order for 6 groups; backgrounds
+          #FAF8F1/#1A1A17; chrome theme-adaptive'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -107,26 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above baseline: per-group coloring on error bars (not just markers)
-          and ''highest variability'' annotation show design intent; not exceptional
-          — no spine removal or strong visual hierarchy beyond color'
+        comment: 'Above-default: per-group colored Whiskers matching scatter points
+          is deliberate design; not yet at publication-ready level'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only subtle grid, correct background tokens; but outline_line_color
-          creates full rectangular box (not preferred L-shape)
+        comment: Y-only grid at alpha=0.15, no outer border, L-shaped spine, no minor
+          ticks, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: '''highest variability'' annotation guides attention; asymmetric
-          errors reveal interesting data story; no dramatic focal point or emphasis
-          beyond annotation'
+        comment: Color contrast differentiates groups; annotation creates focal point;
+          asymmetric errors reinforce Treatment C story
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,30 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct error bar plot with scatter markers and Whisker+TeeHead error
-          bars
+        comment: 'Correct error bar plot: scatter means + Whisker error bars with
+          TeeHead caps'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Error bars with caps (TeeHead), consistent widths, different colors
-          per group, asymmetric errors — all present
+        comment: Visible caps, consistent bar widths, per-group colors, asymmetric
+          errors correctly implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categorical x-axis, numeric y-axis, correct asymmetric error mapping
-          (upper/lower)
+        comment: X = categorical groups, Y = response values; all 6 groups plotted
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title missing ''python'' language component. Actual: ''errorbar-basic
-          · bokeh · anyplot.ai''. Required: ''errorbar-basic · python · bokeh · anyplot.ai''.
-          No legend needed (groups labeled on x-axis).'
+        passed: true
+        comment: Title matches format; no legend needed as x-axis labels identify
+          groups
     data_quality:
       score: 15
       max: 15
@@ -167,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows asymmetric errors, multiple colored groups, annotation — all
-          key error bar features covered
+        comment: Shows symmetric errors, asymmetric errors (Treatment C 6.5/2.8),
+          and varying magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Experimental groups (Control + Treatments A-E) with response values
-          is realistic, plausible, and neutral
+        comment: 'Scientific experimental context: Control + Treatment A-E groups;
+          neutral and non-controversial'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 23-50 units with trimmed y-range and 15% padding — sensible
-          scale
+        comment: Means 25-48, errors 2-6.5 units; plausible proportions for scientific
+          response variable
     code_quality:
       score: 10
       max: 10
@@ -192,35 +189,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear code structure throughout
+        comment: 'Linear structure: imports -> constants -> data -> figure -> whiskers
+          -> scatter -> annotation -> style -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, time, Path, numpy, bokeh models, selenium)
-          are used
+        comment: All imports used; no unused packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop for per-group whiskers; no fake UI; zip(strict=True) is
-          a nice touch
+        comment: zip(..., strict=True) for per-group whisker loop; individual ColumnDataSource
+          per group elegantly solves per-color Whisker limitation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for Bokeh
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current Bokeh
+          API + Selenium screenshot
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -228,16 +226,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct use of ColumnDataSource, Whisker, TeeHead, Label, figure
-          with x_range for categorical axis, add_layout — all idiomatic Bokeh patterns
+        comment: Correct categorical x_range; ColumnDataSource throughout; figure()
+          with min_border; Whisker via add_layout()
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Whisker+TeeHead for error bars is Bokeh-specific; per-group ColumnDataSource
-          enabling individual color control; Label annotation — good Bokeh mastery,
-          not exceptional
+        comment: Bokeh-specific Whisker+TeeHead for capped error bars; per-group ColumnDataSource
+          for individual colors; Label annotation; CDP viewport override
   verdict: APPROVED
 impl_tags:
   dependencies:
