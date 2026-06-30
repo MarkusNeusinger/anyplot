@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-30
@@ -81,6 +81,23 @@ for idx, (_name, pos, elev) in enumerate(peaks):
 
 # Fine-grain jaggedness along the full ridgeline
 ridge += np.random.randn(N) * 18.0
+
+# Secondary depth ridge (more distant range peeking above main ridge valleys — DE-01 depth)
+np.random.seed(99)
+depth_ridge = np.zeros(N)
+depth_ridge[0] = 3050.0
+depth_ridge[N - 1] = 2950.0
+step = N - 1
+amp_d = 240.0
+while step > 1:
+    half = step // 2
+    for i in range(0, N - step, step):
+        midval = (depth_ridge[i] + depth_ridge[i + step]) / 2.0
+        depth_ridge[i + half] = midval + float(np.random.randn()) * amp_d
+    amp_d *= 0.62
+    step = half
+depth_ridge = np.clip(depth_ridge, 2800.0, 3550.0)
+depth_ridge += np.random.randn(N) * 10.0
 
 # Canvas — 3200×1800 landscape (hard contract per pygal library prompt)
 CANVAS_W, CANVAS_H = 3200, 1800
@@ -174,10 +191,21 @@ svg_parts = [
             <stop offset="0%" stop-color="{SKY_TOP}"/>
             <stop offset="100%" stop-color="{PAGE_BG}"/>
         </linearGradient>
+        <clipPath id="plotClip">
+            <rect x="{plot_x_left:.2f}" y="{plot_y_top:.2f}" width="{plot_w:.2f}" height="{plot_h:.2f}"/>
+        </clipPath>
     </defs>""",
     f'<rect x="{plot_x_left:.2f}" y="{plot_y_top:.2f}" '
     f'width="{plot_w:.2f}" height="{plot_h:.2f}" fill="url(#skyGrad)" stroke="none"/>',
 ]
+
+# Secondary depth ridge polygon (distant muted ridge visible above main valleys)
+depth_fill = "#A8BAB4" if THEME == "light" else "#2C3E38"
+depth_pts = " ".join(f"{angle[i] * x_scale + x_off:.1f},{depth_ridge[i] * y_scale + y_off:.1f}" for i in range(N))
+depth_pts += f" {plot_x_right:.1f},{plot_y_bottom:.1f} {plot_x_left:.1f},{plot_y_bottom:.1f}"
+svg_parts.append(
+    f'<polygon points="{depth_pts}" fill="{depth_fill}" opacity="0.60" clip-path="url(#plotClip)" stroke="none"/>'
+)
 
 # Title — scaled for long descriptive string (formula: round(66 * 67 / len(title)))
 title_str = "Bernese Oberland · area-mountain-panorama · python · pygal · anyplot.ai"
@@ -201,7 +229,7 @@ for v in y_ticks:
     ty = v * y_scale + y_off
     svg_parts.append(
         f'<text x="{plot_x_left - 16:.2f}" y="{ty + 11:.2f}" text-anchor="end" '
-        f'fill="{INK_SOFT}" style="font-size:30px;font-family:{font}">{v:,}</text>'
+        f'fill="{INK_SOFT}" style="font-size:40px;font-family:{font}">{v:,}</text>'
     )
     svg_parts.append(
         f'<line x1="{plot_x_left:.2f}" y1="{ty:.2f}" '
@@ -219,7 +247,7 @@ svg_parts.append(
 )
 
 # Compass bearings on x-axis
-compass_ticks = [(20, "W"), (80, "SW"), (140, "S"), (200, "SE"), (265, "E")]
+compass_ticks = [(28, "W"), (80, "SW"), (140, "S"), (200, "SE"), (265, "E")]
 for ang_val, label in compass_ticks:
     tx = ang_val * x_scale + x_off
     svg_parts.append(
@@ -284,6 +312,9 @@ if plot_group_idx != -1:
     output_svg = base_svg[:insert_idx] + custom_svg + "\n" + base_svg[insert_idx:]
 else:
     output_svg = base_svg.replace("</svg>", f"{custom_svg}\n</svg>")
+
+# Clip the pygal fill to the plot-box so it doesn't bleed into the bottom margin
+output_svg = output_svg.replace('class="plot"', 'class="plot" clip-path="url(#plotClip)"', 1)
 
 cairosvg.svg2png(bytestring=output_svg.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=CANVAS_W)
 
