@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-30
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -45,6 +45,7 @@ thresholds = [30, 70]
 center_x, center_y = 0.0, 0.0
 outer_radius = 0.95
 inner_radius = 0.62
+arc_mid_radius = (inner_radius + outer_radius) / 2  # label midpoint inside arc
 needle_length = 0.86
 start_angle = np.pi  # leftmost position (180°)
 
@@ -83,19 +84,60 @@ p.title.text_font_size = "50pt"
 p.title.text_color = INK
 p.title.align = "center"
 
-# Zone arcs via annular_wedge
+# Zone arcs via annular_wedge — ColumnDataSource enables HoverTool
 zone_colors = [ZONE_LOW, ZONE_MID, ZONE_HIGH]
-for i, color in enumerate(zone_colors):
-    p.annular_wedge(
-        x=center_x,
-        y=center_y,
-        inner_radius=inner_radius,
-        outer_radius=outer_radius,
-        start_angle=zone_angles[i + 1],
-        end_angle=zone_angles[i],
-        fill_color=color,
-        line_color=PAGE_BG,
-        line_width=4,
+zone_names = ["Low", "Caution", "Optimal"]
+zone_ranges = ["0–30", "30–70", "70–100"]
+
+zone_source = ColumnDataSource(
+    data={
+        "x": [center_x, center_x, center_x],
+        "y": [center_y, center_y, center_y],
+        "inner_radius": [inner_radius, inner_radius, inner_radius],
+        "outer_radius": [outer_radius, outer_radius, outer_radius],
+        "start_angle": [float(zone_angles[1]), float(zone_angles[2]), float(zone_angles[3])],
+        "end_angle": [float(zone_angles[0]), float(zone_angles[1]), float(zone_angles[2])],
+        "fill_color": zone_colors,
+        "zone": zone_names,
+        "range": zone_ranges,
+    }
+)
+
+zone_renderer = p.annular_wedge(
+    x="x",
+    y="y",
+    inner_radius="inner_radius",
+    outer_radius="outer_radius",
+    start_angle="start_angle",
+    end_angle="end_angle",
+    fill_color="fill_color",
+    line_color=PAGE_BG,
+    line_width=4,
+    source=zone_source,
+)
+
+p.add_tools(HoverTool(renderers=[zone_renderer], tooltips=[("Zone", "@zone"), ("Range", "@range")]))
+
+# Zone labels inside each arc segment — contrasting fixed colors (zones are theme-invariant)
+# red/green zones get light text; amber zone gets dark text for contrast
+zone_mid_values = [15.0, 50.0, 85.0]
+zone_label_colors = ["#FFFDF6", "#1A1A17", "#FFFDF6"]
+
+for mid_val, label_text, label_color in zip(zone_mid_values, zone_names, zone_label_colors, strict=True):
+    a = start_angle - (mid_val / max_value) * np.pi
+    lx = arc_mid_radius * np.cos(a)
+    ly = arc_mid_radius * np.sin(a)
+    p.add_layout(
+        Label(
+            x=lx,
+            y=ly,
+            text=label_text,
+            text_font_size="22pt",
+            text_color=label_color,
+            text_align="center",
+            text_baseline="middle",
+            angle=float(a - np.pi / 2),  # tangent along arc for natural text flow
+        )
     )
 
 # Tick marks and labels
@@ -114,7 +156,7 @@ for tick_val, a in zip(tick_values, tick_angles, strict=True):
             x=center_x + (outer_radius + 0.22) * cos_a,
             y=center_y + (outer_radius + 0.22) * sin_a,
             text=str(tick_val),
-            text_font_size="28pt",
+            text_font_size="31pt",
             text_color=INK_SOFT,
             text_align="center",
             text_baseline="middle",
@@ -158,7 +200,7 @@ p.add_layout(
         x=center_x,
         y=-0.44,
         text="CPU Utilization (%)",
-        text_font_size="26pt",
+        text_font_size="30pt",
         text_color=INK_SOFT,
         text_align="center",
         text_baseline="middle",
@@ -166,8 +208,15 @@ p.add_layout(
 )
 
 # Save interactive HTML
-output_file(f"plot-{THEME}.html")
+html_path = Path(f"plot-{THEME}.html")
+output_file(str(html_path))
 save(p)
+
+# Inject body background CSS to prevent thin border artifact in headless-Chrome screenshot
+html_content = html_path.read_text()
+body_style = f"<style>body{{margin:0;padding:0;background:{PAGE_BG};}}</style>"
+html_content = html_content.replace("</head>", f"{body_style}\n</head>", 1)
+html_path.write_text(html_content)
 
 # Screenshot via headless Chrome — use CDP to set exact viewport to match figure dimensions
 opts = Options()
@@ -184,7 +233,7 @@ driver = webdriver.Chrome(options=opts)
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
-driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+driver.get(f"file://{html_path.resolve()}")
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
