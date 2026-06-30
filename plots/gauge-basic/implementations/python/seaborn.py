@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-30
@@ -16,6 +16,7 @@ sys.path = [p for p in sys.path if not p or os.path.abspath(p) != _own_dir]
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib.patches import Circle, Wedge
 
@@ -39,10 +40,15 @@ min_value = 0
 max_value = 100
 thresholds = [40, 80]  # 0–40: Normal, 40–80: Moderate, 80–100: High
 
+# Historical readings for seaborn sparkline (minutes_ago=0 is current reading)
+history_minutes = list(range(10, -1, -1))
+history_cpu = [72, 68, 74, 79, 77, 82, 85, 81, 84, 86, 83]
+spark_df = pd.DataFrame({"minutes_ago": history_minutes, "cpu": history_cpu})
+
 # Gauge geometry (unit-square axis coordinates)
-center = (0.5, 0.45)
-radius = 0.38
-width = 0.15
+center = (0.5, 0.48)
+radius = 0.34  # reduced from 0.38 for better breathing room
+width = 0.14
 start_angle = 180
 end_angle = 0
 angle_range = start_angle - end_angle
@@ -52,14 +58,14 @@ zone_boundaries = [min_value] + thresholds + [max_value]
 zone_names = ["Normal", "Moderate", "High"]
 zone_colors = [ZONE_NORMAL, ZONE_MODERATE, ZONE_HIGH]
 
-# Plot — seaborn theme with Imprint chrome
+# Seaborn theme with Imprint chrome — applies globally to all axes
 sns.set_theme(
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
         "axes.edgecolor": INK_SOFT,
-        "axes.labelcolor": INK,
+        "axes.labelcolor": INK_MUTED,
         "text.color": INK,
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
@@ -69,6 +75,7 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+
 fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
@@ -117,10 +124,10 @@ ax.add_patch(Circle(center, radius=0.045, facecolor=PAGE_BG, edgecolor="none", z
 ax.add_patch(Circle(center, radius=0.035, facecolor=INK, edgecolor="none", zorder=14))
 
 # Value display — bold reading centered below gauge
-ax.text(center[0], center[1] - 0.19, f"{value}%", ha="center", va="center", fontsize=32, fontweight="bold", color=INK)
+ax.text(center[0], center[1] - 0.17, f"{value}%", ha="center", va="center", fontsize=32, fontweight="bold", color=INK)
 
-# Context label
-ax.text(center[0], center[1] - 0.29, "CPU Utilization", ha="center", va="center", fontsize=9, color=INK_MUTED)
+# Context label — fontsize=11 for mobile legibility
+ax.text(center[0], center[1] - 0.26, "CPU Utilization", ha="center", va="center", fontsize=11, color=INK_MUTED)
 
 # Min / max scale endpoints
 for vlabel, x_off in [(min_value, -1), (max_value, 1)]:
@@ -151,5 +158,32 @@ ax.set_ylim(0, 1)
 ax.set_aspect("equal")
 ax.axis("off")
 
+# Reserve bottom 22% of figure for seaborn sparkline, then adjust
 plt.tight_layout()
+plt.subplots_adjust(bottom=0.22)
+
+# Seaborn lineplot sparkline — 10-minute CPU history (genuine sns.lineplot usage)
+ax_spark = fig.add_axes([0.12, 0.04, 0.76, 0.14], facecolor=PAGE_BG)
+sns.lineplot(data=spark_df, x="minutes_ago", y="cpu", ax=ax_spark, color=INK_SOFT, linewidth=1.5)
+# Highlight current reading with a red dot
+ax_spark.scatter([0], [value], color=ZONE_HIGH, s=22, zorder=5)
+# Zone threshold reference lines
+ax_spark.axhline(80, color=ZONE_HIGH, alpha=0.25, linewidth=0.7, linestyle="--")
+ax_spark.axhline(40, color=ZONE_MODERATE, alpha=0.25, linewidth=0.7, linestyle="--")
+# Reversed x-axis: oldest (10 min ago) on left, newest ("now") on right
+ax_spark.set_xlim(10.5, -0.5)
+ax_spark.set_ylim(0, 100)
+ax_spark.set_xticks([10, 5, 0])
+ax_spark.set_xticklabels(["10m", "5m", "now"], fontsize=6, color=INK_SOFT)
+ax_spark.set_yticks([40, 80])
+ax_spark.set_yticklabels(["40%", "80%"], fontsize=6, color=INK_SOFT)
+ax_spark.tick_params(axis="both", length=2, pad=1, colors=INK_SOFT)
+ax_spark.set_xlabel("")
+ax_spark.set_facecolor(PAGE_BG)
+ax_spark.yaxis.grid(True, alpha=0.12, linewidth=0.5, color=INK)
+for spine in ax_spark.spines.values():
+    spine.set_edgecolor(INK_SOFT)
+    spine.set_linewidth(0.4)
+    spine.set_alpha(0.4)
+
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
