@@ -1,7 +1,7 @@
 // anyplot.ai
 // dumbbell-basic: Basic Dumbbell Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 85/100 | Created: 2026-06-30
+// Quality: 89/100 | Created: 2026-06-30
 
 //# anyplot-orientation: landscape
 
