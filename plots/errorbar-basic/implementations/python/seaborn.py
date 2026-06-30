@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-30
@@ -94,7 +94,7 @@ ax.legend(handles=[brand_patch, accent_patch], fontsize=8, framealpha=0.9, loc="
 fig.text(
     0.5,
     0.96,
-    "errorbar-basic · seaborn · anyplot.ai",
+    "errorbar-basic · python · seaborn · anyplot.ai",
     ha="center",
     va="top",
     fontsize=12,
