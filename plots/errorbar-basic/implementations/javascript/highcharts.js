@@ -19,24 +19,35 @@ const measurements = [
     { label: "50°C", mean: 22.1, error: 3.7 },
 ];
 
+const PEAK_IDX = 4; // 37°C — optimal temperature peak
 const categories = measurements.map(function (d) { return d.label; });
-const means = measurements.map(function (d) { return d.mean; });
+const means = measurements.map(function (d, i) {
+    if (i === PEAK_IDX) {
+        return {
+            y: d.mean,
+            marker: { radius: 11, lineWidth: 3, lineColor: t.pageBg, fillColor: t.palette[0] }
+        };
+    }
+    return d.mean;
+});
 
 Highcharts.chart("container", {
     chart: {
-        type: "line",
+        type: "scatter",
         backgroundColor: "transparent",
         animation: false,
+        plotBorderWidth: 0,
         style: { fontFamily: "inherit" },
         events: {
             render: function () {
                 const c = this;
                 const series = c.series[0];
 
-                // Clean up error bars from previous renders
+                // Clean up SVG overlays from previous renders
                 if (c._errorBars) {
                     c._errorBars.forEach(function (el) { el.destroy(); });
                 }
+                if (c._peakLabel) { c._peakLabel.destroy(); }
                 c._errorBars = [];
 
                 series.points.forEach(function (point, i) {
@@ -66,6 +77,19 @@ Highcharts.chart("container", {
                             .add()
                     );
                 });
+
+                // Focal point annotation at peak 37°C — positioned right of the marker
+                const peakPoint = series.points[PEAK_IDX];
+                const peakPx = peakPoint.plotX + c.plotLeft;
+                const peakAbsY = peakPoint.plotY + c.plotTop;
+                c._peakLabel = c.renderer.text(
+                    "← Optimal: 37°C",
+                    peakPx + 15,
+                    peakAbsY + 5
+                )
+                    .attr({ zIndex: 5 })
+                    .css({ color: t.inkSoft, fontSize: "13px", fontWeight: "500" })
+                    .add();
             }
         }
     },
@@ -81,6 +105,7 @@ Highcharts.chart("container", {
     },
     xAxis: {
         categories: categories,
+        lineWidth: 1,
         lineColor: t.inkSoft,
         tickColor: t.inkSoft,
         labels: { style: { color: t.inkSoft, fontSize: "14px" } },
@@ -91,6 +116,8 @@ Highcharts.chart("container", {
     },
     yAxis: {
         min: 0,
+        lineWidth: 1,
+        lineColor: t.inkSoft,
         title: {
             text: "Enzyme Activity (nmol/min)",
             style: { color: t.inkSoft, fontSize: "16px" }
@@ -102,9 +129,7 @@ Highcharts.chart("container", {
     tooltip: { enabled: false },
     plotOptions: {
         series: { animation: false },
-        line: {
-            lineWidth: 0,
-            states: { hover: { lineWidth: 0 } },
+        scatter: {
             marker: {
                 enabled: true,
                 radius: 7,
