@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-30
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import FixedTicker, Label
+from bokeh.models import ColumnDataSource, FixedTicker, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -29,8 +29,11 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BRAND = "#009E73"  # Imprint palette position 1 — always first series
+
+# Atmospheric sky gradient endpoints per theme
+SKY_TOP = "#4A8EC4" if THEME == "light" else "#081424"
+SKY_HORIZON = "#D4EBF7" if THEME == "light" else "#1C2E45"
 
 # Data — Wallis (Valais, Switzerland) summit panorama, ordered W → E
 peaks = [
@@ -72,39 +75,48 @@ ctrl_y.append(3350.0)
 ctrl_x = np.array(ctrl_x)
 ctrl_y = np.array(ctrl_y)
 
-# Smooth ridgeline via cosine smoothstep between adjacent control points
-ridge_x = []
-ridge_y = []
+# Piecewise-linear ridgeline with fractal jitter — sharp triangular peaks
+# Uses linear interpolation (not cosine smoothstep) for pointed alpine apexes;
+# tapered Gaussian noise adds rocky texture while preserving clean summit tips.
+ridge_x_segs = []
+ridge_y_segs = []
 for i in range(len(ctrl_x) - 1):
     n = 80
     last = i == len(ctrl_x) - 2
     t = np.linspace(0.0, 1.0, n, endpoint=last)
-    s = 0.5 - 0.5 * np.cos(np.pi * t)
-    ridge_x.append(ctrl_x[i] + (ctrl_x[i + 1] - ctrl_x[i]) * t)
-    ridge_y.append(ctrl_y[i] + (ctrl_y[i + 1] - ctrl_y[i]) * s)
-ridge_x = np.concatenate(ridge_x)
-ridge_y = np.concatenate(ridge_y)
+    y_linear = ctrl_y[i] + (ctrl_y[i + 1] - ctrl_y[i]) * t
+    seg_dx = abs(ctrl_x[i + 1] - ctrl_x[i])
+    jitter_scale = 28 * np.sqrt(seg_dx / 8.0)
+    taper = np.sin(np.pi * t)  # 0 at endpoints → no jitter at exact summit/col
+    jitter = np.random.normal(0, jitter_scale, n) * taper
+    ridge_x_segs.append(ctrl_x[i] + (ctrl_x[i + 1] - ctrl_x[i]) * t)
+    ridge_y_segs.append(y_linear + jitter)
 
-# Anchor the silhouette polygon at the lower edge of the visible y-range
+ridge_x = np.concatenate(ridge_x_segs)
+ridge_y = np.concatenate(ridge_y_segs)
+
+# Anchor silhouette polygon at y-floor
 Y_FLOOR = 2500
+Y_TOP = 5600
 poly_x = np.concatenate([[ridge_x[0]], ridge_x, [ridge_x[-1]]])
 poly_y = np.concatenate([[Y_FLOOR], ridge_y, [Y_FLOOR]])
 
-# Assign label tiers avoiding same-tier collision for adjacent peaks
-# Three tiers staggered vertically; greedy assignment per bearing proximity
-LEVEL_TIERS = [4860, 5040, 5220]
+# 4 label tiers — 3-previous penalty cycles all 4 evenly, spreading eastern cluster
+LEVEL_TIERS = [4880, 5040, 5200, 5360]
 tier_assignments = []
 for i in range(len(peaks)):
-    # Score each tier: avoid tier used by the immediately preceding peak
     prev_tier = tier_assignments[i - 1] if i > 0 else -1
     prev2_tier = tier_assignments[i - 2] if i > 1 else -1
+    prev3_tier = tier_assignments[i - 3] if i > 2 else -1
     scores = []
-    for t in range(3):
+    for t_idx in range(4):
         penalty = 0
-        if t == prev_tier:
-            penalty += 2  # strong penalty for same tier as direct predecessor
-        if t == prev2_tier:
-            penalty += 1  # mild penalty for same tier as two peaks ago
+        if t_idx == prev_tier:
+            penalty += 4
+        if t_idx == prev2_tier:
+            penalty += 2
+        if t_idx == prev3_tier:
+            penalty += 1
         scores.append(penalty)
     tier_assignments.append(int(np.argmin(scores)))
 
@@ -117,22 +129,44 @@ p = figure(
     title="Wallis 4000ers · area-mountain-panorama · bokeh · anyplot.ai",
     y_axis_label="Elevation (m)",
     x_range=(-3, 184),
-    y_range=(Y_FLOOR, 5600),
+    y_range=(Y_FLOOR, Y_TOP),
     background_fill_color=PAGE_BG,
     border_fill_color=PAGE_BG,
-    toolbar_location=None,  # disable toolbar — adds ~30-50px above canvas
+    toolbar_location=None,  # disable toolbar — adds ~30-50px above canvas in PNG
     min_border_bottom=60,
     min_border_left=180,
     min_border_top=110,
     min_border_right=50,
 )
 
+
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = [int(c0[j : j + 2], 16) for j in (1, 3, 5)]
+    r1, g1, b1 = [int(c1[j : j + 2], 16) for j in (1, 3, 5)]
+    return "#{:02X}{:02X}{:02X}".format(int(r0 + t * (r1 - r0)), int(g0 + t * (g1 - g0)), int(b0 + t * (b1 - b0)))
+
+
+# Atmospheric sky gradient — drawn first so mountain silhouette overlaps correctly
+N_SKY = 60
+for k in range(N_SKY):
+    t0, t1 = k / N_SKY, (k + 1) / N_SKY
+    y0 = Y_FLOOR + t0 * (Y_TOP - Y_FLOOR)
+    y1 = Y_FLOOR + t1 * (Y_TOP - Y_FLOOR)
+    color = _lerp_hex(SKY_HORIZON, SKY_TOP, t0)
+    p.quad(top=[y1], bottom=[y0], left=[-3.0], right=[184.0], color=color, line_color=None)
+
 # Mountain silhouette — Imprint palette position 1 (brand green, always first series)
 p.patch(poly_x, poly_y, fill_color=BRAND, line_color=BRAND, line_width=2)
 
-# Peak labels with leader lines and summit dots
+# Peak labels, leader lines, summit dots
+peak_names, peak_angles, peak_elevs = [], [], []
 labels = []
+
 for i, (name, ang, el) in enumerate(peaks):
+    peak_names.append(name)
+    peak_angles.append(ang)
+    peak_elevs.append(el)
+
     tier_idx = tier_assignments[i]
     label_y = LEVEL_TIERS[tier_idx]
     is_focal = name == "Matterhorn"
@@ -140,16 +174,13 @@ for i, (name, ang, el) in enumerate(peaks):
     leader_alpha = 0.9 if is_focal else 0.55
     leader_width = 3.0 if is_focal else 1.8
 
-    # Leader line from just above summit to just below the label block
     p.line(
         [ang, ang], [el + 25, label_y - 90], line_color=leader_color, line_alpha=leader_alpha, line_width=leader_width
     )
 
-    # Summit dot — larger and fully inked for the focal peak
     dot_size = 28 if is_focal else 20
     p.scatter([ang], [el], size=dot_size, fill_color=INK if is_focal else INK_SOFT, line_color=PAGE_BG, line_width=2)
 
-    # Peak name label (top of stacked label block)
     labels.append(
         Label(
             x=ang,
@@ -162,8 +193,6 @@ for i, (name, ang, el) in enumerate(peaks):
             text_baseline="bottom",
         )
     )
-
-    # Elevation label (below the name)
     labels.append(
         Label(
             x=ang,
@@ -176,14 +205,14 @@ for i, (name, ang, el) in enumerate(peaks):
         )
     )
 
-# Matterhorn reference annotation — focal peak callout
+# Matterhorn focal callout — 19pt INK_SOFT (stronger than prior 16pt INK_MUTED)
 labels.append(
     Label(
         x=58,
         y=4290,
-        text="reference peak",
-        text_color=INK_MUTED,
-        text_font_size="16pt",
+        text="focal peak · 4478 m a.s.l.",
+        text_color=INK_SOFT,
+        text_font_size="19pt",
         text_font_style="italic",
         text_align="center",
         text_baseline="bottom",
@@ -192,6 +221,18 @@ labels.append(
 
 for lbl in labels:
     p.add_layout(lbl)
+
+# HoverTool — invisible hit targets at each summit for interactive HTML artifact
+peak_source = ColumnDataSource(
+    {"x": peak_angles, "y": peak_elevs, "name": peak_names, "elevation": peak_elevs, "bearing": peak_angles}
+)
+hover_targets = p.scatter("x", "y", source=peak_source, size=30, fill_alpha=0.0, line_alpha=0.0)
+p.add_tools(
+    HoverTool(
+        renderers=[hover_targets],
+        tooltips=[("Peak", "@name"), ("Elevation", "@elevation{0,0} m"), ("Bearing", "@bearing°")],
+    )
+)
 
 # Typography — per bokeh.md sizing for 3200×1800
 p.title.text_font_size = "50pt"
@@ -230,7 +271,6 @@ html_content = html_content.replace("</head>", f"{body_style}\n</head>", 1)
 html_path.write_text(html_content)
 
 # Screenshot via headless Chrome — use CDP to set exact viewport to match figure dimensions
-# (export_png uses a snap chromedriver that fails; set_window_size leaves ~140px gap)
 opts = Options()
 for arg in (
     "--headless=new",
