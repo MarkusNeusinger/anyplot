@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: plotly 6.7.0 | Python 3.14.4
-Quality: 89/100 | Created: 2026-04-25
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-06-30
 """
 
 import os
@@ -17,8 +17,12 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
-BRAND = "#009E73"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+BRAND = "#009E73"  # Imprint palette position 1 — mountain silhouette
+AMBER = "#DDCC77"  # semantic anchor — focal peak (Matterhorn) spotlight
+
+# Sky fill — Imprint cyan (light) / Imprint blue (dark) for atmospheric mood per spec
+SKY_FILL = "rgba(42,188,205,0.12)" if THEME == "light" else "rgba(68,103,163,0.22)"
 
 # Data — Wallis (Valais) panorama: peaks ordered along a 0–180° angular sweep
 peaks = [
@@ -40,49 +44,84 @@ peaks = [
     ("Dom", 174, 4545),
 ]
 
-# Build ridgeline control points: peaks alternating with saddles (cols)
+# Build piecewise-linear ridgeline: peaks connected by angular V-shaped saddles
+# No smoothing — each segment is straight to produce the alpine angular silhouette
 np.random.seed(42)
-ctrl_x = [-3.0]
-ctrl_y = [3250.0]
+
+# Accumulate (x, y) control points for the full ridgeline
+ridge_x = [-3.0]
+ridge_y = [3250.0]
+
 for i, (_, ang, el) in enumerate(peaks):
-    ctrl_x.append(float(ang))
-    ctrl_y.append(float(el))
+    # Approach flank: one intermediate point on the way up to the summit
+    if len(ridge_x) > 1:
+        prev_x = ridge_x[-1]
+        prev_y = ridge_y[-1]
+        # Steep asymmetric approach — put the inflection point close to the summit
+        frac = np.random.uniform(0.65, 0.85)
+        mid_x = prev_x + (ang - prev_x) * frac
+        mid_y = prev_y + (el - prev_y) * np.random.uniform(0.15, 0.40)
+        ridge_x.append(float(mid_x))
+        ridge_y.append(float(mid_y))
+
+    # Summit apex
+    ridge_x.append(float(ang))
+    ridge_y.append(float(el))
+
     if i < len(peaks) - 1:
         next_ang = peaks[i + 1][1]
         next_el = peaks[i + 1][2]
-        col_ang = (ang + next_ang) / 2 + np.random.uniform(-1.2, 1.2)
+        # Saddle (col) between this peak and the next — sharp V bottom
+        col_ang = (ang + next_ang) / 2 + np.random.uniform(-1.5, 1.5)
         col_drop = np.random.uniform(420, 820)
         col_el = min(el, next_el) - col_drop
-        ctrl_x.append(float(col_ang))
-        ctrl_y.append(float(col_el))
-ctrl_x.append(184.0)
-ctrl_y.append(3350.0)
+        # Descent: straight to col
+        ridge_x.append(float(col_ang))
+        ridge_y.append(float(col_el))
 
-ctrl_x = np.array(ctrl_x)
-ctrl_y = np.array(ctrl_y)
+ridge_x.append(184.0)
+ridge_y.append(3350.0)
 
-# Smooth ridgeline via cosine smoothstep between adjacent control points
-ridge_x = []
-ridge_y = []
-for i in range(len(ctrl_x) - 1):
-    n = 80
-    last = i == len(ctrl_x) - 2
-    t = np.linspace(0.0, 1.0, n, endpoint=last)
-    s = 0.5 - 0.5 * np.cos(np.pi * t)
-    ridge_x.append(ctrl_x[i] + (ctrl_x[i + 1] - ctrl_x[i]) * t)
-    ridge_y.append(ctrl_y[i] + (ctrl_y[i + 1] - ctrl_y[i]) * s)
-ridge_x = np.concatenate(ridge_x)
-ridge_y = np.concatenate(ridge_y)
+ridge_x = np.array(ridge_x)
+ridge_y = np.array(ridge_y)
+
+Y_FLOOR = 2500
+Y_TOP = 5650
 
 # Anchor the silhouette polygon at the lower edge of the visible y-range
-Y_FLOOR = 2500
 poly_x = np.concatenate([[ridge_x[0]], ridge_x, [ridge_x[-1]]])
 poly_y = np.concatenate([[Y_FLOOR], ridge_y, [Y_FLOOR]])
+
+# Sky polygon above the ridgeline (fills from ridgeline to Y_TOP)
+sky_x = np.concatenate([[ridge_x[0]], ridge_x, [ridge_x[-1]]])
+sky_y = np.concatenate([[Y_TOP], ridge_y, [Y_TOP]])
+
+# Assign label tiers — 6 tiers with interleaved (0,3,1,4,2,5) pattern so that
+# consecutive peaks always land 280-420 m apart vertically, avoiding overlap
+# even when peaks are only 8-10° apart horizontally.
+LABEL_TIERS = [4800, 4940, 5080, 5220, 5360, 5500]
+TIER_ORDER = [0, 3, 1, 4, 2, 5]  # interleave low/high for max vertical spread
+
+label_tiers = [LABEL_TIERS[TIER_ORDER[i % len(TIER_ORDER)]] for i in range(len(peaks))]
 
 # Plot
 fig = go.Figure()
 
-# Mountain silhouette (first categorical series — brand green)
+# Sky fill behind silhouette — Imprint palette atmospheric tint per spec
+fig.add_trace(
+    go.Scatter(
+        x=sky_x,
+        y=sky_y,
+        mode="lines",
+        line={"color": "rgba(0,0,0,0)", "width": 0},
+        fill="toself",
+        fillcolor=SKY_FILL,
+        hoverinfo="skip",
+        showlegend=False,
+    )
+)
+
+# Mountain silhouette (first categorical series — Imprint brand green)
 fig.add_trace(
     go.Scatter(
         x=poly_x,
@@ -97,17 +136,16 @@ fig.add_trace(
 )
 
 # Leader lines + peak markers + labels
-LEVEL_TIERS = [4880, 5040, 5200]
 annotations = []
 for i, (name, ang, el) in enumerate(peaks):
-    label_y = LEVEL_TIERS[i % 3]
+    label_y = label_tiers[i]
     is_focal = name == "Matterhorn"
 
     # Leader line (thin, theme-adaptive)
     fig.add_trace(
         go.Scatter(
             x=[ang, ang],
-            y=[el + 25, label_y - 80],
+            y=[el + 25, label_y - 60],
             mode="lines",
             line={"color": INK_SOFT, "width": 1},
             hoverinfo="skip",
@@ -115,20 +153,22 @@ for i, (name, ang, el) in enumerate(peaks):
         )
     )
 
-    # Summit dot (slightly larger for the focal peak)
+    # Summit dot — Matterhorn gets amber focal treatment for visual distinction
+    dot_color = AMBER if is_focal else INK_SOFT
+    dot_size = 12 if is_focal else 6
     fig.add_trace(
         go.Scatter(
             x=[ang],
             y=[el],
             mode="markers",
-            marker={"size": 10 if is_focal else 6, "color": INK if is_focal else INK_SOFT, "line": {"width": 0}},
+            marker={"size": dot_size, "color": dot_color, "line": {"width": 0}},
             hoverinfo="skip",
             showlegend=False,
         )
     )
 
-    # Label: name on top, elevation below
-    name_size = 17 if is_focal else 14
+    # Label: name on top, elevation below — compact fonts to prevent truncation
+    name_size = 11 if is_focal else 8
     weight = "700" if is_focal else "600"
     annotations.append(
         {
@@ -136,7 +176,7 @@ for i, (name, ang, el) in enumerate(peaks):
             "y": label_y,
             "text": (
                 f"<span style='font-size:{name_size}px;font-weight:{weight};color:{INK}'>{name}</span><br>"
-                f"<span style='font-size:13px;color:{INK_MUTED}'>{el:,} m</span>"
+                f"<span style='font-size:8px;color:{INK_MUTED}'>{el:,} m</span>"
             ),
             "showarrow": False,
             "align": "center",
@@ -145,27 +185,28 @@ for i, (name, ang, el) in enumerate(peaks):
         }
     )
 
-# Subtitle / footnote
+# Subtitle annotation
 annotations.append(
     {
         "x": 0.5,
-        "y": 1.08,
+        "y": 1.07,
         "xref": "paper",
         "yref": "paper",
         "text": f"<span style='color:{INK_SOFT}'>Wallis panorama — sixteen 4 000 m peaks of the Pennine Alps</span>",
         "showarrow": False,
-        "font": {"size": 18},
+        "font": {"size": 15},
         "xanchor": "center",
     }
 )
 
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "area-mountain-panorama · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "area-mountain-panorama · python · plotly · anyplot.ai",
+        "font": {"size": 18, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.96,
+        "y": 0.97,
     },
     annotations=annotations,
     paper_bgcolor=PAGE_BG,
@@ -181,8 +222,8 @@ fig.update_layout(
         "fixedrange": True,
     },
     yaxis={
-        "title": {"text": "Elevation (m)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Elevation (m)", "font": {"size": 16, "color": INK}},
+        "tickfont": {"size": 14, "color": INK_SOFT},
         "tickvals": [2500, 3000, 3500, 4000, 4500, 5000],
         "ticksuffix": "  ",
         "gridcolor": GRID,
@@ -191,10 +232,10 @@ fig.update_layout(
         "zeroline": False,
         "showline": False,
         "ticks": "",
-        "range": [Y_FLOOR, 5400],
+        "range": [Y_FLOOR, Y_TOP],
     },
-    margin={"l": 120, "r": 80, "t": 160, "b": 60},
+    margin={"l": 100, "r": 60, "t": 130, "b": 50},
 )
 
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
