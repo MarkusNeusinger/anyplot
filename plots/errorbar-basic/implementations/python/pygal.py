@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-30
@@ -24,6 +24,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BRAND = IMPRINT_PALETTE[0]  # #009E73 — Imprint palette position 1, always first series
+ANYPLOT_AMBER = "#DDCC77"  # warning / caution annotation (outside categorical pool, per pygal.md)
 
 # Data — dose-response study: vehicle control + escalating doses (mg/kg)
 categories = ["Vehicle", "1 mg/kg", "3 mg/kg", "10 mg/kg", "30 mg/kg", "100 mg/kg"]
@@ -35,9 +36,9 @@ err_upper = [2.1, 2.5, 3.0, 2.8, 2.2, 3.4]
 n = len(categories)
 baseline = means[0]  # Vehicle/control mean — visual reference for treatment effects
 
-# Colors: Mean ± error series added first → gets BRAND (#009E73, Imprint position 1).
-# Vehicle baseline added second → gets INK_MUTED. Error bar segments follow (all BRAND).
-colors_tuple = (BRAND, INK_MUTED) + (BRAND,) * 62
+# Colors: series ordering determines color assignment
+# 1: Mean ± error → BRAND; 2: asymmetry callout → ANYPLOT_AMBER; 3: baseline → INK_MUTED; 4+: error bars → BRAND
+colors_tuple = (BRAND, ANYPLOT_AMBER, INK_MUTED) + (BRAND,) * 62
 
 custom_style = Style(
     background=PAGE_BG,
@@ -87,14 +88,30 @@ chart.x_labels = [{"label": categories[i], "value": i + 1} for i in range(n)]
 chart.x_labels_major = [{"label": categories[i], "value": i + 1} for i in range(n)]
 chart.y_labels = [20, 25, 30, 35, 40, 45, 50]
 
-# Mean points — added FIRST so brand green (#009E73) is assigned as the first palette color
+# Mean points — first series (BRAND #009E73) so brand green is assigned as palette position 1
 mean_points = [
-    {"value": (i + 1, means[i]), "label": f"{categories[i]}: {means[i]:.1f} (-{err_lower[i]:.1f}/+{err_upper[i]:.1f})"}
+    {"value": (i + 1, means[i]), "label": f"{categories[i]}: {means[i]:.1f} (−{err_lower[i]:.1f}/+{err_upper[i]:.1f})"}
     for i in range(n)
 ]
 chart.add("Mean ± error", mean_points, stroke=False, dots_size=28)
 
-# Vehicle baseline reference line — added second so it gets INK_MUTED (palette position 2)
+# Asymmetric variability callout — second series (ANYPLOT_AMBER warning color)
+# Amber marker overlaid at 10 mg/kg creates a visual focal point for the chart's key insight:
+# lower-tail variability (6.2) substantially exceeds upper (2.8), indicating non-Gaussian spread
+asym_idx = 3  # 10 mg/kg
+chart.add(
+    "↓ Asymmetric at 10 mg/kg (−6.2 / +2.8)",
+    [
+        {
+            "value": (asym_idx + 1, means[asym_idx]),
+            "label": "10 mg/kg: lower-tail variability (6.2) ≫ upper (2.8) — floor-effect compression near peak response",
+        }
+    ],
+    stroke=False,
+    dots_size=38,
+)
+
+# Vehicle baseline reference line — third series (INK_MUTED) for control comparison
 chart.add(
     "Vehicle baseline",
     [(0.5, baseline), (n + 0.5, baseline)],
