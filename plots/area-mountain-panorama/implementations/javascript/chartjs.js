@@ -94,8 +94,8 @@ const summits = [
   { name: "Monte Rosa",     angle: 120, elev: 4634, yOff: 55  },
   { name: "Rimpfischhorn",  angle: 142, elev: 4199, yOff: 90  },
   { name: "Alphubel",       angle: 158, elev: 4206, yOff: 72  },
-  { name: "Dom",            angle: 168, elev: 4545, yOff: 55  },
-  { name: "Täschhorn",      angle: 175, elev: 4491, yOff: 87  },
+  { name: "Dom",            angle: 168, elev: 4545, yOff: 110 },
+  { name: "Täschhorn",      angle: 175, elev: 4491, yOff: 60  },
 ];
 
 // --- Mount ------------------------------------------------------------------
@@ -134,37 +134,53 @@ const annotPlugin = {
     ctx.save();
     ctx.textAlign = 'center';
 
+    // Text shadow for contrast against both light and dark sky
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 3;
+
     summits.forEach((s) => {
+      const isMatterhorn = s.name === 'Matterhorn';
       const px = xSc.getPixelForValue(s.angle);
       const py = ySc.getPixelForValue(s.elev);
       const ly = py - s.yOff;  // label baseline y (above summit dot)
 
       // Dashed leader line from just above dot to just below elevation label
+      ctx.shadowBlur = 0;
       ctx.strokeStyle = 'rgba(250,248,241,0.48)';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
-      ctx.moveTo(px, py - 6);
+      ctx.moveTo(px, py - (isMatterhorn ? 9 : 6));
       ctx.lineTo(px, ly + 16);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.shadowBlur = 3;
 
-      // Summit dot (brand green Imprint position 1)
+      // Summit dot — Matterhorn gets a larger highlighted dot
+      if (isMatterhorn) {
+        // Outer highlight ring
+        ctx.fillStyle = 'rgba(250,248,241,0.35)';
+        ctx.beginPath();
+        ctx.arc(px, py, 12, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.fillStyle = dotColor;
       ctx.beginPath();
-      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.arc(px, py, isMatterhorn ? 7 : 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Peak name
+      // Peak name — Matterhorn uses larger bold font
       ctx.fillStyle = '#FAF8F1';
-      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.font = isMatterhorn ? 'bold 15px system-ui, sans-serif' : 'bold 13px system-ui, sans-serif';
       ctx.fillText(s.name, px, ly);
 
       // Elevation in meters below name
-      ctx.font = '11px system-ui, sans-serif';
+      ctx.font = isMatterhorn ? '12px system-ui, sans-serif' : '11px system-ui, sans-serif';
       ctx.fillStyle = 'rgba(250,248,241,0.80)';
-      ctx.fillText(`${s.elev.toLocaleString()} m`, px, ly + 15);
+      ctx.fillText(`${s.elev.toLocaleString()} m`, px, ly + 16);
     });
+
+    ctx.shadowBlur = 0;
 
     ctx.restore();
   },
@@ -227,7 +243,7 @@ new Chart(canvas, {
           stepSize: 30,
           callback: (v) => ({ 0: 'W', 30: 'WSW', 60: 'SW', 90: 'S', 120: 'SSE', 150: 'SE', 180: 'E' })[v] || `${v}°`,
         },
-        grid: { color: t.grid },
+        grid: { display: false },
         border: { color: t.inkSoft },
         title: {
           display: true,
