@@ -1,7 +1,7 @@
 // anyplot.ai
 // errorbar-basic: Basic Error Bar Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 86/100 | Created: 2026-06-30
+// Quality: 92/100 | Created: 2026-06-30
 
 //# anyplot-orientation: landscape
 
