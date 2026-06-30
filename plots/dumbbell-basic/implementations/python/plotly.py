@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
-Library: plotly | Python
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-30
 """
 
 import os
