@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-30
@@ -82,8 +82,8 @@ plot = (
     + geom_segment(
         aes(x="start", xend="end", y="category", yend="category"), data=df_segments, color=INK_SOFT, size=0.8, alpha=0.5
     )
-    + geom_point(aes(x="value", y="category", color="period"), data=df_points, size=3.0)
-    + geom_text(aes(x="label_x", y="category", label="label"), data=df_segments, color=INK_MUTED, size=2.5, nudge_y=0.3)
+    + geom_point(aes(x="value", y="category", color="period"), data=df_points, size=4.0)
+    + geom_text(aes(x="label_x", y="category", label="label"), data=df_segments, color=INK_MUTED, size=3.0, nudge_y=0.3)
     + scale_color_manual(values={"Before": IMPRINT[0], "After": IMPRINT[1]})
     + scale_x_continuous(limits=(30, 100), breaks=[30, 40, 50, 60, 70, 80, 90, 100])
     + labs(
