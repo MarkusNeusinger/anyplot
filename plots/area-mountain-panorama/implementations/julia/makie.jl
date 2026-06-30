@@ -1,7 +1,7 @@
 # anyplot.ai
 # area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 85/100 | Created: 2026-06-30
+# Quality: 80/100 | Created: 2026-06-30
 
 using CairoMakie
 using Colors
