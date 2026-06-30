@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: matplotlib | Python 3.13
-Quality: pending | Updated: 2026-06-30
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-30
 """
 
 import os
