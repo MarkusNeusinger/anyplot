@@ -2,50 +2,48 @@ library: pygal
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:45Z'
-updated: '2026-04-25T09:48:54Z'
-generated_by: claude-opus
-workflow_run: 24927292473
+updated: '2026-06-30T20:53:43Z'
+generated_by: claude-sonnet
+workflow_run: 28473514040
 issue: 973
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/pygal/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - Full spec compliance with asymmetric error bars, visible caps, and correct plot
-    type implemented via pygal.XY
-  - 'Both renders are fully theme-adaptive: backgrounds, text, grid, and chrome all
-    correct; no dark-on-dark issues'
-  - 'Excellent data quality: realistic pharmacology dose-response context with varied
-    error magnitudes telling a clear scientific story'
-  - Rich per-point interactive tooltips and HTML export leverage pygal's distinctive
-    interactive features
-  - Vehicle baseline reference line creates intentional visual hierarchy anchoring
-    the dose-response narrative
+  - Excellent error bar implementation for a library without native support -- vertical
+    stems and capped ends are clearly visible on all 6 groups
+  - Amber callout at 10 mg/kg is a sophisticated focal-point design choice that highlights
+    the asymmetric error story
+  - Dose-response baseline reference line enables immediate visual comparison at every
+    dose
+  - Correctly uses the Imprint palette in both themes with no chrome failures in either
+    render
+  - All code quality criteria met perfectly, including the subtle sys.path workaround
+    for the filename conflict
+  - Rich per-point tooltip labels in the HTML output provide excellent interactivity
   weaknesses:
-  - 'VQ-07 palette ordering: colors=(INK_MUTED,) + (BRAND,) * 64 places the reference
-    line at palette position 1, making INK_MUTED the first color instead of #009E73.
-    Fix: add the Mean ± error series before the Vehicle baseline series so the data
-    series gets #009E73 as the first pygal cycle color'
-  - DE-02 visual refinement limited by pygal's full border frame (all 4 sides visible);
-    consider strategies to reduce visual chrome or accept pygal's constraint
-  - DE-01 aesthetic sophistication could be pushed higher by adding a focal point
-    emphasis on the peak-response dose (30 mg/kg) via larger marker or annotation
+  - 'Legend label truncation: the amber callout entry shows as ''Asymmetric at 10
+    m...'' -- shorten label to fit within pygal legend width (e.g. ''Asymmetric at
+    10 mg/kg (-6.2/+2.8)'')'
+  - 'Empty canvas below legend: ~20% of canvas height is unused space making the layout
+    bottom-heavy -- adjust margin settings to reclaim this space'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "errorbar-basic · pygal · anyplot.ai" in dark ink — readable. X-axis label "Dose" and y-axis label "Response Value (units)" both readable. Tick labels for all 6 dose categories and y-axis values clearly visible in dark text. Legend at bottom shows "Vehicle baseline" and "Mean ± error" in readable dark text.
-      Data: Six green circles (#009E73) for mean values with asymmetric error bars capped with horizontal lines. Muted gray dashed reference line at vehicle mean. Subtle dotted horizontal grid lines only.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: warm off-white #FAF8F1 -- correct theme surface
+      Chrome: Title "errorbar-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis label "Response Value (units)" and X-axis label "Dose" in dark ink, visible. Tick labels (Vehicle, 1 mg/kg, etc. on X; 20-50 on Y) all readable. Legend at bottom shows three entries; amber callout entry truncated as "Asymmetric at 10 m...". Large empty cream area below legend (~20% canvas height).
+      Data: Six Imprint brand green (#009E73) circular markers with error bars (vertical stems + horizontal caps). Amber (#DDCC77) callout marker overlaid at 10 mg/kg (larger, visually prominent). Dashed INK_MUTED horizontal baseline at ~25.3. Y-axis grid lines subtle and dotted.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, axis labels, tick labels, and legend all render in light-colored text against the dark background. No dark-on-dark text observed. All text elements are clearly readable.
-      Data: Green circles (#009E73) and error bar lines are identical in color to light render — only chrome has flipped. Muted gray dashed baseline remains visible against dark background.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected
+      Background: warm near-black #1A1A17 -- correct dark theme surface
+      Chrome: Title in light cream text, clearly readable against dark background. Y-axis and X-axis labels in light text, visible. Tick labels in light text, no dark-on-dark failures. Legend text is light-colored and legible. Same empty near-black area below legend.
+      Data: Colors identical to light render -- green markers, amber callout at 10 mg/kg, green error bars, dashed muted baseline. All data elements distinguishable from the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,78 +51,80 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 56px, labels 40px, ticks 40px,
-          legend 36px); all text readable in both themes
+        comment: 'Font sizes explicitly set (title=66, label=56, major_label=44, legend=44).
+          All text readable in both themes. Minor deduction: amber callout legend
+          label truncated to ''Asymmetric at 10 m...'''
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; x-axis labels well-spaced for 6
-          categories
+        comment: No overlapping text or data elements. Amber callout overlaid on green
+          marker is intentional.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Large dots (size 28) and error bar lines clearly visible; caps well-defined
+        comment: Large markers (dots_size=28) with clearly visible error bars and
+          caps. Amber callout at dots_size=38 provides visual emphasis.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green on off-white/near-black; muted gray baseline distinguishable;
-          Okabe-Ito CVD-safe
+        comment: Brand green and amber are CVD-safe. Muted baseline is appropriately
+          low-contrast. No red-green sole-signal issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization; legend at bottom creates some whitespace
-          in lower region
+        comment: Canvas correctly 3200x1800. Plot+legend fills ~80% of canvas height.
+          Deduction for ~20% empty canvas area below legend making layout bottom-heavy.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units; x-axis Dose is appropriate for categorical;
-          title matches required format
+        comment: Y-axis has units ('Response Value (units)'). X-axis 'Dose' is descriptive.
+          Title matches mandated format.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), chrome theme-adaptive. First
-          series gets INK_MUTED not #009E73 because colors=(INK_MUTED,)+(BRAND,)*64
-          — baseline reference is first series added'
+        passed: true
+        comment: 'First series is #009E73. Amber #DDCC77 used as warning semantic
+          anchor. Background #FAF8F1/#1A1A17. Both themes correct.'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above generic default: intentional color hierarchy (muted baseline
-          vs brand-green data), deliberate dash pattern, realistic pharma context'
+        comment: Thoughtful amber callout and baseline reference above defaults, but
+          pygal's SVG rendering style limits polish to 'well-configured default' level.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: 'Minimal refinement: no x-guides is the only choice; full 4-sided
-          border frame visible (pygal limitation); no spine removal equivalent'
+        comment: Y-axis-only grid is correct. Pygal constraints limit further refinement.
+          Large empty bottom-margin hurts overall polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Baseline reference line anchors viewer; dose-response narrative clear;
-          asymmetric errors at 10 mg/kg highlight variability
+        comment: Amber callout creates clear focal point at asymmetric data point.
+          Baseline reference enables dose-response comparison. Above default storytelling
+          level.
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct error bar plot via pygal.XY with manual error bar construction
+        comment: XY scatter with manually constructed error bars (vertical stem +
+          upper/lower caps). Correct idiomatic approach for pygal.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps, consistent cap width, asymmetric errors, categorical
-          x-axis, multiple groups all present
+        comment: Visible caps, consistent widths, asymmetric errors demonstrated,
+          multiple groups.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Dose on x, response on y; all 6 points visible with full error extent
+        comment: 'X: dose categories, Y: response values. All 6 points visible with
+          correct error mapping.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'errorbar-basic · pygal · anyplot.ai'; legend labels
-          Vehicle baseline and Mean ± error
+        comment: Title matches exact mandated format. Legend shows all three series.
     data_quality:
       score: 15
       max: 15
@@ -164,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mean points, symmetric and asymmetric errors, cap markers, baseline
-          reference, varied magnitudes — full feature set
+        comment: Shows symmetric and notably asymmetric errors, dose-response pattern,
+          varying error magnitudes, visible caps, baseline reference.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Dose-response pharmacology study with vehicle control and escalating
-          mg/kg doses; credible neutral scientific context
+        comment: Dose-response study with vehicle control + escalating doses (1-100
+          mg/kg). Standard pharmacology scenario, neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response 25-47 units with 2-6 unit errors; y-axis dynamically padded;
-          log-like dose progression realistic
+        comment: Response values 25-47 with errors 2-6 are realistic. 2-log dose range
+          is standard. Peak at 30 mg/kg models realistic bell-shaped dose-response.
     code_quality:
       score: 10
       max: 10
@@ -189,57 +190,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: tokens → data → style → chart → save; no classes or
-          functions'
+        comment: Flat sequential structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: All data hardcoded, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, Style imported and all used
+        comment: Only os, sys, pygal, Style imported; all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Python; loop for per-bar error bars is appropriate
-          pygal pattern
+        comment: sys.path fix is necessary workaround. Loop for error bars is correct
+          approach. Clean readable code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current pygal API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: pygal.XY with positional x coordinates, x_labels as value-label dicts,
-          per-point data dicts with label keys, stroke_style for dash, render_to_png
-          + render()
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Interactive HTML output and per-data-point rich tooltip labels via
-          pygal dict format; stroke_style dasharray is pygal-specific
-  verdict: REJECTED
+        comment: XY chart with value-label dict format for x_labels, Style object
+          wired correctly, stroke_style dasharray, show_dots=False -- all idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export with rich per-point tooltips is a genuine pygal differentiator.
+          Error bars are simulated not native, limiting distinctive showcase.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep: []
