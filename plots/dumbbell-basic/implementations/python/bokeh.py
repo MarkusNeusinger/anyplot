@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-06-30
@@ -16,7 +16,7 @@ _here = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -86,8 +86,38 @@ p.segment(
     x0="x_start", x1="x_end", y0="y", y1="y", source=seg_source, line_color="seg_color", line_alpha=0.55, line_width=6
 )
 
+# Delta labels on connecting segments — makes improvement/regression story explicit
+label_source = ColumnDataSource(
+    data={
+        "x": [(s + e) / 2 for s, e in zip(start_values, end_values, strict=True)],
+        "y": categories,
+        "text": [f"{d:+d}" for d in deltas],
+    }
+)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=label_source,
+        text_align="center",
+        text_baseline="bottom",
+        text_font_size="26pt",
+        text_color=INK_SOFT,
+        y_offset=24,
+    )
+)
+
 # "Before" dots — Imprint palette position 1 (brand green)
-before_source = ColumnDataSource(data={"x": start_values, "y": categories, "phase": ["Before"] * len(categories)})
+before_source = ColumnDataSource(
+    data={
+        "x": start_values,
+        "y": categories,
+        "phase": ["Before"] * len(categories),
+        "after": end_values,
+        "delta": [f"{d:+d} pts" for d in deltas],
+    }
+)
 before_glyph = p.scatter(
     x="x",
     y="y",
@@ -100,7 +130,15 @@ before_glyph = p.scatter(
 )
 
 # "After" dots — Imprint palette position 2 (lavender)
-after_source = ColumnDataSource(data={"x": end_values, "y": categories, "phase": ["After"] * len(categories)})
+after_source = ColumnDataSource(
+    data={
+        "x": end_values,
+        "y": categories,
+        "phase": ["After"] * len(categories),
+        "before": start_values,
+        "delta": [f"{d:+d} pts" for d in deltas],
+    }
+)
 after_glyph = p.scatter(
     x="x",
     y="y",
@@ -112,10 +150,11 @@ after_glyph = p.scatter(
     legend_label="After policy changes",
 )
 
-# Hover tooltip (Bokeh-distinctive interactive feature)
+# Hover tooltip — shows department, phase, score, and delta change together
 p.add_tools(
     HoverTool(
-        renderers=[before_glyph, after_glyph], tooltips=[("Department", "@y"), ("Phase", "@phase"), ("Score", "@x")]
+        renderers=[before_glyph, after_glyph],
+        tooltips=[("Department", "@y"), ("Phase", "@phase"), ("Score", "@x"), ("Δ Change", "@delta")],
     )
 )
 
@@ -126,7 +165,7 @@ p.title.text_font_style = "normal"
 p.title.align = "center"
 
 p.xaxis.axis_label_text_font_size = "42pt"
-p.yaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "36pt"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_label_text_color = INK
@@ -151,7 +190,7 @@ p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_color = None
 
 # Legend
-p.legend.location = "top_left"
+p.legend.location = "bottom_left"
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.background_fill_alpha = 0.95
 p.legend.border_line_color = INK_SOFT
