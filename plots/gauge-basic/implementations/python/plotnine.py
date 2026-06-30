@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 86/100 | Created: 2026-04-25
+Library: plotnine | Python
 """
 
 import os
@@ -20,12 +19,14 @@ from plotnine import (  # noqa: E402
     coord_fixed,
     element_blank,
     element_rect,
+    element_text,
     geom_point,
     geom_polygon,
     geom_segment,
     geom_text,
     ggplot,
     labs,
+    scale_color_identity,
     scale_fill_manual,
     theme,
     theme_void,
@@ -39,10 +40,16 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint semantic anchors (red / amber / green traffic-light)
-ZONE_BAD = "#AE3030"  # matte red
-ZONE_WARN = "#DDCC77"  # amber
-ZONE_GOOD = "#009E73"  # brand green
+# Imprint palette semantic anchors for traffic-light zones
+ZONE_BAD = "#AE3030"  # Imprint position 5 — matte red (semantic bad/loss)
+ZONE_WARN = "#DDCC77"  # Imprint amber warning anchor
+ZONE_GOOD = "#009E73"  # Imprint position 1 — brand green
+ZONE_COLORS = [ZONE_BAD, ZONE_WARN, ZONE_GOOD]
+
+# Zone label text colors that contrast against each zone fill
+# Data colors are theme-stable, so these text colors are static too
+ZONE_LABEL_COLORS = ["#FAF8F1", "#1A1A17", "#FAF8F1"]
+ZONE_NAMES = ["Low", "Mid", "High"]
 
 # Data
 value = 72
@@ -50,30 +57,45 @@ min_value = 0
 max_value = 100
 thresholds = [30, 70]
 
-# Geometry
-inner_radius = 0.7
-outer_radius = 1.0
+# Geometry parameters
+inner_radius = 0.70
+outer_radius = 1.00
 start_angle = np.pi
 end_angle = 0.0
 
 # Zone arc polygons
-zone_colors = [ZONE_BAD, ZONE_WARN, ZONE_GOOD]
 zone_bounds = [min_value, *thresholds, max_value]
 zone_records = []
-for i in range(len(zone_colors)):
+for i in range(len(ZONE_COLORS)):
     start_pct = (zone_bounds[i] - min_value) / (max_value - min_value)
     end_pct = (zone_bounds[i + 1] - min_value) / (max_value - min_value)
     start_ang = start_angle - start_pct * (start_angle - end_angle)
     end_ang = start_angle - end_pct * (start_angle - end_angle)
-    n_points = 60
-    angles_outer = np.linspace(start_ang, end_ang, n_points)
-    angles_inner = np.linspace(end_ang, start_ang, n_points)
+    n_pts = 60
+    angles_outer = np.linspace(start_ang, end_ang, n_pts)
+    angles_inner = np.linspace(end_ang, start_ang, n_pts)
     xs = np.concatenate([outer_radius * np.cos(angles_outer), inner_radius * np.cos(angles_inner)])
     ys = np.concatenate([outer_radius * np.sin(angles_outer), inner_radius * np.sin(angles_inner)])
     for j in range(len(xs)):
         zone_records.append({"x": xs[j], "y": ys[j], "zone": str(i)})
 
 df_zones = pd.DataFrame(zone_records)
+
+# Zone labels at arc midpoints — plotnine geom_text + scale_color_identity
+arc_mid_radius = (inner_radius + outer_radius) / 2  # 0.85
+zone_label_rows = []
+for i in range(len(ZONE_COLORS)):
+    mid_pct = (zone_bounds[i] + zone_bounds[i + 1]) / 2 / (max_value - min_value)
+    ang = start_angle - mid_pct * (start_angle - end_angle)
+    zone_label_rows.append(
+        {
+            "x": arc_mid_radius * np.cos(ang),
+            "y": arc_mid_radius * np.sin(ang),
+            "label": ZONE_NAMES[i],
+            "text_color": ZONE_LABEL_COLORS[i],
+        }
+    )
+df_zone_labels = pd.DataFrame(zone_label_rows)
 
 # Needle pointing to current value
 value_pct = (value - min_value) / (max_value - min_value)
@@ -121,42 +143,42 @@ df_minor_ticks = pd.DataFrame(minor_tick_records)
 df_major_ticks = pd.DataFrame(major_tick_records)
 df_labels = pd.DataFrame(label_records)
 
-# Center cap (two layered points for definition)
+# Center cap (two-layer for visual definition)
 df_cap_outer = pd.DataFrame({"x": [0], "y": [0]})
 df_cap_inner = pd.DataFrame({"x": [0], "y": [0]})
 
-# Value display and context
-df_value = pd.DataFrame({"x": [0], "y": [-0.30], "label": [str(value)]})
-df_context = pd.DataFrame({"x": [0], "y": [-0.55], "label": ["Current Sales"]})
+# Value display and context label
+df_value = pd.DataFrame({"x": [0], "y": [-0.28], "label": [str(value)]})
+df_context = pd.DataFrame({"x": [0], "y": [-0.50], "label": ["Current Sales"]})
 
-# Title
-df_title = pd.DataFrame({"x": [0], "y": [1.42], "label": ["gauge-basic · plotnine · anyplot.ai"]})
-
-# Build plot
+# Build plot — idiomatic plotnine: grammar-of-graphics layers + labs() title
+# scale_color_identity maps zone label hex colors directly from data column
 plot = (
     ggplot()
-    + geom_polygon(aes(x="x", y="y", fill="zone", group="zone"), data=df_zones, color=PAGE_BG, size=1.2)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_minor_ticks, color=INK_SOFT, size=0.8)
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_major_ticks, color=INK, size=1.6)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_labels, color=INK_SOFT, size=18, fontweight="bold")
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color=INK, size=4, lineend="round")
-    + geom_point(aes(x="x", y="y"), data=df_cap_outer, color=INK, size=14)
-    + geom_point(aes(x="x", y="y"), data=df_cap_inner, color=PAGE_BG, size=5)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_value, color=ZONE_GOOD, size=56, fontweight="bold")
-    + geom_text(aes(x="x", y="y", label="label"), data=df_context, color=INK_MUTED, size=20)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, color=INK, size=24, fontweight="medium")
-    + scale_fill_manual(values=zone_colors, guide=None)
-    + coord_fixed(ratio=1, xlim=(-1.5, 1.5), ylim=(-0.75, 1.55))
-    + labs(x="", y="")
+    + geom_polygon(aes(x="x", y="y", fill="zone", group="zone"), data=df_zones, color=PAGE_BG, size=0.6)
+    + geom_text(aes(x="x", y="y", label="label", color="text_color"), data=df_zone_labels, size=8, fontweight="bold")
+    + scale_color_identity()
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_minor_ticks, color=INK_SOFT, size=0.4)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_major_ticks, color=INK, size=0.8)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_labels, color=INK_SOFT, size=9, fontweight="bold")
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_needle, color=INK, size=2.0, lineend="round")
+    + geom_point(aes(x="x", y="y"), data=df_cap_outer, color=INK, size=7)
+    + geom_point(aes(x="x", y="y"), data=df_cap_inner, color=PAGE_BG, size=2.5)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_value, color=ZONE_GOOD, size=28, fontweight="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=df_context, color=INK_MUTED, size=10)
+    + scale_fill_manual(values=ZONE_COLORS, guide=None)
+    + coord_fixed(ratio=1, xlim=(-1.40, 1.40), ylim=(-0.65, 1.50))
+    + labs(title="gauge-basic · plotnine · anyplot.ai")
     + theme_void()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(color=INK, size=12, ha="center"),
         legend_position="none",
         axis_text=element_blank(),
         axis_title=element_blank(),
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
