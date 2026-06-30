@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-06-30
@@ -19,6 +19,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -69,8 +70,24 @@ df_declined = df[df["diff"] <= 0]
 
 df_points = pd.concat(
     [
-        pd.DataFrame({"y_pos": df["y_pos"], "value": df["before"], "period": "Before"}),
-        pd.DataFrame({"y_pos": df["y_pos"], "value": df["after"], "period": "After"}),
+        pd.DataFrame(
+            {
+                "y_pos": df["y_pos"],
+                "value": df["before"],
+                "period": "Before",
+                "category": df["category"].values,
+                "diff": df["diff"].values,
+            }
+        ),
+        pd.DataFrame(
+            {
+                "y_pos": df["y_pos"],
+                "value": df["after"],
+                "period": "After",
+                "category": df["category"].values,
+                "diff": df["diff"].values,
+            }
+        ),
     ]
 )
 
@@ -87,16 +104,21 @@ plot = (
         mapping=aes(x="before", xend="after", y="y_pos", yend="y_pos"),
         color=BRAND,
         size=1.2,
-        alpha=0.45,
+        alpha=0.65,
     )
     + geom_segment(
         data=df_declined,
         mapping=aes(x="before", xend="after", y="y_pos", yend="y_pos"),
         color=DECLINE,
         size=1.2,
-        alpha=0.55,
+        alpha=0.65,
     )
-    + geom_point(data=df_points, mapping=aes(x="value", y="y_pos", color="period"), size=4)
+    + geom_point(
+        data=df_points,
+        mapping=aes(x="value", y="y_pos", color="period"),
+        size=5,
+        tooltips=layer_tooltips().line("@category").line("@period: @value").line("Change: @diff"),
+    )
     + scale_color_manual(values=[BRAND, LAVENDER], name="Period")
     + scale_x_continuous(limits=[50, 95])
     + scale_y_continuous(breaks=list(range(len(df))), labels=df["category"].tolist())
@@ -106,7 +128,7 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color="transparent"),
         panel_grid_major_x=element_line(color=RULE, size=0.3),
         panel_grid_minor_x=element_blank(),
         panel_grid_major_y=element_blank(),
