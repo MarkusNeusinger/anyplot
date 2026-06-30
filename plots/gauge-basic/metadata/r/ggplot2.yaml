@@ -1,0 +1,248 @@
+library: ggplot2
+language: r
+specification_id: gauge-basic
+created: '2026-06-30T21:39:58Z'
+updated: '2026-06-30T21:57:36Z'
+generated_by: claude-sonnet
+workflow_run: 28477319487
+issue: 857
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Excellent semantic color design using Imprint palette anchors (matte red/amber/brand
+    green) — passes palette compliance perfectly
+  - 'Full theme-adaptive chrome: needle, tick labels, value text, subtitle and title
+    all flip correctly between light and dark'
+  - 'Strong data storytelling: large 72% focal point, zone-based reading areas, needle
+    reinforcement'
+  - 'Clean ggplot2 grammar: fill aesthetic mapped to zone factor with scale_fill_manual
+    for declarative zone coloring'
+  - PAGE_BG camouflage separator lines create seamless zone boundaries in both themes
+  - Canvas exactly 3200x1800px with correct ragg::agg_png device
+  weaknesses:
+  - Tick label size=3.8mm is at the boundary of readable — at mobile scaling (~400px)
+    may be marginally small; size=4.2–4.5 would give more margin
+  - INK_MUTED token is defined but never used — minor code noise
+  - Helper functions val_to_angle and annular_sector slightly violate KISS, though
+    justified given polar geometry complexity in Cartesian coordinates
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color
+      Chrome: Title "gauge-basic · r · ggplot2 · anyplot.ai" in dark ink, centered at top. Tick labels (0, 20, 40, 60, 80, 100) in INK_SOFT gray around outer arc. "Quarterly Sales Attainment" subtitle in INK_SOFT. All readable.
+      Data: Three colored zone arcs — matte red #AE3030 (0-30%), amber #DDCC77 (30-70%), brand green #009E73 (70-100%). Dark needle pointing to ~72 position. Center pivot dot. Large bold "72%" value in dark INK.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface color
+      Chrome: Title in light INK text (#F0EFE8). Tick labels and subtitle in light gray INK_SOFT (#B8B7B0). "72%" in near-white. No dark-on-dark failures detected.
+      Data: Zone colors identical to light render (red/amber/green unchanged). Needle renders white (INK = #F0EFE8 for dark theme). All data elements clearly distinguishable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes. Tick labels size=3.8mm (~10.8pt)
+          are at the top of recommended range, slightly small but readable. Value
+          72% very prominent at size=17mm.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions detected in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Zone arcs, needle, tick marks and pivot dot all clearly visible in
+          both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic colors (red/amber/green) with needle position providing
+          redundant encoding beyond color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800px landscape canvas. Gauge nicely centered with generous
+          whitespace for value display.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct mandatory title format. Tick values labeled at every 20 units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Matte red #AE3030 (semantic anchor), amber #DDCC77 (ANYPLOT_AMBER),
+          brand green #009E73 (Imprint slot 1). Semantic exception correctly applied.
+          Backgrounds correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional semantic color design, professional polish with camouflage
+          separator lines, annular sector polygon construction. Clear visual hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void() for clean minimal chrome. Subtle inner/outer boundary
+          arcs at alpha=0.4. Separator lines use PAGE_BG for seamless look.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Strong focal point with large 72% value. Zone-based storytelling.
+          Needle reinforces position. Subtitle provides context.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct semi-circular gauge with zones, needle, and value display.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color zones (red/yellow/green), needle indicator, value label, thresholds
+          at 30/70 per spec example.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value 72 correctly positioned; zones correctly mapped 0-30/30-70/70-100;
+          needle points accurately.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'gauge-basic · r · ggplot2 · anyplot.ai' matches required format.
+          No legend needed (zones self-evident).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full coverage: semi-circle arc, colored zones, tick marks and labels,
+          needle, pivot dot, prominent value, descriptive subtitle.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly Sales Attainment is a realistic, neutral business KPI.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% scale with thresholds at 30/70 and value 72 are plausible
+          and conventional.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Two helper functions (val_to_angle, annular_sector) justified by
+          polar geometry complexity but push against KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is deterministic (hardcoded values, no randomness). No seed
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Clean ggplot2 grammar usage. Well-organized structure.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Fill aesthetic mapped to zone factor with scale_fill_manual, coord_fixed
+          for aspect ratio, theme_void() override, multiple geom layers — highly idiomatic
+          ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics approach to zone coloring (factor fill + scale)
+          is distinctively ggplot2. Factor ordering for zone display. geom_polygon
+          for annular sectors leverages declarative data-to-geometry mapping.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

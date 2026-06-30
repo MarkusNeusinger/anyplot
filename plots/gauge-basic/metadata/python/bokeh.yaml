@@ -2,47 +2,46 @@ library: bokeh
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:02:34Z'
-updated: '2026-04-25T12:54:21Z'
-generated_by: claude-opus
-workflow_run: 24931133255
+updated: '2026-06-30T21:47:48Z'
+generated_by: claude-sonnet
+workflow_run: 28476691727
 issue: 857
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Perfect spec compliance: all gauge features (zones, needle, hub, ticks, value)
-    present and correctly implemented'
-  - 'Excellent code quality: idiomatic use of annular_wedge, flat KISS structure,
-    clean theme token wiring'
-  - 'Full theme adaptation: needle, hub, text, and background all adapt correctly
-    between light and dark renders'
-  - Okabe-Ito zone colors used semantically (brand green for high/good zone) — CVD-safe
-    and visually coherent
+  - 'Correct semantic color assignment: brand green (#009E73), amber anchor (#DDCC77),
+    and matte red (#AE3030) properly applied to good/caution/bad gauge zones'
+  - Proper theme-adaptive chrome in both renders; all INK/INK_SOFT tokens correctly
+    threaded through needle, hub, tick labels, and text elements
+  - HoverTool with zone name and range leverages Bokeh's interactive HTML output distinctively
+  - Arc-tangent text rotation for zone labels inside arc segments is a professional
+    design touch
+  - Clean, deterministic code with no unnecessary abstraction; sys.path fix for self-shadowing
+    is well-documented
   weaknesses:
-  - 'Design storytelling is minimal: no zone labels (Low/Med/High), no contextual
-    subtitle, no annotation explaining what 72 means — viewer sees a value but not
-    a narrative'
-  - Lower canvas quadrant is largely empty; the gauge composition could be enlarged
-    or supplemented with context text to fill the space more purposefully
-  - 'DE-01 does not yet reach strong design level: no subtitle, no zone annotations,
-    visual hierarchy limited to needle position and bold value'
+  - Zone arc labels ('Low', 'Optimal') at 22pt with ~90° rotation are slightly small
+    and hard to read at a glance; consider increasing to 26–28pt or supplementing
+    with a small external legend
+  - The 50-tick mark and label at the top-center of the arc have minor visual proximity
+    — the tick line and label are close together
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "gauge-basic · bokeh · anyplot.ai" in dark ink at top — readable. Tick labels (0, 25, 50, 75, 100) in dark grey INK_SOFT around arc — all readable. Bold "72" value in dark INK below gauge — prominent and readable.
-      Data: Three zone arcs — vermillion/orange (#D55E00, low 0-30), golden-orange (#E69F00, mid 30-70), brand green (#009E73, high 70-100). Black triangular needle points to ~72 (just into green zone). Dark circular hub at center.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "gauge-basic · python · bokeh · anyplot.ai" in dark ink, clearly readable. Tick labels (0, 25, 50, 75, 100) in INK_SOFT (#4A4A44), all readable. "CPU Utilization (%)" subtitle in INK_SOFT. Bold value "72" in dark INK. Zone arc labels ("Low", "Caution", "Optimal") in fixed contrasting colors (white on red/green, dark on amber). All text readable against the warm off-white background.
+      Data: Three annular wedge zones — matte red (#AE3030) 0–30, amber/yellow (#DDCC77) 30–70, brand green (#009E73) 70–100. Black triangular needle pointing to ~72 in the green zone. Black circular hub at center with white ring border. Tick marks extend outside arc in INK_SOFT.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light cream text — readable. Tick labels in light INK_SOFT — readable. "72" value in light color — prominent and readable. No dark-on-dark failures observed.
-      Data: Zone colors identical to light render (vermillion, golden-orange, brand green unchanged). Needle is now white/cream (#F0EFE8 = INK in dark mode) — adapts correctly and is clearly visible. Hub is light with dark ring border.
-      Legibility verdict: PASS — all text clearly readable against near-black background; correct theme adaptation throughout
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — visible and legible. "CPU Utilization (%)" in INK_SOFT. Bold "72" value in light ink. No dark-on-dark failures observed. Zone arc labels retain fixed contrasting colors unchanged.
+      Data: Zone arc colors are identical to light render — matte red, amber, brand green (#009E73). Needle and hub rendered in near-white INK (#F0EFE8) — visually distinct against the dark background. Data colors unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -50,75 +49,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 44pt, tick labels 30pt, value 84pt — all explicitly set and
-          readable in both themes
+        comment: All font sizes explicitly set and readable in both themes. Minor
+          deduction for 22pt arc-tangent rotated zone labels which are slightly small.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; 0 and 100 labels near edges but non-overlapping
+        comment: No text or element collisions; all labels clearly separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All arcs, needle, hub, tick marks clearly visible at 4800x2700
+        comment: Gauge arcs, needle, hub, value display all optimally sized and immediately
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito zone colors CVD-safe; zones differ in hue and luminance
+        comment: Semantic traffic-light zones have redundant text labels; amber zone
+          uses dark text for contrast; CVD-safe with multiple encoding layers.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Gauge well-positioned but significant empty space below value label
-          in lower canvas
+        comment: Gauge well-centered with balanced margins; value and metric label
+          anchor the lower space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; no axis labels needed for gauge type
+        comment: CPU Utilization (%) provides context with units; title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for high zone; backgrounds correct; chrome flips
-          correctly; data colors identical across themes'
+        comment: 'Zones use #009E73 (brand green), #DDCC77 (semantic amber), #AE3030
+          (semantic red) — all Imprint members correctly applied. Backgrounds #FAF8F1
+          light / #1A1A17 dark. Chrome flips correctly.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Intentional Okabe-Ito zone assignment, clean minimal chrome, but
-          no zone labels, no contextual subtitle, limited visual hierarchy
+        passed: true
+        comment: 'Above generic default: semantic color assignment, arc-tangent label
+          rotation, hub circle detail, background-color zone dividers. Intentional
+          design but not FiveThirtyEight-level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes and grid hidden; PAGE_BG zone separator borders; hub styled
-          with theme contrast. Good refinement above defaults
+        comment: Axes and grid fully hidden, custom external tick marks, hub detail,
+          generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Needle in green zone communicates positive reading; missing zone
-          labels (Low/Mid/High), contextual annotations, or subtitle that turns value
-          into insight
+        passed: true
+        comment: Needle at 72 in green zone communicates the message immediately;
+          bold value and semantic zone colors create clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semi-circular speedometer gauge
+        comment: Correct semi-circular gauge/speedometer chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: value=72, min=0, max=100, thresholds=[30,70], three zones, needle,
-          hub, tick marks, value display — all present
+        comment: 'All spec features: value display (72), min/max (0, 100), thresholds
+          [30, 70], color zones, needle, value label.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value 72 correctly mapped to angular position just past 70 threshold
-          into green zone
+        comment: Needle correctly positioned at 72 in green zone; zones correctly
+          divide at thresholds 30 and 70.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend N/A for single-value gauge
+        comment: Title 'gauge-basic · python · bokeh · anyplot.ai' correct; zone labels
+          embedded in arcs serve as the legend.
     data_quality:
       score: 15
       max: 15
@@ -158,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all core gauge features: arc, three semantic color
-          zones, needle, tick scale, value readout'
+        comment: 'Shows all gauge aspects: three zones, needle, tick marks, tick labels,
+          zone labels, value display, metric label.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Value 72 on 0-100 scale plausible for sales performance, NPS, or
-          completion rate; neutral business context
+        comment: CPU utilization at 72% is a realistic, neutral technology monitoring
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 range with thresholds at 30 and 70 is standard gauge configuration;
-          value 72 interestingly just past upper threshold
+        comment: 0–100% range correct for utilization; 72% realistic; thresholds at
+          30 and 70 align with system monitoring conventions.
     code_quality:
       score: 10
       max: 10
@@ -183,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: theme tokens → data → geometry → figure → zones
-          → ticks → needle → labels → save'
+        comment: Clean Imports → Data → Plot → Save flow with no unnecessary functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded values; no randomness needed for gauge
+        comment: All data hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, and only used bokeh modules
+        comment: All imported modules actively used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: annular_wedge used idiomatically; zip(strict=True) clean; no fake
-          UI elements
+        comment: Clean, Pythonic; angle calculations via numpy elegant; sys.path fix
+          well-documented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; uses current Bokeh
+          3.x API.
     library_mastery:
       score: 7
       max: 10
@@ -219,23 +223,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: annular_wedge is correct Bokeh primitive for arc segments; Label
-          model for annotations; proper theme token wiring via figure properties
+        comment: 'Strong Bokeh idioms: ColumnDataSource for zone data enabling HoverTool,
+          annular_wedge for arcs, Label for annotations, output_file+save for HTML
+          artifact.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: annular_wedge is Bokeh-native; dual output via export_png + output_file/save;
-          Bokeh-specific Label model layer
-  verdict: REJECTED
+        comment: HoverTool with zone name and range (Bokeh-distinctive), CDP-based
+          viewport override, CSS body background injection.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
+  - html-export
   - annotations
   - patches
-  - manual-ticks
-  patterns: []
+  patterns:
+  - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
