@@ -10,6 +10,9 @@ const labels = ["15 °C", "20 °C", "25 °C", "30 °C", "35 °C"];
 const means  = [12.3, 18.7, 24.2, 21.5, 16.1];
 const errors = [2.1,  1.8,  2.3,  2.9,  3.4];
 
+// Peak at 25°C — full opacity to draw the eye to the inverted-U apex
+const peakIdx = 2;
+
 // Plugin: fill canvas with theme background before anything is drawn
 const bgPlugin = {
   id: "bg",
@@ -22,13 +25,30 @@ const bgPlugin = {
   },
 };
 
+// Plugin: draw L-shaped frame (left + bottom spines only) — Chart.js border.display is
+// disabled on both scales so this replaces the default 4-sided box with a clean L-shape
+const spinePlugin = {
+  id: "spine",
+  afterDraw(chart) {
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, chartArea.top);
+    ctx.lineTo(chartArea.left, chartArea.bottom);
+    ctx.lineTo(chartArea.right, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
+
 // Plugin: I-bar error whiskers drawn over each bar after bars are rendered
 const errorBarPlugin = {
   id: "errorBar",
   afterDatasetsDraw(chart) {
     const { ctx, scales } = chart;
     const meta = chart.getDatasetMeta(0);
-    const CAP = 18; // half-cap width in CSS px
 
     ctx.save();
     ctx.strokeStyle = t.ink;
@@ -37,6 +57,7 @@ const errorBarPlugin = {
 
     meta.data.forEach((bar, i) => {
       const x   = bar.x;
+      const CAP = bar.width * 0.35; // cap width proportional to bar width
       const yHi = scales.y.getPixelForValue(means[i] + errors[i]);
       const yLo = scales.y.getPixelForValue(means[i] - errors[i]);
 
@@ -70,16 +91,17 @@ document.getElementById("container").appendChild(canvas);
 // Chart
 new Chart(canvas, {
   type: "bar",
-  plugins: [bgPlugin, errorBarPlugin],
+  plugins: [bgPlugin, spinePlugin, errorBarPlugin],
   data: {
     labels,
     datasets: [
       {
         label: "Mean stem length (cm)",
         data: means,
-        backgroundColor: t.palette[0] + "99", // brand green at ~60% opacity
+        // Peak bar (25°C) at full opacity; remaining bars at 60% to guide attention
+        backgroundColor: means.map((_, i) => i === peakIdx ? t.palette[0] : t.palette[0] + "99"),
         borderColor: t.palette[0],
-        borderWidth: 2,
+        borderWidth: means.map((_, i) => i === peakIdx ? 3 : 1),
         borderRadius: 3,
         barPercentage: 0.55,
         categoryPercentage: 0.85,
@@ -105,8 +127,9 @@ new Chart(canvas, {
     },
     scales: {
       x: {
+        border: { display: false }, // spinePlugin draws the L-frame instead
         ticks: { color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { display: false },   // Y-axis only grid for bar charts
         title: {
           display: true,
           text: "Growth Temperature",
@@ -115,6 +138,7 @@ new Chart(canvas, {
         },
       },
       y: {
+        border: { display: false }, // spinePlugin draws the L-frame instead
         min: 0,
         suggestedMax: 30,
         ticks: { color: t.inkSoft, font: { size: 14 } },
