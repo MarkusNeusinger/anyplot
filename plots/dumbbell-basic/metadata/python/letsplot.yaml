@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:17Z'
-updated: '2026-06-30T23:04:07Z'
+updated: '2026-06-30T23:13:33Z'
 generated_by: claude-sonnet
 workflow_run: 28480996002
 issue: 945
@@ -12,130 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Semantic segment color encoding: green segments for improvements, red for the
-    single declining department (Operations) — creates a clear directional narrative
-    beyond what simple dot coloring achieves'
-  - Sorted by difference (ascending) so the only declining department lands at the
-    bottom and the largest improvement tops the chart — excellent data storytelling
-    choice
-  - 'Fully compliant Imprint palette: #009E73 (brand green) for first series, #C475FD
-    (lavender) for second, #AE3030 (matte red) for decline connector — all from canonical
-    positions'
-  - 'Complete theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT tokens wired
-    through to all non-data elements; both renders legible with no dark-on-dark issues'
-  - 'Idiomatic letsplot grammar: separate geom_segment calls for improved/declined
-    subsets, scale_y_continuous with explicit breaks/labels for the categorical y-axis'
-  - '10 realistic department categories with plausible satisfaction scores (55–89)
-    and one deliberate decline (Operations: 72→65) adds authenticity'
-  - Title correctly formatted with descriptive prefix and title_size scaled down via
-    the 67-char formula to prevent overflow
+  - Correct horizontal dumbbell layout with departments on Y-axis and satisfaction
+    scores on X-axis
+  - 'Semantic color coding: green segments for improvement, red (#AE3030 semantic
+    anchor) for Operations decline — immediately communicates direction'
+  - Data sorted ascending by diff so viewer reads most-to-least improved top-to-bottom,
+    strong visual hierarchy
+  - 'Full theme-adaptive chrome: both renders pass legibility checks with warm off-white
+    / near-black backgrounds'
+  - layer_tooltips() leverages letsplot interactive HTML output — shows category,
+    period, value, and delta
+  - 'All Imprint palette positions used correctly: Before=#009E73 (pos 1), After=#C475FD
+    (pos 2), decline segment=#AE3030 (semantic anchor)'
+  - Title includes descriptive prefix Employee Satisfaction with proper mandated format
+  - Deterministic hardcoded data covers both improvement and decline scenarios
   weaknesses:
-  - Marker size (size=4) is adequate but below the 'sparse data → prominent markers'
-    guideline for a 10-point dumbbell — increase to size=5 or size=6 to give each
-    dot more visual weight
-  - 'Design Excellence is solid but not exceptional: the legend box border (color=INK_SOFT
-    on element_rect) adds visual clutter — consider removing the border or using a
-    hairline; also the legend floated at [0.92, 0.2] intrudes slightly into the plot''s
-    data region near the Finance/Operations rows'
-  - 'Library Mastery could be elevated: letsplot supports geom_lollipop or custom
-    stat layers that could make the dumbbell construction more idiomatic; the current
-    geom_segment+geom_point approach is correct but generic across ggplot-family libraries'
-  - Connecting segment alpha for improved rows (alpha=0.45) is quite low — segments
-    feel lighter than the dots, weakening the visual connection; 0.6–0.7 would better
-    tie the dots together without competing
+  - Two separate geom_segment calls (df_improved / df_declined) rather than a single
+    geom_segment with a direction color aesthetic — the more idiomatic ggplot/letsplot
+    approach would add a direction column and map color=aes(direction) inside one
+    layer
+  - DE-02 refinement is solid but legend border color is transparent rather than INK_SOFT
+    — minor polish gap
+  - LM-02 could be elevated by using geom_lollipop or a custom stat if available,
+    or annotating the delta value directly on each segment for richer storytelling
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · python · letsplot · anyplot.ai" in dark ink at top-center, well-proportioned. Y-axis label "Department" rotated vertically on left in dark text. X-axis label "Satisfaction Score" at bottom in dark text. Tick labels: department names on y-axis (Customer Support, Engineering, Product, R&D, Marketing, Sales, HR, Finance, Legal, Operations) and numeric values (50, 55, 60, 65, 70, 75, 80, 85, 90, 95) on x-axis — all clearly readable.
-      Data: 10 dumbbell rows sorted by ascending diff. Green dots (#009E73, mapped to "Before") at start values and lavender dots (#C475FD, mapped to "After") at end values. Connecting segments: green/teal for 9 improved departments (alpha=0.45), matte red for Operations decline (alpha=0.55). Legend in lower-right area with elevated background showing "Before" (green dot) and "After" (lavender dot). Subtle vertical grid lines at x-axis major breaks.
-      Legibility verdict: PASS — all text readable against the warm off-white background
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · python · letsplot · anyplot.ai" centered in dark ink (#1A1A17), font scaled to ~15pt for long string, fully visible. Y-axis label "Department" in dark ink, X-axis label "Satisfaction Score" in dark ink — both explicitly sized at 12pt. Y-axis category tick labels (department names) in muted #4A4A44 at 10pt, readable. X-axis numeric tick labels (50–95) in same muted tone, readable. No text-on-text overlap anywhere.
+      Data: 10 horizontal dumbbells. Green (#009E73, pos 1) filled circles = Before scores. Lavender (#C475FD, pos 2) filled circles = After scores. Connecting segments green for 9 improved departments, red (#AE3030, semantic anchor) for Operations (declined). Segment alpha=0.65, markers size=5 — both clearly visible. Sorted ascending by diff so Operations (−7) is at bottom, Customer Support (+25) at top. Legend "Period" with Before/After entries positioned bottom-right, does not overlap data.
+      Legibility verdict: PASS — all elements fully legible against warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title rendered in near-white (#F0EFE8) ink, clearly legible against the dark surface. Y-axis and x-axis labels in light-grey text (#B8B7B0 INK_SOFT), readable. Department tick labels on y-axis and numeric tick labels on x-axis all rendered in INK_SOFT light grey — fully legible, no dark-on-dark failure. Legend box has elevated dark background (#242420) with visible border, text readable.
-      Data: Colors are identical to the light render — #009E73 green dots for Before, #C475FD lavender dots for After, green segments for improvements, red segment for Operations decline. Imprint data palette is theme-independent as required.
-      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark issues detected
+      Background: Near-black #1A1A17 — correct, warm near-black
+      Chrome: Title in light #F0EFE8 — clearly readable. "Department" and "Satisfaction Score" axis labels in light ink. Y-axis category labels and X-axis tick labels in #B8B7B0 muted light — all readable. Legend box has elevated #242420 dark background with light text. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — Before dots remain #009E73, After dots remain #C475FD, improved segments green, Operations segment red. All markers and segments clearly distinguishable against the near-black background.
+      Legibility verdict: PASS — both theme-adaptive chrome and data elements fully legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, axis labels and tick labels all clearly readable in both themes
-          at appropriate sizes; minor point on marker prominence
+        comment: 'All font sizes explicitly set: title scaled by formula (16*67/71=15pt),
+          axis titles 12pt, tick labels 10pt. Both renders fully legible at canvas
+          size and when scaled to mobile width.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps; department labels well-spaced on y-axis
+        comment: No overlapping elements. Department labels well-spaced on Y-axis.
+          Legend positioned clear of data area.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers visible but size=4 is below the recommended prominence level
-          for sparse 10-point data; segments slightly faint at alpha=0.45
+        comment: 10 data points (sparse), size=5 in letsplot units — dots prominent
+          and clearly distinguishable. Segments at alpha=0.65 visible without dominating.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Both colors (#009E73 and #C475FD) are CVD-safe Imprint palette members
-          with good contrast on both surfaces'
+        comment: Green (#009E73) and lavender (#C475FD) are perceptually distinct
+          under CVD. Red segment (#AE3030) for Operations uses position redundancy
+          (always at bottom). Not relying on red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); layout proportions good; title fits
-          within plot width; no clipping
+        comment: 3200x1800 canvas (ggsize 800x450, scale=4). Plot fills canvas well,
+          balanced margins. Legend well-integrated. No canvas gate failure.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title uses correct descriptive-prefix format; x-axis 'Satisfaction
-          Score' and y-axis 'Department' are clear
+        comment: 'X: ''Satisfaction Score'' (descriptive). Y: ''Department'' (descriptive).
+          Title: ''Employee Satisfaction · dumbbell-basic · python · letsplot · anyplot.ai''
+          — correct format with descriptive prefix.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series=green #009E73, second=#C475FD; segment decline uses
-          #AE3030 (position 5); backgrounds correct in both themes'
+        comment: 'Before=#009E73 (position 1, first series). After=#C475FD (position
+          2). Decline segment uses #AE3030 semantic anchor correctly. Backgrounds
+          #FAF8F1 light / #1A1A17 dark. Chrome is theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Semantic segment color coding by change direction is a sophisticated
-          design choice; otherwise conventional treatment
+        comment: Thoughtful semantic color coding (green improvement vs red decline),
+          descriptive title prefix, sorted data revealing pattern. Clearly above defaults
+          but not FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Axis ticks removed, only x-axis grid lines, elevated legend background;
-          legend border adds minor clutter
+        comment: Y-axis grid removed, subtle X-axis grid only, ticks removed (element_blank),
+          theme_minimal base, strategic legend placement. Good refinement above defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sort by difference creates clear narrative; single red segment makes
-          Operations decline immediately visible; effective focal point
+        comment: Sort by diff magnitude with red accent on Operations creates immediate
+          visual hierarchy — viewer sees most-improved vs outlier decline without
+          annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dumbbell chart (horizontal connected dot plot) with geom_segment
-          + geom_point
+        comment: Correct horizontal dumbbell chart with dots connected by segments.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two distinct colored dots per category, connected by line, horizontal
-          orientation, sorted by difference
+        comment: Two dots per category (before/after), connecting segment, distinct
+          colors for each endpoint, horizontal orientation, sorted by difference.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=satisfaction score, Y=department category; all data visible within
-          x-limits 50-95
+        comment: X=satisfaction score, Y=department. All 10 departments visible. X-range
+          50–95 shows full data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title has correct format with descriptive prefix; legend labels 'Before'
-          and 'After' clearly identified
+        comment: 'Title: ''Employee Satisfaction · dumbbell-basic · python · letsplot
+          · anyplot.ai''. Legend: ''Period'' with ''Before'' / ''After'' labels —
+          correct.'
     data_quality:
       score: 15
       max: 15
@@ -177,22 +176,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both start/end values, connecting lines, directional encoding,
-          10 categories — full dumbbell feature set
+        comment: Shows improvements of varying magnitude AND one decline (Operations).
+          Range from +1 (Legal) to +25 (Customer Support) demonstrates all aspects
+          of the dumbbell chart including directionality.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction before/after policy changes is the spec's own
-          example use case; scores realistic; one decline adds authenticity
+        comment: Employee satisfaction by department before/after policy changes —
+          real, neutral, business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 categories within the 5-20 spec range; satisfaction scores 55-89
-          are plausible for this domain
+        comment: Satisfaction scores 55–90 realistic on a 0–100 scale. Differences
+          (1–25 points) plausible for a policy change impact.
     code_quality:
       score: 10
       max: 10
@@ -202,34 +202,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom flow; no functions or classes; minimal complexity
+        comment: Clean Imports → Tokens → Data → Plot → Save structure. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded data — fully deterministic, no seed needed
+        comment: All data hardcoded, fully deterministic — no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused imports
+        comment: All imported symbols are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Two geom_segment calls (improved/declined) is a reasonable split
-          for semantic coloring; no fake UI
+        comment: Clean, appropriate complexity. Two-segment-group approach for semantic
+          coloring is a valid pattern, not over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct path parameter
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No deprecated API usage.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,22 +238,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar: separate data= per geom, scale_y_continuous
-          with breaks/labels for categorical axis, element_blank() for tick removal'
+        comment: 'Correct ggplot grammar, ggsize(), ggsave() with scale, scale_color_manual,
+          scale_y_continuous with explicit breaks/labels. Minor deduction: splitting
+          into df_improved/df_declined rather than using a direction aesthetic column
+          is slightly less idiomatic than a single geom_segment with color=aes(''direction'').'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: No letsplot-distinctive features; ggsize() is used correctly but
-          the geom_segment+geom_point dumbbell approach is generic across ggplot-family
-          libraries
+        passed: true
+        comment: layer_tooltips() with multi-field display (category, period, value,
+          change delta) is distinctively letsplot — this feature does not exist in
+          matplotlib or plotnine. HTML export via ggsave is also letsplot-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
   - html-export
+  - manual-ticks
+  - layer-composition
   patterns:
   - wide-to-long
   dataprep: []
