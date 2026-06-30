@@ -2,12 +2,12 @@ library: bokeh
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:56Z'
-updated: '2026-04-26T01:29:49Z'
-generated_by: claude-opus
-workflow_run: 24945052285
+updated: '2026-06-30T23:11:27Z'
+generated_by: claude-sonnet
+workflow_run: 28480554709
 issue: 945
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/bokeh/plot-light.html
@@ -15,89 +15,116 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-
 quality_score: 88
 review:
   strengths:
-  - 'Perfect palette compliance: #009E73 before, #D55E00 after, warm off-white/near-black
-    backgrounds, chrome fully adaptive across both themes with no dark-on-dark failures.'
-  - 'Excellent data design: sorted by delta ascending, one regression (Finance −6)
-    at bottom and largest improvement (R&D +23) at top — viewer reads the story immediately
-    without annotations.'
-  - 'Perfect code quality: clean linear structure, all imports used, idiomatic Bokeh
-    with ColumnDataSource, HoverTool tooltips, and HTML export alongside PNG.'
-  - HoverTool and HTML export are genuinely Bokeh-distinctive features that elevate
-    the implementation above a static equivalent.
+  - 'Correct Imprint palette usage: #009E73 (brand green) for ''Before'' and #C475FD
+    (lavender) for ''After'' dots, with semantic red #AE3030 for the Finance regression
+    segment'
+  - Delta labels above each connecting segment make the story immediately explicit
+    — viewer sees +23, +17, etc. without reading data
+  - Categories sorted ascending by delta so the largest improvement (R&D +23) sits
+    at the top — strong visual hierarchy
+  - Color-coded segments (green for improvements, red for regression) add a redundant
+    semantic layer that reinforces the direction-of-change narrative
+  - 'Full theme-adaptive chrome: backgrounds, text, grid, and legend box all flip
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - White dot edges (line_color=PAGE_BG) give clean separation on both surfaces without
+    introducing new colors
+  - LabelSet for delta annotations and HoverTool for interactive tooltip are idiomatic
+    bokeh; HTML artifact is generated as required catalog artifact
+  - 8 categories with realistic employee satisfaction data including one regression
+    (Finance -6) adds narrative depth
+  - min_border_left=280 is correctly generous to accommodate the long 'Research &
+    Development' category label without clipping
   weaknesses:
-  - 'Title format deviates from required spec: ''Employee Satisfaction · dumbbell-basic
-    · bokeh · anyplot.ai'' should be ''dumbbell-basic · bokeh · anyplot.ai''.'
-  - 'Design Excellence gap (13/20): needs higher aesthetic sophistication — directional
-    arrow tips on connecting segments (Bokeh Arrow with VeeHead) or segment color-coding
-    by improvement vs. regression would elevate DE-01 above 5/8.'
-  - Y-axis spine still visible; removing it (p.yaxis.axis_line_color = None) and slightly
-    tightening row spacing would push DE-02 above 4/6.
+  - 'Legend placement `p.legend.location = ''bottom_left''` places the legend box
+    directly over the Finance row (bottom data row after ascending-delta sort), partially
+    obscuring the Finance dumbbell dots (before=78, after=72) and the ''-6'' delta
+    label. Fix: move legend to ''top_left'' (where there is more empty space above
+    the R&D row''s x=65 start dot) or ''bottom_right'' (clear of all dots since all
+    data is clustered in x=55-90 range but bottom-right is open), or use explicit
+    offset — e.g. `p.legend.location = ''top_left''` which avoids the data region
+    entirely.'
+  - X-axis label 'Satisfaction Score' is set at 42pt while Y-axis label 'Department'
+    is 36pt — the 6pt gap creates a mild imbalance. Per style guide, axis labels should
+    be visually similar in size. Align y-axis to 42pt as well (the min_border_left=280
+    already reserves room for this).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · bokeh · anyplot.ai" in dark ink at top-center. Y-axis label "Department" rotated, dark ink. X-axis label "Satisfaction Score" in dark ink. Y-axis category labels (Research & Development, Human Resources, Marketing, Engineering, Customer Support, Operations, Sales, Finance) in INK_SOFT. X-axis tick labels (50, 60, 70, 80, 90) in INK_SOFT. All readable.
-      Data: 8 horizontal dumbbell rows. Before-dots in #009E73 (brand green, Okabe-Ito position 1). After-dots in #D55E00 (vermillion, Okabe-Ito position 2). Thin gray connecting segments with alpha=0.45. Sorted ascending by delta: Finance (−6 regression) at bottom, R&D (+23 improvement) at top. Subtle vertical grid lines at alpha=0.10. Legend top-left with elevated background.
-      Legibility verdict: PASS — all text clearly readable against light background.
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "dumbbell-basic · python · bokeh · anyplot.ai" centered at top in dark ink (#1A1A17) — clear and readable. Y-axis label "Department" (rotated) in dark ink. X-axis label "Satisfaction Score" in italic dark ink. Tick labels in #4A4A44 (INK_SOFT) — all readable. Subtle vertical grid lines at low alpha (0.10). Y-axis spine removed; x-axis spine kept.
+      Data: Green dots (#009E73) mark "Before" satisfaction scores; lavender dots (#C475FD) mark "After" scores. Connecting segments colored green for improvements and red (#AE3030) for Finance regression. Delta labels (+23, +17, +16, +16, +15, +13, +11, -6) in INK_SOFT above each segment midpoint. 8 departments sorted by ascending delta. Finance at bottom shows -6 regression.
+      Legend: Positioned bottom-left with ELEVATED_BG fill. Legend overlaps the Finance row (bottom data row), partially obscuring the Finance dumbbell and '-6' label.
+      First series color: #009E73 ✓
+      Legibility verdict: PASS — all chrome text is readable against the off-white background. Minor issue: legend overlaps bottom data row.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, tick labels, and legend text all render in light ink (#F0EFE8 / #B8B7B0). No dark-on-dark failures detected. Legend uses elevated dark fill (#242420). Y-axis spine and x-axis spine visible in INK_SOFT. Grid lines subtle.
-      Data: Data colors identical to light render — #009E73 before-dots and #D55E00 after-dots unchanged. Only chrome (background, text, grid, legend frame) flips between themes.
-      Legibility verdict: PASS — all text clearly readable against dark background; no "dark on dark" failures.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in #F0EFE8 (INK light) — clearly readable against dark surface. Y-axis and X-axis labels in #F0EFE8 — readable. Tick labels in #B8B7B0 (INK_SOFT dark) — readable, no dark-on-dark failure. Delta labels (+23, +17, etc.) in #B8B7B0 — visible against dark background. Grid lines at low alpha — subtle and unobtrusive.
+      Data: Green (#009E73) and lavender (#C475FD) dots are identical to the light render — palette colors are theme-independent ✓. Red (#AE3030) segment for Finance regression is visible. All data elements clearly distinguishable from the near-black background.
+      Legend: Elevated dark background (#242420) with light text (#B8B7B0) — readable. Same bottom-left overlap with Finance row as in light render.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements use light chrome tokens correctly. Brand green #009E73 is clearly visible against #1A1A17.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set above minimums: title 36pt, axis labels
-          24pt, tick/legend labels 20pt. Both renders fully readable.'
+        comment: 'Font sizes explicitly set (50pt title, 42pt x-axis, 36pt y-axis,
+          34pt ticks). Readable in both themes. Minor: y-axis label 36pt vs x-axis
+          42pt creates a slight size imbalance.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No overlapping elements in either render.
+        passed: false
+        comment: legend.location='bottom_left' places legend box directly over the
+          Finance row (bottom row after ascending-delta sort), obscuring Finance dumbbell
+          dots and '-6' delta label in both renders.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=34 dots clearly visible for 8 categories; thin connecting lines
-          intentional per spec.
+        comment: Dots at size=28 are prominent for 8 data points. Connecting lines
+          at line_width=6 with alpha=0.55 are visible. Delta labels at 26pt are clear.
+          All data elements well-sized for data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 / #D55E00 are Okabe-Ito positions 1-2; CVD-safe and sufficient
-          luminance contrast.'
+        comment: Imprint palette positions 1 (#009E73) and 2 (#C475FD) used for before/after.
+          Red (#AE3030) used semantically for regression. Redundant encoding via position
+          on x-axis aids CVD safety.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas use; generous vertical spacing between 8 rows leaves
-          some whitespace.
+        comment: Canvas gate passed (3200x1800). min_border_* values correctly enlarged
+          to accommodate long labels. Legend placement overlapping bottom data row
+          is a layout design flaw.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Satisfaction Score'' and ''Department'' are descriptive.'
+        comment: Title correctly formatted as 'dumbbell-basic · python · bokeh · anyplot.ai'.
+          Axis labels 'Satisfaction Score' and 'Department' are descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          chrome fully adaptive in both renders.'
+        comment: 'First series (Before dots) = #009E73 ✓. Second series (After dots)
+          = #C475FD ✓. Red segment #AE3030 is semantic exception for regression ✓.
+          Backgrounds #FAF8F1 / #1A1A17 correct ✓. Data colors identical across both
+          renders ✓.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -105,24 +132,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain default: thoughtful sorting, clean legend, no outline.
-          Doesn''t reach publication level — no directional indicators or color-by-magnitude.'
+        comment: 'Above-default design: color-coded segments for direction of change,
+          white dot edges for separation, delta labels as data annotations. Intentional
+          palette use with semantic red for regression.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Outline removed, vertical-only grid at alpha=0.10, minor ticks suppressed,
-          elevated legend. Y-axis spine still present; row spacing could be tighter.
+        comment: Y-axis spine removed, outline removed, vertical-only grid at 10%
+          alpha, legend with proper elevated background and muted border. Good overall
+          refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Sorting by delta creates clear visual hierarchy: R&D +23 at top,
-          Finance −6 regression at bottom tells the story immediately.'
+        comment: Ascending sort by delta creates clear visual hierarchy with R&D at
+          top (+23) as the hero. Red segment for Finance regression creates immediate
+          contrast. Delta labels make the 'policy change impact' story explicit without
+          reader having to calculate.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,27 +161,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dumbbell/connected dot plot.
+        comment: 'Correct dumbbell/connected dot plot: horizontal orientation, categories
+          on y-axis, values on x-axis, two dots per category connected by a line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two distinct-color dots per category, connected by thin subtle line,
-          horizontal orientation, categories on y-axis, 8 categories within 5-20 range.
+        comment: Horizontal orientation ✓, distinct colors for start/end dots ✓, connecting
+          line ✓, sorted by difference ✓ (spec-recommended sort applied).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, satisfaction scores on x-axis, all data visible.
+        comment: Categories on y-axis ✓, satisfaction scores on x-axis ✓, x_range=(45,95)
+          shows all data correctly ✓.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title has extra prefix ''Employee Satisfaction · '' before spec-id.
-          Required: ''dumbbell-basic · bokeh · anyplot.ai''. Legend labels correct.'
+        passed: true
+        comment: Title 'dumbbell-basic · python · bokeh · anyplot.ai' matches required
+          format ✓. Legend labels 'Before policy changes' / 'After policy changes'
+          clearly differentiate the two series ✓.
     data_quality:
       score: 15
       max: 15
@@ -160,23 +194,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of large improvements (+23 R&D), small improvements (+11 Sales),
-          and one regression (−6 Finance); varied before-values 55-78 and after-values
-          70-88.
+        comment: 'Shows all key dumbbell features: direction of change, magnitude,
+          before/after comparison. Includes one regression (Finance -6) demonstrating
+          the plot handles both positive and negative deltas.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction by department before/after policy changes —
-          real, comprehensible, neutral business scenario.
+        comment: Employee satisfaction scores before/after policy changes is plausible,
+          neutral, and relatable. 8 departments with scores in 55-88 range are realistic.
+          No controversial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Scores 55-88 on 0-100 scale; change magnitudes −6 to +23 realistic
-          for policy interventions.
+        comment: 8 categories in 5-20 spec range ✓. Satisfaction scores 55-88 are
+          realistic for a 0-100 scale. x_range 45-95 provides good padding without
+          excessive whitespace.
     code_quality:
       score: 10
       max: 10
@@ -186,61 +222,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → figure → glyphs → styling → save.
-          No functions or classes.'
+        comment: No functions or classes — straight procedural script with clear section
+          comments.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded arrays; no random seed needed.
+        comment: All data is hardcoded inline — fully deterministic, no random state
+          needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All four imports (os, bokeh.io, bokeh.models, bokeh.plotting) are
-          used.
+        comment: All imports (os, sys, time, Path, bokeh modules, selenium) are used.
+          No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Appropriate complexity for a dumbbell chart.
+        comment: Clean, well-organized code. HoverTool is real bokeh interactivity
+          for the HTML artifact, not fake UI. Selenium screenshot pattern is correct
+          for bokeh catalog renders.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Bokeh
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required. Uses current
+          bokeh 3.x API throughout.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource for all data, segment() for connecting lines,
+          scatter() for dots, LabelSet for text overlay, categorical axis via y_range=categories,
+          proper min_border_* for label room. HTML-first + Selenium screenshot is
+          the correct bokeh catalog pattern.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: y_range=categories for categorical axis, separate ColumnDataSources
-          per series, segment() + scatter() pattern. Solid Bokeh idiom.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with @y/@phase/@x tooltips and HTML export are Bokeh-distinctive;
-          no other library generates interactive .html as primary output alongside
-          PNG.
-  verdict: REJECTED
+        comment: 'HoverTool with multi-field tooltips (Department, Phase, Score, Delta)
+          ✓. LabelSet for positioned text annotations ✓. Interactive HTML artifact
+          ✓. ColumnDataSource with rich field dictionaries ✓. Missing: could use Bokeh
+          Band or Arrow glyphs for more advanced decoration.'
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - columndatasource
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
