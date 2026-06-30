@@ -6,7 +6,7 @@ title: Mountain Panorama Profile with Labeled Peaks
 
 # Specification tracking
 created: 2026-04-24T21:39:00Z
-updated: 2026-04-25T00:00:00Z
+updated: 2026-06-30T21:43:15Z
 issue: 5365
 suggested: MarkusNeusinger
 
@@ -19,7 +19,7 @@ tags:
   data_type:
     - numeric
     - continuous
-    - spatial
+    - geospatial
   domain:
     - general
     - science
@@ -28,4 +28,3 @@ tags:
     - annotated
     - silhouette
     - jagged
-    - geospatial
