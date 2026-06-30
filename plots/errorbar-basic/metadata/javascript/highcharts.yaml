@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: errorbar-basic
+created: '2026-06-30T20:33:29Z'
+updated: '2026-06-30T20:52:53Z'
+generated_by: claude-sonnet
+workflow_run: 28473626655
+issue: 973
+language_version: 22.23.0
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Single-series brand green (#009E73) scatter with manually drawn SVG error bars
+    and caps — correct workaround for highcharts-more not being available
+  - Peak at 37°C highlighted with larger marker and annotation, creating a clear focal
+    point and storytelling element
+  - Subtitle explains error bars (± 1 SD), informative axis labels with units on Y-axis
+  - Theme-adaptive chrome fully wired via ANYPLOT_TOKENS — both renders look clean
+    and correct
+  - Deterministic hard-coded data with realistic enzyme kinetics bell-curve shape
+  weaknesses:
+  - Error bars implemented via SVG renderer render event — clever and correct, but
+    the render callback adds complexity; consider whether a simpler layout approach
+    could achieve the same result
+  - X-axis title is \"Temperature\" without \"(°C)\" unit — tick labels carry the
+    units but axis title could be \"Temperature (°C)\" for full formality
+  - 'Design Excellence could be elevated: grid only shows on Y-axis (good) but removing
+    the bottom/left axis lines would further clean up the look'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white
+      Chrome: Title "errorbar-basic · javascript · highcharts · anyplot.ai" in dark ink at 22px — readable and spans ~65% of width. Subtitle "Error bars represent ± 1 standard deviation" in inkSoft at 14px. X-axis title "Temperature" and Y-axis "Enzyme Activity (nmol/min)" in inkSoft at 16px. Tick labels at 14px in inkSoft. Annotation "← Optimal: 37°C" at 13px in inkSoft near peak point.
+      Data: 8 scatter points in #009E73 (brand green) with white-ring outline markers (radius 7). Error bars with T-caps drawn via SVG renderer in same green. Peak at 37°C has enlarged marker (radius 11). Data forms a bell curve peaking at 74.5 nmol/min at 37°C. Subtle horizontal grid lines in t.grid color.
+      Legibility verdict: PASS — all elements clearly readable, no overflow, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black
+      Chrome: Title and all labels rendered in light text (t.ink = #F0EFE8 / t.inkSoft = #B8B7B0) — fully readable against dark background. No dark-on-dark issues observed. Annotation visible and readable.
+      Data: Data colors are identical to light render — same #009E73 green for all markers and error bars. Error bar caps and stems at same green. Peak marker enlarged as in light render.
+      Legibility verdict: PASS — both themes fully readable with correct theme-adaptive chrome
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 22px, axis titles 16px, tick/legend
+          labels 14px, annotation 13px. Well-proportioned in both themes. Title ~65%
+          width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Annotation sits cleanly to the right of
+          the peak marker.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 sparse points — radius 7 markers well-sized. Error bar caps visible.
+          Peak marker at radius 11 is clearly differentiated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in #009E73. White ring (lineColor: pageBg) on markers
+          adds definition. CVD-safe.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Data spread across full plot area. Balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Enzyme Activity (nmol/min)'' with units. X-axis: ''Temperature''
+          — tick labels carry the °C units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, colors: t.palette. backgroundColor: transparent
+          (pageBg shows through). Theme-adaptive chrome via t.ink, t.inkSoft, t.grid
+          in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: Imprint palette, peak marker differentiation, clean
+          minimal chrome, good typography hierarchy. Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid via t.grid, no plot border, white-ring markers. Some
+          explicit refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Enlarged peak marker + annotation ''Optimal: 37°C'' creates clear
+          focal point. Subtitle explains error bars. Visual hierarchy guides the viewer.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter + manually-drawn SVG error bars with T-caps — correct implementation
+          given highcharts-more is not available.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars with visible caps, consistent widths, error magnitude
+          varies across groups.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: temperature categories, Y: enzyme activity mean, error bars represent
+          ± SD.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''errorbar-basic · javascript · highcharts · anyplot.ai''
+          — correct format. Single series, no legend appropriate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varying errors, clear pattern (bell curve), highlighted peak
+          — all errorbar aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Enzyme activity vs temperature is a textbook scientific scenario.
+          Neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (18–75 nmol/min) with SD (2.3–6.3) are biologically plausible
+          for enzyme kinetics. Bell curve peaking at 37°C (body temperature) is factually
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data → chart config with render callback. No unnecessary abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded inline, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — Highcharts and ANYPLOT_TOKENS are globals. Clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the SVG workaround. SVG lifecycle managed
+          correctly (destroy + recreate). No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Highcharts.chart(''container'', ...) with animation: false. Harness
+          produces plot-{theme}.png and plot-{theme}.html.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of render events, SVG renderer API, axis coordinate conversion
+          (toPixels). Slight deduction as native errorbar series type unavailable
+          forces a workaround.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts SVG renderer (c.renderer.path/text), coordinate mapping
+          (yAxis.toPixels, plotLeft, plotTop), render event lifecycle — distinctly
+          Highcharts-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
