@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: errorbar-basic
 created: '2025-12-23T13:02:19Z'
-updated: '2026-06-30T20:38:08Z'
+updated: '2026-06-30T20:48:23Z'
 generated_by: claude-sonnet
 workflow_run: 28473740576
 issue: 973
@@ -12,97 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Focal highlight design (Treatment D in Imprint lavender) adds intentional visual
-    hierarchy and communicates which group has the most variability
-  - 'Full adaptive chrome: all theme tokens correctly applied for both light and dark
-    renders with no dark-on-dark failures'
-  - Clean, well-layered lets-plot code using geom_errorbar + geom_point with correct
-    canvas sizing (3200x1800 via ggsize(800,450) + scale=4)
-  - 'Correct Imprint palette usage: #009E73 as first (base) series, #C475FD as focal;
-    data colors are theme-invariant as required'
-  - HTML export included — leverages lets-plot's interactive output capability
-  - Clinical trial data context is realistic and neutral with appropriate mg/dL units
-    and sensible error magnitudes
+  - Focal highlighting using Imprint palette positions 1+2 (brand green for base,
+    lavender for widest-error group) creates intentional visual hierarchy with a clear
+    focal point
+  - Subtitle explicitly communicates the key insight, removing the need for a legend
+    while telling the data story
+  - Y-axis-only grid with subtle opacity (15%), no X-axis grid, and panel border removal
+    show solid visual refinement
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white (#FAF8F1)
+    light background, near-black (#1A1A17) dark background, all text readable in both
+    themes'
+  - Correct 3200×1800 canvas via ggsize(800,450)+scale=4, all font sizes explicitly
+    set (title 16pt, axis 12pt, ticks 10pt, subtitle 11pt)
+  - 'Clean KISS structure: constants → data → theme → plot → save, with both PNG and
+    HTML outputs'
   weaknesses:
-  - 'Design storytelling is incomplete: the focal highlight on Treatment D draws the
-    eye but there is no annotation, subtitle, or data label to explain WHY Treatment
-    D is highlighted or what the viewer should conclude — the narrative stops halfway'
-  - Asymmetric error bars (a feature type explicitly noted in the spec as relevant
-    to skewed distributions / log-transformed data) are not demonstrated; only symmetric
-    errors are shown
-  - No explicit top/right spine removal via theme override — theme_minimal() handles
-    this implicitly, but explicit suppression of remaining spines would be stronger
+  - 'LM-02: lets-plot''s interactive HTML output is exported but no distinctively
+    idiomatic lets-plot features (e.g. geom_livemap, sampling, animation, or Kotlin-interop
+    patterns) are leveraged — implementation is solid but generic across ggplot2-style
+    libraries'
+  - 'DE-01: Design is clean and intentional but does not yet reach publication-ready
+    level (8/8) — the focal highlight idea is good but the plot would benefit from
+    a reference line or annotation mark on Treatment D to further anchor the story'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "errorbar-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17), top-left. Axis labels "Experimental Group" (X) and "Measured Value (mg/dL)" (Y) in dark ink (size 12). Tick labels in INK_SOFT (#4A4A44, size 10). All text clearly readable against the light background.
-      Data: Four groups (Control, Treatment A, Treatment B, Treatment C) in brand green (#009E73). Treatment D (focal, highest error) in lavender (#C475FD, Imprint position 2). Center points (size=6) and capped error bars (width=0.3) visible for all five groups. Horizontal Y-grid lines subtle (15% opacity). No X-grid. No legend.
-      Legibility verdict: PASS — all text elements readable, no light-on-light issues, good contrast throughout.
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface.
+      Chrome: Title "errorbar-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17) at 16pt, spanning ~60% of canvas width. Subtitle in medium gray (INK_SOFT #4A4A44) at 11pt clearly readable. X-axis label "Experimental Group" and Y-axis label "Measured Value (mg/dL)" both in dark ink at 12pt. Tick labels (category names on x-axis, numeric values 40–65 on y-axis) in INK_SOFT at 10pt. L-shaped axis frame (left + bottom only) in INK_SOFT. Subtle horizontal Y-axis grid lines visible. No top/right spines, no X-axis grid.
+      Data: 4 groups (Control, Treatment A, Treatment B, Treatment C) rendered in brand green #009E73 with T-capped error bars and circular center markers (size=6). Treatment D rendered in Imprint palette position 2 lavender #C475FD, visually distinct as the focal group. Error bar caps are clearly visible on all groups. No legend (removed; subtitle explains the highlight).
+      Legibility verdict: PASS — all text fully readable, no dark-on-light failure, no crowding.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8). Tick labels in INK_SOFT (#B8B7B0). All text clearly legible against the dark background. No dark-on-dark failures observed.
-      Data: Data colors are IDENTICAL to light render — green (#009E73) base groups and lavender (#C475FD) focal group unchanged. Only chrome (background, text, grid) flips between themes, as required.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, brand green #009E73 comfortably visible on dark surface.
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface.
+      Chrome: Title and subtitle now rendered in near-white (#F0EFE8 / #B8B7B0 respectively), clearly legible against the dark background. Axis labels and tick labels switch to light-on-dark as expected. Grid lines remain subtle. Axis lines visible in lighter INK_SOFT dark-mode color (#B8B7B0).
+      Data: Data colors are identical to the light render — base series in brand green #009E73, Treatment D in lavender #C475FD. Both read well on the near-black surface. Error bars and center markers retain the same visual weight.
+      Legibility verdict: PASS — no dark-on-dark failure observed. All text is light-on-dark and clearly readable. No element is unreadable or invisible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All text readable in both themes at correct sizes (title 16pt, axis
-          labels 12pt, ticks 10pt). Minor: title left-aligned with minimal breathing
-          room above.'
+        comment: All font sizes explicitly set (title 16pt, axis 12pt, ticks 10pt,
+          subtitle 11pt). Readable in both themes at full resolution and expected
+          mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Five well-spaced groups, no text or data element collisions.
+        comment: No overlapping text or data elements. 5 well-spaced groups with adequate
+          horizontal breathing room.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bars with visible caps, center points size=6 appropriate for
-          5 sparse data points.
+        comment: geom_point(size=6) is appropriately prominent for 5 sparse data points.
+          Error bar caps (width=0.3) clearly visible on all groups.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint green and lavender are perceptually distinct; x-axis labels
-          provide redundant categorical encoding.
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe — distinguishable
+          under deuteranopia/protanopia by both hue and lightness.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good proportions, whitespace adequate,
-          nothing cut off.
+        comment: Correct 3200x1800 canvas. Plot fills ~70% of canvas area. Balanced
+          margins. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Experimental Group, Y: Measured Value (mg/dL) with units. Title
-          in required format.'
+        comment: Y-axis 'Measured Value (mg/dL)' includes units. X-axis 'Experimental
+          Group' is descriptive. Title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, focal #C475FD (Imprint pos 2). Backgrounds
-          #FAF8F1/#1A1A17. Data colors theme-invariant.'
+        comment: 'Base series #009E73 (Imprint position 1), focal #C475FD (Imprint
+          position 2). Backgrounds #FAF8F1 light / #1A1A17 dark. Chrome correctly
+          theme-adaptive in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +114,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Focal-highlight pattern (idxmax -> color_map) is a thoughtful design
-          choice. Legend omitted cleanly. Above default but no further sophistication.
+        comment: Above well-configured default (4). Intentional focal highlighting
+          using palette positions 1+2 shows design thinking. Informative subtitle
+          eliminates legend. Clean professional appearance.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X-grid suppressed, Y-only horizontal grid at 15% opacity. Panel border
-          removed. Axis elements styled with INK_SOFT. Clean, not quite publication-ready
-          polish.
+        comment: Y-axis only grid, subtle rule opacity, panel border removed, axis
+          lines styled with INK_SOFT, legend removed. Solid refinement above library
+          defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Focal color creates attention on Treatment D but no annotation, subtitle,
-          or data label closes the narrative loop. Viewer cannot tell why that group
-          is highlighted.
+        passed: true
+        comment: Focal highlight (Treatment D in purple) creates clear visual hierarchy.
+          Subtitle explicitly communicates the insight. Viewer is guided to the key
+          finding.
     spec_compliance:
       score: 15
       max: 15
@@ -137,54 +142,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct error bar plot: geom_errorbar + geom_point combination.'
+        comment: Correct error bar chart using geom_errorbar + geom_point layers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible end-caps (width=0.3), consistent cap widths, color distinction
-          via focal/base pattern.
+        comment: Visible T-caps (width=0.3), consistent error bar widths, symmetric
+          errors (ymin/ymax), color distinguishes focal group.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categorical groups, Y: mean values, error bars via ymin/ymax
-          derived from +/-error.'
+        comment: Categorical X (experiment groups), numeric Y (mean_value), error
+          bars from ymin/ymax. 5 groups within 3-20 range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in canonical format. No legend appropriate (x-axis labels suffice
-          for categorical identity).
+        comment: Title 'errorbar-basic · python · letsplot · anyplot.ai' matches required
+          format. No legend needed; subtitle explains the highlight.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Symmetric capped error bars with center points and focal highlighting
-          demonstrated. Asymmetric error bars (spec note: may be needed for skewed
-          data) not shown.'
+        comment: Shows center points, T-capped error bars, varying error magnitudes
+          (3.9–7.1), varying mean values (45.2–61.3). Covers all key error bar aspects.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Clinical trial scenario with control and treatment groups in mg/dL
-          is realistic and neutral.
+        comment: Clinical trial / treatment group comparison in mg/dL is a real, neutral,
+          scientifically relevant scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y range ~40-67 mg/dL, error magnitudes +/-3.9 to +/-7.1, all clinically
-          plausible.
+        comment: mg/dL values 45–61 and error magnitudes 4–7 are plausible for biological/clinical
+          measurements.
     code_quality:
       score: 10
       max: 10
@@ -194,34 +198,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Flat code: constants → data → theme → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; deterministic, no random seed needed.
+        comment: Static deterministic data. No randomness used.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used; no dead imports.
+        comment: All imported symbols are used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Focal pattern (idxmax -> boolean list -> dict) is clean and idiomatic.
-          No fake UI.
+        comment: Clean, idiomatic lets-plot grammar. No over-engineering. No fake
+          UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -229,16 +234,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering, proper theme element types,
-          ggsize canvas control. Well-structured lets-plot code.
+        comment: 'Comprehensive and idiomatic: geom layering, scale_color_manual with
+          named values, full theme customization using element_text/line/rect/blank,
+          correct ggsize+ggsave with scale. Above default (3).'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: HTML interactive export (key lets-plot differentiator) and scale=4
-          high-DPI raster export used. Could have demonstrated tooltip configuration
-          or additional lets-plot-specific geoms.
+        comment: HTML export demonstrates lets-plot's interactive output capability.
+          Comprehensive element_blank/line usage shows library-specific theme API
+          knowledge. No truly distinctive lets-plot-only features used.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -247,4 +253,5 @@ impl_tags:
   - html-export
   patterns: []
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling

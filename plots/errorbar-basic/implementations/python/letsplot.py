@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: letsplot 4.11.0 | Python 3.13.14
-Quality: 87/100 | Updated: 2026-06-30
+Quality: 89/100 | Updated: 2026-06-30
 """
 
 import os
