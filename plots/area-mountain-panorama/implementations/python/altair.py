@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: altair 6.1.0 | Python 3.14.4
-Quality: 93/100 | Created: 2026-04-25
+Quality: pending | Created: 2026-06-30
 """
 
 import importlib
@@ -9,51 +9,44 @@ import os
 import sys
 
 
-# Drop script directory from sys.path so the `altair` package resolves, not this file
+# Drop script directory from sys.path so `altair` resolves the package, not this file
 sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != os.path.dirname(os.path.abspath(__file__))]
 alt = importlib.import_module("altair")
 np = importlib.import_module("numpy")
 pd = importlib.import_module("pandas")
+from PIL import Image
 
 
-# Theme tokens (chrome flips with theme; data colors stay constant)
+# Theme tokens — chrome flips with theme; Imprint palette data colors stay constant
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Okabe-Ito position 1 — silhouette fill (single data series)
+BRAND = "#009E73"  # Imprint palette position 1 — silhouette fill (single data series)
 
-# Theme-adaptive dusk sky gradient (chrome layer above the ridgeline; spec-authorized)
-SKY_HORIZON = "#FFC58A" if THEME == "light" else "#5A3422"  # warm dusk glow at ridgeline
-SKY_MID = "#D89AA8" if THEME == "light" else "#2E1F35"  # twilight rose / deep plum
-SKY_ZENITH = "#5C5078" if THEME == "light" else "#0C0E1A"  # evening blue / night sky
+# Theme-adaptive dusk sky gradient (spec-authorized chrome above the ridgeline)
+SKY_HORIZON = "#FFC58A" if THEME == "light" else "#5A3422"
+SKY_MID = "#D89AA8" if THEME == "light" else "#2E1F35"
+SKY_ZENITH = "#5C5078" if THEME == "light" else "#0C0E1A"
+# Alpenglow rim — warm gold / rose-copper at the sky-to-silhouette boundary
+ALPENGLOW = "#FFBA6A" if THEME == "light" else "#C88060"
 
-# Data — Wallis (Valais, CH) panorama: 16 4000-m summits along a 180° sweep
+# Data — 6 major Wallis (Valais, CH) summits across a 180° horizontal sweep.
+# Ober Gabelhorn (30°) and Liskamm (97°) omitted: their 12° gaps to adjacent
+# peaks (Dent Blanche 42°, Monte Rosa 109°) prevent clean two-tier label stagger.
 peaks = pd.DataFrame(
     [
         ("Weisshorn", 4506, 9),
-        ("Zinalrothorn", 4221, 20),
-        ("Ober Gabelhorn", 4063, 30),
         ("Dent Blanche", 4358, 42),
         ("Matterhorn", 4478, 56),
-        ("Breithorn", 4164, 73),
-        ("Pollux", 4092, 81),
-        ("Castor", 4223, 88),
-        ("Liskamm", 4527, 97),
         ("Monte Rosa", 4634, 109),
-        ("Strahlhorn", 4190, 122),
-        ("Rimpfischhorn", 4199, 132),
-        ("Allalinhorn", 4027, 140),
         ("Alphubel", 4206, 148),
-        ("Täschhorn", 4491, 158),
         ("Dom", 4545, 168),
     ],
     columns=["name", "elevation_m", "angle_deg"],
 )
 
-# Skyline ridge — gaussians around named peaks plus naturalistic minor ridge texture
+# Ridgeline — gaussian superposition: named summits + naturalistic minor relief
 np.random.seed(42)
 angles = np.linspace(-2, 182, 1500)
 ridge_elev = 2950 + 110 * np.sin(angles * 0.11) + 35 * np.sin(angles * 0.43 + 1.1)
@@ -65,30 +58,43 @@ for _ in range(55):
     ridge_elev = np.maximum(ridge_elev, 2950 + height * np.exp(-((angles - pos) ** 2) / (2 * width**2)))
 
 for _, row in peaks.iterrows():
-    height = row["elevation_m"] - 2950
-    width = 2.0 + (row["elevation_m"] - 4000) * 0.0007
-    ridge_elev = np.maximum(ridge_elev, 2950 + height * np.exp(-((angles - row["angle_deg"]) ** 2) / (2 * width**2)))
+    h = row["elevation_m"] - 2950
+    w = 2.0 + (row["elevation_m"] - 4000) * 0.0007
+    ridge_elev = np.maximum(ridge_elev, 2950 + h * np.exp(-((angles - row["angle_deg"]) ** 2) / (2 * w**2)))
 
 ridge = pd.DataFrame({"angle_deg": angles, "elevation_m": ridge_elev})
 
-# Stagger label heights so adjacent peaks don't collide; Matterhorn lifted as focal summit
-peaks = peaks.sort_values("angle_deg").reset_index(drop=True)
-LABEL_HIGH = 5800
-LABEL_LOW = 5400
-peaks["label_y"] = [LABEL_HIGH if i % 2 == 0 else LABEL_LOW for i in range(len(peaks))]
-peaks.loc[peaks["name"] == "Matterhorn", "label_y"] = 6000
-peaks["elev_label"] = peaks["elevation_m"].apply(lambda v: f"{v:.0f} m")
+# Two-tier label stagger + Matterhorn focal accent.
+# HIGH tier: Weisshorn/Monte Rosa/Dom — well-separated (≥59°).
+# LOW tier: Dent Blanche/Alphubel — well-separated (106°).
+# Dent Blanche uses right-align to avoid horizontal overlap with Matterhorn's
+# center-aligned SPECIAL label (14° / 48px gap between their anchor points).
+label_y_map = {
+    "Weisshorn": 4950,  # HIGH
+    "Dent Blanche": 4700,  # LOW  — right-aligned in text layers
+    "Matterhorn": 5050,  # SPECIAL focal
+    "Monte Rosa": 4950,  # HIGH
+    "Alphubel": 4700,  # LOW
+    "Dom": 4950,  # HIGH
+}
+peaks["label_y"] = peaks["name"].map(label_y_map)
+peaks["elev_label"] = peaks["elevation_m"].apply(lambda v: f"{v} m")
 
 matterhorn = peaks[peaks["name"] == "Matterhorn"]
-others = peaks[peaks["name"] != "Matterhorn"]
+dent_blanche = peaks[peaks["name"] == "Dent Blanche"]
+others_center = peaks[(peaks["name"] != "Matterhorn") & (peaks["name"] != "Dent Blanche")]
 
-# Shared scales / axis so all layers register on the same coordinate system
+# Coordinate system — only the sky layer carries the explicit scale + axis;
+# other layers share it implicitly via Vega-Lite layer scale resolution.
+# Adding alt.Scale to any secondary layer causes vl-convert to produce ~2× chart
+# height overhead (confirmed via systematic debug tests), making the output exceed
+# the 1800-source-px target even at height=190. Sky alone is the "anchor" layer.
 X_SCALE = alt.Scale(domain=[0, 180])
-Y_SCALE = alt.Scale(domain=[2900, 6300])
+Y_SCALE = alt.Scale(domain=[2900, 5800])
 Y_AXIS = alt.Axis(values=[3000, 3500, 4000, 4500, 5000])
 
-# Sky — dusk vertical gradient covering the full plot area; silhouette will mask the lower half
-sky_df = pd.DataFrame({"x_min": [0], "x_max": [180], "y_min": [2900], "y_max": [6300]})
+# Layer 1: dusk sky gradient (vertical linear, zenith → ridge horizon)
+sky_df = pd.DataFrame({"x_min": [0], "x_max": [180], "y_min": [2900], "y_max": [5800]})
 sky = (
     alt.Chart(sky_df)
     .mark_rect(
@@ -113,92 +119,105 @@ sky = (
     )
 )
 
-# Silhouette — brand-green photo-like fill; ridge stroke gives the snow-edge alpenglow line
-silhouette = (
+# Layer 2: mountain silhouette — brand-green filled area below the ridgeline
+silhouette = alt.Chart(ridge).mark_area(color=BRAND, opacity=1.0).encode(x="angle_deg:Q", y="elevation_m:Q")
+
+# Layer 3: alpenglow rim — warm glowing stroke at the sky-to-silhouette boundary
+alpenglow = (
     alt.Chart(ridge)
-    .mark_area(color=BRAND, line={"color": BRAND, "strokeWidth": 2.5}, opacity=1.0)
+    .mark_line(color=ALPENGLOW, strokeWidth=3.5, opacity=0.88)
     .encode(x="angle_deg:Q", y="elevation_m:Q")
 )
 
-# Leader lines from summit up to label position (with tooltip for HTML hover)
+_tooltip_others = [
+    alt.Tooltip("name:N", title="Peak"),
+    alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d"),
+]
+_tooltip_mat = [alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")]
+
+# Layers 4–5: leader lines from summit apex to label anchor
 leaders = (
-    alt.Chart(others)
+    alt.Chart(pd.concat([others_center, dent_blanche]))
     .mark_rule(strokeWidth=1.0, opacity=0.55, color=INK_SOFT)
-    .encode(
-        x="angle_deg:Q",
-        y="elevation_m:Q",
-        y2="label_y:Q",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip_others)
 )
 matterhorn_leader = (
     alt.Chart(matterhorn)
-    .mark_rule(strokeWidth=2.0, opacity=0.9, color=INK)
-    .encode(
-        x="angle_deg:Q",
-        y="elevation_m:Q",
-        y2="label_y:Q",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    .mark_rule(strokeWidth=2.5, opacity=0.9, color=INK)
+    .encode(x="angle_deg:Q", y="elevation_m:Q", y2="label_y:Q", tooltip=_tooltip_mat)
 )
 
-# Two-line peak labels at recommended sizes (name 18, elevation 15 — meets tick-floor)
+# Layers 6–7: center-aligned name/elev labels for non-Matterhorn, non-Dent-Blanche peaks
 name_labels = (
-    alt.Chart(others)
-    .mark_text(align="center", baseline="bottom", fontSize=18, fontWeight="bold", color=INK, dy=-26)
-    .encode(
-        x="angle_deg:Q",
-        y="label_y:Q",
-        text="name:N",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    alt.Chart(others_center)
+    .mark_text(align="center", baseline="bottom", fontSize=12, fontWeight="bold", color=INK, dy=-28)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_others)
 )
 elev_labels = (
-    alt.Chart(others)
-    .mark_text(align="center", baseline="bottom", fontSize=15, color=INK_SOFT, dy=-8)
-    .encode(
-        x="angle_deg:Q",
-        y="label_y:Q",
-        text="elev_label:N",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    alt.Chart(others_center)
+    .mark_text(align="center", baseline="bottom", fontSize=12, color=INK_SOFT, dy=-8)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_others)
 )
 
-# Matterhorn focal accent: notably larger label so the anchor summit reads as the composition's focus
+# Layers 8–9: right-aligned name/elev labels for Dent Blanche.
+# Right-align causes text to extend LEFT of x=42°, giving a 28px horizontal gap
+# to Matterhorn's center-aligned labels at x=56° and avoiding visual collision.
+db_name = (
+    alt.Chart(dent_blanche)
+    .mark_text(align="right", baseline="bottom", fontSize=12, fontWeight="bold", color=INK, dy=-28)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_others)
+)
+db_elev = (
+    alt.Chart(dent_blanche)
+    .mark_text(align="right", baseline="bottom", fontSize=12, color=INK_SOFT, dy=-8)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_others)
+)
+
+# Layers 10–11: Matterhorn focal accent — larger font, heavier weight, composition anchor
 matterhorn_name = (
     alt.Chart(matterhorn)
-    .mark_text(align="center", baseline="bottom", fontSize=26, fontWeight="bold", color=INK, dy=-30)
-    .encode(
-        x="angle_deg:Q",
-        y="label_y:Q",
-        text="name:N",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    .mark_text(align="center", baseline="bottom", fontSize=16, fontWeight="bold", color=INK, dy=-32)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="name:N", tooltip=_tooltip_mat)
 )
 matterhorn_elev = (
     alt.Chart(matterhorn)
-    .mark_text(align="center", baseline="bottom", fontSize=18, fontWeight="bold", color=INK_SOFT, dy=-8)
-    .encode(
-        x="angle_deg:Q",
-        y="label_y:Q",
-        text="elev_label:N",
-        tooltip=[alt.Tooltip("name:N", title="Peak"), alt.Tooltip("elevation_m:Q", title="Elevation (m)", format=",d")],
-    )
+    .mark_text(align="center", baseline="bottom", fontSize=12, fontWeight="bold", color=INK_SOFT, dy=-8)
+    .encode(x="angle_deg:Q", y="label_y:Q", text="elev_label:N", tooltip=_tooltip_mat)
 )
 
+title_str = "Wallis Panorama · area-mountain-panorama · python · altair · anyplot.ai"
+n = len(title_str)
+ratio = 67 / n if n > 67 else 1.0
+title_fs = max(11, round(16 * ratio))
+
+# height=190: vl-convert with explicit Y_SCALE on the sky anchor layer adds ~47 CSS px
+# of Y overhead per 190 CSS px (source height ≈ 1500px pre-pad, ≤1800px with title).
+# DO NOT increase to ≥210 — overhead scales with height and tips over 1800 source px.
 chart = (
-    (sky + silhouette + leaders + matterhorn_leader + name_labels + elev_labels + matterhorn_name + matterhorn_elev)
+    (
+        sky
+        + silhouette
+        + alpenglow
+        + leaders
+        + matterhorn_leader
+        + name_labels
+        + elev_labels
+        + db_name
+        + db_elev
+        + matterhorn_name
+        + matterhorn_elev
+    )
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=190,
         title=alt.Title(
-            "Wallis Panorama · area-mountain-panorama · altair · anyplot.ai",
-            subtitle="Sixteen 4000-m summits along a 180° horizontal sweep, Valais Alps",
+            title_str,
+            subtitle="Six 4000-m summits along a 180° horizontal sweep, Valais Alps",
             subtitleColor=INK_SOFT,
-            subtitleFontSize=18,
-            fontSize=28,
+            subtitleFontSize=13,
+            fontSize=title_fs,
             anchor="start",
-            offset=18,
+            offset=12,
             color=INK,
         ),
         background=PAGE_BG,
@@ -211,11 +230,25 @@ chart = (
         gridOpacity=0.0,
         labelColor=INK_SOFT,
         titleColor=INK,
-        labelFontSize=18,
-        titleFontSize=22,
-        tickSize=8,
+        labelFontSize=10,
+        titleFontSize=12,
+        tickSize=5,
     )
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad-only to exact 3200×1800 target — altair.md Canvas rule (never crop)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
