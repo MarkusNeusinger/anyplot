@@ -1,7 +1,7 @@
 // anyplot.ai
 // errorbar-basic: Basic Error Bar Plot
 // Library: muix 7.29.1 | JavaScript 22.23.0
-// Quality: 89/100 | Created: 2026-06-30
+// Quality: 89 | Created: 2026-06-30
 //# anyplot-orientation: landscape
 // anyplot.ai
 // errorbar-basic: Basic Error Bar Plot
@@ -14,6 +14,7 @@ import { BarPlot } from "@mui/x-charts/BarChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -23,21 +24,29 @@ const CONDITIONS = ["Control", "Low Temp", "High Temp", "Low pH", "High pH", "Dr
 const MEANS      = [4.2,       2.8,         3.1,         2.4,      3.6,       1.9,       2.2];
 const ERRORS     = [0.5,       0.7,         0.6,         0.8,      0.5,       0.6,       0.9];
 
+// Visual hierarchy: Control=full brand green (benchmark), Drought=amber (stress/caution),
+// intermediate conditions=muted brand green to draw the eye to the key contrast
+const BAR_COLORS = CONDITIONS.map((c) => {
+  if (c === "Control") return t.palette[0];   // #009E73 — optimal/reference
+  if (c === "Drought") return t.amber;         // #DDCC77 — peak stress (caution anchor)
+  return t.palette[0] + "99";                 // ~60% opacity — intermediate conditions
+});
+
 // ErrorBars renders ±1 SD whiskers using the CartesianContext scale functions
 function ErrorBars() {
   const xScale = useXScale("x");
   const yScale = useYScale("y");
   if (!xScale || !yScale) return null;
 
-  const bw  = (xScale ).bandwidth();
-  const cap = Math.round(bw * 0.14);
+  const bw  = (xScale as any).bandwidth();
+  const cap = Math.round(bw * 0.19);  // 19% of bandwidth for readable caps
 
   return (
     <g>
       {CONDITIONS.map((cond, i) => {
-        const cx   = (xScale )(cond) + bw / 2;
-        const yTop = (yScale )(MEANS[i] + ERRORS[i]);
-        const yBot = (yScale )(MEANS[i] - ERRORS[i]);
+        const cx   = (xScale as any)(cond) + bw / 2;
+        const yTop = (yScale as any)(MEANS[i] + ERRORS[i]);
+        const yBot = (yScale as any)(MEANS[i] - ERRORS[i]);
         return (
           <g key={cond}>
             {/* Vertical whisker */}
@@ -79,18 +88,30 @@ export default function Chart() {
         id: "x",
         scaleType: "band",
         data: CONDITIONS,
+        colorMap: {
+          type: "ordinal",
+          values: CONDITIONS,
+          colors: BAR_COLORS,
+        },
       }]}
       yAxis={[{
         id: "y",
         min: 0,
         max: 6,
       }]}
-      colors={[t.palette[0]]}
-      margin={{ top: 72, bottom: 92, left: 100, right: 44 }}
+      margin={{ top: 72, bottom: 92, left: 100, right: 100 }}
     >
       <ChartsGrid horizontal />
       <BarPlot skipAnimation borderRadius={4} />
       <ErrorBars />
+      <ChartsReferenceLine
+        y={MEANS[0]}
+        axisId="y"
+        label="Control baseline"
+        labelAlign="end"
+        lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+        labelStyle={{ fontSize: 13, fill: t.inkSoft, fontStyle: "italic" }}
+      />
       <ChartsXAxis
         axisId="x"
         label="Growth Condition"
