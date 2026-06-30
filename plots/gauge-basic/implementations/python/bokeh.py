@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: bokeh | Python 3.14
-Quality: pending | Updated: 2026-06-30
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-06-30
 """
 
 import os
