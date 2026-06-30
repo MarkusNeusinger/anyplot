@@ -1,3 +1,7 @@
+// anyplot.ai
+// gauge-basic: Basic Gauge Chart
+// Library: highcharts 12.6.0 | JavaScript 22.23.0
+// Quality: 91/100 | Created: 2026-06-30
 //# anyplot-orientation: square
 // anyplot.ai
 // gauge-basic: Basic Gauge Chart
