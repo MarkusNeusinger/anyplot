@@ -1,0 +1,246 @@
+library: chartjs
+language: javascript
+specification_id: errorbar-basic
+created: '2026-06-30T20:41:43Z'
+updated: '2026-06-30T21:00:52Z'
+generated_by: claude-sonnet
+workflow_run: 28474085811
+issue: 973
+language_version: 22.23.0
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Custom Chart.js plugin system: bgPlugin, spinePlugin, and errorBarPlugin demonstrate
+    idiomatic use of Chart.js lifecycle hooks (beforeDraw, afterDraw, afterDatasetsDraw)'
+  - Data storytelling via opacity emphasis — peak bar at 25°C rendered at full opacity
+    while remaining bars use 60%, creating a clear inverted-U focal point
+  - Proportional cap width (35% of bar width) and L-shaped spine via spinePlugin show
+    polished attention to detail
+  - 'Fully theme-adaptive chrome: error bar color uses t.ink, backgrounds use t.pageBg,
+    both renders correctly switch chrome without touching data colors'
+  - Realistic plant-growth scenario with plausible temperatures (15–35°C) and biologically
+    sensible inverted-U peak
+  weaknesses:
+  - Single-series legend is redundant — the y-axis label already carries the same
+    information; removing it would reduce visual noise and save vertical space
+  - 'DE-01 ceiling: the composition is clean and intentional but stops short of FiveThirtyEight-level
+    sophistication — a subtle annotation marking the 25°C apex or a thin reference
+    line for the average would elevate the storytelling'
+  - Error bar color uses t.ink (full primary text color) — a slightly softer t.inkSoft
+    or t.grid-adjacent tone would let the data bars breathe more while keeping the
+    whiskers readable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure white.
+      Chrome: Title "errorbar-basic · javascript · chartjs · anyplot.ai" centered at top, dark ink, occupies ~55% of width — well-proportioned. Y-axis label "Stem Length (cm)" and X-axis label "Growth Temperature" both dark ink, balanced size. Tick labels dark-on-light, clearly readable. L-shaped spine (left + bottom only) via custom plugin. Subtle Y-axis horizontal gridlines only.
+      Data: Five bars in brand green #009E73. Peak bar (25°C) at full opacity, remaining four at ~60% opacity — clear visual emphasis on inverted-U apex. I-bar error bars drawn in dark ink with horizontal caps at both ends; caps are proportional to bar width. Legend swatch is green, label "Mean stem length (cm)".
+      Legibility verdict: PASS — all text readable, no overlap, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, no pure black.
+      Chrome: Title and axis labels flip to light off-white; tick labels similarly light. Error bar whiskers render white/light (t.ink = #F0EFE8 on dark theme), cleanly visible against near-black background. L-spine and gridlines use light-toned adaptive tokens. No dark-on-dark failures detected.
+      Data: Bar colors identical to light render — same #009E73 green at identical opacity levels. Peak emphasis preserved. Error bar caps visible in white.
+      Legibility verdict: PASS — all chrome correctly adapts; no unreadable elements in dark theme.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, legend 16, ticks 14, axis
+          labels 15). Well-proportioned in both themes, no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and I-bar error bars clearly visible; cap width proportional
+          to bar width (35%).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series in colorblind-safe brand green; error bars in high-contrast
+          ink color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, no cut-off elements.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Stem Length (cm)'' with units; X-axis: ''Growth Temperature'';
+          both descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green; backgrounds #FAF8F1 light / #1A1A17
+          dark; data colors identical across themes; chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: custom spine plugin, L-frame, peak
+          emphasis — not quite FiveThirtyEight level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine via plugin, Y-only grid, rounded bar corners, proportional
+          caps. Redundant single-series legend not removed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear inverted-U narrative; peak emphasis via opacity variation guides
+          viewer to the 25°C focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct error bar chart using bar chart with custom I-bar plugin.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars with visible caps, consistent widths, symmetric errors,
+          5 groups (within spec range).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on X (categorical), stem length on Y (numeric), error
+          ± correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'errorbar-basic · javascript · chartjs · anyplot.ai' correct;
+          legend label descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied error magnitudes (1.8–3.4 cm), inverted-U trend, visible caps
+          on all bars.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plant growth × temperature study — real-world biology scenario, neutral,
+          comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperatures 15–35°C and stem lengths 12–24 cm are biologically plausible;
+          peak at 25°C is realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Header → data → plugins → mount → chart; clean linear structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded; deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart is global per harness contract. No extraneous globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable plugins; proportional cap calculation is concise.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: responsive:true, maintainAspectRatio:false, animation:false all set;
+          harness handles file output.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of Chart.js plugin system, lifecycle hooks, and scales.getPixelForValue()
+          API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw, afterDraw, beforeDraw plugin hooks and getPixelForValue()
+          are Chart.js-specific; could not be easily replicated in matplotlib/plotly.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
