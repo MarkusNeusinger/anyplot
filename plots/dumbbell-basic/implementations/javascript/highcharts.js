@@ -73,6 +73,9 @@ const chart = Highcharts.chart("container", {
     gridLineColor: "transparent",
   },
   legend: {
+    verticalAlign: "top",
+    align: "right",
+    layout: "vertical",
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
@@ -109,13 +112,28 @@ const plotTop   = chart.plotTop;
 const beforeByIdx = {};
 chart.series[1].data.forEach(p => { beforeByIdx[p.y] = p; });
 
+// Improvement per sorted row (label top 3 for focal point)
+const diffs = vAfter.map((v, i) => +(v - vBefore[i]).toFixed(1));
+const topN  = 3;
+
 chart.series[0].data.forEach((afterPt) => {
   const beforePt = beforeByIdx[afterPt.y];
   if (!beforePt) return;
+
   renderer.path([
     "M", plotLeft + beforePt.plotX, plotTop + beforePt.plotY,
     "L", plotLeft + afterPt.plotX,  plotTop + afterPt.plotY,
   ])
     .attr({ stroke: t.inkSoft, "stroke-width": 2.5, "stroke-opacity": 0.35 })
     .add();
+
+  // Annotate top-improvement rows with the gain value
+  if (afterPt.y >= n - topN) {
+    const midX = plotLeft + (beforePt.plotX + afterPt.plotX) / 2;
+    const midY = plotTop + afterPt.plotY - 14;
+    renderer.text(`+${diffs[afterPt.y].toFixed(1)}`, midX, midY)
+      .attr({ align: "center", zIndex: 6, fill: t.inkSoft })
+      .css({ fontSize: "11px", fontWeight: "700" })
+      .add();
+  }
 });
