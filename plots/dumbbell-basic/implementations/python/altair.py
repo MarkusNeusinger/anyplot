@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-30
@@ -83,7 +83,7 @@ dots = (
 diff_labels = (
     alt.Chart(data)
     .transform_calculate(label="'+' + toString(datum.difference) + ' pts'")
-    .mark_text(align="left", dx=8, fontSize=9, fontWeight="bold", clip=False)
+    .mark_text(align="left", dx=8, fontSize=11, fontWeight="bold", clip=False)
     .encode(
         y=alt.Y("category:N", sort=y_sort, title=None),
         x=alt.X("After:Q", scale=x_scale),
@@ -105,6 +105,7 @@ chart = (
         labelFontSize=10,
         titleFontSize=12,
         domainColor=INK_SOFT,
+        domainOpacity=0,
         tickColor=INK_SOFT,
         gridColor=INK,
         gridOpacity=0.10,
