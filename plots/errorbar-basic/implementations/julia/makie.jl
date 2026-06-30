@@ -10,10 +10,11 @@ using Random
 Random.seed!(42)
 
 # Theme tokens
-const THEME       = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const THEME     = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG   = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK       = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT  = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
 const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — first categorical series (Imprint brand green)
     colorant"#C475FD",  # 2 — lavender
@@ -53,6 +54,8 @@ ax = Axis(
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
     backgroundcolor    = PAGE_BG,
@@ -61,9 +64,15 @@ ax = Axis(
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
     xgridvisible       = false,
-    ygridcolor         = RGBAf(Float32(INK.r), Float32(INK.g), Float32(INK.b), 0.15f0),
+    ygridvisible       = false,
     yminorgridvisible  = false,
     xticks             = (x_pos, light_levels),
+)
+
+# Highlight the growth saturation region (800–1600 lux = x positions 5–6)
+c = IMPRINT_PALETTE[1]
+vspan!(ax, [4.5], [6.5];
+    color = RGBAf(Float32(c.r), Float32(c.g), Float32(c.b), 0.08f0),
 )
 
 errorbars!(ax, x_pos, mean_height, std_height;
@@ -82,6 +91,14 @@ scatter!(ax, x_pos, mean_height;
     markersize  = 14,
     strokewidth = 1.5,
     strokecolor = PAGE_BG,
+)
+
+# Annotate the saturation plateau to guide the reader to the key insight
+text!(ax, 5.5, 8.4;
+    text     = "growth plateau",
+    color    = INK_MUTED,
+    fontsize = 12,
+    align    = (:center, :bottom),
 )
 
 # Save
