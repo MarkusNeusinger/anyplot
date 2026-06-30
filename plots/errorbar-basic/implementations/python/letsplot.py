@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 91/100 | Updated: 2026-04-25
+Library: letsplot | Python 3.13
+Quality: pending | Updated: 2026-06-30
 """
 
 import os
@@ -32,11 +32,13 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+RULE = "#1A1A1726" if THEME == "light" else "#F0EFE826"  # 15% opacity — subtle grid
 
-BRAND = "#009E73"  # Okabe-Ito position 1
-FOCAL = "#C475FD"  # Okabe-Ito position 2 — emphasises group with largest spread
+BRAND = "#009E73"  # Imprint palette position 1
+FOCAL = "#C475FD"  # Imprint palette position 2 — highlights group with largest spread
 
-# Data — experimental measurements with uncertainty
+# Data — clinical measurements comparing control vs treatment groups
 data = pd.DataFrame(
     {
         "experiment": ["Control", "Treatment A", "Treatment B", "Treatment C", "Treatment D"],
@@ -47,11 +49,12 @@ data = pd.DataFrame(
 data["ymin"] = data["mean_value"] - data["error"]
 data["ymax"] = data["mean_value"] + data["error"]
 
-# Highlight the group with the largest error spread to give the chart a focal point
 focal_idx = data["error"].idxmax()
 data["highlight"] = ["focal" if i == focal_idx else "base" for i in data.index]
 
 color_map = {"base": BRAND, "focal": FOCAL}
+
+title = "errorbar-basic · python · letsplot · anyplot.ai"
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -59,12 +62,12 @@ anyplot_theme = theme(
     panel_border=element_blank(),
     panel_grid_major_x=element_blank(),
     panel_grid_minor=element_blank(),
-    panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+    panel_grid_major_y=element_line(color=RULE, size=0.3),
     axis_line=element_line(color=INK_SOFT),
     axis_ticks=element_line(color=INK_SOFT),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
-    plot_title=element_text(color=INK, size=24),
+    axis_title=element_text(color=INK, size=12),
+    axis_text=element_text(color=INK_SOFT, size=10),
+    plot_title=element_text(color=INK, size=16),
     legend_position="none",
 )
 
@@ -73,14 +76,14 @@ plot = (
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.3, size=1.5)
     + geom_point(size=6)
     + scale_color_manual(values=color_map)
-    + labs(x="Experimental Group", y="Measured Value (mg/dL)", title="errorbar-basic · letsplot · anyplot.ai")
+    + labs(x="Experimental Group", y="Measured Value (mg/dL)", title=title)
     + theme_minimal()
     + anyplot_theme
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# PNG (scale 3x for 4800 x 2700 px)
-ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
+# PNG (scale=4 → 3200 × 1800 px)
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
 
 # HTML (interactive)
 ggsave(plot, f"plot-{THEME}.html", path=".")
