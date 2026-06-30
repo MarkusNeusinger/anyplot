@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T01:29:09Z'
-updated: '2026-06-30T22:13:52Z'
+updated: '2026-06-30T22:28:02Z'
 generated_by: claude-sonnet
 workflow_run: 28478444292
 issue: 5365
@@ -12,59 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - Correct panoramic area chart with geom_ribbon fill covering the full ridgeline
-    from 2500 m floor
-  - All 16 Wallis peaks labeled with name + elevation, staggered across 3 vertical
-    tiers to prevent overlap
-  - 'Matterhorn correctly differentiated as focal point: bold label, larger summit
-    marker (size=3.2 vs 2.0), and stronger leader line (INK color vs INK_MUTED for
-    others)'
-  - 'Theme adaptation is flawless — both renders use correct backgrounds (#FAF8F1
-    light / #1A1A17 dark), all chrome tokens (title, labels, ticks) flip correctly
-    between themes with no dark-on-dark failures'
-  - 'Palette compliance: Imprint brand green #009E73 used as the single data color;
-    grid alpha=0.12 keeps it subtle'
-  - Canvas correctly sized at 3200×1800 px (8×4.5 in at 400 dpi); canvas gate passed
-  - Code is clean, reproducible (np.random.seed(42)), and idiomatic plotnine grammar-of-graphics
-    layering
-  - np.maximum() used to combine Gaussian contributions creates visually distinct
-    peak profiles without explicit looping over the render array
+  - Piecewise-linear tent functions with per-peak asymmetric flanks create genuinely
+    angular alpine silhouette that reads as rock, not probability density — exactly
+    as spec requires
+  - 3-tier vertical staggering (5050/5250/5450 m) elegantly handles 16 labels across
+    a dense 0–150° sweep without overlap
+  - Matterhorn focal emphasis (bold label, larger marker, thicker/darker leader line)
+    creates clear visual hierarchy
+  - Fully theme-adaptive chrome with correct Imprint palette (#009E73) for data elements
+    in both renders
+  - Per-peak deterministic RandomState ensures reproducible asymmetric flank widths
+    across runs
   weaknesses:
-  - Ridgeline uses Gaussian/bell-curve functions (np.exp(-((angles-p['angle_deg'])**2)/(2*sigma**2)))
-    — the specification explicitly forbids Gaussian bumps and requires piecewise-linear/fractal
-    silhouette with triangular peaks and sharp apexes. Replace with summed tent/triangle
-    functions or midpoint-displacement noise to produce a jagged alpine profile.
-  - 'Title is missing the ''python'' language segment. Current: ''Wallis from Gornergrat
-    · area-mountain-panorama · plotnine · anyplot.ai''. Required format: ''{Descriptive
-    Title} · {spec-id} · {language} · {library} · anyplot.ai''. Fix: ''Wallis from
-    Gornergrat · area-mountain-panorama · python · plotnine · anyplot.ai'''
-  - Silhouette fill is brand green (#009E73, bright) rather than the 'dark solid color'
-    described in the spec for a 'photo-like silhouette, evening/dusk feel'. While
-    the Imprint palette rules mandate green as first series, this bright green fill
-    significantly departs from the intended dark/atmospheric alpine aesthetic of the
-    plot type.
-  - Monte Rosa (4634 m) renders visually taller than Matterhorn (4478 m) in the silhouette,
-    which is correct data-wise, but the spec says Matterhorn 'should read as visually
-    prominent — it is the focal point'. The label emphasis alone is insufficient when
-    the mountain shape itself makes Monte Rosa appear largest.
+  - 'Mountain fill uses custom hex #263040 — not in Imprint palette or semantic anchors.
+    Consider using the neutral anchor token (INK) or another palette member as semantic
+    silhouette color'
+  - Optional sky-color gradient above the ridgeline (light-blue→white or dusk orange→deep
+    blue) from the spec was not implemented — this would significantly enhance photographic
+    mood
+  - Optional layered background ridges (lighter foreground/darker background) not
+    implemented — would add depth and Zermatt-panorama-style atmosphere
+  - Peak labels (geom_text size=3.0mm ≈ 8.5pt) are small for the information density;
+    increasing to 3.4–3.8mm would improve mobile legibility
+  - Title fontsize 11pt for ~79-char title is marginally above formula-scaled recommendation
+    (12×67/79 ≈ 10pt); reduce to 10pt to follow the scaling rule
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct Imprint light surface, not pure white.
-      Chrome: Title "Wallis from Gornergrat · area-mountain-panorama · plotnine · anyplot.ai" is centered at top in dark INK text (~11pt), clearly readable. Y-axis label "Elevation (m)" in dark ink at 10pt, readable. Y-axis tick labels (2,500 to 5,000 in 500 m steps) at 8pt in INK_SOFT, clearly visible. X-axis ticks and labels hidden (intentional per spec). Subtle horizontal grid lines visible at low alpha.
-      Data: Bright Imprint brand green (#009E73) filled area traces the mountain ridgeline across 0–150° panorama. All 16 peaks marked with green circles (white centers) and thin vertical leader lines extending to 3-tier label zones (5050/5250/5450 m). Matterhorn has a thicker, darker (INK) leader line and bold label at size=3.8mm. Other peaks use INK_MUTED leaders at size=3.0mm. Peak labels show name and elevation (e.g., "Matterhorn / 4,478 m"). Ridgeline silhouette is smooth/Gaussian-shaped rather than jagged.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Wallis from Gornergrat · area-mountain-panorama · python · plotnine · anyplot.ai" readable in dark ink at top-left. Y-axis label "Elevation (m)" readable. Y-axis tick labels (2,500–5,000) readable in INK_SOFT. X-axis blank (intentional).
+      Data: Dark slate-blue (#263040) filled silhouette traces jagged alpine ridgeline. 16 brand-green (#009E73) circular markers at summit positions. Thin leader lines rise to 3-tier staggered labels (peak name + elevation). Matterhorn bold and larger.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct Imprint dark surface, not pure black.
-      Chrome: Title visible in light text (#F0EFE8 / INK token). Y-axis label and tick labels rendered in light INK_SOFT (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures observed. Subtle horizontal grid lines visible at low alpha against dark background.
-      Data: Identical Imprint brand green (#009E73) silhouette — data colors unchanged from light render as required. Leader lines adapt: Matterhorn uses white/light INK leader; others use INK_MUTED (#A8A79F). Both are visible against the dark background. Summit markers (green circles) readable. Peak labels in light text, all legible.
-      Legibility verdict: PASS — all text readable against the near-black background. Brand green #009E73 clearly visible. No dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title and axis labels render in light text (#F0EFE8). Y-axis tick labels in light secondary text (#B8B7B0). All text clearly visible on dark surface. No dark-on-dark failures observed.
+      Data: Mountain fill (#263040) remains same color as light render — produces subtle blue-grey silhouette against near-black background, still readable as mountain form. Peak markers (#009E73) identical to light render — Imprint data colors unchanged. Leader lines light-colored.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -72,80 +61,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, and tick labels all readable in both themes.
-          Peak annotation labels at geom_text size=3.0mm are visible but slightly
-          small at mobile scale.
+        comment: All font sizes explicitly set; both themes fully readable. Peak labels
+          at size=3.0mm are small but legible. Title at 11pt for ~79-char string marginally
+          above formula recommendation.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: 3-tier label stagger prevents most overlap. Minor crowding in the
-          0-30° cluster (Weisshorn/Zinalrothorn/Ober Gabelhorn/Dent Blanche) but labels
-          do not actually collide.
+        comment: 3-tier staggering handles dense left cluster (4–26° range). Mild
+          horizontal crowding perceptible but no actual overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Green silhouette clearly visible, summit markers prominent, leader
-          lines visible at both alpha levels.
+        comment: Dark silhouette, brand-green markers, and leader lines all clearly
+          visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series fill, no CVD issues. Leader lines use ink tokens.
+        comment: High contrast between dark silhouette and green markers; no red-green
+          dependency.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas. Good panoramic proportions, wide aspect
-          ratio. Nothing clipped.
+        comment: Canvas gate passed (3200x1800). Panoramic landscape fills canvas
+          well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Elevation (m)' with units. X-axis correctly hidden
-          per spec. Title present (though missing 'python' — scored under SC-04).
+        comment: 'Y-axis: Elevation (m) with units. X-axis intentionally blank per
+          spec.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green #009E73 used as sole data color. Backgrounds #FAF8F1
-          (light) / #1A1A17 (dark) correct. Chrome adapts properly.'
+        passed: false
+        comment: 'Background and peak markers (#009E73) correct. Mountain fill #263040
+          is a custom hex not in Imprint palette or semantic anchors. Partial compliance.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Thoughtful design: 3-tier stagger system, Matterhorn emphasis via
-          multiple channels (bold text, larger dot, INK leader). Brand green silhouette
-          is vivid but loses the dark alpine aesthetic the spec describes.'
+        comment: 'Strong design above defaults: dark silhouette with brand-green markers
+          is elegant, Matterhorn focal emphasis is intentional. Optional atmospheric
+          elements (sky gradient, layered ridges) not implemented.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines, no ticks, minimal y-axis-only grid at alpha=0.12. Ridgeline
-          outline adds crispness. Clean composition.
+        comment: All spines removed, Y-only subtle grid (alpha=0.12), X-axis hidden.
+          Well-refined. Sky gradient would add final layer of polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Matterhorn is labeled as focal point but the smooth Gaussian peaks
-          undermine the jagged alpine drama the spec calls for. No layered depth or
-          sky gradient to reinforce the dusk/alpine atmosphere.
+        passed: true
+        comment: Matterhorn clearly marked as focal summit. Staggered labels tell
+          story of ridge density. Missing atmospheric layering for full photographic
+          narrative.
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,58 +142,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: panoramic mountain silhouette with filled area
-          and annotated peaks.'
+        comment: 'Correct: filled area silhouette + piecewise-linear jagged ridgeline
+          + annotated peaks.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Has: filled area, leader lines, staggered labels, hidden x-axis,
-          y-axis in meters, Matterhorn emphasis. Missing: (1) piecewise-linear/jagged
-          peaks — Gaussian functions explicitly forbidden; (2) dark solid silhouette
-          fill specified for dusk/photo feel.'
+        passed: true
+        comment: 'All required features present: filled area, jagged ridgeline, leader
+          lines, name+elevation labels, staggered positions, Matterhorn emphasis,
+          Y-axis in meters, hidden X-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 Wallis peaks from spec included with correct names and elevations.
-          X=angle_deg, Y=elevation_m. Axes show full data range.
+        comment: 'X: angle_deg (bearing), Y: elevation_m. All 16 Wallis peaks included.'
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title missing 'python' language segment. Has 'Wallis from Gornergrat
-          · area-mountain-panorama · plotnine · anyplot.ai' but requires '...· python
-          · plotnine · anyplot.ai'. No legend (appropriate for single series).
+        passed: true
+        comment: 'Title format correct: Descriptive Title · spec-id · language · library
+          · anyplot.ai. No legend needed.'
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows panoramic ridgeline, peak labels, leader lines, stagger. Missing:
-          jagged/angular peaks (smooth Gaussian profile misses the core mountain silhouette
-          character).'
+        comment: Covers asymmetric tent peaks, undulating base ridge, noise+smoothing,
+          3-tier staggering, focal summit. Optional features (sky gradient, layered
+          depth) not implemented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wallis/Valais peaks with authentic elevations. Gornergrat vantage
-          is historically accurate. Neutral, non-controversial.
+        comment: Real Wallis/Valais panorama from Gornergrat with all 16 peaks at
+          correct elevations. Neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y range 2500-5700m appropriate (highest peak 4634m Monte Rosa). Panorama
-          spans 0-150° of bearing. Tick intervals at 500m sensible.
+        comment: Elevation 2500–5700m appropriate for Swiss Alps. Bearing range 0–150°
+          appropriate. 1600 sample points produce smooth ridgeline.
     code_quality:
       score: 10
       max: 10
@@ -214,31 +200,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Flat script structure.
+        comment: 'Flat sequential: imports → tokens → data → skyline generation →
+          plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any randomness.
+        comment: np.random.seed(42) plus per-peak RandomState with deterministic seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All plotnine symbols imported and used. No unused imports.
+        comment: All imported plotnine components are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with clear section comments. No fake functionality.
+        comment: Vectorized numpy tent functions; anchor/others split for focal emphasis
+          is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          correct.
     library_mastery:
       score: 7
       max: 10
@@ -248,16 +237,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot grammar: aes(), multiple geom layers, theme(). Idiomatic
-          plotnine patterns throughout.'
+        comment: 'Strong plotnine grammar: geom_ribbon, geom_line, geom_segment, geom_point,
+          geom_text with correct aes() mappings. Above default.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon for area fill (plotnine-specific), geom_segment for leaders,
-          geom_text with ha/va control, coord_cartesian for clip limits. Good use
-          of the grammar.
+        comment: Per-geom data= parameter (skyline/others/anchor dataframes) uses
+          plotnine/ggplot2's per-layer data model distinctively.
   verdict: APPROVED
 impl_tags:
   dependencies: []
