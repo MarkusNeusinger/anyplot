@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T21:45:12Z'
-updated: '2026-06-30T22:13:42Z'
+updated: '2026-06-30T22:30:01Z'
 generated_by: claude-sonnet
 workflow_run: 28478245701
 issue: 5365
@@ -12,50 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Correct Imprint palette usage: brand green #009E73 silhouette, theme-adaptive
-    chrome throughout; both renders pass theme check'
-  - 'Factually accurate data: all 16 Wallis 4000-metre peaks with real elevations,
-    compelling geographic context'
-  - 'Solid focal peak hierarchy: Matterhorn visually distinguished via bold label,
-    larger summit dot, and heavier leader line weight'
-  - Very subtle y-only grid (alpha=0.10) and removed chart outline give a clean, refined
-    look
-  - 'Proper canvas gate compliance: exactly 3200x1800 via Selenium CDP viewport override;
-    HTML+PNG dual artifact'
-  - Random seed set; all ridgeline geometry is reproducible
+  - Atmospheric sky gradient (light blue→horizon in light; deep navy in dark) creates
+    genuine alpine mood and distinguishes sky from silhouette beautifully in both
+    themes
+  - Piecewise-linear fractal ridgeline with tapering jitter produces sharp, asymmetric
+    triangular peaks — correctly reads as alpine rock, not Gaussian bumps
+  - Four-tier label staggering (4880–5360 m) with 3-previous-penalty cycling avoids
+    the most severe cluster collisions across all 16 peaks
+  - Matterhorn focal emphasis (larger dot, bolder text, stronger leader line) plus
+    'focal peak · 4478 m a.s.l.' callout creates clear visual hierarchy
+  - Bokeh HoverTool on invisible hit-targets at each summit adds genuine interactivity
+    to the HTML artifact — idiomatic and correct for an interactive library
+  - 'Both light and dark themes render cleanly: brand green silhouette, correct warm-off-white
+    / near-black backgrounds, and fully adaptive chrome (INK / INK_SOFT) — no dark-on-dark
+    failures'
+  - 'Complete Wallis/Valais Switzerland data: 16 named 4000m peaks with accurate elevations
+    ordered W→E, geographically realistic and non-controversial'
   weaknesses:
-  - '"reference peak" annotation is 16 pt in INK_MUTED — too small and low-contrast
-    to be legible; increase to 18-20 pt INK_SOFT or replace with a stronger focal
-    callout'
-  - Ridgeline peaks are cosine-smoothstepped, producing slightly curved transitions
-    rather than the spec required sharp triangular peaks with steep linear flanks
-    — use piecewise-linear tent functions or jittered segments
-  - 'No atmospheric sky background: spec envisions a photo-like silhouette with an
-    optional sky gradient above the ridge — add a sky-to-horizon gradient fill above
-    the ridgeline'
-  - No HoverTool on the interactive HTML artifact — add hover tooltips for peak name,
-    elevation, and bearing to leverage bokeh interactivity
-  - Eastern label cluster (Strahlhorn through Dom, 6 peaks in 53 degrees) is visually
-    dense — consider a fourth tier or wider tier spread for this zone
+  - 'Title is missing the language component: current title is ''Wallis 4000ers ·
+    area-mountain-panorama · bokeh · anyplot.ai'' but the required format is ''{Descriptive
+    Title} · {spec-id} · {language} · {library} · anyplot.ai'' — must be ''Wallis
+    4000ers · area-mountain-panorama · python · bokeh · anyplot.ai'''
+  - 'Label crowding in dense right-side cluster (Strahlhorn@121°, Rimpfischhorn@132°,
+    Allalinhorn@142°, Alphubel@152°, Täschhorn@162°, Dom@174°): 6 peaks in ~53° with
+    4 tiers — some labels visibly crowd each other; consider reducing peak label font
+    size slightly (21pt→17pt) or widening tier gaps'
+  - '''Dom'' peak label at bearing 174° is very close to the right canvas edge (min_border_right=50
+    is tight for a 21pt label at that position) — nudge min_border_right to 80 or
+    shift Dom''s label anchor slightly left'
+  - _lerp_hex helper function defined at module scope — acceptable but mildly violates
+    KISS (CQ-01); inline as a lambda or replace with direct linear RGB arithmetic
+    at the two call sites
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Wallis 4000ers · area-mountain-panorama · bokeh · anyplot.ai" in dark ink, centred, ~70% width. Y-axis label "Elevation (m)" in dark ink. Tick labels (2500–5000 m) in INK_SOFT. All clearly readable against light background.
-      Data: Brand green #009E73 mountain silhouette fills the ridgeline area. 16 peak labels with leader lines in 3 staggered tiers. Summit dots in dark ink. Matterhorn has bold label and larger dot.
-      Minor concern: "reference peak" annotation at 16 pt INK_MUTED is barely legible.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct. The sky area shows a smooth atmospheric gradient from light blue (#4A8EC4) at the top to a pale sky-blue horizon (#D4EBF7), rendered via 60 stacked quads. The mountain silhouette fills the lower portion with brand green (#009E73), creating a sharp contrast against the sky.
+      Chrome: Title "Wallis 4000ers · area-mountain-panorama · bokeh · anyplot.ai" centered at top in dark INK (#1A1A17) at 50pt — fully readable. Y-axis label "Elevation (m)" in INK at 42pt — clear. Y-axis tick labels (2500–5000) in INK_SOFT (#4A4A44) at 34pt — readable. X-axis intentionally hidden (per spec).
+      Data: Mountain silhouette is brand green #009E73 with jagged, asymmetric triangular peaks — correct alpine silhouette character. 16 peaks annotated with leader lines (thin ink/INK_SOFT lines) running from summit dots up to staggered label tiers. Matterhorn has a bold 26pt label and larger dot. Summit dots (dark circle, white ring) are clearly visible on the green silhouette. "focal peak · 4478 m a.s.l." italic callout visible in sky area above Matterhorn.
+      Label crowding: The right-side cluster (Strahlhorn through Dom) shows noticeable crowding despite the 4-tier staggering — labels are legible individually but proximity makes the zone feel busy. "Dom" is very close to the right canvas edge.
+      Legibility verdict: PASS — all title, axis, and peak labels are readable against the light background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title and all labels render in light ink tokens (#F0EFE8 / #B8B7B0), clearly visible against dark background. No dark-on-dark failures. Summit dots flip to light fill (INK_SOFT on dark theme). Grid lines are subtle. Y-axis spine visible in INK_SOFT.
-      Data: Brand green #009E73 silhouette is identical to light render — data colour unchanged as required. Peak labels and leader lines in light ink.
-      Legibility verdict: PASS — full theme adaptation correct, no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct. The sky gradient shifts to deep navy (#081424 top → #1C2E45 horizon), giving a dramatic dusk/night alpine atmosphere. The contrast between the dark sky and the green silhouette is striking and effective.
+      Chrome: Title in light INK (#F0EFE8) — clearly visible against dark background. Y-axis label and tick labels in INK_SOFT (#B8B7B0) — legible. No dark-on-dark text issues found anywhere.
+      Data: Mountain silhouette is identical brand green #009E73 — correct, palette data colors unchanged between themes. Summit dots show as white/light-colored rings on the dark theme (PAGE_BG line_color inverts to near-black rings against green, which is subtly different). Leader lines lighter (INK → #F0EFE8 for focal, INK_SOFT → #B8B7B0 for others). "focal peak" callout in INK_SOFT — visible. All peak name labels in INK (#F0EFE8) — readable.
+      Legibility verdict: PASS — all text elements are readable against the dark background. Chrome correctly adapts via INK/INK_SOFT tokens. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -63,180 +69,201 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set per bokeh.md (50pt title, 42pt axis
-          label, 34pt ticks, 21-26pt peak names). Minor deduction: 16 pt reference
-          peak annotation in INK_MUTED is barely legible.'
+        comment: 'Title 50pt, axis label 42pt, tick labels 34pt, peak names 21-26pt
+          — all readable in both themes. Minor deduction: peak label font in dense
+          right-side cluster (21pt) feels slightly small given the crowding, reducing
+          comfortable legibility at a glance.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 3-tier staggering prevents direct overlap. Eastern cluster (6 peaks
-          in 53 degrees of bearing) is somewhat crowded but no collision observed.
+        comment: 4-tier staggering mitigates the worst collisions but the right-half
+          cluster (Strahlhorn→Dom, 6 peaks in ~53°) still shows notable label crowding.
+          Labels are individually legible but proximity prevents full marks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Brand green silhouette is vivid. Summit dots well-sized (28px focal,
-          20px standard). Leader lines at 1.8-3.0pt visible in both themes.
+        comment: Green silhouette visible on both sky gradients. Summit dots (size
+          20-28) clearly placed on silhouette. Leader lines at 1.8-3.0 line_width
+          well-proportioned. Sky gradient creates clean depth separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue silhouette with brand green. INK/INK_SOFT leader lines
-          have strong contrast. No red-green conflict.
+        comment: 'Brand green #009E73 against sky gradient has strong contrast. No
+          red-green sole-signal. INK/INK_SOFT chrome meets readable contrast in both
+          themes.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas confirmed 3200x1800. Plot fills canvas well with panoramic
-          silhouette in lower portion and labelled zone above. Appropriate margins
-          via min_border_*.
+        comment: Canvas gate passed (3200×1800). Panoramic landscape composition is
+          well-chosen. 'Dom' label at bearing 174° is very close to the right canvas
+          edge (min_border_right=50 is tight). No pixels appear actually clipped (AR-09
+          not triggered), but the margin is narrow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Elevation (m) with units. Title correctly formatted with descriptive
-          prefix. X-axis intentionally hidden per spec.
+        comment: Y-axis 'Elevation (m)' with units is correct. X-axis intentionally
+          hidden per spec ('bearing angles would clutter the panorama'). Title is
+          descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Silhouette uses #009E73 (Imprint position 1). Background #FAF8F1
-          light / #1A1A17 dark. All chrome uses theme-adaptive tokens. Both renders
-          theme-correct.'
+        comment: 'Mountain silhouette uses #009E73 (Imprint position 1, brand green)
+          — correct first-series assignment. Backgrounds are #FAF8F1 (light) / #1A1A17
+          (dark). Sky gradient uses custom atmospheric colors (not Imprint categorical)
+          — acceptable as atmospheric background, not a categorical data series. Chrome
+          fully adaptive.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic default: intentional focal peak hierarchy, subtle
-          grid, no outline, theme-adaptive tokens. Lacks dramatic atmospheric depth
-          the spec envisions (photo-like silhouette, sky gradient, dusk feel).'
+        comment: Atmospheric sky gradient adds genuine photographic mood. Fractal
+          ridgeline with per-segment jitter and tapered noise is algorithmically sophisticated.
+          Focal peak emphasis (Matterhorn) with 4 distinct visual cues. Clearly above
+          generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Chart outline removed, x-axis hidden, y-grid alpha=0.10, leader line
-          weights differentiated. Good refinement, no excess decoration.
+        comment: No x-axis (correct for panorama). Y-grid at alpha=0.10 is very subtle.
+          No plot outline. Clean typographic hierarchy across title/labels/ticks/peak-names/elevation-text.
+          Generous min_border reservations.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Matterhorn focal point established via bold label, larger dot, heavier
-          leader line. West-to-east sweep reads naturally. Reference peak annotation
-          too subtle to be effective storytelling device.
+        comment: 'Matterhorn is unmistakably the focal point (bold label, larger dot,
+          stronger leader, italic callout). The sky-to-mountain contrast creates clear
+          figure/ground. W→E ordering tells the geographic story naturally. Minor
+          deduction: the right-side crowding slightly reduces the guided-panorama
+          reading experience.'
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct panorama silhouette with filled area. Minor deduction: cosine
-          smoothstep creates slightly curved peak transitions rather than sharp triangular
-          peaks with steep linear flanks as spec prescribes.'
+        comment: Correct panoramic filled-area silhouette. Piecewise-linear ridgeline
+          with fractal jitter — sharp triangular peaks, not Gaussian bumps. Wide landscape
+          aspect ratio (16:9). Jagged, asymmetric alpine character.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: filled ridgeline, peak annotations
-          with name+elevation, leader lines, 3-tier staggering, 2500m Y floor, wide
-          landscape, Matterhorn focal peak.'
+        comment: 'All spec features implemented: jagged silhouette, sky gradient,
+          peak annotations with name+elevation, leader lines, staggered labels, Y-axis
+          in meters with 2500m lower bound, X-axis hidden, focal peak (Matterhorn)
+          prominent.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Horizontal bearing W to E on X, elevation metres on Y. Full 16-peak
-          Wallis panorama correctly mapped.
+        comment: Bearing angle on X (−3 to 184°), elevation in meters on Y (2500–5600m).
+          All 16 Wallis 4000m peaks included with correct names and elevations. W→E
+          ordering matches spec example.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title Wallis 4000ers · area-mountain-panorama · bokeh · anyplot.ai
-          matches {Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
-          format. No legend needed for single-series panorama.
+        passed: false
+        comment: 'Title is ''Wallis 4000ers · area-mountain-panorama · bokeh · anyplot.ai''
+          — MISSING the language component. Required format: ''{Descriptive Title}
+          · {spec-id} · {language} · {library} · anyplot.ai''. Correct title: ''Wallis
+          4000ers · area-mountain-panorama · python · bokeh · anyplot.ai''. No legend
+          (single-series silhouette) — N/A for legend.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Peaks at varying heights, significant col drops (420-820m), asymmetric
-          flanks via random noise. Minor deduction: single-ridge approach misses optional
-          layered depth dimension.'
+        comment: Silhouette polygon, fractal ridgeline, 16 annotated peaks, sky gradient,
+          leader lines, staggered labels, focal peak callout, interactive HoverTool
+          — comprehensive feature set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wallis/Valais Switzerland panorama with all 16 real named 4000-metre
-          peaks. Neutral geographic topic.
+        comment: Named Swiss Wallis/Valais 4000m peaks with authentic elevations (4027–4634m).
+          Geographically ordered W→E. Non-controversial alpine geography. Plausible
+          bearing-angle sweep (−3 to 184°).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All summit elevations match real-world values. Y-axis 2500-5600m
-          appropriate for Zermatt-area panorama.
+        comment: Elevation range 2500–5600m appropriate for Swiss Alps. All 16 peaks
+          in 4027–4634m range. Y-floor at 2500m gives silhouette good vertical extent.
+          Col depths (420–820m below neighboring peaks) are realistic.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports → tokens → data → ridgeline
-          → figure → annotations → style → save. No functions or classes.'
+        comment: One helper function _lerp_hex defined at module scope — mildly violates
+          no-functions guideline but is small (3 lines) and used at two distinct call
+          sites. No classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all stochastic ridgeline construction.
+        comment: np.random.seed(42) before all stochastic operations — deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, time, Path, numpy, bokeh modules, selenium.'
+        comment: All imports (numpy, bokeh.io, bokeh.models, bokeh.plotting, selenium,
+          pathlib, os, sys, time) are actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriately complex. sys.path self-shadowing guard
-          is a legitimate necessity.
+        comment: Appropriate complexity for the task. HoverTool is legitimate for
+          Bokeh (interactive library). No fake UI elements. Clear, readable code structure.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium. Uses current
-          bokeh 3.x API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh API (output_file,
+          save, figure). Selenium headless-Chrome pattern matches bokeh.md canonical
+          pattern.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,30 +271,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses figure(), patch(), line(), scatter(), add_layout(), Label model,
-          FixedTicker, output_file/save, Selenium/CDP viewport. Minor deduction: no
-          ColumnDataSource (direct arrays used).'
+        comment: Idiomatic use of figure(), patch(), line(), scatter(), Label glyphs
+          via add_layout(), FixedTicker, ColumnDataSource, HoverTool. output_file+save+Selenium
+          pattern matches bokeh.md specification. Above default.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'Leverages bokeh Label model for positioned annotations, FixedTicker
-          for custom ticks, dual HTML+PNG artifact pattern. Deduction: no HoverTool
-          on HTML artifact despite it being a natural bokeh interactive capability.'
-  verdict: REJECTED
+        comment: HoverTool on invisible scatter hit-targets with custom tooltips —
+          genuine Bokeh interactivity. HTML export as catalog artifact. Label glyphs
+          in data coordinates (not screen). Multiple quad() calls for gradient background.
+          FixedTicker for precise elevation ticks. Strong use of Bokeh-distinctive
+          features.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  - columndatasource
+  dataprep: []
   styling:
+  - gradient-fill
   - alpha-blending
-  - edge-highlighting
