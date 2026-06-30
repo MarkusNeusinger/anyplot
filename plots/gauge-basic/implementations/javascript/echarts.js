@@ -9,6 +9,12 @@ const t = window.ANYPLOT_TOKENS;
 
 // Net Promoter Score — Q2 2026 customer satisfaction survey (scale 0–100)
 const score = 72;
+const zoneLabel = score >= 70 ? "✓ Promoter Zone"
+               : score >= 30 ? "◎ Passive Zone"
+               : "✗ Detractor Zone";
+const zoneColor = score >= 70 ? "#009E73"
+               : score >= 30 ? "#DDCC77"
+               : "#AE3030";
 
 const chart = echarts.init(document.getElementById("container"));
 
@@ -24,7 +30,7 @@ chart.setOption({
   series: [
     {
       type: "gauge",
-      center: ["50%", "54%"],
+      center: ["50%", "58%"],
       radius: "76%",
       min: 0,
       max: 100,
@@ -41,7 +47,11 @@ chart.setOption({
           ],
         },
       },
-      progress: { show: false },
+      progress: {
+        show: true,
+        width: 14,
+        itemStyle: { color: t.palette[0] },
+      },
       pointer: {
         length: "65%",
         width: 8,
@@ -83,11 +93,15 @@ chart.setOption({
       },
       detail: {
         valueAnimation: false,
-        fontSize: 60,
         offsetCenter: [0, "58%"],
-        formatter: "{value}",
+        formatter: function (value) {
+          return `{val|${value}}\n{lbl|${zoneLabel}}`;
+        },
+        rich: {
+          val: { fontSize: 60, fontWeight: "bold", color: t.ink, lineHeight: 80 },
+          lbl: { fontSize: 18, color: zoneColor, lineHeight: 32 },
+        },
         color: t.ink,
-        fontWeight: "bold",
       },
       data: [{ value: score, name: "Net Promoter Score" }],
     },
