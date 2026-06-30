@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-30
@@ -57,7 +57,7 @@ p = figure(
     width=W,
     height=H,
     x_range=categories,
-    title="errorbar-basic · bokeh · anyplot.ai",
+    title="errorbar-basic · python · bokeh · anyplot.ai",
     x_axis_label="Experimental Group",
     y_axis_label="Response Value (units)",
     toolbar_location=None,
@@ -105,7 +105,7 @@ p.add_layout(focus_label)
 # Style — background and outline
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Title
 p.title.text_color = INK
@@ -148,7 +148,7 @@ p.y_range.start = max(0.0, y_min - y_pad)
 p.y_range.end = y_max + y_pad
 
 # Save HTML (required interactive artifact)
-output_file(f"plot-{THEME}.html", title="errorbar-basic · bokeh · anyplot.ai")
+output_file(f"plot-{THEME}.html", title="errorbar-basic · python · bokeh · anyplot.ai")
 save(p)
 
 # Screenshot with headless Chrome via Selenium — export_png uses chromedriver snap shim which fails
