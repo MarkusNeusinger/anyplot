@@ -1,0 +1,259 @@
+library: ggplot2
+language: r
+specification_id: errorbar-basic
+created: '2026-06-30T20:35:03Z'
+updated: '2026-06-30T20:51:59Z'
+generated_by: claude-sonnet
+workflow_run: 28473855854
+issue: 973
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct Imprint palette (#009E73) used throughout both light and dark renders
+    with properly themed chrome
+  - Enlarged focal point at 35°C plus enzyme optimum annotation provides clear visual
+    hierarchy guiding the viewer to the key insight
+  - 'Perfect spec compliance: error bars with visible caps, consistent widths, and
+    center-value markers'
+  - Excellent real-world biochemistry dataset (enzyme kinetics temperature response)
+    with scientifically plausible values and appropriate error magnitudes
+  - 'Clean ggplot2 grammar of graphics usage: layer composition of geom_errorbar and
+    geom_point, idiomatic annotate(), expansion() for axis padding'
+  - All font sizes explicitly set (title=12pt, axis.title=10pt, axis.text=8pt, caption=7pt)
+    with proper theme-adaptive chrome in both renders
+  - Methodological caption explaining error bar meaning adds credibility
+  weaknesses:
+  - Annotation text size=3.2mm (approx 9pt) is small relative to the canvas — consider
+    increasing to size=3.8–4.0 for better readability at scaled sizes
+  - 'DE-01 moderate: the design, while clean, is still close to a well-configured
+    library default — additional refinement such as a bold focal data label or a more
+    deliberate emphasis on the bell-curve narrative could push it further'
+  - 'LM-02: the double geom_point() emphasis and adjustcolor() grid alpha trick show
+    ggplot2 idioms, but no uniquely ggplot2-specific feature (e.g., stat_smooth, geom_ribbon
+    for CI bands, coord_flip) was used'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "errorbar-basic · r · ggplot2 · anyplot.ai" in dark #1A1A17 ink, clearly readable. Axis labels "Temperature" (x) and "Enzyme Activity (μmol / min)" (y) in dark ink, well-proportioned at 10pt. Tick labels (20°C–50°C, numeric y values) in #4A4A44 INK_SOFT at 8pt, readable. Caption "Error bars: ±1 SD (n = 12 replicates per condition)" in small 7pt soft ink at bottom left. Annotation "enzyme optimum" in INK_SOFT above the 35°C peak.
+      Data: All error bars and points rendered in brand green #009E73. Error bars with visible horizontal caps. Standard points at size=3.5, enlarged focal point at 35°C at size=6.0 to highlight the enzyme optimum. Bell-curve distribution of means from 12.4 to 35.6 μmol/min peaking at 35°C.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background; no light-on-light text issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 ink, clearly readable against dark background. Axis labels and tick labels in #B8B7B0 INK_SOFT, readable. Caption in soft light text. Annotation "enzyme optimum" in light secondary ink. No dark-on-dark text failures detected.
+      Data: Data colors identical to light render — all error bars and points in #009E73 brand green. The enlarged 35°C focal point and annotation are present identically. Grid lines visible as subtle gray horizontal rules.
+      Legibility verdict: PASS — all text readable against the dark background; brand green remains clearly visible; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12pt, axis.title=10pt, axis.text=8pt,
+          caption=7pt, annotation=3.2mm). All text readable in both themes. Annotation
+          text at size=3.2mm is small but visible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Annotation well-separated above
+          data. Tick labels well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Error bars with caps clearly visible. Points sized appropriately
+          for 7 data points. Enlarged focal point at 35°C (size=6) clearly distinguishable
+          from standard points (size=3.5).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series in Imprint brand green #009E73 — colorblind-safe.
+          Good contrast against both light and dark backgrounds.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good layout proportions. Canvas gate passed (3200x1800). Balanced
+          margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Enzyme Activity (μmol / min)'' with units. X-axis: ''Temperature''
+          descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single series correctly uses #009E73 brand green. Light background
+          #FAF8F1, dark background #1A1A17. All chrome correctly theme-adaptive in
+          both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: enlarged focal point for emphasis,
+          clean annotation, Imprint palette. Not yet FiveThirtyEight-level design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axis frame, horizontal-only major grid with alpha-adjusted
+          color, no minor grid, generous margins. Clear refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Enlarged 35°C point + 'enzyme optimum' annotation actively guides
+          viewer. Bell-curve pattern clearly communicated. Caption adds methodological
+          credibility.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct error bar plot with center-value markers and visible caps.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Error bars with caps, consistent widths, center markers, error magnitude
+          varies by condition.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: categorical temperature, Y: enzyme activity. All 7 conditions
+          visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'errorbar-basic · r · ggplot2 · anyplot.ai'. No legend
+          needed for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: error bars with caps, varying magnitudes, bell-curve
+          response pattern with a clear peak.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real biochemistry scenario: enzyme kinetics temperature response.
+          Non-controversial, scientifically meaningful.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Activity values 8.3–35.6 μmol/min plausible. 20°C–50°C range appropriate
+          for mesophilic enzyme. SDs 1.4–3.2 reasonable for biological replicates.
+          Optimum at 35°C near physiological temperature.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data vectors. No random generation
+          needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R. Double geom_point() layering for emphasis is an
+          elegant ggplot2 pattern.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf(). Modern ggplot2 API (linewidth=
+          not size= for lines).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics: geom_errorbar + layered geom_point,
+          annotate(), scale_y_continuous(expand=expansion()), theme_minimal() base
+          with layer-on-top theme customization.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses adjustcolor() trick for grid line alpha (ggplot2-specific workaround),
+          expansion() for axis padding, and double geom_point() layering for emphasis
+          — all ggplot2-idiomatic patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
