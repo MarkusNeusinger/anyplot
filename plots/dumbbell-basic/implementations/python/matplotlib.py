@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 88/100 | Created: 2026-06-30
@@ -70,7 +70,7 @@ ax.set_yticklabels(categories)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.set_xlim(28, 108)
 
-title = "dumbbell-basic · matplotlib · anyplot.ai"
+title = "dumbbell-basic · python · matplotlib · anyplot.ai"
 title_fs = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fs, fontweight="medium", color=INK)
 ax.set_xlabel("Satisfaction Score (0–100)", fontsize=10, color=INK)
