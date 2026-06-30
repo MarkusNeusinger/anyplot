@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-06-30
@@ -80,8 +80,16 @@ points = base.mark_circle().encode(
     ],
 )
 
+# Annotation surfacing the "Peak response" label for Treatment D
+peak_df = df[df["category"] == "Treatment D"]
+annotation = (
+    alt.Chart(peak_df)
+    .mark_text(dy=-28, color=ACCENT, fontSize=10, fontStyle="italic", text="Peak response")
+    .encode(x=alt.X("category:N", sort=categories), y=alt.Y("error_upper:Q", scale=y_scale))
+)
+
 chart = (
-    alt.layer(error_bars, caps_bottom, caps_top, points)
+    alt.layer(error_bars, caps_bottom, caps_top, points, annotation)
     .properties(
         width=620,
         height=320,
@@ -92,7 +100,7 @@ chart = (
     )
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
-        labelFontSize=10,
+        labelFontSize=11,
         titleFontSize=12,
         labelColor=INK_SOFT,
         titleColor=INK,
@@ -100,7 +108,7 @@ chart = (
         domainOpacity=0,
         tickColor=INK_SOFT,
         gridColor=INK,
-        gridOpacity=0.10,
+        gridOpacity=0.13,
         labelAngle=0,
     )
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
