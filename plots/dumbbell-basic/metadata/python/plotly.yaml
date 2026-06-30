@@ -2,55 +2,50 @@ library: plotly
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:26Z'
-updated: '2026-04-26T01:24:53Z'
-generated_by: claude-opus
-workflow_run: 24944963786
+updated: '2026-06-30T22:51:41Z'
+generated_by: claude-sonnet
+workflow_run: 28480466483
 issue: 945
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.8.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Correct Okabe-Ito palette: #009E73 (Before) and #D55E00 (After) in canonical
-    order'
-  - 'Full theme adaptation: #FAF8F1 light / #1A1A17 dark backgrounds with all chrome
-    tokens propagated through title, axes, ticks, legend, and grid'
-  - All font sizes explicitly set (title=28, axis=22, tick=18, legend=16px) — readable
-    in both themes
-  - Data sorted by improvement magnitude with a deliberate regression case (Legal)
-    for narrative interest
-  - Clean KISS code structure with deterministic hand-picked data and no RNG
-  - 'Idiomatic Plotly use: hovertemplate with formatted tooltips, hoverinfo=skip for
-    connecting lines, HTML+PNG dual output'
-  - 'Marker edge borders (line={color: PAGE_BG}) adapt to theme for clean dot definition
-    against both surfaces'
+  - 'Perfect Visual Quality (30/30): explicit sizing, no overlaps, appropriate marker
+    scale for 9 sparse data points, full Imprint palette and theme-adaptive chrome
+    compliance in both renders'
+  - 'Strong spec and data coverage: all dumbbell features demonstrated including regression
+    case; realistic neutral employee satisfaction scenario; deterministic data'
+  - Amber semantic anchor used correctly for regression case — conditional coloring
+    on both connecting line and delta label is a thoughtful design decision that adds
+    storytelling without annotations
+  - 'Ascending-delta sort order creates an implicit visual hierarchy: best improvement
+    at top, regression outlier at bottom with amber highlighting'
   weaknesses:
-  - Title domain is 'pyplots.ai' instead of 'anyplot.ai' — SC-04 non-compliance
-  - Y-axis horizontal gridlines are shown (showgrid=True on yaxis) but add noise to
-    a dumbbell chart — only x-axis vertical gridlines are needed to trace values
-  - 'No visual emphasis for the extreme cases: the largest-gap department (Customer
-    Support: +24 pts) and the only regression (Legal: -3 pts) look identical to mid-range
-    entries — conditional coloring or size variation for the regression row would
-    add storytelling'
-  - Design sophistication is above-default but not exceptional — no data labels showing
-    delta values, no annotation callouts, no conditional color to flag negative vs.
-    positive changes
+  - Legend box border adds visual weight — set legend.borderwidth=0 or reduce to 0.5
+    for a cleaner, Tufte-inspired chrome
+  - Plotly axis frame lines are still visible on all four sides — add xaxis_showline=False
+    / yaxis_showline=False or mirror=False to achieve an L-shaped or open frame for
+    more visual refinement
+  - Regression outlier (Legal, -3 pts) sits at the bottom where the eye ends rather
+    than begins — an annotation callout or slightly enlarged amber dot would make
+    it a more immediate focal point for the viewer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per spec, not pure white.
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · plotly · pyplots.ai" in dark ink (#1A1A17), 28px, centered. X-axis label "Satisfaction Score (out of 100)" and Y-axis label "Department" both in dark text, 22px. Tick labels in slightly lighter #4A4A44 at 18px. All text is clearly readable against the light background. Horizontal legend above plot area with green (#009E73) "Before" and orange (#D55E00) "After" entries in elevated (#FFFDF6) box.
-      Data: 9 horizontal dumbbell entries sorted by improvement (Customer Support at top with largest gap ~45→69, Legal at bottom with regression ~70→67). Before dots are Okabe-Ito green (#009E73) with white borders; After dots are Okabe-Ito vermillion (#D55E00) with white borders. Connecting lines are thin and in #4A4A44.
-      Legibility verdict: PASS — all text clearly readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · python · plotly · anyplot.ai" in dark ink, centered, size=16 — fully readable. Y-axis title "Department" and x-axis title "Satisfaction Score (out of 100)" both in dark ink, size=12. Tick labels in ink-soft (#4A4A44), size=10. Legend above chart with "Before" (green swatch) and "After" (lavender swatch), size=10, in elevated box.
+      Data: Before dots in #009E73 (Imprint position 1, brand green), After dots in #C475FD (Imprint position 2, lavender), both size=14 with white ring strokes. Connecting lines in ink-soft gray for all improvements (#4A4A44 in light mode), amber (#DDCC77) for Legal regression (-3 pts). Delta annotations right-aligned past each dumbbell. 9 departments sorted ascending by delta — Customer Support (+24) at top, Legal (-3) at bottom.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct per spec, not pure black.
-      Chrome: Title in light #F0EFE8, axis labels in #F0EFE8, tick labels in #B8B7B0. Legend box uses elevated dark (#242420) with light text. All text is clearly readable against the dark background — no dark-on-dark failures observed.
-      Data: Green (#009E73) and vermillion (#D55E00) data colors are IDENTICAL to the light render — only connecting lines flip to #B8B7B0 (light gray) and legend box fill changes. Brand green #009E73 is clearly visible on the dark surface.
-      Legibility verdict: PASS — all text clearly readable, proper light-on-dark rendering throughout.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and axis labels render in cream (#F0EFE8). Tick labels in #B8B7B0 (ink-soft dark token). Legend box in elevated dark background #242420. No dark-on-dark failures — all text is clearly light-colored against the dark surface.
+      Data: Before stays #009E73, After stays #C475FD — identical to light render as required. Connecting lines for improvements now light gray (#B8B7B0) — subtle but visible against the dark background. Amber line and "-3 pts" annotation for Legal remain clearly distinguishable in both themes.
+      Legibility verdict: PASS — all text clearly readable against the warm near-black background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,51 +56,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis=22, tick=18, legend=16px.
-          Readable in both light and dark themes.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, annotations=11,
+          legend=10); well-proportioned in both renders; no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 9 categories well-spaced. No label or element overlap.
+        comment: No text or marker collisions in either render; categories and delta
+          labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size=18 clearly visible. Connecting lines at width=2 visible
-          but subtle.
+        comment: size=14 markers perfectly scaled for 9 sparse data points; both dot
+          series and connecting lines clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green and vermillion are CVD-safe and distinguishable without
-          relying on hue alone.
+        comment: Imprint green and lavender are CVD-distinguishable; amber adds redundant
+          semantic encoding for regression
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px canvas. Generous margins (l=170, r=60, t=110, b=90).
-          Nothing cut off. Good canvas utilization.
+        comment: 3200x1800 landscape; canvas gate passed; left margin=150 accommodates
+          category labels; plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Satisfaction Score (out of 100)'' with units. Y-axis:
-          ''Department''. Both descriptive.'
+        comment: X-axis has units (out of 100); Y-axis Department is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Before). Second series #D55E00 (After). Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark). Both renders theme-correct.'
+        comment: 'Before=#009E73 (position 1), After=#C475FD (position 2), amber for
+          regression; backgrounds #FAF8F1/#1A1A17; full theme-adaptive chrome in both
+          renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -113,25 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: Okabe-Ito correctly applied, marker edge borders
-          adapt to theme, clean legend placement. Professional but not publication-extraordinary.'
+        comment: 'Above generic defaults: conditional amber on regression, white ring
+          strokes, intentional sort. Not yet at FiveThirtyEight level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Custom margins, subtle 10% opacity grid, theme-adaptive connecting
-          lines. Y-axis gridlines shown unnecessarily. No explicit spine removal.
+        comment: X-axis-only vertical grid with low-opacity token; no horizontal grid;
+          white marker strokes; plotly default axis frame (all four sides) still present
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Sorted by improvement magnitude reveals pattern. Deliberate regression
-          case (Legal) adds narrative. No visual emphasis distinguishing the extreme
-          outlier or the regression case.
+        comment: 'Ascending delta sort + amber regression highlight creates clear
+          narrative: most departments improved, Legal is the exception'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dumbbell chart with connecting lines.
+        comment: Correct horizontal dumbbell/connected dot plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Two distinct-color dots per category, thin connecting lines, horizontal
-          orientation, sorted by difference.
+        comment: Horizontal orientation, two distinct-color dots, connecting lines,
+          sorted by difference
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values on x-axis. All 9 departments visible.
+        comment: Before dot at before value, After dot at after value; x-range 35-100
+          shows all data
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title includes spec-id and library but uses 'pyplots.ai' instead
-          of 'anyplot.ai'. Legend labels 'Before'/'After' are correct.
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend labels
+          Before/After correct
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dumbbell chart aspects: multiple categories, before/after
-          comparison, sorted order, includes a negative change for full range demonstration.'
+        comment: 'Full spectrum: before/after dots, lines, delta annotations, sort
+          order, AND regression case (Legal -3 pts)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction scores before/after policy changes — realistic,
-          neutral, comprehensible scenario.
+        comment: Employee satisfaction scores before/after policy changes; neutral
+          business scenario with named departments
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Satisfaction scores 45-85 on a 100-point scale. Realistic range for
-          employee surveys.
+        comment: Scores 45-85/100; deltas -3 to +24 — plausible satisfaction survey
+          values
     code_quality:
       score: 10
       max: 10
@@ -194,34 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat structure: tokens → data → sort → figure → traces → layout
-          → save.'
+        comment: 'Clean linear flow: constants → data → sort → figure → traces → annotations
+          → layout → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hand-picked data, no RNG.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported; both used.
+        comment: Only os and plotly.graph_objects imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration over categories for connecting lines. Pythonic sorted()
-          with lambda. Appropriate complexity.
+        comment: Conditional loop for per-trace coloring is necessary; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; autosize=False with
+          explicit dimensions; current API
     library_mastery:
       score: 7
       max: 10
@@ -231,25 +227,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure() with explicit trace management per Plotly idiom. Proper
-          update_layout. showlegend=False on non-legend traces. Good but not expert-level
-          (could use shapes for lines instead of Scatter for slightly cleaner approach).
+        comment: go.Scatter with mode=lines/markers for dumbbell; showlegend=False
+          on connector traces; full layout dict with chrome tokens
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Plotly-specific: hovertemplate with formatted tooltips showing department
-          and score, hoverinfo=skip for connecting lines to prevent hover clutter,
-          HTML export alongside PNG.'
-  verdict: REJECTED
+        comment: Per-trace hovertemplate with HTML formatting and extra suppression;
+          hoverinfo=skip on connectors; write_html with CDN plotlyjs
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
