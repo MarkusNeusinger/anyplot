@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-30
@@ -18,8 +18,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-BRAND = "#009E73"  # Imprint palette position 1 — first/only data series
+BRAND = "#009E73"  # Imprint palette position 1
 SKY_TOP = "#E8C8A0" if THEME == "light" else "#252D40"
+# Dark silhouette fill: very dark near-black for photo-like alpine silhouette
+MOUNTAIN_FILL = "#23231F" if THEME == "light" else "#0D0D0B"
 
 # Data — Wallis (Valais) summit panorama, ordered W → E
 peaks = [
@@ -45,12 +47,13 @@ peaks = [
 # Top 3 summits by elevation for additional visual emphasis
 top_elevations = set(sorted([p[2] for p in peaks], reverse=True)[:3])  # 4634, 4545, 4527
 
-# Skyline construction
+# Skyline construction — piecewise-linear triangular tent peaks (NOT Gaussian)
 np.random.seed(42)
-angle = np.linspace(0, 262, 2000)
+n_pts = 2000
+angle = np.linspace(0, 262, n_pts)
 
 # Base ridge: smoothed random walk in the 3000–3700 m belt (foothills + minor cols)
-walk = np.cumsum(np.random.randn(len(angle)) * 1.5)
+walk = np.cumsum(np.random.randn(n_pts) * 1.5)
 sigma_walk = 22
 g = np.arange(-3 * sigma_walk, 3 * sigma_walk + 1)
 kernel_walk = np.exp(-(g**2) / (2 * sigma_walk**2))
@@ -58,17 +61,38 @@ walk = np.convolve(walk, kernel_walk / kernel_walk.sum(), mode="same")
 walk = (walk - walk.min()) / (walk.max() - walk.min())
 ridge = 3000 + walk * 700
 
-# Major summits as Gaussian peaks (max-combined for the visible silhouette)
+# Asymmetric triangular tent functions — steep linear flanks, sharp pointed apexes
 for _, pos, elev in peaks:
-    width = 5.5 + (elev - 4000) / 130
-    bump = (elev - 2700) * np.exp(-((angle - pos) ** 2) / (2 * width**2))
-    ridge = np.maximum(ridge, 2700 + bump)
+    col_base = max(elev - np.random.uniform(900, 1300), 2900)
+    left_w = np.random.uniform(5.0, 8.5)  # asymmetric half-widths in degrees
+    right_w = np.random.uniform(7.0, 11.5)
 
-# Light final smoothing of the combined ridge
-sigma_ridge = 0.8
-g = np.arange(-3, 4)
-kernel_ridge = np.exp(-(g**2) / (2 * sigma_ridge**2))
-ridge = np.convolve(ridge, kernel_ridge / kernel_ridge.sum(), mode="same")
+    tent = np.zeros(n_pts)
+    mask_l = (angle >= pos - left_w) & (angle < pos)
+    if mask_l.any():
+        t_l = (angle[mask_l] - (pos - left_w)) / left_w
+        tent[mask_l] = col_base + t_l * (elev - col_base)
+    mask_r = (angle > pos) & (angle <= pos + right_w)
+    if mask_r.any():
+        t_r = 1.0 - (angle[mask_r] - pos) / right_w
+        tent[mask_r] = col_base + t_r * (elev - col_base)
+    apex_idx = int(np.argmin(np.abs(angle - pos)))
+    tent[apex_idx] = elev
+
+    ridge = np.maximum(ridge, tent)
+
+# Rocky jaggedness: lightly smoothed high-frequency noise for rugged alpine texture
+rock_noise = np.random.randn(n_pts) * 22
+sigma_r = 1.5
+g2 = np.arange(-5, 6)
+k2 = np.exp(-(g2**2) / (2 * sigma_r**2))
+rock_noise = np.convolve(rock_noise, k2 / k2.sum(), mode="same")
+ridge = ridge + rock_noise
+
+# Re-pin apex elevations after noise (labeled summits show their true height)
+for _, pos, elev in peaks:
+    apex_idx = int(np.argmin(np.abs(angle - pos)))
+    ridge[apex_idx] = max(ridge[apex_idx], elev)
 
 # Canvas — landscape 3200×1800 px (figsize=(8, 4.5) × dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -87,9 +111,10 @@ ax.imshow(
     interpolation="bilinear",
 )
 
-# Mountain silhouette — Imprint brand green fill (stylised alpine palette)
-ax.fill_between(angle, 2400, ridge, color=BRAND, linewidth=0, zorder=2)
-ax.plot(angle, ridge, color=BRAND, linewidth=0.8, zorder=3)
+# Mountain silhouette — dark solid fill (photo-like silhouette, evening/dusk feel)
+ax.fill_between(angle, 2400, ridge, color=MOUNTAIN_FILL, linewidth=0, zorder=2)
+# Brand-green ridge highlight line for identity against the dark mountain body
+ax.plot(angle, ridge, color=BRAND, linewidth=1.0, alpha=0.7, zorder=3)
 
 # Peak labels staggered across three vertical levels with thin leader lines
 label_levels = [5050, 5310, 5570]
