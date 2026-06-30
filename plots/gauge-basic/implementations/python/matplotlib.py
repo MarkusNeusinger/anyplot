@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 gauge-basic: Basic Gauge Chart
-Library: matplotlib | Python 3.14
+Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 91/100 | Updated: 2026-06-30
 """
 
