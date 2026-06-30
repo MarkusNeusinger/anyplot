@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: errorbar-basic
 created: '2026-06-30T20:44:21Z'
-updated: '2026-06-30T20:51:40Z'
+updated: '2026-06-30T21:12:36Z'
 generated_by: claude-sonnet
 workflow_run: 28473971049
 issue: 973
@@ -12,53 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/errorbar-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/errorbar-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Brand green #009E73 used correctly as first (and only) series color'
-  - 'Elegant three-layer composition: errorbars! + lines! + scatter! showing trend
-    and uncertainty simultaneously'
-  - Scatter markers with strokecolor=PAGE_BG create a nice definition effect against
-    both backgrounds
-  - 'Full theme-adaptive chrome: all text, grid, and spine colors use INK/INK_SOFT
-    tokens — both renders pass legibility check'
-  - Realistic scientific dataset (plant seedling growth under light intensities) with
-    biologically plausible saturation curve
-  - Y-only subtle grid (xgridvisible=false) and top/right spines removed — clean,
-    uncluttered layout
-  - 'Perfect spec compliance: error bars with visible caps (whiskerwidth=12), correct
-    title format, correct axes'
-  - 'Perfect code quality: KISS structure, clean imports, explicit sizing, correct
-    output format'
+  - Clean layer composition (errorbars! + lines! + scatter!) showcasing Makie compositional
+    API
+  - 'Excellent theme adaptation: all chrome elements use correct INK/INK_SOFT tokens
+    for both light and dark renders'
+  - Error bars have visible caps (whiskerwidth=12) meeting spec requirement
+  - Data storytelling via vspan highlight + growth plateau annotation adds narrative
+    value
+  - Idiomatic CairoMakie code throughout — native recipes, RGBAf, colorant strings,
+    Figure/Axis API
   weaknesses:
-  - 'DE-01 LOW (5/8): Design lacks visual emphasis beyond clean defaults — no annotation
-    or focal point highlights the growth saturation plateau visible in the data; the
-    saturation around 800-1600 lux is the key insight but nothing draws the eye to
-    it'
-  - 'DE-02 MODERATE (4/6): Visual refinement is good but incomplete — xticklabelsize
-    and yticklabelsize are not explicitly set on the Axis (inherited from Figure fontsize=14
-    rather than set directly as separate axis params); style guide with 6 sparse data
-    points recommends no grid, but the Y-grid is retained'
-  - 'DE-03 LOW (2/6): Data storytelling is at default — the growth saturation story
-    is inherent in the data but no visual element (annotation, reference band, size
-    variation) explicitly guides the viewer to the leveling-off effect at high lux
-    values'
-  - 'LM-02 MODERATE (3/5): Primitive layering is Makie-idiomatic but the combination
-    errorbars!+lines!+scatter! follows the standard template without using more distinctive
-    Makie capabilities (e.g., hidespines!, hidedecorations!, explicit axis margins
-    for tighter padding)'
+  - vspan! highlight alpha is 0.08 — barely perceptible in both renders; increase
+    to 0.12-0.15 for the subtle plateau region to actually register visually
+  - growth plateau annotation uses fontsize=12 with INK_MUTED color — readable but
+    quite small; consider fontsize=13 for better visibility at mobile scale
+  - Grid lines appear visible in renders at y=2.5, 5.0, 7.5 despite xgridvisible=false
+    and ygridvisible=false; if unintentional, verify attribute names; if intentional,
+    add explicit ygridcolor styling using INK token at 0.15 alpha per the Makie guide
+    skeleton
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS.
-      Chrome: Title "errorbar-basic · julia · makie · anyplot.ai" in dark ink at ~65% width, well-proportioned. X-axis label "Light Intensity" and Y-axis label "Mean Seedling Height (cm)" in dark INK, clearly readable. Tick labels ("50 lux" through "1600 lux", numeric Y values) in softer INK_SOFT. All text clearly readable against the warm off-white background. Subtle horizontal Y-grid lines at 15% opacity; no X-grid.
-      Data: Error bars, connecting line, and scatter markers all rendered in brand green #009E73. Scatter markers have a cream strokecolor (PAGE_BG) giving clean definition. Error bars display visible whisker caps. 6 data points from 50 lux to 1600 lux; the trend line shows a saturation curve.
-      Legibility verdict: PASS — all text readable, no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "errorbar-basic · julia · makie · anyplot.ai" in bold dark (#1A1A17) text, centered; Y-axis label "Mean Seedling Height (cm)" rotated in dark text; X-axis label "Light Intensity" in dark text; tick labels ("50 lux" … "1600 lux", 2.5/5.0/7.5) in INK_SOFT dark gray — all clearly readable. Faint horizontal grid lines visible at y=2.5, 5.0, 7.5 (despite xgridvisible=false, ygridvisible=false in code). Top/right spines absent; left/bottom spines in INK_SOFT. "growth plateau" annotation visible near top-center of right section in INK_MUTED (tertiary gray) at fontsize=12 — readable but subtle. Very faint vspan region highlight on far right (0.08 alpha, barely perceptible).
+      Data: Single series in #009E73 brand green — errorbars with horizontal whisker caps, smooth line through 6 data points, circular scatter markers with PAGE_BG stroke. Ascending growth curve flattening at high light levels.
+      Legibility verdict: PASS — all text elements clearly readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS.
-      Chrome: Title and axis labels flip to light text (#F0EFE8 equivalent), tick labels to softer #B8B7B0. All text clearly readable against the dark background. Subtle Y-grid visible. No dark-on-dark failures observed.
-      Data: Error bars, line, and scatter markers are identical green #009E73 to the light render — data colors unchanged between themes. Scatter stroke adapts to dark PAGE_BG. Brand green reads clearly on dark background.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in cream (#F0EFE8) text clearly readable; Y-axis and X-axis labels in cream text; tick labels in INK_SOFT (#B8B7B0 soft gray) — all visible against dark background. Faint horizontal grid lines similarly visible. "growth plateau" annotation in INK_MUTED (#A8A79F, ~8:1 contrast ratio) — readable. No dark-on-dark text issues found.
+      Data: Colors identical to light render — same #009E73 green for errorbars, line, and scatter markers. Data colors unchanged across themes (only chrome flipped). Brand green #009E73 clearly visible and well-contrasted against dark background.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,55 +55,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: titlesize=20, xlabelsize/ylabelsize=14 explicitly set; xticklabelsize/yticklabelsize
-          inherited from Figure fontsize=14 rather than set at Axis level. Result
-          looks well-proportioned and readable in both themes.
+        comment: 'All font sizes explicitly set via titlesize=20, xlabelsize=14, ylabelsize=14,
+          xticklabelsize=12, yticklabelsize=12. Both themes fully readable. Minor:
+          annotation fontsize=12 in INK_MUTED is slightly subtle at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. 6 well-spaced data points, categorical X-axis
-          ticks spaced evenly.
+        comment: 6 well-spaced data points, no text collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 sparse data points — markersize=14 and whiskerwidth=12 are appropriately
-          prominent. Error bar caps clearly visible.
+        comment: markersize=14 and whiskerwidth=12 appropriate for 6-point sparse
+          data. Error bars with caps clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73 (Imprint green) with strokecolor for shape
-          redundancy. CVD-safe.'
+        comment: 'Single series in #009E73, excellent contrast on both backgrounds,
+          no CVD concerns.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization. Balanced margins. Y-axis label is tight
-          to left edge but all pixels intact — no clipping.
+        comment: Canvas gate passed (3200x1800). Good whitespace. L-shaped frame.
+          No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Mean Seedling Height (cm)'' with units. X: ''Light Intensity''
-          with units conveyed via tick labels (50 lux, 100 lux, ...). Title format
-          correct.'
+        comment: 'Title correct format. Y-axis: ''Mean Seedling Height (cm)'' with
+          units. X-axis: ''Light Intensity'' descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series = #009E73 (Imprint brand green). Background
-          #FAF8F1 light / #1A1A17 dark. All chrome tokens theme-adaptive. Both renders
-          pass.'
+        comment: 'First series IMPRINT_PALETTE[1]=#009E73. Backgrounds #FAF8F1 light
+          / #1A1A17 dark. All chrome theme-adaptive. Data colors identical across
+          both renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -125,26 +109,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: intentional three-layer composition
-          (errorbars+lines+scatter), stroked markers, Y-only grid. But no visual emphasis
-          on the key insight (growth saturation) and no deliberate typography hierarchy
-          beyond template defaults.'
+        comment: Layered composition (errorbars+line+scatter) with Imprint palette
+          shows intentional design above library defaults. vspan+annotation add narrative.
+          vspan at 0.08 alpha is barely perceptible which weakens the visual impact
+          somewhat.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid (xgridvisible=false), top/right spines removed, stroked
-          markers. Style guide recommends no grid for plots with few datapoints (6
-          here), and tick label sizes not set at Axis level.
+        comment: L-shaped spine frame, INK_SOFT colors on remaining spines, scatter
+          marker stroke (strokewidth=1.5, strokecolor=PAGE_BG) for definition. Horizontal
+          grid lines appear in render despite ygridvisible=false.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data is displayed clearly but not interpreted. The growth saturation
-          plateau is visible from the data but no annotation, shaded region, or focal
-          point guides the viewer to the key insight.
+        passed: true
+        comment: Growth plateau story communicated via annotation text and vspan.
+          But vspan at 0.08 alpha barely registers; annotation carries most of the
+          storytelling load.
     spec_compliance:
       score: 15
       max: 15
@@ -154,29 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: error bars with visible caps using errorbars!().
-          Symmetric error bars appropriate for ''basic'' spec.'
+        comment: Correct error bar plot with visible caps (whiskerwidth=12). errorbars!
+          primitive used.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible caps (whiskerwidth=12), consistent widths, symmetric error
-          bars, central value markers all present.
+        comment: Error bars with caps, consistent widths, data markers, connected
+          trend line all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=light intensity (categorical), Y=mean height (numeric), error=std.
-          All 6 points visible.
+        comment: 'X: light intensity levels (categorical). Y: mean seedling height
+          (cm). Error: standard deviation. All 6 points shown.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'errorbar-basic · julia · makie · anyplot.ai' — correct format.
-          Single series, no legend needed.
+        comment: 'Title: ''errorbar-basic · julia · makie · anyplot.ai'' correct format.
+          Single series, no legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -186,25 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows error bars with caps, varying magnitudes (std 0.35→0.85), central
-          values, connecting line. Core features of the error bar plot type fully
-          represented.
+        comment: Error bars, trend line, markers, region highlight, annotation — comprehensive
+          feature coverage for the error bar plot type.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real botanical scenario: seedling height under measured light intensities
-          (50-1600 lux). Scientific methodology (n=20 replicates, std deviation).
-          Neutral, comprehensible topic.'
+        comment: Seedling height under light intensity experiment — scientifically
+          plausible and neutral. Values (1.2-7.8 cm), light levels (50-1600 lux),
+          std devs (0.35-0.85) all realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Heights 1.2-7.8 cm plausible for seedlings. Std 0.35-0.85 cm realistic
-          variability. Light range 50-1600 lux spans indoor to bright conditions.
-          Growth saturation biologically plausible.
+        comment: 6 data points within 3-20 spec range. Values and error magnitudes
+          (~10-15% of mean) consistent with real seedling growth experiments.
     code_quality:
       score: 10
       max: 10
@@ -214,35 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: constants → data → figure → plot layers → save. No functions
-          or classes.'
+        comment: 'Linear script: theme tokens → data → plot → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present; data is deterministic (hardcoded arrays).
+        comment: Random.seed!(42) present. Data is hardcoded arrays so deterministic
+          by construction.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie (plot), Colors (colorant syntax), Random (seed) — all
-          used.
+        comment: CairoMakie (plotting), Colors (colorant strings), Random (seed) —
+          all imported and used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clean idiomatic Julia. Minor verbosity: explicit Float32 casts in
-          RGBAf() not needed (Makie handles conversion), but correct.'
+        comment: Clean and readable. RGBAf inline construction for vspan color is
+          slightly verbose but correct. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses size= (modern
-          Makie param). Correct.
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct output format.
     library_mastery:
       score: 7
       max: 10
@@ -252,27 +234,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of errorbars!, lines!, scatter! as composited primitives
-          on the same Axis. RGBAf for alpha grid color. colorant"#..." syntax. Figure/Axis
-          layout. Well-idiomatic.
+        comment: Multiple Makie recipes composited on one Axis (errorbars!, lines!,
+          scatter!, vspan!, text!). Proper Figure/Axis API, RGBAf for alpha colors,
+          colorant strings from Colors.jl — consistently idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Makie-idiomatic primitive layering (three separate calls vs. matplotlib's
-          single errorbar()). strokewidth/strokecolor on scatter markers (Makie-specific).
-          Could go further with hidespines!(), hidedecorations!(), or explicit axis
-          margins.
-  verdict: REJECTED
+        comment: errorbars! with whiskerwidth (Makie-specific recipe), vspan! for
+          region highlighting (Makie-specific), layer composition of 5 plot primitives
+          on one Axis showcasing Makie's composable design.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
