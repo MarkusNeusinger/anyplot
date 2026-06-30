@@ -1,0 +1,279 @@
+library: makie
+language: julia
+specification_id: area-mountain-panorama
+created: '2026-06-30T22:26:39Z'
+updated: '2026-06-30T22:52:42Z'
+generated_by: claude-sonnet
+workflow_run: 28478951647
+issue: 5365
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 80
+review:
+  strengths:
+  - Striking light-mode panorama with deep black silhouette against ice-blue sky —
+    photographic alpine feel executed well
+  - Staggered peak labels with thin leader lines are well-separated and readable across
+    all 15 summits
+  - Correct use of Makie Theme object, layout grid Label for subtitle, and poly! for
+    the silhouette polygon — idiomatic Makie
+  - All chrome tokens (INK, INK_SOFT, PAGE_BG, SKY_BG, MTN_FILL) are theme-adaptive
+    and correctly wired
+  - Asymmetric tent functions + midpoint-displacement jitter produce convincingly
+    jagged triangular peaks — not bell-curve bumps
+  - Accurate real-world elevations and factually correct peak order for a Gornergrat-area
+    westward sweep
+  weaknesses:
+  - 'Dark-mode mountain silhouette (#324060) against dark-navy sky (#0D1825) has very
+    low luminance contrast (~1.6:1) — the mountains are barely distinguishable from
+    the sky in dark render; increase MTN_FILL luminance to at least #4A5F80 or adjust
+    SKY_BG darker'
+  - Large flat baseline gap (~36° of bearing) between Dent Blanche (52°) and Matterhorn
+    (88°) — the actual alpine skyline has sub-peaks and cols in this gap; add 2-3
+    intermediate tent peaks at lower elevations (e.g. 3700-3900m) to fill the dead
+    zone
+  - Peak annotation labels at fontsize=11 are quite small for a 3200×1800 canvas —
+    at mobile scale (400px wide) they would be illegible; increase to fontsize=13
+    for better readability
+  - tent() helper function violates KISS/CQ-01 (no functions) — can be inlined as
+    a lambda or reformulated as a one-liner broadcasted expression
+  - Breithorn (4164m) from the spec example dataset is missing — add it between Castor
+    and Pollux at ~168°
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page background — PASS, not pure white
+      Axis background: Ice-blue sky (#B8D8EF) fills the plot panel, creating a photographic "sky" effect above the ridgeline
+      Chrome: Title "Wallis Peaks Panorama · area-mountain-panorama · julia · makie · anyplot.ai" renders in dark ink (#1A1A17) clearly above the plot; axis labels "Bearing (°)" and "Elevation (m)" in dark ink; tick labels in INK_SOFT (#4A4A44), all readable
+      Data: Mountain silhouette in near-black (#262623) stands out sharply against the ice-blue sky. Teal (#009E73) peak markers are clearly visible at each summit. Leader lines are thin grey vertical segments. All 15 peak name + elevation labels are staggered at three height levels (~4640m, ~4870m, ~5100m) to avoid overlap. Matterhorn label is highest (5250m) with a slightly larger marker.
+      Legibility verdict: PASS — all text elements readable; peak labels are small but legible at full resolution; title and axis labels well-proportioned
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) page background — PASS, not pure black
+      Axis background: Very dark navy (#0D1825) fills the plot panel as the night-sky equivalent of the light ice-blue
+      Chrome: Title in light cream (#F0EFE8) readable against dark background; axis labels in light ink; tick labels in INK_SOFT (#B8B7B0) — all clearly readable. No dark-on-dark failures for text elements.
+      Data: Mountain silhouette uses #324060 (dark grayish-navy) — data colors are DIFFERENT from light render (navy-blue vs near-black), which is acceptable as MTN_FILL is not a categorical data color but a custom silhouette fill. Peak markers remain teal (#009E73) — identical to light render, consistent with Imprint palette rule. The silhouette contrast against #0D1825 sky is LOW (luminance ratio ~1.6:1) — the mountains are barely visible, appearing as slightly lighter angular shapes against an almost identical dark sky.
+      Legibility verdict: PASS for text; PARTIAL FAIL for mountain visibility — silhouette contrast is too low for comfortable dark-mode reading
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; axis labels 13pt, ticks 11pt, peak
+          labels 11pt. Title scales correctly with formula. Both themes readable.
+          Peak annotations at fontsize=11 are small for 3200x1800 canvas — mobile-width
+          legibility marginal.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Three-level stagger (4640/4870/5100m) prevents overlap for most peaks.
+          Right portion (142-185°, 7 peaks) is crowded but labels remain distinguishable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Light mode: excellent — black silhouette against ice-blue sky. Dark
+          mode: mountain silhouette (#324060) against sky (#0D1825) has very low contrast,
+          barely distinguishable. Teal markers visible in both.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 is CVD-safe. Dark mode silhouette contrast ratio
+          ~1.6:1 is below WCAG 3:1 threshold for non-text graphics.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Plot fills canvas well. Panoramic landscape
+          format appropriate. Large flat baseline gap (~36° of bearing between Dent
+          Blanche and Matterhorn) is visually disruptive.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Bearing (°) and Elevation (m) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Peak markers use BRAND=#009E73. Page backgrounds #FAF8F1 / #1A1A17.
+          MTN_FILL and SKY_BG are custom atmospheric colors, not categorical data
+          colors. Chrome is theme-adaptive in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Light mode is genuinely striking — the black silhouette against ice-blue
+          sky is a publication-quality alpine panorama composition. Dark mode is weaker
+          due to low silhouette contrast. Overall clearly above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, no grid (appropriate for panorama), custom
+          sky-blue axis background adds character, theme-adaptive tokens wired throughout.
+          Subtitle label above axis adds context. Good but not perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Matterhorn focal point established via highest label position and
+          larger marker. Left-to-right panorama sweep has natural narrative flow.
+          Staggered annotations guide the eye across the ridgeline.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: filled area silhouette with annotated peaks.
+          Piecewise-linear angular peaks, not Gaussian bumps.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Ridgeline as piecewise-linear silhouette: YES. Area fill (dark solid
+          color): YES. Leader lines to labels: YES. Staggered labels: YES. Y-axis
+          from 2500m: YES. Sky background: YES. Sky gradient: NO (solid color). Layered
+          depth: NO. Both optional.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: bearing 0-180°, Y: elevation meters. 15 of 16 suggested peaks
+          included (Breithorn missing). All axes show full data range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Wallis Peaks Panorama · area-mountain-panorama · julia
+          · makie · anyplot.ai'' — correct optional descriptive prefix format. No
+          legend (unnecessary for single-series silhouette).'
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Asymmetric flanks per summit: YES. Sharp triangular peaks: YES.
+          Jitter for jaggedness: YES. Varying peak heights: YES. Inter-peak cols/sub-peaks:
+          MISSING — large flat baseline sections between major peaks look unrealistic.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Swiss Alps peaks with accurate elevations (Matterhorn 4478m,
+          Weisshorn 4506m, Monte Rosa 4634m, etc.). Gornergrat vantage at 3100m. Neutral,
+          educational alpine geography.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Elevations factually correct. Y range 2450-5350m appropriate. Bearing
+          0-180° reasonable abstraction. BASELINE=2780m plausible. However, flat ~36°
+          gap between Dent Blanche and Matterhorn is geographically unrealistic for
+          a continuous alpine skyline.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 'tent() helper function defined — technically violates no-functions
+          rule but is a simple pure function used in comprehension. Otherwise structure
+          is clean: imports → consts → data → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top of file.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean implementation. ANYPLOT_MAKIE_THEME consolidation is elegant.
+          Jitter damping near summits is a nice algorithmic touch. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save('plot-$(THEME).png', fig; px_per_unit = 2) — correct output
+          format and canvas size.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: with_theme() for theme application, Figure/Axis layout grid, Label()
+          in row 0 for subtitle, rowgap! for spacing, xlims!/ylims!, poly!/scatter!/lines!/text!
+          for layered rendering — all idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Makie-distinctive features: Theme() object for centralised chrome,
+          layout grid Label for subtitle (non-Axis layout element), poly!() for the
+          silhouette polygon. Not using Figure.scene or GLMakie-only features.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
