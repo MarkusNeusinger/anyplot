@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-30
@@ -55,6 +55,9 @@ data["highlight"] = ["focal" if i == focal_idx else "base" for i in data.index]
 color_map = {"base": BRAND, "focal": FOCAL}
 
 title = "errorbar-basic · python · letsplot · anyplot.ai"
+subtitle = (
+    "Treatment D (highlighted) has the widest error margin (±7.1 mg/dL), indicating higher measurement variability"
+)
 
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -68,6 +71,7 @@ anyplot_theme = theme(
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
     plot_title=element_text(color=INK, size=16),
+    plot_subtitle=element_text(color=INK_SOFT, size=11),
     legend_position="none",
 )
 
@@ -76,7 +80,7 @@ plot = (
     + geom_errorbar(aes(ymin="ymin", ymax="ymax"), width=0.3, size=1.5)
     + geom_point(size=6)
     + scale_color_manual(values=color_map)
-    + labs(x="Experimental Group", y="Measured Value (mg/dL)", title=title)
+    + labs(x="Experimental Group", y="Measured Value (mg/dL)", title=title, subtitle=subtitle)
     + theme_minimal()
     + anyplot_theme
     + ggsize(800, 450)
