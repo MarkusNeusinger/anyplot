@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-06-30
@@ -28,6 +28,7 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 BEFORE = "#009E73"  # Imprint position 1 — brand green, always first series
 AFTER = "#C475FD"  # Imprint position 2 — lavender
 CONNECTOR = INK_SOFT  # theme-adaptive neutral connector line
+LOSS_COLOR = "#AE3030"  # Imprint matte red — semantic anchor for regression/bad outcomes
 
 # Data — employee satisfaction scores before and after new workplace policy
 categories = [
@@ -66,8 +67,9 @@ n_chars = len(title)  # 70 chars
 ratio = 67 / n_chars if n_chars > 67 else 1.0
 title_font_size = max(44, round(66 * ratio))  # ≈ 63
 
-# Color sequence: n neutral connectors then brand green + lavender for dots
-colors_tuple = (CONNECTOR,) * n + (BEFORE, AFTER)
+# Color sequence: neutral connectors (red for negative deltas), then dot colors
+connector_colors = tuple(LOSS_COLOR if a < b else CONNECTOR for b, a in zip(before, after, strict=True))
+colors_tuple = connector_colors + (BEFORE, AFTER)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -98,6 +100,7 @@ chart = pygal.XY(
     legend_at_bottom_columns=2,
     legend_box_size=44,
     margin=80,
+    margin_bottom=20,
     show_x_guides=False,
     show_y_guides=False,
     xrange=(35, 95),
