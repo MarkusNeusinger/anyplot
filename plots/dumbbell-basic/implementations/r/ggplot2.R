@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' dumbbell-basic: Basic Dumbbell Chart
-#' Library: ggplot2 | R 4.x
-#' Quality: pending | Created: 2026-06-30
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 90/100 | Created: 2026-06-30
 
 library(ggplot2)
 library(ragg)
