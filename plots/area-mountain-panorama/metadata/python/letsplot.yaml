@@ -2,51 +2,66 @@ library: letsplot
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T21:44:24Z'
-updated: '2026-04-25T21:51:46Z'
-generated_by: claude-opus
-workflow_run: 24941216649
+updated: '2026-06-30T22:21:43Z'
+generated_by: claude-sonnet
+workflow_run: 28478745810
 issue: 5365
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Exemplary data quality: real Swiss Alpine peaks (Matterhorn, Monte Rosa, Weisshorn,
-    Dom, etc.) with accurate elevations from Gornergrat vantage point'
-  - 3-row label staggering algorithm elegantly solves the crowding problem for 16
-    simultaneous peak annotations without any overlap
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
-    correct without any dark-on-dark or readability failures'
-  - Matterhorn typographic emphasis (size 9 vs 7 for others) provides a clear visual
-    anchor focal point
-  - Compass bearing X-axis labels (WSW, W, NW, N, NE) add geographic orientation without
-    cluttering the panorama
+  - Beautiful alpine panorama silhouette with dark mountain fill (#2C3E50) and brand
+    green (#009E73) ridge outline — striking visual contrast in light mode
+  - Three-row label staggering algorithm handles 16 clustered peaks cleanly with no
+    overlaps
+  - Piecewise-linear triangular tent functions correctly produce angular alpine peaks
+    (not Gaussian bumps) as required by spec
+  - Matterhorn anchor peak emphasised with larger fontsize (4.5 vs 3.5 mm) for focal
+    prominence
+  - 'Themed sky panel backgrounds (light-blue #B8D4E8 / dark-navy #0B1726) reinforce
+    the panorama photographic aesthetic'
+  - layer_tooltips() with peak name + elevation leverages letsplots interactive HTML
+    output — a genuine library differentiator
+  - All 16 Wallis 4000-m summits with correct real-world elevations, compass bearings,
+    and Gornergrat vantage point
   weaknesses:
-  - 'Mountain silhouette uses bright brand green (#009E73) instead of the spec-required
-    dark solid color for a photo-like silhouette with evening/dusk feel — the spec
-    explicitly says to fill with a dark solid color; use a dark charcoal/slate fill
-    and reserve #009E73 as a thin ridge outline'
-  - No sky-gradient background above the ridgeline (spec describes it as optional
-    but it would dramatically improve the atmospheric panorama feel the spec envisions)
-  - lets-plot HTML export does not leverage tooltip annotations on peaks — hover for
-    name and elevation would be the library's key interactive differentiator and is
-    missing from the implementation
+  - 'Dark render: mountain fill #2C3E50 is lighter than the dark sky panel background
+    #0B1726 (RGB 44,62,80 vs 11,23,38), subtly inverting the silhouette effect. Consider
+    making MOUNTAIN_FILL theme-adaptive so it remains darker than the sky in both
+    themes.'
+  - Elevation sub-labels use size=3.0 mm (~8.5 pt), which may be slightly small at
+    mobile scale (~400 px). Increasing to 3.2–3.5 mm would improve legibility on small
+    screens.
+  - 'DE-03: storytelling is good (Matterhorn emphasis, compass bearings) but the subtitle
+    already provides context — a visual annotation pointing out the tallest peak (Monte
+    Rosa / Dufourspitze at 4634 m) as the highest summit could further elevate narrative
+    clarity.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title in dark ink (#1A1A17) at size 24, clearly readable. Subtitle in muted gray (#6B6A63). Axis labels "Elevation (m)" and "Bearing" in dark ink. Tick labels in INK_SOFT (#4A4A44). All chrome elements readable.
-      Data: Mountain area filled solid with brand green #009E73. 16 peak leader lines in INK_SOFT gray. Peak names in bold dark INK. Elevation sub-labels in INK_SOFT. Matterhorn name larger than others.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background
+      Background: Warm off-white #FAF8F1 — correct page surface.
+      Panel background: Light sky-blue (#B8D4E8) filling the full chart area above the ridgeline — matches the atmospheric panorama intent from the spec.
+      Mountain silhouette: Dark slate-navy fill (#2C3E50) clearly darker than the sky blue, creating the intended photo-like silhouette with brand green (#009E73) ridge outline tracing the full skyline.
+      Peak markers: Brand green (#009E73) dots at all 16 summit positions — clearly visible.
+      Labels: Three-row staggered system; peak names in bold dark INK (#1A1A17), elevation sub-labels in INK_SOFT (#4A4A44). All clearly readable.
+      Title: "Wallis Panorama from Gornergrat · area-mountain-panorama · python · letsplot · anyplot.ai" — dark text, fills ~80% of width, readable.
+      Subtitle: Smaller grey text below title, readable.
+      Compass X-axis: WSW, W, NW, N, NE labels readable.
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title adapts to light text (#F0EFE8), clearly readable against dark background. Subtitle in #A8A79F. Axis labels in light INK token. Tick labels in #B8B7B0. No dark-on-dark failures detected.
-      Data: Mountain area fill is identical #009E73 brand green — same as light render, data colors unchanged. Leader lines in soft gray. Peak name labels in light ink. Elevation labels in muted light gray.
-      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures
+      Background: Warm near-black #1A1A17 — correct page surface.
+      Panel background: Very dark navy (#0B1726) — night-sky feel appropriate for dark mode.
+      Mountain silhouette: Mountain fill (#2C3E50, RGB 44,62,80) is slightly lighter than the very dark sky (#0B1726, RGB 11,23,38), causing a subtle inversion of the silhouette effect — mountains appear as medium-dark blue forms against a darker sky rather than dark silhouettes against a lighter sky. The brand green (#009E73) outline still clearly defines the ridgeline. Visually acceptable but different from the light render's photographic silhouette effect.
+      Peak markers: Brand green (#009E73) dots visible — data colors identical to light render. ✓
+      Labels: Peak names use INK (#F0EFE8, near-white) — clearly readable against the dark background. Elevation sub-labels use INK_SOFT (#B8B7B0) — readable. Leader lines appear light-colored (INK_SOFT in dark mode).
+      Title/subtitle: Light text on near-black background — fully readable.
+      No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable. Minor visual note: mountain silhouette effect inverted in this theme but not a legibility failure.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,72 +72,93 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set: title 24, axis_title 20, axis_text 16; geom_text
-          sizes in lets-plot native units; all readable in both themes'
+        comment: 'All font sizes explicitly set; title scaled via formula (max(11,
+          round(16*67/88))=12); peak name sizes 3.5–4.5 mm and axis labels 10–12pt
+          well-proportioned. Minor: elevation sub-labels at size=3.0 mm may be slightly
+          small at mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 3-row staggering algorithm prevents all 16 peak label collisions
+        comment: Three-row staggering algorithm (rows at y=5650/5350/5050, min_dx=26
+          degrees) cleanly separates all 16 peak labels. No overlaps detected in either
+          render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Mountain silhouette, leader lines, and all annotations clearly visible
+        comment: 'Light render: excellent — dark silhouette against light sky. Dark
+          render: mountain fill (#2C3E50) is lighter than dark sky (#0B1726) creating
+          a subtle inversion; brand green outline still defines ridgeline clearly.
+          Data density (1600 samples) appropriate for area chart.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series green on warm backgrounds, high contrast in both themes
+        comment: 'Brand green #009E73 on both dark mountain fill and sky backgrounds
+          — good contrast. No red-green only signals.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Landscape aspect suits panorama; annotation area takes upper 45%
-          of canvas height
+        comment: ggsize(800,450) with scale=4 → 3200x1800 correct landscape canvas.
+          Y range [2800,6000] with label space at 5050-5650 creates good panoramic
+          proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Elevation (m) and Bearing with compass labels
+        comment: 'X: ''Bearing'' with compass labels WSW/W/NW/N/NE. Y: ''Elevation
+          (m)'' with units. Both descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 fill, correct backgrounds #FAF8F1/#1A1A17, theme-adaptive
-          chrome'
+        comment: 'Brand green #009E73 used as ridge outline and peak markers (primary
+          data element). Plot background #FAF8F1 light / #1A1A17 dark correct. Mountain
+          fill #2C3E50 and sky colors are design/atmosphere elements justified by
+          spec''s photo-realistic requirement. Chrome (title, labels) uses theme-adaptive
+          tokens throughout.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: Matterhorn emphasis, compass labels, subtitle; bright
-          green silhouette misses spec dark atmospheric feel'
+        comment: 'Strong design clearly above defaults: custom dark mountain silhouette
+          + brand green ridge outline, themed sky colors (light-blue / dark-navy),
+          intentional font hierarchy (Matterhorn 4.5mm vs others 3.5mm), compass bearings,
+          staggered labels. Not quite FiveThirtyEight editorial polish but genuinely
+          sophisticated.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only grid, spines removed, subtle RULE color
+        comment: Grid completely removed (major+minor), Y-axis line and ticks removed,
+          only X-axis line retained for bearing reference. Sky panel background adds
+          atmosphere. Generous plot_margin=[40,40,20,20]. Clean, nearly polished.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Matterhorn focal point via larger text; panoramic sweep intuitive;
-          missing atmospheric sky gradient
+        comment: Matterhorn focal emphasis via larger text is a clear design choice.
+          Compass bearings provide geographic orientation. Subtitle adds vantage-point
+          context. Visual hierarchy guides the viewer. Could be stronger with explicit
+          annotation of the highest peak (Monte Rosa 4634m) or a cleaner way to differentiate
+          the anchor peak visually (e.g. different marker or color).
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -130,27 +166,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart as panoramic mountain silhouette
+        comment: Correct mountain panorama area chart with piecewise-linear tent functions
+          (not Gaussians) — sharp triangular peaks as required.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: All structural features present but spec says dark solid color fill;
-          bright green does not match evening/dusk silhouette intent
+        passed: true
+        comment: 'All features present: filled silhouette, annotated peaks with name+elevation,
+          leader lines, staggered labels, y-axis in meters, compass bearings, Matterhorn
+          focal emphasis, minor ridge bumps and organic roughness.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: angle_deg on X, elevation_m on Y, all 16 peaks annotated
+        comment: X=angle_deg (bearing), Y=elevation_m. All 16 Wallis peaks from spec
+          example present with correct angles and elevations.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, anyplot.ai; no legend needed for
-          single series
+        comment: 'Title: ''Wallis Panorama from Gornergrat · area-mountain-panorama
+          · python · letsplot · anyplot.ai'' — correct {Descriptive} · {spec-id} ·
+          {lang} · {lib} · anyplot.ai format. No legend needed (single-series).'
     data_quality:
       score: 15
       max: 15
@@ -160,21 +200,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Skyline profile, labeled summits, varying elevations, ridge variation,
-          compass orientation, 16 peaks
+        comment: 'Covers all aspects: skyline silhouette, asymmetric triangular peaks
+          (not Gaussians), minor ridge bumps, organic roughness, staggered labels,
+          compass bearings, focal peak emphasis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Valais Alps peaks with accurate elevations from Gornergrat vantage
-          point
+        comment: Real Wallis/Valais panorama from Gornergrat (3089m), real peak names
+          and elevations. Authentic geographic context, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y range 2800-6000m for Alpine panorama; X 0-290 degrees WSW to NE
+        comment: 1600 sample points appropriate for smooth ridgeline. Elevation range
+          2800-4634m realistic for this vantage point. 16 peaks within spec's 10-20
+          recommendation.
     code_quality:
       score: 10
       max: 10
@@ -184,34 +227,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports, tokens, data, skyline, staggering, plot, save;
-          no functions or classes'
+        comment: 'Flat sequential: imports → tokens → data → skyline generation →
+          plot → save. No classes or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all stochastic operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used. layer_tooltips used in geom_point, all element_*
+          used in theme, ggsave used for output.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for staggering logic; idiomatic pandas usage
+        comment: Clean and Pythonic. Tent function construction is appropriately concise.
+          Label staggering algorithm is clear. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: ggsave(plot, f'plot-{THEME}.png', scale=4) and ggsave(plot, f'plot-{THEME}.html')
+          — correct PNG + HTML output with theme suffix.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -219,24 +265,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, geom layering, ggsize(), ggsave() with scale=3,
-          element_* theme tokens
+        comment: 'Good idiomatic letsplot: ggplot grammar, ggsize() for canvas, ggsave()
+          with scale, theme_minimal()+custom theme, scale_x/y_continuous. Uses layer_tooltips()
+          correctly showing the library''s interactive pattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generates HTML output (lets-plot distinctive) but no interactive
-          tooltips on peaks which is the library's key differentiator
-  verdict: REJECTED
+        passed: true
+        comment: Uses layer_tooltips().line('@name').line('@elev_text') — letsplot's
+          native interactive hover system, a key differentiator from static Python
+          plotting libraries. Also produces HTML interactive output alongside the
+          static PNG.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - minimal-chrome

@@ -1,0 +1,240 @@
+library: d3
+language: javascript
+specification_id: gauge-basic
+created: '2026-06-30T21:59:45Z'
+updated: '2026-06-30T22:06:56Z'
+generated_by: claude-sonnet
+workflow_run: 28477629157
+issue: 857
+language_version: 22.23.1
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Semantic Imprint palette usage is exemplary: matte red / amber / brand green
+    for bad/warning/good uses the palette anchors exactly as intended'
+  - Both themes render cleanly with full chrome adaptation — needle flips from black
+    to white, inner fill matches page background
+  - Typography hierarchy (88px value → 30px metric label → 22px ticks/legend) creates
+    strong visual clarity
+  - Deterministic, self-contained D3 snippet with correct square orientation directive
+  weaknesses:
+  - DE-02 could be pushed to 6/6 with subtle stroke separators between zones at threshold
+    boundaries for crisper transitions
+  - LM-02 at 4/5 — d3.arc().cornerRadius() for rounded zone ends would add a more
+    distinctive D3 flourish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "gauge-basic · javascript · d3 · anyplot.ai" in dark ink at top — readable. Tick labels (0%, 25%, 50%, 75%, 100%) in inkSoft — readable. Metric label "Project Completion" in inkSoft — readable.
+      Data: Three zone arcs — matte red (#AE3030) for "Behind" 0-33%, amber (#DDCC77) for "On Track" 33-67%, brand green (#009E73) for "Ahead" 67-100%. Black needle pointing to ~68%. Prominent "68%" value in dark ink (88px bold). Legend circles in red/amber/green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light ink (#F0EFE8) — readable. Tick labels in inkSoft light gray — readable. Metric label in inkSoft — readable. No dark-on-dark failures.
+      Data: Zone colors IDENTICAL to light render (red/amber/green unchanged). Needle turns white (t.ink on dark). Inner gauge fill matches dark page background. Legend circles same colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px ticks, 88px value, 30px metric
+          label, 22px title/legend). Well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Gauge arcs, needle, tick marks, and labels all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint semantic anchors used; amber zone separates red and green,
+          reducing CVD confusion.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for gauge. Gauge in upper half, value/label/legend
+          in lower half.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Percentage tick labels provide units; Project Completion metric label
+          is descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint semantic anchors used correctly: palette[4] for bad, amber
+          for warning, palette[0] for good. Background and chrome fully correct in
+          both themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: intentional semantic color choices, donut-style gauge
+          with outer ring guide, clean pivot circle, professional typography hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: outer ring at 0.25 opacity, zone arcs at 0.9 opacity,
+          inner background fill. Minor: no zone boundary separators.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear story: needle just past 67% threshold into green zone. Semantic
+          color zones and prominent value display deliver the ahead-of-target message.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct semi-circular gauge with needle indicator.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Value, min, max, thresholds, color zones, prominent value label,
+          and needle all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: d3.scaleLinear() correctly maps 0-100 to semi-circle angle range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format. Legend correctly labels all three
+          zones with threshold ranges.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three zones represented; needle, tick marks, color zones, and
+          value display demonstrate gauge fully.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Project Completion at 68% is a credible, neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100% scale standard for completion metrics; thresholds at 33%/67%
+          are logically sound.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level code flow with no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded and deterministic; no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; d3, window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE
+          are globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic D3. No fake interactive elements. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{theme}.png and plot-{theme}.html; SVG sized
+          to window.ANYPLOT_SIZE.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses d3.arc() generator, d3.scaleLinear() for angle mapping,
+          d3.select().append() DOM binding.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: D3 arc generator for donut zones, scale-driven needle, manual SVG
+          path for triangular needle are distinctively D3. Missing d3.arc().cornerRadius()
+          or other exclusive flourishes.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
