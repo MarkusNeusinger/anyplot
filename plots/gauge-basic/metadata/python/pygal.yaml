@@ -2,103 +2,103 @@ library: pygal
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:07:29Z'
-updated: '2026-04-25T13:29:55Z'
-generated_by: claude-opus
-workflow_run: 24931399741
+updated: '2026-06-30T21:54:37Z'
+generated_by: claude-sonnet
+workflow_run: 28477004596
 issue: 857
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect code quality: clean, reproducible, idiomatic structure with correct theme-adaptive
-    tokens'
-  - 'Full spec compliance: all required gauge features implemented (zones, needle,
-    value display, range context)'
-  - Theme adaptation works correctly in both renders — needle color flips (black/white),
-    backgrounds and text adapt properly
-  - Okabe-Ito semantic zone colors (bad=#D55E00, warn=#E69F00, good=#009E73) are an
-    intentional and effective design choice
+  - Needle implementation via SVG injection is creative and correctly positioned (angle
+    computed from value/max_value ratio)
+  - 'Full theme-adaptation: needle color, pivot circle, text labels, and backgrounds
+    all respond correctly to ANYPLOT_THEME'
+  - 'Semantic zone colors (#AE3030 / #DDCC77 / #009E73) drawn from Imprint palette
+    anchors with obvious semantic mapping — valid semantic exception'
+  - Value displayed in zone_color creates an immediate visual verdict without requiring
+    the viewer to read the legend
+  - Title font size scales dynamically with title length via the 67-char formula
+  - Both PNG and HTML outputs correctly generated with interactive tooltips preserved
   weaknesses:
-  - 'Code/image title mismatch: code produces ''Sales: 72/100 (Good) · ...'' but images
-    show ''Quarterly Sales Performance · ...'' — fix title to a stable descriptive
-    string'
-  - 'DE-01 (5/8): The gauge is clean but lacks a distinctive design signature — consider
-    adding subtle range markers at 0/100 endpoints on the arc, or a refined font-weight
-    hierarchy between the ''72'' and the subtitle'
-  - 'DE-02 (4/6): The center label area is plainly formatted; the gap between gauge
-    and legend could be tightened; the subtitle ''out of 100 · Good'' could benefit
-    from a slightly muted color to create text hierarchy'
-  - 'LM-02 (3/5): Not yet leveraging pygal-specific features like custom value_formatter
-    or creative legend styling'
+  - 'DE-01 headroom: inner donut zone sub-label (R_INNER×0.15 ≈99px) could be bumped
+    to ×0.18 for better thumbnail readability'
+  - 'DE-02: title margin at top canvas edge is tight; adding margin_top=80 to the
+    Pie constructor would improve breathing room without affecting gauge proportions'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "Quarterly Sales Performance · gauge-basic · pygal · anyplot.ai" in dark (#1A1A17) text at top — readable; legend at bottom in dark text — readable; subtitle "out of 100 · Good" in muted dark text — readable; needle is black (INK token)
-      Data: Three semi-circular arcs — green (#009E73) Good zone on left, amber (#E69F00) Fair zone in center, orange-brown (#D55E00) Poor zone on right; large bold "72" in center; needle points just past 70-threshold into Good zone
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: Title "Quarterly Sales Performance · gauge-basic · pygal · anyplot.ai" in dark ink (#1A1A17) at top — clearly readable. Legend at bottom with three items ("Poor (0–30)", "Fair (30–70)", "Good (70–100)") in muted ink — readable. No axis labels (appropriate for gauge type).
+      Data: Three arc zones — matte red (#AE3030) left, amber (#DDCC77) centre, brand green (#009E73) right. Black needle (#1A1A17) from pivot at bottom-centre to arc, landing in the green Good zone at value=72. Inner donut shows "72" in large green text and "Good" label in muted ink below. Pivot circle in black.
+      Legibility verdict: PASS — all text elements readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light text — readable; legend at bottom in light text — readable; subtitle "out of 100 · Good" in muted light text — readable; needle is white (adapts to dark theme via foreground token)
-      Data: Same three arc zones present with same hue identities; colors appear slightly darker due to background contrast (perceptual effect, not actual color change — code defines ZONE_COLORS without theme modification); "72" in light/white text — clearly visible
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: Title in near-white (#F0EFE8) — clearly readable against dark background. Legend text in #B8B7B0 (secondary dark token, ~9:1 contrast) — readable. "Good" zone sub-label in #B8B7B0 — readable. No dark-on-dark failures detected.
+      Data: Zone arc colors identical to light render (#AE3030, #DDCC77, #009E73) — Imprint data colors unchanged across themes. Needle and pivot circle switched to near-white (#F0EFE8 = INK dark token) — correctly theme-adapted and clearly visible. "72" remains in brand green #009E73, legible on dark surface.
+      Legibility verdict: PASS — all text elements readable against dark background; theme adaptation complete and correct.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=64, labels=44, value=56, legend=44);
-          all text readable in both themes
+        comment: 'Title, value, zone label, legend all readable in both themes. Small
+          deduction: ''Good'' sub-label is small (R_INNER×0.15≈99px) but legible at
+          full resolution.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text-on-text or text-on-data collisions in either render. Pivot
+          circle and 'Good' label maintain clear gap.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Gauge arcs clear and well-sized; needle is functional but thin
+        comment: All three zone arcs, needle, pivot circle, value, and legend swatches
+          fully visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito hues used for zones, CVD-safe
+        comment: Semantic zones backed by text labels in legend and zone label — no
+          color-only signaling.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, slight excess vertical space between gauge and
-          legend
+        comment: Canvas gate passed (3200×1800). Well-balanced proportions, generous
+          margins, legend fits cleanly at bottom.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format; 'out of 100 · Good' provides clear context
+        comment: Descriptive title with optional prefix. Zone labels carry threshold
+          ranges. No axis labels needed for gauge.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito zone colors; correct backgrounds (#FAF8F1/#1A1A17); chrome
-          adapts correctly
+        comment: 'Zone colors are Imprint semantic anchors (#009E73, #DDCC77, #AE3030).
+          Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,22 +106,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional zone-color design with functional needle; above default
-          but not publication-ready
+        comment: 'Above baseline: SVG needle injection is creative, value in zone
+          color is semantically reinforced, clean professional layout.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No unnecessary chrome; generous margin; center label area plainly
-          styled
+        comment: Correct warm backgrounds, generous margin=60, clean legend. Title
+          top margin slightly tight.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Large value + zone status communicates clearly; zone colors tell
-          performance story
+        comment: 'Clear focal point: large green ''72'' + ''Good'' label gives immediate
+          verdict. Needle + zones create coherent directional narrative.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,49 +131,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semi-circular gauge using half_pie=True with inner_radius
+        comment: Semi-circular gauge correctly implemented via pygal.Pie(half_pie=True,
+          inner_radius=0.60).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Current value, min/max, three color zones at thresholds, needle indicator
-          all present
+        comment: Three color zones, needle indicator, prominent value display, thresholds
+          at 30 and 70.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Zone arcs correctly sized; needle correctly positioned at value=72
+        comment: value=72, min=0, max=100. Needle at angle=50.4°, correctly in Good
+          zone.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows format; legend labels descriptive with range bounds
+        comment: Title uses valid optional-prefix format. Legend labels include threshold
+          ranges.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All main gauge features shown; uses spec's example scenario directly
-          without adding contrast
+        comment: 'Demonstrates all gauge features: zone segmentation, needle, value
+          label, zone classification, interactive tooltip, HTML export.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly sales performance KPI is realistic, neutral business scenario
+        comment: Quarterly sales performance is a canonical gauge use case. Value
+          72 is plausible. Non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 scale with value=72; zone boundaries realistic for sales KPI
+        comment: 0–100 scale with 30/70 thresholds matches spec example. Sensible
+          domain.
     code_quality:
       score: 10
       max: 10
@@ -183,54 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: theme tokens → data → style → chart → save'
+        comment: Flat script, no unnecessary abstractions. SVG injection is appropriately
+          inline.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no random data
+        comment: All data hardcoded; deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, pathlib.Path, pygal, pygal.style.Style — all used
+        comment: All 8 imports are used. sys.path manipulation justified and explained.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic; zone logic concise; no over-engineering
+        comment: SVG geometry is well-calculated, injection is minimal, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pygal.Pie+half_pie+inner_radius pattern. Style object covers
+          all theme tokens. render()→SVG→cairosvg is canonical pygal PNG pipeline.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: pygal.Pie with half_pie=True and inner_radius; Style class for theme
-          tokens; PNG and HTML output
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: half_pie=True is pygal-native gauge approach; automatic needle; interactive
-          HTML export
-  verdict: REJECTED
+        comment: 'half_pie=True, inner_radius, legend_at_bottom, value_formatter for
+          rich tooltips, HTML interactive export, SVG needle injection. Minor deduction:
+          no use of pygal guide visibility options.'
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - html-export
+  - hover-tooltips
+  - annotations
   patterns: []
   dataprep: []
   styling: []
