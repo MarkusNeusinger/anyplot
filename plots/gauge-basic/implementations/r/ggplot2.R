@@ -4,7 +4,6 @@
 #' Quality: 84/100 | Created: 2026-06-30
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 # Theme tokens
@@ -17,9 +16,7 @@ INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
 # Zone colors — semantic exception applies: red=bad, amber=caution, green=good
 # per the Imprint palette's semantic anchors and matte-red role
-COL_RED   <- "#AE3030"  # Imprint matte red — bad/fail zone
-COL_AMBER <- "#DDCC77"  # Imprint amber     — caution zone
-COL_GREEN <- "#009E73"  # Imprint brand green — good zone (first Imprint position)
+ZONE_COLORS <- c(bad = "#AE3030", caution = "#DDCC77", good = "#009E73")
 
 # Data: quarterly sales attainment (%)
 current_value  <- 72
@@ -53,10 +50,14 @@ a_low  <- val_to_angle(threshold_low)
 a_high <- val_to_angle(threshold_high)
 a_max  <- val_to_angle(max_value)
 
-# Zone polygons
-zone_red   <- annular_sector(a_min,  a_low,  r_inner, r_outer)
-zone_amber <- annular_sector(a_low,  a_high, r_inner, r_outer)
-zone_green <- annular_sector(a_high, a_max,  r_inner, r_outer)
+# Combined zones data frame — zone factor enables fill aesthetic mapping
+# and scale_fill_manual(), leveraging ggplot2's grammar of graphics
+zones_df <- rbind(
+  cbind(annular_sector(a_min,  a_low,  r_inner, r_outer), zone = "bad"),
+  cbind(annular_sector(a_low,  a_high, r_inner, r_outer), zone = "caution"),
+  cbind(annular_sector(a_high, a_max,  r_inner, r_outer), zone = "good")
+)
+zones_df$zone <- factor(zones_df$zone, levels = c("bad", "caution", "good"))
 
 # Thin separator lines at zone boundaries
 sep_angles <- c(a_low, a_high)
@@ -65,6 +66,14 @@ sep_df <- data.frame(
   y    = r_inner * sin(sep_angles),
   xend = r_outer * cos(sep_angles),
   yend = r_outer * sin(sep_angles)
+)
+
+# Decorative boundary arcs (inner + outer rings) — grouped for single geom_path call
+arc_angles <- seq(a_min, a_max, length.out = 300)
+arcs_df <- data.frame(
+  x    = c(r_outer * cos(arc_angles), r_inner * cos(arc_angles)),
+  y    = c(r_outer * sin(arc_angles), r_inner * sin(arc_angles)),
+  ring = factor(rep(c("outer", "inner"), each = 300))
 )
 
 # Needle
@@ -79,65 +88,68 @@ needle_df <- data.frame(
 )
 
 # Tick marks at every 20 units
-tick_values <- c(0, 20, 40, 60, 80, 100)
-tick_angles <- val_to_angle(tick_values)
-tick_lines <- data.frame(
+tick_values    <- c(0, 20, 40, 60, 80, 100)
+tick_angles    <- val_to_angle(tick_values)
+tick_lines_df <- data.frame(
   x    = 1.04 * cos(tick_angles),
   y    = 1.04 * sin(tick_angles),
   xend = 1.12 * cos(tick_angles),
   yend = 1.12 * sin(tick_angles)
 )
-tick_label_df <- data.frame(
+tick_labels_df <- data.frame(
   x     = 1.26 * cos(tick_angles),
   y     = 1.26 * sin(tick_angles),
   label = as.character(tick_values)
 )
 
-# Center dot data frame
-center_dot <- data.frame(x = 0, y = 0)
-
-# Value and subtitle labels
-value_label    <- data.frame(x = 0, y = -0.22, label = paste0(current_value, "%"))
-subtitle_label <- data.frame(x = 0, y = -0.44, label = "Quarterly Sales Attainment")
-
 plot_title <- "gauge-basic · r · ggplot2 · anyplot.ai"
 
-# Build plot
+# Build plot — zones mapped via fill aesthetic + scale_fill_manual (ggplot2 grammar)
 p <- ggplot() +
-  # Colored zone arcs
-  geom_polygon(data = zone_red,   aes(x, y), fill = COL_RED,   alpha = 0.88) +
-  geom_polygon(data = zone_amber, aes(x, y), fill = COL_AMBER, alpha = 0.88) +
-  geom_polygon(data = zone_green, aes(x, y), fill = COL_GREEN, alpha = 0.88) +
-  # Zone boundary separators
+  # Colored zone arcs — fill mapped to zone factor, colors via scale
+  geom_polygon(
+    data = zones_df,
+    aes(x = x, y = y, fill = zone, group = zone),
+    alpha = 0.88
+  ) +
+  scale_fill_manual(values = ZONE_COLORS, guide = "none") +
+  # Zone boundary separators (PAGE_BG camouflage for seamless look)
   geom_segment(
     data = sep_df, aes(x = x, y = y, xend = xend, yend = yend),
     color = PAGE_BG, linewidth = 1.8
   ) +
+  # Decorative inner/outer boundary arcs — both rings in one geom_path call
+  geom_path(
+    data = arcs_df, aes(x = x, y = y, group = ring),
+    color = INK_SOFT, linewidth = 0.35, alpha = 0.4
+  ) +
   # Tick marks
   geom_segment(
-    data = tick_lines, aes(x = x, y = y, xend = xend, yend = yend),
+    data = tick_lines_df, aes(x = x, y = y, xend = xend, yend = yend),
     color = INK_SOFT, linewidth = 0.5
   ) +
-  # Tick labels
+  # Tick labels (size=3.8mm for better mobile legibility)
   geom_text(
-    data = tick_label_df, aes(x, y, label = label),
-    color = INK_SOFT, size = 3.2
+    data = tick_labels_df, aes(x = x, y = y, label = label),
+    color = INK_SOFT, size = 3.8
   ) +
   # Needle
   geom_segment(
     data = needle_df, aes(x = x, y = y, xend = xend, yend = yend),
     color = INK, linewidth = 1.4, lineend = "round"
   ) +
-  # Center dot (caps the needle pivot)
-  geom_point(data = center_dot, aes(x, y), size = 5, color = INK) +
+  # Center pivot dot
+  annotate("point", x = 0, y = 0, size = 5, color = INK) +
   # Current value (large, prominent)
-  geom_text(
-    data = value_label, aes(x, y, label = label),
+  annotate(
+    "text", x = 0, y = -0.22,
+    label = paste0(current_value, "%"),
     color = INK, size = 17, fontface = "bold"
   ) +
   # Subtitle below the value
-  geom_text(
-    data = subtitle_label, aes(x, y, label = label),
+  annotate(
+    "text", x = 0, y = -0.44,
+    label = "Quarterly Sales Attainment",
     color = INK_SOFT, size = 4.2
   ) +
   labs(title = plot_title) +
