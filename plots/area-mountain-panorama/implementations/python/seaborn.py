@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: seaborn 0.13.2 | Python 3.14.4
-Quality: 88/100 | Created: 2026-04-25
+Library: seaborn | Python 3.13
+Quality: 88/100 | Updated: 2026-06-30
 """
 
 import os
@@ -33,12 +33,13 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
         "grid.color": INK,
         "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
     },
 )
 
 # Data — Wallis (Valais, Switzerland) panorama from Gornergrat, west → east sweep.
-# `sigma` is the angular half-width that shapes how broad each summit reads on
-# the silhouette: smaller = sharper, more iconic profile.
+# sigma controls angular half-width: smaller = sharper, more iconic summit profile.
 peaks = pd.DataFrame(
     [
         {"name": "Weisshorn", "angle_deg": 10.0, "elevation_m": 4506, "sigma": 4.6},
@@ -60,10 +61,7 @@ peaks = pd.DataFrame(
     ]
 )
 
-# Build the skyline as the upper envelope of per-peak Gaussian bumps over a
-# slowly undulating valley floor. This produces distinct peak shapes
-# (sharper for iconic summits, broader for massif shoulders) instead of the
-# uniform scallop pattern a global spline would give.
+# Build skyline as upper envelope of per-peak Gaussian bumps over undulating valley floor
 np.random.seed(42)
 sample_angles = np.linspace(-5.0, 205.0, 1800)
 
@@ -76,7 +74,7 @@ for _, row in peaks.iterrows():
     bump = bump_height * np.exp(-0.5 * ((sample_angles - row["angle_deg"]) / row["sigma"]) ** 2)
     ridge = np.maximum(ridge, valley_floor + bump)
 
-# High-frequency rocky texture; tapered so edges blend into the valley floor
+# High-frequency rocky texture, tapered at panorama edges
 texture = (
     35 * np.sin(sample_angles * 1.7 + 0.3)
     + 22 * np.sin(sample_angles * 3.1 + 1.7)
@@ -87,38 +85,51 @@ ridge = ridge + texture * edge_taper
 
 skyline = pd.DataFrame({"angle_deg": sample_angles, "elevation_m": ridge})
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — 3200×1800 px landscape canvas (figsize=(8,4.5) × dpi=400)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 Y_FLOOR = 2500
-LABEL_BASE_Y = 5150
-LABEL_STAGGER = 360
+LABEL_BASE_Y = 4880
+LABEL_STAGGER = 200
 
-# Filled silhouette
+# Filled silhouette + crisp ridgeline edge via sns.lineplot
 ax.fill_between(skyline["angle_deg"], skyline["elevation_m"], Y_FLOOR, color=BRAND, alpha=1.0, linewidth=0, zorder=2)
-sns.lineplot(data=skyline, x="angle_deg", y="elevation_m", color=BRAND, linewidth=1.6, ax=ax, legend=False)
+sns.lineplot(data=skyline, x="angle_deg", y="elevation_m", color=BRAND, linewidth=1.2, ax=ax, legend=False)
 
-# Peak labels with leader lines, alternating heights to avoid overlap
-for i, row in peaks.iterrows():
+# Assign 3-level stagger based on angular proximity (threshold 20°) to avoid
+# same-height labels when peaks cluster (e.g. Breithorn / Pollux / Castor).
+peak_angles = peaks["angle_deg"].values
+label_levels = np.zeros(len(peaks), dtype=int)
+for i in range(1, len(peaks)):
+    for lvl in range(3):
+        conflict = any(abs(peak_angles[j] - peak_angles[i]) < 20 and label_levels[j] == lvl for j in range(i))
+        if not conflict:
+            label_levels[i] = lvl
+            break
+    else:
+        label_levels[i] = i % 3
+
+# Peak labels with leader lines
+for i, (_, row) in enumerate(peaks.iterrows()):
     is_anchor = row["name"] == "Matterhorn"
-    label_y = LABEL_BASE_Y + (LABEL_STAGGER if i % 2 == 0 else 0)
-    leader_top = label_y - 80
+    label_y = LABEL_BASE_Y + label_levels[i] * LABEL_STAGGER
+    elev_y = label_y - 130
+    leader_top = elev_y - 30
 
     ax.plot(
         [row["angle_deg"], row["angle_deg"]],
         [row["elevation_m"], leader_top],
         color=INK_SOFT,
-        linewidth=1.0,
-        alpha=0.65,
+        linewidth=0.8,
+        alpha=0.55,
         zorder=3,
     )
-
     ax.text(
         row["angle_deg"],
         label_y,
         row["name"],
-        fontsize=15 if is_anchor else 13,
+        fontsize=9 if is_anchor else 8,
         fontweight="semibold" if is_anchor else "regular",
         color=INK,
         ha="center",
@@ -127,51 +138,48 @@ for i, row in peaks.iterrows():
     )
     ax.text(
         row["angle_deg"],
-        label_y - 195,
+        elev_y,
         f"{int(row['elevation_m'])} m",
-        fontsize=11,
+        fontsize=7,
         color=INK_MUTED,
         ha="center",
         va="bottom",
         zorder=4,
     )
 
-# Highlight Matterhorn summit as the focal anchor
+# Matterhorn focal highlight via sns.scatterplot (open circle on summit)
 matterhorn = peaks.loc[peaks["name"] == "Matterhorn"].iloc[0]
-ax.scatter(
-    [matterhorn["angle_deg"]],
-    [matterhorn["elevation_m"]],
-    s=110,
+sns.scatterplot(
+    x=[matterhorn["angle_deg"]],
+    y=[matterhorn["elevation_m"]],
+    s=90,
     color=PAGE_BG,
     edgecolor=BRAND,
-    linewidth=2.8,
+    linewidth=2.0,
+    ax=ax,
     zorder=6,
+    legend=False,
 )
 
 # Style
 ax.set_xlim(0, 200)
-ax.set_ylim(Y_FLOOR, LABEL_BASE_Y + LABEL_STAGGER + 600)
-ax.set_xlabel("Compass bearing", fontsize=20, color=INK)
-ax.set_ylabel("Elevation (m)", fontsize=20, color=INK)
+ax.set_ylim(Y_FLOOR, LABEL_BASE_Y + 2 * LABEL_STAGGER + 350)
+ax.set_xlabel("Compass bearing", fontsize=10, color=INK)
+ax.set_ylabel("Elevation (m)", fontsize=10, color=INK)
 ax.set_title(
-    "Wallis 4000ers from Gornergrat · area-mountain-panorama · seaborn · anyplot.ai",
-    fontsize=24,
-    fontweight="medium",
-    color=INK,
-    pad=18,
+    "area-mountain-panorama · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10
 )
 
 ax.set_xticks([0, 50, 100, 150, 200])
 ax.set_xticklabels(["W", "SW", "S", "SE", "E"])
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT, length=0)
-ax.tick_params(axis="y", labelsize=16, colors=INK_SOFT, length=0)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, length=0)
+ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT, length=0)
 
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+sns.despine(ax=ax, top=True, right=True)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.6, color=INK)
 ax.set_axisbelow(True)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.09, right=0.97, top=0.91, bottom=0.11)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
