@@ -15,11 +15,12 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
-# Panorama-specific colors (not from categorical palette — atmospheric tones)
-SKY_COLOR     <- if (THEME == "light") "#C8DCEC" else "#0B1828"
-MOUNTAIN_FILL <- if (THEME == "light") "#2C2A28" else "#0D0C0A"
-MOUNTAIN_FG   <- if (THEME == "light") "#1E1C1A" else "#080808"
-RIDGE_COLOR   <- if (THEME == "light") "#4A4540" else "#2E2C2A"
+# Panorama-specific colors (atmospheric tones, not categorical palette)
+SKY_BOTTOM    <- if (THEME == "light") "#C8DCEC" else "#12203A"
+SKY_TOP       <- if (THEME == "light") "#DDEEF8" else "#0A121E"
+MOUNTAIN_FILL <- if (THEME == "light") "#2C2A28" else "#2A2825"
+MOUNTAIN_FG   <- if (THEME == "light") "#1E1C1A" else "#1A1815"
+RIDGE_COLOR   <- if (THEME == "light") "#4A4540" else "#3E3A35"
 
 # Peak data: Wallis panorama — 10 summits in a west-to-east sweep
 peaks_df <- data.frame(
@@ -45,7 +46,21 @@ peaks_df$label_y <- c(
   5300   # Dom           HIGH
 )
 
-# Derived label positions (elevation text above leader endpoint; name above elevation)
+# Horizontal label positions — spread dense right cluster (Strahlhorn–Dom in 20° span)
+peaks_df$label_x <- c(
+   8,   # Weisshorn
+  28,   # Dent Blanche
+  47,   # Matterhorn
+  63,   # Breithorn
+  76,   # Liskamm
+  90,   # Dufourspitze
+  93,   # Strahlhorn (nudged left from 98°)
+ 105,   # Allalinhorn
+ 112,   # Alphubel
+ 120    # Dom (nudged right from 118°, 4° from right edge)
+)
+
+# Derived label positions
 peaks_df$seg_y1 <- peaks_df$label_y
 peaks_df$elev_y <- peaks_df$label_y + 30
 peaks_df$name_y <- peaks_df$label_y + 30 + 80 + 30
@@ -87,12 +102,26 @@ fg_ridge <- BASE_ELEV + 80 +
   rnorm(n_pts, 0, 10)
 fg_df <- data.frame(angle = angles, ridge = fg_ridge)
 
+# Sky gradient raster — top row (ymax) = SKY_TOP, bottom row (ymin) = SKY_BOTTOM
+n_sky    <- 80
+sky_grad <- colorRampPalette(c(SKY_TOP, SKY_BOTTOM))(n_sky)
+sky_mat  <- matrix(sky_grad, nrow = n_sky, ncol = 1)
+
 # Title — 67 chars → ratio = 1.0 → title_size = 12
 title_str  <- "Wallis Panorama · area-mountain-panorama · r · ggplot2 · anyplot.ai"
 title_n    <- nchar(title_str)
 title_size <- max(8, round(12 * 67 / title_n))
 
 p <- ggplot() +
+  # Sky gradient background (annotation_raster: row 1 = ymax = top)
+  annotation_raster(
+    raster      = sky_mat,
+    xmin        = 0,
+    xmax        = 124,
+    ymin        = BASE_ELEV,
+    ymax        = 5850,
+    interpolate = TRUE
+  ) +
   # Main mountain silhouette
   geom_ribbon(
     data  = panorama_df,
@@ -114,26 +143,26 @@ p <- ggplot() +
     color     = RIDGE_COLOR,
     linewidth = 0.35
   ) +
-  # Leader lines: summit tip → label base
+  # Leader lines: summit tip → label base (angled to spread-label positions)
   geom_segment(
     data = peaks_df,
-    aes(x = angle_deg, xend = angle_deg, y = elev_m + 20, yend = seg_y1),
+    aes(x = angle_deg, xend = label_x, y = elev_m + 20, yend = seg_y1),
     color     = INK_MUTED,
     linewidth = 0.4
   ) +
   # Elevation labels
   geom_text(
     data     = peaks_df,
-    aes(x = angle_deg, y = elev_y, label = paste0(elev_m, " m")),
+    aes(x = label_x, y = elev_y, label = paste0(elev_m, " m")),
     color    = INK_SOFT,
-    size     = 2.4,
+    size     = 2.8,
     hjust    = 0.5,
     vjust    = 0
   ) +
   # Peak names (bold, above elevation)
   geom_text(
     data     = peaks_df,
-    aes(x = angle_deg, y = name_y, label = name),
+    aes(x = label_x, y = name_y, label = name),
     color    = INK,
     size     = 3.0,
     hjust    = 0.5,
@@ -150,8 +179,8 @@ p <- ggplot() +
   labs(title = title_str, x = NULL, y = "Elevation") +
   theme_minimal(base_size = 8) +
   theme(
-    plot.background    = element_rect(fill = PAGE_BG,   color = PAGE_BG),
-    panel.background   = element_rect(fill = SKY_COLOR, color = NA),
+    plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
+    panel.background   = element_rect(fill = NA,      color = NA),
     panel.grid.major.y = element_line(color = INK_MUTED, linewidth = 0.15,
                                       linetype = "dashed"),
     panel.grid.major.x = element_blank(),
