@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T01:01:05Z'
-updated: '2026-06-30T22:03:21Z'
+updated: '2026-06-30T22:17:29Z'
 generated_by: claude-sonnet
 workflow_run: 28477951953
 issue: 5365
@@ -12,56 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Excellent theme adaptation: sky gradient switches from warm dusk peach (#FAF8F1→#E8C8A0)
-    in light to deep navy in dark, creating distinct and compelling moods for each
-    theme'
-  - Three-tier peak label hierarchy (Matterhorn bold/INK, top-3 semibold, others regular
-    with decreasing leader-line opacity) shows intentional design storytelling and
-    makes the Matterhorn the clear focal point
-  - 'Correct Imprint palette usage: brand green #009E73 fill, theme-adaptive chrome
-    throughout, correct backgrounds #FAF8F1/#1A1A17'
-  - No bbox_inches on savefig — canvas gate passed 3200×1800
-  - Realistic Wallis Alps data with accurate real peak elevations (4027–4634 m range),
-    ordered W→E with compass bearings
-  - Clean KISS code structure with np.random.seed(42) for reproducibility; LinearSegmentedColormap
-    for sky gradient is distinctive matplotlib usage
+  - 'Excellent atmospheric design: dusk-mood sky gradient plus dark mountain silhouette
+    creates a photographic alpine panorama feel'
+  - Asymmetric triangular tent functions correctly produce sharp, jagged alpine peaks
+    (not Gaussian bell curves) per spec requirement
+  - Three-tiered label staggering with tiered emphasis (bold/semibold/regular by peak
+    importance) solves a hard label-placement problem elegantly
+  - Brand-green ridge line provides excellent separation between sky and mountain
+    in the dark theme where fill-on-background contrast is lower
+  - Full Wallis Alps dataset with accurate real-world elevations; Matterhorn is clearly
+    the focal point
+  - All chrome is correctly theme-adaptive; both renders pass the readability check
   weaknesses:
-  - 'SPEC VIOLATION — Gaussian bumps explicitly prohibited: spec says "Do NOT model
-    summits as Gaussian/bell-curve bumps — the silhouette must read as alpine rock,
-    not as a probability density." The code uses np.exp(-((angle - pos)**2)/(2*width**2))
-    which produces smooth bell-shaped peaks. The rendered ridgeline looks like overlapping
-    probability densities, not jagged alpine terrain. Fix: replace Gaussian summation
-    with piecewise-linear triangular tent functions with midpoint-displacement noise
-    — steep linear flanks, sharp pointed apexes, asymmetric slopes, irregular cols
-    between summits.'
-  - 'SPEC DEVIATION — Dark fill required: spec says "Fill the area below the ridgeline
-    with a dark solid color (photo-like silhouette, evening/dusk feel)." The implementation
-    fills with brand green #009E73, giving a stylized look rather than the photographic
-    dark silhouette the spec envisions. Consider using a very dark near-black or deep
-    navy fill (INK_MUTED or a dark slate) for the mountain body, reserving the brand
-    color for a ridge highlight or other accent.'
-  - Minor label crowding in the Breithorn/Pollux/Castor cluster (3 peaks at angles
-    120/132/139°, only 8–12° apart horizontally) — labels are staggered vertically
-    across three levels so no actual overlap, but the cluster is dense. Consider wider
-    horizontal spacing or slightly smaller label fontsizes for that region.
+  - 'Title is missing the required ''python'' language component: current ''Wallis
+    Alps · area-mountain-panorama · matplotlib · anyplot.ai'' must be ''Wallis Alps
+    · area-mountain-panorama · python · matplotlib · anyplot.ai'''
+  - Optional layered depth (foreground/background ridge) not implemented — would add
+    further visual depth and sophistication
+  - The sky gradient in the dark theme (near-black to dark navy) is quite subtle;
+    a slightly brighter navy (#3A4A6A) would create a more visible atmospheric effect
+    in the dark render
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm peach/dusk gradient sky from PAGE_BG (#FAF8F1, warm off-white bottom) rising to sandy peach (#E8C8A0) near top — theme-correct and visually inviting
-      Chrome: Title "Wallis Alps · area-mountain-panorama · matplotlib · anyplot.ai" clearly readable in dark INK on light background; Y-axis label "Elevation (m)" readable at 10pt; compass bearing tick labels (W/SW/S/SE/E) readable in INK_SOFT at 8pt; all peak labels at 8-10pt with INK/INK_SOFT colors visible against warm sky gradient; left/bottom spines in INK_SOFT; subtle y-axis grid (alpha=0.10)
-      Data: Mountain silhouette filled with brand green #009E73 — vivid and prominent against the warm peach sky; smooth bell-shaped peaks (Gaussian-derived) spanning 2500–4634 m range; 17 peaks annotated with three-tier leader lines (Matterhorn bold/1.2pt/alpha=0.85, top-3 semibold, others 0.7pt/alpha=0.45)
-      Legibility verdict: PASS — all text readable in light theme; no dark-on-light failures
+      Background: Warm off-white #FAF8F1 — correct per spec
+      Chrome: Title "Wallis Alps · area-mountain-panorama · matplotlib · anyplot.ai" at 12pt in dark ink (#1A1A17) — fully readable. Y-axis label "Elevation (m)" at 10pt, compass tick labels (W, SW, S, SE, E) at 8pt in INK_SOFT (#4A4A44) — all readable.
+      Data: Dark silhouette fill (#23231F) with warm peach sky gradient (#FAF8F1 to #E8C8A0) above ridgeline. Brand-green (#009E73) ridge line at 1.0pt linewidth clearly traces the jagged angular ridgeline. 17 peak labels at 3 staggered heights with thin leader lines; Matterhorn bold 10pt, top-3 semibold 9pt, others regular 8pt.
+      Legibility verdict: PASS — all text clearly readable against light background, no overflow, no overlap detected.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 with deep navy gradient sky (#1A1A17 → #252D40) — theme-correct warm near-black, not pure black; creates atmospheric alpine night
-      Chrome: Title text light-colored (INK=#F0EFE8 in dark mode) — readable; axis label "Elevation (m)" readable; compass bearings readable; peak labels use INK_SOFT (#B8B7B0) and INK (#F0EFE8) against dark navy background — all clearly readable; spines and grid subtle and appropriate
-      Data: Mountain fill still #009E73 (identical to light render — correct Imprint behavior); brand green reads strongly against the deep navy sky, possibly even more striking than in light theme
-      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures detected; data colors identical to light render (chrome flipped correctly)
+      Background: Warm near-black #1A1A17 — correct per spec
+      Chrome: Title in light ink (#F0EFE8) — readable. All tick labels and axis labels in INK_SOFT (#B8B7B0) — clearly visible against dark background. No dark-on-dark failures detected.
+      Data: Very-dark mountain fill (#0D0D0B) against dark navy sky gradient (#1A1A17 to #252D40). Brand-green ridge line (#009E73) — identical to light render — provides strong definition. All 17 peak labels in light gray (#B8B7B0) against the dark navy sky — readable.
+      Legibility verdict: PASS — all text readable against dark background; brand green data color identical to light render; only chrome has flipped.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -69,86 +57,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 12pt via scaling formula, axis
-          10pt, ticks 8pt, peak labels 8-10pt). Both themes readable. Minor: some
-          peak labels in dense cluster (Breithorn/Pollux/Castor) are small at 8pt
-          but legible.'
+        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks 8pt,
+          peaks 8-10pt). Readable in both themes. Minor crowding near Pollux/Castor/Liskamm
+          cluster.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Three-level stagger (5050/5310/5570 m) prevents overlap for most
-          peaks. Dense cluster at Breithorn/Pollux/Castor (120/132/139 deg) has tight
-          horizontal spacing but labels don't actually overlap due to vertical stagger.
+        comment: Three-level staggering effective. Minor crowding in Liskamm/Monte
+          Rosa cluster but no actual text overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Mountain silhouette in brand green is vivid and prominent against
-          warm peach (light) and deep navy (dark) sky gradients. All leader lines
-          and annotations visible.
+        comment: Mountain silhouette clear in both themes. Brand-green ridge line
+          provides definition in dark render.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 is CVD-safe. Single data series with high contrast
-          against both theme backgrounds.'
+        comment: High contrast silhouette on sky; green ridge visible in both themes;
+          theme-adaptive ink colors.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Good panoramic layout. Label area
-          uses upper portion effectively. No overflow or clipping detected.
+        comment: Canvas gate passed. Landscape format fits panoramic spec well. Plot
+          fills >70% of canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Elevation (m)'' with units. X-axis: compass bearings W/SW/S/SE/E.
-          Both descriptive and informative.'
+        comment: 'Y-axis: ''Elevation (m)'' with units. X-axis: compass bearings.
+          Both descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Mountain fill: #009E73 (Imprint brand green position 1). Backgrounds:
-          #FAF8F1 light / #1A1A17 dark. Theme-adaptive chrome correctly implemented
-          throughout. Sky gradient uses theme-adaptive PAGE_BG as anchor.'
+        comment: 'Brand green #009E73 for ridge line. Backgrounds #FAF8F1/#1A1A17
+          correct. Sky gradient is decorative, not data encoding. All chrome theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default (4). Sky gradient (warm peach dusk for light, deep
-          navy for dark) adds genuine visual sophistication. Three-tier label hierarchy
-          with varying line weights and opacities shows intentional design thinking.
-          Not quite 'strong design' (6) territory but clearly above configured defaults.
+        comment: Strong atmospheric dusk/evening mood. Tiered label emphasis (bold/semibold/regular).
+          Clearly above defaults — intentional hierarchy and professional polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Subtle y-axis grid (alpha=0.10). Varying
-          leader line thickness per importance tier. tight_layout(pad=0.8). Good refinement
-          above default (2).
+        comment: Top/right spines removed, very subtle grid (alpha=0.10), tick marks
+          hidden. Dark-theme sky gradient is quite subtle — room for further polish.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Matterhorn prominently highlighted (bold, full INK, thicker leader).
-          Top-3 peaks in semibold. Opacity gradient on leader lines de-emphasizes
-          lesser peaks. Clear focal point and visual hierarchy.
+        comment: Matterhorn as clear focal point (bold, heavier line). Top-3 peaks
+          semibold. Angular ridgeline reads as alpine rock. Good visual hierarchy.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -156,33 +136,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct area chart under a mountain ridgeline/skyline silhouette.
+        comment: Correct panoramic mountain silhouette chart with filled area below
+          skyline.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'VIOLATION 1: Spec explicitly says ''Do NOT model summits as Gaussian/bell-curve
-          bumps.'' Code uses np.exp(-((angle-pos)**2)/(2*width**2)) — Gaussian. Result:
-          smooth bell-shaped peaks, not angular alpine terrain. VIOLATION 2: Spec
-          says ''Fill the area below the ridgeline with a dark solid color (photo-like
-          silhouette, evening/dusk feel).'' Implementation fills with brand green
-          #009E73, not a dark color. Other features present: leader lines, name+elevation
-          labels, 3-tier stagger, y-range, compass bearings, Matterhorn prominence.'
+        passed: true
+        comment: Jagged piecewise-linear ridgeline, filled silhouette, sky gradient,
+          annotated peaks with leader lines, staggered labels, sensible y lower bound,
+          compass bearings, Matterhorn focal point.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: bearing angle W→E. Y: elevation in meters. All 17 peaks correctly
-          positioned and annotated.'
+        comment: 'X: bearing angle, Y: elevation. All 17 Wallis peaks with correct
+          elevations.'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''Wallis Alps · area-mountain-panorama · matplotlib · anyplot.ai''
-          — correct descriptive prefix format. No legend appropriate for single-series.'
+        passed: false
+        comment: 'Missing ''python'' language field. Actual: ''Wallis Alps · area-mountain-panorama
+          · matplotlib · anyplot.ai''. Required: ''Wallis Alps · area-mountain-panorama
+          · python · matplotlib · anyplot.ai''.'
     data_quality:
       score: 14
       max: 15
@@ -192,24 +170,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Panoramic ridgeline, all 17 Wallis 4000m peaks, compass orientation,
-          label hierarchy. Missing: jagged/fractal ridge character central to alpine
-          panorama plot type identity.'
+        comment: Angular peaks, asymmetric flanks, cols/saddles, rocky noise texture.
+          Optional layered depth not implemented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Wallis Alps peaks with accurate real-world elevations. Classic
-          Zermatt/Matterhorn panorama context. Non-controversial geography topic.
+        comment: Real Wallis/Valais Alps peaks with correct names and elevations,
+          ordered W to E.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevations 4027–4634 m are factually accurate for these Wallis 4000m
-          peaks. Y-axis 2500–6050 m gives sensible lower bound. X-axis 0–262 degrees
-          spans the full W→E panorama.
+        comment: Accurate real-world peak elevations (Matterhorn 4478m, Monte Rosa
+          4634m, Dom 4545m, etc.). Y lower bound 2500m appropriate.
     code_quality:
       score: 10
       max: 10
@@ -219,35 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural: theme tokens → data → skyline construction → plotting
-          → styling → save. No functions or classes.'
+        comment: 'Flat structure: imports → tokens → data → ridgeline → canvas → labels
+          → axes → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random generation.
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, LinearSegmentedColormap — all actively
+        comment: Only os, matplotlib.pyplot, numpy, LinearSegmentedColormap — all
           used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, appropriate complexity. np.maximum ridge construction
-          is elegant. No over-engineering.
+        comment: Asymmetric tent-function approach is algorithmically appropriate.
+          Re-pinning apexes post-noise is a sensible correctness fix. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — no
-          bbox_inches='tight', correct filename pattern.
+          bbox_inches='tight', correct filename.
     library_mastery:
       score: 7
       max: 10
@@ -257,19 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax.fill_between for silhouette, ax.imshow with extent for gradient
-          sky, ax.plot/ax.text for leader lines and labels. Idiomatic Axes-method
-          usage. Not 5 because the Gaussian ridge construction is algorithmically
-          inelegant for the visual goal.
+        comment: Uses ax.* methods throughout. fill_between for silhouette, imshow
+          for sky gradient, plot for ridge line. Good matplotlib idiom.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ax.imshow with extent parameter for gradient background is a distinctive
-          matplotlib technique. LinearSegmentedColormap.from_list for custom sky gradient.
-          np.maximum for ridge envelope construction. Above generic usage.
-  verdict: REJECTED
+        comment: LinearSegmentedColormap for custom sky gradient and imshow for a
+          continuous gradient pinned to data coordinates. Distinctively matplotlib
+          but not highly specialized.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -282,6 +256,6 @@ impl_tags:
   - normalization
   - cumulative-sum
   styling:
+  - gradient-fill
   - alpha-blending
   - custom-colormap
-  - gradient-fill
