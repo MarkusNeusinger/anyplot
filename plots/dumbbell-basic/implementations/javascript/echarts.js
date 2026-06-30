@@ -1,7 +1,7 @@
 // anyplot.ai
 // dumbbell-basic: Basic Dumbbell Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-06-30
+// Library: echarts 5.5.1 | JavaScript 22.23.0
+// Quality: 87/100 | Created: 2026-06-30
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
