@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 errorbar-basic: Basic Error Bar Plot
 Library: altair 6.2.2 | Python 3.13.14
-Quality: 89/100 | Updated: 2026-06-30
+Quality: 94/100 | Updated: 2026-06-30
 """
 
 import importlib
