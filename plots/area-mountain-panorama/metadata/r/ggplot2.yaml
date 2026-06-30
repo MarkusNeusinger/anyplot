@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: area-mountain-panorama
 created: '2026-06-30T22:16:26Z'
-updated: '2026-06-30T22:23:25Z'
+updated: '2026-06-30T22:40:25Z'
 generated_by: claude-sonnet
 workflow_run: 28478849847
 issue: 5365
@@ -12,115 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Factually accurate Wallis peak elevations (Matterhorn 4478m, Dufourspitze 4634m,
-    Dom 4545m, etc.) — data is verifiably correct
-  - Tent-function skyline with per-peak asymmetric slopes correctly produces angular,
-    non-Gaussian alpine silhouette
-  - Layered depth effect (foreground ridge + main mountain) adds visual dimension
-    matching the spec's depth suggestion
-  - Focal-peak label hierarchy (Matterhorn/Dufourspitze at 5500m tier vs alternating
-    HIGH/LOW for others) creates clear visual emphasis
-  - 'Theme-adaptive sky color (light blue #C8DCEC vs dark navy #0B1828) gives the
-    panorama genuinely different moods per theme'
-  - Subtle dashed horizontal grid, no x-axis chrome, and hidden tick marks keep the
-    composition clean and panoramic
-  - 'Perfect code quality: KISS structure, seed set, clean imports, modern ggplot2
-    API (linewidth= not size=)'
-  - Smooth noise added via stats::filter() + micro-jitter gives the ridgeline plausible
-    rock texture
-  - geom_ribbon() layer composition is the idiomatic ggplot2 approach for this fill-under-curve
-    type
+  - Stunning atmospheric sky gradient in both themes (colorRampPalette + annotation_raster)
+    — thematically appropriate for a mountain panorama
+  - Foreground ridge depth layer creates photographic, layered alpine silhouette
+  - 'Accurate real-world Swiss Alps data: 10 peaks with factually correct elevations
+    from Wallis Valais panorama'
+  - Tent function approach with asymmetric left/right slopes produces angular, non-Gaussian
+    ridgeline exactly as specified
+  - Comprehensive label staggering (5050m / 5300m / 5500m heights, nudged x positions)
+    prevents collision in the dense right cluster
+  - 'Expert ggplot2 API usage: annotation_raster for sky gradient, geom_ribbon for
+    area, expansion(0) on scales, function label formatter'
+  - 'Perfect spec compliance: all required features present — filled silhouette, leader
+    lines, name+elevation format, hidden x-axis, 2750m lower bound'
+  - 'Correct canvas: 8×4.5 in at 400 DPI = 3200×1800 px landscape — no canvas gate
+    failure'
+  - Dynamic title size scaling formula prevents overflow for the long mandated title
   weaknesses:
-  - 'Dark render: mountain silhouette fill (#0D0C0A) against dark navy sky (#0B1828)
-    produces very low contrast — the panorama shape is discernible but the alpine
-    drama is lost; consider lightening MOUNTAIN_FILL slightly in dark mode (e.g. #2A2825)
-    or darkening the sky less (e.g. #12203A) to increase luminance separation'
-  - Label density on right side (Strahlhorn / Allalinhorn / Alphubel / Dom compressed
-    in 20° span) creates visual crowding; consider widening their horizontal offsets
-    or reducing label font size for the dense cluster
-  - 'No sky gradient: spec explicitly mentions ''Optional sky-gradient background''
-    as a moody atmosphere technique; even a two-stop gradient (light: pale-blue #DDEEF8
-    → sky-blue #C8DCEC top-to-bottom, dark: near-black #0A121E → navy #0B1828) would
-    elevate DE-01 noticeably'
-  - Elevation sub-labels (size=2.4 ≈ 6.8pt) are close to the readability floor at
-    mobile widths; increase to size=2.8 to match peak-name to elevation label hierarchy
-    more comfortably
+  - 'Dark mode: mountain fill (#2A2825 warm near-black) against dark navy sky top
+    (#0A121E) has low contrast — the silhouette is readable due to shape but the color
+    separation is minimal; consider slightly lightening the mountain fill in dark
+    theme to ~#4A4440 or boosting sky top toward #1B2E4A to widen the luminance gap'
+  - Peak annotation labels (geom_text size=2.8-3.0 ≈ 8pt) may be too small when the
+    plot is scaled to mobile thumbnail width (~400px); consider increasing to size=3.2-3.5
+    for the peak name labels
+  - Matterhorn label (label_y=5500m) and Dufourspitze label (label_y=5500m) are at
+    identical heights — the spec calls for Matterhorn as the visually prominent focal
+    point, but Dufourspitze (highest peak at 4634m) competes equally; give Matterhorn
+    an exclusive 5600m position or bold-color treatment to distinguish it as THE focal
+    peak
+  - Dense right cluster (Strahlhorn at x=93, Allalinhorn at x=105, Alphubel at x=112,
+    Dom at x=120) has tight angular spacing; the labels appear non-overlapping but
+    are borderline — if font sizes are increased, verify no collisions appear
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 outer plot area — correct
-      Panel: Light sky blue (#C8DCEC) fills the plot panel, providing an atmospheric alpine-sky backdrop
-      Chrome: Bold dark title "Wallis Panorama · area-mountain-panorama · r · ggplot2 · anyplot.ai" clearly readable against off-white; Y-axis "Elevation" label in medium gray (INK_SOFT); tick labels "3000 m … 5000 m" in same gray — all readable; no x-axis labels (intentionally hidden)
-      Data: Near-black mountain silhouette (#2C2A28) with excellent contrast against light blue sky; slightly darker foreground ridge (#1E1C1A) adds depth layer; thin ridge-edge line (#4A4540); subtle dashed horizontal grid lines at low linewidth; 10 peak leader lines in muted gray connecting summit tips to staggered labels
-      Labels: Bold peak names at size 3.0 (≈8.5pt) in near-black INK; elevation sub-labels at size 2.4 (≈6.8pt) in INK_SOFT — all readable; Matterhorn and Dufourspitze at highest label tier (5500m), other peaks alternating HIGH(5300)/LOW(5050)
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+      Background: Outer canvas is warm off-white #FAF8F1. Plot panel fills with a light-blue sky gradient (top #DDEEF8 lighter to bottom #C8DCEC slightly deeper) giving a daytime alpine panorama feel.
+      Chrome: Title "Wallis Panorama · area-mountain-panorama · r · ggplot2 · anyplot.ai" in bold dark ink on the cream background — fully readable. Y-axis "Elevation" label and tick marks (3000 m–5000 m) in dark-soft ink — clearly legible. X-axis hidden (appropriate for panorama). Subtle dashed horizontal grid lines at very thin linewidth.
+      Data: Dark near-black mountain silhouette (#2C2A28 fill) against the light sky — excellent contrast. Sharp jagged ridgeline with asymmetric triangular peaks. A slightly darker foreground ridge (#1E1C1A) adds depth. 10 peaks annotated with thin leader lines from summit to staggered labels: name bold above, elevation muted below. First series (mountain fill) uses atmospheric tones appropriate for this panorama type, not categorical Imprint colors.
+      Legibility verdict: PASS — all text clearly readable against the light cream and light-blue backgrounds.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 outer plot area — correct
-      Panel: Very dark navy #0B1828 sky color; mountain fill #0D0C0A (near-black) against dark navy creates LOW CONTRAST — shapes distinguishable but atmospheric drama diminished vs light render
-      Chrome: Title bold, light cream (#F0EFE8) against near-black — clearly readable; Y-axis tick labels in B8B7B0 (INK_SOFT dark) — readable; no dark-on-dark failures for text elements; leader lines appear as near-white/light against the dark panel
-      Data: Mountain silhouette visible but low contrast (near-black fill on dark-navy sky); foreground ridge barely distinguishable from main silhouette in dark mode; dashed grid lines visible as faint light lines
-      Data colors identical to light render in terms of structure; sky/mountain colors are theme-adaptive (correct per spec atmospheric intent)
-      Legibility verdict: PASS for text elements (no dark-on-dark text failure); PARTIAL CONCERN for mountain element visibility (low luminance contrast between fill and sky in dark mode)
+      Background: Outer canvas is warm near-black #1A1A17. Plot panel shows a very dark navy sky gradient (#0A121E top to #12203A bottom) for a dusk/night atmospheric feel.
+      Chrome: Title in light off-white ink (#F0EFE8) on the near-black canvas — fully readable. Y-axis "Elevation" label and tick labels in light secondary ink (#B8B7B0) — readable. No dark-on-dark text failures detected.
+      Data: Mountain silhouette in dark warm-gray (#2A2825) against the dark navy sky — distinction maintained through different color temperatures (warm gray vs cool dark blue) but contrast is reduced compared to light mode. The jagged peak profile and ridgeline edge (#3E3A35) remain visible against the sky. Foreground ridge (#1A1815) adds darkest layer. Leader lines and peak labels (light ink on dark background) are clearly readable. Data colors identical to light render — only chrome (sky gradient warmth, outer background, text) adapts to dark theme.
+      Legibility verdict: PASS — all text readable; mountain-vs-sky contrast is intentionally low (artistic night/dusk panorama effect) but the silhouette form is legible through shape.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title scaled dynamically; elevation
-          sub-labels at size=2.4 (≈6.8pt) are near readability floor on mobile
+        comment: 'All font sizes explicitly set (title=12pt dynamic, axis=9pt, ticks=8pt,
+          peak names=3.0 ggplot units). All readable at full resolution. Minor concern:
+          peak annotation labels (size 2.8-3.0) may be marginal at 400px mobile thumbnail
+          scale.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Staggered label heights work well; right-side cluster (98–118°) is
-          visually dense but alternating HIGH/LOW tiers prevent overlap
+        comment: 'Good label staggering (3 heights: 5050/5300/5500m) with nudged x
+          positions for dense right cluster. No observed overlaps but the Strahlhorn-Allalinhorn-Alphubel-Dom
+          cluster is borderline.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Light render: excellent contrast. Dark render: mountain fill (#0D0C0A)
-          vs sky (#0B1828) is low-luminance — shapes visible but subdued'
+        comment: 'Light mode: excellent dark-on-light mountain contrast. Dark mode:
+          mountain fill (#2A2825) vs sky (#0A121E) has reduced luminance contrast
+          — intentional artistic dusk effect, silhouette readable through shape, but
+          less immediately impactful.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Atmospheric colors (not categorical) — no red-green reliance; silhouette
-          relies on luminance contrast not hue alone
+        comment: Monochrome silhouette approach — no CVD issues. High contrast between
+          mountains and sky in light mode. Labels use sufficient contrast against
+          both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect landscape layout; no overflow; title fully visible; plot
-          fills canvas well; canvas gate passed
+        comment: Canvas 3200x1800px confirmed (8in x 4.5in @ 400 DPI). Panorama fills
+          full width. Annotation zone above peaks uses space appropriately for label
+          staggering. Well-proportioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Elevation'' + ''3000 m … 5000 m'' tick labels with units;
-          X-axis intentionally hidden per spec'
+        comment: 'Y-axis: ''Elevation'' label with units (m) present in tick labels
+          (3000 m, 3500 m, etc.). X-axis: intentionally hidden (appropriate for panorama).
+          Title: correct Descriptive · spec-id · r · ggplot2 · anyplot.ai format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Atmospheric panorama — no categorical series; sky/mountain colors
-          are semantically appropriate; plot bg #FAF8F1/#1A1A17 correct; all chrome
-          theme-adaptive'
+        comment: 'Non-categorical panorama chart — atmospheric tones are appropriate
+          replacements for Imprint categorical colors. Outer canvas backgrounds: #FAF8F1
+          (light) and #1A1A17 (dark) confirmed correct. All chrome (title, axis labels,
+          ticks, grid) uses theme-adaptive INK/INK_SOFT/INK_MUTED tokens correctly
+          in both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -128,27 +133,31 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: atmospheric sky color, layered depth, focal-peak
-          label hierarchy — clearly above configured defaults; no sky gradient limits
-          to 6'
+        comment: 'Strong design: theme-adaptive sky gradients with different atmospheric
+          palettes (daytime light-blue vs night navy), layered foreground depth ridge,
+          asymmetric tent-function peaks for authenticity. Clearly above library defaults.
+          Not quite publication-ready (title font not custom, annotation style minimal).'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No spines, no x-axis chrome, subtle dashed y-grid, thin leader lines
-          (0.4), thin ridgeline edge (0.35) — highly polished; sky panel color adds
-          distinctive atmosphere
+        comment: 'Good refinement: x-axis completely removed, panel border eliminated,
+          ultra-thin dashed y-grid (0.15 linewidth), no tick marks. The annotation
+          zone above peaks could be more elegantly treated (labels are functional
+          but visually sparse). Above defaults, not perfect.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Focal peaks (Matterhorn/Dufourspitze) at highest label tier creates
-          hierarchy; west-to-east geographic narrative; layered depth guides eye —
-          good visual hierarchy
+        comment: 'Good visual hierarchy: Matterhorn and Dufourspitze labeled at 5500m
+          while others alternate at 5050/5300m creating a clear focal emphasis. Panoramic
+          sweep from Weisshorn to Dom tells a geographic story. Weakness: Matterhorn
+          and Dufourspitze share equal label height — spec designates Matterhorn as
+          THE focal peak but it doesn''t distinctly outshine the highest actual summit.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,30 +165,34 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Mountain panorama silhouette with filled area, jagged angular peaks
-          via tent functions (not Gaussian), labeled summits — correct
+        comment: Correct panoramic mountain silhouette chart. Angular, non-Gaussian
+          peaks via tent functions. Filled area below ridgeline. Sky gradient background.
+          Foreground depth ridge. All spec-defined chart characteristics implemented.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Asymmetric tent functions, smoothed noise, foreground depth layer,
-          staggered labels, leader lines all present; sky gradient (labeled 'optional'
-          in spec) absent
+        comment: 'All required features: filled silhouette (dark solid), sky gradient
+          background, leader lines from summits, name+elevation labels, staggered
+          vertical positions, 2750m lower bound, hidden x-axis, Matterhorn prominently
+          labeled. Optional multi-background-ridge not implemented (it is optional
+          per spec).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle on X (0–124°), elevation on Y (2750–5850m); all 10 peaks mapped
-          and annotated; X-axis hidden per spec allowance
+        comment: 'X: horizontal bearing angle (0-124°); Y: elevation in meters (2750-5850m).
+          All 10 peaks within range. Correct axis orientation.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Wallis Panorama · area-mountain-panorama · r · ggplot2 · anyplot.ai'
-          matches optional-prefix format; no legend needed (no categorical series)
+        comment: 'Title: ''Wallis Panorama · area-mountain-panorama · r · ggplot2
+          · anyplot.ai'' — correct Descriptive · spec-id · language · library · anyplot.ai
+          format. No legend needed (peaks labeled directly). Perfect.'
     data_quality:
       score: 15
       max: 15
@@ -189,24 +202,29 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows triangular peaks, saddles, jagged ridge noise, depth layers,
-          leader lines, staggered labels — comprehensive coverage of all panorama
-          features
+        comment: 'Shows all aspects: full ridgeline sweep with 10 labeled summits,
+          varying peak heights (4027-4634m), angular jagged silhouette, foreground
+          depth layer, sky gradient, staggered leader-line annotations. Full feature
+          coverage of the mountain panorama plot type.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Swiss Alps Wallis peaks with accurate names; geography-education
-          context; politically neutral alpine scenery
+        comment: 'Authentic Wallis (Valais) Swiss Alps panorama. The spec itself lists
+          these exact peaks as the canonical example. Real peak names and accurate
+          elevations: Matterhorn 4478m, Dufourspitze 4634m, Weisshorn 4506m, etc.
+          Non-controversial geography/science context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All 10 peak elevations are factually accurate (Matterhorn 4478m,
-          Dufourspitze 4634m, Dom 4545m, Weisshorn 4506m etc.); Y-axis range (2750–5850m)
-          sensible for Wallis panorama
+        comment: 'All 10 elevations verified against real Swiss Alpine data: exact
+          or within 1m of documented values (Dufourspitze 4634m ✓, Liskamm 4527m ✓,
+          Matterhorn 4478m ✓, Dom 4545m ✓, etc.). Angular positions represent a plausible
+          Zermatt-area bearing sweep. Base elevation 2750m appropriate for Wallis
+          valley context.'
     code_quality:
       score: 10
       max: 10
@@ -216,62 +234,73 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports→Data→Plot→Save flow; no functions or classes
+        comment: 'No functions or classes. Linear structure: theme tokens → peak data
+          → label positions → skyline generation → foreground ridge → sky gradient
+          → plot construction → save. Clean and readable.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top
+        comment: set.seed(42) at top. All rnorm() and stats::filter() calls are deterministic
+          given the seed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only library(ggplot2) and library(ragg) — both actively used
+        comment: Only library(ggplot2) and library(ragg) — both used. No unnecessary
+          imports (dplyr, tidyr not imported since they're not needed).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; stats::filter() for smoothing is idiomatic R; tent-function
-          loop appropriate; modern linewidth= API
+        comment: Well-structured. The tent function loop, smoothed noise, and re-anchoring
+          approach are appropriate complexity for the task. No fake UI elements. Dynamic
+          title size formula is clever and purposeful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png via ragg::agg_png; width=8, height=4.5,
-          dpi=400 → 3200×1800px correct
+        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device
+          correctly. No deprecated API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2: annotation_raster for sky gradient (correct ymax/ymin
+          mapping), geom_ribbon for filled area, expansion(0) to eliminate scale padding,
+          function label formatter for tick labels, theme_minimal + layered theme()
+          overrides. Proper modern ggplot2 patterns throughout.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Expert-level ggplot2: geom_ribbon(), layer composition, expansion(),
-          custom scale label formatter, theme_minimal()+theme() composition — all
-          idiomatic'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: geom_ribbon() for area silhouette is the ggplot2-native approach;
-          layered geom composition with 6+ layers is a ggplot2 hallmark; R's stats::filter()
-          integration leverages the R ecosystem
-  verdict: REJECTED
+        comment: annotation_raster() for embedding a raster gradient within ggplot
+          coordinate space is distinctly ggplot2. colorRampPalette for gradient construction
+          is R-native. stats::filter() for convolution smoothing is base-R idiomatic.
+          pmax() for elementwise tent-function composition is R-specific. Strong library-specific
+          usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
+  - gradient-fill
   - minimal-chrome
