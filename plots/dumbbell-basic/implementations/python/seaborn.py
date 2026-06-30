@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-06-30
@@ -67,16 +67,21 @@ sns.set_theme(
 # Canvas — landscape 3200×1800 px (8 × 4.5 in @ dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Connecting lines (drawn first, sit beneath dots)
-for i, row in df.iterrows():
-    ax.plot([row["Before"], row["After"]], [i, i], color=INK_SOFT, alpha=0.45, linewidth=1.2, zorder=1)
+# Linewidth range proportional to reduction magnitude for visual hierarchy
+red_min = df["Reduction"].min()
+red_max = df["Reduction"].max()
 
-# Dots — seaborn scatterplot for both ends
+# Connecting lines (drawn first, sit beneath dots) — width encodes improvement magnitude
+for i, row in df.iterrows():
+    lw = 0.8 + (row["Reduction"] - red_min) / (red_max - red_min) * 1.4
+    ax.plot([row["Before"], row["After"]], [i, i], color=INK_SOFT, alpha=0.45, linewidth=lw, zorder=1)
+
+# Dots — seaborn scatterplot for both ends; s=150 for adequate visual weight on 3200×1800
 sns.scatterplot(
     x=df["Before"],
     y=range(len(df)),
     color=BEFORE_COLOR,
-    s=90,
+    s=150,
     label="Before optimisation",
     edgecolor=PAGE_BG,
     linewidth=0.8,
@@ -87,13 +92,17 @@ sns.scatterplot(
     x=df["After"],
     y=range(len(df)),
     color=AFTER_COLOR,
-    s=90,
+    s=150,
     label="After optimisation",
     edgecolor=PAGE_BG,
     linewidth=0.8,
     ax=ax,
     zorder=3,
 )
+
+# Delta annotations — reduction in seconds, positioned right of the Before dot
+for i, row in df.iterrows():
+    ax.text(row["Before"] + 0.18, i, f"−{row['Reduction']:.1f}s", va="center", ha="left", fontsize=7, color=INK_MUTED)
 
 # Axes
 ax.set_yticks(range(len(df)))
@@ -102,7 +111,7 @@ ax.set_xlabel("Page Load Time (seconds)", fontsize=10, color=INK)
 ax.set_ylabel("", fontsize=10)
 ax.set_title("dumbbell-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
 ax.tick_params(axis="both", labelsize=8)
-ax.set_xlim(0.0, 7.5)
+ax.set_xlim(0.0, 8.5)
 ax.set_ylim(-0.7, len(df) - 0.3)
 
 sns.despine(ax=ax, top=True, right=True)
@@ -113,6 +122,6 @@ legend = ax.legend(fontsize=8, loc="lower right", frameon=True, framealpha=1.0, 
 for text in legend.get_texts():
     text.set_color(INK)
 
-fig.subplots_adjust(left=0.18, right=0.97, top=0.93, bottom=0.12)
+fig.subplots_adjust(left=0.18, right=0.95, top=0.93, bottom=0.12)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
