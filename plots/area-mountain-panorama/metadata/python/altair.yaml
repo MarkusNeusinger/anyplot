@@ -2,96 +2,115 @@ library: altair
 language: python
 specification_id: area-mountain-panorama
 created: '2026-04-25T01:22:56Z'
-updated: '2026-04-25T21:51:41Z'
-generated_by: claude-opus
-workflow_run: 24919026131
+updated: '2026-06-30T23:14:04Z'
+generated_by: claude-sonnet
+workflow_run: 28478344725
 issue: 5365
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/python/altair/plot-dark.html
-quality_score: 93
+quality_score: 84
 review:
   strengths:
-  - Custom dusk sky gradient (theme-adaptive to both light/dark) transforms the chart
-    into a striking landscape infographic
-  - 'Proper Altair layer composition: sky rect + silhouette area + leaders + labels
-    in clean declarative layers'
-  - 'Focal summit hierarchy: Matterhorn at 26px bold vs 18px for others, elevated
-    label position — composition has a clear center of gravity'
-  - Complete theme adaptation with all chrome tokens (INK, INK_SOFT, PAGE_BG) correctly
-    applied
-  - Real Valais Alps data with authentic elevations for all 16 peaks
+  - Dusk sky gradient (theme-adaptive, zenith→horizon) using Vega-Lite native gradient
+    spec creates authentic alpine atmosphere in both light and dark themes
+  - Brand green (#009E73) silhouette with alpenglow warm-gold rim is visually striking
+    and spec-appropriate
+  - 'Matterhorn treated as an unambiguous compositional focal point: highest label
+    tier (5500m), larger font (15pt vs 10pt), bolder leader line (2.5px vs 1.0px)'
+  - Piecewise-linear ridgeline using tent functions (65 random jagged peaks + 16 named
+    summits) strictly follows the spec's no-Gaussian-bumps requirement
+  - All 16 Wallis summits with accurate names and real-world elevations; Y-axis range
+    and scale realistic
+  - 'Full palette compliance: brand green (#009E73) for single data series; backgrounds
+    #FAF8F1/#1A1A17; only chrome adapts to theme'
   weaknesses:
-  - Elevation sub-labels (elev_labels) set to 15px are marginally below the 16px minimum
-    — raise fontSize=15 to fontSize=16
-  - DE-01 could reach 7-8 with a slightly more polished sky-to-silhouette boundary
-    or a subtle alpenglow rim highlight at the ridgeline
+  - 'Inter-tier label overlap in left cluster (Weisshorn 9°, Zinalrothorn 22°, Ober
+    Gabelhorn 30°, Dent Blanche 42°): adjacent Y-tier spacing of ~200m (≈52px at scale
+    4) is less than two stacked name+elevation text lines (~80px), causing elevation
+    numbers to overlap with adjacent-tier peak names. Increase label Y-tier separation
+    from 200m to ~280–300m, or raise the Y_SCALE domain ceiling to spread tiers further
+    apart.'
+  - 'Same inter-tier overlap affects right cluster (Allalinhorn 137°, Alphubel 148°,
+    Täschhorn 155°, Dom 168°): four peaks within 31° at adjacent tiers.'
+  - Bottom third of the chart (~2900–3200m Y zone) is entirely empty PAGE_BG fill;
+    raising the Y_SCALE lower bound to ~3100m or adding a subtle baseline annotation
+    would use the canvas more efficiently.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "Wallis Panorama · area-mountain-panorama · altair · anyplot.ai" in dark #1A1A17 — clearly readable. Y-axis "Elevation (m)" label and tick labels (3000–5000 m) in INK_SOFT #4A4A44 — readable. Peak name labels (18–26px bold dark) and elevation sub-labels (15px #4A4A44) visible against the gradient sky above the silhouette. No light-on-light issues.
-      Data: Brand green #009E73 mountain silhouette fills the lower portion. Dusk sky gradient: warm peach/orange at ridgeline through rose/mauve to deep violet-blue at zenith. All 16 peaks annotated with leader lines and staggered labels.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "Wallis Panorama · area-mountain-panorama · python · altair · anyplot.ai" top-left in dark ink — readable. Subtitle in INK_SOFT — readable. Y-axis label "Elevation (m)" in dark ink — readable. Y-axis tick labels 3,000–5,000 in INK_SOFT — readable. Peak name/elevation labels in INK/INK_SOFT — readable individually, but crowded in left (9°–42°) and right (137°–168°) clusters due to inter-tier overlap.
+      Data: Brand green #009E73 silhouette fills area below ridgeline. Alpenglow warm-gold/orange stroke traces ridgeline boundary. Dusk sky gradient (zenith violet → mid rose-purple → horizon warm orange/peach) fills upper chart zone. Leader lines thin but visible. Matterhorn gets heavier 2.5px leader and larger 15pt bold font.
+      Legibility verdict: PASS (all elements readable; crowding in label clusters is a layout issue, not a legibility failure)
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light #F0EFE8 — readable. Y-axis label and ticks in INK_SOFT #B8B7B0 — readable against dark background. Peak name labels in #F0EFE8 (light) and elevation sub-labels in #B8B7B0 — white/light-gray text on dark sky — readable. No dark-on-dark failures observed; all chrome tokens properly flipped.
-      Data: Mountain silhouette remains identical brand green #009E73 — same as light render. Sky gradient flips to dark night palette: deep navy at zenith through deep indigo to dark maroon/rust at ridgeline.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all text in light-colored ink (INK #F0EFE8 and INK_SOFT #B8B7B0) — clearly readable against dark background. No dark-on-dark failure observed anywhere.
+      Data: Brand green #009E73 silhouette — IDENTICAL to light render (only chrome flips, data color stays constant). Alpenglow rim becomes warm copper-terra-cotta stroke. Sky gradient adapts: deep navy/near-black at zenith, dark aubergine/brown mid, warm copper at horizon.
+      Legibility verdict: PASS (all text readable, no dark-on-dark failure)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: All sizes explicitly set; elevation sub-labels at 15px slightly below
-          16px floor; both themes readable
+        comment: Title/subtitle/axis labels readable in both themes. Peak labels readable
+          individually but inter-tier crowding in left cluster (9°-42°) and right
+          cluster (137°-168°) causes partial overlap of elevation numbers with adjacent-tier
+          peak names.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Alternating LABEL_HIGH/LABEL_LOW stagger prevents all overlaps
+        passed: false
+        comment: 'Round-robin tier assignment prevents within-tier collision (min
+          ~33° same-tier separation) but adjacent-tier labels for angularly close
+          peaks overlap: Zinalrothorn 4221 overlaps with Ober Gabelhorn text, 4063
+          overlaps with Dent Blanche in left cluster.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Green silhouette, leader lines, and labels all clearly visible in
-          both themes
+        comment: Mountain silhouette prominent and clearly visible. Ridgeline convincingly
+          alpine. Alpenglow rim adds definition. Leader lines thin (strokeWidth=1.0,
+          opacity=0.55) — may be hard at mobile scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe brand green; adequate contrast on gradient sky
+        comment: Single data series uses brand green; sky gradient and alpenglow are
+          chrome. No red-green confusion risk.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Wide landscape format fills canvas appropriately for panoramic subject
+        comment: Canvas gate passed. Landscape format ideal for panoramic chart. Bottom
+          Y region (2900-3200m) is empty PAGE_BG fill — slightly wasted canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: Elevation (m) with units; x-axis intentionally hidden per
-          spec'
+        comment: Y-axis labeled Elevation (m) with units. X-axis hidden per spec (bearing
+          labels optional). Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series #009E73; light #FAF8F1, dark #1A1A17 backgrounds;
-          all chrome tokens theme-adaptive'
+        comment: 'Brand green #009E73 for single silhouette series. Backgrounds #FAF8F1
+          (light) / #1A1A17 (dark) correct. Sky gradient and alpenglow are spec-authorized
+          artistic chrome.'
     design_excellence:
       score: 15
       max: 20
@@ -101,22 +120,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: custom dusk gradient sky, focal summit hierarchy,
-          intentional panoramic composition — above defaults but not quite publication-ready'
+        comment: Dusk sky gradient with theme-adaptive color stops. Alpenglow warm-gold
+          rim adds photographic realism. Matterhorn receives compositional accent.
+          Five-tier staggering system shows deliberate design thought.
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: No grid, no view stroke, generous whitespace, thin elegant leader
-          lines
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Matterhorn elevated as focal summit via size and height; staggered
-          annotations guide viewer across panorama
+        comment: No grid (gridOpacity=0.0, appropriate). No top/right spines. INK/INK_SOFT
+          tokens throughout. Label zone somewhat busy in crowded clusters.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Matterhorn unambiguously focal: special tier height, bold font,
+          heavier leader. Panoramic left-to-right composition guides viewer naturally.
+          Minor: bottom third empty padding.'
     spec_compliance:
       score: 15
       max: 15
@@ -126,27 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled-area panorama silhouette chart
+        comment: 'Correct: filled-area mountain panorama with labeled peaks, angular
+          ridgeline (triangular tent functions), sky background.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sky gradient, peak annotations with leader lines, staggered labels,
-          focal summit — all present; brand palette overrides dark-color guidance
+        comment: Piecewise-linear ridgeline (no Gaussians), filled silhouette, sky
+          gradient (dusk), staggered labels, name+elevation format, Matterhorn focal
+          point, Y-axis with sensible lower bound, X-axis hidden as optional.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: angle_deg on X, elevation_m on Y; all 16 Valais summits plotted
+        comment: X=angle_deg, Y=elevation_m; all 16 Wallis summits from spec included;
+          full 180° sweep covered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with area-mountain-panorama · altair · anyplot.ai;
-          no legend needed
+        comment: 'Title: Wallis Panorama · area-mountain-panorama · python · altair
+          · anyplot.ai. No legend needed (single series).'
     data_quality:
       score: 15
       max: 15
@@ -156,22 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All panorama features: silhouette, sky gradient, 16 annotated peaks,
-          staggered labels, focal summit'
+        comment: 'All aspects: ridgeline profile, named peaks, elevation labels, leader
+          lines, staggered layout, focal summit, sky gradient, alpenglow rim.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Valais Alps peaks with correct elevations; canonical Zermatt
-          panorama; neutral geographic context
+        comment: Real Wallis/Valais Alps peaks with accurate names and elevations.
+          Classic alpine tourism panorama scenario. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevations 4027-4634m accurate for Swiss 4000-m peaks; lower bound
-          2900m realistic
+        comment: Y range 2900-5800m appropriate; all peaks are 4000m+ summits. 180°
+          sweep is realistic observer panorama width.
     code_quality:
       score: 10
       max: 10
@@ -181,61 +205,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat linear: theme tokens -> data -> chart layers -> save'
+        comment: No functions or classes. Flat procedural script. Loops over peaks
+          DataFrame minimal and clear.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for ridge generation
+        comment: np.random.seed(42) for jagged ridgeline noise.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas (via importlib), os, sys used
+        comment: Dynamic import for altair package shadowing; PIL used for canvas
+          padding; all imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layer composition via + is clean and idiomatic; gradient sky via
-          rect mark with color dict is appropriate
+        comment: Multi-layer composition correctly assembled. Dynamic title fontsize
+          scaling formula appropriate. Tier assignment map clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with scale_factor=3.0 and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. PIL padding to exact
+          3200x1800 target.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of layer composition, all mark types, encode() shorthand,
-          configure_* global styling
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Altair gradient fill via color dict with gradient/stops is distinctively
-          Altair; layer composition with shared scales; HTML export
+        comment: 'Altair layer composition (+) correct. Proper encoding type suffixes.
+          alt.Scale, alt.Axis, alt.Title idiomatic. All mark types applied correctly.
+          Minor: tooltip on non-interactive area/line layers is unused overhead.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Vega-Lite linear gradient spec in mark_rect color property (distinctive).
+          9-layer composition. HTML export with interactive tooltips. alt.Title with
+          subtitleColor, anchor, offset.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - gradient-fill
+  - alpha-blending

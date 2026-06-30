@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: dumbbell-basic
 created: '2025-12-23T13:02:07Z'
-updated: '2026-04-26T01:56:22Z'
-generated_by: claude-opus
-workflow_run: 24945231415
+updated: '2026-06-30T23:06:29Z'
+generated_by: claude-sonnet
+workflow_run: 28480736982
 issue: 945
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,130 +15,113 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - Correct horizontal dumbbell chart using geom_segment + geom_point - idiomatic
-    plotnine grammar
-  - Data sorted by difference (ascending) which creates a clear narrative revealing
-    which departments improved most vs. least
-  - Full theme adaptation with all text elements (title, axis labels, tick labels,
-    legend) using adaptive INK/INK_SOFT tokens for both light and dark renders
-  - All font sizes explicitly set to spec (title=24, axis=20, ticks=16, legend=16)
-    for the 4800×2700 render target
-  - 'Correct Okabe-Ito order: Before=#009E73 (position 1), After=#D55E00 (position
-    2)'
-  - pd.Categorical used for correct category ordering in plotnine
-  - Realistic, neutral business context (employee satisfaction before/after policy
-    changes) with varied gap sizes across 8 departments
+  - Fully correct horizontal dumbbell chart using idiomatic geom_segment + geom_point
+    composition
+  - Sorted by improvement delta — creates an immediately readable narrative showing
+    which departments benefited most
+  - Per-segment difference annotations (+N) above each connector give viewers direct
+    delta reference
+  - Both light and dark renders are fully theme-correct with no dark-on-dark or legibility
+    failures
+  - 'Complete spec compliance: all required features (orientation, distinct colors,
+    sorting, subtle connector) implemented'
+  - Deterministic hardcoded data with clean pd.Categorical ordering — robust and reproducible
   weaknesses:
-  - 'DE-01 (4/8): Design sophistication is at ''well-configured library default''
-    level — no standout design choices. Consider annotating each dumbbell with the
-    difference value (+N pts) to add insight, or use marker size proportional to the
-    magnitude of change to create visual hierarchy.'
-  - 'DE-02 (4/6): Spines are not explicitly removed — relying on theme_minimal() defaults.
-    Should add panel_border=element_blank() and set axis_line=element_line(color=INK_SOFT)
-    explicitly per the library guide. Also missing legend_key_size or legend_key adjustments.'
-  - 'DE-03 (3/6): Sorting creates narrative structure but no visual emphasis distinguishes
-    top performers (Engineering, HR with +17/+28 pt gains) from smallest improvers
-    (Sales, Finance with +6/+7 pt gains). Could use color alpha variation or a ''gap
-    annotation'' to make the story pop.'
-  - 'LM-02 (3/5): The grammar of graphics layering is good but could be more distinctive
-    — e.g., using scale_y_discrete(expand=...) for fine-tuned spacing, or coord_flip()
-    pattern instead of raw horizontal mapping.'
+  - Difference annotation labels (geom_text size=3.0mm) are small; at mobile display
+    sizes (~400px wide) they may become difficult to read — bumping to size=3.5–4.0mm
+    would improve legibility without cluttering the chart
+  - 'Design sophistication (DE-01) is solid but leaves room: no department is visually
+    distinguished as the standout (e.g., HR with +28 could receive a subtle highlight
+    or color accent to serve as the focal point)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) fills the entire canvas including the panel area — correct theme surface.
-      Chrome: Title "Employee Satisfaction · dumbbell-basic · plotnine · anyplot.ai" is bold, dark (#1A1A17), clearly readable. "Department" y-axis label and "Satisfaction Score" x-axis label are dark and legible. Tick labels (30–100 on x, department names on y) are in a slightly lighter dark gray, all clearly readable.
-      Data: 8 horizontal dumbbells ordered by satisfaction-score improvement (smallest gap at bottom: Sales +6, Finance +7; largest at top: HR +28, Customer Support +22). Green dots (#009E73) mark "Before" values, orange dots (#D55E00) mark "After" values. Connecting lines are a subtle gray (INK_SOFT with alpha=0.6), thin and non-obtrusive. Subtle vertical grid lines at x-axis ticks.
-      Legend: "Before" (green circle) and "After" (orange circle) in a box at right — readable and well-positioned.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct Imprint light surface
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · plotnine · anyplot.ai" is bold dark text, clearly visible. Y-axis label "Department" and X-axis label "Satisfaction Score" are dark and readable. Tick labels (category names and score values) rendered in dark INK_SOFT tone, fully legible.
+      Data: Green (#009E73 = IMPRINT[0]) dots for "Before", purple/violet (#C475FD = IMPRINT[1]) dots for "After", connected by thin gray segments (alpha=0.5). Difference annotations (+6 to +28) above segment midpoints in muted gray. Legend on right with correct color swatches.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the canvas — correct dark-theme surface.
-      Chrome: Title is rendered in light cream text (#F0EFE8), clearly readable. "Department" and "Satisfaction Score" axis labels are light-colored. Tick labels are in lighter gray (#B8B7B0 equivalent), all legible against the dark background. No dark-on-dark failures detected.
-      Data: Identical data colors — green (#009E73) "Before" dots and orange (#D55E00) "After" dots are exactly the same as the light render, confirming Okabe-Ito positions 1–2 are theme-invariant. Connecting lines adapt to a lighter gray (INK_SOFT dark-theme value). X-axis gridlines are subtle and visible.
-      Legend: Readable in a slightly elevated dark box — "Before" and "After" labels in lighter gray text with colored circles.
-      Legibility verdict: PASS — all text clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct Imprint dark surface
+      Chrome: Title is bold light text (#F0EFE8), clearly visible against dark background. Axis labels and tick labels are light-toned and readable. Legend background uses elevated dark swatch (#242420). No dark-on-dark failures detected anywhere.
+      Data: Colors are identical to light render — green (#009E73) Before dots and purple (#C475FD) After dots. Brand green reads strongly on dark surface. Connecting segments remain visible as subtle gray lines. Difference annotations in muted tone remain legible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title=24, axis=20, ticks=16, legend=16.
-          Readable in both themes via INK/INK_SOFT tokens.'
+        comment: All text readable in both themes; difference annotation labels (size=3.0mm)
+          are on the small side for mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 8 categories well-spaced horizontally; no label collisions.
+        comment: No collisions; nudge_y=0.3 cleanly separates annotations from connecting
+          lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: size=7 markers clearly visible at 4800x2700. Connecting lines at
-          size=1.5 are appropriately subtle.
+        comment: Dot size=4.0 is appropriately prominent; segments are intentionally
+          subtle at size=0.8, alpha=0.5
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) vs orange (#D55E00) — Okabe-Ito CVD-safe combination
-          with good luminance separation.
+        comment: Green/purple combination is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas with balanced margins; plot fills 50-70% of canvas; legend
-          integrated at right without isolation.
+        comment: Correct 3200x1800 canvas; good whitespace; legend well-positioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Satisfaction Score'' x-axis and ''Department'' y-axis are descriptive.
-          Satisfaction scores are dimensionless (survey scale), so no units needed.'
+        comment: Satisfaction Score and Department are descriptive; title follows
+          mandated format with descriptive prefix
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Before=#009E73 (position 1), After=#D55E00 (position 2). Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Data colors identical across both renders.
-          Chrome flips correctly.'
+        comment: Before=#009E73 (IMPRINT[0]), After=#C475FD (IMPRINT[1]); light bg=#FAF8F1;
+          dark bg=#1A1A17; both renders theme-correct
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default. Sorting by difference is a good
-          intentional choice but no standout design element lifts it above standard
-          defaults. No annotations, no size variation, no emphasis hierarchy.
+        passed: true
+        comment: Above default; intentional palette, sorting creates visual narrative,
+          difference annotations add informational layer
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Y-axis major grid blanked (correct for dumbbell), x-axis grid subtle,
-          minor grid removed. But spines not explicitly removed (no panel_border=element_blank());
-          relying on theme_minimal() to handle them.
+        passed: true
+        comment: Deliberate removal of horizontal gridlines smart for this chart type;
+          vertical grid at alpha=0.10 very subtle; clean spine treatment
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorting by difference ascending creates clear narrative structure
-          (worst-to-best improvement). But no visual emphasis distinguishes high-gain
-          from low-gain departments beyond position.
+        passed: true
+        comment: Sorting by difference tells clear story; per-segment delta labels
+          give immediate reference; clear before/after narrative
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal dumbbell chart with two dots per category connected
-          by a line.
+        comment: Correct horizontal dumbbell chart with geom_point and geom_segment
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec requirements met: two distinct dot colors, horizontal orientation,
-          categories on y-axis, sorted by difference, thin subtle connecting lines.'
+        comment: Horizontal orientation, distinct colors, sorted by difference, thin
+          subtle connector — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Satisfaction values on x-axis, departments on y-axis. All 8 categories
-          fully visible.
+        comment: X=scores, Y=departments; all 8 categories shown; correct axis limits
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Employee Satisfaction · dumbbell-basic · plotnine · anyplot.ai'
-          correct. Legend shows 'Before' and 'After' with matching dot colors.
+        comment: Title matches descriptive·spec-id·library·anyplot.ai format; legend
+          labels Before/After correct
     data_quality:
       score: 15
       max: 15
@@ -180,23 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows variety: large gaps (HR +28, Customer Support +22), medium
-          gaps (Engineering +17), and small gaps (Sales +6, Finance +7). Both starting
-          points and magnitudes vary.'
+        comment: 'Demonstrates all dumbbell aspects: two-value comparison, dot differentiation,
+          connectors, sorting, difference annotation, legend'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee satisfaction scores before/after workplace policy changes.
-          Real-world, neutral business scenario across 8 recognizable departments.
+        comment: Employee satisfaction before/after policy changes is neutral and
+          plausible; standard departments; scores 40-88 are realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values range 40–88 on a 30–100 survey scale. Realistic and internally
-          consistent.
+        comment: 8 categories (within 5-20 spec range); satisfaction scores 40-88
+          on 30-100 axis; deltas 6-28 are realistic
     code_quality:
       score: 10
       max: 10
@@ -206,60 +186,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → constants → data → dataframes → plot → save.
-          No functions or classes.'
+        comment: Flat script, no functions or classes, clean linear flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded; fully deterministic, no random state needed.
+        comment: 'Fully deterministic: all data hardcoded, no random generation'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 13 plotnine symbols imported are actually used in the plot construction.
+        comment: All imported symbols used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. zip(strict=True) is a good practice. list comprehensions
-          are appropriate.
+        comment: Separate df_segments and df_points is correct approach; pd.Categorical
+          with ordered=True properly controls axis order
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via plot.save(). verbose=False is a nice
-          touch.
+        comment: Saves as plot-{THEME}.png; uses current plotnine API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert plotnine grammar: ggplot() + geom_segment() + geom_point()
-          + scale_* + theme() composition. pd.Categorical for correct ordering is
-          the idiomatic plotnine pattern.'
+        comment: Grammar-of-graphics layering, scale_color_manual, per-geom data=
+          arguments, pd.Categorical ordering — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses plotnine's grammar of graphics layering (geom_segment + geom_point)
-          and pd.Categorical for ordered factors. Distinctive but not exceptional
-          — could benefit from scale_y_discrete spacing or other plotnine-specific
-          tuning.
-  verdict: REJECTED
+        passed: true
+        comment: geom_segment for connectors, multi-layer composition, explicit theme()
+          token overrides; solid but not advanced
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - wide-to-long
   dataprep: []
