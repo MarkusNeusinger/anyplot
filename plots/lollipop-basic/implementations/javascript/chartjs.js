@@ -14,9 +14,29 @@ const channels = [
 ];
 const visitors = [312, 285, 198, 176, 165, 142, 118, 89, 67, 43];
 
+// Emphasize top performer with a larger dot
+const dotRadii = visitors.map((_, i) => i === 0 ? 20 : 14);
+
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Inline plugin: value label above the top performer -------------------
+const topLabelPlugin = {
+  id: "topLabel",
+  afterDraw(chart) {
+    const ctx = chart.ctx;
+    const meta = chart.getDatasetMeta(1); // line dataset (dots)
+    const topPoint = meta.data[0];
+    ctx.save();
+    ctx.font = "bold 15px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("312K", topPoint.x, topPoint.y - dotRadii[0] - 6);
+    ctx.restore();
+  },
+};
 
 // --- Chart (lollipop: thin bars as stems + line points as dots) -----------
 new Chart(canvas, {
@@ -34,15 +54,15 @@ new Chart(canvas, {
         order: 1,
       },
       {
-        // Dots: large circular points at each value
+        // Dots: large circular points at each value; top performer is larger
         type: "line",
         label: "Visitors (K)",
         data: visitors,
         backgroundColor: t.palette[0],
         borderColor: t.pageBg,
         borderWidth: 2,
-        pointRadius: 14,
-        pointHoverRadius: 16,
+        pointRadius: dotRadii,
+        pointHoverRadius: dotRadii.map(r => r + 2),
         showLine: false,
         order: 2,
       },
@@ -70,7 +90,7 @@ new Chart(canvas, {
           color: t.inkSoft,
           font: { size: 14 },
         },
-        grid: { color: t.grid },
+        grid: { display: false },
         title: {
           display: true,
           text: "Marketing Channel",
@@ -96,7 +116,8 @@ new Chart(canvas, {
       },
     },
     layout: {
-      padding: { top: 10, bottom: 20, left: 30, right: 30 },
+      padding: { top: 40, bottom: 20, left: 30, right: 30 },
     },
   },
+  plugins: [topLabelPlugin],
 });
