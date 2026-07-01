@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: lollipop-basic
+created: '2026-07-01T06:09:30Z'
+updated: '2026-07-01T06:35:29Z'
+generated_by: claude-sonnet
+workflow_run: 28497107993
+issue: 934
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Renewable energy data by country is real-world compelling and non-controversial
+  - Amber accent on Norway (98%) creates immediate focal point and clear visual hierarchy
+  - 50% majority-renewable threshold line adds meaningful analytical context
+  - Value annotations on every lollipop make each data point readable at a glance
+  - linesegments! with Point2f[] paired-point idiom is the correct idiomatic Makie
+    approach for stems
+  - 'Full Imprint palette compliance: #009E73 first series, correct theme-adaptive
+    chrome in both renders'
+  - Top/right spines removed, Y-only subtle grid, dot strokes with PAGE_BG for clean
+    visual refinement
+  weaknesses:
+  - Value annotation fontsize=10 (20px effective) is the smallest text on the canvas
+    — consider bumping to fontsize=11 or 12 for better mobile readability
+  - 'ANYPLOT_AMBER semantic role is warning/caution; using it for the top performer
+    (Norway) is a creative choice that slightly mismatches the anchor''s documented
+    role — an alternative is a larger dot (markersize=24) or a bold text annotation
+    to mark Norway as #1 without color-role mismatch'
+  - DE storytelling is good but stops short of the top tier — adding a direct annotation
+    arrow or callout for Norway (e.g. text! with arrow-like offset) would push narrative
+    clarity further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "lollipop-basic · julia · makie · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "Renewable Energy Share (%)" and X-axis label "Country" in dark ink, descriptive and readable. X-tick labels (USA through Norway) rotated ~30°, readable. Y-tick labels (0, 50, 100) readable. "50% threshold" annotation in INK_SOFT grey, readable. Value annotations (18%–98%) at fontsize=10 are the smallest text but legible at canvas resolution.
+      Data: 9 lollipops in brand green #009E73, Norway (rightmost, 98%) highlighted in amber #DDCC77. Stems are thin lines from baseline to dots; dots have PAGE_BG stroke for definition. A dashed 50% reference line adds analytical context. Data sorted ascending left-to-right.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels render in light ink (#F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0), readable. "50% threshold" annotation visible. Value annotations readable. No dark-on-dark failures observed.
+      Data: Data colors are identical to light render — 9 green (#009E73) lollipops and 1 amber (#DDCC77) Norway lollipop. Only chrome (background, text, grid, spines) has flipped to dark theme. Dashed reference line and subtle Y-grid visible.
+      Legibility verdict: PASS — all text readable against dark background; theme adaptation is complete and correct.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes. Value annotations
+          at fontsize=10 (20px effective) are borderline on mobile — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; Germany 46% annotation and 50% threshold
+          label are at different x-positions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markersize=18 appropriate for 10 lollipops; stems at linewidth=2.5
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; green/amber distinction clear; no red-green
+          as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions; generous whitespace;
+          no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Renewable Energy Share (%)'' with units; X-axis: ''Country'';
+          title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; amber used as semantic accent; backgrounds
+          #FAF8F1/#1A1A17 correct in both themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default 4: amber accent on leader, sorted progression, reference
+          line, clean palette application. Not quite publication-ready (no callout
+          annotation for Norway).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; Y-only grid at 0.15 opacity; dot PAGE_BG
+          strokes; rotated x-ticks. Clearly above default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorted ranking + 50% threshold + amber focal point create a clear
+          narrative. Above default 2; falls short of 6 (no arrow/callout for Norway).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lollipop chart: thin stems (linesegments!) + circular markers
+          (scatter!).'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stems from baseline, circular dots, vertical orientation, sorted
+          data — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Countries on x-axis, renewable % on y-axis, all 10 categories visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''lollipop-basic · julia · makie · anyplot.ai''. No legend
+          needed (single categorical variable with accent); correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all lollipop aspects: varied heights, sorted order, clear
+          baseline, good range 18–98%.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable energy share by country is a compelling, non-controversial,
+          real-world scientific topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 18–98% are factually reasonable for these countries in the
+          renewable energy domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: constants → data → sort → figure → axis → plot elements
+          → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data is hardcoded so deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie (plot), Colors (colorant""), Random (seed) — all three
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean paired-point construction for linesegments!; no over-engineering;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png; uses size= (correct CairoMakie 0.21+
+          API, not deprecated resolution=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Figure/Axis/primitive pattern; proper colorant"", RGBAf,
+          Point2f[] types; theme-adaptive chrome all wired correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: linesegments! with paired Point2f array is distinctly Makie (vs.
+          matplotlib vlines); RGBAf alpha on grid/reference is Makie-native.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
