@@ -1,7 +1,7 @@
 // anyplot.ai
 // lollipop-basic: Basic Lollipop Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.0
-// Quality: 88/100 | Created: 2026-07-01
+// Quality: 87/100 | Created: 2026-07-01
 
 //# anyplot-orientation: landscape
 
