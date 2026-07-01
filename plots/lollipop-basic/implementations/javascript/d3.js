@@ -37,14 +37,15 @@ const y = d3.scaleBand()
   .range([ih, 0])
   .padding(0.45);
 
-// Vertical gridlines
-x.ticks(6).forEach(tick => {
-  g.append("line")
-    .attr("x1", x(tick)).attr("x2", x(tick))
-    .attr("y1", 0).attr("y2", ih)
-    .attr("stroke", t.grid)
-    .attr("stroke-width", 1);
-});
+// Vertical gridlines — idiomatic D3 data join
+g.selectAll(".grid")
+  .data(x.ticks(6))
+  .join("line")
+  .attr("class", "grid")
+  .attr("x1", d => x(d)).attr("x2", d => x(d))
+  .attr("y1", 0).attr("y2", ih)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
 
 // Axes
 const xAxisG = g.append("g").attr("transform", `translate(0,${ih})`).call(
@@ -56,7 +57,11 @@ xAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
 xAxisG.selectAll("line").attr("stroke", t.grid);
 xAxisG.select(".domain").attr("stroke", t.inkSoft);
 
-yAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+// Semi-bold Louvre label for typographic hierarchy (top-ranked entry)
+yAxisG.selectAll("text")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-weight", d => d === "Louvre" ? "600" : "400");
 yAxisG.select(".domain").attr("stroke", t.inkSoft);
 
 // Stems
@@ -72,29 +77,40 @@ g.selectAll(".stem")
   .attr("stroke-width", 2.5)
   .attr("stroke-opacity", 0.65);
 
-// Dots
+// Dots — Louvre at r=13 (vs r=10) signals its outlier status
 g.selectAll(".dot")
   .data(museums)
   .join("circle")
   .attr("class", "dot")
   .attr("cx", d => x(d.visitors))
   .attr("cy", d => y(d.name) + y.bandwidth() / 2)
-  .attr("r", 10)
+  .attr("r", d => d.name === "Louvre" ? 13 : 10)
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2.5);
 
-// Value labels
+// Value labels — 14px to meet the floor; Louvre label semi-bold
 g.selectAll(".val")
   .data(museums)
   .join("text")
   .attr("class", "val")
-  .attr("x", d => x(d.visitors) + 16)
+  .attr("x", d => x(d.visitors) + 18)
   .attr("y", d => y(d.name) + y.bandwidth() / 2)
   .attr("dy", "0.35em")
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
+  .style("font-weight", d => d.name === "Louvre" ? "600" : "400")
   .text(d => `${d.visitors}M`);
+
+// Focal-point annotation on the Louvre outlier
+const louvre = museums[museums.length - 1];
+g.append("text")
+  .attr("x", x(louvre.visitors) + 18)
+  .attr("y", y(louvre.name) + y.bandwidth() / 2 - 22)
+  .attr("fill", t.palette[0])
+  .style("font-size", "12px")
+  .style("font-style", "italic")
+  .text("world's most-visited");
 
 // X-axis label
 g.append("text")
