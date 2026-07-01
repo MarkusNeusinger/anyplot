@@ -2,44 +2,59 @@ library: plotnine
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:33:20Z'
-updated: '2026-04-26T13:16:18Z'
-generated_by: claude-opus
-workflow_run: 24957093138
+updated: '2026-07-01T06:13:20Z'
+generated_by: claude-sonnet
+workflow_run: 28496693186
 issue: 934
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - Perfect spec compliance with idiomatic geom_segment + geom_point lollipop pattern
-  - Correct theme-adaptive chrome in both renders with no legibility failures
-  - All font sizes match style guide (24/20/16pt), readable at high resolution
-  - 'Intentional grid treatment: x-grid off, y-grid at 15% opacity'
-  - Sorted data creates natural ranking narrative
+  - Correct lollipop chart anatomy (geom_segment stems + geom_point markers) with
+    full spec compliance
+  - 'Brand green #009E73 used consistently for single-series data'
+  - Size aesthetic mapped to value adds redundant encoding and reinforces the ranking
+    hierarchy
+  - Data sorted ascending left-to-right, creating a clear ranking narrative
+  - Theme adaptation is correct — light (#FAF8F1) and dark (#1A1A17) backgrounds render
+    properly with adaptive chrome tokens
+  - Value labels (e.g. 58k, 245k) placed above each dot for precise readability
+  - Clean, idiomatic plotnine grammar-of-graphics code with no unnecessary complexity
+  - Properly adapted INK/INK_SOFT tokens across both renders — no dark-on-dark issues
+    in dark theme
   weaknesses:
-  - Design sophistication at default level — no size variation, opacity emphasis,
-    or focal point highlighting
-  - Spines removal is implicit via theme_minimal; panel_border not explicitly set
-    to element_blank()
+  - Design Excellence is moderate — single brand-green palette for all 10 lollipops
+    without any inter-category differentiation; consider if any styling element could
+    add intentional hierarchy beyond size encoding
+  - LM-02 underperforms — the implementation uses standard geom_segment + geom_point
+    layering without exploiting distinctive plotnine features (e.g. stat_identity,
+    facet_wrap, explicit scale transformations, or advanced aes groupings)
+  - DE-02 refinement is basic — top/right spines are removed via theme_minimal but
+    no additional polish (e.g. no explicit spine removal confirmation in theme(),
+    no custom legend treatment, no axis tick mark removal)
+  - The smallest lollipops (Automotive=58k, Garden=72k) have noticeably small dots
+    due to the size-encoding range=[2,7]; at mobile display widths these may be hard
+    to distinguish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "lollipop-basic · plotnine · anyplot.ai" in dark ink (24pt) — clearly readable. Axis labels "Product Category" and "Sales (thousands $)" in dark ink (20pt) — readable. Tick labels in muted dark (#4A4A44) at 16pt — readable. X-tick labels rotated 45° — readable but slightly crowded at bottom margin.
-      Data: All 10 lollipops in brand green (#009E73). Stems as thin vertical lines, dots as circles at value positions. Sorted ascending left-to-right (Automotive 58 to Electronics 245). Y-axis horizontal grid at ~15% opacity.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "lollipop-basic · python · plotnine · anyplot.ai" visible in dark ink (~65% plot width, size 12pt). X-axis label "Product Category" and Y-axis label "Sales (thousands $)" are clearly readable in dark ink (10pt). Category tick labels are rotated 45° and readable in INK_SOFT (#4A4A44). Y-axis numeric tick labels are readable. Subtle horizontal gridlines (alpha=0.15) visible without competing with data.
+      Data: All 10 lollipop stems and markers rendered in brand green (#009E73). Stems are thin vertical lines from y=0 to each value. Circular markers scale in size from small (Automotive=58k) to large (Electronics=245k) via size aesthetic. Value labels (e.g. "58k", "245k") appear above each dot in INK_SOFT — small but readable at full resolution.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — readable. Tick labels in secondary light (#B8B7B0) — readable. No dark-on-dark failures detected.
-      Data: Stem and dot colors are identical to light render (#009E73) — confirmed. Only chrome elements (background, text, axis lines) changed between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title and axis labels are rendered in light near-white (INK=#F0EFE8) — clearly visible against dark background. Tick labels appear in INK_SOFT (#B8B7B0) — adequately readable. Value labels above dots also in INK_SOFT, visible but small. Subtle gridlines appear lighter on dark background, consistent with theme-adaptive alpha.
+      Data: Brand green (#009E73) lollipop markers and stems are identical in color to the light render — data colors are theme-independent as required. Size encoding is preserved. No change in data encoding between themes.
+      Legibility verdict: PASS — no dark-on-dark issues found; all chrome elements properly adapted via INK/INK_SOFT tokens. Brand green reads well on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -47,68 +62,85 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes correct (24/20/16pt), both themes readable; minor crowding
-          from rotated x-labels
+        comment: Title (12pt), axis labels (10pt), tick labels (8pt) all explicitly
+          set and readable in both themes. Value labels (geom_text size=2.8mm ≈ 8pt)
+          are small but within spec at full resolution. Slight risk at mobile scale
+          for the smallest labels.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No collisions; 45° rotation prevents label overlap
+        comment: No overlapping text or data elements. Middle-section lollipops (Books,
+          Sports, Groceries) are somewhat close together but labels do not collide.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Stems and dots clearly visible in both themes
+        comment: 10 data points (< 50) — sparse data. Stems clearly visible. Markers
+          scale in size (range=[2,7]) which is effective for ranking. Smallest dots
+          (Automotive, Garden) are visible but noticeably smaller.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-color CVD-safe Okabe-Ito green
+        comment: Single brand green series — no CVD concerns with single-color usage.
+          Good contrast on both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; rotated labels slightly tight at bottom margin
+        comment: Canvas gate passed (3200x1800). Title takes ~65% of plot width. Balanced
+          axis label sizes. No overflow or clipping. Bottom margin accommodates rotated
+          x-axis tick labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: 'X: ''Product Category'', Y: ''Sales (thousands $)'' with units.
+          Title matches required format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct bg in both themes, data colors identical'
+        comment: 'Single series uses brand green #009E73. Light bg #FAF8F1, dark bg
+          #1A1A17. Chrome tokens are theme-adaptive. Both renders correct.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean but at default level; no size/opacity variation or focal point
-          emphasis
+        passed: true
+        comment: Above default (4). Size encoding adds meaningful visual hierarchy.
+          Warm backgrounds and brand palette create consistent identity. However,
+          single-color design across all 10 categories limits differentiation beyond
+          size and height.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'Intentional grid: x-grid off, y-grid at 15% opacity; spines removed
-          implicitly via theme_minimal'
+        comment: Slightly above default (2). theme_minimal() removes most chartjunk.
+          Horizontal-only gridlines (alpha=0.15) are appropriately subtle. X-grid
+          removed. Minor gridlines removed. No tick mark removal or further spine
+          polish.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Ascending sort creates ranking narrative; no focal point highlighting
+        comment: Slightly above default (2). Ascending sort creates clear ranking
+          narrative. Size encoding reinforces value hierarchy. Value labels enable
+          precise reading. No additional emphasis (e.g. color highlight on top performer)
+          or annotations.
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +150,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct lollipop via geom_segment + geom_point
+        comment: 'Correct lollipop chart: geom_segment for stems, geom_point for circular
+          markers.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems from baseline, circular markers, vertical orientation, sorted
+        comment: Stems from y=0 to value, circular markers at data values, vertical
+          orientation, data sorted by value.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category->x, value->y; all 10 categories shown
+        comment: Category on x-axis, value on y-axis. All 10 categories displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; no legend appropriate for single series
+        comment: Title matches required format 'lollipop-basic · python · plotnine
+          · anyplot.ai'. No legend (single series, show_legend=False) — appropriate.
     data_quality:
       score: 15
       max: 15
@@ -146,21 +181,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All lollipop elements demonstrated: stems, dots, baseline, sorted
-          categories'
+        comment: 'Full lollipop anatomy: stems, markers, sorting, size encoding, data
+          labels. 10 categories covers the mid-range of the spec''s 5-20 guideline.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales by category — realistic and neutral
+        comment: Product sales by category — neutral, real-world plausible data. No
+          controversial elements.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 10 categories (within 5-20 range); values 58-245 thousands $ are
-          plausible
+        comment: Sales values $58k-$245k are realistic for product category sales.
+          Range provides good visual spread.
     code_quality:
       score: 10
       max: 10
@@ -170,33 +206,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat procedural script
+        comment: Top-level script, no functions or classes. Clear linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data (no random generation)
+        comment: Hardcoded deterministic data. No random seeds needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All 14 plotnine imports are used in the code.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Clean, readable code. sys.path manipulation is necessary to avoid
+          circular import due to file being named plotnine.py. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave with correct dimensions
+        comment: ggsave outputs to plot-{THEME}.png. Current plotnine API used.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -204,21 +241,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering; pd.Categorical for factor ordering;
-          proper theme() composition
+        comment: 'Proper ggplot grammar: aes() mapping, layered geoms, theme() customization.
+          pd.Categorical for axis ordering is the correct plotnine pattern.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: geom_segment + geom_point is canonical plotnine lollipop pattern;
-          pd.Categorical ordered axis control
+        passed: false
+        comment: Uses standard geom_segment + geom_point + geom_text layering (classic
+          ggplot2 lollipop pattern). scale_size_continuous is a nice touch. No more
+          advanced plotnine-specific features (stats, coord transforms, advanced scales)
+          exploited.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  patterns:
-  - data-generation
+  - annotations
+  patterns: []
   dataprep: []
   styling: []
