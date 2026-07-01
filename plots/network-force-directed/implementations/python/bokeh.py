@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 86/100 | Updated: 2026-07-01
@@ -108,7 +108,7 @@ for src, tgt in all_edges:
 p = figure(
     width=3200,
     height=1800,
-    title="network-force-directed · bokeh · anyplot.ai",
+    title="network-force-directed · python · bokeh · anyplot.ai",
     x_range=(-0.05, 1.05),
     y_range=(-0.05, 1.05),
     toolbar_location=None,
@@ -191,15 +191,31 @@ p.add_tools(
     )
 )
 
+# Spotlight — draw a glow ring around the single highest-degree hub node
+top_hub_id = max(degrees, key=degrees.get)
+top_hub_x = pos[top_hub_id][0]
+top_hub_y = pos[top_hub_id][1]
+top_hub_size = 16 + degrees[top_hub_id] * 2
+p.scatter(
+    x=[top_hub_x],
+    y=[top_hub_y],
+    size=[top_hub_size + 20],
+    fill_color=None,
+    line_color=ANYPLOT_AMBER,
+    line_width=4,
+    line_alpha=0.85,
+)
+
 # Hub labels — threshold 9 keeps only the top hubs to avoid label crowding
-hub_x, hub_y = [], []
+hub_x, hub_y, hub_labels = [], [], []
 for node in nodes:
     if degrees[node["id"]] >= 9:
         hub_x.append(pos[node["id"]][0])
-        hub_y.append(pos[node["id"]][1] + 0.032)
+        hub_y.append(pos[node["id"]][1] + 0.045)
+        hub_labels.append("Top Hub" if node["id"] == top_hub_id else "Hub")
 
 if hub_x:
-    hub_source = ColumnDataSource(data={"x": hub_x, "y": hub_y, "text": ["Hub"] * len(hub_x)})
+    hub_source = ColumnDataSource(data={"x": hub_x, "y": hub_y, "text": hub_labels})
     p.text(
         x="x",
         y="y",
@@ -230,7 +246,7 @@ p.legend.glyph_height = 32
 p.legend.glyph_width = 32
 
 # Save HTML (interactive artifact)
-output_file(f"plot-{THEME}.html", title="network-force-directed · bokeh · anyplot.ai")
+output_file(f"plot-{THEME}.html", title="network-force-directed · python · bokeh · anyplot.ai")
 save(p)
 
 # Screenshot via headless Chrome — CDP sets exact viewport (set_window_size alone is insufficient)
