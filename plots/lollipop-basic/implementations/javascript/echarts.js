@@ -12,6 +12,7 @@ const professions = [
   "Mechanical Eng.", "Marketing Mgr.", "Nurse", "Teacher"
 ];
 const salaries = [125, 118, 115, 95, 88, 85, 82, 75, 68, 58];
+const avg = Math.round(salaries.reduce((a, b) => a + b, 0) / salaries.length);
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -27,7 +28,7 @@ chart.setOption({
     top: 28,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: "normal" }
   },
-  grid: { left: 90, right: 60, top: 90, bottom: 120 },
+  grid: { left: 90, right: 80, top: 90, bottom: 120 },
   xAxis: {
     type: "category",
     data: professions,
@@ -37,7 +38,7 @@ chart.setOption({
       rotate: 30,
       interval: 0
     },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false }
   },
@@ -48,6 +49,7 @@ chart.setOption({
     nameGap: 65,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     min: 0,
+    max: 150,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { show: false },
     axisTick: { show: false },
@@ -59,6 +61,18 @@ chart.setOption({
       data: salaries,
       barWidth: 2,
       itemStyle: { color: t.palette[0] },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          position: "end",
+          formatter: "Avg: " + avg + "K",
+          color: t.inkSoft,
+          fontSize: 13
+        },
+        data: [{ yAxis: avg, name: "Average" }]
+      },
       z: 1
     },
     {
@@ -66,6 +80,13 @@ chart.setOption({
       data: salaries,
       symbolSize: 16,
       itemStyle: { color: t.palette[0] },
+      label: {
+        show: true,
+        position: "top",
+        formatter: "{c}K",
+        color: t.inkSoft,
+        fontSize: 13
+      },
       z: 2
     }
   ]
