@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' network-force-directed: Force-Directed Graph
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-07-01
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 86/100 | Created: 2026-07-01
 
 library(ggplot2)
 library(ragg)
