@@ -2,62 +2,64 @@ library: seaborn
 language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:15:25Z'
-updated: '2026-04-26T09:12:11Z'
-generated_by: claude-opus
-workflow_run: 24952470496
+updated: '2026-07-01T01:34:17Z'
+generated_by: claude-sonnet
+workflow_run: 28486519281
 issue: 990
-python_version: 3.14.4
+language_version: 3.13.14
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Correct force-directed layout implemented via inline Fruchterman-Reingold algorithm
-    with deterministic seed
-  - Bridge node detection and ring highlighting adds meaningful analytical layer to
-    the network
-  - Degree-based node sizing communicates centrality immediately and clearly
-  - Selective hub labeling (75th-percentile threshold) shows design restraint
-  - 'Full theme-adaptive chrome: backgrounds #FAF8F1/#1A1A17, all text/ticks/legend
-    use INK tokens — both renders legible'
-  - 'Complete spec compliance: nodes, edges, weighted edge thickness, degree scaling,
-    community structure all present'
-  - Network statistics annotation (nodes, edges, avg degree, bridges) adds quantitative
-    context
-  - Clean flat code with seed, no functions/classes, correct plot-{THEME}.png output
+  - Custom Fruchterman-Reingold force-directed layout implemented inline with 150
+    iterations and proper normalization — realistic organic community structure
+  - Three-way seaborn encoding (hue=department, size=degree, style=node_type) in a
+    single scatterplot call — leverages seaborn's multi-encoding strength cleanly
+  - 'Imprint palette applied correctly in canonical order (#009E73 Engineering, #C475FD
+    Marketing, #4467A3 Sales) with full theme-adaptive chrome'
+  - Edge weight encoded in line thickness and edge alpha (0.22) keeps the graph readable
+    without clutter
+  - Selective hub labeling (top-4 by degree only) prevents label clutter while highlighting
+    key nodes
+  - Network statistics annotation (nodes, edges, avg degree, bridge count) provides
+    immediate quantitative context
+  - All font sizes explicitly set throughout (title=12, axes=10, annotations=8, stats=7,
+    legend=8/9)
+  - Both light (#FAF8F1) and dark (#1A1A17) renders are fully legible with no dark-on-dark
+    failures
   weaknesses:
-  - Seaborn's role is narrow — only the node scatter layer uses sns.scatterplot; all
-    edges, bridge rings, annotations, and the layout algorithm are pure matplotlib,
-    limiting library mastery score
-  - 'DE-01 gap: design is intentional and above defaults but not yet at publication
-    quality — node styling is clean but the overall aesthetic could be more refined
-    (e.g., softer edge alpha, gradient node sizing, or a visual ''hero'' node)'
-  - 'DE-02 gap: spine treatment keeps left+bottom which may feel heavy for a network
-    viz where axes carry no semantic meaning — removing all spines (ax.axis(''off'')
-    style) would give a cleaner floating-graph look'
-  - Hub label font size (16pt) is correct per spec but the offset (12 points) is tight;
-    some labels risk clipping or appearing very close to the node marker at full resolution
-  - Edge drawing uses uniform linewidth formula (1 + weight*2) with weight range 0.5-1.0,
-    giving edges in the 2-3pt range — variation is subtle and weight encoding is hard
-    to perceive visually
+  - Stats annotation at fontsize=7 may be too small (~5 px) when the 3200px PNG is
+    scaled to ~400px mobile width — increase to 8pt to match hub label size
+  - Hub labels 'Node 3' and 'Node 1' are positionally close in the dense Engineering
+    cluster center; if random seed produces a tighter cluster on re-run the labels
+    risk overlap — consider adding a minimum separation check or reducing from 4 to
+    3 hub labels
+  - 'Design could be elevated: edge color could vary by cross-community vs within-community
+    (e.g. muted grey for within, INK_SOFT for bridge edges) to reinforce the structural
+    story'
+  - 'LM-01 gap: legend is constructed manually via matplotlib scatter handles rather
+    than using seaborn''s legend API — the `legend=False` + manual handle loop is
+    less idiomatic than using seaborn''s built-in legend with `hue_order` and then
+    appending the bridge-node handle'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Organizational Network · network-force-directed · seaborn · anyplot.ai" in dark ink (24pt bold) — clearly readable. Axis labels "Force-Directed X Position" / "Force-Directed Y Position" in dark ink (20pt). No tick labels (axes hidden — appropriate for network). Legend shows Engineering/Marketing/Sales with colored circles and Bridge node ring entry, all readable. Stats annotation "Nodes: 37 | Edges: 98 | Avg Degree: 5.3" in muted ink at bottom, small but legible.
-      Data: Engineering nodes #009E73 (green, Okabe-Ito position 1) clustered left-center. Marketing nodes #D55E00 (orange, position 2) right side. Sales nodes #0072B2 (blue, position 3) scattered periphery. Node sizes vary visibly by degree. Bridge nodes have dark ring outlines. Hub labels (Node 3, Node 4, Node 20, Node 21, Node 28, Node 30) visible above high-degree nodes. Edges drawn in gray (INK_SOFT) at alpha=0.25 — subtle and non-distracting.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, no pure white.
+      Chrome: Title "network-force-directed · python · seaborn · anyplot.ai" in dark ink at top, clearly readable. Axis labels "Force-directed Y" (left) and "Force-directed X" (bottom) in dark ink at 10pt. No tick labels (intentionally removed — correct for network coordinates). Legend in upper left with "Department" title, three colored circle entries (Engineering green, Marketing purple, Sales blue) and a diamond "Bridge node" entry — all readable. Network stats line at bottom center in muted ink: "Nodes: 37 · Edges: 98 · Avg degree: 5.3 · Bridges: 26". Hub node labels ("Node 3", "Node 1", "Node 4", "Node 9") in INK_SOFT at 8pt, positioned above respective hub nodes.
+      Data: Engineering community (#009E73 green) forms a central-left dense cluster with larger nodes reflecting higher degree. Marketing (#C475FD purple) occupies the right side. Sales (#4467A3 blue) is sparse at the bottom-left. Bridge nodes are shown as diamond markers across all three colors. Edge lines are gray with alpha=0.22 and varying thickness by weight. Node sizes range from small circles to large circles/diamonds based on degree.
+      Legibility verdict: PASS — all text is readable against the warm off-white background; no "light on light" failures detected.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Axis labels in light ink — readable. Legend text readable against elevated dark background (#242420). Stats annotation in muted light ink — readable. Bridge node rings use light INK (#F0EFE8) — visible against dark background.
-      Data: Colors are identical to light render — Engineering #009E73 (green), Marketing #D55E00 (orange), Sales #0072B2 (blue). Node degree sizing unchanged. Hub labels visible in light-colored INK_SOFT token.
-      Legibility verdict: PASS — no dark-on-dark failures observed, all chrome uses theme-adaptive tokens correctly, data colors unchanged between renders
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light cream text (#F0EFE8), clearly visible. Axis labels in light text, readable. Legend box in elevated dark (#242420) with light text entries. Hub node labels in INK_SOFT light-grey, visible. Stats line in muted light grey. Left and bottom spines in INK_SOFT (light grey) appropriate for dark theme.
+      Data: Node colors identical to light render — Engineering #009E73 green, Marketing #C475FD purple, Sales #4467A3 blue. Bridge diamonds unchanged. Edge lines are light grey with same alpha. No dark-on-dark failures detected — all text is light-colored against the dark background.
+      Legibility verdict: PASS — full theme-adaptive chrome works correctly; brand green #009E73 reads clearly on dark surface; no unreadable elements detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,54 +67,60 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24pt, axis labels=20pt, ticks/annotations=16pt.
-          Both themes fully readable. Minor: hub label offset (12pt) is tight at full
-          resolution.'
+        comment: 'All font sizes explicitly set (title=12, axes=10, annotations=8,
+          legend=8/9, stats=7). Readable in both themes. Minor concern: stats at 7pt
+          may be marginal at 400px mobile scale; hub labels are close in the central
+          cluster but not overlapping.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlap. Hub labels use xytext offset. Minor potential
-          for label-node proximity in dense areas.
+        comment: No overlap detected. Hub labels are close in the center Engineering
+          cluster but all remain readable and non-overlapping. Legend and stats are
+          well-separated from data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes clearly visible (s=150-800), edges visible at alpha=0.25, bridge
-          rings clearly distinguishable.
+        comment: 37 nodes with sizes 80-400 based on degree are clearly visible. Edge
+          alpha=0.22 keeps graph readable without clutter. Node marker shapes (circle/diamond)
+          clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Shape (ring) used redundantly with
-          color for bridge nodes.
+        comment: Three Imprint hues (green/purple/blue) are perceptually distinct
+          and CVD-safe. Redundant encoding via marker shape (circle vs diamond) adds
+          accessibility beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Network fills canvas well. Legend top-left, stats bottom-center.
-          tight_layout applied.
+        comment: Plot fills ~70-75% of canvas with balanced margins. Legend in upper
+          left well-positioned. Stats at bottom center. subplots_adjust(left=0.07,
+          right=0.97, top=0.91, bottom=0.10) provides good whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Force-Directed X/Y Position. Title includes
-          spec-id, library, anyplot.ai.'
+        comment: '''Force-directed X'' and ''Force-directed Y'' are descriptive and
+          appropriate for network coordinates (no physical units needed). Title format
+          correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering=#009E73 (position 1), Marketing=#D55E00 (position 2),
-          Sales=#0072B2 (position 3). Light bg #FAF8F1, dark bg #1A1A17. Both renders
-          theme-correct.'
+        comment: 'Imprint palette in canonical order: Engineering=#009E73, Marketing=#C475FD,
+          Sales=#4467A3. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Full theme-adaptive
+          chrome. Data colors identical across both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,25 +128,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: bridge node rings, degree-scaled sizing, selective
-          hub annotation, themed node edges (edgecolor=PAGE_BG). Not yet at publication
-          quality.'
+        comment: 'Above a configured default: custom FD layout, triple encoding, selective
+          hub labeling, edge weight in thickness, themed chrome. Not quite publication-ready
+          — the visual treatment of edges is uniform grey and the network lacks a
+          standout design focal point.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed (top+right), no grid (appropriate for network), axes
-          ticks hidden, edge alpha gives depth. Keeping left+bottom spines feels heavy
-          for a floating graph.
+        comment: 'Good refinement: top/right spines removed, all ticks removed (appropriate
+          for network coords), subtle edge alpha, no grid, proper whitespace via subplots_adjust.
+          Stops short of ''every detail polished'' — e.g., edge styling doesn''t differentiate
+          within vs cross-community connections.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Three visual encodings (size=centrality, color=community, ring=bridge)
-          work together to tell network story. Hub labels guide attention. Stats provide
-          context.
+        comment: 'Good visual hierarchy: large Engineering (green) nodes dominate
+          the center visually, bridge diamonds show connectors, hub labels identify
+          key nodes, stats give quantitative context. The community separation story
+          is clear. Does not reach 6/6 as there is no explicit emphasis technique
+          (e.g., highlighted bridge paths) to make one insight unmissable.'
     spec_compliance:
       score: 15
       max: 15
@@ -148,56 +160,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed graph with inline Fruchterman-Reingold physics
-          simulation.
+        comment: Correct force-directed graph with custom Fruchterman-Reingold physics
+          simulation (150 iterations).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, optional degree sizing, edge weight thickness, community
-          structure all implemented.
+        comment: 'All spec features present: nodes with unique IDs (37), edges (98),
+          node size by degree, edge thickness by weight, 3-community structure with
+          cross-community edges, bridge node identification and legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Force-directed X/Y positions correctly mapped. All 37 nodes visible.
-          Node size and color correctly mapped.
+        comment: X/Y coordinates from force-directed layout, all 37 nodes visible,
+          all 98 edges drawn.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Code title: ''network-force-directed · seaborn · anyplot.ai'' (correct
-          format). Legend: Engineering/Marketing/Sales with counts + Bridge node entry.'
+        comment: 'Title: ''network-force-directed · python · seaborn · anyplot.ai''
+          — correct format. Legend labels match data: Engineering (15), Marketing
+          (12), Sales (10), Bridge node.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows community clustering, bridge nodes, degree centrality, weighted
-          edges. Edge weight variation (0.5-1.0 range) is subtle and hard to perceive
-          visually.
+        comment: 'Shows all force-directed graph features: 3 communities, within-community
+          dense edges (p=0.35) vs sparse cross-community (p=0.05), weighted edges,
+          degree-varying node sizes, bridge nodes.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Organizational network with Engineering/Marketing/Sales departments.
-          Realistic intra/inter department connection probabilities (0.35/0.05). Neutral
-          topic.
+        comment: Organizational social network with real departments (Engineering
+          15, Marketing 12, Sales 10). Neutral business context, plausible connection
+          density.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
         comment: 37 nodes within spec range (20-200). 98 edges with avg degree 5.3
-          — realistic for a small organizational network.
+          is realistic. Within-community edge probability (0.35) vs cross-community
+          (0.05) creates the stochastic block model structure correctly.
     code_quality:
       score: 10
       max: 10
@@ -207,35 +222,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme setup → data generation → FR algorithm
-          → plotting → save. No functions or classes.'
+        comment: 'Linear: imports → theme tokens → data generation → layout → plot
+          → legend → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set at the top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy, seaborn — all used.
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. FR algorithm is necessarily verbose but appropriate
-          for inline implementation. No fake UI elements.
+        comment: Clean and well-organized. The inline FD algorithm is necessarily
+          verbose but correctly structured. No fake UI elements or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=300, bbox_inches='tight', facecolor=PAGE_BG.
+        comment: Saves as plot-{THEME}.png at dpi=400 without bbox_inches='tight'.
+          Current API throughout.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -243,31 +259,30 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.scatterplot used correctly with hue, size, palette, edgecolor
-          parameters — idiomatic seaborn for categorical scatter. But most visualization
-          work (edges, rings, annotations, layout) is pure matplotlib.
+        comment: Uses sns.scatterplot with multi-encoding (hue, size, style, palette
+          dict, sizes range, style_order) idiomatically. However, legend is constructed
+          manually via matplotlib scatter handles rather than seaborn's built-in legend
+          API, and most visualization work (edges, annotations) is matplotlib-level.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's hue+size+palette combination for the community/degree
-          encoding — a genuine seaborn strength. Limited scope since the plot is primarily
-          network-drawing via matplotlib.
-  verdict: REJECTED
+        comment: Seaborn's three-way encoding in a single scatterplot call (hue +
+          size + style with explicit palette dict, sizes range, and style_order) is
+          distinctively seaborn — replicating this cleanly in pure matplotlib requires
+          3× more code. This showcases seaborn's declarative multi-encoding strength.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - normalization
   styling:
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome
