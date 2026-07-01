@@ -2,50 +2,52 @@ library: plotly
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:41:19Z'
-updated: '2026-04-26T12:50:56Z'
-generated_by: claude-opus
-workflow_run: 24956801988
+updated: '2026-07-01T05:58:45Z'
+generated_by: claude-sonnet
+workflow_run: 28496453895
 issue: 934
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.8.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Perfect theme adaptation: both light and dark renders are fully correct, with
-    all chrome tokens properly threaded through'
-  - Single-trace None-separator stem technique is an efficient, idiomatic Plotly pattern
-  - All spec requirements met perfectly with correct data, axis mapping, and title
-    format
-  - Marker border matching PAGE_BG is a thoughtful refinement that makes markers pop
-    cleanly on both backgrounds
-  - Font sizes match the style guide pixel-based recommendations exactly
+  - 'Excellent palette usage: brand green (#009E73) for the main series with lavender
+    (#C475FD, Imprint position 2) as a deliberate focal accent on the top performer
+    (Drama), creating clear visual hierarchy'
+  - Clean implementation of the None-separator trick for multi-segment stems — idiomatic
+    Plotly graph objects pattern
+  - 'All theme-adaptive chrome tokens applied correctly in both renders: backgrounds
+    (#FAF8F1 / #1A1A17), INK/INK_SOFT for all text and axis elements'
+  - Title font size dynamically scaled to prevent overflow (max(11, round(16*67/len(title_text))))
+    — thoughtful engineering
+  - 'Interactive Plotly features leveraged: custom hovertemplate with formatted values
+    and HTML export alongside PNG'
+  - Marker edge (PAGE_BG outline) adds clean visual definition separating dots from
+    background in both themes
+  - 'Spec fully covered: stems, circular markers, vertical orientation, sorted data,
+    10 categories in optimal range'
   weaknesses:
-  - 'Design Excellence is the primary gap (9/20): the plot is technically correct
-    but visually generic — no emphasis on any performer, no visual hierarchy, all
-    lollipops share identical color with no focal point'
-  - 'DE-03: No data storytelling — consider highlighting the top performer with a
-    distinct color or annotation'
-  - 'DE-01: Aesthetic sophistication could be elevated — for instance, accent the
-    highest value with a contrasting Okabe-Ito color to create intentional visual
-    emphasis'
-  - 'DE-02: Spines not explicitly managed — explicit showline/mirror settings would
-    make the intent clear'
+  - 'DE-02 refinement could be pushed further: the axis lines and tick marks (showline=True,
+    ticks=''outside'') remain visible — removing them or using inward ticks would
+    give a cleaner lollipop aesthetic'
+  - LM-02 could score higher by exploiting a more distinctively Plotly feature, e.g.
+    adding a custom shape annotation or ranking label on the accent marker using fig.add_annotation()
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Product Sales by Category · lollipop-basic · plotly · anyplot.ai" in dark ink, clearly readable; axis labels "Product Category" and "Sales ($)" in dark ink; y-axis tick labels in dark ink with $ formatting; x-axis category labels angled at -35° in dark gray (INK_SOFT)
-      Data: All stems and circular markers in Okabe-Ito brand green #009E73; markers have background-toned border ring; stems are thin vertical lines; subtle horizontal grid lines on y-axis only
-      Legibility verdict: PASS — all text readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "Streaming Hours by Genre · lollipop-basic · python · plotly · anyplot.ai" in dark ink (#1A1A17), centered, spans ~80% of canvas width (expected for this long mandated title). X-axis label "Content Genre" and Y-axis label "Watch Hours (thousands/month)" in INK color, readable. Rotated tick labels (-35°) in INK_SOFT (#4A4A44), all legible. Y-axis grid lines are very subtle (15% opacity). L-shaped axis frame (bottom + left lines, no top/right mirror).
+      Data: Drama lollipop uses lavender stem + marker (#C475FD, Imprint position 2) as focal accent for the top performer. Remaining 9 genres use brand green (#009E73) stems and markers. Large circular markers (size=22 px) with PAGE_BG inner ring provide clear visual definition. Descending sort makes ranking immediately legible.
+      Legibility verdict: PASS — all text fully readable, no "light on light" failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in off-white/light text, clearly readable; axis labels in light text; y-axis tick labels in light gray (INK_SOFT #B8B7B0); x-axis category labels in lighter gray — all readable against dark background; no dark-on-dark text failure observed
-      Data: Colors identical to light render — stems and markers remain #009E73 (theme-independent data color); marker border adapts to dark PAGE_BG
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light colors (INK = #F0EFE8 / INK_SOFT = #B8B7B0) against the dark background — clearly readable. Grid lines use rgba(240,239,232,0.15) — subtle and visible. No "dark on dark" text detected anywhere.
+      Data: Data colors are identical to the light render — Drama lavender (#C475FD) and main-series brand green (#009E73) unchanged. Only chrome (background, text, grid) has flipped to dark theme. Marker edges use dark PAGE_BG (#1A1A17) which provides definition without compromising color identity.
+      Legibility verdict: PASS — all elements readable, theme adaptation complete and correct.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,71 +58,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px — all explicitly set;
-          readable in both themes
+        comment: All font sizes explicitly set (title dynamic, axis labels 12px, ticks
+          10px). Result is well-proportioned, no overflow, balanced axis labels, rotated
+          ticks readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 10 angled x-axis labels at -35° have no collisions
+        comment: No overlapping elements detected in either render. Rotated tick labels
+          well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers size 22 with background border ring; stems width 3; clearly
-          visible
+        comment: 10 data points with size=22 markers — large and prominent appropriate
+          for sparse dataset. Stems width=3 clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito brand color, high contrast in both themes
+        comment: Imprint palette is CVD-safe. Lavender accent vs green primary provides
+          good contrast. Marker edges add extra definition.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700px, balanced margins, nothing cut off
+        comment: Plot fills canvas well. Margins l=110, r=60, t=80, b=140 give room
+          for rotated labels and axis titles. Canvas gate passed (3200x1800).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Product Category (x), Sales ($) (y) with currency unit
+        comment: 'Y-axis: ''Watch Hours (thousands/month)'' — descriptive with units.
+          X-axis: ''Content Genre'' — descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, light bg #FAF8F1, dark bg #1A1A17, all chrome
-          tokens correct'
+        comment: 'Main series: #009E73 (Imprint position 1). Accent: #C475FD (Imprint
+          position 2) for top-performer semantic highlight. Backgrounds: #FAF8F1 /
+          #1A1A17. Chrome theme-correct in both renders.'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default look; custom font family and hover labels
-          are nice but no intentional visual hierarchy or focal point
+        passed: true
+        comment: 'Strong design: deliberate Imprint palette use, warm theme-adaptive
+          backgrounds, marker edges for definition, Inter font, intentional accent
+          on top performer. Clearly above defaults, not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: X-axis grid removed, subtle y-axis grid with GRID token, zero-line
-          styled; above default but spine handling relies on Plotly defaults
+        passed: true
+        comment: 'Good refinement: y-axis-only subtle grid (15% opacity), L-shaped
+          frame, generous margins, INK_SOFT tick colors. Axis lines and outer ticks
+          remain which limits top score.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted order is spec requirement not storytelling; all lollipops
-          identical color; no focal point emphasis
+        passed: true
+        comment: 'Good storytelling: lavender accent on Drama creates clear focal
+          point, descending sort makes ranking immediately readable. Visual hierarchy
+          guides the viewer to the top performer.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical lollipop chart with stems and circular markers
+        comment: Correct lollipop chart with stems (lines) and circular markers. Vertical
+          orientation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems, circular markers, vertical orientation, sorted-by-value all
-          present
+        comment: Thin stems, circular markers, vertical orientation, sorted descending,
+          10 categories in optimal range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, dollar values on y-axis, all 10 categories
-          displayed
+        comment: Categories on x-axis, values on y-axis, baseline at 0, all 10 data
+          points visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains lollipop-basic · plotly · anyplot.ai; no legend needed
-          for single series
+        comment: 'Title format: ''Streaming Hours by Genre · lollipop-basic · python
+          · plotly · anyplot.ai'' — correct with descriptive prefix. No legend (single-series,
+          correct).'
     data_quality:
       score: 15
       max: 15
@@ -161,20 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide value range $31k-$125k demonstrates chart type's comparison
-          strength
+        comment: Shows full range from high to low values with good variation. All
+          lollipop features demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: E-commerce product category sales — genuine neutral business scenario
+        comment: Streaming platform watch hours by genre — realistic, neutral entertainment/media
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values realistic for mid-size retail categories
+        comment: Drama > Comedy > Thriller ordering is plausible. Values 650–3840k
+          hours/month are realistic for streaming.
     code_quality:
       score: 10
       max: 10
@@ -184,33 +199,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: tokens → data → figure → traces → layout → save;
-          no functions or classes'
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Hardcoded deterministic data. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects, both actively used
+        comment: Only os and plotly.graph_objects imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Single-trace None-separator stem technique; strict=True in zip; clean
-          variable naming
+        comment: Clean idiomatic code. None-separator trick is elegant Plotly pattern.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with CDN; no bare plot.png
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API
+          used.
     library_mastery:
       score: 8
       max: 10
@@ -220,22 +235,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: None-separator single-trace stems, cliponaxis=False, hovertemplate,
-          include_plotlyjs=cdn all demonstrate library expertise
+        comment: Expertly uses go.Scatter with mode='lines'/'markers', None-separator
+          trick, hovertemplate, cliponaxis=False — all idiomatic Plotly graph objects
+          patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive hover tooltips with formatted template and theme-styled
-          hover labels; HTML output. Basic but correctly executed Plotly interactivity.
-  verdict: REJECTED
+        comment: 'Uses Plotly-specific features: hovertemplate for interactive hover,
+          HTML export alongside PNG. Some distinctive usage but could leverage more
+          (e.g. fig.add_annotation, shapes, or rangeslider).'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  patterns: []
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
