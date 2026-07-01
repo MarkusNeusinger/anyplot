@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: plotly 6.7.0 | Python 3.14.4
-Quality: 87/100 | Updated: 2026-07-01
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 92/100 | Updated: 2026-07-01
 """
 
 import os
