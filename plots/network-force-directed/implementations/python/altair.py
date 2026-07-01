@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-01
@@ -25,6 +25,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#6B6A63" if THEME == "light" else "#A8A79F"
+BRIDGE_STROKE = "#DDCC77"  # amber accent for cross-community bridge nodes
 
 # Imprint categorical palette (first series is always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
@@ -42,16 +43,16 @@ for comm_idx, size in enumerate(community_sizes):
         nodes.append({"id": node_id, "community": community_names[comm_idx]})
         node_id += 1
 
-edges = []
-# Intra-community edges (dense)
+# Intra-community edges (dense) + inter-community bridges (sparse)
+intra_edges = []
 for start, end in [(0, 18), (18, 35), (35, 50)]:
     for i in range(start, end):
         for j in range(i + 1, end):
             if np.random.random() < 0.3:
-                edges.append((i, j))
+                intra_edges.append((i, j))
 
-# Inter-community bridges (sparse)
-edges.extend([(0, 18), (5, 20), (10, 25), (18, 35), (22, 40), (30, 45), (8, 38), (15, 48)])
+bridge_edges = [(0, 18), (5, 20), (10, 25), (18, 35), (22, 40), (30, 45), (8, 38), (15, 48)]
+edges = intra_edges + bridge_edges
 
 # Fruchterman-Reingold force-directed layout
 n = len(nodes)
@@ -80,15 +81,22 @@ for iteration in range(iterations):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.15 * temperature)
 
+# Normalize to 95% of canvas to maximize space utilization
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
-positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.9 + 0.05
+positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.95 + 0.025
 
 # Node-level summary
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
+
+# Bridge nodes have cross-community connections
+bridge_node_ids = set()
+for src, tgt in bridge_edges:
+    bridge_node_ids.add(src)
+    bridge_node_ids.add(tgt)
 
 node_df = pd.DataFrame(
     {
@@ -97,9 +105,9 @@ node_df = pd.DataFrame(
         "y": positions[:, 1],
         "community": [node["community"] for node in nodes],
         "degree": [degrees[node["id"]] for node in nodes],
+        "is_bridge": [node["id"] in bridge_node_ids for node in nodes],
     }
 )
-node_df["size"] = node_df["degree"] * 30 + 200
 
 # Edge segments (long-form, two rows per edge)
 edge_data = []
@@ -112,10 +120,10 @@ edge_df = pd.DataFrame(edge_data)
 hub_df = node_df.nlargest(4, "degree").copy()
 hub_df["label"] = "Hub " + hub_df["id"].astype(str)
 
-# Edges layer
+# Edges layer — slightly thicker, compensated with lower opacity
 edges_chart = (
     alt.Chart(edge_df)
-    .mark_line(strokeWidth=1.0, opacity=0.5)
+    .mark_line(strokeWidth=1.3, opacity=0.45)
     .encode(
         x=alt.X("x:Q", axis=None),
         y=alt.Y("y:Q", axis=None),
@@ -125,32 +133,41 @@ edges_chart = (
     )
 )
 
-# Nodes layer
+# Nodes layer — bridge nodes highlighted with amber stroke
 nodes_chart = (
     alt.Chart(node_df)
-    .mark_circle(stroke=PAGE_BG, strokeWidth=1.0, opacity=0.95)
+    .mark_circle(strokeWidth=1.8, opacity=0.95)
     .encode(
         x=alt.X("x:Q", axis=None),
         y=alt.Y("y:Q", axis=None),
-        size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[60, 400])),
+        size=alt.Size(
+            "degree:Q",
+            scale=alt.Scale(range=[60, 400]),
+            legend=alt.Legend(title="Connections", titleFontSize=10, labelFontSize=10),
+        ),
         color=alt.Color(
             "community:N",
             scale=alt.Scale(domain=community_names, range=IMPRINT),
             legend=alt.Legend(title="Team", titleFontSize=10, labelFontSize=10, symbolSize=100),
         ),
+        stroke=alt.condition("datum.is_bridge", alt.value(BRIDGE_STROKE), alt.value(PAGE_BG)),
         tooltip=[alt.Tooltip("community:N", title="Team"), alt.Tooltip("degree:Q", title="Connections")],
     )
 )
 
-# Hub labels
-hub_labels = (
-    alt.Chart(hub_df)
-    .mark_text(fontSize=11, fontWeight="bold", color=INK, dy=-12)
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N")
-)
+# Hub labels — separate layer per hub enables per-label dx/dy to fan out dense clusters
+_hub_offsets = {0: (-15, -18), 10: (15, -22), 14: (0, -18), 45: (0, -18)}
+hub_label_layers = []
+for hid in hub_df["id"].tolist():
+    dx_off, dy_off = _hub_offsets.get(hid, (0, -18))
+    hub_label_layers.append(
+        alt.Chart(hub_df[hub_df["id"] == hid])
+        .mark_text(fontSize=11, fontWeight="bold", color=INK, dx=dx_off, dy=dy_off)
+        .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N")
+    )
 
 chart = (
-    (edges_chart + nodes_chart + hub_labels)
+    alt.layer(edges_chart, nodes_chart, *hub_label_layers)
     .properties(
         width=620,
         height=320,
