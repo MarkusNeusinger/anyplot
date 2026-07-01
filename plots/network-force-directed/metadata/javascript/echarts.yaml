@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: network-force-directed
 created: '2026-07-01T01:43:37Z'
-updated: '2026-07-01T07:45:39Z'
+updated: '2026-07-01T07:57:27Z'
 generated_by: claude-sonnet
 workflow_run: 28487439038
 issue: 990
@@ -12,47 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - Imprint palette applied correctly across all 4 community categories (Frontend=#009E73,
-    Backend=#C475FD, Data Layer=#4467A3, Infrastructure=#BD8233)
-  - Node size proportional to degree effectively highlights the API hub as the most
-    connected node
-  - labelLayout hideOverlap cleanly prevents label collisions in the dense network
-  - Idiomatic ECharts graph/force layout with categories system, emphasis control,
-    and force physics parameters
-  - Realistic software module dependency scenario with 30 nodes across 4 meaningful
-    communities
-  - All chrome tokens (t.ink, t.inkSoft, t.pageBg) correctly applied — both themes
-    pass readability checks
-  - edge borderColor:t.pageBg with borderWidth:2 creates clean visual separation between
-    overlapping nodes
+  - Realistic software module dependency dataset with meaningful 4-community structure
+    (Frontend, Backend, Data Layer, Infrastructure) — clear real-world use case for
+    force-directed graphs
+  - Degree-based node sizing clearly identifies the API hub as the central connector
+    across all communities
+  - Cross-community edges are visually distinguished (wider, higher opacity) to guide
+    the eye to inter-layer connections
+  - 'Imprint palette applied in canonical order — first series (Frontend) correctly
+    uses brand green #009E73'
+  - 'ECharts-idiomatic patterns: `categories` array for community coloring, `labelLayout:
+    { hideOverlap: true }` to prevent label clutter, `lineStyle.color: ''source''`
+    for organic edge colors'
+  - Theme-adaptive chrome correctly uses `t.ink` / `t.inkSoft` / `t.pageBg` tokens
+    — title, legend, and node labels flip correctly between light and dark themes
   weaknesses:
-  - 'Poor canvas utilization: the force-directed graph cluster occupies roughly 14%
-    of the 2400x2400 canvas. In the light render, the graph spans x=330-780 (~41%
-    width) and y=330-720 (~36% height), leaving ~35% of canvas height empty below
-    the graph and ~30% empty on the right. Increase force.repulsion from 180 to 400-600,
-    widen force.edgeLength from [50,120] to [80,200], and consider a center gravity
-    of 0.25+ so the layout expands to fill 50%+ of the canvas.'
-  - 'Design excellence is adequate but not distinguished. The visualization reads
-    as a well-configured library default: no visual accent on the highest-degree node,
-    no edge-weight differentiation, no annotation highlighting the API hub as the
-    system''s central dependency. Consider: (1) making the highest-degree node (API)
-    use a slightly brighter or outlined appearance, (2) varying edge opacity or width
-    by cross-community vs intra-community to guide the eye to key bridging connections.'
+  - 'Non-deterministic force layout: ECharts force layout has no seed parameter, so
+    light and dark renders produce different node topologies (confirmed by visual
+    inspection). Fix: pre-compute deterministic x/y positions using a seeded LCG before
+    the force phase, or hard-code initial node coordinates, ensuring both renders
+    converge to the same layout'
+  - 'Canvas underutilization: the network occupies roughly 60% of the 2400x2400 canvas
+    with empty whitespace in the lower portions. Fix: increase `edgeLength` range
+    to [120, 280] and `repulsion` to 600-700 to spread nodes further across the canvas'
+  - 'Node labels at fontSize: 12 CSS px (~24 source px) are borderline small for mobile
+    readability at ~400px width. Fix: increase to fontSize: 14'
+  - 'Design storytelling is limited to community coloring — no annotations or callouts
+    highlight the API hub''s central role. Fix: add a subtitle like ''API module is
+    the central integration point'' or a text annotation near the API node listing
+    its connection count'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS.
-      Chrome: Bold title "network-force-directed · javascript · echarts · anyplot.ai" at top center in dark ink — clearly readable. Legend below title shows 4 colored circles (Frontend, Backend, Data Layer, Infrastructure) with inkSoft text — readable. All chrome uses theme tokens correctly.
-      Data: Force-directed graph with 30 nodes, 4 color-coded communities. Frontend nodes = #009E73 (brand green, correct first palette slot). Backend = lavender/purple. Data Layer = blue. Infrastructure = ochre. Edges are semi-transparent (opacity 0.55), straight, colored by source node. Node sizes vary by degree — API node is clearly the largest. Labels placed to the right of nodes, hidden where they would overlap. Graph occupies the center-left portion of the canvas; large empty space at bottom (~35% of canvas height) and right side (~30% of canvas width).
-      Legibility verdict: PASS — all visible text is readable. hideOverlap correctly suppresses crowded labels.
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color, not pure white.
+      Chrome: Title "network-force-directed · javascript · echarts · anyplot.ai" centered at top in bold dark text (#1A1A17 via t.ink) — clearly readable. Horizontal legend below title shows 4 community labels (Frontend, Backend, Data Layer, Infrastructure) with colored circle icons in t.inkSoft (#4A4A44) — all readable.
+      Data: Force-directed network with 30 nodes in 4 communities. Frontend nodes: brand green #009E73 (correct first series). Backend nodes: lavender #C475FD. Data Layer: blue #4467A3. Infrastructure: ochre #BD8233. API hub node is largest (9 connections) with thick dark border for emphasis. Node labels positioned to the right, in t.inkSoft, with hideOverlap active. Edges are semi-transparent (opacity: 0.55) and inherit source node color. Cross-community edges are slightly wider/more opaque.
+      Legibility verdict: PASS — all text readable against warm off-white background. No light-on-light issues. Network graph is clear and well-structured.
+      Canvas note: Graph occupies roughly 60% of the 2400x2400 canvas; lower portions have significant empty whitespace.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black. PASS.
-      Chrome: Title in light/white text — clearly readable against dark background. Legend text in light inkSoft color — readable. No dark-on-dark failures detected.
-      Data: Same 4-community color scheme as light render — data colors are identical (Frontend=#009E73, Backend=lavender, Data Layer=blue, Infrastructure=ochre). Graph layout differs slightly from light render (expected for force-directed non-deterministic simulation). Node borders use t.pageBg for visual separation. Canvas utilization issue persists — graph fills a compact cluster with significant empty space around it.
-      Legibility verdict: PASS — all visible text readable on dark background. No dark-on-dark issues found.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title in light text (#F0EFE8 via t.ink) — clearly readable against dark background. Legend labels in t.inkSoft (#B8B7B0) — visible. Node labels also use t.inkSoft (light gray) — readable on dark background. No dark-on-dark failures observed.
+      Data: Same 4 community colors as light render — #009E73, #C475FD, #4467A3, #BD8233 — confirmed identical categorical palette. Node border color switches to pageBg (#1A1A17 in dark) making standard nodes borderless, while API hub border uses t.ink (#F0EFE8) — correctly flipped.
+      Legibility verdict: PASS — all text readable against near-black background. No dark-on-dark issues.
+      Layout note: Force layout settled at different node positions than light render (non-seeded — different topology). Both layouts are reasonable but differ, which is a reproducibility concern.
   criteria_checklist:
     visual_quality:
       score: 25
@@ -60,83 +65,89 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=22px, legend=13px, node labels=12px.
-          Readable in both themes. Minor deduction for 12px node labels which approach
-          readability floor at mobile scale.'
+        comment: Title and legend fully readable in both themes. Node labels at fontSize:12
+          CSS px (~24 source px) are adequate but borderline for mobile readability;
+          hideOverlap prevents clutter but hides some labels
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: labelLayout hideOverlap effectively prevents all label collisions.
-          No visible overlap in either render.
+        comment: labelLayout hideOverlap:true prevents label collisions; some labels
+          are hidden rather than overlapping — acceptable for a 30-node graph
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Nodes well-sized proportional to degree. Edges visible at opacity
-          0.55 and width 1.5. Minor deduction: some edges are thin and subtle.'
+        comment: Nodes sized by degree (14-46px symbolSize), clearly visible. API
+          hub distinguished with thick border. Edge opacity 0.55 keeps edges visible
+          without overwhelming
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe. Node borderColor=pageBg provides contrast
-          separation.
+        comment: Imprint palette used — CVD-safe by design. 4 categories use first
+          4 slots with distinct hue families
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Graph occupies ~14% of the 2400x2400 canvas. Significant dead space
-          at bottom (~35% of height) and right (~30% of width). Force repulsion too
-          low to spread graph across canvas.
+        passed: true
+        comment: Square 2400x2400 orientation appropriate for network graph. Title
+          and legend well-positioned. No overflow or clipping. Graph uses ~60% of
+          canvas area with empty whitespace in lower portions — force parameters could
+          spread nodes further
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. No axis labels needed for network graph — appropriate.
+        comment: No axes required for force-directed graph. Title correctly formatted
+          as spec-id · javascript · echarts · anyplot.ai. Legend labels describe the
+          4 communities
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'color: t.palette correctly applied. First category (Frontend) uses
-          #009E73. Backgrounds correct: #FAF8F1 light / #1A1A17 dark. All chrome tokens
-          theme-adaptive.'
+        comment: 'First categorical series (Frontend) = #009E73 brand green. Remaining
+          3 categories use Imprint positions 2-4 in order. Background transparent/pageBg
+          token. Data colors identical between light and dark — only chrome flips'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Good design choices: degree-based node sizing, community color coding,
-          node borders on pageBg. Canvas utilization issue detracts from overall aesthetic.
-          Reads as a well-configured library default.'
+        comment: 'Above-default: community coloring, hub node special styling, cross-community
+          edge distinction, degree-based sizing, lineStyle.color:''source'' for organic
+          edge appearance. Missing: annotations, callout boxes, or explicit focal
+          hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Several refinements: edge opacity 0.55, borderColor/borderWidth
-          matching pageBg, hideOverlap, emphasis scale=false, legend icon=circle with
-          itemGap=28. Good detail work.'
+        comment: No spines/grid needed for graph layout. Clean transparent background.
+          label placement right of nodes. Edge curveness:0 keeps lines clean. itemStyle.borderColor:pageBg
+          creates seamless node appearance. Small but meaningful refinements
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Community structure tells a clear software architecture story. Degree-based
-          sizing highlights the API hub. No annotations but visual hierarchy is present
-          via size and color.
+        passed: false
+        comment: Community coloring reveals structure. API hub is visually prominent.
+          Cross-community edges are wider. But no text annotations, subtitle, or callout
+          that explicitly tells the story — reader must infer the API hub's central
+          role
     spec_compliance:
       score: 15
       max: 15
@@ -146,56 +157,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed network graph using ECharts graph type with
-          force layout.
+        comment: Force-directed graph with physics simulation — exactly the spec's
+          chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Force physics simulation, node sizing by degree, community color
-          coding, labels with overlap handling — all present.
+        comment: Node labels, edges, community coloring, node size by degree, edge
+          thickness distinction for cross-community, force layout with layoutAnimation:false
+          for convergence, hideOverlap for clutter control
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Source/target edges correctly assigned. Degree computed correctly.
-          Categories mapped correctly.
+        comment: Nodes mapped to graph vertices, edges to connections, categories
+          to communities, degree to node size
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''network-force-directed · javascript · echarts · anyplot.ai''
-          — correct format. Legend shows all 4 communities with correct colors.'
+          — correct format. Legend shows 4 community categories with circle icons'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows community structure, degree variation (leaf nodes vs hub nodes),
-          intra-community connections, and cross-community bridging edges.
+        comment: '30 nodes, 4 communities, 43 edges, cross-community connections,
+          degree-based sizing, hub distinction — covers all force-directed graph features.
+          Minor: no edge weight data (cross-edge width is a design choice, not data-driven)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Software module dependency network is realistic, neutral, and comprehensible.
-          Real-world modules: Router, Pages, Auth, Database, Docker, K8s, CI/CD.'
+        comment: Software module dependency network is a classic, highly realistic
+          force-directed use case. Module names (App, Router, API, Database, K8s,
+          etc.) are plausible real-world components. Neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 30 nodes within spec range (20-200). 4 communities with realistic
-          sizes. Edge density plausible for a software system.
+        comment: 30 nodes (within spec's 20-200 range), 43 edges, degree range 2-9,
+          node sizes 14-46 CSS px — all sensible for this domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -203,60 +217,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean data-then-setOption structure. No functions or classes.
+        comment: No functions or classes. Flat procedural code using forEach/map for
+          data transformation. Clean and direct
       - id: CQ-02
         name: Reproducibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All data hardcoded and deterministic. No random generation.
+        passed: false
+        comment: Node and edge data is hardcoded (deterministic), but ECharts force
+          layout has no seed parameter — the layout converges to a different equilibrium
+          each render. Light and dark PNGs show different topologies, confirming non-determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports. Uses only echarts and window.ANYPLOT_TOKENS globals.
+        comment: No imports — uses only window.ANYPLOT_TOKENS and echarts globals
+          as expected
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable. Degree computation via forEach is efficient. Node
-          mapping via map is idiomatic.
+        comment: Good use of Set for cross-edge lookup, map/forEach for data transformation,
+          isHub shorthand. Appropriate complexity for a 30-node network
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set. Harness handles file output. No deprecated
-          APIs.'
+        comment: animation:false set, echarts.init without explicit size/devicePixelRatio
+          — harness handles output correctly
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses ECharts graph/force type with categories system, labelLayout
-          hideOverlap, force physics parameters, and emphasis control.
+        comment: graph type with layout:'force' is idiomatic. categories array for
+          community coloring is the ECharts pattern. force config (repulsion, gravity,
+          edgeLength) correctly tuned. lineStyle.color:'source' is the idiomatic edge-from-node-color
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: graph+force, categories grouping, labelLayout hideOverlap, emphasis.scale=false
-          are all ECharts-specific features not easily replicated in other libraries.
-  verdict: REJECTED
+        comment: labelLayout:{hideOverlap:true} is ECharts-specific. lineStyle.color:'source'
+          for organic edge coloring. categories + legend integration. Force physics
+          (repulsion/gravity/edgeLength). Hub node emphasis via borderWidth/borderColor.
+          These are ECharts-native features not available in generic charting libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
