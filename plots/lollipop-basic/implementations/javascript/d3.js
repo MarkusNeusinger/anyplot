@@ -1,7 +1,7 @@
 // anyplot.ai
 // lollipop-basic: Basic Lollipop Chart
 // Library: d3 7.9.0 | JavaScript 22.23.0
-// Quality: 87/100 | Created: 2026-07-01
+// Quality: 91/100 | Created: 2026-07-01
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
