@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-26
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 86/100 | Updated: 2026-07-01
 """
 
 import os
@@ -41,12 +41,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Okabe-Ito categorical palette
+# Imprint palette — 3 community hues (positions 1–3)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: 50-node social network with 3 communities
 np.random.seed(42)
-
 community_sizes = [18, 17, 15]
 community_names = ["Engineering", "Marketing", "Sales"]
 nodes = []
@@ -56,7 +55,7 @@ for comm_idx, size in enumerate(community_sizes):
         nodes.append({"id": node_id, "community": comm_idx, "community_name": community_names[comm_idx]})
         node_id += 1
 
-# Intra-community edges with weights (dense within communities)
+# Intra-community edges (dense within each community)
 edges = []
 ranges = [(0, 18), (18, 35), (35, 50)]
 for start, end in ranges:
@@ -110,7 +109,7 @@ for src, tgt, _ in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Edge DataFrame with weight-driven thickness
+# Edge DataFrame — weight drives thickness and opacity
 edges_df = pd.DataFrame(
     {
         "x": [pos[src][0] for src, tgt, _ in edges],
@@ -118,21 +117,25 @@ edges_df = pd.DataFrame(
         "xend": [pos[tgt][0] for src, tgt, _ in edges],
         "yend": [pos[tgt][1] for src, tgt, _ in edges],
         "weight": [w for _, _, w in edges],
-        "edge_size": [0.4 + w * 1.4 for _, _, w in edges],
+        "edge_size": [0.3 + w * 0.9 for _, _, w in edges],
         "edge_alpha": [0.15 + w * 0.35 for _, _, w in edges],
     }
 )
 
-# Node DataFrame
+# Node DataFrame — size scales with degree centrality
 nodes_df = pd.DataFrame(
     {
         "x": [pos[node["id"]][0] for node in nodes],
         "y": [pos[node["id"]][1] for node in nodes],
         "Team": [node["community_name"] for node in nodes],
         "Connections": [degrees[node["id"]] for node in nodes],
-        "size": [9 + degrees[node["id"]] * 1.8 for node in nodes],
+        "size": [7 + degrees[node["id"]] * 1.2 for node in nodes],
     }
 )
+
+# Title — len("network-force-directed · python · letsplot · anyplot.ai") = 55 < 67, no scaling
+TITLE = "network-force-directed · python · letsplot · anyplot.ai"
+title_size = 16
 
 # Plot
 plot = (
@@ -146,7 +149,7 @@ plot = (
     + geom_point(
         aes(x="x", y="y", color="Team", size="size"),
         data=nodes_df,
-        stroke=1.5,
+        stroke=1.0,
         alpha=0.92,
         tooltips=layer_tooltips().line("Team: @Team").line("Connections: @Connections"),
     )
@@ -156,24 +159,25 @@ plot = (
     + coord_fixed(ratio=1)
     + scale_x_continuous(limits=(-0.05, 1.05))
     + scale_y_continuous(limits=(-0.05, 1.05))
-    + labs(title="network-force-directed · letsplot · anyplot.ai")
-    + ggsize(1600, 900)
+    + labs(title=TITLE)
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, face="bold", color=INK),
+        plot_title=element_text(size=title_size, face="bold", color=INK),
         axis_title=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
         legend_position=(0.02, 0.78),
         legend_justification=(0, 1),
     )
 )
 
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+# Save — ggsize(600, 600) × scale=4 → 2400 × 2400 px
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

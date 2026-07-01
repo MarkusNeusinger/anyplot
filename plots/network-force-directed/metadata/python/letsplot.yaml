@@ -2,118 +2,117 @@ library: letsplot
 language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:17:41Z'
-updated: '2026-04-26T09:29:42Z'
-generated_by: claude-opus
-workflow_run: 24953111578
+updated: '2026-07-01T01:44:58Z'
+generated_by: claude-sonnet
+workflow_run: 28487052506
 issue: 990
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.13.14
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Custom Fruchterman-Reingold force-directed algorithm implemented from scratch
-    — no networkx dependency, pure numpy
-  - 'Dual weight encoding: edge weight mapped to both thickness AND alpha simultaneously,
-    creating sophisticated visual depth'
-  - 'Full theme-adaptive chrome: all tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT)
-    threaded through correctly — both renders pass legibility checks'
-  - Node degree encoded as size with continuous scaling (9 + degree × 1.8), making
-    hub nodes immediately identifiable
-  - Interactive layer_tooltips showing Team and Connections count — leverages lets-plot's
-    distinct interactive strength over static libraries
-  - 'Perfect spec compliance: 50 nodes, 3 communities, intra- and inter-community
-    bridge edges, degree-scaled nodes, weight-encoded edges'
-  - 'Correct Okabe-Ito order: Engineering=#009E73, Marketing=#D55E00, Sales=#0072B2'
-  - HTML output generated alongside PNG — appropriate for an interactive library
+  - 'Perfect spec compliance: Fruchterman-Reingold physics (200 iterations) produces
+    stable layout revealing 3 distinct communities'
+  - Degree-scaled nodes and weight-scaled edges with variable opacity create excellent
+    visual hierarchy
+  - Imprint palette applied in canonical order (green/lavender/blue) with brand green
+    correctly assigned to first series
+  - Full theme adaptation — background, title, legend fill, legend text, and edge
+    color all flip correctly between light and dark
+  - 'Idiomatic letsplot usage: layer_tooltips() for genuine interactivity, scale_size_identity/scale_alpha_identity
+    for direct mapping, coord_fixed() to preserve layout aspect ratio'
   weaknesses:
-  - 'Canvas utilization: 16:9 landscape canvas with coord_fixed(1) and normalized
-    [0,1] coordinates leaves substantial empty space on the left/upper-left — a square
-    ggsize(1600,1600) or ggsize(900,900) would fill the canvas more naturally for
-    a network graph'
-  - 'No visual storytelling emphasis: hub nodes (highest degree) and bridge nodes
-    connecting communities deserve extra visual prominence — e.g. a stroke/outline
-    highlight or a separate size tier for the top-5 hubs'
-  - 'DE-03 storytelling gap: the three community clusters are visible but the narrative
-    could be sharpened with a caption or subtitle, or by annotating the two largest
-    hub nodes with their names/degree'
-  - Title font size at 24pt is the minimum recommended; bumping to 28-30pt would improve
-    presence on the large canvas
+  - Dense intra-community clusters (Engineering top-right, Marketing bottom-right)
+    have heavy node overlap — nodes stack on top of each other, making individual
+    members indistinguishable within each community. Increasing the repulsion constant
+    k (e.g. from 0.5 to 0.8-1.0) or scaling proportional to sqrt(n) would spread clusters
+    further apart.
+  - 'DE-01 limited by cluster crowding: the visual hierarchy between hub nodes and
+    peripheral nodes is partially lost inside the overlapping clusters. More aggressive
+    degree scaling (e.g. size = 8 + degree * 2.0) would make high-degree hub nodes
+    stand out even when clusters overlap.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "network-force-directed · letsplot · anyplot.ai" is bold dark text, clearly readable. Legend "Team" with Engineering/Marketing/Sales labels in dark secondary text. No axis labels or ticks (appropriately hidden for a network graph).
-      Data: Three communities clearly separated — Engineering cluster (green #009E73) upper-right, Marketing cluster (orange #D55E00) lower-right, Sales cluster (blue #0072B2) center-left. Edges in warm-dark gray with variable thickness and alpha. Hub nodes visibly larger than peripheral nodes. Bridge edges connecting clusters are visible.
-      Layout note: Network occupies roughly the right 60% of canvas width; the upper-left quadrant has significant empty space due to coord_fixed(1) on a 16:9 canvas.
-      Legibility verdict: PASS — all text readable, data elements clearly visible
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
+      Chrome: Bold title "network-force-directed · python · letsplot · anyplot.ai" in dark ink at top, clearly readable. Axis labels, ticks, grid lines, and axis lines all hidden (correct for network plot). Legend box in elevated-fill (#FFFDF6) top-left showing "Team" header in dark INK with three labeled swatches.
+      Data: Three community clusters — Engineering (green #009E73, top-right), Marketing (lavender #C475FD, bottom-right), Sales (blue #4467A3, left). Nodes vary in size by degree. Edges rendered as thin gray segments with weight-based opacity (lighter for inter-community bridges, denser for intra-community). First series is brand green #009E73. Inter-community bridge edges visible connecting the three clusters.
+      Legibility verdict: PASS — all text readable; legend labels "Engineering", "Marketing", "Sales" clear; note that Engineering and Marketing cluster interiors have heavy node overlap making individual nodes hard to separate.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title is rendered in light text, clearly readable against the dark surface. Legend "Team" and category labels are light-colored and readable. No dark-on-dark issues detected.
-      Data: Node colors are identical to the light render — Engineering #009E73, Marketing #D55E00, Sales #0072B2. Edge colors flip to a light warm tone (INK token = #F0EFE8 in dark mode). Network layout is identical to light render.
-      Legibility verdict: PASS — no dark-on-dark failures, all chrome elements correctly adapted
+      Background: Warm near-black #1A1A17 — correct dark theme surface, no pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly visible against dark background. Legend box uses elevated dark fill (#242420). Legend text in INK_SOFT (#B8B7B0). No dark-on-dark failures observed — all text elements flip correctly to light-on-dark.
+      Data: Data colors are identical to light render — same green, lavender, and blue for the three communities. Edges now rendered in near-white (#F0EFE8) with same variable opacity, producing subtle light-gray lines against the dark background. The three-community structure is visually identical to the light render.
+      Legibility verdict: PASS — title and legend text both clearly readable against dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Title size=24 and legend sizes explicitly set; readable in both
-          themes. Minor deduction: title could be larger (28-30pt) for the canvas
-          scale.'
+        comment: 'Title and legend text readable in both renders; font sizes correctly
+          set (title 16px, legend 10px at scale=4). Minor deduction: font weight/size
+          hierarchy is functional but not strongly differentiated.'
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Notable node overlap within dense Engineering and Marketing clusters
+          — nodes stack on top of each other making individual members hard to distinguish.
+          Text and legend don't overlap with data. Intrinsic to the physics simulation
+          with these community densities but degrades readability.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Some node overlap in dense clusters (expected for force-directed
-          layout). No text overlap. Minor deduction for very dense cluster cores.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Nodes clearly visible in both themes. Edges appropriately subtle
-          with alpha blending. Hub nodes stand out by size.
+        comment: 'Communities clearly distinguishable by color. Hub nodes visible
+          via size scaling. Bridge edges between communities visible with lighter
+          opacity. Minor deduction: nodes within dense clusters are partially hidden
+          behind each other.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Green/orange/blue have good luminance
-          contrast.
+        comment: Three Imprint palette hues (green/lavender/blue) span distinct perceptual
+          families and are CVD-safe. No red-green as sole differentiator.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: coord_fixed(1) on a 16:9 canvas leaves notable empty space upper-left.
-          Network fills ~50-60% of canvas area. A square canvas (ggsize(900,900) scaled
-          3x = 2700x2700, or ggsize(1200,1200)) would suit a network graph better.
+        comment: Square 2400x2400 format appropriate for network layout. Canvas gate
+          passed. No text overflow. Good margins around network. Network uses most
+          of the available space. Slight empty space top-left and bottom-left but
+          acceptable for this organic layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title correct: ''network-force-directed · letsplot · anyplot.ai''.
-          No axis labels needed for a network graph.'
+        comment: Title correctly formatted as 'network-force-directed · python · letsplot
+          · anyplot.ai'. Axis labels intentionally hidden (correct for network graph
+          — positional coordinates have no semantic meaning).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series Engineering=#009E73 correct. Multi-series follows Okabe-Ito
-          order. Light bg=#FAF8F1, dark bg=#1A1A17. Chrome adapts correctly in both
-          renders.
+        comment: 'First series (Engineering) = #009E73 brand green. Second (Marketing)
+          = #C475FD lavender. Third (Sales) = #4467A3 blue. Canonical Imprint order
+          1-3. Backgrounds #FAF8F1 light / #1A1A17 dark. Data colors identical across
+          both renders. Edge color uses theme-adaptive INK token.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -121,25 +120,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: dual weight encoding (thickness + alpha), degree-scaled
-          nodes, correct Okabe-Ito, interactive tooltips. Not quite publication-ready
-          due to canvas utilization and no focal-point emphasis.'
+        comment: 'Above default: degree-scaled nodes, weight-scaled edges with variable
+          opacity, Imprint palette, and theme adaptation all show design intent. Hub
+          nodes are visually prominent where not occluded. Held back by cluster overlap
+          which reduces the intended size-hierarchy effect.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All axes/grid/ticks removed (appropriate for network). Edge alpha
-          blending refined. coord_fixed for spatial integrity. Legend positioned thoughtfully.
-          Canvas underutilized on 16:9 prevents full marks.
+        comment: 'Excellent chrome removal: all axes, ticks, grids, and spines hidden.
+          Panel background matches page background for seamless look. Elevated legend
+          fill correctly applied. Theme-adaptive edge color. Clean, minimal aesthetic
+          suited to network visualization.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three communities naturally emerge. Hub nodes visible by size. Bridge
-          edges present. No additional emphasis on the most connected nodes or the
-          cross-community bridges that would elevate the narrative.
+        comment: Three communities clearly distinguishable by color and spatial position.
+          Hub nodes visually prominent through size variation. Bridge edges communicate
+          inter-community connections. The force-directed layout naturally reveals
+          community structure and connectivity patterns.
     spec_compliance:
       score: 15
       max: 15
@@ -149,29 +151,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed graph with custom Fruchterman-Reingold physics
-          simulation.
+        comment: Correct force-directed graph. Fruchterman-Reingold physics simulation
+          implemented from scratch with 200 iterations.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Node size by degree, edge thickness by weight, edge alpha by weight,
-          50 nodes, 3 communities, bridge edges between communities — all present.
+        comment: 50-node social network, 3 communities, node size by degree, edge
+          thickness and opacity by weight, sufficient iterations, bridge edges between
+          communities.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y from force-directed positions. Color=community. Size=degree.
-          All correct.
+        comment: Nodes mapped to physics-computed positions. Edges as segments. Community
+          → color. Degree → node size. Weight → edge size + alpha.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'network-force-directed · letsplot · anyplot.ai' correct. Legend
-          'Team' with Engineering/Marketing/Sales correct.
+        comment: Title is exactly 'network-force-directed · python · letsplot · anyplot.ai'.
+          Legend shows all 3 communities labeled correctly.
     data_quality:
       score: 15
       max: 15
@@ -181,22 +184,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: community structure, degree variation, weighted
-          edges, intra-community density, inter-community bridges.'
+        comment: 'Demonstrates all key aspects: community structure, degree centrality
+          via node size, edge weight via thickness/opacity, bridge edges, force-directed
+          equilibrium.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Engineering/Marketing/Sales departments in a company social network.
-          Realistic, neutral, comprehensible.
+        comment: Workplace social network (Engineering, Marketing, Sales) is realistic
+          and neutral. Community sizes 18/17/15 are plausible proportions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50 nodes (within 20-200 spec range). 30% intra-community connection
-          probability. Edge weights 0.2-1.0. All plausible.
+        comment: 50 nodes within spec's recommended 20-200. Intra-community edge probability
+          30% gives realistic density. Weight ranges (0.5-1.0 intra, 0.2-0.5 inter)
+          sensibly model relationship strength.
     code_quality:
       score: 10
       max: 10
@@ -206,60 +211,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports→data→algorithm→plot→save structure. No functions or
-          classes.
+        comment: No functions or classes. Linear procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) ensures deterministic layout.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 15 lets-plot imports verified as used in the code.
+        comment: All imported names are used in the implementation.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. The inline Fruchterman-Reingold loop is readable
-          and appropriate. No fake functionality.
+        comment: No fake UI. The O(n²) force loop is appropriate for n=50. Edge/node
+          DataFrames cleanly constructed.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html. Correct API
-          usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current lets_plot
+          API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expertly uses grammar of graphics: geom_segment+geom_point layering,
-          scale_size_identity/scale_alpha_identity for pre-computed aesthetics, coord_fixed
-          for spatial data, ggsave with scale=3.'
+        comment: Proper ggplot grammar, aes() mappings, scale_* functions, theme()
+          customization, labs(), coord_fixed(), ggsize(). Good use of the library's
+          patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips showing Team+Connections (interactive, lets-plot specific),
-          HTML export, scale_alpha_identity pattern. Could further leverage lets-plot's
-          interactive features (e.g. geom_livemap or more complex tooltip configuration).
-  verdict: REJECTED
+        comment: layer_tooltips() for genuine interactivity (letsplot specialty),
+          scale_size_identity + scale_alpha_identity for direct value pass-through
+          (avoiding transformation), coord_fixed() for layout preservation. Good use
+          of distinctive features but could go further (e.g., geom_text for hub node
+          labels, or more sophisticated tooltip content).
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -268,5 +274,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
