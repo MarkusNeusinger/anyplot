@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: bokeh 3.9.0 | Python 3.14.4
+Library: bokeh 3.9.1 | Python 3.13.14
+Quality: 88/100 | Updated: 2026-07-01
 """
 
 import sys
