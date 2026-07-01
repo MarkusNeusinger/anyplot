@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:33:44Z'
-updated: '2026-07-01T06:00:37Z'
+updated: '2026-07-01T06:10:07Z'
 generated_by: claude-sonnet
 workflow_run: 28496285913
 issue: 934
@@ -12,126 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Correct lollipop chart type: stems via ax.vlines, markers via ax.scatter, vertical
-    orientation, baseline-to-value design'
-  - 'Good data storytelling: descending sort creates natural ranking narrative, average
-    reference line anchors comparison, ''Top performer'' callout annotation with arrow
-    creates focal point'
-  - Brand green (#009E73) correctly used as single series color; differential marker
-    size (s=120 top vs s=80 rest) adds emphasis
-  - Theme-adaptive chrome correctly and completely implemented — all text, background,
-    grid, annotation box tokens flip between themes
-  - 'Clean code: no functions/classes, deterministic data, correct matplotlib axes
-    API, no bbox_inches=''tight'' (respects canvas gate)'
+  - 'Perfect spec compliance: correct lollipop chart with stems (ax.vlines) and circular
+    markers (ax.scatter) in vertical orientation with data sorted descending by value'
+  - 'Correct Imprint palette usage: brand green #009E73 for both stems and markers;
+    theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark) and full INK/INK_SOFT/INK_MUTED
+    chrome token threading'
+  - 'Intentional visual hierarchy: slightly larger top-performer marker (s=120 vs
+    s=80), plus ''Top performer'' annotation with arrowprops, plus average reference
+    line — creates a clear ranking narrative'
+  - 'Idiomatic matplotlib usage: ax.vlines() for stems, ax.scatter() for markers,
+    ax.annotate() with arrowprops, mticker.FuncFormatter for y-axis formatting, fig.subplots_adjust()
+    to control layout without bbox_inches=''tight'''
+  - 'Perfect code quality: clean KISS structure, all imports used, deterministic data,
+    saves as plot-{THEME}.png'
+  - Both light and dark renders fully readable with no dark-on-dark or light-on-light
+    failures
   weaknesses:
-  - 'Title missing ''python'' language identifier: should be ''lollipop-basic · python
-    · matplotlib · anyplot.ai'' — the {language} token is required by SC-04'
-  - Value labels (fontsize=6.5) and avg reference label (fontsize=6) are too small
-    at mobile scale (~400px); increase value labels to fontsize=8 and avg label to
-    fontsize=7.5
-  - X-axis label 'Product Category' is at the bottom canvas edge with bottom margin
-    too tight; increase subplots_adjust(bottom=0.22) to bottom=0.26 to ensure the
-    xlabel does not touch or clip the canvas edge
+  - Annotation text at fontsize=6.5 and avg-line label at fontsize=7.5 are borderline
+    at mobile scale (~400px viewport) — tertiary elements but still worth bumping
+    to 8pt minimum
+  - 'DE-01 is at default level: the chart is clean but aesthetic sophistication could
+    be elevated — e.g., subtle gradient on stems from baseline to marker tip, or per-category
+    color intensity to encode rank'
+  - 'LM-02: only two genuinely matplotlib-distinctive features used (mticker.FuncFormatter,
+    ax.annotate with arrowprops) — could showcase more library depth (e.g., matplotlib.patches
+    for custom connectors, BboxTransformTo for annotation positioning, or a PathEffect
+    for the stems)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "lollipop-basic · matplotlib · anyplot.ai" in dark ink — readable. Y-axis label "Sales (thousands)" in dark ink — readable with units. X-axis label "Product Category" present but very close to bottom canvas edge with possible pixel clipping. Tick labels rotated 45° in secondary ink (#4A4A44) — readable. Y-axis numeric tick labels in secondary ink — readable.
-      Data: Ten brand-green (#009E73) lollipops; stems via vlines, circular markers via scatter. Value labels (fontsize=6.5) above each marker showing 87K...25K. Dashed average line at 52K with "avg 52K" label (fontsize=6 — very small). "Top performer" callout annotation box with arrow pointing to Electronics dot.
-      Legibility verdict: PASS for main chrome; value labels and avg label are very small at mobile scale; x-axis label near bottom canvas edge.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "lollipop-basic · python · matplotlib · anyplot.ai" in dark ink at 12pt, readable. X-axis label "Product Category" and Y-axis label "Sales (thousands)" in dark ink at 10pt, readable. Tick labels rotated 45° at 8pt, all fully readable. Y-axis ticks (0, 20, 40, 60, 80, 100, 120) in INK_SOFT gray, readable. Average line label "avg 52K" in INK_MUTED at 7.5pt — small but legible at full resolution.
+      Data: Brand green (#009E73) stems (linewidth=2) and filled circular markers for all 10 retail categories. Top-performer marker (Electronics, 87K) slightly larger (s=120 vs s=80). Value labels "87K", "72K"... in INK_SOFT at 8pt above each marker. Dashed average reference line in INK_MUTED. "Top performer" annotation box with arrow pointing to Electronics lollipop.
+      Legibility verdict: PASS — all primary and secondary text clearly readable; annotation at 6.5pt is the only element approaching the mobile-readability limit.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in near-white (#F0EFE8) — readable. Y-axis label in near-white — readable. Tick labels in #B8B7B0 — readable against dark background. No dark-on-dark text failures detected. "Top performer" annotation box uses ELEVATED_BG (#242420) with INK (#F0EFE8) text — correctly adapted for dark theme. Avg line label in INK_MUTED (#A8A79F) — subtle but visible.
-      Data: Same brand-green (#009E73) lollipops — colors identical to light render; only chrome flipped. Grid lines use INK at alpha=0.15 — appropriately subtle light lines on dark background.
-      Legibility verdict: PASS for main chrome; same small-font concern for value/avg labels; x-axis label near bottom canvas edge.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels appear in light color (INK=#F0EFE8 in dark mode), clearly readable against dark surface. Tick labels in INK_SOFT (#B8B7B0) — visible and legible. Average line label "avg 52K" in INK_MUTED (#A8A79F), readable. "Top performer" annotation box uses ELEVATED_BG (#242420) fill with light INK text — correct adaptation.
+      Data: Stem and marker colors identical to light render (brand green #009E73 unchanged) — Imprint palette consistency confirmed. No difference in data colors between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements flip correctly; data colors are theme-invariant as required.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels explicitly sized and readable at
-          desktop resolution. Value labels (fontsize=6.5) and avg reference label
-          (fontsize=6) too small for mobile scale (~400px wide). Increase value labels
-          to 8pt and avg label to 7.5pt.
+        comment: All primary/secondary text sizes explicitly set and readable in both
+          themes; annotation at 6.5pt is borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping elements; 45-degree rotated tick labels well-spaced;
+          value labels clear of markers
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lollipop stems and markers clearly visible. Differential marker sizing
-          (s=120 top vs s=80 rest) adds emphasis. Could be slightly larger (s=100/s=140)
-          for better mobile visibility.
+        comment: Sparse 10-point dataset; s=80-120 markers well-sized; stems at linewidth=2.0
+          clearly visible; edge highlighting adds definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green with good contrast on both surfaces; CVD-safe.
+        comment: Single-series in CVD-safe brand green; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Proportions generally good. Minor concern: x-axis label ''Product
-          Category'' at bottom canvas edge with bottom margin too tight (0.22). Increase
-          to 0.26.'
+        comment: Canvas gate passed (3200x1800); subplots_adjust gives generous margins;
+          plot fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Product Category'' and ''Sales (thousands)'' — descriptive with
-          units.'
+        comment: Title correct format; 'Product Category' and 'Sales (thousands)'
+          descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and only) series is #009E73. Light background #FAF8F1, dark
-          background #1A1A17. All chrome tokens correctly theme-adaptive in both renders.'
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          adapt correctly across themes'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above generic defaults: sorted ranking, larger top-performer dot,
-          callout annotation with arrow, average reference line create a designed
-          narrative. Not FiveThirtyEight-level but clearly intentional.'
+        passed: false
+        comment: 'Well-configured default: clean, correct, uses INK hierarchy and
+          edge highlighting, but no advanced typographic or compositional moves beyond
+          standard'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-axis-only grid at alpha=0.15,
-          white marker edges for definition, theme-adaptive chrome. Solid refinement.
+        comment: Spines removed (top/right); y-axis-only grid at alpha=0.15; set_axisbelow;
+          INK_SOFT spine color; edge highlights on markers
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear ranking story via descending sort. Average line anchors viewer
-          reference. 'Top performer' callout creates explicit focal point. Value labels
-          enable exact figure reading.
+        comment: Sorted ranking creates narrative; average reference line for context;
+          focal point via larger top-performer marker + annotation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,31 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lollipop: thin stems (ax.vlines) from baseline to value,
-          circular markers (ax.scatter) at each data point, vertical orientation.'
+        comment: 'Correct lollipop chart: ax.vlines() stems + ax.scatter() markers
+          in vertical orientation'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems present, markers present, vertical orientation, data sorted
-          by value descending.
+        comment: Stems, circular markers, vertical orientation, sorted by value —
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, sales values on y-axis, all 10 data points
-          shown.
+        comment: Categories on x-axis, values on y-axis, all 10 points shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title is ''lollipop-basic · matplotlib · anyplot.ai'' but required
-          format is ''{spec-id} · {language} · {library} · anyplot.ai''. The ''python''
-          language identifier is missing. Fix: title = ''lollipop-basic · python ·
-          matplotlib · anyplot.ai''.'
+        passed: true
+        comment: Title 'lollipop-basic · python · matplotlib · anyplot.ai' correct;
+          no legend (single series, correct to omit)
     data_quality:
       score: 15
       max: 15
@@ -173,21 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all essential lollipop features: stems, markers, sorted ranking,
-          range of values, baseline-to-dot visual.'
+        comment: 'Shows all lollipop aspects: stems, markers, baseline, sorting; value
+          labels and reference line add context'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail sales by category is a real-world, neutral business scenario
-          with recognizable category labels.
+        comment: Retail category sales — neutral, realistic, named categories (not
+          abstract)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 25-87K for retail category sales are realistic and well-spread.
+        comment: 25-87K range plausible for retail; y-axis from 0 correct for this
+          chart type
     code_quality:
       score: 10
       max: 10
@@ -197,36 +197,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> constants -> data -> plot -> save. No functions
-          or classes.'
+        comment: 'Linear structure: imports → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data; no random generation.
+        comment: Fully hardcoded deterministic data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, matplotlib.ticker, numpy — all used.
+        comment: All 4 imports (os, matplotlib.pyplot, matplotlib.ticker, numpy) are
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; np.where for conditional marker sizes is concise;
-          FuncFormatter for y-tick formatting is elegant.
+        comment: Clean Pythonic code; no fake interactivity; appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi; no bbox_inches='tight'
-          (correct for canvas gate).
+        comment: Saves plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -234,19 +234,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct axes-method API throughout (ax.vlines, ax.scatter, ax.annotate,
-          ax.axhline). FuncFormatter from matplotlib.ticker used idiomatically. subplots_adjust
-          used correctly to avoid bbox_inches='tight' drift.
+        comment: ax.vlines() for stems, ax.scatter() with edge params, ax.annotate()
+          with arrowprops, ax.axhline(), FuncFormatter, fig.subplots_adjust() — all
+          correct idiomatic patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: ax.vlines is the canonical matplotlib stem API for lollipops. ax.annotate
-          with arrowprops is distinctly matplotlib. mticker.FuncFormatter is library-specific.
-          Good use but not pushing into territory that truly couldn't be replicated
-          elsewhere.
-  verdict: REJECTED
+        passed: false
+        comment: mticker.FuncFormatter and ax.annotate with arrowprops are matplotlib-specific,
+          but usage is moderate; could showcase more library depth
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
