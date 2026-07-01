@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 89/100 | Updated: 2026-07-01
@@ -139,7 +139,7 @@ for node in nodes:
             bbox={"facecolor": ELEVATED_BG, "edgecolor": "none", "boxstyle": "round,pad=0.2", "alpha": 0.85},
         )
 
-title = "network-force-directed · matplotlib · anyplot.ai"
+title = "network-force-directed · python · matplotlib · anyplot.ai"
 title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK, pad=10)
 ax.set_xlim(-0.02, 1.02)
