@@ -2,43 +2,56 @@ library: pygal
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:14:09Z'
-updated: '2026-04-26T13:07:36Z'
-generated_by: claude-opus
-workflow_run: 24957187995
+updated: '2026-07-01T06:06:14Z'
+generated_by: claude-sonnet
+workflow_run: 28496779704
 issue: 934
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Correct lollipop implementation in pygal (no native lollipop type — XY chart approach
-    is the right solution)
-  - 'Flawless spec compliance: sorted data, correct title format, horizontal orientation
-    appropriate for long labels'
-  - 'Perfect theming: all chrome tokens thread correctly through Style; both renders
-    pass readability checks in light and dark'
-  - Clean, elegant code with the r=0 hidden-node trick for baseline suppression
+  - Clever use of pygal.XY with stroke=True and node r=0 to create lollipop stems
+    — idiomatic workaround for pygal's lack of a native lollipop type
+  - 'Deliberate visual hierarchy: brand green (#009E73) for the top-ranked item (Smartphones),
+    muted anchor for all others — creates immediate focal point'
+  - 'Both light and dark themes fully theme-adaptive: background, text, and chrome
+    all use correct tokens; data colors are identical across themes'
+  - 'Perfect spec compliance: sorted data, circular dot markers, horizontal orientation
+    appropriate for moderately long labels, correct title format'
+  - Data is realistic, neutral, and well-varied (134–892 units) — range makes the
+    ranking immediately meaningful
+  - Clean code structure with no unnecessary abstractions; sys.path fix is a legitimate
+    workaround for the pygal name collision
+  - Generates both plot-light.html and plot-dark.html in addition to PNGs, correctly
+    leveraging pygal's interactive output
   weaknesses:
-  - 'Design lacks sophistication: dashed grid lines feel dated; no spine cleanup;
-    no value labels or emphasis on top-ranked item'
-  - 'DE-03 storytelling is thin: sorting is present but no visual hierarchy beyond
-    it (no top-item highlight, no value labels at dot endpoints)'
+  - Value labels at the end of each lollipop stem are absent — readers cannot read
+    precise values without hovering the HTML version; adding text annotations at each
+    dot tip would improve data readability in the static PNG
+  - Y-axis category label font size (label_font_size=56) is noticeably larger than
+    x-axis tick label font size (major_label_font_size=44), creating a slight size
+    imbalance across axes
+  - The vertical baseline on the left extends above the top data point, leaving extra
+    whitespace above Smartphones — minor layout inefficiency from XY chart padding
+  - DE-01 limited by absence of value labels or additional storytelling elements (e.g.,
+    mean reference line, color-coded tiers) that would elevate from clean to publication-ready
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "lollipop-basic · pygal · anyplot.ai" in dark text, clearly readable. X-axis label "Sales (units)" readable. Y-axis label "Product Category" (rotated) readable. Category labels (Smartphones, Laptops, Tablets, Headphones, Smartwatches, Cameras, Speakers, Gaming) all readable in dark text. X-axis tick labels (0–900) readable.
-      Data: All stems and dots rendered in brand green #009E73. Stems are horizontal lines from x=0 to each category's value. Dots are large circles at the value endpoints.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "lollipop-basic · python · pygal · anyplot.ai" appears at top-center in dark text, ~50% canvas width, clearly readable. Y-axis title "Product Category" rotated vertically, dark text, readable. X-axis title "Sales (units)" at bottom, dark text, readable. X-axis tick labels (0–900 in increments of 100) and y-axis category labels (Smartphones through Gaming) are dark and legible. No grid lines (intentional).
+      Data: 8 horizontal lollipop stems. Top item "Smartphones" (892 units) has a brand green (#009E73) stem and dot, clearly standing out. All other 7 items have muted gray (#6B6A63) stems and dots, creating a deliberate visual hierarchy. Dots (circles) are clearly visible at each value tip. Data sorted descending by value.
+      Legibility verdict: PASS — all text elements are clearly readable against the light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title, axis labels, tick labels, and category labels all rendered in light text — clearly readable against the dark surface. No dark-on-dark failures detected. Dashed vertical grid lines visible but subtle.
-      Data: Stem and dot colors are identical brand green #009E73 as in the light render. Data colors unchanged between themes as required.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title rendered in light-colored monospace text, fully readable against dark background. Y-axis title and x-axis title are light-colored and clearly readable. All category labels (Smartphones, Laptops, etc.) and numeric tick labels appear in light text, no dark-on-dark failures.
+      Data: Smartphones lollipop retains brand green (#009E73) — identical to light render. Other 7 items show muted gray (#A8A79F dark variant) stems and dots — distinctly visible against the dark background. Color identity preserved across themes.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,75 +59,88 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=64, labels=44, major=40); all
-          text clearly readable in both themes
+        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44);
+          all readable in both themes. Minor: y-axis category labels (label_font_size=56)
+          are noticeably larger than x-axis numeric tick labels (major_label_font_size=44),
+          slight axis balance issue.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Category labels well-spaced, no collisions anywhere
+        comment: No overlapping elements. 8 well-spaced categories, ample vertical
+          spacing between lollipop rows.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems (stroke_width=8) and dots (dots_size=28) clearly visible in
-          both themes
+        comment: Lollipop stems clearly visible (stroke_width=6), dots prominent (dots_size=20).
+          Brand green Smartphones dot immediately visible; muted dots for others still
+          clearly readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green, CVD-safe, adequate contrast on both surfaces
+        comment: Green vs muted gray provides good luminance contrast. CVD-safe —
+          brand green and muted gray are distinguishable under deuteranopia/protanopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall layout; minor excess whitespace on right side (xrange
-          extends ~10% past max data value)
+        comment: 'Plot fills canvas well. 120px margins. Minor: baseline extends slightly
+          above top data point creating small whitespace above Smartphones lollipop,
+          but overall proportions are good.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: x=Sales (units) with units; y=Product Category; correct title format
+        comment: 'X-axis: ''Sales (units)'' — descriptive with units. Y-axis: ''Product
+          Category'' — descriptive. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series; #FAF8F1 light / #1A1A17 dark backgrounds;
-          chrome correctly adaptive'
+        comment: 'First (top) series is #009E73. Other series use muted semantic anchor
+          (#6B6A63 light / #A8A79F dark) — valid use of the rest/other anchor for
+          de-emphasized items. Backgrounds: #FAF8F1 light / #1A1A17 dark — correct.
+          Chrome fully theme-adaptive in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Clean horizontal lollipop with consistent brand green; above generic
-          defaults but not publication-ready; dashed grid lines reduce polish
+        passed: true
+        comment: 'Above defaults: deliberate color hierarchy (brand green for top
+          performer, muted gray for rest) creates professional focal point. Clean
+          minimal look. Missing: value labels, reference lines, or additional design
+          layers that would push toward publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: No y-axis guides (appropriate); dashed x-guides visible; no explicit
-          spine removal; whitespace is generous
+        passed: true
+        comment: No grid lines (appropriate for simple 8-point chart), theme-adaptive
+          chrome, no legend. Missing frames/box around data area. Some refinement
+          visible above pure defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Data sorted descending creates ranking narrative; no additional emphasis
-          (value labels, top-item highlight) to guide viewer
+        passed: true
+        comment: Visual hierarchy via color (green vs muted) + sorted data creates
+          clear ranked comparison. Smartphones dominates immediately. Good focal point.
+          Value labels would strengthen the story further.
     spec_compliance:
       score: 15
       max: 15
@@ -124,52 +150,60 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal lollipop via XY chart with stems and dots; horizontal
-          orientation justified by long category names
+        comment: Correct lollipop chart with thin stems (XY lines) and circular dot
+          markers. Horizontal orientation — spec explicitly lists this as valid for
+          long category labels.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems from baseline, circular markers at values, sorted data, baseline
-          at x=0 — all present
+        comment: 'All spec features: thin line stems from baseline to value, circular
+          dot markers, sorted by value descending, horizontal orientation for readable
+          labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Sales (units), Y=categories; all 8 data points visible
+        comment: 'X-axis: Sales (units), Y-axis: Product Category. All 8 categories
+          visible. Values correctly mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format lollipop-basic · pygal · anyplot.ai; legend suppressed
-          (correct for single series)
+        comment: 'Title: ''lollipop-basic · python · pygal · anyplot.ai'' — correct
+          format. No legend (show_legend=False) — appropriate since categories are
+          labeled directly on y-axis.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows stems, dots, sorting, and adequate value range; no value labels
-          to demonstrate exact reading
+        comment: 8 categories with high variation (134–892 units). Shows full range
+          from short stems (Gaming) to full-width stem (Smartphones). Good spread
+          demonstrates chart's ranking capability.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales by consumer electronics category; real-world neutral
-          business scenario
+        comment: Consumer electronics sales by product category — neutral, real-world
+          business scenario. All category names are actual product types. No controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 134-892 units; realistic and internally consistent
+        comment: Values range 134–892 units. Proportions are plausible (Smartphones
+          >> Cameras, Speakers, Gaming). Relative rankings align with real-world consumer
+          electronics market expectations.
     code_quality:
       score: 10
       max: 10
@@ -179,55 +213,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → style → chart → render'
+        comment: 'Linear flow: path fix → imports → tokens → data → colors → style
+          → chart → add series loop → save. No unnecessary abstractions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static deterministic data; no randomness
+        comment: Data is fully hardcoded — deterministic. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, sys, pathlib.Path for path fix, pygal, Style)
+        comment: os, sys, pathlib.Path, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; clever r=0 node trick to hide baseline dots; sys.path workaround
-          is documented
+        comment: Clean and Pythonic. sys.path manipulation is a necessary workaround
+          for pygal package name collision. Loop over categories to add XY series
+          is appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct filenames
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct format for
+          interactive pygal library.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper use of pygal.XY with Style system; all theme tokens threaded
-          through Style object; above default
+        comment: 'Expert adaptation: uses pygal.XY with stroke=True, node r=0 to suppress
+          baseline dot, y_labels with label/value dict for custom categorical axis.
+          Shows deep knowledge of pygal''s API.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML interactive export (pygal flagship feature); r=0 node trick
-          is pygal-specific; Style object fully leveraged
-  verdict: REJECTED
+        comment: HTML interactive output generated (chart.render()) — distinctive
+          to pygal. Custom y_labels dict pattern is pygal-specific. But lollipop via
+          XY workaround is more adaptation than showcasing a distinctive pygal feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - iteration-over-groups
   dataprep: []
