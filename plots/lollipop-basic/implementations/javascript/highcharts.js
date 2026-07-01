@@ -22,14 +22,20 @@ const data = [
 ];
 
 const categories = data.map(d => d.category);
-const values = data.map(d => d.value);
+const stemValues = data.map(d => d.value);
+
+// Scatter points — top performer gets a larger dot for emphasis
+const dotValues = data.map((d, i) => ({
+    y: d.value,
+    marker: i === data.length - 1 ? { radius: 12 } : undefined,
+}));
 
 Highcharts.chart("container", {
     chart: {
         backgroundColor: "transparent",
         animation: false,
         style: { fontFamily: "inherit" },
-        spacing: [40, 30, 30, 30],
+        spacing: [40, 30, 40, 30],
     },
     credits: { enabled: false },
     colors: t.palette,
@@ -40,6 +46,10 @@ Highcharts.chart("container", {
     },
     xAxis: {
         categories: categories,
+        title: {
+            text: "Product Category",
+            style: { color: t.inkSoft, fontSize: "16px" },
+        },
         lineColor: t.inkSoft,
         tickColor: "transparent",
         gridLineWidth: 0,
@@ -73,6 +83,18 @@ Highcharts.chart("container", {
                 lineWidth: 2,
                 lineColor: t.pageBg,
             },
+            dataLabels: {
+                enabled: true,
+                formatter: function () { return this.y + "K"; },
+                style: {
+                    color: t.ink,
+                    fontSize: "11px",
+                    fontWeight: "400",
+                    textOutline: "none",
+                },
+                verticalAlign: "bottom",
+                y: -14,
+            },
         },
     },
     tooltip: {
@@ -84,13 +106,13 @@ Highcharts.chart("container", {
         {
             type: "column",
             name: "Stem",
-            data: values,
+            data: stemValues,
             color: t.palette[0],
         },
         {
             type: "scatter",
             name: "Units Sold",
-            data: values,
+            data: dotValues,
             color: t.palette[0],
         },
     ],
