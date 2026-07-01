@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: seaborn 0.13.2 | Python 3.13.14
 Quality: 82/100 | Updated: 2026-07-01
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 
@@ -115,8 +116,16 @@ if max_coord > 0:
 x_coords = pos[:, 0]
 y_coords = pos[:, 1]
 
-# Node sizes by degree — tuned for 3200×1800 canvas
-node_sizes = [80 + degree * 30 for degree in degrees]
+# Node DataFrame for seaborn three-way encoding (hue + size + style)
+node_df = pd.DataFrame(
+    {
+        "x": x_coords,
+        "y": y_coords,
+        "department": [community_names[c] for c in communities],
+        "degree": degrees,
+        "node_type": ["Bridge" if i in bridge_nodes else "Member" for i in range(num_nodes)],
+    }
+)
 
 # Plot — 3200×1800 px landscape (figsize=(8,4.5) × dpi=400)
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -128,14 +137,21 @@ for src, tgt, weight in edges:
     x1, y1 = pos[tgt]
     ax.plot([x0, x1], [y0, y1], color=EDGE_COLOR, linewidth=0.5 + weight * 1.0, alpha=0.22, zorder=1)
 
-# Nodes (Imprint palette via seaborn)
+# Nodes via seaborn three-way encoding: hue=department, size=degree, style=node_type
+# Diamond markers distinguish bridge nodes (cross-community connectors) from regular members
+palette = {name: IMPRINT[i] for i, name in enumerate(community_names)}
 sns.scatterplot(
-    x=x_coords,
-    y=y_coords,
-    hue=communities,
-    palette=IMPRINT,
-    size=node_sizes,
+    data=node_df,
+    x="x",
+    y="y",
+    hue="department",
+    hue_order=community_names,
+    palette=palette,
+    size="degree",
     sizes=(80, 400),
+    style="node_type",
+    style_order=["Member", "Bridge"],
+    markers={"Member": "o", "Bridge": "D"},
     alpha=0.90,
     edgecolor=PAGE_BG,
     linewidth=0.8,
@@ -144,36 +160,33 @@ sns.scatterplot(
     zorder=2,
 )
 
-# Highlight bridge nodes with an ink-coloured ring
-bridge_x = [pos[i, 0] for i in bridge_nodes]
-bridge_y = [pos[i, 1] for i in bridge_nodes]
-bridge_sizes = [node_sizes[i] + 80 for i in bridge_nodes]
-ax.scatter(bridge_x, bridge_y, s=bridge_sizes, facecolors="none", edgecolors=INK, linewidth=1.0, alpha=0.60, zorder=3)
+# Label top 4 hubs by degree only — prevents center-cluster label overlap
+top_hubs = sorted(range(num_nodes), key=lambda i: degrees[i], reverse=True)[:4]
+for node in top_hubs:
+    ax.annotate(
+        f"Node {node}",
+        (pos[node, 0], pos[node, 1]),
+        fontsize=8,
+        ha="center",
+        va="bottom",
+        xytext=(0, 7),
+        textcoords="offset points",
+        fontweight="bold",
+        color=INK_SOFT,
+    )
 
-# Label hub nodes (75th-percentile degree threshold)
-degree_threshold = np.percentile(degrees, 75)
-for node in range(num_nodes):
-    if degrees[node] >= degree_threshold:
-        ax.annotate(
-            f"Node {node}",
-            (pos[node, 0], pos[node, 1]),
-            fontsize=7,
-            ha="center",
-            va="bottom",
-            xytext=(0, 7),
-            textcoords="offset points",
-            fontweight="bold",
-            color=INK_SOFT,
-        )
-
-# Legend — departments + bridge node indicator
+# Legend — departments (circle) + bridge node indicator (diamond)
 legend_elements = []
 for idx, name in enumerate(community_names):
     count = community_sizes[idx]
     legend_elements.append(
-        plt.scatter([], [], c=IMPRINT[idx], s=80, label=f"{name} ({count})", edgecolor=PAGE_BG, linewidth=0.8)
+        plt.scatter(
+            [], [], c=IMPRINT[idx], s=80, marker="o", label=f"{name} ({count})", edgecolor=PAGE_BG, linewidth=0.8
+        )
     )
-legend_elements.append(plt.scatter([], [], s=80, facecolors="none", edgecolors=INK, linewidth=1.0, label="Bridge node"))
+legend_elements.append(
+    plt.scatter([], [], c=INK_SOFT, s=80, marker="D", edgecolor=PAGE_BG, linewidth=0.8, label="Bridge node")
+)
 
 ax.legend(
     handles=legend_elements,
