@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 81/100 | Updated: 2026-07-01
@@ -173,7 +173,7 @@ for src, tgt, weight in edges:
             "y": pos[src][1],
             "xend": pos[tgt][0],
             "yend": pos[tgt][1],
-            "thickness": 0.18 + weight * 0.20 if is_internal else 0.28 + weight * 0.20,
+            "thickness": 0.40 + weight * 0.35 if is_internal else 0.55 + weight * 0.35,
             "edge_type": "internal" if is_internal else "bridge",
         }
     )
@@ -206,7 +206,7 @@ plot = (
     + scale_color_manual(values=DEPARTMENT_COLORS, breaks=legend_order)
     + scale_size_identity()
     + guides(color=guide_legend(override_aes={"size": 3}))
-    + labs(title="network-force-directed · plotnine · anyplot.ai", color="Department")
+    + labs(title="network-force-directed · python · plotnine · anyplot.ai", color="Department")
     + xlim(-0.02, 1.02)
     + ylim(-0.02, 1.02)
     + annotate(
