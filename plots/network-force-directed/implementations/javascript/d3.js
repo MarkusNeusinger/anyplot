@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-force-directed: Force-Directed Graph
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-07-01
+// Library: d3 7.9.0 | JavaScript 22.23.0
+// Quality: 87/100 | Created: 2026-07-01
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
