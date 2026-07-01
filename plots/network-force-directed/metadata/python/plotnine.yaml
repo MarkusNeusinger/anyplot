@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: network-force-directed
 created: '2025-12-23T15:14:59Z'
-updated: '2026-04-26T09:13:04Z'
-generated_by: claude-opus
-workflow_run: 24952837092
+updated: '2026-07-01T01:44:01Z'
+generated_by: claude-sonnet
+workflow_run: 28486824632
 issue: 990
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.13.14
+library_version: 0.15.7
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,37 +15,38 @@ preview_html_dark: null
 quality_score: 85
 review:
   strengths:
-  - Excellent Fruchterman-Reingold implementation producing clear community separation
-    across all four department clusters
-  - Solid vs. dashed edge distinction adds meaningful visual encoding (internal collaboration
-    vs. cross-team bridges)
-  - Node sizing by degree effectively highlights hub nodes
-  - Legend ordered spatially (left-to-right) via pd.Categorical(ordered=True) — intuitive
-    and plotnine-idiomatic
-  - 'Full theme-adaptive chrome: all INK/INK_SOFT/ELEVATED_BG tokens correctly wired
-    through theme() in both light and dark renders'
+  - Custom Fruchterman-Reingold layout with simulated annealing cooling — no external
+    graph library needed
+  - Three simultaneous visual encodings (color by department, node size by degree,
+    edge thickness+linetype by connection type) all working harmoniously
+  - Perfect theme adaptation in both renders — no dark-on-dark failures, correct backgrounds
+  - Spatial legend ordering by centroid x-position is an elegant plotnine-idiomatic
+    touch
+  - Informative caption annotation that decodes all visual encodings for the reader
   weaknesses:
-  - Helper function _make_internal_edges violates the no-functions/classes KISS rule;
-    edge pattern should be inlined
-  - Footer annotation at size=12 is too small for 4800x2700 resolution — increase
-    to at least 14-16pt
-  - Force layout leaves a large empty center area — reducing k slightly or adding
-    a weak centering force would produce a more balanced composition
+  - annotate() size=8 exceeds the plotnine-guide recommended 2.5-4mm range; while
+    the rendered text looks acceptable, aligning to the guide (size=3-4) would ensure
+    consistency
+  - 'DE-01 and DE-02 have room for improvement: hub nodes (highest degree) could be
+    more dramatically enlarged to create a stronger focal point; edge colors could
+    vary slightly with weight rather than only thickness'
+  - 'LM-02 below max: core distinctiveness comes from numpy physics engine, not plotnine
+    idioms — further plotnine-specific features could raise this'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "network-force-directed · plotnine · anyplot.ai" at top in dark ink — clearly readable. Legend "Department" header + 4 entries in dark text on elevated light frame (#FFFDF6). Footer annotation legible. Axes/ticks hidden (appropriate for network graph).
-      Data: Four department clusters — Engineering (#009E73, lower-left), Marketing (#0072B2, upper-center), Design (#D55E00, lower-center), Sales (#CC79A7, right). Internal edges solid gray, bridges dashed. Node sizes vary by degree.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "network-force-directed · python · plotnine · anyplot.ai" centered at top in dark ink, readable. Legend box top-left with "Department" title (10pt) and 4 entries (8pt), all readable. Bottom caption annotation readable in muted ink.
+      Data: Four department clusters — Engineering (#009E73 green, lower-left), Marketing (#4467A3 blue, upper-center), Design (#C475FD lavender, lower-center), Sales (#BD8233 ochre, right). Solid gray internal edges (alpha=0.45), dashed lighter gray bridge edges (alpha=0.65). Node sizes vary by degree.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light text (#F0EFE8) — clearly readable. Legend on elevated dark background (#242420) with light secondary text. Footer annotation visible. No dark-on-dark failures detected.
-      Data: Node colors identical to light render — Engineering green, Marketing blue, Design orange, Sales pink unchanged. Edge colors adapted to dark theme (lighter gray tones).
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light adaptive color (#F0EFE8) clearly visible on dark background. Legend box uses elevated dark background (#242420) with light text for entries. Bottom caption visible in muted light color. No dark-on-dark failures detected.
+      Data: Identical colors to light render — #009E73, #4467A3, #C475FD, #BD8233 — only chrome flipped. All nodes and edges clearly visible against the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,51 +54,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (24pt) and legend (16pt) readable in both themes; footer annotation
-          size=12 is slightly small for 4800x2700
+        comment: 'All font sizes explicitly set; title 12pt, legend title 10pt, legend
+          text 8pt readable in both themes. Minor: annotate size=8 exceeds recommended
+          2.5-4mm range per plotnine guide.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Minor node overlap within dense clusters; force layout keeps most
-          elements separable
+        comment: No text overlaps. Dense cluster edges produce inherent visual crossings
+          expected for force-directed graphs.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Nodes and edges clearly visible in both themes; some edge clutter
-          in dense internal clusters
+        comment: 40 nodes clearly visible, size variation by degree apparent, edge
+          thickness and linetype differentiation readable in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette used correctly, CVD-safe, no red-green sole signal
+        comment: 4 Imprint palette hues spanning green/blue/purple/ochre — distinct
+          hue families with strong CVD safety.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Four clusters use canvas well; center area noticeably sparse due
-          to force layout pushing clusters apart
+        comment: Canvas gate passed (3200x1800). Network fills plot area well with
+          balanced margins. Legend in empty upper-left corner.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct (network-force-directed · plotnine · anyplot.ai);
-          axes appropriately hidden for network graph
+        comment: Network graph correctly omits axis labels/ticks. Title descriptive
+          and correctly formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering=#009E73 (first series), Okabe-Ito order maintained,
-          backgrounds #FAF8F1/#1A1A17, both renders theme-correct'
+        comment: 'Engineering (first series) = #009E73. All 4 departments use Imprint
+          positions 1-4 canonical order. Backgrounds #FAF8F1 (light) / #1A1A17 (dark).
+          Both renders theme-correct.'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -105,23 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Intentional design choices: Okabe-Ito palette, elevated legend frame,
-          spatial legend ordering, edge type distinction. Above defaults but not publication-level
-          polish.'
+        comment: Above default. Custom FR algorithm, 3 simultaneous visual encodings,
+          spatial legend sorting. Not quite strong design level — gray edge palette
+          retains standard appearance.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: All chrome removed (axes, ticks, grid, spines); solid vs. dashed
-          edge encoding; elevated legend background adapts to theme
+        comment: All axis elements removed (correct for network graphs). Alpha differentiation
+          between edge types and elevated legend background show care. Above default.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Community clusters are clear focal point; bridge connections tell
-          cross-team story; footer annotation explains encoding; legend ordered spatially
+        comment: 'Clear story: four clusters with sparse dashed bridges reveals team
+          structure vs cross-team collaboration. Caption decodes encodings. Good visual
+          hierarchy.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed graph via Fruchterman-Reingold algorithm
+        comment: Correct force-directed graph with Fruchterman-Reingold physics simulation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Physics simulation layout, node degree sizing, edge weight thickness,
-          community structure all implemented
+        comment: Nodes with IDs, edges with source/target, weights affecting attraction,
+          degree-scaled nodes, weight-scaled edges, community structure, 250 iterations.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 40 nodes, 95 edges, 4 departments, all visible within bounds
+        comment: All 40 nodes and 95 edges visible, department-to-color, degree-to-size,
+          weight-to-thickness mappings verified.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: network-force-directed · plotnine · anyplot.ai; legend labels match;
-          legend ordered by spatial position
+        comment: 'Title: ''network-force-directed · python · plotnine · anyplot.ai''.
+          Legend labels match department names.'
     data_quality:
       score: 15
       max: 15
@@ -161,89 +167,93 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clusters, bridges, hub nodes via degree sizing, edge weights
-          — all aspects of the plot type covered
+        comment: 'Shows all force-directed graph features: community clusters, bridges,
+          degree variation, edge weight variation, intra vs inter-cluster topology.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Team collaboration network with 4 departments is a canonical, neutral
-          real-world use case for force-directed graphs
+        comment: 40-person corporate org (Engineering, Design, Marketing, Sales) with
+          95 collaboration edges. Neutral, plausible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 40 nodes, 95 edges within spec 20-200 typical range; collaboration
-          weights 1-3 are sensible
+        comment: 40 nodes within spec 20-200 range. Weight scale 1-3 sensible. Dense
+          intra-dept and sparse inter-dept bridges produce realistic community structure.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Helper function _make_internal_edges defined; criteria requires no
-          functions/classes
+        passed: true
+        comment: 'Linear flat structure: imports → tokens → data → FR layout → DataFrames
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before layout computation
+        comment: np.random.seed(42) before random position initialization.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (annotate, guide_legend, guides, etc.) are used
+        comment: All imports used. os, numpy, pandas, and all plotnine symbols are
+          referenced.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; force algorithm clearly structured; edge DataFrame split
-          is clean
+        comment: No fake UI. FR algorithm is minimum necessary for a network graph
+          without native plotnine support.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi=300, width=16, height=9
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Correct ggplot grammar: geom_segment + geom_point layering, scale_color_manual,
-          scale_size_identity, guide_legend with override_aes; theme tokens threaded
-          through theme()'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Spatial legend ordering via pd.Categorical(ordered=True) is plotnine-idiomatic;
-          guide_legend(override_aes) is canonical ggplot2; geom_segment as network
-          edge primitive
+        comment: 'Correct plotnine grammar: layered geoms, aes() mappings, scale_color_manual,
+          guides with override_aes, pd.Categorical for ordered legend, theme customization.
+          Default score — core layout lives in numpy.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: 'pd.Categorical with ordered categories for spatial legend ordering
+          and guide_legend(override_aes={''size'': 3}) are plotnine-specific idioms.
+          Slightly above default (1). Main technical contribution is the numpy physics
+          engine.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - matrix-construction
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
   - alpha-blending
