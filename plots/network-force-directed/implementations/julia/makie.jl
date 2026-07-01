@@ -38,7 +38,7 @@ edges = Tuple{Int,Int}[]
 for d in 1:4
     members = findall(==(d), node_dept)
     for i in members, j in members
-        if i < j && rand() < 0.5
+        if i < j && rand() < 0.65
             push!(edges, (i, j))
         end
     end
@@ -116,7 +116,7 @@ node_sizes  = 12.0 .+ degree .* 2.5
 
 # Title — 51 chars, below the 67-char baseline so no scaling needed
 const TITLE        = "network-force-directed · julia · makie · anyplot.ai"
-const TITLE_SIZE   = 20
+const TITLE_SIZE   = 22
 
 # Figure
 fig = Figure(
@@ -182,6 +182,10 @@ Legend(
 )
 
 colsize!(fig.layout, 1, Relative(0.82))
+
+# Annotation: explain the node-size encoding
+text!(ax, 0.01, 0.01; text = "Node size ∝ degree (connections)",
+      fontsize = 10, color = INK_SOFT, align = (:left, :bottom))
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
