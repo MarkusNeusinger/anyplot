@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: matplotlib | Python
+Library: matplotlib 3.11.0 | Python 3.13.14
+Quality: 89/100 | Updated: 2026-07-01
 """
 
 import os
