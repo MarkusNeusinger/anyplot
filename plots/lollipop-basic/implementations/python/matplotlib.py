@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-basic: Basic Lollipop Chart
 Library: matplotlib 3.11.0 | Python 3.13.14
 Quality: 85/100 | Updated: 2026-07-01
@@ -57,11 +57,11 @@ ax.scatter(x, values, color=BRAND_GREEN, s=marker_sizes, zorder=3, edgecolors=PA
 
 # Value labels above each marker
 for xi, v in zip(x, values, strict=False):
-    ax.text(xi, v + 2.5, f"{v}K", ha="center", va="bottom", fontsize=6.5, color=INK_SOFT, fontweight="medium")
+    ax.text(xi, v + 2.5, f"{v}K", ha="center", va="bottom", fontsize=8, color=INK_SOFT, fontweight="medium")
 
 # Average reference line — structural anchor for context
 ax.axhline(avg_val, color=INK_MUTED, linewidth=0.9, linestyle="--", zorder=1)
-ax.text(len(x) - 0.5, avg_val + 1.5, f"avg {avg_val:.0f}K", ha="right", va="bottom", fontsize=6, color=INK_MUTED)
+ax.text(len(x) - 0.5, avg_val + 1.5, f"avg {avg_val:.0f}K", ha="right", va="bottom", fontsize=7.5, color=INK_MUTED)
 
 # Callout annotation on the top performer using matplotlib's annotation API
 ax.annotate(
@@ -75,7 +75,7 @@ ax.annotate(
     bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "boxstyle": "round,pad=0.3", "linewidth": 0.6},
 )
 
-title = "lollipop-basic · matplotlib · anyplot.ai"
+title = "lollipop-basic · python · matplotlib · anyplot.ai"
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK, pad=8)
 ax.set_xlabel("Product Category", fontsize=10, color=INK)
 ax.set_ylabel("Sales (thousands)", fontsize=10, color=INK)
@@ -98,5 +98,5 @@ ax.yaxis.grid(True, alpha=0.15, color=INK, linewidth=0.8)
 ax.set_axisbelow(True)
 
 # Manual margins — bbox_inches must stay None (default) to preserve exact canvas size
-fig.subplots_adjust(left=0.10, right=0.97, top=0.91, bottom=0.22)
+fig.subplots_adjust(left=0.10, right=0.97, top=0.91, bottom=0.26)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
