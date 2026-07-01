@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: lollipop-basic
 created: '2026-07-01T06:26:28Z'
-updated: '2026-07-01T06:32:31Z'
+updated: '2026-07-01T06:45:43Z'
 generated_by: claude-sonnet
 workflow_run: 28497441216
 issue: 934
@@ -12,40 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Correct use of MUI X composable pattern: ChartContainer + ChartsGrid/XAxis/YAxis
-    + custom SVG via useXScale/useYScale hooks is the idiomatic way to render custom
-    mark types in MUI X'
-  - 'Correct Imprint palette usage: brand green (#009E73) as the single data color,
-    correct warm backgrounds in both themes'
-  - 'Full spec compliance: stems from baseline, circular markers, 12 genres, sorted
-    by value, horizontal orientation for long labels'
-  - Realistic and neutral dataset (book sales by genre) with plausible values
-  - Both light and dark renders are theme-correct with all chrome elements readable
+  - Implements lollipop chart correctly using MUI X's low-level ChartContainer + useXScale/useYScale
+    hook composition, which is exactly the idiomatic approach for custom chart types
+    that lack a native component
+  - Opacity-based visual hierarchy (top 3 genres at opacity=1.0, remaining at 0.6)
+    creates an effective focal point that immediately draws the viewer's eye to the
+    top performers
+  - 'Perfect palette compliance: t.palette[0] (#009E73) used throughout, and theme-adaptive
+    chrome (t.ink, t.inkSoft) correctly wires title and tick labels to be readable
+    in both light and dark renders'
+  - Realistic, neutral dataset (annual book sales by genre in millions) with plausible
+    values and correct descending sort order across 12 categories
+  - All font sizes explicitly set (title 22px, axis label 15px, tick labels 13-14px,
+    value labels 12px); proportions are well-balanced and no overflow is present
+  - Vertical-only grid lines are a good aesthetic choice for a horizontal lollipop
+    — the direction of comparison is horizontal, so only vertical reference lines
+    add value
   weaknesses:
-  - Missing skipAnimation on ChartContainer — the library guide requires this on every
-    chart component to guarantee the final paint is captured in the screenshot
-  - No value labels on the lollipop circles — adding them would improve readability
-    and eliminate the need for precise grid reading
-  - 'No visual storytelling: the top genre (Children''s) or the performance gap between
-    top-3 and the rest could be highlighted through opacity variation or a reference
-    annotation'
-  - Grid opacity not explicitly set — relies on MUI X default; explicit rgba values
-    matching the style guide's grid token would be more correct
+  - 'Duplicate header block: the impl-review.yml header-rewrite prepended the new
+    quality header (lines 1-4) but the original skeleton header (lines 6-10) after
+    the //# directive was not removed, leaving two // comment blocks in sequence —
+    cosmetic but messy'
+  - Spines (axis border lines) are still present; MUI X doesn't make spine removal
+    trivial, but setting the axisLine styles via slotProps or sx selectors to hide
+    the top/right frame edges would give a cleaner minimal look
+  - Value labels next to dots are fontSize=12 (CSS px), the smallest text element
+    in the chart — bumping to 13-14px to match tick label sizing would improve readability
+    and hierarchy consistency
+  - Grid strokeOpacity is set to 0.5 via sx which is somewhat prominent — a value
+    of 0.25-0.35 would be more subtle and let the data elements read more cleanly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "lollipop-basic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable. X-axis label "Annual Sales (millions of units)" in dark ink, readable. Y-axis category labels (Children's through Literary Fiction) in soft dark ink, all readable. Tick labels on X-axis in soft dark ink, readable.
-      Data: Brand green (#009E73) stems (thin lines, strokeWidth=3) from x=0 baseline to filled circles (r=11) at each data value. 12 categories sorted highest to lowest. Subtle vertical grid lines aid reading. Single-color single-series, no legend.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct anyplot surface, no pure white
+      Chrome: Title "lollipop-basic · javascript · muix · anyplot.ai" in dark text (~22px), clearly centered at top. Y-axis genre labels in dark secondary text (14px), X-axis "Annual Sales (millions of units)" label in dark text (15px), tick numbers in dark secondary text (13px) — all readable against the light surface. No dark-on-light contrast failures.
+      Data: Horizontal lollipop stems in #009E73 (brand green), circular markers in #009E73 (r=11 CSS). Top 3 entries (Children's 22.1, Romance 18.7, Thriller 16.3) at full opacity=1.0; remaining 9 genres at opacity=0.6 for visual hierarchy. Small numeric value labels (12px) to the right of each dot. Subtle vertical grid lines across the plot area. 12 categories sorted descending by value, from Children's at top to Literary Fiction at bottom.
+      Legibility verdict: PASS — all title, axis labels, tick labels, and value labels are readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light cream/gray tones — correctly adapted to dark surface. No dark-on-dark failures detected. Grid lines visible but subtle on dark background.
-      Data: Colors identical to light render — brand green (#009E73) stems and circles unchanged. Only chrome elements flipped.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct anyplot dark surface, no pure black
+      Chrome: Title in light-colored text (clearly readable), Y-axis genre labels in light secondary text, X-axis label and tick numbers in light text — all visible against the dark surface. The MUI X ThemeProvider correctly inverts chrome via ANYPLOT_TOKENS. No dark-on-dark failures observed.
+      Data: Lollipop stems and circles in identical #009E73 brand green — matches the light render exactly, as required (data colors are theme-independent). Opacity gradient for top-3 emphasis is preserved. Value labels visible in light text (t.inkSoft).
+      Legibility verdict: PASS — all chrome elements (title, axis labels, tick labels, value labels) are light-colored and readable against the near-black background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,49 +66,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 22px, axis labels 15px, tick labels 13-14px — all readable
-          in both themes
+        comment: All font sizes explicitly set (title 22px, axis label 15px, ticks
+          13-14px, value labels 12px). Well-proportioned, no overflow. Value labels
+          at 12px are the smallest element — minor deduction for mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 12 categories well-spaced, no collisions with stems or circles
+        comment: No overlapping elements in either render. Categories well-spaced,
+          value labels clearly separated from dots.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circles r=11 prominent for 12 sparse points; stems strokeWidth=3
-          clearly visible
+        comment: Stems strokeWidth=3 clearly visible; circles r=11 CSS (22px native)
+          well-sized for 12-category dataset. Opacity=0.6 for lower entries still
+          clearly readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single Imprint brand green #009E73, CVD-safe'
+        comment: 'Single series #009E73 brand green on both light and dark surfaces
+          — clear contrast, no CVD issues.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; horizontal orientation correct for long labels;
-          left margin 168px adequate
+        comment: Canvas gate passed. Good utilization — generous left margin (168px)
+          for category labels, right margin (85px) for value labels. Plot fills canvas
+          well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label includes units; Y-axis labels self-descriptive
+        comment: 'X-axis: ''Annual Sales (millions of units)'' — descriptive with
+          units. Y-axis: categorical genre names are self-describing (no unit label
+          needed).'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 't.palette[0] (#009E73) used; backgrounds #FAF8F1 light / #1A1A17
-          dark correct'
+        comment: t.palette[0] (#009E73) used for all data elements. Theme-adaptive
+          chrome via t.ink and t.inkSoft. Both light (#FAF8F1) and dark (#1A1A17)
+          backgrounds correct. Data colors identical across themes.
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -106,22 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Sophisticated composable API pattern; fontWeight 500 title; but no
-          value labels or emphasis on performers
+        comment: 'Above library defaults: opacity-based visual hierarchy for top-3,
+          explicit value labels, correct Imprint palette. Not yet FiveThirtyEight-level
+          — missing annotation callouts or gradient fills that would push to 6+.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Vertical-only grid correct; clean layout; but no explicit spine removal
-          or grid opacity customization
+        passed: true
+        comment: Vertical-only grid (appropriate choice), generous margins, clean
+          layout. Spines still present (MUI X limitation). Grid strokeOpacity=0.5
+          is somewhat prominent. Between 'minimal customization' and 'some refinement
+          visible'.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted by value gives ranking structure; no focal point or annotations
-          highlighting insights
+        passed: true
+        comment: Opacity gradient clearly separates top 3 performers from the rest,
+          guiding the viewer to Children's, Romance, Thriller. Data sorted descending
+          reinforces the visual hierarchy. Viewer immediately sees which genres lead.
     spec_compliance:
       score: 15
       max: 15
@@ -131,26 +153,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal lollipop with stems and circular markers
+        comment: 'Correct horizontal lollipop: thin SVG stems (line elements) from
+          baseline to marker, circular dots at data values. Baseline at 0.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems from baseline, circles at values, 12 categories, sorted highest
-          to lowest
+        comment: Stems, circular markers, baseline, sorted data (descending), horizontal
+          orientation for long category labels — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis values from 0, Y-axis all 12 genres, baseline at x=0
+        comment: Categories on Y-axis (band scale), values on X-axis (linear scale,
+          0 to MAX*1.1). All 12 categories visible. Correct mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; no legend appropriate for single series
+        comment: 'Title: ''lollipop-basic · javascript · muix · anyplot.ai'' — correct
+          format. Single series, no legend needed.'
     data_quality:
       score: 15
       max: 15
@@ -160,24 +185,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All lollipop features demonstrated: stems, circles, categorical+quantitative
-          axes, sorted ranking, horizontal layout'
+        comment: 'Shows all key lollipop features: range of values (6.4 to 22.1M),
+          meaningful variation across 12 categories, clear relative comparisons.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual book sales by genre in millions; values 6.4-22.1M plausible;
-          neutral topic
+        comment: Annual book sales by genre (millions of units) — real-world domain,
+          neutral topic, recognizable categories. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 6.4-22.1M provides good visual differentiation; realistic for
-          book market
+        comment: Children's books leading (22.1M), followed by Romance, Thriller —
+          plausible and consistent with real-world publishing data. Values and proportions
+          factually reasonable.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -185,56 +211,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: LollipopPlot sub-component necessary for hook usage inside ChartContainer
+        comment: LollipopPlot helper component is architecturally required for React
+          hooks (useXScale/useYScale must be called inside a component). This is the
+          idiomatic MUI X pattern, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hardcoded data; deterministic and offline
+        comment: Fully hardcoded data — deterministic by construction.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 7 imports used; no unused imports
+        comment: 'All 8 imports are used: ChartContainer, ChartsXAxis, ChartsYAxis,
+          ChartsGrid, useXScale, useYScale, Box, Typography.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Missing skipAnimation on ChartContainer — required by library rules
-          for static screenshot
+        passed: true
+        comment: Clean, concise code. Null checks for scale readiness are appropriate.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default export correct; current @mui/x-charts community API
+        comment: Output handled by harness (plot-light.png + plot-dark.png + HTML).
+          Current MUI X v7 API used.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ChartContainer + declarative slots + scale hooks is the correct MUI
-          X pattern; deduction for missing skipAnimation
+        comment: Expert use of ChartContainer compositional API with useXScale/useYScale
+          hooks for custom rendering. skipAnimation set. Separate axis/grid components.
+          This is the canonical MUI X approach for custom chart types.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks and custom SVG rendering demonstrate MUI
-          X-specific composable API mastery
+        comment: The useXScale/useYScale hook pattern to implement a lollipop inside
+          ChartContainer is distinctively MUI X — not replicable with the same elegance
+          in other libraries. Loses 1pt because the custom SVG rendering (lines, circles)
+          is generic SVG, not MUI X-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
