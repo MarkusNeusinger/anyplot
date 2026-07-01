@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 83/100 | Updated: 2026-07-01
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 84/100 | Created: 2026-07-01
 """
 
 import sys
