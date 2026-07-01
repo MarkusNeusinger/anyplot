@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-basic: Basic Lollipop Chart
 Library: bokeh 3.9.1 | Python 3.13.14
 Quality: 88/100 | Updated: 2026-07-01
@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, NumeralTickFormatter, Range1d, Span
+from bokeh.models import ColumnDataSource, Label, NumeralTickFormatter, Range1d, Span
 from bokeh.plotting import figure
 from PIL import Image
 from selenium import webdriver
@@ -67,7 +67,7 @@ p = figure(
     height=1800,
     x_range=categories,
     y_range=Range1d(0, 108000),
-    title="lollipop-basic · bokeh · anyplot.ai",
+    title="lollipop-basic · python · bokeh · anyplot.ai",
     x_axis_label="Cloud Service",
     y_axis_label="Monthly Spend (USD)",
     toolbar_location=None,
@@ -77,8 +77,21 @@ p = figure(
     min_border_right=80,
 )
 
-# Average reference line
+# Average reference line + label
 p.add_layout(Span(location=avg_spend, dimension="width", line_color=INK_MUTED, line_width=3, line_dash="dashed"))
+p.add_layout(
+    Label(
+        x=2880,
+        y=avg_spend,  # screen x from plot-frame left; plot area = 3200-180-80=2940px wide
+        x_units="screen",
+        text=f"Avg: ${avg_spend / 1000:.1f}K",
+        text_font_size="22pt",
+        text_color=INK_MUTED,
+        text_align="right",
+        text_baseline="bottom",
+        y_offset=8,
+    )
+)
 
 # Stems
 p.segment(x0="categories", y0="zeros", x1="categories", y1="values", source=source, line_width=4, color=BRAND)
@@ -132,7 +145,7 @@ p.ygrid.grid_line_alpha = 0.10
 # Background and chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # L-spine only: x/y axis_line_color handle bottom+left
 
 # Y-axis tick format
 p.yaxis.formatter = NumeralTickFormatter(format="$0,0")
