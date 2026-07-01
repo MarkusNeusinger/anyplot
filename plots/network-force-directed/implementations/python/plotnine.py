@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: plotnine 0.15.7 | Python 3.13.14
-Quality: 81/100 | Updated: 2026-07-01
+Quality: 85/100 | Updated: 2026-07-01
 """
 
 import os
