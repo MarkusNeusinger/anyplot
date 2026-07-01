@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: letsplot 4.11.0 | Python 3.13.14
 Quality: 83/100 | Updated: 2026-07-01
@@ -160,7 +160,7 @@ plot = (
     + scale_x_continuous(limits=(-0.05, 1.05))
     + scale_y_continuous(limits=(-0.05, 1.05))
     + labs(title=TITLE)
-    + ggsize(800, 450)
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -178,6 +178,6 @@ plot = (
     )
 )
 
-# Save — ggsize(800, 450) × scale=4 → 3200 × 1800 px
+# Save — ggsize(600, 600) × scale=4 → 2400 × 2400 px
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")
