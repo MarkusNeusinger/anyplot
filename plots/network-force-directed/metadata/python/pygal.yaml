@@ -2,12 +2,12 @@ library: pygal
 language: python
 specification_id: network-force-directed
 created: 2025-12-17 10:04:33+00:00
-updated: '2026-04-26T10:03:29Z'
-generated_by: claude-opus
-workflow_run: 24952933179
+updated: '2026-07-01T01:41:56Z'
+generated_by: claude-sonnet
+workflow_run: 28486898568
 issue: 990
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/python/pygal/plot-light.html
@@ -15,39 +15,49 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-f
 quality_score: 83
 review:
   strengths:
-  - Complete Fruchterman-Reingold force-directed layout from scratch with no external
-    graph library
-  - 'Degree-based node sizing using pygal per-point SVG attribute overrides ({"node":
-    {"r": ...}}) — distinctive pygal feature'
-  - Three-community corporate social network (Engineering/Marketing/Sales) — realistic,
-    neutral scenario
-  - Full theme adaptation in both renders; all token assignments (background, foreground,
-    foreground_subtle) correctly derived from ANYPLOT_THEME
-  - 'Perfect code quality: seed set, clean imports, linear structure, appropriate
-    complexity; full output (PNG + SVG + HTML)'
+  - 'Correct Imprint palette: Metabolism=#009E73 (brand green) first, followed by
+    lavender and blue for the other modules'
+  - Degree-based node sizing elegantly encodes hub proteins — nodes with more connections
+    appear visibly larger
+  - Visual distinction between intra-module edges (muted gray) and cross-module bridge
+    edges (amber dashed) effectively tells the crosstalk story
+  - 'Theme adaptation is correct: backgrounds (#FAF8F1 light / #1A1A17 dark), text
+    colors, and data colors all adapt properly'
+  - Protein-protein interaction domain with functional modules (Metabolism, Signaling,
+    Gene Regulation) is a realistic and informative context
+  - 'Full output set: SVG + PNG + HTML for interactive hover tooltips via pygal'
+  - Fruchterman-Reingold force-directed algorithm implemented correctly with cooling
+    schedule and repulsion/attraction forces
   weaknesses:
-  - 'First pygal series Connections uses EDGE_COLOR (#9A988F light / #5A5852 dark)
-    rather than #009E73 — palette position 1 is not the brand green; reorder series
-    so Engineering comes first'
-  - Some node crowding in dense Engineering and Marketing clusters; increase repulsion
-    constant k from 0.95 to 1.1 for better node separation
-  - Legend font appears small relative to canvas at rendered scale despite legend_font_size=44
-    being set
+  - 'Layout imbalance: a single Gene Regulation node (node 28 or similar) is isolated
+    in the upper-left corner of the canvas — far from the main cluster — while the
+    rest of the network is concentrated in the lower-right half. This leaves ~50-60%
+    of the canvas as empty white/dark space and creates a visually confusing composition.
+    Add a centripetal/gravity force (pulling all nodes toward canvas center) to prevent
+    outlier nodes from drifting far from the main graph.'
+  - 'No gravitational centering term in the force-directed algorithm: without a weak
+    attractive force toward the canvas center, isolated or lightly-connected nodes
+    get pushed to canvas extremes by repulsion. Add `displacement[i] -= alpha * positions[i]`
+    with a small alpha (~0.01) on each iteration to keep all nodes anchored near center.'
+  - 'Design refinement limited: the pygal XY chart retains a visible frame/border
+    around the plot area (top and right borders visible) which adds visual noise for
+    a network graph. Consider hiding the chart border with `no_data_text` overrides
+    or style tweaks for a cleaner look.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "network-force-directed · pygal · anyplot.ai" in dark text at top center — readable. No axis labels (appropriate for network graph). Legend at bottom with four entries (Connections, Engineering, Marketing, Sales) in dark text — readable.
-      Data: Three community clusters: Engineering (teal #009E73, right side), Marketing (orange #D55E00, lower-left), Sales (blue #0072B2, upper-center). Edges as light gray lines (#9A988F). Node sizes vary by degree — hub nodes noticeably larger.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color
+      Chrome: Title "network-force-directed · python · pygal · anyplot.ai" is clear dark text at top (~65% canvas width). No axis labels (appropriately hidden for network graph). Legend at bottom shows 5 series in readable dark text.
+      Data: Three node groups — Metabolism nodes in brand green (#009E73), Signaling in lavender (#C475FD), Gene Regulation in blue (#4467A3). Node sizes scale with degree (hub proteins visibly larger). Intra-module edges in muted gray. Bridge edges in dashed amber (#BD8233). Main cluster is concentrated in the lower-right quadrant of the canvas. A single isolated node (small blue dot) is positioned in the upper-left, far from the main cluster, leaving ~50-60% of the canvas empty.
+      Legibility verdict: PASS — all text is readable against light background. Data colors are vivid against the cream surface.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct theme surface
-      Chrome: Title in light off-white text at top center — clearly readable. Legend at bottom in light-colored text — readable. No dark-on-dark text issues detected.
-      Data: Community colors identical to light render — Engineering green, Marketing orange, Sales blue. Edges appear as lighter gray on dark background. Node sizing preserved.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface color
+      Chrome: Title text is light-colored and clearly readable against dark background. Legend text is light and readable. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — same green, lavender, blue nodes, muted gray intra-edges, amber dashed bridge edges. Same layout imbalance as light render (isolated node top-left, cluster bottom-right). Brand green #009E73 remains clearly visible on the dark surface.
+      Legibility verdict: PASS — all text is readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
@@ -55,51 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, legend=44, labels=40); all text
-          readable in both themes
+        comment: Title, legend text readable in both themes; no axis labels needed
+          for network graph
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Some node crowding in dense clusters inherent to 50-node network;
-          no text overlap
+        comment: Minor overlap in dense cluster area is normal for network graphs;
+          no text-data overlap
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Nodes clearly visible with degree-based sizing; edges rendered as
-          clean gray lines
+        comment: Nodes well-sized with degree encoding; isolated outlier node is small
+          but visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito community colors (green/orange/blue); CVD-safe; muted edges
-          don't compete
+        comment: CVD-safe Imprint palette; redundant encoding via legend labels
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Network fills ~65-70% of canvas; slight wasted space at canvas edges
+        passed: false
+        comment: 'Significant layout imbalance: isolated node in upper-left, main
+          cluster in lower-right; ~50-60% of canvas is empty space'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; no axis labels appropriate for network
-          graph type
+        comment: Title format correct; no axis labels appropriate for network graph
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Community colors correctly use Okabe-Ito; but first series Connections
-          uses EDGE_COLOR not #009E73; both theme backgrounds correct'
+        passed: true
+        comment: Metabolism=#009E73 first; Imprint palette in canonical order; backgrounds
+          correct for both themes
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -107,24 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: degree-based sizing, muted edges vs bright community
-          nodes creates hierarchy'
+        comment: Degree-based node sizing, visual distinction between edge types,
+          semantic bridge highlighting show design intent; layout imbalance detracts
+          from polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No grid or axis decorations; clean margins; legend neat; above library
-          defaults
+        comment: No grid, no axis labels, hidden axis ticks — appropriate minimalism
+          for network graph; chart frame border visible
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three communities immediately apparent; hub nodes visually stand
-          out; bridge edges tell inter-community connectivity story
+        comment: Functional module story (Metabolism/Signaling/Gene Regulation) and
+          crosstalk via bridge edges is communicated; isolated node undermines coherence
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,52 +142,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Force-directed graph with manual Fruchterman-Reingold implementation
+        comment: Force-directed graph implemented via Fruchterman-Reingold algorithm
+          on pygal.XY — correct approach
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Node degree scaling, edge representation, community structure present;
-          edge thickness for weights not implemented (spec optional)
+        comment: Nodes with positions, edges, node size by degree, edge type distinction
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct network topology; three-community structure clearly shown
+        comment: Node positions from force-directed layout, module membership via
+          color, degree mapped to node size
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title network-force-directed · pygal · anyplot.ai correct; legend
-          labels correct
+        comment: 'Title: ''network-force-directed · python · pygal · anyplot.ai''
+          — correct format; legend labels match module names'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows communities, hub nodes, bridge edges, degree variation; minor:
-          no strongly isolated peripheral nodes'
+        comment: Shows topology, three functional modules, intra/cross-module edges,
+          degree-based sizing, hub identification
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Corporate social network (Engineering, Marketing, Sales) — realistic,
-          neutral scenario
+        comment: Protein-protein interaction network with functional modules is a
+          classic and realistic use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50 nodes, 30% intra-community edge probability, 8 bridge edges; all
-          plausible
+        comment: 38 nodes within the 20-200 range; edge probability 0.25 creates realistic
+          density
     code_quality:
       score: 10
       max: 10
@@ -187,8 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> layout -> plot -> save; no
-          functions or classes'
+        comment: Top-level script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,20 +211,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: sys, pathlib.Path, os, numpy, pygal, pygal.style.Style — all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Force-directed layout computation appropriate complexity; clean readable
-          code
+        comment: Clear structure, good comments, logical flow; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, .svg, .html
+        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -223,22 +233,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.XY, Style object for full theming, per-point node dict
-          for radius overrides, correct stroke/dots_size API
+        comment: pygal.XY with stroke/dots options, None for line breaks, node dict
+          for radius — idiomatic and clever
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-point SVG attribute overrides for degree-based radii; None-break
-          technique for edges; interactive HTML export
-  verdict: REJECTED
+        comment: Interactive HTML output, hover tooltips with protein info, node radius
+          via pygal node dict, stroke_style dasharray for bridge edges
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
