@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: pygal 3.1.3 | Python 3.13.14
 Quality: 84/100 | Created: 2026-07-01
@@ -46,17 +46,17 @@ for mod_idx, size in enumerate(module_sizes):
 # Intra-module edges (dense within functional groups)
 for i in range(15):
     for j in range(i + 1, 15):
-        if np.random.random() < 0.35:
+        if np.random.random() < 0.25:
             edges.append((i, j))
 
 for i in range(15, 28):
     for j in range(i + 1, 28):
-        if np.random.random() < 0.35:
+        if np.random.random() < 0.25:
             edges.append((i, j))
 
 for i in range(28, 38):
     for j in range(i + 1, 38):
-        if np.random.random() < 0.35:
+        if np.random.random() < 0.25:
             edges.append((i, j))
 
 # Cross-module interactions (sparse bridges — crosstalk between pathways)
@@ -105,10 +105,10 @@ for iteration in range(iterations):
         if disp_norm > 0:
             positions[i] += (displacement[i] / disp_norm) * min(disp_norm, 0.15 * temperature)
 
-# Normalize positions to padded plot range
+# Normalize positions with ~15% margin on each side to keep clusters away from canvas edges
 pos_min = positions.min(axis=0)
 pos_max = positions.max(axis=0)
-positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 10 + 1
+positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 9 + 1.5
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
 # Node degrees (for size encoding)
@@ -117,9 +117,10 @@ for src, tgt in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Style — module series use Imprint positions 1-3; edge series uses INK_MUTED (muted semantic anchor)
+# Style — module series use Imprint positions 1-3; intra edges use INK_MUTED; bridge edges use Imprint[3]
 module_colors = IMPRINT[: len(module_names)]
-series_colors = module_colors + (INK_MUTED,)  # nodes first → Metabolism gets #009E73
+BRIDGE_COLOR = IMPRINT[3]  # #BD8233 amber — visually distinct cross-module connector
+series_colors = module_colors + (INK_MUTED, BRIDGE_COLOR)  # nodes first → Metabolism gets #009E73
 
 custom_style = Style(
     background=PAGE_BG,
@@ -152,9 +153,9 @@ chart = pygal.XY(
     show_y_labels=False,
     stroke=True,
     dots_size=18,
-    stroke_style={"width": 1.5, "linecap": "round"},
+    stroke_style={"width": 2.5, "linecap": "round"},
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=5,
     legend_box_size=24,
     margin=60,
     range=(0, 12),
@@ -177,16 +178,38 @@ for mod_idx, mod_name in enumerate(module_names):
         node_points.append({"value": (x, y), "label": label, "node": {"r": round(radius, 1)}})
     chart.add(mod_name, node_points, stroke=False)
 
-# Edge series added LAST (series 3) — uses INK_MUTED via colors position 3
-edge_points = []
+# Build intra-module edge set for fast lookup
+bridge_edge_set = set(map(tuple, bridge_edges))
+
+# Intra-module edges (series 3) — uses INK_MUTED via colors position 3
+intra_edge_points = []
 for src, tgt in edges:
+    if (src, tgt) not in bridge_edge_set and (tgt, src) not in bridge_edge_set:
+        x1, y1 = pos[src]
+        x2, y2 = pos[tgt]
+        intra_edge_points.append((x1, y1))
+        intra_edge_points.append((x2, y2))
+        intra_edge_points.append(None)
+
+chart.add("Interactions", intra_edge_points, stroke=True, show_dots=False, fill=False)
+
+# Cross-module bridge edges (series 4) — amber #BD8233, dashed to signal inter-pathway crosstalk
+bridge_edge_points = []
+for src, tgt in bridge_edges:
     x1, y1 = pos[src]
     x2, y2 = pos[tgt]
-    edge_points.append((x1, y1))
-    edge_points.append((x2, y2))
-    edge_points.append(None)
+    bridge_edge_points.append((x1, y1))
+    bridge_edge_points.append((x2, y2))
+    bridge_edge_points.append(None)
 
-chart.add("Interactions", edge_points, stroke=True, show_dots=False, fill=False)
+chart.add(
+    "Cross-module Bridges",
+    bridge_edge_points,
+    stroke=True,
+    show_dots=False,
+    fill=False,
+    stroke_style={"width": 2.5, "dasharray": "8 5", "linecap": "round"},
+)
 
 # Save outputs (theme-aware filenames)
 chart.render_to_file(f"plot-{THEME}.svg")
