@@ -10,10 +10,10 @@ using Random
 Random.seed!(42)
 
 # Theme tokens
-const THEME    = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const THEME        = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG      = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK          = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT     = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const IMPRINT_PALETTE = [
     colorant"#009E73",  # 1 — brand green (always first categorical series)
     colorant"#C475FD",  # 2 — lavender
@@ -24,6 +24,7 @@ const IMPRINT_PALETTE = [
     colorant"#954477",  # 7 — rose
     colorant"#99B314",  # 8 — lime
 ]
+const ANYPLOT_AMBER = colorant"#DDCC77"
 
 # Data — renewable energy share (%) by country
 countries = ["Norway", "Iceland", "Austria", "Sweden", "New Zealand",
@@ -35,6 +36,11 @@ order            = sortperm(pct_renew)
 sorted_countries = countries[order]
 sorted_pct       = pct_renew[order]
 n                = length(sorted_pct)
+
+# Amber accent on the clear leader (Norway 98%, rightmost after ascending sort)
+base_color  = IMPRINT_PALETTE[1]
+dot_colors  = [i == n ? ANYPLOT_AMBER : base_color for i in 1:n]
+stem_colors = [c for dc in dot_colors for c in (dc, dc)]  # 2 points per stem
 
 # Build stem point pairs for linesegments!
 stem_pts = Point2f[]
@@ -81,18 +87,32 @@ ax = Axis(
 ax.xticks = (1:n, sorted_countries)
 ax.xticklabelrotation = π / 6
 
+# 50% reference line — "majority renewable" threshold
+hlines!(ax, [50.0]; color = RGBAf(INK.r, INK.g, INK.b, 0.35), linestyle = :dash, linewidth = 1.5)
+text!(ax, 1.1, 52.0; text = "50% threshold", color = INK_SOFT, fontsize = 10, align = (:left, :bottom))
+
 # Stems
-linesegments!(ax, stem_pts; color = IMPRINT_PALETTE[1], linewidth = 2.5)
+linesegments!(ax, stem_pts; color = stem_colors, linewidth = 2.5)
 
 # Dots
 scatter!(ax, collect(1:n), sorted_pct;
-    color       = IMPRINT_PALETTE[1],
+    color       = dot_colors,
     markersize  = 18,
     strokewidth = 2.0,
     strokecolor = PAGE_BG,
 )
 
-ylims!(ax, 0, 105)
+# Value annotations via Makie's native text! — lightweight data labels
+for (i, val) in enumerate(sorted_pct)
+    text!(ax, i, val + 3.0;
+        text     = "$(Int(val))%",
+        color    = INK_SOFT,
+        fontsize = 10,
+        align    = (:center, :bottom),
+    )
+end
+
+ylims!(ax, 0, 115)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
