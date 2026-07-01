@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 72, right: 175, bottom: 60, left: 60 };
+const margin = { top: 72, right: 185, bottom: 60, left: 60 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -104,8 +104,8 @@ const sim = d3.forceSimulation(nodes)
   .force("link", d3.forceLink(links).id(d => d.id).distance(80).strength(0.7))
   .force("charge", d3.forceManyBody().strength(-280))
   .force("center", d3.forceCenter(iw / 2, ih / 2))
-  .force("x", d3.forceX(iw / 2).strength(0.05))
-  .force("y", d3.forceY(ih / 2).strength(0.05))
+  .force("x", d3.forceX(iw / 2).strength(0.10))
+  .force("y", d3.forceY(ih / 2).strength(0.10))
   .force("collide", d3.forceCollide().radius(d => nodeRadius(d) + 5).iterations(2))
   .stop();
 
@@ -134,7 +134,7 @@ g.append("g")
   .attr("stroke-width", 1)
   .attr("stroke-opacity", 0.35);
 
-// --- Nodes ---
+// --- Nodes (hub nodes get thicker stroke for visual emphasis) ---
 g.append("g")
   .selectAll("circle")
   .data(nodes)
@@ -144,7 +144,7 @@ g.append("g")
   .attr("r", d => nodeRadius(d))
   .attr("fill", d => t.palette[d.group])
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 1.5)
+  .attr("stroke-width", d => d.degree >= 4 ? 2.5 : 1.5)
   .attr("fill-opacity", 0.9);
 
 // --- Labels for hub nodes (degree >= 4) ---
@@ -153,11 +153,11 @@ g.append("g")
   .data(nodes.filter(d => d.degree >= 4))
   .join("text")
   .attr("x", d => d.x)
-  .attr("y", d => d.y - nodeRadius(d) - 4)
+  .attr("y", d => d.y - nodeRadius(d) - 5)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
-  .style("font-size", "12px")
-  .style("font-weight", "500")
+  .style("font-size", "14px")
+  .style("font-weight", "600")
   .text(d => d.id);
 
 // --- Legend ---
@@ -165,8 +165,15 @@ const lgX = margin.left + iw + 24;
 const lgY = margin.top + 20;
 const lgG = svg.append("g").attr("transform", `translate(${lgX},${lgY})`);
 
+lgG.append("text")
+  .attr("x", 0).attr("y", 0)
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Community");
+
 GROUPS.forEach((name, i) => {
-  const row = lgG.append("g").attr("transform", `translate(0,${i * 28})`);
+  const row = lgG.append("g").attr("transform", `translate(0,${24 + i * 28})`);
   row.append("circle")
     .attr("cx", 8).attr("cy", 0).attr("r", 7)
     .attr("fill", t.palette[i]).attr("fill-opacity", 0.9)
@@ -174,15 +181,15 @@ GROUPS.forEach((name, i) => {
   row.append("text")
     .attr("x", 22).attr("y", 5)
     .attr("fill", t.inkSoft)
-    .style("font-size", "13px")
+    .style("font-size", "14px")
     .text(name);
 });
 
 lgG.append("text")
   .attr("x", 0)
-  .attr("y", GROUPS.length * 28 + 22)
+  .attr("y", 24 + GROUPS.length * 28 + 24)
   .attr("fill", t.inkSoft)
-  .style("font-size", "11px")
+  .style("font-size", "14px")
   .text("Node size ∝ degree");
 
 // --- Title ---
