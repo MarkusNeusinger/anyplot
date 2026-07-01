@@ -1,14 +1,21 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: altair 6.1.0 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-26
+Quality: 85/100 | Updated: 2026-07-01
 """
 
 import os
+import sys
+
+
+# Prevent this file from shadowing the installed altair package (same filename as the library).
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if not (p and os.path.abspath(p) == _here)]
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -19,7 +26,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 EDGE_COLOR = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito categorical palette (first series is always #009E73)
+# Imprint categorical palette (first series is always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: a 50-node organisational network with three communities
@@ -108,7 +115,7 @@ hub_df["label"] = "Hub " + hub_df["id"].astype(str)
 # Edges layer
 edges_chart = (
     alt.Chart(edge_df)
-    .mark_line(strokeWidth=1.4, opacity=0.55)
+    .mark_line(strokeWidth=1.0, opacity=0.5)
     .encode(
         x=alt.X("x:Q", axis=None),
         y=alt.Y("y:Q", axis=None),
@@ -121,15 +128,15 @@ edges_chart = (
 # Nodes layer
 nodes_chart = (
     alt.Chart(node_df)
-    .mark_circle(stroke=PAGE_BG, strokeWidth=1.5, opacity=0.95)
+    .mark_circle(stroke=PAGE_BG, strokeWidth=1.0, opacity=0.95)
     .encode(
         x=alt.X("x:Q", axis=None),
         y=alt.Y("y:Q", axis=None),
-        size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[200, 900])),
+        size=alt.Size("size:Q", legend=None, scale=alt.Scale(range=[60, 400])),
         color=alt.Color(
             "community:N",
             scale=alt.Scale(domain=community_names, range=IMPRINT),
-            legend=alt.Legend(title="Team", titleFontSize=18, labelFontSize=16, symbolSize=400),
+            legend=alt.Legend(title="Team", titleFontSize=10, labelFontSize=10, symbolSize=100),
         ),
         tooltip=[alt.Tooltip("community:N", title="Team"), alt.Tooltip("degree:Q", title="Connections")],
     )
@@ -138,25 +145,41 @@ nodes_chart = (
 # Hub labels
 hub_labels = (
     alt.Chart(hub_df)
-    .mark_text(fontSize=15, fontWeight="bold", color=INK, dy=-22)
+    .mark_text(fontSize=11, fontWeight="bold", color=INK, dy=-12)
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), text="label:N")
 )
 
 chart = (
     (edges_chart + nodes_chart + hub_labels)
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         background=PAGE_BG,
         title=alt.Title(
-            "network-force-directed · altair · anyplot.ai", fontSize=28, color=INK, anchor="start", offset=20
+            "network-force-directed · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="start", offset=10
         ),
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
     .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=12, cornerRadius=4
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=8, cornerRadius=4
     )
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+# Save PNG and pad to exact 3200 × 1800 landscape target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
