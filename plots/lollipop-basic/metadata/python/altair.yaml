@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:13:50Z'
-updated: '2026-07-01T06:06:39Z'
+updated: '2026-07-01T06:16:56Z'
 generated_by: claude-sonnet
 workflow_run: 28496613795
 issue: 934
@@ -12,40 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: correct lollipop type with stems and dots, sorted data,
-    all required features present'
-  - 'Strong theme adaptation: both renders pass legibility with correct background
-    and text color tokens throughout'
-  - 'Intentional focal emphasis: Electronics dot sized at 2x others using alt.condition
-    — evidence of design thinking beyond defaults'
-  - Interactive hover with selection_point and opacity dim/highlight showcases Altair
-    distinctive declarative interactivity
-  - 'Clean KISS code: deterministic data, all imports used, elegant layer composition
-    with + operator'
-  - 'Correct canvas handling: pad-to-3200x1800 logic with fail-loud on overshoot'
+  - Correct lollipop chart with proper mark_rule stems and mark_circle dots — all
+    spec requirements satisfied
+  - 'Focal emphasis: Electronics dot rendered at size=950 vs size=480 for others,
+    creating clear visual hierarchy'
+  - Annotated top performer with bold '$425,000' value label guiding viewer to key
+    insight
+  - Interactive hover selection (alt.selection_point) with opacity dimming — Altair-native
+    feature active in HTML output
+  - 'Perfect theme-adaptive chrome: all text, grid, and legend tokens correctly flip
+    between #FAF8F1 and #1A1A17 surfaces'
+  - Idiomatic Altair layer composition (stems + dots + annotation) using alt.datum
+    expressions and alt.condition
+  - Sales data sorted descending — reinforces ranking narrative immediately
+  - 'Both renders fully legible: no dark-on-dark or light-on-light text failures'
   weaknesses:
-  - 'DE-03: No value annotation or reference line to anchor the viewer story — add
-    a text label on the Electronics dot showing $425K or a horizontal mean reference
-    line'
-  - 'DE-02: Axis domain lines still visible (domainColor=INK_SOFT) — add domainOpacity=0
-    to configure_axis for a cleaner minimal aesthetic'
-  - 'VQ-01 minor: 10 rotated x-axis labels at -35 deg are readable but slightly dense
-    — labelAngle=-45 with labelFontSize=9 would improve spacing'
+  - 'DE-01 (5/8): Design is intentional and above defaults but not yet at publication-quality
+    polish — typography hierarchy could be tighter and marker stroke effect could
+    be more refined'
+  - 'DE-02 (4/6): Tick marks still visible on both axes; removing or reducing them
+    would sharpen the minimalist look; domain opacity=0 hides axis line cleanly but
+    tick color remains'
+  - 'DE-03 (4/6): Storytelling is good but could be elevated — consider color-fading
+    all bars below top-3 slightly to deepen the ranking story beyond size variation'
+  - 'VQ-01 (7/8): Annotation font at fontSize=10 is the smallest element; at mobile
+    width (~400 px) it scales to ~5 px — slightly below comfortable threshold; consider
+    fontSize=11-12 for the annotation'
+  - 'LM-02 (4/5): Interactive selection and alt.datum expressions are Altair-distinctive,
+    but the HTML-rendered interactivity is invisible in the static PNG — consider
+    adding a text annotation or legend note referencing interactivity, or showcase
+    another Altair-unique static visual encoding'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme background.
-      Chrome: Title "Product Sales by Category · lollipop-basic · python · altair · anyplot.ai" in bold dark ink, ~70% width — readable. Y-axis label "Sales (USD)" and X-axis label "Category" in dark INK tone — readable. Y-axis tick labels ($0–$450,000) and X-axis category labels (rotated -35°) in muted INK_SOFT tone — all readable.
-      Data: Brand green #009E73 stems (strokeWidth=4 vertical rules) and circular dots. Electronics dot is noticeably larger (size=950) as a focal emphasis. All 10 categories visible with lollipop from $0 baseline to value. No overlapping elements.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Bold title "Product Sales by Category · lollipop-basic · python · altair · anyplot.ai" in dark ink, clearly readable; "Category" X-axis label and "Sales (USD)" Y-axis label both readable dark text; Y-axis tick labels ($0–$450,000 in dollar format) and X-axis category tick labels (rotated -45°) all legible against the light surface; subtle horizontal grid lines in INK at 12% opacity
+      Data: 10 lollipop stems in brand green #009E73 (mark_rule, strokeWidth=4); circular markers in same #009E73 with PAGE_BG stroke ring for separation; Electronics marker is distinctly larger (size=950) creating focal emphasis; "$425,000" annotation in dark ink above Electronics dot
+      Legibility verdict: PASS — all text clearly readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme background.
-      Chrome: Title in bold light text (#F0EFE8 tone) — readable. Axis labels and tick labels in light muted tone (#B8B7B0 tone) — readable. No dark-on-dark failures. Tick label text is clearly distinguishable from the dark background.
-      Data: Data colors (brand green #009E73) are IDENTICAL to the light render — only chrome has flipped. Stems and dots carry identical color. Electronics larger dot is preserved. Grid lines appear as subtle light lines on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels in light off-white (INK=#F0EFE8) — fully readable against dark surface; Y-axis and X-axis tick labels in INK_SOFT (#B8B7B0) — clearly visible; grid lines subtle against dark surface; "$425,000" annotation in light text, legible
+      Data: Stems and dots in identical #009E73 brand green — matches light render exactly; Electronics dot still distinctly larger; no hue shift between themes (data colors theme-invariant, only chrome flips)
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome tokens correctly adapted to dark theme; brand green #009E73 remains visible and distinguishable on dark surface
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,50 +67,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 15px, axis 10/12px), readable in
-          both themes. 10 rotated labels at -35deg are slightly dense but readable.
+        comment: All font sizes explicitly set (title=15, axis=12, ticks=10, annotation=10);
+          readable in both themes; annotation at fontSize=10 is the smallest element
+          and slightly tight at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No overlapping elements; X-axis labels rotated -45° with sufficient
+          spacing for 10 categories
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems at strokeWidth=4 clearly visible; dot sizes 480-950 well-sized;
-          Electronics focal dot stands out.
+        comment: Stems at strokeWidth=4 clearly visible; dots at size=480–950 well-proportioned
+          for 10 data points; size variation adds information encoding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series brand green is CVD-safe, no red-green-only signal.
+        comment: 'Single #009E73 series with high contrast on both surfaces; no CVD
+          concerns with single-hue chart'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. No overflow or clipping. Title proportional,
-          balanced axis labels.
+        comment: Chart occupies healthy portion of 3200x1800 canvas; balanced margins;
+          vl-convert padding + PIL centering produces clean layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Sales (USD) includes units; X-axis Category descriptive; title
-          in correct format with descriptive prefix.
+        comment: 'X: ''Category'', Y: ''Sales (USD)'' — descriptive with units; title
+          includes descriptive prefix per spec'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73. Backgrounds #FAF8F1 / #1A1A17. Both renders
-          theme-correct.'
+        comment: 'First (only) series = #009E73 brand green; background #FAF8F1 (light)
+          / #1A1A17 (dark); chrome tokens (INK, INK_SOFT, ELEVATED_BG) correctly theme-adaptive;
+          data colors identical across both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -107,23 +122,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: conditional dot sizing highlights top performer,
-          hover selection with opacity dim/highlight adds interactivity. Professional
-          but not exceptional.'
+        comment: 'Above a well-configured default: intentional focal emphasis via
+          size variation, dot stroke ring for definition, annotation on top performer,
+          interactive hover selection. Not yet at FiveThirtyEight publication level.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-only grid, very low gridOpacity=0.12, dot stroke outline creates
-          clean outlined marker effect. Axis domain lines still present.
+        comment: Y-grid only with 12% opacity (subtle), domain opacity=0 removes axis
+          line, X-grid disabled. Tick marks still visible on both axes; further minimization
+          would sharpen the look.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Data sorted descending, larger Electronics dot focal emphasis. No
-          annotation or reference line to anchor the narrative further.
+        comment: 'Clear storytelling: descending sort creates ranking narrative, size-encoded
+          focal point on Electronics (the winner), value annotation anchors the story.
+          Visual hierarchy guides viewer. Good but not exceptional storytelling depth.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +150,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lollipop chart: rule stems + circle markers, vertical orientation.'
+        comment: 'Correct lollipop chart: mark_rule stems from baseline, mark_circle
+          dots at values, vertical orientation, categories on X-axis'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems from baseline to value, circular dots at data values, vertical
-          orientation, data sorted by value descending.
+        comment: 'Stems: thin lines (mark_rule strokeWidth=4); dots: circular markers;
+          vertical orientation; sorted by value (sort=''-y''); 10 categories in optimal
+          range'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=category (N), Y=value in USD (Q). All 10 categories shown, full
-          value range displayed.
+        comment: Category on X-axis, Sales value on Y-axis; all 10 categories visible;
+          baseline at $0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix. Single series
-          — no legend needed.
+        comment: 'Title: ''Product Sales by Category · lollipop-basic · python · altair
+          · anyplot.ai'' — correct {Descriptive Title} · {spec-id} · {lang} · {lib}
+          · anyplot.ai format; no legend (single-series, appropriate)'
     data_quality:
       score: 15
       max: 15
@@ -164,22 +184,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full lollipop structure: stems, dots, sorted ranking, focal emphasis,
-          10 categories.'
+        comment: 'Full lollipop feature set demonstrated: stems, dots, baseline, sorted
+          ranking, value annotation; 10 categories provides good variation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: E-commerce product sales by category — plausible, neutral, real-world
-          scenario.
+        comment: Product sales by e-commerce category — recognizable, neutral, real-world
+          business scenario; Electronics as top seller is realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: USD $95k-$425k range realistic for product category sales; Y-axis
-          starts at $0; 10 categories within spec's 5-20 range.
+        comment: Sales values $95K–$425K are plausible for a medium retailer; Electronics:Pet
+          Supplies ratio (~4.5:1) is realistic; descending values have natural distribution
     code_quality:
       score: 10
       max: 10
@@ -189,51 +209,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes. Linear flow. Clean variable naming.
+        comment: 'Flat structure: sys.path fix → imports → tokens → data → chart layers
+          → compose → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Static hardcoded data, fully deterministic output.
+        comment: Deterministic hardcoded data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: sys, os, altair, pandas, PIL.'
+        comment: All 5 imports (sys, os, altair, pandas, PIL.Image) are actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Layer composition with + operator idiomatic. alt.condition used cleanly
-          for size and opacity.
+        comment: Clean Altair layer composition; alt.condition and alt.datum expressions
+          used appropriately; no fake interactivity (hover is real Altair feature)
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6 API.
-          Correct scale_factor=4.0 with pad-to-target logic.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
+          API; PIL padding block present
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Altair usage: declarative layer composition (stems+dots+annotation),
+          alt.selection_point with pointerover, alt.condition for conditional encodings,
+          configure_* for theme-adaptive chrome'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: mark_rule for stems, mark_circle for dots, layer composition with
-          +, configure_* for global styling — all idiomatic Altair.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: alt.selection_point interactive hover with opacity dim/highlight,
-          alt.condition for conditional size and opacity, tooltips with format strings.
+        comment: 'Altair-distinctive: selection_point with pointerover for real hover,
+          alt.condition for opacity/size based on selection/datum, alt.datum.category
+          expression, layer composition with + operator, dual HTML+PNG output. Hover
+          interactivity is invisible in static PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -241,9 +265,9 @@ impl_tags:
   techniques:
   - layer-composition
   - hover-tooltips
+  - annotations
   - html-export
   patterns: []
   dataprep: []
   styling:
   - edge-highlighting
-  - alpha-blending
