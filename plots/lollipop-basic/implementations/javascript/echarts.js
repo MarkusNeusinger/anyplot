@@ -1,7 +1,7 @@
 // anyplot.ai
 // lollipop-basic: Basic Lollipop Chart
 // Library: echarts 5.5.1 | JavaScript 22.23.0
-// Quality: 86/100 | Created: 2026-07-01
+// Quality: 88/100 | Created: 2026-07-01
 
 const t = window.ANYPLOT_TOKENS;
 
