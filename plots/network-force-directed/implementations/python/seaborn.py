@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: seaborn 0.13.2 | Python 3.13.14
-Quality: 82/100 | Updated: 2026-07-01
+Quality: 88/100 | Updated: 2026-07-01
 """
 
 import os
