@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: pygal 3.1.0 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-07-01
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-07-01
 """
 
 import os
