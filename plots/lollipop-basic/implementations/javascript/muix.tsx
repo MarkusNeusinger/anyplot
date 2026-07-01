@@ -55,8 +55,11 @@ function LollipopPlot() {
         if (bandTop == null || !isFinite(+bandTop)) return null;
         const cy = +bandTop + yScale.bandwidth() / 2;
 
+        // Highlight top 3 genres; de-emphasise the rest for visual hierarchy
+        const opacity = i < 3 ? 1.0 : 0.6;
+
         return (
-          <g key={genre}>
+          <g key={genre} opacity={opacity}>
             <line
               x1={x0} y1={cy}
               x2={x1} y2={cy}
@@ -65,6 +68,15 @@ function LollipopPlot() {
               strokeLinecap="round"
             />
             <circle cx={x1} cy={cy} r={11} fill={t.palette[0]} />
+            <text
+              x={x1 + 15}
+              y={cy + 4}
+              fill={t.inkSoft}
+              fontSize={12}
+              fontFamily="sans-serif"
+            >
+              {val.toFixed(1)}
+            </text>
           </g>
         );
       })}
@@ -74,7 +86,7 @@ function LollipopPlot() {
 
 const TITLE = "lollipop-basic · javascript · muix · anyplot.ai";
 const TITLE_HEIGHT = 70;
-const MARGIN = { top: 10, right: 70, bottom: 62, left: 168 };
+const MARGIN = { top: 10, right: 85, bottom: 62, left: 168 };
 
 export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width;
@@ -104,6 +116,7 @@ export default function Chart() {
       </Box>
 
       <ChartContainer
+        skipAnimation
         width={chartWidth}
         height={chartHeight}
         margin={MARGIN}
@@ -125,6 +138,9 @@ export default function Chart() {
           data: genres,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
         }]}
+        sx={{
+          "& .MuiChartsGrid-line": { stroke: t.grid, strokeOpacity: 0.5 },
+        }}
       >
         <ChartsGrid vertical />
         <LollipopPlot />
