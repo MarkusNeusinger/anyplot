@@ -15,6 +15,7 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+RULE        <- if (THEME == "light") "#1A1A1726" else "#F0EFE826"
 IMPRINT_PALETTE <- c(
   "#009E73", "#C475FD", "#4467A3", "#BD8233",
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
@@ -44,12 +45,18 @@ p <- ggplot(df, aes(x = score, y = discipline)) +
   ) +
   geom_point(
     color = BRAND,
-    size  = 3.5
+    size  = 5.0
+  ) +
+  geom_text(
+    aes(x = score + 0.8, label = score),
+    hjust  = 0,
+    color  = INK_SOFT,
+    size   = 2.5
   ) +
   scale_x_continuous(
     limits = c(baseline, 100),
     breaks = seq(60, 100, 10),
-    expand = expansion(mult = c(0, 0.05))
+    expand = expansion(mult = c(0, 0.12))
   ) +
   labs(
     x     = "Aerobic Fitness Index",
@@ -60,12 +67,12 @@ p <- ggplot(df, aes(x = score, y = discipline)) +
   theme(
     plot.background     = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.x  = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.x  = element_line(color = RULE, linewidth = 0.3),
     panel.grid.major.y  = element_blank(),
     panel.grid.minor    = element_blank(),
     axis.title.x        = element_text(color = INK, size = 10),
     axis.text.x         = element_text(color = INK_SOFT, size = 8),
-    axis.text.y         = element_text(color = INK, size = 8),
+    axis.text.y         = element_text(color = INK_SOFT, size = 8),
     plot.title          = element_text(color = INK, size = 12),
     plot.title.position = "plot",
     plot.margin         = margin(12, 16, 12, 8),
