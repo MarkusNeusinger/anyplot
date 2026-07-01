@@ -1,3 +1,7 @@
+// anyplot.ai
+// network-force-directed: Force-Directed Graph
+// Library: highcharts 12.6.0 | JavaScript 22.23.0
+// Quality: 87/100 | Created: 2026-07-01
 //# anyplot-orientation: landscape
 // anyplot.ai
 // network-force-directed: Force-Directed Graph
