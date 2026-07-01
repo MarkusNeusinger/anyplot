@@ -1,0 +1,264 @@
+library: ggplot2
+language: r
+specification_id: network-force-directed
+created: '2026-07-01T01:36:57Z'
+updated: '2026-07-01T01:43:35Z'
+generated_by: claude-sonnet
+workflow_run: 28487132057
+issue: 990
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correctly implements Fruchterman-Reingold layout in pure R without any external
+    graph packages — creative use of geom_segment + geom_point
+  - 'Full Imprint palette compliance: #009E73 for Genomics first, correct positions
+    1–5, both themes correct'
+  - 'Excellent idiomatic ggplot2: theme_void, coord_fixed(ratio=1), scale_size_identity
+    for degree-scaled nodes, guides() override.aes'
+  - Degree-scaled node sizes correctly communicate hub researchers visually
+  - Theme-adaptive chrome fully correct — no dark-on-dark failures in either render,
+    legend elevated BG correct
+  weaknesses:
+  - 'FR layout produces linear node arrangements (top row: Neuroscience, right column:
+    Genomics, bottom row: Pharmacology) rather than tight organic community clusters
+    — the main value proposition of force-directed graphs is community revelation,
+    which the current layout fails to deliver clearly. Increase temperature, adjust
+    k constant, or run more iterations to pull groups into tight blobs.'
+  - Edges at 0.18 alpha in dark render are very faint — trace visibility of network
+    structure is poor on dark theme. Increase dark-theme edge alpha to at least 0.30.
+  - Function fr_layout() present — CQ-01 KISS violation (minor).
+  - 'VQ-05: Many nodes push to the plot area boundaries (nodes hugging top, right,
+    and bottom walls) due to boundary clamping at 0.04/0.96 — the plot area boundary
+    is visible through the node arrangement rather than the force equilibrium. Loosen
+    boundary clamp or add a frame margin parameter to allow groups more interior space.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "network-force-directed · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17), centered, ~75% of canvas width, clearly readable. No axis labels (theme_void — correct for network). Legend titled "Research Area" with 5 entries, all readable with light background.
+      Data: 5 research groups — Genomics (#009E73 brand green, rightmost vertical column), Neuroscience (#C475FD lavender, top horizontal row), Immunology (#4467A3 blue, upper-left), Bioinformatics (#BD8233 ochre, lower-left and center), Pharmacology (#AE3030 red, bottom row). Edges rendered as thin light-gray segments. Hub nodes visibly larger (degree scaling). Edges visible but subtle (alpha=0.28).
+      Layout issue: Nodes arrange in linear patterns along plot boundaries (top row, right column, bottom row) rather than tight organic community blobs — community structure not clearly revealed.
+      Legibility verdict: PASS — all text clearly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light (#F0EFE8) text, clearly readable. Legend background uses elevated dark (#242420), text in INK_SOFT (#B8B7B0) — all readable. No dark-on-dark failures.
+      Data: Identical data colors to light render — Genomics green, Neuroscience lavender, Immunology blue, Bioinformatics ochre, Pharmacology red. Edges in light gray but at 0.18 alpha appear quite faint on dark background — network structure harder to trace than in light render.
+      Legibility verdict: PASS — all text readable, though edges are notably faint
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set (title 11pt, legend.text 8pt, legend.title
+          10pt). Readable in both themes. Minor: 11pt title is slightly below the
+          12pt guideline but acceptable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap. Minor node proximity in bottom section where Pharmacology
+          and Bioinformatics nodes cluster, but no severe overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nodes appropriately sized with degree scaling — hub nodes prominent,
+          smaller nodes still visible. Edges visible in light render; quite faint
+          in dark render at 0.18 alpha.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette correctly applied across 5 categories. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Good canvas use for a square network graph. Minor issue: boundary
+          clamping (0.04-0.96) causes nodes to hug the plot walls rather than settling
+          in interior equilibrium positions.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels correct for network graph (x=NULL, y=NULL). Title
+          correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect compliance: #009E73 for Genomics (first series), Imprint
+          positions 1-5, correct backgrounds (#FAF8F1 light / #1A1A17 dark), data
+          colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: Imprint palette, theme_void for
+          clean look, degree-scaled nodes, alpha-blended edges. Custom FR layout is
+          creative. Layout quality (linear arrangements) limits overall visual impact.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all spines and grid, generous margins, subtle
+          edge alpha, elevated legend background. Good refinement but not fully polished
+          (legend border slightly heavy).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Degree scaling provides visual hierarchy (hub researchers stand out).
+          Color coding clearly separates 5 research areas. However, linear node arrangements
+          undermine the community structure story — the key insight of force-directed
+          graphs.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Force-directed graph correctly implemented with geom_segment (edges)
+          + geom_point (nodes) using Fruchterman-Reingold layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Node degree scaling, community structure, intra/inter-group edges
+          all present. Node labels omitted (correct for 40 nodes).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Nodes positioned by FR layout, edges correctly connect from/to nodes,
+          colors by research group, sizes by degree.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''network-force-directed · r · ggplot2 · anyplot.ai'' correct.
+          Legend labels all 5 research areas correctly.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: 5 communities, hub/peripheral nodes via degree
+          scaling, dense intra-group edges, sparse inter-group bridges.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Scientific collaboration network across Genomics, Neuroscience, Immunology,
+          Bioinformatics, Pharmacology — realistic, neutral, comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 40 nodes (within spec's 20-200 range), realistic connection densities,
+          sensible degree distribution.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses function fr_layout() — violates no-functions KISS rule. Rest
+          of structure is clean linear flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top of script.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality, appropriate complexity for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave with ragg::agg_png device.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent: theme_void, coord_fixed(ratio=1), scale_size_identity
+          (pre-computed sizes), scale_color_manual, guides() with override.aes — all
+          idiomatic ggplot2 patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses distinctive ggplot2 features: scale_size_identity for pre-computed
+          node sizes, coord_fixed for spatial integrity. Main algorithm (FR layout)
+          is pure R, not ggplot2-specific.'
+  verdict: REJECTED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
