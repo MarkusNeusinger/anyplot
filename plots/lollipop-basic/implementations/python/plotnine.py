@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-basic: Basic Lollipop Chart
 Library: plotnine 0.15.7 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-01
@@ -72,7 +72,7 @@ plot = (
         va="bottom",
     )
     + scale_size_continuous(range=[2, 7])
-    + labs(x="Product Category", y="Sales (thousands $)", title="lollipop-basic · plotnine · anyplot.ai")
+    + labs(x="Product Category", y="Sales (thousands $)", title="lollipop-basic · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
