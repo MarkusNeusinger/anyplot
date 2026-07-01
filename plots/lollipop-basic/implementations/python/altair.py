@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-basic: Basic Lollipop Chart
 Library: altair 6.2.2 | Python 3.13.14
 Quality: 87/100 | Updated: 2026-07-01
@@ -55,7 +55,7 @@ stems = (
     alt.Chart(df)
     .mark_rule(strokeWidth=4)
     .encode(
-        x=alt.X("category:N", sort="-y", title="Category", axis=alt.Axis(labelAngle=-35)),
+        x=alt.X("category:N", sort="-y", title="Category", axis=alt.Axis(labelAngle=-45, labelFontSize=9)),
         y=alt.Y("value:Q", title="Sales (USD)", axis=alt.Axis(format="$,.0f")),
         color=alt.value(BRAND),
         opacity=alt.condition(selection, alt.value(1.0), alt.value(0.3)),
@@ -77,11 +77,24 @@ dots = (
     )
 )
 
+# Value annotation on top performer to anchor the narrative (DE-03)
+annotation_df = df[df["category"] == "Electronics"].copy()
+annotation = (
+    alt.Chart(annotation_df)
+    .mark_text(dy=-18, fontSize=10, fontWeight="bold")
+    .encode(
+        x=alt.X("category:N", sort="-y"),
+        y=alt.Y("value:Q"),
+        text=alt.Text("value:Q", format="$,.0f"),
+        color=alt.value(INK),
+    )
+)
+
 # Title: n=73 chars → fontsize = round(16 × 67/73) = 15
 TITLE = "Product Sales by Category · lollipop-basic · python · altair · anyplot.ai"
 
 chart = (
-    (stems + dots)
+    (stems + dots + annotation)
     .properties(
         width=620,
         height=320,
@@ -91,6 +104,7 @@ chart = (
     .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
+        domainOpacity=0,
         domainWidth=1,
         tickColor=INK_SOFT,
         gridColor=INK,
