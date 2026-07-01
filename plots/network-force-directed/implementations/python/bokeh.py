@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-force-directed: Force-Directed Graph
 Library: bokeh 3.9.1 | Python 3.13.14
-Quality: 86/100 | Updated: 2026-07-01
+Quality: 87/100 | Updated: 2026-07-01
 """
 
 # Remove the script's own directory from sys.path so 'bokeh.py' doesn't shadow
