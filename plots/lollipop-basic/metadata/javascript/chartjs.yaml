@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: lollipop-basic
 created: '2026-07-01T06:11:03Z'
-updated: '2026-07-01T06:19:17Z'
+updated: '2026-07-01T06:31:36Z'
 generated_by: claude-sonnet
 workflow_run: 28497190812
 issue: 934
@@ -12,44 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Correct lollipop using Chart.js mixed chart (bar + line) approach — idiomatic
-    and well-executed
-  - 'Perfect Imprint palette compliance: single series uses #009E73, theme-adaptive
-    chrome with t.ink/t.inkSoft/t.grid tokens throughout'
-  - Both light and dark renders are fully readable with no dark-on-dark or light-on-light
-    issues — theme token wiring is correct
-  - 'Descriptive axis labels with units: Marketing Channel / Monthly Visitors (thousands)'
-  - 'Correct title format: lollipop-basic · javascript · chartjs · anyplot.ai'
-  - Data sorted descending adds ranking storytelling — top channels immediately visible
-  - No legend for single series — correct design decision
-  - 'Dot halos via borderColor: t.pageBg create clean visual separation between dot
-    and stem in both themes'
-  - Clean flat script with hard-coded deterministic data — perfect KISS structure
+  - 'Clean mixed-chart lollipop: bar stems (barThickness:3) + line points (showLine:false)
+    is the correct Chart.js idiom'
+  - Custom topLabelPlugin using afterDraw hook annotates the top performer with theme-adaptive
+    color (t.ink)
+  - Variable pointRadius array emphasizes the top performer with a larger dot (radius
+    20 vs 14)
+  - Data sorted descending creates natural visual ranking story
+  - Both themes render correctly — Imprint green (#009E73) data color identical, chrome
+    adapts properly via tokens
+  - Y-axis-only grid keeps chart clean; x-axis grid disabled; legend hidden (single
+    series)
+  - 'All token usage correct: t.ink, t.inkSoft, t.pageBg, t.palette[0], t.grid throughout'
   weaknesses:
-  - Both x-axis and y-axis grid lines are shown — style guide recommends y-axis-only
-    grid for bar/lollipop charts; x-axis column grid lines add visual noise to a categorical
-    chart
-  - DE-01 aesthetic sophistication is well-configured but not exceptional — no visual
-    emphasis on the top performer (Paid Search), no data labels or annotations to
-    add a focal point
-  - DE-03 storytelling is above default (sorted ranking) but lacks visual hierarchy
-    — highlighting or slightly enlarging the tallest lollipop or the first entry would
-    strengthen the ranking narrative
+  - 'Chart.js default scale borders are visible at the top and right of the chart
+    area — add border: { display: false } to both x and y scales to remove these implicit
+    spines and achieve a cleaner L-shaped or frameless look'
+  - 'DE-02 impact: the chart area frame (top/right thin lines) is a default remnant
+    that should be explicitly suppressed for publication-ready polish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, clearly not pure white.
-      Chrome: Title "lollipop-basic · javascript · chartjs · anyplot.ai" in bold dark text, clearly readable at the top. X-axis label "Marketing Channel" and y-axis label "Monthly Visitors (thousands)" are dark and legible. Tick labels on both axes are in a slightly muted dark tone (t.inkSoft), fully readable. Subtle grid lines on both x and y axes in a light warm color.
-      Data: 10 lollipop elements in brand green #009E73. Thin vertical stems (barThickness: 3) extend from y=0 to each value; large circular dots (pointRadius: 14) sit at the top with a subtle off-white halo ring (borderColor: t.pageBg). Channels sorted descending from Paid Search (312K) to Podcast (43K). No legend (single series, correctly omitted).
-      Legibility verdict: PASS — all text is clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1) — clearly visible cream surface, not pure white ✓
+      Chrome: Title "lollipop-basic · javascript · chartjs · anyplot.ai" in bold dark text, centered at top — fully readable. X-axis title "Marketing Channel" and Y-axis title "Monthly Visitors (thousands)" in dark text, both readable. Tick labels in muted dark (#4A4A44 / inkSoft), clearly legible. "312K" annotation above the top dot in dark ink — readable and correctly positioned.
+      Data: 10 lollipops in Imprint brand green (#009E73). Thin stems (barThickness:3) extending from baseline to values, topped by circular dots (radius 14). Top performer "Paid Search" (312K) has a slightly larger dot (radius 20) and "312K" label above it. Y-axis horizontal grid lines are subtle. X-axis grid disabled.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title in bold light text, clearly visible. Axis labels and tick labels are in light muted tones (t.inkSoft dark values), all readable. Grid lines are subtle light lines on the dark background.
-      Data: Same brand green #009E73 stems and dots as the light render — data colors are identical across themes. Dot halos now use dark pageBg (#1A1A17) creating a dark ring that separates the dot from the stem cleanly. Visual appearance is fully consistent with the light render in terms of data presentation.
-      Legibility verdict: PASS — no dark-on-dark text failures; all title, axis, and tick elements are clearly readable against the dark background.
+      Background: Warm near-black (#1A1A17) — clearly visible dark surface, not pure black ✓
+      Chrome: Title in light off-white text — readable. Axis titles in light text — readable. Tick labels in muted light (#B8B7B0 / inkSoft) — clearly legible. "312K" annotation above the first dot correctly uses t.ink (near-white in dark mode) — readable with no dark-on-dark failure. Grid lines are subtle light-on-dark.
+      Data: Lollipops still in identical Imprint brand green (#009E73) — same as light render, confirming data colors are theme-invariant. Dot borders use t.pageBg (near-black) which blends into the dark background cleanly.
+      Legibility verdict: PASS — all text readable against warm near-black background. No dark-on-dark failures observed. Brand green #009E73 clearly visible.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,80 +56,79 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set: title 22px bold, axis titles 16px,
-          ticks 14px. Balanced proportions, readable in both themes.'
+          tick labels 14px, annotation 15px. Well-proportioned in both themes. Title
+          spans ~55% of width — appropriate for this length.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements. Channel labels
-          well-spaced.
+        comment: No overlapping elements. '312K' annotation clears the top dot cleanly.
+          X-axis labels well-spaced across 10 channels.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Dots (pointRadius: 14) and stems (barThickness: 3) clearly visible.
-          Density is low (10 points), markers are appropriately prominent.'
+        comment: Sparse data (10 points) — stems and dots are prominent. Top performer
+          has larger dot (radius 20). All lollipops clearly distinct.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in CVD-safe brand green #009E73. No multi-series contrast
-          issues.'
+        comment: Single Imprint green series — no CVD concerns. Strong contrast on
+          both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good layout proportions, balanced margins via
-          layout.padding. Title spans ~65% of canvas width. No overflow or clipping.
+        comment: Canvas gate passed. Chart fills canvas well with generous but balanced
+          padding (top:40, sides:30). Good whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Marketing Channel'', Y: ''Monthly Visitors (thousands)'' —
-          descriptive with units.'
+        comment: 'Title format exact. X: ''Marketing Channel'', Y: ''Monthly Visitors
+          (thousands)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series uses t.palette[0] (#009E73). Background #FAF8F1 (light)
-          / #1A1A17 (dark). Chrome tokens (t.ink, t.inkSoft, t.grid) correctly applied
-          in both renders.'
+        comment: 't.palette[0] (#009E73) used as sole data color. Backgrounds: t.pageBg
+          (theme-adaptive). All chrome tokens correct. Identical data colors in both
+          renders.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured implementation: correct palette, bold title, dot
-          halos via borderColor. But overall aesthetic is standard Chart.js with correct
-          anyplot config — no distinctive design choices that elevate beyond a well-configured
-          default.'
+        passed: true
+        comment: 'Above default (4): inline annotation plugin, variable dot sizes
+          for emphasis, legend suppressed, no x-grid. Professional and clean but not
+          publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: 'Legend correctly hidden for single series; layout padding set. Negative:
-          grid shown on both x and y axes — style guide recommends y-only for bar/lollipop
-          charts. X-axis grid columns add unnecessary visual noise to a categorical
-          chart.'
+        passed: true
+        comment: Y-only grid deliberate, legend hidden. But Chart.js default scale
+          borders remain visible at top/right of chart area — explicit border:{ display:false
+          } missing on both scales.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted descending ranking is above the default (tells a ranking story).
-          But no visual emphasis — the top performer (Paid Search) is not highlighted,
-          no data labels, no focal point. Viewer must derive insights manually.
+        passed: true
+        comment: 'Above default (2): ranked data + larger dot + ''312K'' annotation
+          creates clear focal point. Viewer immediately sees Paid Search leads. Real-world
+          marketing context.'
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lollipop chart using Chart.js mixed chart (bar stems + line
-          dots with showLine: false).'
+        comment: 'Correct lollipop chart: thin stems (bar barThickness:3) + circular
+          dots (line, showLine:false). Vertical orientation, categories on x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Thin stems (barThickness: 3) ✓, circular dots (pointRadius: 14)
-          ✓, vertical orientation ✓, sorted descending ✓.'
+        comment: 'All spec features present: stems from baseline, circular markers
+          at values, vertical orientation, data sorted descending.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, values on y-axis, all 10 data points displayed
-          correctly.
+        comment: 'X: marketing channels (categorical), Y: monthly visitors (numeric).
+          All 10 data points visible.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'lollipop-basic · javascript · chartjs · anyplot.ai' is correct
-          format. No legend for single series — correct.
+        comment: 'Title: ''lollipop-basic · javascript · chartjs · anyplot.ai'' —
+          exact required format. Legend hidden (appropriate for single series).'
     data_quality:
       score: 15
       max: 15
@@ -176,22 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows stem-to-dot lollipop structure for 10 categories with good
-          value range (43-312K), demonstrating comparison capability across many categories.
+        comment: 'Shows all lollipop aspects: stems, dots, baseline, ranking, variable
+          heights. Top performer emphasis demonstrates the chart type''s ranking story.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing channel traffic data is realistic, neutral, and business-relevant.
-          Clear real-world scenario.
+        comment: Website traffic by marketing channel — neutral business scenario
+          with realistic channel names and plausible visitor counts (43K–312K).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Monthly visitor counts in thousands (43-312K) are plausible for a
-          mid-sized business. 10 categories within spec's 5-20 range. Good spread.
+        comment: 10 categories within the 5–20 spec range. Values 43–312 (thousands)
+          are realistic for a marketing analytics dashboard.
     code_quality:
       score: 10
       max: 10
@@ -201,61 +195,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flat script: tokens → data → mount → chart. No functions or
-          classes.'
+        comment: No functions/classes. Data → mount → plugin definition → chart. Flat
+          and readable.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data arrays. No RNG.
+        comment: All data hardcoded as literal arrays. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports — uses window.Chart, window.ANYPLOT_TOKENS as globals.
-          Correct for Chart.js harness.
+        comment: 'No imports (Chart.js is a global). Only tokens actually used: t.ink,
+          t.inkSoft, t.pageBg, t.palette, t.grid.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable. Appropriate complexity for a lollipop chart. Mixed
-          chart approach is elegant.
+        comment: Appropriate complexity. Inline plugin is minimal and purposeful.
+          No fake UI elements. No overengineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'animation: false set ✓. responsive: true, maintainAspectRatio: false
-          ✓. Harness handles file output.'
+        comment: Harness handles PNG+HTML output. animation:false, responsive:true,
+          maintainAspectRatio:false all set correctly.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert Chart.js usage: correct mixed chart type, canvas mount contract
-          followed, all required options set (animation: false, responsive, maintainAspectRatio:
-          false), tokens mapped onto Chart.js option keys correctly.'
+        comment: Mixed chart type (bar+line datasets) is the correct Chart.js idiom
+          for lollipop. Correct use of order property, showLine:false, pointRadius
+          array. Plugin API via afterDraw hook is idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Uses Chart.js mixed chart (bar + line type in same dataset array),
-          showLine: false for dot-only series, order property for layer control, and
-          borderColor: t.pageBg for theme-adaptive dot halos. These are Chart.js-specific
-          techniques, though the mixed-chart lollipop is a known pattern.'
-  verdict: REJECTED
+        comment: 'Chart.js-specific: afterDraw plugin hook for canvas-level annotation,
+          mixed dataset types with order control, per-point pointRadius array. Above
+          generic default.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   - html-export
   patterns:
   - data-generation
