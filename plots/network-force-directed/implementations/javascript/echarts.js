@@ -79,17 +79,30 @@ edgePairs.forEach(function(pair) {
 });
 
 const nodes = rawNodes.map(function(n) {
+  const d = degree[n.id];
+  const isHub = n.id === "API";
   return {
     name: n.id,
-    value: degree[n.id],
+    value: d,
     category: n.cat,
-    symbolSize: Math.max(14, 10 + degree[n.id] * 4),
+    symbolSize: Math.max(14, 10 + d * 4),
     label: { formatter: n.label },
+    itemStyle: isHub ? { borderWidth: 4, borderColor: t.ink } : undefined,
   };
 });
 
+// Cross-community edges styled slightly wider/more opaque to guide the eye
+const crossEdges = new Set([
+  "App->API", "API->Database", "API->Cache", "Auth->Database",
+  "Orders->Queue", "CICD->API", "Gateway->API", "Monitor->Metrics", "Logging->DataStore",
+]);
+
 const links = edgePairs.map(function(pair) {
-  return { source: pair[0], target: pair[1] };
+  const result = { source: pair[0], target: pair[1] };
+  if (crossEdges.has(pair[0] + "->" + pair[1])) {
+    result.lineStyle = { width: 2.5, opacity: 0.75 };
+  }
+  return result;
 });
 
 const chart = echarts.init(document.getElementById("container"));
@@ -142,9 +155,9 @@ chart.setOption({
       },
       emphasis: { scale: false },
       force: {
-        repulsion: 180,
-        gravity: 0.15,
-        edgeLength: [50, 120],
+        repulsion: 500,
+        gravity: 0.3,
+        edgeLength: [80, 200],
         layoutAnimation: false,
       },
     },
