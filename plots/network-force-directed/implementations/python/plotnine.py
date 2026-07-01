@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 network-force-directed: Force-Directed Graph
-Library: plotnine 0.15.3 | Python 3.14.4
-Quality: 85/100 | Updated: 2026-04-26
+Library: plotnine | Python
 """
 
 import os
@@ -36,7 +35,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette — first series is always #009E73
+# Imprint palette — first series is always #009E73
 DEPARTMENT_NAMES = ["Engineering", "Design", "Marketing", "Sales"]
 DEPARTMENT_COLORS = {"Engineering": "#009E73", "Design": "#C475FD", "Marketing": "#4467A3", "Sales": "#BD8233"}
 
@@ -45,37 +44,33 @@ np.random.seed(42)
 # Data: 40-person organization across 4 departments (10 each)
 nodes = [{"id": i, "group": i // 10} for i in range(40)]
 
-
-def _make_internal_edges(start: int) -> list[tuple[int, int, int]]:
-    """Dense intra-department clique-ish edges with collaboration weights 1-3."""
-    pattern = [
-        (0, 1, 3),
-        (0, 2, 2),
-        (0, 3, 2),
-        (1, 2, 3),
-        (1, 4, 2),
-        (2, 3, 2),
-        (2, 5, 1),
-        (3, 4, 3),
-        (3, 6, 2),
-        (4, 5, 2),
-        (4, 7, 1),
-        (5, 6, 3),
-        (5, 8, 2),
-        (6, 7, 2),
-        (6, 9, 1),
-        (7, 8, 3),
-        (7, 9, 2),
-        (8, 9, 2),
-        (0, 9, 1),
-        (1, 8, 1),
-    ]
-    return [(start + a, start + b, w) for a, b, w in pattern]
-
-
+# Intra-department edges (dense clique-like pattern, repeated per department)
 edges: list[tuple[int, int, int]] = []
-for dept_start in (0, 10, 20, 30):
-    edges.extend(_make_internal_edges(dept_start))
+for s in (0, 10, 20, 30):
+    edges.extend(
+        [
+            (s + 0, s + 1, 3),
+            (s + 0, s + 2, 2),
+            (s + 0, s + 3, 2),
+            (s + 1, s + 2, 3),
+            (s + 1, s + 4, 2),
+            (s + 2, s + 3, 2),
+            (s + 2, s + 5, 1),
+            (s + 3, s + 4, 3),
+            (s + 3, s + 6, 2),
+            (s + 4, s + 5, 2),
+            (s + 4, s + 7, 1),
+            (s + 5, s + 6, 3),
+            (s + 5, s + 8, 2),
+            (s + 6, s + 7, 2),
+            (s + 6, s + 9, 1),
+            (s + 7, s + 8, 3),
+            (s + 7, s + 9, 2),
+            (s + 8, s + 9, 2),
+            (s + 0, s + 9, 1),
+            (s + 1, s + 8, 1),
+        ]
+    )
 
 # Cross-department bridges (weaker connections)
 edges.extend(
@@ -98,17 +93,18 @@ edges.extend(
     ]
 )
 
-# Force-directed layout (Fruchterman-Reingold)
+# Fruchterman-Reingold layout with weak centering gravity to avoid empty core
 n = len(nodes)
 positions = np.random.rand(n, 2) * 2 - 1
-k = 0.3
-iterations = 200
+k = 0.28
+gravity = 0.06
+iterations = 250
 temperature = 1.0
 
 for iteration in range(iterations):
     displacement = np.zeros((n, 2))
 
-    # Repulsive forces between all pairs
+    # Repulsive forces between all node pairs
     for i in range(n):
         for j in range(i + 1, n):
             diff = positions[i] - positions[j]
@@ -125,7 +121,11 @@ for iteration in range(iterations):
         displacement[src] -= force
         displacement[tgt] += force
 
-    # Cooling
+    # Weak gravity toward origin pulls clusters inward
+    for i in range(n):
+        displacement[i] += gravity * (-positions[i])
+
+    # Simulated annealing cooling
     cooling = temperature * (1 - iteration / iterations)
     for i in range(n):
         disp_norm = np.linalg.norm(displacement[i])
@@ -138,13 +138,13 @@ pos_max = positions.max(axis=0)
 positions = (positions - pos_min) / (pos_max - pos_min + 1e-6) * 0.9 + 0.05
 pos = {node["id"]: positions[i] for i, node in enumerate(nodes)}
 
-# Node degrees for sizing
+# Node degrees for size scaling
 degrees = {node["id"]: 0 for node in nodes}
 for src, tgt, _ in edges:
     degrees[src] += 1
     degrees[tgt] += 1
 
-# Department centroids — used to order the legend by spatial position (left → right)
+# Department centroids — order legend spatially (left → right)
 centroids = {}
 for dept_idx, dept_name in enumerate(DEPARTMENT_NAMES):
     member_ids = [node["id"] for node in nodes if node["group"] == dept_idx]
@@ -158,11 +158,11 @@ node_df = pd.DataFrame(
         "group": pd.Categorical(
             [DEPARTMENT_NAMES[node["group"]] for node in nodes], categories=legend_order, ordered=True
         ),
-        "size": [9 + degrees[node["id"]] * 1.6 for node in nodes],
+        "size": [3.0 + degrees[node["id"]] * 0.4 for node in nodes],
     }
 )
 
-# Edges: separate internal vs. bridge
+# Split edges into internal (solid) vs. cross-department bridges (dashed)
 edge_records = []
 for src, tgt, weight in edges:
     is_internal = nodes[src]["group"] == nodes[tgt]["group"]
@@ -172,8 +172,7 @@ for src, tgt, weight in edges:
             "y": pos[src][1],
             "xend": pos[tgt][0],
             "yend": pos[tgt][1],
-            "weight": weight,
-            "thickness": 0.4 + weight * 0.45 if is_internal else 0.6 + weight * 0.45,
+            "thickness": 0.18 + weight * 0.20 if is_internal else 0.28 + weight * 0.20,
             "edge_type": "internal" if is_internal else "bridge",
         }
     )
@@ -181,20 +180,19 @@ edge_df = pd.DataFrame(edge_records)
 internal_edges = edge_df[edge_df["edge_type"] == "internal"]
 bridge_edges = edge_df[edge_df["edge_type"] == "bridge"]
 
-# Theme-adaptive edge color
 EDGE_COLOR = INK_SOFT
 BRIDGE_COLOR = INK_MUTED
 
 plot = (
     ggplot()
-    # Internal edges (solid, theme-adaptive)
+    # Internal edges — solid, theme-adaptive
     + geom_segment(
         data=internal_edges,
         mapping=aes(x="x", y="y", xend="xend", yend="yend", size="thickness"),
         color=EDGE_COLOR,
         alpha=0.45,
     )
-    # Cross-department bridges (dashed, lighter)
+    # Cross-department bridges — dashed, lighter
     + geom_segment(
         data=bridge_edges,
         mapping=aes(x="x", y="y", xend="xend", yend="yend", size="thickness"),
@@ -202,30 +200,29 @@ plot = (
         alpha=0.65,
         linetype="dashed",
     )
-    # Nodes on top, with page-bg edge for definition (matches theme)
-    + geom_point(data=node_df, mapping=aes(x="x", y="y", color="group", size="size"), alpha=0.95, stroke=0.6)
+    # Nodes on top, sized by degree
+    + geom_point(data=node_df, mapping=aes(x="x", y="y", color="group", size="size"), alpha=0.95, stroke=0.5)
     + scale_color_manual(values=DEPARTMENT_COLORS, breaks=legend_order)
     + scale_size_identity()
-    + guides(color=guide_legend(override_aes={"size": 8}))
+    + guides(color=guide_legend(override_aes={"size": 3}))
     + labs(title="network-force-directed · plotnine · anyplot.ai", color="Department")
     + xlim(-0.02, 1.02)
     + ylim(-0.02, 1.02)
-    # Footer annotation: dataset summary
     + annotate(
         "text",
         x=0.5,
         y=-0.015,
-        label=f"{len(nodes)} people · {len(edges)} collaborations · node size scales with degree · dashed = cross-team",
-        size=12,
+        label=f"{len(nodes)} people · {len(edges)} collaborations · node size ∝ degree · dashed = cross-team",
+        size=8,
         color=INK_MUTED,
         ha="center",
         va="top",
     )
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, color=INK, ha="center", margin={"b": 14}),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, color=INK, ha="center", margin={"b": 6}),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
         legend_position=(0.02, 0.98),
         legend_direction="vertical",
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
@@ -239,4 +236,4 @@ plot = (
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
