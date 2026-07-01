@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 lollipop-basic: Basic Lollipop Chart
-Library: plotnine 0.15.3 | Python 3.14.4
+Library: plotnine 0.15.7 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-07-01
 """
 
 import os
