@@ -2,50 +2,54 @@ library: altair
 language: python
 specification_id: gauge-basic
 created: '2025-12-23T13:03:02Z'
-updated: '2026-04-25T13:06:27Z'
-generated_by: claude-opus
-workflow_run: 24931340754
+updated: '2026-06-30T22:23:22Z'
+generated_by: claude-sonnet
+workflow_run: 28476799115
 issue: 857
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gauge-basic/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Value '72' displayed in the zone's own color (brand green) — strong visual shortcut
-    communicating 'we're in the good zone' without text
-  - 'Correct theme adaptation in both renders: needle flips from near-black to near-white,
-    hub two-tone adapts, all chrome uses appropriate tokens; no dark-on-dark failures'
-  - Arc stroke separator (PAGE_BG colored) creates clean visual gaps between zones
-    — a refined detail that elevates the chart above default appearance
-  - Code structure is clean and linear after removing the value_to_angle() function;
-    numpy vectorization for boundary_angles is elegant
-  - 'Full spec compliance: all required gauge features (zones, needle, threshold labels,
-    range bounds, value display, context label) correctly implemented'
+  - Excellent idiomatic Altair layer composition using mark_arc with theta/theta2
+    and scale=None for precise angle control
+  - Semantic use of Imprint palette (matte red / amber / brand green) for zone colors
+    perfectly matches the spec convention
+  - Both themes handled correctly — chrome fully adapts (INK token drives needle,
+    range/threshold labels, and title) while arc colors stay constant
+  - 'Value label colored to match its zone (green #009E73) creates an instant semantic
+    connection reinforcing the performance message'
+  - 'Complete feature set: arc zones with rounded corners and gaps, needle with two-tone
+    hub, threshold labels, range labels, and context label'
   weaknesses:
-  - Landscape canvas (1600x900) leaves large empty horizontal margins for a semi-circular
-    gauge; a square format would better utilize the canvas and look more polished
-  - Title at fontSize=28 and context label at 22 are at minimum guideline values —
-    increasing title to 34-36px and context label to 26px would strengthen typographic
-    hierarchy
-  - Altair's tooltip capability is unused — adding tooltip encoding to the arc segments
-    would make the HTML export genuinely informative and leverage a distinctive Altair
-    strength
+  - 'VQ-04: Red-green color blindness — the gauge zones rely on red/amber/green hue
+    alone to communicate Low/Medium/High without redundant text inside the static
+    PNG arcs. Adding small zone text labels ("Low", "Med", "High") inside each arc
+    segment or enlarging the threshold label text would improve CVD accessibility
+    in the PNG without changing the design.'
+  - 'DE-01: Design sophistication is good but not publication-ready — the overall
+    composition is clean but lacks hierarchy polish that would elevate it further
+    (e.g., a subtle radial tick-mark ring along the arc outer edge, or finer typography
+    sizing contrast between the 60px value label and the 16px supporting labels).'
+  - 'DE-02: Minor refinement gap — the hub treatment could be refined with a slightly
+    higher outer/inner size contrast and the inner highlight color could use the ELEVATED_BG
+    token instead of PAGE_BG for subtle dimensionality.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "gauge-basic · altair · anyplot.ai" in dark near-black text at top center, clearly readable. Threshold labels "30" and "70" in INK_SOFT dark gray, readable. Range labels "0" and "100" at bottom corners in dark gray, readable. Context label "Current Sales" in muted gray, readable.
-      Data: Three Okabe-Ito zone arcs — vermillion (#D55E00, 0-30), orange (#E69F00, 30-70), teal green (#009E73, 70-100). Needle in near-black (INK = #1A1A17), pointing to 72 in green zone. Hub: dark outer circle with lighter PAGE_BG inner circle. Value "72" in brand green (#009E73), bold, large (88px).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "gauge-basic · python · altair · anyplot.ai" in dark #1A1A17 ink, clearly readable. Range labels "0" and "100" in #4A4A44 (INK_SOFT) flanking the arc ends. Threshold labels "30" and "70" in #4A4A44 placed at zone boundaries just outside the arc. "Current Sales" context label in muted #6B6A63. All text readable against the warm off-white background.
+      Data: Semi-circular gauge with three arc zones — matte red #AE3030 (Low 0-30), Imprint amber #DDCC77 (Medium 30-70), brand green #009E73 (High 70-100). Needle in near-black #1A1A17 pointing to ~72. Two-tone hub: dark outer ring, light inner circle. Value "72" in bold green #009E73 (matching the High zone) displayed prominently below the hub.
+      Legibility verdict: PASS — all text readable, threshold labels tight but not overlapping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in near-white (#F0EFE8) light text, clearly readable against dark background. Threshold labels "30" and "70" in INK_SOFT lighter tone (#B8B7B0), readable. Range labels "0" and "100" in lighter gray, readable. Context label "Current Sales" in muted lighter tone, readable. No dark-on-dark text failures.
-      Data: Zone arc colors are identical to light render (vermillion, orange, teal green — Okabe-Ito positions 2, 5, 1). Needle flips to near-white (INK = #F0EFE8), clearly visible against dark surface. Hub adapts: outer circle near-white, inner circle near-black. Value "72" retains brand green (#009E73) — visible on dark background.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title text is light cream #F0EFE8, clearly readable against the dark background. Range labels "0" and "100" in #B8B7B0 (INK_SOFT dark). Threshold labels "30" and "70" in #B8B7B0. "Current Sales" in muted #A8A79F. No dark-on-dark failures detected.
+      Data: Arc zone colors are identical to the light render — matte red, Imprint amber, brand green. Needle adapts correctly to cream/white (INK dark token = #F0EFE8), clearly visible against the dark background. Hub: cream outer ring, dark center. Value "72" remains in brand green #009E73.
+      Legibility verdict: PASS — all chrome adapts correctly; no dark-on-dark issues; data colors identical across themes.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -56,52 +60,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; title
-          at 28px and context label at 22px are at minimums
+        comment: Font sizes explicitly set throughout (fontSize=60 value, fontSize=16
+          supporting labels, title fontSize=16). All text readable in both themes.
+          Threshold labels at zone boundaries are tight but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render
+        comment: No overlapping elements. Range labels, threshold labels, value label,
+          and context label all clearly separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Arcs, needle (strokeWidth=10), hub, and labels all clearly visible
-          in both themes
+        comment: 'All elements clearly visible: arc zones fill well, needle at strokeWidth=8
+          is prominent, hub two-tone treatment is clear, all labels legible.'
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Okabe-Ito zone colors are CVD-safe; numeric labels provide redundant
-          encoding beyond color
+        comment: Red-green zones follow the spec convention but offer no redundant
+          text encoding inside arc segments in the static PNG. Threshold labels and
+          zone tooltips provide partial redundancy. Score 1/2 for CVD gap.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Gauge centered and balanced but landscape format leaves significant
-          empty space on left/right; square canvas would better suit this chart type
+        comment: Square 2400x2400 canvas appropriate for semi-circular gauge. Gauge
+          fills the canvas well. Good whitespace. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; min/max labels and context label appropriate
-          for gauge chart
+        comment: Title in correct format. 'Current Sales' context label, range labels,
+          and threshold labels all provide clear context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito zone colors (#D55E00, #E69F00, #009E73); correct backgrounds
-          (#FAF8F1/#1A1A17); data colors identical across themes; chrome correctly
-          adapts'
+        comment: 'Semantic Imprint palette use: ZONE_BAD=#AE3030 (matte red), ZONE_WARN=#DDCC77
+          (amber anchor), ZONE_GOOD=#009E73 (brand green). Valid semantic exception
+          (red/warn/good status roles). Backgrounds #FAF8F1 / #1A1A17 correct. Chrome
+          fully theme-adaptive.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -109,22 +117,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Value colored in zone color is intentional storytelling; arc stroke
-          gaps and two-tone hub add sophistication; above defaults but not publication-ready
+        comment: Custom arc-based gauge built from scratch in Altair with no native
+          support. Semantic color coding, two-tone hub, corner radius on arcs (cornerRadius=6),
+          value colored to match zone — shows clear design intent above configured
+          defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: configure_view(strokeWidth=0); arc stroke separators; no chartjunk;
-          minor penalty for underutilized landscape canvas
+        comment: Arc gaps via stroke=PAGE_BG give visual separation. strokeWidth=0
+          on view removes frame. Corner radii polish the arcs. Above default but short
+          of 'every detail polished'.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Value colored to match zone creates narrative; Current Sales adds
-          context; needle near 70 threshold adds subtle tension
+        comment: Value '72' in green instantly communicates 'target achieved'. 'Current
+          Sales' labels the metric. Threshold boundaries contextualize the zones.
+          Visual hierarchy above the default, though no focal-point annotation distinguishing
+          the zone crossing.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semi-circular gauge chart
+        comment: Correct semi-circular speedometer gauge with needle, color zones,
+          and center hub.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: color zones, needle, value label, threshold
-          labels, min/max bounds'
+        comment: 'All spec features present: color zones (red/yellow/green), thresholds
+          at [30,70], needle, prominent value label, min/max range labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: value=72 maps correctly to needle in green zone; thresholds and range
-          boundaries accurate
+        comment: value=72, min=0, max=100, thresholds=[30,70] all correctly represented.
+          Needle angle computed from value position.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches gauge-basic · altair · anyplot.ai; no legend
-          required for gauge chart type
+        comment: Title 'gauge-basic · python · altair · anyplot.ai' is correct format.
+          No categorical legend needed — zones are self-labeling via threshold markers
+          and tooltips.
     data_quality:
       score: 15
       max: 15
@@ -165,22 +180,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All gauge aspects: arcs, zones, needle, hub, value display, threshold
-          markers, range labels'
+        comment: 'Complete gauge feature set: arc zones, needle, two-tone hub, value
+          display, context label, range labels, threshold boundary labels, zone tooltips.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Current Sales = 72 on 0-100 scale is a real-world neutral business
-          KPI matching spec examples
+        comment: Sales performance gauge — a canonical business KPI use case, neutral,
+          comprehensible. value=72 in the High zone tells a clear story.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Canonical 0-100 percentage scale; thresholds at 30/70 create reasonable
-          zones; value 72 (just into good zone) is interesting
+        comment: 0-100 percentage scale is natural for sales targets. Thresholds at
+          30/70 create intuitive low/medium/high zones. Value=72 just above the 70
+          target threshold is realistic.
     code_quality:
       score: 10
       max: 10
@@ -190,61 +206,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No function/class definitions; clean linear flow: imports → tokens
-          → data → geometry → layers → compose → save'
+        comment: 'Linear: imports → tokens → data → geometry → layers → compose →
+          save → pad. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (fixed values, no randomness)
+        comment: Fully deterministic — fixed data values, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas, PIL.Image — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise; numpy vectorization for boundary angles; no fake UI or interactivity
-          simulations
+        comment: Clean, well-organized code with clear section comments. Appropriate
+          complexity for the chart type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Altair
-          6.1.0 API
+        comment: Saves plot-{THEME}.png (with padding to 2400x2400) and plot-{THEME}.html.
+          scale_factor=4.0 correct.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of alt.layer(), mark_arc() with innerRadius/outerRadius,
-          mark_rule() with x2/y2, alt.Scale(domain=...), alt.Title() with properties
+        comment: Expertly uses alt.layer() composition, mark_arc with theta/theta2
+          and scale=None for precise angle control, mark_rule() for needle, mark_circle()
+          for hub, mark_text() for labels — all idiomatic Altair patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative mark_arc() with theta/theta2 Scale=None for gauge geometry;
-          8-layer composition; HTML export; tooltip capability unused
-  verdict: REJECTED
+        comment: Uses Altair-distinctive theta/theta2 angle encoding with scale=None
+          for precise arc positioning. Layer composition of 8 simultaneous layers.
+          Tooltip interactivity on arc zones preserved in HTML export.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
-  patterns:
-  - data-generation
-  dataprep:
-  - normalization
+  patterns: []
+  dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting

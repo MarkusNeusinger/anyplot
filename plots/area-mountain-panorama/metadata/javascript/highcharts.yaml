@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: area-mountain-panorama
+created: '2026-06-30T22:19:28Z'
+updated: '2026-06-30T22:44:48Z'
+generated_by: claude-sonnet
+workflow_run: 28478645089
+issue: 5365
+language_version: 22.23.0
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Thematic sky-gradient + dark silhouette faithfully captures the alpine panorama
+    aesthetic the spec calls for
+  - SVGRenderer used idiomatically for leader lines and two-line peak labels with
+    coordinate-space toPixels() conversion
+  - All 16 real Wallis Alps peaks with accurate names and elevations; ridgeline LCG
+    noise produces convincing jagged alpine texture
+  - Matterhorn clearly established as focal peak with larger/bolder annotation and
+    taller leader line
+  - 'Perfect code quality: deterministic LCG seed, clean structure, full Highcharts
+    API compliance'
+  weaknesses:
+  - Dense right-side peak cluster (Dom, Täschhorn, Alphubel, Allalinhorn, Rimpfischhorn,
+    Strahlhorn) has significant label overlap — stagger xOff/yOff values more aggressively
+    or use alternating y-levels to spread the annotations; consider reducing label
+    font size to 9px for the 6 right-most peaks if needed
+  - 'Mountain silhouette uses custom thematic hex colors (#29261F / #3A3830) instead
+    of Imprint palette — spec justifies this, but partial palette non-compliance'
+  - 'Dark render sky gradient (near-black navy to near-black) has lower contrast between
+    mountain fill and sky than the light render; consider making SKY_TOP slightly
+    lighter (e.g. #1A2B38) for better visual separation in dark mode'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page surface; plot area has a sky gradient from light blue (#BBD5E8) at the top to #FAF8F1 at the bottom, creating an authentic alpine sky effect.
+      Chrome: Title "Wallis Alps Panorama · area-mountain-panorama · javascript · highcharts · anyplot.ai" in dark text at top, fully readable. Y-axis label "Elevation (m)" in dark secondary text, readable. Compass labels (S, SW, W, NW) on x-axis, readable. Y-axis ticks (2500–5000) in secondary dark text, readable.
+      Data: Mountain silhouette fills the lower portion in near-black dark brown (#29261F), creating a strong photographic panorama silhouette. 16 peak annotations with thin leader lines and two-line labels (name + elevation). Matterhorn annotated with bolder/larger text for visual prominence.
+      Legibility verdict: PASS — all chrome text is clearly readable; peak annotation labels are small (10-11px CSS) but legible; right-side cluster (Dom through Strahlhorn) has noticeable label overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 page surface; plot area has a very subtle sky gradient from near-black navy (#0D1820) at top to #1A1A17 at bottom — the gradient is much less pronounced than the light render.
+      Chrome: Title in light text (#F0EFE8 equivalent), readable. Y-axis "Elevation (m)" in light secondary text, readable. Compass bearing labels (S, SW, W, NW) in secondary light text, readable. Y-axis tick labels in secondary light text, readable. No dark-on-dark failures for text elements.
+      Data: Mountain silhouette in dark brownish-gray (#3A3830) against the near-black sky gradient — contrast is lower than the light render but the silhouette remains identifiable. Data colors are as expected for a single-series monochromatic visualization; the warm/cool distinction between rock and sky is present. Peak labels in theme-adaptive light ink colors, readable.
+      Legibility verdict: PASS — all text is readable against the dark background; the mountain-sky contrast is lower than ideal in dark mode (both very dark tones), but no text readability failures.
+  criteria_checklist:
+    visual_quality:
+      score: 22
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout; annotations at 10-11px CSS
+          are small but justified by 16-peak density; title at 18px is slightly under
+          the recommended 22px but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Right-side cluster (Dom, Täschhorn, Alphubel, Allalinhorn, Rimpfischhorn,
+          Strahlhorn) has significant label overlap; staggering was attempted with
+          xOff/yOff but is insufficient for that dense section
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ridgeline and silhouette clear in light render; dark render has lower
+          mountain-sky contrast (both very dark tones), silhouette identifiable but
+          less dramatic
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series monochromatic; adequate contrast, no red-green only
+          encoding, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good panoramic landscape layout; 130px top margin accommodates peak
+          annotations; right annotation cluster slightly cramped but canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis shows Elevation (m) with units; X-axis uses informative compass
+          bearing labels (S/SW/W/NW) per spec
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Theme chrome is correct (transparent bg shows page surface, text
+          uses t.ink/t.inkSoft tokens); mountain silhouette uses custom thematic hexes
+          (#29261F light / #3A3830 dark) justified by spec requirement for ''dark
+          solid color silhouette / evening/dusk feel'' — partial compliance'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong thematic design: sky gradient evokes alpine photography,
+          dark silhouette creates photographic mood, Matterhorn focal prominence;
+          above configured-default level but dark render gradient contrast reduces
+          overall impact'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: no legend (single series), no tooltip, gridLineWidth=0
+          on x-axis, subtle y-axis grid, compass bearing labels, sky gradient background'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear narrative: Matterhorn visually emphasized with bolder larger
+          annotation and taller leader (yOff -120 vs -65 to -90 for others); real
+          Wallis Alps data with accurate peaks creates authentic alpine panorama context;
+          panoramic sweep reads naturally'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mountain panorama silhouette with filled area and jagged
+          angular ridgeline (LCG noise, not Gaussian bumps)
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All spec-required features present (silhouette fill, sky gradient,
+          peak annotations with leader lines, staggered labels, compass bearings,
+          Y min at 2500m, Matterhorn focal prominence); label staggering attempted
+          but not fully effective for dense right cluster
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=panorama bearing angle 0-1000 (SSE to NNW), Y=elevation in meters;
+          all 16 peaks correctly positioned at their bearing/elevation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: ''Wallis Alps Panorama · area-mountain-panorama ·
+          javascript · highcharts · anyplot.ai'' — correct descriptive prefix + spec-id
+          + language + library; no legend appropriate for single series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 16 Wallis Alps peaks; full SSE-to-NNW panoramic sweep; varied
+          peak heights, asymmetric flanks, saddles, sub-peaks, rocky notches; LCG
+          noise texture
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Valais/Wallis Alps peaks with accurate names (Monte Rosa 4634m,
+          Matterhorn 4478m, Dom 4545m, etc.) from the spec's example data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct elevations for Wallis 4000m peaks; valley floor at 2600-2900m
+          is accurate for Zermatt area; Y-axis range 2500-5000m appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean structure: theme constants → control points → LCG ridgeline
+          generation → peak annotations → chart → annotation overlays'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed 42; all data in-memory
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; correctly uses window.ANYPLOT_TOKENS, window.ANYPLOT_THEME,
+          window.Highcharts globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, appropriate complexity for 16-peak annotated
+          panorama; justified deviation from Imprint palette noted in code comment
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) pattern; animation:false
+          in both chart and plotOptions.series; credits disabled; no explicit width/height;
+          landscape orientation directive correct
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert Highcharts usage: SVGRenderer for post-render overlays, toPixels()
+          for coordinate conversion, plotBackgroundColor gradient, tickPositions with
+          formatter, all idiomatic Highcharts patterns'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: SVGRenderer path() and text() for custom leader lines and two-line
+          labels; toPixels() for data-space to pixel-space coordinate mapping; plotBackgroundColor
+          with linearGradient — all genuinely Highcharts-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill

@@ -1,0 +1,273 @@
+library: muix
+language: javascript
+specification_id: dumbbell-basic
+created: '2026-06-30T23:13:34Z'
+updated: '2026-06-30T23:35:47Z'
+generated_by: claude-sonnet
+workflow_run: 28481532541
+issue: 945
+language_version: 22.23.0
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Expert use of MUI X composition pattern: ChartContainer + useXScale/useYScale
+    hooks + SVG overlay — the idiomatic way to build a custom chart type without dropping
+    to raw D3'
+  - 'Strong data storytelling: amber highlight on Operations (largest gain), explicit
+    ''largest gain'' annotation, italic label for the regression row (Legal, −0.2),
+    and signed gap labels form a coherent visual narrative'
+  - 'Perfect spec compliance: horizontal orientation, distinct colors for before/after,
+    subtle connecting lines, sorted by before-score to reveal baseline-vs-gain pattern'
+  - 'Data coverage: includes both improvement (most rows) and regression (Legal −0.2),
+    demonstrating the full range of dumbbell chart use cases'
+  - Clean, deterministic code — hard-coded data, all imports used, component structure
+    is idiomatic React/MUI X
+  - 'Correct Imprint palette: palette[0] (#009E73) for Before, palette[1] (#C475FD)
+    for After, amber semantic anchor for the highlight; both renders theme-correct'
+  weaknesses:
+  - Gap labels use fontSize=12 CSS px, which is below the library-guide minimum of
+    ~14 px for secondary text; at 2× DPR that's 24 native px — borderline at mobile
+    widths. Increase to 13–14 CSS px.
+  - X-axis spine (bottom horizontal line) is still visible; the Y-axis line was correctly
+    removed via disableLine, but the X-axis line was not. Removing or softening it
+    would give a fully open-chart aesthetic consistent with the rest of the design.
+  - 'DE-02 refinement opportunity: the vertical grid lines could be given explicit
+    opacity (e.g. strokeOpacity 0.15) via ChartsGrid slotProps to make them more subtle
+    and match the style-guide''s 10–15% grid-opacity guideline.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "dumbbell-basic · javascript · muix · anyplot.ai" is centered, rendered in dark ink (~#1A1A17) at fontSize 22 CSS px, clearly readable. X-axis label "Employee Satisfaction Score (0 – 10)" in dark ink at fontSize 16, readable. Y-axis tick labels (department names: Finance, Legal, Marketing, Sales, Operations, Engineering, HR, Design) at fontSize 14 in inkSoft — readable but modestly sized. Gap labels (+0.5, −0.2, +1.6, +0.5, +2.5, +0.9, +1.3, +0.6) at fontSize 12/13 — readable but slightly small. Legend ("Before Program" / "After Program") at the bottom, visible.
+      Data: Brand green (#009E73) dots for "Before Program" and lavender (#C475FD) dots for "After Program", matching Imprint palette[0] and palette[1]. Connecting lines in subtle gray (inkSoft, 35% opacity). Operations row (largest gain +2.5) highlighted with an amber (#DDCC77) line and "largest gain" annotation. Legal row (−0.2 regression) correctly shows the after dot to the left of the before dot, labeled in italic.
+      Legibility verdict: PASS — all text readable against the off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface.
+      Chrome: Title and all labels rendered in light ink (F0EFE8 / B8B7B0 range) — correctly theme-flipped. Y-axis department labels, X-axis label, tick labels, and gap labels all visible in light colors against the dark background. No dark-on-dark failures observed.
+      Data: Green and lavender dots are identical to the light render — data colors did not flip, only chrome flipped. The amber highlight on Operations remains clearly visible (#DDCC77 reads well on both surfaces). The "largest gain" annotation is rendered in amber, readable.
+      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark issues detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, x-label 16, ticks 14, gap
+          labels 12–13 CSS px). Gap labels at 12 px are slightly below the 14 px guideline
+          for secondary text; borderline at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markerSize=10 CSS px (20 native px) for 8 data points — appropriate
+          density, clearly visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) vs lavender (#C475FD) — distinct hue families, CVD-safe.
+          Amber accent for highlight is distinct from both series colors.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Margins left=130, right=80, top=70, bottom=110
+          — generous and well-balanced. Chart fills ~70% of canvas. Legend near plot
+          at bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis label 'Employee Satisfaction Score (0 – 10)' is descriptive
+          with units. Y-axis uses department names as categorical tick labels (no
+          redundant axis label needed).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: palette[0] (#009E73) for Before, palette[1] (#C475FD) for After —
+          canonical Imprint order. Amber semantic anchor used correctly for the focal
+          highlight. t.ink/t.inkSoft for chrome — theme-adaptive. Data colors identical
+          across both renders; only chrome flips.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: amber semantic accent, gap labels, ''largest
+          gain'' callout, italic for regression, sorted data. Not quite FiveThirtyEight-level
+          (no custom typography or layout-level hierarchy) but strong design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis spine removed (disableLine). Vertical grid only (appropriate
+          for horizontal dumbbell). Connecting lines at 35% opacity and 2.5px width
+          are subtle. X-axis spine still visible — could be removed for fully open-chart
+          look.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong storytelling: amber highlight immediately draws eye to Operations
+          (largest gain), ''largest gain'' annotation confirms the insight, italic
+          label for regression (Legal), signed gap labels provide quantitative context,
+          data sorted ascending to reveal baseline-vs-gain pattern. Viewer immediately
+          sees the story.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct dumbbell/connected-dot chart: two dots per category connected
+          by a line, horizontal orientation with categories on Y-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors for before/after dots, connecting lines, horizontal
+          orientation, categories on Y-axis, sorted by before-score.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Satisfaction scores on X-axis, department categories on Y-axis. All
+          8 departments visible with full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'dumbbell-basic · javascript · muix · anyplot.ai' matches required
+          format. Legend labels 'Before Program' and 'After Program' are descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows improvement (6 of 8 departments), regression (Legal −0.2),
+          and a standout outlier gain (Operations +2.5). Covers the full range of
+          dumbbell chart use cases.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction before/after wellness program — neutral, real-world
+          plausible business scenario with named departments.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Satisfaction scores 5.4–9.0 on a 0–10 scale are realistic. Changes
+          from −0.2 to +2.5 are plausible for a workplace wellness program.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: DumbbellOverlay helper component is necessary (hooks must be called
+          inside ChartContainer context) — idiomatic React/MUI X, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully hard-coded, no random number generation, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 7 imports used: ChartContainer, ChartsXAxis, ChartsYAxis, ChartsGrid,
+          ChartsLegend, ScatterPlot, useXScale/useYScale.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. No fake UI elements. SVG overlay pattern
+          is the correct MUI X approach for custom marks.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: MUI X harness handles output (plot-light.png, plot-dark.png, HTML).
+          No manual output code needed — correct per harness contract.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ChartContainer slot composition, useXScale/useYScale
+          hooks, ScatterPlot, ChartsGrid with vertical-only setting, disableLine on
+          Y-axis. All idiomatic MUI X patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale coordinate-scale hooks inside ChartContainer
+          for SVG overlay is a distinctive MUI X pattern — React component access
+          to D3 scales is unique to this library's architecture and enables the dumbbell
+          connecting lines without external SVG libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: dumbbell-basic
+created: '2026-06-30T23:10:47Z'
+updated: '2026-06-30T23:38:29Z'
+generated_by: claude-sonnet
+workflow_run: 28481172604
+issue: 945
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance: correct horizontal dumbbell chart sorted by improvement,
+    with distinct colors for start/end dots and subtle connecting lines'
+  - 'Correct Imprint palette usage — brand green #009E73 for Pre-Program (first series),
+    lavender #C475FD for Post-Program (second series), in canonical order'
+  - 'Full theme adaptation: all chrome tokens (background, title, axis labels, ticks,
+    spines, grid, legend) correctly flip between #FAF8F1 light and #1A1A17 dark'
+  - 'Effective data storytelling: delta labels above each segment and standout highlighting
+    (larger/darker text for gains ≥2.0 pts) guide the viewer''s eye'
+  - 'Idiomatic CairoMakie usage: linesegments! for segment pairs, axislegend for the
+    legend, RGBAf for alpha grid colors, ytickwidth=0 for clean y-axis'
+  weaknesses:
+  - Delta annotation labels use fontsize 9 (18px effective at px_per_unit=2) — borderline
+    at mobile thumbnail sizes (~400px width); bump minimum annotation fontsize to
+    11-12 for better mobile scalability
+  - LM-02 Distinctive Features at 2/5 — chart uses linesegments! and axislegend but
+    no deeper Makie-specific recipe features (e.g., custom tick formatters, inset
+    axes, or bezier connectors) that would showcase library depth
+  - 'DE-01 slightly below ceiling: the standout-gain highlighting is a nice touch
+    but a subtle alternating row background (zebra bands) or improved marker stroke
+    contrast would elevate the aesthetic further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white
+      Chrome: Title "Employee Satisfaction · dumbbell-basic · julia · makie · anyplot.ai" is bold dark (#1A1A17), clearly readable. Y-axis department labels and x-axis tick labels are in INK_SOFT (#4A4A44), crisp and legible. X-axis label "Satisfaction Score (1–10)" and Y-axis label "Department" are dark and clearly readable. Legend top-right shows "Pre-Program" / "Post-Program" with colored swatches — readable.
+      Data: 10 horizontal dumbbell rows, green dots (#009E73) for Pre-Program and lavender dots (#C475FD) for Post-Program, connected by thin INK_MUTED lines. Delta labels (+1.3 to +2.1) above each segment, slightly larger/darker for gains ≥2.0 (Finance, Engineering). Sorted ascending by improvement (largest gain at top — Finance row).
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, no pure black
+      Chrome: Title is light (#F0EFE8), clearly readable against the dark background. Y-axis and x-axis labels and tick labels are in light ink (#B8B7B0 INK_SOFT), fully readable. Legend box has elevated dark background (#242420). No dark-on-dark failures observed.
+      Data: Same green (#009E73) and lavender (#C475FD) dots — colors are identical to the light render (chrome flipped, data colors unchanged). Delta labels in INK_SOFT/INK_MUTED are visible against the dark background.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, brand green #009E73 clearly visible
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text explicitly sized and readable in both themes; delta
+          annotation labels at fontsize 9 (18px effective) are borderline at mobile
+          thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps; categories well-spaced vertically; delta
+          labels clear of dots
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize=18 appropriate for 10 data points; connecting lines subtle
+          but visible; both dot colors clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1 and 2 (green/lavender) are CVD-safe; good contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed (gate passed); good proportions; generous
+          margins; title ~75% width acceptable for long descriptive title
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct with descriptive prefix; axis labels descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Pre-Program = #009E73 (first series, brand green); Post-Program
+          = #C475FD (Imprint position 2); both theme backgrounds correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): Imprint palette correctly applied, sorted by
+          improvement, standout gain highlighting — professional but not exceptional'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): top/right spines removed, x-only grid, ytickwidth=0
+          clean y-axis, spine colors use INK_SOFT token — well-refined'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): sorted by improvement tells a clear story, delta
+          labels quantify change, standout highlighting for largest gains creates
+          focal point'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dumbbell/connected dot chart; horizontal orientation; two
+          dots per category connected by line
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors for start/end dots; thin subtle connecting line;
+          horizontal orientation; sorted by difference (improvement)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = satisfaction score; Y-axis = department; all 10 categories
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Employee Satisfaction · dumbbell-basic · julia · makie · anyplot.ai'
+          correct; legend 'Pre-Program' / 'Post-Program' correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All dumbbell features: two values per category, connecting line,
+          distinct series colors, delta annotations, sorting'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee satisfaction before/after wellness program — realistic,
+          neutral, relatable HR scenario with plausible department names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1-10 satisfaction scale; pre-program 5.1-7.2, post-program 7.1-8.8
+          — realistic improvements; 10 categories optimal for readability
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: reduce(vcat, ...) for segment construction is idiomatic; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save('plot-$(THEME).png', fig; px_per_unit=2) correct
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Above default (3): linesegments! is the correct idiomatic primitive
+          for paired segments; axislegend, xlims!, ylims!, text! all idiomatic Makie'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: 'Above default (1): linesegments! is Makie-specific (no direct matplotlib
+          equivalent); RGBAf for alpha grid; axislegend — but no deeper recipe features'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - minimal-chrome
