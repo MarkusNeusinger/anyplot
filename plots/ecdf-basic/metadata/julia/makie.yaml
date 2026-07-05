@@ -1,0 +1,242 @@
+library: makie
+language: julia
+specification_id: ecdf-basic
+created: '2026-06-25T09:53:54Z'
+updated: '2026-06-25T10:09:44Z'
+generated_by: claude-sonnet
+workflow_run: 28161241015
+issue: 976
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct Imprint palette (positions 1-3) with full theme-adaptive chrome in both
+    renders
+  - P50 median annotations and drop lines add genuine analytical value to the ECDF
+  - Y-only subtle gridlines and frame-free legend give clean, professional appearance
+  - Realistic web-server scenario with well-differentiated distributions (σ=0.20/0.30/0.60)
+  - stairs!(step=:post) is the correct idiomatic ECDF primitive in CairoMakie
+  weaknesses:
+  - P50 callout text at fontsize=10 is slightly small on the high-res canvas; increase
+    to fontsize=11-12 for better mobile readability
+  - Three near-identical ECDF computation blocks (sort, extend tails, build xs/ys)
+    should be consolidated into a loop
+  - No emphasis differentiating the hero story (fastest vs slowest); consider slightly
+    bolder linewidth or alpha contrast on the extreme groups
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct anyplot light surface
+      Chrome: Title "ecdf-basic · julia · makie · anyplot.ai" in dark ink, fully readable; Y-axis label "Cumulative Proportion" and X-axis label "Page Load Time (seconds)" in dark ink; tick labels in INK_SOFT (#4A4A44); all text clearly readable
+      Data: Three ECDF step curves - Cached Server in brand green (#009E73), CDN Server in lavender (#C475FD), Legacy Server in Imprint blue (#4467A3); subtle dashed P50 vertical reference lines and text callouts at y=0.53; horizontal dashed median reference at y=0.5
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct anyplot dark surface
+      Chrome: Title, axis labels, tick labels all in light cream/grey ink (#F0EFE8 / #B8B7B0); no dark-on-dark failures detected; legend background matches dark elevated surface (#242420) with light label text
+      Data: Data colours identical to light render - green (#009E73), lavender (#C475FD), blue (#4467A3); grid lines subtle but visible; all ECDF curves clearly distinguishable
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and well-proportioned; P50 callout
+          at fontsize=10 is slightly small for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Three well-separated distributions; P50 callouts at different x-positions,
+          no collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Step curves at linewidth=2.5 clearly visible for 200-point data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1-3 (green/lavender/blue) perceptually distinct
+          and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good canvas utilisation with generous
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Page Load Time (seconds) and Cumulative Proportion both descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order; backgrounds #FAF8F1/#1A1A17;
+          chrome correctly theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: Imprint palette, P50 drop-lines and callouts add
+          depth; not yet publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only gridlines, top/right spines removed, frame-free legend, comfortable
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: P50 annotations answer which server is fastest; visual hierarchy
+          through colour and median markers
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ECDF step function; y-axis 0-1; step increases by 1/n per
+          observation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Step function, Y 0-1, gridlines, multi-group comparison all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=page load time, Y=cumulative proportion; all 200 points per group
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'ecdf-basic · julia · makie · anyplot.ai' exact; legend labels
+          match data groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three groups with different spread (σ=0.20/0.30/0.60) and location
+          demonstrate full ECDF interpretation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web server page load time comparison is a real, neutral tech scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cached ~0.8s, CDN ~1.4s, Legacy ~2.8s medians are plausible real-world
+          values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> Data -> ECDF computation -> Plot -> Save; no functions
+          or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Three near-identical ECDF computation blocks are repetitive; should
+          be a loop
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; uses CairoMakie 0.21+
+          size parameter
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of stairs!, hlines!, vlines!, text!, axislegend; CairoMakie
+          Axis attribute API throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stairs!(step=:post) is Makie's native ECDF primitive; RGBAf() for
+          alpha-keyed reference colours is Makie-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

@@ -1,0 +1,298 @@
+library: d3
+language: javascript
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:24:46Z'
+updated: '2026-06-21T08:51:08Z'
+generated_by: claude-sonnet
+workflow_run: 27898164676
+issue: 4416
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Excellent CVD accessibility via dual encoding (circle=made, X-cross=missed) using
+    d3.symbolCross — directly addresses previous attempt weakness
+  - Zone FG% annotations (At-Rim ~62%, Mid ~38%, Top-3 ~35%) with semi-transparent
+    backdrop rects significantly elevate the analytical storytelling
+  - Y-domain cropped to [0, 32] eliminates dead upper-court area, tightening composition
+    and making shot-dense regions more prominent
+  - Increased marker size to r=7 circles and MARKER_AREA=180 crosses provides excellent
+    visibility for 420 data points with appropriate alpha (0.85 made, 0.65 missed)
+  - 'Perfect theme adaptation: pageBg/inkSoft/elevatedBg tokens used throughout; data
+    colors identical between light and dark renders'
+  - Deterministic LCG (seed=42) + Box-Muller transform for realistic clustered shot
+    distribution — correct browser workaround; all 12 clusters cover expected basketball
+    shooting zones
+  - ClipPath via SVG defs keeps court elements within the plot rectangle — idiomatic
+    D3/SVG technique
+  weaknesses:
+  - 'VQ-05 / COORD DISTORTION: Court coordinate system is ~55% stretched vertically
+    — xSc maps 50 ft to iw=1100 px (22 px/ft) but ySc maps 32 ft to ih=1090 px (34
+    px/ft). The spec requires ''1:1 aspect ratio so the court is not distorted.''
+    Free-throw circle and restricted area arc appear visually oval in both renders.
+    Fix: compute a uniform scale factor as min(iw/50, ih/32) = min(22, 34.1) = 22
+    px/ft and center the resulting court rectangle within the plot area.'
+  - 'VQ-01 MINOR: Zone annotation labels at 12px CSS (= 24 source px on 2400-px canvas)
+    are below the 14-22px recommended minimum. They are readable at full resolution
+    but will become near-illegible when scaled to mobile (~400 px). Increase to 14px
+    CSS.'
+  - 'LM-01/LM-02 MINOR: Arc paths still generated via manual aPath() helper using
+    Math.cos/sin line segments rather than d3.arc() generator or d3.path() API. Consider
+    using d3.arc() for the restricted-area arc and free-throw circle, and d3.path()
+    for the three-point arc — more idiomatic and easier to maintain.'
+  - 'DE-01/DE-02 MINOR: Zone coverage is asymmetric — only 3 of 5+ analytically distinct
+    zones are labelled. Left/right corner-3 zones (highest frequency in dataset) have
+    no annotation. Adding symmetric left/right annotations or subtle zone-shading
+    polygons would elevate to publication quality.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white. Subtle tan court-floor wash (#D4B483 at 18% opacity) overlays the inner plot area, giving the court a hardwood feel.
+      Chrome: Title "scatter-shot-chart · javascript · d3 · anyplot.ai" at 22px bold, dark ink (#1A1A17) — clearly readable at top center. Legend box in upper-left with elevated cream background (#FFFDF6 approx.) and rounded corners; "Made (165)" (green circle) and "Missed (255)" (matte red X) at 16px in inkSoft — readable. Zone labels ("Top-3 · ~35%", "Mid · ~38%", "At-Rim · ~62%") with semi-transparent backdrop boxes at 12px bold — small but visible at full resolution. No axis tick labels (correct per spec). Court lines in neutral inkSoft — visible and clean.
+      Data: Green (#009E73) circles for made shots, matte red (#AE3030) X-cross shapes for missed. Dual encoding distinguishes outcomes for CVD users. Shot clusters visible around rim/paint (dense), three-point arc (distributed), mid-range (scattered). Made shots rendered on top of missed for visual clarity.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues; data markers clearly visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black. Court floor tint barely visible but present.
+      Chrome: Title in light text (#F0EFE8 approx.) — clearly readable against dark background. Legend box uses elevated dark fill (#242420); text in light inkSoft tone — readable. Court lines appear in lighter inkSoft against dark background — clearly defined. Zone annotation labels have dark-theme elevated backdrop and light text — readable. No dark-on-dark text failures found.
+      Data: Shot marker colors are IDENTICAL to the light render — green (#009E73) circles for made, matte red (#AE3030) X-crosses for missed. Both types clearly visible on dark background. Brand green #009E73 reads well on the near-black surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements use theme-adaptive tokens correctly; data colors unchanged between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22px) and legend (16px) explicitly set and readable in both
+          themes. Zone annotation labels at 12px CSS (24 source px) are below the
+          14px recommended minimum — readable at full resolution but near-illegible
+          at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; zone annotation backdrop boxes prevent text/data
+          collisions; legend well-positioned; natural data overplotting at 420 shots
+          is expected and visually managed with alpha.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Made circles at r=7 (alpha=0.85) and missed crosses at MARKER_AREA=180
+          (alpha=0.65) are clearly visible in both renders; dual encoding (shape+color)
+          makes each outcome type immediately identifiable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Dual encoding implemented: circle=made (green), X-cross=missed (red).
+          CVD users can distinguish by shape alone. Excellent improvement from attempt
+          1.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas (2400x2400) correct for 1:1 spec requirement. Y-domain
+          cropped to [0,32] removes dead space. However, court coordinate system has
+          ~55% vertical stretch (22 px/ft in x vs 34 px/ft in y), causing arcs to
+          appear slightly oval rather than circular — violates spec '1:1 aspect ratio
+          so the court is not distorted'.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; no axis labels (appropriate per spec — court
+          geometry provides spatial reference).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Made shots: palette[0]=#009E73 (brand green, always first series).
+          Missed shots: palette[4]=#AE3030 (matte red semantic anchor for loss/error
+          — correct semantic exception). Light background #FAF8F1, dark #1A1A17. Data
+          colors identical between themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: zone FG% annotations, dual encoding, floor
+          tint, polished legend with counts, rendering order awareness (missed below,
+          made on top). Three analytical zone labels is a genuine improvement but
+          asymmetric coverage (no corner-3 annotations despite high corner-3 shot
+          frequency) keeps this below publication level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinements: no axis ticks, theme-adaptive court lines, subtle
+          floor wash, marker edge strokes using pageBg, SVG clipPath for clean court
+          boundary, zone annotation backdrop boxes with elevated-bg fill. Y-domain
+          trim to [0,32] significantly improves composition vs attempt 1.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Zone FG% labels (At-Rim ~62%, Mid ~38%, Top-3 ~35%) create a clear
+          analytical narrative. Legend counts (165/255 = 39% FG%) give instant context.
+          Shot clustering in realistic zones tells a believable player story. Missing:
+          corner-3 zone annotations and left/right wing symmetry labels.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basketball shot chart with scatter on NBA half-court diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required court elements: three-point arc (23.75ft top, 22ft
+          corners), free-throw line and circle, paint/key (16ft wide), restricted
+          area arc (4ft), basket and backboard. Shot_type visualization is optional
+          per spec. 420 shots in 200-500 spec range.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y in feet from basket center; made=green/missed=red; realistic
+          cluster distribution covering all major court zones.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''scatter-shot-chart · javascript · d3 · anyplot.ai'' — correct
+          format. Legend: Made/Missed with Imprint colors, shot counts, and correct
+          shape encoding.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: '420 shots across 12 clusters covering rim, paint, mid-range, corner-3,
+          wing-3, top-of-arc. Made/missed rates realistic per zone. Missing: explicit
+          shot_type dimension (2-pointer/3-pointer/free-throw) in the data model.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball analytics — real-world professional sport; realistic FG%
+          by zone (62% rim, 38% mid, 34-35% 3-point); shot clusters at expected positions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'NBA-accurate: 50ft wide, basket at 5.25ft, backboard at 4ft, free-throw
+          at 19ft from baseline (15ft from backboard), three-point at 23.75ft, corners
+          at 22ft.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (makeLcg, bm, aPath, cLine) are minimal, well-justified,
+          and enable the complex court geometry without abstraction overhead. Overall
+          flow is linear and readable.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: LCG seed=42 with Box-Muller transform — correct deterministic approach
+          for browser environment without seeded Math.random.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global and ANYPLOT_* window globals used, all referenced
+          in the code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant cluster-weighted shot generation; clean D3 selectAll/data/join
+          patterns for markers; zone labels rendered via forEach; no over-engineering
+          or fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 is interactive library — harness outputs plot-{theme}.png and
+          plot-{theme}.html; uses current D3 7.9.0 API and ANYPLOT_* globals correctly.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong D3 usage: scaleLinear for court coordinates, selectAll/data/join
+          for scatter markers, d3.symbol().type(d3.symbolCross) for cross shapes,
+          SVG defs/clipPath. Arc generation still uses manual Math.cos/sin in aPath()
+          rather than d3.arc() or d3.path() — slightly less idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.symbolCross via d3.symbol() is properly D3-idiomatic for cross
+          markers. SVG defs + clipPath is D3/SVG-specific technique. The entire court
+          (geometry + scatter) built from D3 primitives is a showcase of D3's SVG
+          binding strength.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting

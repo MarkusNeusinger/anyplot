@@ -1,0 +1,285 @@
+library: d3
+language: javascript
+specification_id: scatter-lag
+created: '2026-06-24T23:10:00Z'
+updated: '2026-06-24T23:29:15Z'
+generated_by: claude-sonnet
+workflow_run: 28135287811
+issue: 5251
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Strong Imprint sequential colormap via d3.interpolateRgbBasis(t.seq) correctly
+    applied to continuous time-index data
+  - 'Full spec compliance: diagonal reference line, temporal color encoding, r annotation,
+    and configurable lag all present'
+  - Deterministic Park-Miller LCG with fixed seed 42 ensures reproducibility without
+    Date/Math.random
+  - 'Correct D3 mount-contract adherence: window.ANYPLOT_SIZE, window.ANYPLOT_TOKENS,
+    single svg appended to #container'
+  - Symmetric axis domain ensures the y=x diagonal is geometrically accurate at 45
+    degrees
+  - Clean inline Pearson r computation using d3.mean and d3.sum demonstrates D3 data
+    utility functions
+  - SVG linearGradient colorbar is a distinctive D3 technique for visualizing a continuous
+    color scale
+  - 'Both themes pass readability: title, axis labels, ticks, and annotations are
+    theme-adaptive and legible in light and dark renders'
+  weaknesses:
+  - Subtitle at 14px CSS is on the smaller end of the acceptable range — slightly
+    harder to read at mobile scaling compared to 16px axis labels
+  - No descriptive title prefix (e.g. Lag Plot for Hourly Temperature · scatter-lag
+    · ...) — the mandatory spec-id format is correct but a descriptive prefix would
+    add polish for DE-01
+  - The colorbar height (lgH=12px CSS) is quite thin — a taller bar (16-18px) would
+    improve visual weight and readability of the gradient
+  - Tick lines use t.inkSoft rather than t.grid which makes them slightly more prominent
+    than ideal for a minimalist look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "scatter-lag · javascript · d3 · anyplot.ai" bold at 22px, clearly visible in near-black ink. Subtitle "AR(1) hourly temperature · lag k = 1 · tight cluster = strong autocorrelation" at 14px in inkSoft, readable. Axis labels "Temperature at time t (°C)" and "Temperature at t + 1 (°C)" at 16px in ink, both readable and balanced. Tick labels at 14px in inkSoft — legible. r annotation "r = 0.916 (lag 1)" in top-left at 15px, clearly visible. Colorbar labels "time index", "t = 1", "t = 280" at 14px inkSoft, all readable.
+      Data: 279 scatter points colored by time index using Imprint sequential colormap (green #009E73 → blue #4467A3), radius 5.5px CSS, opacity 0.78. Dashed diagonal reference line (y=x) in inkSoft at opacity 0.55, clearly visible. Gridlines in t.grid subtle. Strong linear cluster along diagonal demonstrates high autocorrelation.
+      Legibility verdict: PASS — all text elements readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title visible in light ink (F0EFE8 equivalent). Subtitle, axis labels, tick labels all render in light-colored text appropriate for dark theme. r annotation readable in light ink. Colorbar labels visible. Grid lines subtle in dark-adaptive color. No dark-on-dark failures detected.
+      Data: Scatter points show identical green-to-blue gradient as light render — data colors are theme-independent per Imprint palette rules. Dashed diagonal reference line visible against dark background. Brand green #009E73 clearly visible at early time indices.
+      Legibility verdict: PASS — all text elements readable against dark background, theme-adaptive chrome working correctly, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes. Title
+          22px, axis labels 16px, annotations 15px, ticks/colorbar 14px. Subtitle
+          at 14px is on the smaller end but within the 14-22px D3 range. Both renders
+          pass legibility check.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected. r annotation (top-left) and colorbar (top-right)
+          are well-separated. Scatter points have appropriate opacity for density.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 280 points with r=5.5 CSS radius and 0.78 opacity — appropriate for
+          medium density. Green-to-blue sequential coloring makes each point individually
+          identifiable. Diagonal reference line clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential colormap (green→blue) is CVD-safe. Single data
+          series with continuous color encoding. Diagonal reference line in adaptive
+          inkSoft contrasts well with data points.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Generous margins
+          (top:90, right:80, bottom:100, left:110 CSS px). Plot fills ~80% of canvas.
+          No content cut off. Colorbar neatly positioned in top-right corner.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Temperature at time t (°C)'' — descriptive with units.
+          Y-axis: ''Temperature at t + 1 (°C)'' — descriptive with units. Title: ''scatter-lag
+          · javascript · d3 · anyplot.ai'' — correct mandatory format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous time-index data uses Imprint sequential colormap via
+          d3.interpolateRgbBasis(t.seq) — correct. Background #FAF8F1 (light) / #1A1A17
+          (dark). Chrome is theme-adaptive using t.ink, t.inkSoft, t.grid tokens.
+          Data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured-default level. Intentional sequential temporal coloring
+          adds information layer. r annotation, colorbar, and subtitle work together
+          coherently. Clean professional appearance. Not quite 'strong design' (6/8)
+          — no descriptive title prefix, colorbar could have more visual weight.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped axes (left+bottom domain lines only). Subtle grid (t.grid
+          token, stroke-width=1). Generous margins. Dashed reference line at opacity
+          0.55. Marker stroke (pageBg color) for edge definition. Colorbar with rounded
+          corners. Good refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sequential time coloring reveals temporal structure in AR(1) process.
+          r=0.916 annotation immediately quantifies the strong autocorrelation. Subtitle
+          explicitly guides interpretation ('tight cluster = strong autocorrelation').
+          Diagonal reference line provides visual anchor. Good multi-element storytelling
+          above default.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lag plot: scatter of y(t) vs y(t+lag) for lag=1. Symmetric
+          axis domain ensures 45° diagonal.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line (y=x) present. Time-index color encoding
+          present. Correlation coefficient r annotation present. Configurable lag
+          (const lag = 1) present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = y(t), Y-axis = y(t+1). Symmetric domain [domMin, domMax]
+          covers all data. Correct lag-1 pair construction.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-lag · javascript · d3 · anyplot.ai' matches required
+          format. Colorbar legend labels 'time index', 't = 1', 't = 280' are clear
+          and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all key lag-plot features: scatter pattern, diagonal
+          reference, temporal color encoding, r annotation. AR(1) process shows textbook
+          strong autocorrelation pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(1) hourly temperature series (mu=14.5°C, phi=0.88, sigma=1.8)
+          is realistic, scientifically plausible, and neutral. Temperature range ~2-26°C
+          appropriate for hourly data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 280 observations within spec range of 100-5000. phi=0.88 produces
+          realistic strong autocorrelation (r≈0.916). Temperature values physically
+          plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script. rand()/randn() helpers are minimal, single-purpose LCG
+          functions necessary for offline deterministic data generation. No unnecessary
+          abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Park-Miller LCG with _seed=42, comment explicitly notes 'deterministic,
+          no Date/Math.random'.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'D3 as global. All used: select, scaleLinear, scaleSequential, interpolateRgbBasis,
+          axisBottom/Left, min, max, mean, sum.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable D3 code. No fake UI elements. Appropriate complexity
+          for the visualization.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness generates plot-{theme}.png and plot-{theme}.html. Snippet
+          correctly uses mount contract.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Perfect mount-contract adherence. Proper margin convention. Data-driven
+          joins (.data().join()). D3 scale/axis idioms. SVG linearGradient definition.
+          All idiomatic D3 patterns executed correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'D3-distinctive: d3.interpolateRgbBasis for custom interpolation,
+          SVG linearGradient for visual colorbar, data-driven circle joins, inline
+          Pearson r via d3.mean/d3.sum. Misses one more uniquely D3 technique (e.g.
+          force simulation, GeoJSON) to reach 5/5.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - custom-colormap

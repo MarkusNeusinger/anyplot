@@ -1,0 +1,245 @@
+library: highcharts
+language: javascript
+specification_id: spc-xbar-r
+created: '2026-06-20T13:10:31Z'
+updated: '2026-06-20T13:37:04Z'
+generated_by: claude-sonnet
+workflow_run: 27871790805
+issue: 4551
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Perfect spec compliance: all SPC elements correctly implemented with standard
+    constants for n=5 (A2=0.577, D3=0, D4=2.115)'
+  - 'Realistic injected OOC scenarios demonstrating the chart''s detection capability:
+    process drift (samples 10-12), isolated spike (sample 20), variability event (sample
+    25)'
+  - 'Correct semantic color usage: amber (#DDCC77) for warning limits, matte red (#AE3030)
+    for control limits and OOC points per Imprint anchors'
+  - Fully deterministic via LCG seed=42 plus Box-Muller for exact reproducibility
+    across runs
+  - 'Idiomatic Highcharts: per-point marker overrides for OOC highlighting, stacked
+    Y-axis panels with top/height, animation disabled for clean static capture'
+  weaknesses:
+  - 'Palette order violation: X-bar data line (first series in legend) uses palette[2]
+    (blue #4467A3) instead of palette[0] (#009E73 brand green) — fix by swapping colors
+    so X-bar uses t.palette[0] and center line uses t.palette[2]'
+  - Warning limit lines at lineWidth=1 are slightly under-weighted; increase to 1.5
+    for better visibility in both renders while keeping them subordinate to UCL/LCL
+    lines at 1.5
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "spc-xbar-r · javascript · highcharts · anyplot.ai" in dark ink, fully readable. Subtitle "Shaft Diameter (mm) — CNC Machining Process | 28 Subgroups, n=5" in inkSoft. All axis labels and tick labels readable in dark text. Legend at bottom fully legible.
+      Data: Two-panel layout. Top (X-bar): blue (#4467A3) data line, green (#009E73) center line, red dashed UCL/LCL, amber dashed warning limits, 4 red OOC circles (samples 10-12, 20, 25). Bottom (R): blue data line, green center, red dashed UCL, amber warning, 1 red OOC circle (sample 25).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle rendered in light text (~#F0EFE8) and clearly readable. Axis labels and tick labels in inkSoft (~#B8B7B0), all visible against dark background. No dark-on-dark failures detected. Grid lines subtle and appropriate.
+      Data: Colors identical to light render — brand green center lines, blue data lines, red OOC markers, amber warning lines. Data colors theme-invariant as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, labels 14px, ticks 13px).
+          Both themes legible. Minor: ticks 1px below 14px guideline.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: OOC markers radius=8 excellent, normal radius=4 appropriate for 28
+          pts. Warning lines at lineWidth=1 slightly thin.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant encoding via dash style, marker size, line weight. No red-green
+          sole encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two panels fill ~75% vertical canvas. Balanced margins. No overflow
+          or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All axes labeled with units: X-bar (mm), Range (mm), Sample Number.
+          Subtitle provides domain context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Background and chrome correct. Semantic red/amber anchors used correctly.
+          Issue: X-bar data line (first series) uses palette[2] blue instead of palette[0]
+          brand green.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: semantic colors, marker differentiation for OOC,
+          informative subtitle. Not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No vertical grid, subtle horizontal grids, no legend box, hover artifacts
+          prevented. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy via line weights, OOC focal points, injected failure
+          scenarios tell coherent process story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: X-bar top, R chart bottom, vertically stacked, shared x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: UCL/LCL dashed, center solid, OOC highlighted, warning limits, 4+
+          OOC points, correct constants.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: sample numbers. Y-axis 0: X-bar mm. Y-axis 1: Range mm.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exact required format. Legend labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both charts, all control lines, multiple OOC types (drift, spike,
+          variability).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC machining shaft diameters, n=5 subgroups. Neutral manufacturing
+          context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 28 subgroups (within 20-50 spec), n=5, realistic mm values, correct
+          SPC constants.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Minimal helpers (lcgRand, randN, fix3, flat), clean main flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG seed=42 with Box-Muller. No Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Highcharts is global. Only ANYPLOT_TOKENS used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. Clean structure.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts API, no explicit dimensions, animation disabled,
+          landscape orientation declared.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Multiple Y-axis with top/height, per-point marker overrides, enableMouseTracking:
+          false, hover artifact prevention.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point marker customization and stacked panel via yAxis top/height
+          are genuinely Highcharts-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - control-limits
+  styling: []

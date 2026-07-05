@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-risk-matrix
+created: '2026-06-20T06:14:06Z'
+updated: '2026-06-20T06:32:42Z'
+generated_by: claude-sonnet
+workflow_run: 27862175249
+issue: 4567
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Excellent palette compliance: Imprint semantic anchors (#009E73, #DDCC77, #BD8233,
+    #AE3030) used correctly for the risk gradient, Imprint categorical palette for
+    markers'
+  - Three well-structured Chart.js plugins (matrixBg, riskLabels, zoneLegend) make
+    the implementation readable and maintainable
+  - Pill-shaped label backgrounds with theme-adaptive surfaces ensure risk item labels
+    are readable in both light and dark themes
+  - 'Perfect data quality: realistic IT security scenario with 12 risks covering all
+    four zone types, correct axis mapping'
+  - Square canvas orientation is the right choice for a symmetric 5x5 grid
+  weaknesses:
+  - 'Zone severity legend displays ''Critical (17-25)'' but spec defines Critical
+    as ''(20-25)''. Fix: update the zoneLegend entries array — change { label: ''Critical
+    (17-25)'', score: 22 } to { label: ''Critical (20-25)'', score: 22 }'
+  - 'Axis border spines (border: { color: t.inkSoft, width: 1.5 }) add visual weight
+    to the heatmap without benefit — consider removing them to let the cell borders
+    do the structural work'
+  - Some visual crowding in the high-likelihood rows where pill labels from adjacent
+    cells approach each other; minor as no actual overlap occurs
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "heatmap-risk-matrix · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. X-axis label "Impact" and Y-axis label "Likelihood" in dark ink, both readable. Tick labels (Negligible/Minor/Moderate/Major/Catastrophic; Rare/Unlikely/Possible/Likely/Almost Certain) in secondary ink, clearly readable.
+      Data: 5x5 heatmap cells graduating green (#009E73) through amber (#DDCC77), ochre (#BD8233) to matte red (#AE3030). Zone labels (LOW, MEDIUM, HIGH, CRITICAL) in white in representative cells. Risk score numbers in cell corners (12px, semi-transparent white). 12 scatter markers: Technical = #009E73, Financial = #C475FD, Operational = #4467A3. Pill-backed risk labels in cream (#FAF8F1) with dark text. Zone severity legend in bottom-right. Category legend at bottom.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels flip to light cream (#F0EFE8), tick labels use secondary ink token (#B8B7B0). Pill label backgrounds switch to dark surface (#1A1A17). Zone legend background uses elevatedBg (#242420). All text clearly readable — no dark-on-dark failures.
+      Data: Cell colours, marker colours, and zone label text are visually identical to the light render. Brand green #009E73 is clearly visible. Data colours unchanged between themes (only chrome flips).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, and pill-backed risk names readable
+          in both themes. Minor deduction for small 12px semi-transparent cell score
+          numbers.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Risks in unique cells avoids marker overlap. Minor visual crowding
+          in high-likelihood rows where adjacent cell labels approach each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers at radius 12px well-sized for 5x5 grid; all three category
+          colours distinguishable; heatmap gradient vivid and clear.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-green gradient is spec-mandated; redundant encoding via zone
+          text labels and risk score numbers mitigates CVD concern.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for symmetric 5x5 grid. Canvas gate passed.
+          Layout balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive tick labels on both axes; title in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. First series #009E73. Heatmap
+          uses Imprint semantic anchors. Both themes correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Three custom plugins, colour interpolation using Imprint anchors,
+          theme-adaptive pill labels and zone legend. Above default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid lines disabled, subtle cell borders, clean layout. Axis border
+          spines add unnecessary weight.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green-to-red gradient delivers immediate risk communication. Zone
+          labels reinforce. Risk items categorised and labelled. Clear focal point.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: 5x5 heatmap grid with labelled scatter markers.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All features present. Minor deduction: zone legend shows ''Critical
+          (17-25)'' but spec defines Critical as ''(20-25)''.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Impact, Y=Likelihood correctly mapped. All 12 risks plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct. Category legend and zone severity legend both present.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: coloured grid, individual risk labelling, categorisation,
+          zone text, risk scores, severity legend.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: IT security risk register with real-world risks across authentic
+          categories (Technical, Financial, Operational). Neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 risks within 5-20 range, 1-5 scale correct, scores spanning all
+          four risk zones.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes or unnecessary abstractions. Three plugin objects and
+          one helper function.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic data; no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only ANYPLOT_TOKENS and ANYPLOT_THEME globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Colour interpolation compact and correct; plugin lifecycle hooks
+          appropriately chosen.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Does not call save; orientation directive on its own line.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct scatter type with custom plugins; proper responsive/animation/maintainAspectRatio
+          settings; token integration correct; scale tick callbacks idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom plugin API (beforeDraw/afterDraw) used well; ctx.roundRect
+          for pill labels shows canvas awareness. Could leverage more Chart.js-native
+          features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

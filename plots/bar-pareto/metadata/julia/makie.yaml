@@ -1,0 +1,263 @@
+library: makie
+language: julia
+specification_id: bar-pareto
+created: '2026-06-20T17:03:30Z'
+updated: '2026-06-20T17:23:10Z'
+generated_by: claude-sonnet
+workflow_run: 27877789165
+issue: 4550
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Correct complete Pareto chart with all spec-required features: sorted bars, cumulative
+    % line on secondary axis, 80% threshold reference line styled with semantic matte
+    red (#AE3030)'
+  - 'Thoughtful storytelling annotation: 80% crossing point highlighted with a diamond
+    marker plus ''Top 5 of 7 categories'' text label — reveals the ''vital few'' insight'
+  - 'Both themes render correctly with full chrome adaptation — INK, INK_SOFT, PAGE_BG,
+    ELEVATED_BG all flip correctly between #FAF8F1 and #1A1A17'
+  - Idiomatic CairoMakie dual-axis technique using two overlaid Axis objects linked
+    with linkxaxes! — correct Makie pattern for secondary axes
+  - 'Semantic Imprint palette usage: brand green (#009E73) for bars, blue (#4467A3)
+    for cumulative line, matte red (#AE3030) for threshold — semantically appropriate
+    and CVD-safe'
+  weaknesses:
+  - Primary Y-axis auto-scales to max count (~350) instead of total (1330) — in the
+    canonical Pareto convention ylims!(ax1, 0, total) ensures cumulative % markers
+    visually sit at each bar top; currently the first marker is at ~23% height while
+    the first bar extends to ~97%, breaking the visual alignment story
+  - Annotation text 'Top 5 of 7 categories' uses fontsize=11 (effective 22pt on 3200px
+    canvas) — slightly small when scaled to mobile widths (~400px); increase to fontsize=13
+    for better mobile legibility
+  - Diamond crossing-point marker (markersize=14) is subtle relative to the plot;
+    slightly larger or a brief highlight stroke would improve visual prominence of
+    this key Pareto insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct light theme surface
+      Chrome: Title "bar-pareto · julia · makie · anyplot.ai" in dark ink, clearly readable; "Issue Category" (x-axis) and "Ticket Count" (left y-axis) and "Cumulative %" (right y-axis) labels all in dark INK; rotated 45° x-tick labels readable; secondary y-axis tick labels "0%"–"100%" readable
+      Data: 7 bars in descending order in brand green (#009E73); blue (#4467A3) cumulative % line with circular markers at each bar center; dashed matte red (#AE3030) 80% threshold line; diamond marker at crossing point with annotation "Top 5 of 7 categories"; legend in upper right shows all three series
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in light text (F0EFE8 / B8B7B0 tokens) — clearly readable against dark background; no dark-on-dark issues detected
+      Data: Bar colors (#009E73), cumulative line (#4467A3), threshold (#AE3030) are IDENTICAL to light render — only chrome flips as expected; legend background flips to elevated dark (#242420) with light label text
+      Legibility verdict: PASS — all text readable against dark background, chrome adaptation is correct
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axes, ticks all readable in
+          both themes. Minor deduction for annotation text at fontsize=11 being slightly
+          small at mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; rotated x-axis labels well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, cumulative line, markers, and threshold line all clearly visible
+          at appropriate sizes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; redundant encoding via line style (dashed
+          threshold) adds accessibility
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions, legend properly
+          positioned, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Issue Category'', ''Ticket Count'', ''Cumulative
+          %''; title format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bars #009E73 (position 1), line #4467A3 (position 3), threshold
+          #AE3030 (position 5 semantic red); backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color assignment, clean hierarchy, and crossing-point
+          annotation. Above configured default (4) for intentional design choices
+          but not yet publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-grid at 0.15 opacity, bar stroke with
+          page background color. Moderate refinement beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 80% crossing annotation with diamond + 'Top 5 of 7 categories' text
+          narrates the Pareto insight effectively; semantic red for threshold reinforces
+          the threshold role
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Pareto chart: descending sorted bars + cumulative % line
+          overlay'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required: sorted bars, cumulative line, secondary y-axis (0-100%),
+          80% reference line, markers at bar centers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Correct: categories on X, raw counts on primary Y-left, cumulative
+          % on secondary Y-right'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bar-pareto · julia · makie · anyplot.ai' correct; legend labels
+          'Ticket Count', 'Cumulative %', '80% Threshold' match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Pareto aspects: descending frequency distribution, cumulative
+          trend, 80/20 crossing. 7 categories within 5-15 spec range'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real e-commerce support ticket categories (Billing Issues, Login
+          Problems, Delivery Delays, etc.) — neutral, plausible business domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic ticket counts (65–342), distribution follows Pareto principle
+          naturally with top 3 categories contributing ~63% of total
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flat structure: theme tokens → data → crossing calc → figure
+          → bars → threshold → cumulative → annotation → legend → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data is deterministic hardcoded values
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia idioms; linear interpolation for crossing point is concise;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; uses CairoMakie 0.22
+          current API (size= parameter)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper CairoMakie idioms: linkxaxes!, hidexdecorations!, ylims!,
+          PolyElement/LineElement legend construction'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dual-axis via two Axis objects on same grid slot is Makie-specific;
+          custom Legend with mixed PolyElement+LineElement is distinctive to Makie's
+          composable legend API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - interpolation
+  styling:
+  - edge-highlighting
+  - grid-styling

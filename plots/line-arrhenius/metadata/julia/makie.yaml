@@ -1,0 +1,286 @@
+library: makie
+language: julia
+specification_id: line-arrhenius
+created: '2026-06-24T10:33:44Z'
+updated: '2026-06-24T11:17:03Z'
+generated_by: claude-sonnet
+workflow_run: 28089687874
+issue: 4408
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - 'Full spec compliance: all required features implemented (regression line, R²
+    annotation, Ea/R slope, secondary top x-axis with temperature labels, 95% confidence
+    band as a bonus)'
+  - Clean KISS code structure with explicit font sizing throughout, proper Imprint
+    theme tokens, and Random.seed!(42) for reproducibility
+  - 'Excellent data quality: realistic first-order thermal decomposition scenario
+    with physically correct Arrhenius parameters (Ea=80 kJ/mol, A=1e10, T=300-600
+    K)'
+  - 'Good Makie-idiomatic usage: band! for confidence interval, dual-Axis overlay
+    in the same grid cell for the secondary x-axis, linkxaxes!/linkyaxes! coupling,
+    axislegend with styled frame'
+  - 'Correct Imprint palette: #009E73 scatter markers (brand green), #4467A3 dashed
+    regression line, proper backgrounds (#FAF8F1 light / #1A1A17 dark), all chrome
+    tokens theme-adaptive in both renders'
+  weaknesses:
+  - resize_to_layout!(fig) shrinks or repositions the figure's content area, resulting
+    in the Arrhenius plot occupying only ~40-50% of the 3200x1800 landscape canvas
+    with significant horizontal whitespace; remove resize_to_layout! or constrain
+    the axis fill via colsize!/rowsize! to ensure the axis expands to fill the Figure
+    allocation
+  - X-axis tick labels for the 1000/T range (1.67-3.33) are crowded in the narrow
+    rendered axis width; consider xticklabelrotation=30 or LinearTicks(3) to reduce
+    label density
+  - The steep natural aspect ratio of Arrhenius data (narrow x-range 1.66 units vs
+    large y-range ~19 units) makes a landscape 16:9 canvas suboptimal and amplifies
+    the whitespace problem; a square 2400x2400 canvas (Figure size=(1200,1200)) would
+    better match the data proportions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — confirmed correct, no pure white.
+      Chrome: Title "line-arrhenius · julia · makie · anyplot.ai" in bold dark ink, clearly readable. Y-axis label "ln(k)" and x-axis label "10³/T (K⁻¹)" in dark INK color. Tick labels in INK_SOFT gray, readable. Secondary x-axis at top shows "Temperature (K)" label and tick labels "300 350 400 500 600" in smaller INK_SOFT text. Legend box (upper-right inside axis) on ELEVATED_BG (#FFFDF6) with dark text for "Linear fit (Arrhenius)" and "Measured k(T)" — readable. Text annotation in lower-left shows "-Ea/R = 9609 K / Ea = 79.9 kJ mol⁻¹ / R² = 1.0000" in dark ink — readable.
+      Data: 9 green scatter markers (#009E73, markersize=14, strokewidth=1.5) with a dashed blue (#4467A3) regression line overlaid. A semi-transparent blue confidence band (alpha=0.15) surrounds the regression line. Data shows the expected steep negative-slope Arrhenius line from upper-left (T=600K, high ln(k)) to lower-right (T=300K, strongly negative ln(k)). First series is confirmed #009E73.
+      Layout: The axis content occupies approximately 40-50% of the canvas width, with notable horizontal whitespace — likely a resize_to_layout! artifact. X-axis tick labels are somewhat crowded due to the narrow rendered width.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures. Minor concern: x-axis tick label crowding in the narrow plot area.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — confirmed correct, not pure black.
+      Chrome: Title in light INK (#F0EFE8), clearly visible against dark background. Y-axis and x-axis labels in light INK color, readable. Tick labels in INK_SOFT (#B8B7B0 light gray), clearly visible — no dark-on-dark failures. Secondary x-axis temperature labels are light gray, readable. Legend box on ELEVATED_BG (#242420) with light label text — readable. Annotation text in light INK color, readable.
+      Data: Scatter markers remain #009E73 (identical to light render — data colors do not flip). Dashed regression line remains #4467A3. Confidence band is the same semi-transparent blue. All data colors are identical between renders; only chrome (background, text, legend frame, grid) flips.
+      Layout: Same narrow axis positioning as light render — resize_to_layout! issue carries over to dark theme.
+      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark failures detected. Theme adaptation is correct throughout.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, xlabelsize=16, ylabelsize=16,
+          xticklabelsize=13, yticklabelsize=13); readable in both themes; minor concern
+          about crowded x-axis tick labels in narrow canvas area and small secondary-axis/annotation
+          text
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Mostly clean; x-axis tick labels somewhat crowded in narrow rendered
+          width; legend, annotation, and data are well separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 9 data points with markersize=14 are prominent and clearly visible;
+          regression line linewidth=2.5 stands out; confidence band at alpha=0.15
+          is subtle but visible — well-adapted to sparse data
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and blue (#4467A3) have good luminance separation;
+          strokewidth=1.5 on markers aids contrast against background; CVD-safe Imprint
+          palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Canvas is correct 3200x1800; however resize_to_layout!(fig) combined
+          with the dual-axis overlay causes the axis content to occupy only ~40-50%
+          of the canvas width with notable horizontal whitespace — the landscape 16:9
+          format amplifies this because Arrhenius data has a narrow x-range (1.67-3.33)
+          vs large y-range
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''ln(k)'' (units implied by transformation); X-axis: ''10³/T
+          (K⁻¹)'' with units; secondary x-axis: ''Temperature (K)''; title format
+          correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (scatter) = #009E73 (brand green); regression line
+          = #4467A3 (Imprint position 3, blue); confidence band uses same #4467A3
+          with alpha; backgrounds #FAF8F1 light / #1A1A17 dark; all chrome tokens
+          theme-adaptive in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: 'Well-configured: correct palette, L-spine frame, secondary axis
+          adds scientific context; confidence band shows extra rigor; overall ''polished
+          default'' look, not publication-exceptional'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-axis-only subtle grid (alpha=0.12); secondary
+          top axis adds refinement; legend frame with ELEVATED_BG — good refinement
+          choices beyond pure defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation with -Ea/R, Ea, and R² directly communicates the scientific
+          insight; confidence band shows fit quality; visual hierarchy (data points
+          on top of regression line) guides the eye well
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 1000/T (conventional scaled form),
+          with linear regression showing the expected straight line'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: linear regression line, R² displayed,
+          Ea/R slope annotation, secondary x-axis with temperature labels in K (via
+          ax_top overlay), data point markers'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = 1000/T (K⁻¹), Y = ln(k); all 9 data points spanning T=300-600
+          K fully visible; regression extends with margins
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-arrhenius · julia · makie · anyplot.ai''; legend:
+          ''Linear fit (Arrhenius)'' and ''Measured k(T)'' — descriptive and accurate'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: experimental scatter with noise, regression line,
+          95% confidence band, kinetic parameter annotation; bonus confidence band
+          demonstrates fit quality'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'First-order thermal decomposition reaction with realistic parameters:
+          Ea=80 kJ/mol, A=1e10 s⁻¹, T=300-600 K; neutral chemistry/engineering domain;
+          4% Gaussian noise simulates experimental scatter'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ea=80 kJ/mol is realistic for organic thermal decomposition; temperature
+          range covers a meaningful experimental span; R²≈1.0000 is expected for simulated
+          data with low noise; rate constants span several orders of magnitude as
+          expected from Arrhenius kinetics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → seed → theme tokens → data → regression
+          → plot elements → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics (mean), Printf (@sprintf)
+          — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Julia idioms; title fontsize scaled by length formula; manual
+          regression is appropriate for reproducibility without scipy dependency;
+          no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good idiomatic Makie: band! for confidence interval, axislegend
+          with theme-aware frame, dual-Axis overlay in same grid cell for secondary
+          axis, linkxaxes!/linkyaxes! coupling, RGBAf for grid color with alpha —
+          correct patterns throughout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for confidence interval is distinctly Makie (not a matplotlib
+          direct equivalent); dual-Axis overlay for secondary x-axis is a Makie-idiomatic
+          approach; linkxaxes! coupling between overlaid axes is Makie-specific; collectively
+          demonstrates real Makie knowledge
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

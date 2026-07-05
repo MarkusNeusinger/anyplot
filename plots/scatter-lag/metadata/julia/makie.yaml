@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: scatter-lag
+created: '2026-06-24T23:08:13Z'
+updated: '2026-06-24T23:24:40Z'
+generated_by: claude-sonnet
+workflow_run: 28135107209
+issue: 5251
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-lag/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Excellent spec compliance: all required features implemented — diagonal reference
+    line, temporal color coding, correlation annotation, AR(1) data'
+  - 'Correct Imprint sequential colormap (ANYPLOT_SEQ: #009E73→#4467A3) applied to
+    continuous time index — appropriate for single-polarity data'
+  - 'Thorough theme-adaptive chrome: all axis elements (title, labels, ticks, spines,
+    grid) correctly flip between light (#FAF8F1) and dark (#1A1A17) surfaces'
+  - 'Clean Makie idioms: with_theme(), Figure(size=...) new API, grid-based Colorbar(fig[1,
+    2], sc), cgrad() — all idiomatic'
+  - Colorbar integration (fig[1,2]) cleanly extends the layout without awkward positioning
+  - 'KISS code structure: flat script, Random.seed!(42) for reproducibility, all imports
+    used'
+  weaknesses:
+  - Correlation annotation at fontsize=13 is slightly small relative to the 3200×1800
+    canvas — bumping to 15–16 would improve legibility at thumbnail scale
+  - Marker size=7 at medium density (499 points) is slightly on the small side; markersize=8–9
+    would aid visibility of individual points without increasing overplotting
+  - 'DE-02 refinement opportunity: colorbar frame/border is default; using a slim
+    explicit width=12 and removing the colorbar spine outline would sharpen the minimal
+    aesthetic'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "scatter-lag · julia · makie · anyplot.ai" in dark ink, clearly readable. Axis labels "y(t)" (x-axis) and "y(t + 1)" (y-axis) in dark ink. Tick labels (-2.0, 0.0, 2.0) in soft-dark ink. All chrome elements readable against the warm cream surface.
+      Data: 499 scatter points colored green (#009E73) at the early end of the sequence transitioning to blue (#4467A3) at the late end via the Imprint sequential colormap. A dashed diagonal reference line (y=x) in soft-gray runs from lower-left to upper-right. Correlation annotation "r = 0.85" appears in the upper-left in dark ink. A vertical colorbar on the right side labeled "Time" with "Late" at top and "Early" at bottom. Data shows clear positive autocorrelation, consistent with AR(1) phi=0.85.
+      Legibility verdict: PASS — all text is readable; annotation slightly small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct warm dark, not pure black.
+      Chrome: Title in light near-white ink, clearly readable. Axis labels and tick labels in soft light ink (#B8B7B0). Colorbar "Time"/"Late"/"Early" labels in light ink. No dark-on-dark failures — all text is light against the dark surface.
+      Data: Data colors are identical to the light render — same green-to-blue transition across time index. The dashed reference line appears as white/light dashed line. Correlation annotation "r = 0.85" in light ink, readable.
+      Legibility verdict: PASS — both themes pass the theme-readability check. No dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; annotation at fontsize=13 slightly
+          small at thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor central overplotting at 499 points; alpha=0.72 helps; no text
+          overlaps data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: markersize=7 adequate but slightly small for 499 points; alpha and
+          colormap provide good layering
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green→blue colormap is CVD-safe; no red-green sole-signal
+          usage
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200×1800 canvas correct; colorbar neatly integrated at fig[1,2];
+          no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: y(t) and y(t+1) are descriptive; title follows spec format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ANYPLOT_SEQ (#009E73→#4467A3) correct; backgrounds #FAF8F1/#1A1A17
+          correct; chrome properly adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Temporal sequential colormap reveals time structure; correlation
+          annotation adds analytical value; custom Makie theme applied; polished and
+          intentional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid at 15% opacity; slim colorbar width=14;
+          well-balanced whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-by-time tells the story of autocorrelation structure; reference
+          line guides interpretation; r annotation quantifies the pattern
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct lag plot: y(t) vs y(t+lag)'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal reference line, color by time index, correlation annotation,
+          configurable lag variable — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: y(t) on x-axis, y(t+1) on y-axis, 499 points displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-lag · julia · makie · anyplot.ai' correct; colorbar
+          labeled 'Time' with Early/Late ticks
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: AR(1) with phi=0.85 demonstrates positive autocorrelation; all diagnostic
+          elements shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: AR(1) process is a standard, realistic time series; 500 observations
+          is appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values in [-3, +3] range — appropriate for standardized AR process
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 5 imports (CairoMakie, Colors, ColorSchemes, Random, Statistics)
+          are actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2; current Makie API
+          (size= not resolution=)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: with_theme(), Figure(size=...) new API, scatter!/lines!/text! primitives,
+          Colorbar grid placement — all idiomatic Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: with_theme for custom Theme(), grid-based Colorbar(fig[1,2], sc)
+          layout, cgrad() for gradient colormap — Makie-distinctive features leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending

@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 86/100 | Created: 2026-04-25
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-30
 """
 
 import os
@@ -16,11 +16,13 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_area,
+    geom_point,
     geom_segment,
     geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -34,14 +36,17 @@ LetsPlot.setup_html()
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-RULE = "#D6D3C7" if THEME == "light" else "#3A3A34"
-BRAND = "#009E73"
+BRAND = "#009E73"  # Imprint palette position 1 — ridge outline
 
-# Data — Wallis (Valais, Switzerland) panorama anchored on the Matterhorn
+# Mountain silhouette fill — dark slate for evening/dusk photo feel
+MOUNTAIN_FILL = "#2C3E50"
+# Sky panel background — atmospheric context above the ridgeline
+SKY_COLOR = "#B8D4E8" if THEME == "light" else "#0B1726"
+
+# Data — Wallis (Valais) panorama from Gornergrat, WSW to NE
 peak_records = [
     ("Matterhorn", 22, 4478),
     ("Dent Blanche", 46, 4358),
@@ -61,28 +66,71 @@ peak_records = [
     ("Breithorn", 268, 4164),
 ]
 peaks_df = pd.DataFrame(peak_records, columns=["name", "angle", "elev"])
+peaks_df["elev_text"] = peaks_df["elev"].astype(str) + " m"
 
-# Skyline — sum-of-Gaussians around peaks plus minor inter-peak ridges + organic noise
+# Skyline — piecewise-linear tent functions (triangular peaks, NOT Gaussians)
 np.random.seed(42)
 n_samples = 1600
 angle = np.linspace(0, 290, n_samples)
 base_elev = 3000.0
-
 skyline = np.full_like(angle, base_elev)
-for _, p in peaks_df.iterrows():
-    bell = base_elev + (p["elev"] - base_elev) * np.exp(-((angle - p["angle"]) ** 2) / (2 * 7.0**2))
-    skyline = np.maximum(skyline, bell)
 
-minor_offsets = [9, 33, 56, 73, 88, 108, 138, 162, 198, 224, 258, 280]
-for off in minor_offsets:
-    h = 3450 + np.random.uniform(-180, 200)
-    bell = base_elev + (h - base_elev) * np.exp(-((angle - off) ** 2) / (2 * 4.0**2))
-    skyline = np.maximum(skyline, bell)
+# Asymmetric flank widths (left_deg, right_deg) per peak — steep and angular
+peak_widths = [
+    (11, 14),  # Matterhorn — steep left flank (iconic pyramid)
+    (16, 12),  # Dent Blanche
+    (10, 8),  # Ober Gabelhorn — compact
+    (12, 10),  # Zinalrothorn
+    (14, 16),  # Weisshorn
+    (12, 10),  # Dom
+    (8, 6),  # Täschhorn — narrow and steep
+    (10, 12),  # Alphubel
+    (10, 8),  # Allalinhorn
+    (9, 11),  # Rimpfischhorn
+    (12, 10),  # Strahlhorn
+    (16, 14),  # Monte Rosa — broad massif
+    (10, 12),  # Liskamm
+    (7, 7),  # Castor — symmetric
+    (6, 8),  # Pollux
+    (14, 10),  # Breithorn
+]
 
-skyline = skyline + np.cumsum(np.random.randn(n_samples)) * 0.6
+for i, (_, p) in enumerate(peaks_df.iterrows()):
+    lw, rw = peak_widths[i]
+    left_rise = base_elev + (p["elev"] - base_elev) * np.maximum(0.0, 1.0 - (p["angle"] - angle) / lw)
+    right_fall = base_elev + (p["elev"] - base_elev) * np.maximum(0.0, 1.0 - (angle - p["angle"]) / rw)
+    tent = np.where(angle <= p["angle"], left_rise, right_fall)
+    skyline = np.maximum(skyline, tent)
+
+# Minor ridge bumps and rocky notches between major peaks
+minor_peaks = [
+    (9, 3440),
+    (33, 3490),
+    (56, 3520),
+    (73, 3460),
+    (88, 3540),
+    (108, 3500),
+    (138, 3470),
+    (162, 3510),
+    (198, 3490),
+    (224, 3530),
+    (258, 3450),
+    (280, 3480),
+]
+for mp_angle, mp_elev in minor_peaks:
+    w = np.random.uniform(3, 7)
+    tent = base_elev + (mp_elev - base_elev) * np.maximum(0.0, 1.0 - np.abs(angle - mp_angle) / w)
+    skyline = np.maximum(skyline, tent)
+
+# Organic roughness — rocky jaggedness along ridges
+roughness = np.cumsum(np.random.randn(n_samples)) * 0.5
+roughness -= roughness.mean()
+skyline += roughness
+skyline = np.maximum(skyline, 2870.0)  # floor above y-axis lower limit
+
 skyline_df = pd.DataFrame({"angle": angle, "elev": skyline})
 
-# Stagger labels into three rows — name labels are wide, so use a generous gap
+# Stagger labels into three rows to avoid crowding for the 16 clustered peaks
 label_rows = [5650, 5350, 5050]
 min_dx = 26
 placed = []
@@ -96,62 +144,80 @@ for _, p in peaks_df.iterrows():
             break
     label_y_values.append(chosen)
     placed.append((p["angle"], chosen))
+
 peaks_df["label_y"] = label_y_values
-peaks_df["elev_y"] = peaks_df["label_y"] - 140
-peaks_df["elev_text"] = peaks_df["elev"].astype(str) + " m"
+peaks_df["elev_y"] = peaks_df["label_y"] - 130
+anchor_df = peaks_df[peaks_df["name"] == "Matterhorn"]
+other_df = peaks_df[peaks_df["name"] != "Matterhorn"]
 
-# Highlight the anchor summit (Matterhorn) typographically
-anchor_mask = peaks_df["name"] == "Matterhorn"
-anchor_df = peaks_df[anchor_mask]
-other_df = peaks_df[~anchor_mask]
-
-# Compass bearing ticks — vantage point ~Gornergrat sweeping WSW → ENE
+# Compass bearing labels for geographic orientation
 compass_breaks = [22, 90, 160, 230, 280]
 compass_labels = ["WSW", "W", "NW", "N", "NE"]
 
+# Title scaled for length (formula: round(16 * 67 / n), floor=11)
+TITLE = "Wallis Panorama from Gornergrat · area-mountain-panorama · python · letsplot · anyplot.ai"
+title_size = max(11, round(16 * 67 / len(TITLE)))
+
 plot = (
     ggplot()
-    # Mountain silhouette
-    + geom_area(data=skyline_df, mapping=aes(x="angle", y="elev"), fill=BRAND, color=BRAND, size=0.6, alpha=1.0)
+    # Dark mountain silhouette with BRAND ridge outline — evening/dusk alpine feel
+    + geom_area(data=skyline_df, mapping=aes(x="angle", y="elev"), fill=MOUNTAIN_FILL, color=BRAND, size=0.8, alpha=1.0)
     # Leader lines from each summit up to its label
     + geom_segment(
         data=peaks_df, mapping=aes(x="angle", y="elev", xend="angle", yend="label_y"), color=INK_SOFT, size=0.4
     )
-    # Peak names — non-anchor
-    + geom_text(
-        data=other_df, mapping=aes(x="angle", y="label_y", label="name"), size=7, color=INK, fontface="bold", vjust=0.0
+    # Peak markers — hover tooltips are lets-plot's key interactive HTML differentiator
+    + geom_point(
+        data=peaks_df,
+        mapping=aes(x="angle", y="elev"),
+        color=BRAND,
+        size=2.5,
+        tooltips=layer_tooltips().line("@name").line("@elev_text"),
     )
-    # Peak names — Matterhorn anchor (slightly larger for visual emphasis)
+    # Peak names — non-anchor summits
     + geom_text(
-        data=anchor_df, mapping=aes(x="angle", y="label_y", label="name"), size=9, color=INK, fontface="bold", vjust=0.0
+        data=other_df,
+        mapping=aes(x="angle", y="label_y", label="name"),
+        size=3.5,
+        color=INK,
+        fontface="bold",
+        vjust=0.0,
     )
-    # Elevation under each name
-    + geom_text(data=peaks_df, mapping=aes(x="angle", y="elev_y", label="elev_text"), size=6, color=INK_SOFT, vjust=0.0)
+    # Matterhorn anchor — slightly larger for focal emphasis
+    + geom_text(
+        data=anchor_df,
+        mapping=aes(x="angle", y="label_y", label="name"),
+        size=4.5,
+        color=INK,
+        fontface="bold",
+        vjust=0.0,
+    )
+    # Elevation sub-labels below each peak name
+    + geom_text(
+        data=peaks_df, mapping=aes(x="angle", y="elev_y", label="elev_text"), size=3.0, color=INK_SOFT, vjust=0.0
+    )
     + scale_x_continuous(name="Bearing", breaks=compass_breaks, labels=compass_labels, limits=[0, 290], expand=[0, 0])
     + scale_y_continuous(name="Elevation (m)", breaks=[3000, 3500, 4000, 4500], limits=[2800, 6000], expand=[0, 0])
-    + labs(
-        title="Wallis Panorama from Gornergrat · area-mountain-panorama · letsplot · anyplot.ai",
-        subtitle="Skyline of the Pennine Alps with 16 labeled 4000-m summits",
-    )
-    + ggsize(1600, 900)
+    + labs(title=TITLE, subtitle="Pennine Alps 4000-m summits · 16 labeled peaks from Gornergrat (3089 m)")
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major_y=element_line(color=RULE, size=0.3),
+        panel_background=element_rect(fill=SKY_COLOR),
+        panel_grid_major_y=element_blank(),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         axis_line_x=element_line(color=INK_SOFT, size=0.5),
         axis_line_y=element_blank(),
         axis_ticks_x=element_line(color=INK_SOFT),
         axis_ticks_y=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
-        plot_subtitle=element_text(size=16, color=INK_MUTED),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_title=element_text(size=title_size, color=INK),
+        plot_subtitle=element_text(size=10, color=INK_MUTED),
         plot_margin=[40, 40, 20, 20],
     )
 )
 
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

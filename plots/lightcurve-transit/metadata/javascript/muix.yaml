@@ -1,0 +1,258 @@
+library: muix
+language: javascript
+specification_id: lightcurve-transit
+created: '2026-06-20T08:06:06Z'
+updated: '2026-06-20T08:24:09Z'
+generated_by: claude-sonnet
+workflow_run: 27864806391
+issue: 4559
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lightcurve-transit/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Expert use of MUI X ChartContainer composition API + useDrawingArea hook for seamless
+    custom SVG error bar overlay
+  - Fully correct Imprint palette application and theme-adaptive chrome in both light
+    and dark renders
+  - 'Scientifically accurate TESS-like photometry: realistic transit depth (~1%),
+    noise level, and phase-folded data format'
+  - 'Complete spec compliance: all required features (error bars, model curve, baseline
+    reference, phase-folded data) implemented'
+  - Deterministic LCG for reproducible data generation; clean idiomatic React structure
+  weaknesses:
+  - Duplicate header block (lines 1-4 and 6-10) is a cosmetic pipeline artifact from
+    impl-review header rewrite
+  - '//# anyplot-orientation: landscape directive appears on line 5 after the first
+    header block rather than at the very top of the file per muix.md guidance; landscape
+    is the default so no functional impact'
+  - 'DE-02: No explicit spine or grid customization beyond MUI X/ThemeProvider defaults;
+    subtle grid removal or spine tweaks would further refine the visual chrome'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) as required
+      Chrome: Title "Exoplanet Transit · lightcurve-transit · javascript · muix · anyplot.ai" in dark ink, clearly visible. Axis labels "Orbital Phase" and "Relative Flux" in secondary ink. Tick labels (0.00–1.00 phase, 0.984–1.007 flux) clearly readable.
+      Data: 280 scattered data points in Imprint brand green #009E73 with vertical error bars (opacity=0.52). Smooth lavender (#C475FD) model curve overlaid. Dashed reference line at flux=1.0. Custom legend in right margin.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) as required
+      Chrome: Title and all axis labels/tick labels in light ink, clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Data colors identical to light render — green #009E73 dots and lavender #C475FD model curve unchanged. Error bars and reference line remain visible.
+      Legibility verdict: PASS — all text clearly readable against dark background; full theme adaptation confirmed.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=21px, axis labels=16px, tick
+          labels=14px CSS). Readable in both themes; balanced proportions; no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: r=3.5 CSS px dots at opacity=0.82, error bars at opacity=0.52, well-adapted
+          to 280 data points. Model curve clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) and lavender (#C475FD) are CVD-safe Imprint palette
+          members with distinct hue and luminance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 confirmed. Canvas gate passed. Generous balanced margins.
+          Plot fills ~65% of canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Orbital Phase and Relative Flux are descriptive standard astronomical
+          labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Observed flux uses t.palette[0] (#009E73); model uses t.palette[1]
+          (#C475FD). Background is t.pageBg. Theme-adaptive chrome correct in both
+          renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above MUI X defaults: custom SVG DataLayer for error bars,
+          custom LegendPanel in right margin, dashed baseline reference, natural-curve
+          model. Strong professional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid lines. Generous whitespace. Opacity layering (error bars
+          behind dots) executed well. ThemeProvider handles chrome adaptation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Transit dip at mid-phase is the clear focal point. Model curve guides
+          eye through scatter noise. Dashed baseline at flux=1.0 provides immediate
+          orientation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: phase-folded astronomical light curve with transit dip.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: phase-folded time axis, flux measurements,
+          error bars, smooth model curve, transit dip downward, relative flux Y-axis,
+          baseline reference.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: Orbital Phase 0.0-1.0. Y: Relative Flux centered at 1.0. Transit
+          dip goes downward as specified.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title Exoplanet Transit · lightcurve-transit · javascript · muix
+          · anyplot.ai follows correct format. Legend labels Observed Flux and Transit
+          Model correctly identify both series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: noisy scatter, V-shaped transit dip, per-point
+          error bars, smooth model fit, baseline reference.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated TESS-like photometry with phase-folded exoplanet transit.
+          Neutral, scientifically rigorous scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~1% transit depth (TRANSIT_DEPTH=0.01) realistic for hot Jupiters.
+          Noise sigma=0.0015 consistent with space-based photometry. Physically plausible
+          transit duration.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Well-organized for React/MUI X: data generation, helper components,
+          main Chart export. Component separation is idiomatic and necessary for the
+          composition API.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with fixed seed 42 (makeLCG(42)). All data computed
+          in-memory without Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 8 imports used: ChartContainer, LinePlot, ChartsXAxis, ChartsYAxis,
+          ChartsReferenceLine, useDrawingArea, Box, Typography.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic React code. Custom SVG components appropriately
+          structured. No fake UI elements. No over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness saves plot-light.png, plot-dark.png, plot-light.html, plot-dark.html.
+          Current community @mui/x-charts API used throughout.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert-level MUI X composition: ChartContainer + LinePlot + ChartsXAxis/YAxis
+          + ChartsReferenceLine. Uses useDrawingArea hook for coordinate-space custom
+          SVG — the recommended MUI X extensibility pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useDrawingArea hook for drawing-area coordinate mapping is distinctly
+          MUI X. ChartsReferenceLine is MUI X-specific. ChartContainer composition
+          API. Error bars via SVG overlay is the correct MUI X approach for non-native
+          features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

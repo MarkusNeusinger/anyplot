@@ -1,0 +1,288 @@
+library: muix
+language: javascript
+specification_id: scatter-shot-chart
+created: '2026-06-21T08:36:38Z'
+updated: '2026-06-21T09:02:52Z'
+generated_by: claude-sonnet
+workflow_run: 27898256545
+issue: 4416
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-shot-chart/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Accurate NBA half-court geometry: three-point arc at 23.75 ft, corner lines at
+    ±22 ft, free-throw circle at 19 ft, restricted area arc, backboard, basket — all
+    correctly computed from real dimensions'
+  - Dual encoding (shape + color) for made/missed — circles for made, × marks for
+    missed — provides colorblind-safe redundancy beyond the green/red contrast
+  - Shot type encoded via marker radius variation (free-throw 4.5, 2-pointer 5.5,
+    3-pointer 6.5) adds a third data dimension without cluttering the legend
+  - 'Idiomatic MUI X composition pattern: ChartContainer + useDrawingArea hook synchronizes
+    the custom SVG court overlay to the chart''s data coordinate space cleanly'
+  - Deterministic LCG (seed=42) with realistic make percentages (free throw 78%, 3-pointer
+    37%, close 2-pointer 60%) produces plausible, reproducible basketball data
+  - 'Full theme-adaptive chrome: COURT_STROKE and t.ink used throughout, both light
+    (#FAF8F1) and dark (#1A1A17) renders look clean and professional'
+  - 'Imprint palette semantic exception correctly applied: brand green (#009E73) for
+    made shots, semantic red anchor (#AE3030) for missed shots — matches the good/bad
+    domain convention'
+  - 'Square canvas (//# anyplot-orientation: square) is the right choice for a 1:1-aspect-ratio
+    court diagram'
+  weaknesses:
+  - Legend marker shapes (MUI X default squares) do not match the actual chart markers
+    (× for missed, ○ for made) — ChartsLegend renders colored rectangles regardless
+    of the custom SVG markers drawn by ShotMarkers; consider using a custom legend
+    slot or adding shape icons to label text to make the legend consistent with the
+    markers
+  - Legend label fontSize is 20px vs the muix.md recommended 14–16px for a 1200×1200
+    CSS mount; this makes the legend labels noticeably oversized compared to the title
+    at 22px — reduce legend labelStyle.fontSize to ~14–15px
+  - Marker radii (4.5–6.5 CSS px) are somewhat small for medium-density 300-point
+    data on a 1200×1200 mount; at 2× DPR the final markers are 9–13px diameter — consider
+    increasing to 6–8 px base radius for better visibility, especially in the lower-density
+    mid-range and three-point zones
+  - 'DE-02: no axis-tick suppression is explicit in the code — axis lines are absent
+    only because no <ChartsXAxis /> / <ChartsYAxis /> children are added; the approach
+    works but is implicit; add a comment explaining this is intentional'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface consistent with #FAF8F1 — not pure white, correct anyplot light theme.
+      Chrome: Title "scatter-shot-chart · javascript · muix · anyplot.ai" centered above the court in dark ink at ~22px — clearly readable. No axis tick labels or axis lines visible (correct for court diagram; court boundary provides spatial reference). Legend at bottom-center: "Missed" (red) and "Made" (green) with MUI X default square marks, fontSize ~20px — slightly oversized but readable.
+      Court: NBA half-court rendered in semi-transparent medium gray (rgba(26,26,23,0.40)): court boundary rectangle, paint/key rectangle, free-throw circle, restricted area arc, corner three-point straight lines, three-point arc, backboard line, basket ellipse — all visible and accurately sized.
+      Data: Green filled circles (made shots) with fillOpacity=0.7 and red × marks (missed shots) with strokeOpacity=0.7. First series (made) correctly uses brand green #009E73; missed uses semantic red anchor #AE3030. ~300 data points distributed realistically across zones — clustering at rim/paint and at three-point arc visible. Mild overplotting near paint area; alpha mitigates it.
+      Legibility verdict: PASS — all text elements clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface consistent with #1A1A17 — not pure black, correct anyplot dark theme.
+      Chrome: Title text renders in light cream/off-white (t.ink = #F0EFE8) — clearly readable against dark background. Legend text is also light-colored — readable. No dark-on-dark failures observed.
+      Court: Lines rendered in semi-transparent light (rgba(240,239,232,0.50)) — court geometry clearly visible against the dark background; contrast is appropriate and not overpowering.
+      Data: Data colors are identical to light render — brand green #009E73 circles and #AE3030 × marks maintain their colors as required. Only chrome (background, court lines, text) adapts to dark theme.
+      Legibility verdict: PASS — both data markers and text elements are clearly readable against dark background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title (22px, weight 600) and court are well-proportioned; fonts explicitly
+          set. Legend labels at 20px are above the recommended 14–16px for MUI X at
+          1200px CSS mount — slightly oversized but readable. Both renders clear.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements. Legend, title,
+          and markers occupy separate regions cleanly.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Custom markers (circles r=4.5–6.5 CSS px) are visible with 0.7 opacity.
+          Mild overplotting in paint area for 300 points. Slightly undersized for
+          medium-density data — could be r=6–8 for better visibility.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red contrast supplemented with redundant shape encoding (circle
+          vs × mark) — colorblind-safe. Imprint semantic anchors used correctly.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas with generous symmetric margins (70/80/60/60). Court
+          fills the plot area well. Legend and title positioned cleanly above and
+          below the court.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format 'scatter-shot-chart · javascript · muix · anyplot.ai'
+          correct. No axis labels per spec (court geometry provides reference).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Made shots = #009E73 (brand green, first/primary series). Missed
+          = #AE3030 (semantic red anchor for bad/loss). Backgrounds correct for both
+          themes. Court lines use theme-adaptive ANYPLOT_TOKENS. Data colors identical
+          across themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: accurate court geometry, dual encoding,
+          size variation for shot types, theme-adaptive colors. Not quite FiveThirtyEight-level
+          polish — markers are somewhat small and the visual impact could be stronger.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis chrome rendered (correct for court diagram), no grid lines,
+          semi-transparent court lines that don't compete with data, generous whitespace.
+          Legend well-positioned. Clean, deliberate refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green/red dual encoding creates immediate visual hierarchy for made
+          vs missed. Court overlay contextualizes all shots spatially. Shot clustering
+          patterns (rim, three-point arc) emerge naturally. No explicit annotations
+          or zone labels that would push to DE-03=6.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball shot chart overlaying shot data on NBA half-court diagram
+          — exactly the requested type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: three-point arc, free-throw line, paint/key,
+          restricted area arc, basket/backboard. Green for made, red for missed. Neutral
+          court lines. 1:1 aspect ratio. Legend for made/missed. Shot type encoded
+          via size.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = horizontal position (−25 to 25 ft), y = vertical position (0–47
+          ft), made/missed = color+shape, shot_type = marker radius. 300 points in
+          spec range (200–500).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-shot-chart · javascript · muix · anyplot.ai' — correct
+          format. Legend shows 'Missed' and 'Made' with correct colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all shot types (2-pointer, 3-pointer, free-throw), all court
+          zones (rim, mid-range, corner three, arc three, free-throw line), realistic
+          made/missed distribution with zone-appropriate percentages.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Basketball shot chart is a real-world, neutral sports analytics scenario.
+          Labels are clear (Missed/Made). No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NBA dimensions accurate (50ft wide, 47ft deep, basket at 5.25ft,
+          three-point at 23.75ft, corner three at 22ft, free throw at 19ft). Make
+          percentages realistic (FT 78%, 3PT 37%, close 2PT 60%, other 2PT 41%).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Sub-components (ShotMarkers, BasketballCourt, ChartTitle) are idiomatic
+          and necessary for React/MUI X. Clear separation: data generation → SVG components
+          → chart container.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG with seed=42. All 300 shots fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: React (JSX), ChartContainer, ChartsLegend, useDrawingArea.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. LCG is correct. SVG path math is clean.
+          No fake interactive elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default export component; harness saves plot-light.png, plot-dark.png,
+          plot-light.html, plot-dark.html. skipAnimation set.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartContainer + useDrawingArea is the recommended MUI X composition
+          pattern for custom overlays. ChartsLegend used standalone. skipAnimation,
+          window.ANYPLOT_SIZE, and window.ANYPLOT_TOKENS all correctly applied.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useDrawingArea hook is distinctively MUI X — provides the chart's
+          coordinate-space bounds to synchronize custom SVG court geometry with the
+          data axis. The ChartContainer composition model (series for legend/coords
+          + custom SVG children) is a genuinely distinctive MUI X feature not available
+          in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

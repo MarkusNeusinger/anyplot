@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:23:21Z'
+updated: '2026-06-21T06:51:41Z'
+generated_by: claude-sonnet
+workflow_run: 27895467095
+issue: 4417
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Accurate FIFA-spec pitch diagram with all required markings: penalty areas, goal
+    areas, center circle, halfway line, corner arcs, and goal posts'
+  - Four distinct marker shapes (circle, star, triangle, diamond) plus Imprint palette
+    colors provide excellent CVD-safe redundant encoding for event types
+  - Directional arrows for passes and shots with filled vs hollow markers elegantly
+    encode both trajectory and outcome in a single mark
+  - Deterministic LCG with seed ensures reproducible output; idiomatic D3 usage (d3.line(),
+    d3.arc(), SVG defs/markers, .join() data binding)
+  - 'Correct 105:68 pitch aspect ratio maintained; theme-adaptive pitch background
+    (#3a7d44 light / #1e3a28 dark) and page chrome'
+  - Imprint palette in canonical order (pass=#009E73, shot=#C475FD, tackle=#4467A3,
+    interception=#BD8233); correct page backgrounds both renders
+  weaknesses:
+  - Pass/shot arrow lines are thin (1.2px CSS = 2.4px native); at mobile scale (~400px
+    wide) these become sub-pixel and effectively invisible — increase stroke-width
+    to at least 2px CSS
+  - Legend layout uses fixed pixel offsets (tSp=185, oSp=220) that could misalign
+    if pitch position shifts; two-row legend has good content but could benefit from
+    a subtle background box (t.elevatedBg) to delineate it from the pitch area
+  - 'CQ-01: Seven helper functions (rand, rr, starP, triP, diaP, prect, parc) — reasonable
+    for complexity but slightly non-KISS; D3-idiomatic alternatives (d3.symbol() for
+    marker shapes) could reduce custom path code'
+  - 'DE-02: Legend could be more polished with a bounding box or frame (using t.elevatedBg)
+    so text doesn''t float disconnected below the pitch'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) outer canvas — correct theme surface.
+      Pitch: Vibrant green (#3a7d44) with white semi-transparent pitch lines (outline, halfway line, penalty areas, goal areas, center circle, penalty arcs, corner arcs, goals).
+      Chrome: Title "scatter-pitch-events · javascript · d3 · anyplot.ai" rendered in dark ink at top center, clearly readable. Two-row legend below pitch with dark text labels (Pass, Shot, Tackle, Interception; Successful/Unsuccessful).
+      Data: Pass circles in #009E73, Shot stars in #C475FD, Tackle triangles in #4467A3, Interception diamonds in #BD8233. Arrows visible for passes (distributed across pitch) and shots (converging to right goal). Filled markers = successful, hollow = unsuccessful.
+      Legibility verdict: PASS — all title and legend text clearly readable against warm off-white.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) outer canvas — correct dark theme surface.
+      Pitch: Darker green (#1e3a28) with white pitch lines, slightly more muted appearance appropriate for dark theme.
+      Chrome: Title and legend text rendered in light ink (#F0EFE8 / #B8B7B0 tokens), clearly readable against near-black background. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — pass=#009E73, shot=#C475FD, tackle=#4467A3, interception=#BD8233. Arrows and filled/hollow encoding preserved exactly as in light render.
+      Legibility verdict: PASS — all chrome elements readable; data colors correctly unchanged from light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (22px title, 14px legend), readable in
+          both light and dark renders; no axis labels needed for a pitch map
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; data marker overlap in shot zone is inherent and
+          expected for converging shot trajectories
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers well-sized (mPx*0.9 radius); arrows slightly thin (1.2px
+          CSS) for mobile readability
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette with shape redundancy (circle/star/triangle/diamond)
+          makes encoding robust
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 105:68 aspect ratio; good canvas utilization; balanced margins;
+          legend clearly below pitch
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels required for pitch map; title format 'scatter-pitch-events
+          · javascript · d3 · anyplot.ai' is correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette in canonical order (palette[0–3]); page backgrounds
+          correct (#FAF8F1/#1A1A17); data colors identical across themes; pitch green
+          is a semantic exception
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional football analytics aesthetic; custom theme-adaptive
+          pitch colors; above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines (appropriate); opacity encoding for outcome; legend floats
+          without background frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shot convergence to right goal creates natural focal point; outcome
+          fill/hollow encoding tells success story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct soccer pitch event map with markers and directional arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: pitch markings, 4 event types with distinct shapes/colors,
+          outcome encoding, arrows for passes/shots'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to pitch coordinates (0–105m / 0–68m)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend covers event types and outcome encoding
+          comprehensively
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types shown with both outcomes; passes distributed across
+          pitch; shots in attack zone; deterministic 120 events
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic neutral soccer analytics scenario; shots concentrated in
+          attacking third; pass success rate ~78%
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA-standard pitch dimensions (105m × 68m); realistic penalty area
+          positions; goal dimensions accurate
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Seven helper functions (rand, rr, starP, triP, diaP, prect, parc)
+          — reasonable for spec complexity but not fully flat
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG (seed 12345) ensures reproducible output across
+          runs
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global used; no unnecessary imports; window.ANYPLOT_* correctly
+          consumed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; good use of D3 idioms; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct D3 harness contract: SVG into #container, sized from window.ANYPLOT_SIZE;
+          harness writes both PNG and HTML'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert D3: d3.scaleLinear, d3.line(), d3.arc(), SVG defs/markers,
+          .join() data binding, margin convention'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'D3-distinctive: d3.line() for pitch outlines, d3.arc() for penalty
+          arcs, SVG marker definitions for arrows, data-driven .join() rendering'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -2,119 +2,130 @@ library: altair
 language: python
 specification_id: ecdf-basic
 created: '2025-12-23T13:01:57Z'
-updated: '2026-04-24T13:09:14Z'
-generated_by: claude-opus
-workflow_run: 24890589158
+updated: '2026-06-25T09:56:10Z'
+generated_by: claude-sonnet
+workflow_run: 28160570266
 issue: 976
-python_version: 3.14.4
-library_version: 6.1.0
+language_version: 3.13.14
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ecdf-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Correct ECDF step function using interpolate=step-after
-  - Complete theme adaptation (light/dark) with all chrome tokens properly threaded
-    through configure_* calls
-  - Realistic neutral data context (API latency) with seed for reproducibility
-  - Axis labeled with units (ms), Y-axis as percentages with explicit 11-tick formatting
-  - Interactive tooltips and HTML output leveraging Altair native interactivity
+  - Correct ECDF step function using Vega-Lite declarative cume_dist() window transform
+    — the idiomatic Altair approach, no numpy pre-computation needed
+  - 'Quartile focal design: crosshair dashed reference lines + filled dot markers
+    + text annotations provide at-a-glance percentile reading in a clean, purposeful
+    hierarchy'
+  - 'Full theme adaptation with correct #FAF8F1 / #1A1A17 backgrounds and all chrome
+    elements (text, grid, axes) using theme-adaptive tokens'
+  - Excellent code quality — KISS structure, deterministic seed, clean imports, canvas
+    padding handled correctly with PIL
   weaknesses:
-  - No visual emphasis or focal point — no reference line at median or percentile
-    annotation to guide viewer insight
-  - Design feels like a well-themed default rather than a purposeful composition with
-    no intentional hierarchy beyond color
-  - Grid shows on both axes; for a line chart style guide prefers Y-axis-only grid
-    to reduce visual noise
+  - Annotation text at fontSize=9 renders at ~36 source-px in the 3200×1800 canvas;
+    at 400 px mobile scale this drops to ~4 px effective height — bump to fontSize=11
+    for better mobile readability
+  - Reference lines use opacity=0.75 which can compete visually with the main ECDF
+    line; reducing to opacity=0.5 would strengthen the primary/secondary hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "ecdf-basic · altair · anyplot.ai" in dark ink at top — clearly readable; axis labels "API Response Time (ms)" and "Cumulative Proportion" in dark ink — readable; tick labels in INK_SOFT (#4A4A44) — readable; subtle grid at 10% opacity; no view border box (strokeWidth=0)
-      Data: Single brand-green (#009E73) ECDF step-function line (strokeWidth=3.5) climbing from 0% at ~20ms to 100% at ~260ms; sigmoid rise concentrated around 100-150ms
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "ecdf-basic · python · altair · anyplot.ai" in bold dark ink, clearly readable. X-axis label "API Response Time (ms)" and Y-axis label "Cumulative Proportion" in dark ink, balanced and legible. Tick labels in dark secondary ink (#4A4A44 INK_SOFT equivalent), all readable. Y-axis ticks formatted as percentages (0%–100%). X-axis ticks show ms values (20–260).
+      Data: Single ECDF step-after line in brand green #009E73, strokeWidth=3.5, clearly vivid. Dashed reference lines (5-4 dash pattern) in muted gray at Q1 (25%/~96ms), median (50%/~122ms), Q3 (75%/~140ms). Filled green dot markers at each quartile intersection. Text annotations "~96ms", "~122ms", "~140ms" in small muted text.
+      Legibility verdict: PASS — all elements clearly readable against the warm off-white background. Annotation text (fontSize=9) is the only element that may struggle at mobile scale (~400px width).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light cream (#F0EFE8) — clearly readable against dark background; axis labels in light text — readable; tick labels in INK_SOFT (#B8B7B0) — readable; grid lines flip to light-tinted 10% opacity; no dark-on-dark failure detected
-      Data: ECDF line identical #009E73 — matches light render exactly; no color shift
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title "ecdf-basic · python · altair · anyplot.ai" in light warm-white text, fully readable. X-axis and Y-axis labels in light text, all clearly visible. Tick labels in light secondary text. No dark-on-dark issues.
+      Data: ECDF line in identical brand green #009E73 — unchanged from light render (Imprint palette data colors stay constant). Dashed reference lines and focal markers in same positions with same colors. Annotation text readable.
+      Legibility verdict: PASS — all text is readable against the dark background. Data colors are identical to the light render. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18px; readable in both themes'
+        comment: All font sizes explicitly set (title=16, axis=12, labels=10); readable
+          in both themes. Annotation text at fontSize=9 is slightly small for mobile
+          scale (~400px) but readable at canvas size.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping elements. Annotations are offset (dx=8, dy=-5) cleanly
+          away from focal markers.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: strokeWidth=3.5 appropriate for 4800x2700px canvas; step line clearly
-          visible
+        comment: 250-point ECDF line at strokeWidth=3.5 is vivid and clear. Focal
+          markers at size=120 are prominent. Brand green reads well on both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single CVD-safe Okabe-Ito brand green
+        comment: 'Single series in CVD-safe brand green #009E73. Reference lines in
+          muted gray. High contrast in both themes.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well with balanced margins; nothing cut off
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well with balanced
+          margins. No text overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: API Response Time (ms) includes units; Cumulative Proportion is descriptive
+        comment: 'X: ''API Response Time (ms)'' with units. Y: ''Cumulative Proportion''
+          with % format. Title matches mandated format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; light bg #FAF8F1, dark bg #1A1A17; all chrome
-          theme-correct'
+        comment: 'First series #009E73 (Imprint position 1). Background #FAF8F1 light
+          / #1A1A17 dark. All chrome tokens theme-adaptive. Data colors identical
+          across both renders.'
     design_excellence:
-      score: 9
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default with brand green and theme handling,
-          but no intentional visual hierarchy or design layering
+        passed: true
+        comment: 'Above a well-configured default (4): deliberate focal design with
+          Imprint palette, intentional hierarchy between primary ECDF line and muted
+          reference elements. Not at FiveThirtyEight-level (6+).'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: strokeWidth=0 removes view border box, gridOpacity=0.10 is subtle;
-          above default but not fully polished
+        passed: true
+        comment: X-axis grid removed, Y-axis grid at subtle opacity 0.13. Reference
+          lines dashed and muted (opacity=0.75). Clean view without visible spines.
+          Above default of 2.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly but no visual emphasis, no reference line
-          at median, no focal point
+        passed: true
+        comment: Crosshair reference lines + focal dot markers + text labels at three
+          quartiles clearly guide readers to key percentile values. Practical API
+          latency context strengthens narrative. Above default of 2.
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +135,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: mark_line(interpolate=step-after) is the correct ECDF step function
+        comment: Correct ECDF step function using mark_line(interpolate='step-after')
+          with cume_dist() window transform.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Step function, Y-axis [0,1] as percentages, grid lines, distinct
-          line style all present
+        comment: Step function increases at each data point, Y-axis 0-1 (0%-100%),
+          grid lines present, distinct line style (green, strokeWidth=3.5).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=latency values, Y=cumulative proportion; full data range visible
+        comment: 'X: latency_ms (continuous), Y: cumulative proportion (0-1). Full
+          data range visible (20ms-260ms).'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact format ecdf-basic · altair · anyplot.ai; no legend appropriate
-          for single series
+        comment: Title 'ecdf-basic · python · altair · anyplot.ai' matches mandated
+          format exactly. Single series — no legend needed.
     data_quality:
       score: 15
       max: 15
@@ -154,22 +167,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 250 observations within spec ideal range; shows full ECDF from 0%
-          to 100% with realistic distribution shape
+        comment: 'Shows full ECDF characteristics: step shape, distribution spread,
+          quartile reading. 250 points shows the shape clearly without being too sparse
+          or dense.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response latency from production web service — neutral, real-world,
-          immediately comprehensible
+        comment: API response latency from a production web service — realistic, neutral,
+          practical domain. Normal(120, 35)ms clipped at 20ms is plausible for web
+          APIs.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normal(120ms, 35ms) clipped at 20ms; realistic for web API; values
-          20-260ms are domain-appropriate
+        comment: 20-260ms range with mean ~120ms and std ~35ms is factually correct
+          for typical web service latency distributions.
     code_quality:
       score: 10
       max: 10
@@ -179,59 +194,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Imports -> Tokens -> Data -> Chart -> Save; no functions or
-          classes
+        comment: 'Clean linear flow: imports → tokens → data → chart layers → compose
+          → save → pad. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: All imports (os, sys, altair, numpy, pandas, PIL) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Altair; appropriate complexity; no over-engineering
+        comment: Elegant declarative approach using Vega-Lite transform_window with
+          cume_dist() — no pandas pre-computation needed. Layer composition is clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas padded to exactly
+          3200x1800 with PIL. Current Altair API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Well-executed Altair patterns: typed encodings (:Q), alt.X/alt.Y
-          with alt.Axis, alt.Title, configure_view/configure_axis/configure_title
-          for theming'
+        comment: Expert use of transform_window with cume_dist() for declarative in-Vega
+          ECDF computation. Idiomatic mark_line(interpolate='step-after'), alt.layer()
+          composition, configure_view/axis/title.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: .interactive() zoom/pan, hover tooltips with format strings, and
-          interpolate=step-after are Altair-native features
-  verdict: REJECTED
+        comment: transform_window(cume_dist()) is distinctly Vega-Lite/Altair — the
+          declarative ECDF without pre-processing is a library-specific capability.
+          HTML output with .interactive() tooltips adds Altair-specific interactive
+          value.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
-  styling: []
+  dataprep: []
+  styling:
+  - alpha-blending

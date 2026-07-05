@@ -1,0 +1,263 @@
+library: d3
+language: javascript
+specification_id: curve-oc
+created: '2026-06-20T11:27:14Z'
+updated: '2026-06-20T11:35:07Z'
+generated_by: claude-sonnet
+workflow_run: 27869530755
+issue: 4553
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Full spec compliance: all required OC curve features (AQL/LTPD refs, producer/consumer
+    risk lines, four sampling plans, correct x-range, binomial CDF)'
+  - 'Perfect Imprint palette and theme adaptation: first series #009E73, canonical
+    palette order for all 4 series, correct pageBg in both themes, all chrome tokens
+    theme-adaptive'
+  - Numerically correct binomial CDF using log-space summation — robust for small
+    p values near 0
+  - 'Strong data storytelling via reference lines: viewer immediately interprets which
+    plan meets the alpha/beta requirements'
+  - KISS code structure with fully deterministic mathematical data generation — no
+    RNG needed
+  weaknesses:
+  - 'DE-01 below 6: typography hierarchy is minimal — no weight differentiation between
+    main context (plan curves) vs. supporting annotations; a bolder axis label weight
+    or larger legend font would create clearer visual hierarchy'
+  - 'DE-02 below 6: axis domain lines keep the same weight as tick lines; removing
+    or lightening the axis domain line weight vs. the axis spine would add further
+    visual refinement'
+  - 'LM-02 at 3: core patterns are standard D3 line chart; adding clip-path for clean
+    curve boundaries at x=0 or bisector-based intersection markers at AQL/LTPD crossing
+    points would leverage more distinctive D3 capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "curve-oc · javascript · d3 · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Axis labels "Fraction Defective (p)" and "Probability of Acceptance Pa(p)" in dark ink, clearly readable. Tick labels in secondary dark ink, readable. AQL/LTPD annotation labels above inner plot in inkSoft token — readable. Risk-level labels "1−α = 95%" and "β = 10%" right-anchored inside plot — readable.
+      Data: Four OC curves — brand green (#009E73), lavender (#C475FD), blue (#4467A3), ochre (#BD8233) — as Imprint palette positions 1–4. Vertical dashed refs at AQL=2% and LTPD=8%. Horizontal dashed refs at 95% and 10% probability. Legend box with elevated background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8 range), clearly readable against dark background. Axis labels in light ink, readable. Tick labels in secondary light ink (#B8B7B0 range), readable. AQL/LTPD and risk-level annotation labels in light inkSoft token — readable. Legend box uses elevated dark surface (#242420). No dark-on-dark failures observed anywhere.
+      Data: All four OC curve colors are identical to light render — green, lavender, blue, ochre — confirming palette is theme-independent. Reference lines adapt correctly to dark chrome.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: 22px title, 16px axis labels, 14px
+          tick labels, 13px annotation labels. Balanced X/Y label sizes. Readable
+          in both themes at desktop and mobile widths.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. AQL/LTPD labels above inner plot and risk-level
+          labels right-anchored inside the plot are well-separated from all other
+          elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four OC curves clearly visible with stroke-width=3. Reference
+          lines use distinct dash patterns. No element visibility issues.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 1-4 used; CVD-safe by design. Lines distinguishable
+          by color and horizontal position.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned landscape layout. Legend fits cleanly in right
+          margin (190px CSS). No clipping, balanced whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Fraction Defective (p)'', Y: ''Probability of Acceptance Pa(p)''
+          — both descriptive with domain notation.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Canonical Imprint order for all 4 series.
+          Background #FAF8F1 light / #1A1A17 dark. Chrome fully theme-adaptive via
+          t.ink / t.inkSoft / t.grid / t.elevatedBg tokens.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: monospace font for plan labels, distinct
+          dash patterns for different reference line types. Clean and professional,
+          not yet at publication level — typography hierarchy is minimal.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only gridlines, L-shaped axes (no top/right spines), elevated
+          legend background, subtle grid color via t.grid token. Clearly above library
+          defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: AQL/LTPD and risk-level reference lines actively guide viewer to
+          key QC insights. Viewer immediately sees which plan meets the desired risk
+          thresholds. Above default data display.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: OC curves implemented as smooth S-shaped lines using d3.curveMonotoneX.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL and LTPD vertical reference lines, producer/consumer risk horizontal
+          refs, four sampling plans, binomial CDF log-space computation, x-range 0-15%.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: fraction defective 0-15%; Y: acceptance probability 0-100%. All
+          data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'curve-oc · javascript · d3 · anyplot.ai' matches required
+          format. Legend labels match sampling plans.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Four OC curves spanning two sample sizes and two acceptance numbers.
+          All key OC features shown: S-shape, AQL/LTPD, producer/consumer risk.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Standard QC scenario: AQL=2%, LTPD=8%, alpha=5%, beta=10% — realistic
+          industry values for acceptance sampling (MIL-STD/ISO 2859 range).'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: X range 0-15% appropriate for practical inspection; risk thresholds
+          match industry standards.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: helpers -> data -> SVG -> scales -> gridlines -> reference
+          lines -> curves -> axes -> labels -> legend -> title. No classes or unnecessary
+          abstraction.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: binomial CDF computed analytically from fixed
+          parameters, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only d3 global used. All ANYPLOT_TOKENS properties referenced are
+          actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: logFact and binomialCDF helpers justified for numerical stability.
+          No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness emits plot-{theme}.png and plot-{theme}.html. Uses D3 7.9.0
+          current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Canonical D3 patterns: selections, .join(), d3.line() with .datum(),
+          d3.scaleLinear, d3.axisBottom/Left, d3.format(''.0%''), d3.range(). Reads
+          window.ANYPLOT_SIZE and appends one SVG to #container.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses d3.curveMonotoneX (D3-specific monotone cubic interpolation),
+          d3.format('.0%') for percentage axes, fine-grained SVG attribute control
+          for reference line styling. Core pattern is still standard D3 line chart.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling

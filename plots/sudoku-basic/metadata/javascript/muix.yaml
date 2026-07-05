@@ -1,0 +1,239 @@
+library: muix
+language: javascript
+specification_id: sudoku-basic
+created: '2026-06-25T08:02:48Z'
+updated: '2026-06-25T08:22:25Z'
+generated_by: claude-sonnet
+workflow_run: 28155530959
+issue: 1311
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/muix/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Perfect spec compliance: 9×9 grid with correct thick 3×3 box boundaries and thin
+    cell lines, numbers bold and centered, empty cells blank'
+  - 'Excellent theme adaptation in both renders: t.ink / t.inkSoft / t.pageBg tokens
+    used throughout so light and dark modes flip correctly with no dark-on-dark or
+    light-on-light failures'
+  - Clean, fully deterministic code — hard-coded PUZZLE array, flat structure, all
+    font sizes explicitly set
+  - Appropriate square orientation chosen, well-balanced layout with generous padding
+    around the grid
+  weaknesses:
+  - No @mui/x-charts components used — implementation relies on @mui/material Box
+    / Typography and raw SVG only; a Sudoku grid cannot leverage MUI X chart primitives,
+    which caps Library Mastery (LM-01 3/5, LM-02 1/5)
+  - Design excellence is limited by the monochrome spec requirements — no opportunity
+    to demonstrate palette, axes, or MUI X visual features; DE scores reflect correct
+    minimal execution rather than library showcase
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correctly not pure white
+      Chrome: Title "sudoku-basic · javascript · muix · anyplot.ai" centered at top in dark ink, fontSize 22px CSS, readable; no axis labels (correct for Sudoku)
+      Data: 9×9 grid rendered with thick near-black lines (t.ink) for 3×3 box boundaries and thinner soft-gray lines (t.inkSoft) for individual cell divisions; bold dark digits (font-weight 700, t.ink fill) centered in cells; empty cells blank
+      Legibility verdict: PASS — all text clearly readable against the warm cream background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correctly not pure black
+      Chrome: Title in same position with light cream text (t.ink = #F0EFE8 in dark theme), clearly readable; grid lines appear as soft off-white strokes
+      Data: Digit colors are identical in appearance — still rendered with t.ink fill which adapts to off-white in dark mode, giving high contrast bold numbers against the dark cell background; grid line hierarchy (thick outer boxes, thin cell dividers) reads correctly in dark
+      Legibility verdict: PASS — no dark-on-dark failures; light numbers on dark background achieve excellent contrast throughout
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px CSS, numbers cell*0.52);
+          readable in both themes at full and mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlaps — numbers centered in cells, title in dedicated header
+          space
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bold numbers are very prominent; thick/thin line hierarchy clearly
+          visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome high-contrast design; fully accessible
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for grid; ~80% canvas utilization with
+          balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes applicable; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Monochrome design uses t.pageBg (#FAF8F1 light / #1A1A17 dark),
+          t.ink and t.inkSoft tokens correctly; backgrounds are not pure white/black'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean and appropriate but follows spec requirements without additional
+          sophistication; well-configured minimal defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Explicit thin (0.7) vs thick (3) strokeWidth differentiation shows
+          deliberate refinement; Helvetica Neue font choice; clean padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Thick/thin line hierarchy guides the solver's eye directly to 3×3
+          box regions — functional storytelling for a puzzle grid
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 9×9 Sudoku grid with 3×3 box visual hierarchy
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thick box boundaries, thin cell lines, bold centered numbers, blank
+          empty cells, monochrome design — all spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Classic Sudoku puzzle correctly mapped to 9×9 grid
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'sudoku-basic · javascript · muix · anyplot.ai' correct; no
+          legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Sudoku aspects: filled cells, empty cells, 3×3 box regions,
+          full 9×9 layout'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic well-known Sudoku puzzle — neutral educational content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Single digits 1-9 with 0 for empty — correct Sudoku conventions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: data → computed geometry → JSX render'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded PUZZLE array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Box and Typography both used; no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean flatMap for number rendering; loop-based line generation is
+          readable
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: square orientation directive present; window.ANYPLOT_SIZE used correctly
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses MUI Box sx prop and Typography idiomatically; no @mui/x-charts
+          components — core rendering is raw SVG which is not MUI X specific
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No @mui/x-charts chart components used; the SVG-based grid could
+          be built with plain React; MUI contribution is limited to Box theming wrapper
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

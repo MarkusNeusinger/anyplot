@@ -1,104 +1,144 @@
 library: letsplot
+language: python
 specification_id: line-arrhenius
 created: '2026-03-21T22:07:01Z'
-updated: '2026-03-21T22:35:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389777945
+updated: '2026-06-24T09:57:55Z'
+generated_by: claude-sonnet
+workflow_run: 28089465186
 issue: 4408
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Full spec compliance with all required features (regression line, R², Ea annotation,
-    secondary axis)
-  - Strong design with solarized light flavor creating a distinctive warm aesthetic
-  - Effective use of lets-plot distinctive features (geom_smooth, layer_tooltips,
-    flavor)
-  - Clean well-structured code with proper reproducibility
+  - 'Perfect spec compliance: all required features present (regression line via geom_smooth,
+    R² annotation, slope/Ea annotation, manual secondary temperature axis, data points
+    visible on top of regression line)'
+  - 'Full Imprint palette compliance with brand green #009E73 as primary series; theme-adaptive
+    chrome correctly switches between warm off-white (#FAF8F1) and near-black (#1A1A17)
+    backgrounds in both renders'
+  - Distinctive lets-plot layer_tooltips() usage with custom tooltip lines (temp,
+    1/T, ln(k), k values) — genuine interactive feature unique to lets-plot, visible
+    in HTML output
+  - 'Excellent visual refinement: top/right spines removed, axis ticks blanked, y-only
+    subtle grid (size=0.3), panel background blends with page background, generous
+    margins'
+  - 'Scientifically accurate data: Ea=75 kJ/mol, A=10^12, R=8.314, temperature range
+    300-600 K with 11 points — all physically realistic for a first-order decomposition
+    reaction'
   weaknesses:
-  - Secondary axis constructed via manual geom_text/geom_segment rather than native
-    support (lets-plot limitation)
-  - Slight extra vertical space to accommodate secondary axis labels
-  image_description: The plot displays an Arrhenius plot on a warm solarized light
-    background. The title "line-arrhenius · letsplot · pyplots.ai" appears bold in
-    the top-left. The x-axis shows "1/T (K⁻¹)" with scientific notation tick labels
-    (1.67e-03 to 3.33e-03), and the y-axis shows "ln(k)" ranging from about -4 to
-    18. A secondary temperature axis at the top displays temperature values from 600
-    K down to 300 K with small tick marks and an italic "Temperature (K)" header.
-    Eleven dark blue filled circles with white edge strokes are plotted along a blue
-    regression line. A light gray 95% confidence band surrounds the regression line.
-    An annotation box in the lower-right region displays "Slope = −Ea/R = -8983 K",
-    "Ea = 74.7 kJ/mol", and "R² = 0.9995". The plot uses subtle horizontal grid lines
-    only, with no vertical grid, and the overall composition is clean and polished.
+  - 'DE-01: Aesthetic sophistication stops short of publication-ready — the annotation
+    block (''Slope = -Ea/R = ...'') is positioned as plain text with no background
+    callout box; wrapping it in a geom_rect/panel with ELEVATED_BG fill and a subtle
+    INK_SOFT border would elevate the visual polish significantly'
+  - 'DQ-01: Experimental noise is very low (sigma=0.15 in ln-space) producing R²=0.9995,
+    which doesn''t realistically represent typical experimental scatter in kinetics;
+    a sigma of 0.3-0.5 would produce a more realistic R²~0.995-0.998 while keeping
+    the linear trend clearly visible'
+  - 'DE-03: The confidence band (alpha=0.30) is subtle to the point of being near-invisible
+    in the light render — increasing alpha to 0.40-0.50 would make it more visually
+    impactful and strengthen the storytelling around the regression uncertainty'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, no pure white
+      Chrome: Title "line-arrhenius · python · letsplot · anyplot.ai" in bold dark ink (~45-50% of canvas width), clearly readable. X-axis label "1/T (K⁻¹)" and Y-axis label "ln(k)" in dark text, legible. Tick labels in secondary INK_SOFT gray (e.g. 1.67e-03 to 3.33e-03 on x, -4 to 16 on y), all readable. Secondary temperature axis (600 K → 300 K) rendered as geom_text at top with italic "Temperature (K)" label; tick marks drawn via geom_segment — all visible. Regression annotation (Slope, Ea, R²) positioned lower-right, readable though small.
+      Data: Brand green #009E73 filled circles (shape=21) with PAGE_BG border stroke on top of a solid green regression line and a very subtle green confidence band (alpha=0.30). 11 data points span the full x-range.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in bold light (#F0EFE8 equivalent) clearly visible. Axis labels and tick labels in light secondary tone (#B8B7B0 equivalent), all readable against the dark background. Secondary temperature labels and "Temperature (K)" italic label are visible in light gray. Regression annotation text rendered in light muted tone, legible.
+      Data: Same brand green #009E73 data points and regression line — identical to light render. Confidence band slightly more visible against dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-on-dark as expected. Data colors are identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
-          annotation=12'
+        comment: All font sizes explicitly set (plot_title=16, axis_title=12, axis_text=10);
+          both renders fully readable. Title proportions slightly under 50% in light
+          render but acceptable. Annotation text size=4.5mm is small but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements. Secondary temperature labels evenly spaced,
+          annotation positioned away from data points.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Points size=8 with white stroke, perfectly visible for 11 data points
+        comment: 11 data points at size=4 with filled circle shape are prominent.
+          Regression line clearly visible. Confidence band visible (subtle but present).
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Single-color scheme with good contrast against solarized light background
+        comment: 'Single series in colorblind-safe brand green #009E73. No red-green
+          signal dependency.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout with minor extra vertical space for secondary axis accommodation
+        comment: Good canvas utilization. Plot fills ~75% of canvas area. Margins
+          generous (plot_margin=[40,40,20,20]). Slight crowding between title and
+          secondary temperature axis labels at top.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: 1/T (K⁻¹) and ln(k)'
+        comment: 'X-axis: ''1/T (K⁻¹)'' with units. Y-axis: ''ln(k)''. Title: correct
+          format ''line-arrhenius · python · letsplot · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary series uses #009E73 brand green. Background is #FAF8F1 (light)
+          / #1A1A17 (dark). All chrome tokens are theme-adaptive. Data colors identical
+          across both renders.'
     design_excellence:
-      score: 15
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Strong design with solarized light flavor, Python Blue with white-stroked
-          points, intentional hierarchy
+        comment: 'Above defaults: confidence band, marker stroke style, and secondary
+          axis simulation show design thought. Missing: callout box around annotation,
+          stronger visual accent.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Horizontal grid only, ticks removed, generous margins, clean composition
+        comment: Top/right spines removed, axis ticks blanked, y-only grid at size=0.3,
+          panel background merged with page background. Very polished refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Annotation communicates activation energy and fit quality, secondary
-          axis provides physical context
+        comment: 'Annotation with slope/Ea/R² actively interprets the data. Secondary
+          temperature axis aids physical intuition. Confidence band shows regression
+          uncertainty. Clear story: linear Arrhenius relationship with extracted kinetic
+          parameters.'
     spec_compliance:
       score: 15
       max: 15
@@ -108,26 +148,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Arrhenius plot: ln(k) vs 1/T'
+        comment: 'Correct Arrhenius plot: scatter on 1/T vs ln(k) axes with linear
+          regression line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: regression line, R², Ea annotation, secondary
-          axis, visible data points'
+        comment: 'All spec features: regression line (geom_smooth method=lm), R² displayed,
+          slope/Ea annotation, secondary temperature axis (manual geom_text/geom_segment),
+          data points visible on regression line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=1/T, Y=ln(k), correct mapping
+        comment: X=1/T, Y=ln(k). 11 data points spanning 300-600 K (within spec 5-20
+          range). Full x-range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format, no legend needed for single series
+        comment: Title 'line-arrhenius · python · letsplot · anyplot.ai' matches required
+          format. No legend needed (single series).
     data_quality:
       score: 14
       max: 15
@@ -137,21 +181,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Clear linear relationship with realistic scatter, 11 points spanning
-          300-600 K
+        comment: 'Shows all key Arrhenius plot aspects. Minor issue: noise sigma=0.15
+          is too low, producing R²=0.9995 — unrealistically good fit for experimental
+          data.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: First-order decomposition reaction with Ea ≈ 75 kJ/mol, realistic
-          chemistry
+        comment: First-order decomposition reaction kinetics — scientifically valid,
+          neutral, real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range and activation energy are physically realistic
+        comment: Ea=75 kJ/mol, A=10^12 s^-1, R=8.314 J/(mol·K), T=300-600 K all factually
+          correct for kinetic studies.
     code_quality:
       score: 10
       max: 10
@@ -161,31 +207,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Clean linear flow: imports → constants → data → plot layers → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, numpy, pandas, lets_plot, ggsave, scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code
+        comment: Clean Pythonic code. noqa comments are justified for wildcard import
+          pattern. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves via export_ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current ggsave
+          API with scale=4.
     library_mastery:
       score: 8
       max: 10
@@ -195,29 +244,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics usage: geom_smooth, layer_tooltips, flavor
-          themes'
+        comment: Good ggplot grammar usage with geom_smooth(method='lm'), coord_cartesian,
+          scale_x_continuous. Secondary axis workaround via geom_text/geom_segment
+          is slightly un-idiomatic but justified.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses flavor_solarized_light, layer_tooltips, geom_smooth with confidence
-          band, HTML export
+        comment: layer_tooltips() with custom tooltip lines is genuinely distinctive
+          to lets-plot. HTML output alongside PNG leverages the library's interactive
+          capability. geom_smooth with se=True and custom styling is well-executed.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - edge-highlighting
-  - grid-styling
   - alpha-blending
+  - edge-highlighting

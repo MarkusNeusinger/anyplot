@@ -1,45 +1,62 @@
 library: letsplot
+language: python
 specification_id: spc-xbar-r
 created: '2026-03-19T21:47:50Z'
-updated: '2026-03-19T22:32:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23318370463
+updated: '2026-06-20T13:16:53Z'
+generated_by: claude-sonnet
+workflow_run: 27871838546
 issue: 4551
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/letsplot/plot.html
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/python/letsplot/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent visual hierarchy with 3-tier gray system for limit lines (dotted warning
-    < dashed control < solid center)
-  - Red OOC points immediately draw attention to process instability events
-  - Realistic CNC manufacturing data with correct SPC constants (A2=0.577, D3=0, D4=2.114
-    for n=5)
-  - Clean white background with subtle horizontal-only grid creates professional appearance
-  - Interactive tooltips via layer_tooltips() demonstrate lets-plot distinctive HTML
-    capabilities
-  - Both PNG and HTML output leverage the library dual-format strengths
+  - Correct stacked X-bar/R SPC layout with proper panel proportions — X-bar on top,
+    R on bottom sharing the same x-axis
+  - Accurate use of SPC constants (A2=0.577, D3=0.0, D4=2.114) for n=5 subgroups;
+    UCL/LCL/warning limits computed correctly
+  - Out-of-control points use filled solid red (#AE3030 semantic anchor) vs hollow
+    green open circles — redundant encoding via fill and color that aids CVD users
+  - Three distinct limit-line styles (solid CL, dashed UCL/LCL, dotted warning limits)
+    create clear visual hierarchy without a legend
+  - Inline text annotations (UCL, CL, LCL, R̄) instead of legend — clean and space-efficient
+  - 'Theme-adaptive chrome fully implemented: backgrounds, text, axis lines all flip
+    correctly between light (#FAF8F1) and dark (#1A1A17) modes'
+  - 'Distinctive lets-plot features used well: layer_tooltips() for interactive HTML
+    export, gggrid() for panel composition, plot_margin array tuning'
+  - Y-axis-only grid with minor grid removed — clean, minimal chart chrome
+  - Realistic CNC shaft diameter dataset with np.random.seed(42) for reproducibility
+  - 'Correct output: both plot-{THEME}.png (scale=4 → 3200×1800) and plot-{THEME}.html
+    produced'
   weaknesses:
-  - R chart has no out-of-control points, missing opportunity to demonstrate range
-    chart detection
-  - Right margin slightly generous with minor canvas utilization loss
-  image_description: The plot displays a vertically stacked pair of SPC charts on
-    a clean white background. The top chart (X-bar) shows sample means for 30 samples
-    connected by a bold blue (#306998) line with white-filled circle markers. Three
-    out-of-control points are highlighted as solid red (#DC2626) filled circles at
-    approximately samples 8 (shift up to ~25.1), 19 (shift down to ~24.82), and 25
-    (shift up to ~25.12). Dashed gray UCL and LCL lines bracket the data, with lighter
-    dotted gray warning limit lines inside them. A solid gray center line (CL) runs
-    at ~25.0 mm. Labels "UCL", "CL", "LCL" appear in bold gray text to the right.
-    The bottom chart (R) shows sample ranges with the same blue line/marker styling.
-    No out-of-control points appear in the R chart. UCL dashed line sits at ~0.24,
-    center line (R-bar) at ~0.11, and LCL at 0. A dotted UWL line is also visible.
-    The title reads "spc-xbar-r · letsplot · pyplots.ai" in bold at the top. Y-axes
-    are labeled "X-bar (Sample Mean, mm)" and "R (Sample Range, mm)" with units. X-axis
-    shows "Sample Number" with ticks at 1, 6, 11, 16, 21, 26, 30. Subtle horizontal
-    grid lines on both panels. Overall layout is clean and professional.
+  - Panel border/frame not removed — the default lets-plot panel outline is visible
+    as a box around each chart. Add panel_border=element_blank() (or equivalent) to
+    both theme_top and theme_bottom to achieve the cleaner L-shaped or borderless
+    spine style the style guide prefers.
+  - Annotation text labels (UCL, CL, LCL, R̄) use geom_text(size=4mm) which renders
+    somewhat small at the canvas edge. Consider bumping to size=5-6 for better legibility
+    on small viewports.
+  - 'Third X-bar OOC point (sample 25, shift=0.12mm) does not breach the UCL — only
+    2 X-bar OOC points are visible. Minor: the 1 R-chart OOC point brings the total
+    to 3 across both charts, which satisfies the spec, but a slightly larger shift
+    at sample 25 would more clearly demonstrate the detection capability stated in
+    the spec.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — NOT pure white, correct Imprint light surface across both panels and the surrounding plot area.
+      Chrome: Bold title "spc-xbar-r · python · letsplot · anyplot.ai" in dark (#1A1A17) at size 16 — clearly readable, spans ~70% of canvas width. Y-axis labels "X̄ (Sample Mean, mm)" and "R (Sample Range, mm)" in dark ink, readable. Bottom x-axis label "Sample Number" readable. Tick labels in INK_SOFT (#4A4A44) at size 10, readable. UCL/CL/LCL inline annotations in INK_SOFT, small but legible.
+      Data: Two-panel stacked chart. Top (X-bar): brand green (#009E73) line with hollow open-circle markers for in-control points; 2 filled solid red (#AE3030) circles at samples ~8 and ~19 that breached UCL and LCL respectively. Dashed gray UCL/LCL lines, dotted gray warning lines, solid black center line. Bottom (R chart): same green line/hollow circles for in-control; 1 filled red OOC at sample ~12. UCL=0.27 visible, R̄~0.12 center line, LCL at 0.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — NOT pure black, correct Imprint dark surface across both panels and surrounding area.
+      Chrome: Title text and axis labels rendered in light cream (#F0EFE8/INK for dark theme) — clearly visible against the dark background. Tick labels in light secondary color (#B8B7B0/INK_SOFT for dark) — readable. No dark-on-dark issues detected. Center line flips to near-white (INK = #F0EFE8 in dark mode). Limit lines are lighter gray dashes, visible against dark background.
+      Data: Data colors (brand green #009E73 and matte red #AE3030 OOC points) are IDENTICAL to the light render — both are Imprint categorical/semantic colors that stay constant across themes. The hollow green markers and filled red OOC points are clearly distinguishable against the dark background.
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -47,46 +64,56 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16.
-          Perfectly readable.'
+        comment: Title, axis labels, tick labels all readable in both themes. Minor
+          deduction for geom_text annotation labels (UCL/CL/LCL) being somewhat small
+          (size=4mm).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Limit labels placed to the right with adequate
-          spacing.
+        comment: No overlapping text or data elements. OOC points well-separated spatially.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers well-sized (5 for in-control, 6 for OOC), lines at 1.5 width.
-          Good differentiation.
+        comment: 30 points with prominent markers (size=5/6), clear line (size=1.5),
+          OOC points clearly distinguished by fill and color.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red OOC distinction supplemented by redundant fill encoding
+          (hollow vs filled circles) — CVD-safe approach.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Blue vs red is colorblind-safe. Three levels of gray for limit lines.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good stacked layout. Right margin generous for labels. Some space
-          wasted in R chart.
+        comment: Canvas gate passed. Stacked 800x260 + 800x190 = 800x450 at scale=4
+          → 3200x1800. Good proportional split, X-bar taller than R as expected.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All axes labeled with descriptive names and units (mm).
+        comment: 'Y-axis: ''X̄ (Sample Mean, mm)'' and ''R (Sample Range, mm)'' —
+          descriptive with units. X-axis: ''Sample Number'' — correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only data series uses #009E73 (brand green). OOC uses #AE3030
+          (Imprint semantic red for error/bad) — correct semantic exception. Backgrounds:
+          #FAF8F1 light / #1A1A17 dark.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -94,22 +121,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful 3-tier color hierarchy for limit lines. Custom palette
-          clearly above defaults.
+        comment: Above default (4). Professional control chart layout, differentiated
+          limit-line styles (solid/dashed/dotted), hollow vs filled marker status
+          encoding, inline limit labels replacing legend, semantic color use.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: White background, subtle horizontal-only grid, clean axis lines,
-          well-calibrated margins.
+        passed: false
+        comment: Y-axis-only grid and minor grid removal are good. Panel border/frame
+          not removed — default lets-plot box outline visible around both panels.
+          Above default (2) for grid cleanup but missing spine removal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Red OOC points create focal points. Muted limits don't compete with
-          data narrative.
+        comment: OOC points draw the eye immediately via color and fill contrast.
+          Center line anchors the viewer. Stacked layout is the canonical SPC convention.
+          Clear focal point on process instability events.
     spec_compliance:
       score: 15
       max: 15
@@ -119,51 +149,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: X-bar on top, R on bottom, vertically stacked sharing x-axis.
+        comment: Correct SPC X-bar/R chart, stacked vertically with X-bar on top and
+          R on bottom sharing the same x-axis.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: UCL/LCL dashed, CL solid, warning limits dotted, OOC
-          highlighted, correct constants.'
+        comment: UCL/LCL dashed and labeled, center line solid, warning limits (±2
+          sigma) as dotted lines, OOC points highlighted, standard A2/D3/D4 constants
+          used, 3 OOC points total across both charts.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=sample number, Y=sample mean/range. Correct mapping.
+        comment: 'X: sample number, Y-top: sample mean (mm), Y-bottom: sample range
+          (mm). All data visible within axis bounds.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in correct format. No legend needed; status differentiated
-          by color.
+        comment: 'Title: ''spc-xbar-r · python · letsplot · anyplot.ai'' — correct
+          format. No legend (replaced by inline UCL/CL/LCL text annotations).'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three OOC in X-bar (up/down/up shifts). R chart has no OOC points.
+        comment: Both X-bar and R charts present. UCL, LCL, center line, and ±2-sigma
+          warning limits all shown. OOC classification and highlighting. Correct SPC
+          constants for n=5.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'CNC shaft diameter: 25mm target, 0.05mm std, n=5 subgroups. Textbook
-          SPC scenario.'
+        comment: CNC shaft diameter (25.0mm ± 0.05mm process std) — realistic manufacturing
+          QC scenario. n=5 subgroups is SPC industry standard.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for precision CNC machining. Shifts of 0.12-0.18mm
-          are plausible.
+        comment: Shaft diameter ~25mm with ±0.2mm variation range appropriate. R-bar
+          ~0.12mm consistent with 5-sample subgroups of sigma=0.05mm. OOC shifts (0.12-0.18mm)
+          clearly detectable.
     code_quality:
       score: 10
       max: 10
@@ -173,62 +209,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, constants, limits, plots, combine,
-          save.'
+        comment: No functions or classes. Sequential top-to-bottom structure with
+          clear logical sections.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start.
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot.'
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. Tooltip layers are legitimate lets-plot features.
+        comment: Clean separation of limit-line DataFrames. Two-row start/end approach
+          for line segments is elegant. Interactive tooltip layers created separately
+          and used only for HTML.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3, also exports HTML.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct ggsave
+          API usage.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good ggplot grammar with layered geoms, aes, scales, themes, gggrid
-          for composition.
+        comment: Grammar of graphics layering, aes() mappings, geom_line/point/text,
+          scale_x/y_continuous, labs(), ggsize(), ggsave() with scale — all idiomatic
+          lets-plot patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses layer_tooltips(), gggrid(), and dual HTML/PNG export - lets-plot
-          distinctive capabilities.
+        comment: layer_tooltips() for interactive HTML output (lets-plot distinctive),
+          gggrid() for panel composition, plot_margin array notation. Near-full use
+          of lets-plot-specific capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
-  - layer-composition
   - annotations
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
+  - alpha-blending

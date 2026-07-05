@@ -1,111 +1,146 @@
 library: letsplot
+language: python
 specification_id: titration-curve
 created: '2026-03-21T22:11:54Z'
-updated: '2026-03-21T22:34:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389866106
+updated: '2026-06-24T12:02:20Z'
+generated_by: claude-sonnet
+workflow_run: 28095275139
 issue: 4407
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/titration-curve/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/titration-curve/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.14
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent data storytelling with acidic/basic region shading providing immediate
-    chemical context
-  - Realistic, scientifically accurate titration data calculated from first principles
-  - 'Strong visual hierarchy: pH curve dominant, derivative secondary, equivalence
-    point annotated'
-  - Custom refined color palette with good colorblind accessibility
-  - Uses letsplot-specific interactive features (layer_tooltips) adding value beyond
-    static output
+  - 'Scientifically accurate titration chemistry: correct sigmoid shape, pH 7 equivalence
+    point, realistic HCl/NaOH system with proper calculations'
+  - 'Full spec compliance: equivalence point marker, scaled derivative curve, buffer
+    region shading, 0-14 pH axis, correct axis labels with units'
+  - Correct Imprint palette usage with alphabetical color mapping via scale_color_manual
+    - brand green for pH Curve, lavender for dpH/dV
+  - 'Excellent dark theme adaptation: all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG) flip correctly; data colors remain identical across both renders'
+  - lets_plot layer_tooltips() with formatted content (volume, pH) provides genuine
+    interactivity in HTML output - library-distinctive feature well-used
+  - Dual background region shading (acidic pink / basic blue) provides immediate chemical
+    context with region text labels
   weaknesses:
-  - Buffer region shading (alpha=0.1) is barely visible in the final output
-  - Derivative curve uses same y-axis with scaling rather than a true secondary y-axis
-    as specified
-  image_description: 'The plot shows an acid-base titration curve with a dark navy
-    S-shaped pH curve plotting pH (y-axis, 0-14) against Volume of NaOH added in mL
-    (x-axis, 0-50). The background is divided into a soft pink acidic region (pH 0-7)
-    and a light blue basic region (pH 7-14), separated by a dotted horizontal line
-    at pH 7. An orange dashed derivative curve (dpH/dV, scaled) peaks sharply at ~25
-    mL. The equivalence point is marked with a red diamond and a labeled box reading
-    "Equivalence Point, 25 mL, pH 7.0" in red on a pink background. A subtle light
-    blue shaded buffer region spans approximately 2-20 mL with an italic "Buffer Region"
-    label. Faded bold labels "Acidic" and "Basic" appear in the right portion of each
-    region. The title "titration-curve · letsplot · pyplots.ai" is centered and bold,
-    with subtitle "Strong Acid-Base: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH".
-    A legend in the lower right with white background shows "dpH/dV (scaled)" in orange
-    dashed and "pH Curve" in blue solid.'
+  - 'Acidic region label at (volume=44, pH=2.5) is completely hidden behind the legend
+    box. Legend is placed at [0.85, 0.15] (data coords ~42.5, 2.1) fully covering
+    the label. Fix: move Acidic label to x=8, y=1.5 (lower-left, clear of legend and
+    buffer region label).'
+  - Equivalence point geom_label box is visually heavy (large label_padding=0.4, fontface=bold,
+    nudge_x=8, nudge_y=1.8). A more refined approach would be a smaller annotation
+    with reduced padding or a leader line.
+  - 'RULE grid color uses solid hex (#E0DFDA light / #2E2E2B dark) rather than canonical
+    rgba(26,26,23,0.15). Results in grid lines slightly more prominent than intended
+    in the light render.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct
+      Chrome: Title "titration-curve · python · letsplot · anyplot.ai" bold dark text, clearly readable (~75% plot width). Subtitle readable. X-axis label "Volume of NaOH added (mL)" and Y-axis label "pH" both bold and clearly visible. Tick labels (0-50 x, 0-14 y) readable in dark INK_SOFT color. Legend text ("dpH/dV (scaled)", "pH Curve") readable.
+      Data: Brand green (#009E73) S-shaped pH curve prominent. Dashed lavender (#C475FD) derivative curve visible at equivalence point spike (x=25 mL), near-invisible near y=0 baseline elsewhere. Acidic region pink tint, basic region blue tint. Buffer region (2-20 mL) blue shaded. Red dashed vertical line at x=25 with red diamond marker. Bold "Equivalence Point / 25 mL, pH 7.0" label box. "Basic" text label upper-right (visible). "Buffer Region" italic text (visible). "Acidic" label at (44, 2.5) HIDDEN behind legend box.
+      Legibility verdict: PASS (all visible text legible; "Acidic" label hidden by legend - VQ-02 issue)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - correct
+      Chrome: Title and subtitle in light-colored text (#F0EFE8), clearly readable. Axis labels in light ink. Tick labels in #B8B7B0 (INK_SOFT dark) - light gray, clearly legible against near-black background. No dark-on-dark failures. Legend text in light gray on dark elevated background (#242420) - readable. Equivalence point label box in #242420 with matte-red (#AE3030) bold text - readable.
+      Data: Data colors IDENTICAL to light render - brand green pH curve, lavender dashed derivative. Background region shading (acidic/basic) subtly visible. "Basic" label in blue (#4467A3) visible on dark background. "Buffer Region" label visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=26, axis_title=20, axis_text=16,
-          legend_text=16'
+        comment: 'All font sizes explicitly set. Title, axis labels, tick labels,
+          legend, annotations all clearly readable in both themes. Minor deduction:
+          ''Acidic'' text label at (44, 2.5) is invisible (overlapped by legend box)
+          reducing completeness of labeled content.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Legend slightly overlaps curve area but has white fill so text remains
-          readable
+        comment: '''Acidic'' region label at (volume=44, pH=2.5) is fully covered
+          by legend box (legend_position=[0.85, 0.15] places center at ~(42.5, 2.1)
+          data coords). Label invisible in both renders. Main content readable - only
+          one secondary label affected.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Main curves clearly visible; buffer region shading at alpha=0.1 is
-          very faint
+        comment: Main pH curve bold and prominent. Derivative spike at EP clearly
+          visible. Near-zero regions of derivative near x-axis baseline are intentionally
+          low. Slight deduction for near-invisible lavender line in 0-20 mL range
+          where dpH/dV ~0.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Navy blue and orange are colorblind-safe with strong contrast
+        comment: Imprint palette correctly applied. Brand green and lavender are CVD-safe
+          pair. Good contrast throughout.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions at 1600x900 with scale 3, balanced margins
+        comment: Well-proportioned layout. Plot fills canvas appropriately. Balanced
+          margins. No overflow or edge clipping detected. Canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Volume of NaOH added (mL) and pH'
+        comment: X-axis 'Volume of NaOH added (mL)' and Y-axis 'pH' are descriptive
+          with appropriate units/context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (pH Curve) = #009E73 brand green. Second series (dpH/dV)
+          = #C475FD lavender. Alphabetical mapping via scale_color_manual correct.
+          Backgrounds #FAF8F1 light / #1A1A17 dark correct. Chrome adapts in both
+          renders.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette, acidic/basic region shading, refined typography hierarchy
-          with subtitle
+        comment: 'Above defaults: dual background region shading, derivative curve
+          overlay, equivalence point annotation, buffer region, region text labels,
+          subtitle. Heavy EP label box and hidden Acidic label hold score below 6.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Panel border removed, x-grid removed, y-grid subtle, axis lines styled,
-          generous margins
+        comment: 'Spines removed (axis_line=blank, panel_border=blank). Y-grid only
+          (major_x=blank). Margins set. Legend has elevated background. Minor: RULE
+          color uses solid hex instead of canonical rgba, making grid slightly more
+          prominent.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Acidic/basic regions provide context, buffer region labeled, equivalence
-          point prominent
+        comment: 'Clear visual hierarchy: pH curve dominates, equivalence point prominently
+          marked, acidic/basic shading provides chemistry context, derivative shows
+          EP location. Viewer guided through the titration story.'
     spec_compliance:
       score: 14
       max: 15
@@ -115,26 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct titration curve with characteristic S-shape
+        comment: Correct S-shaped sigmoidal titration curve.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: All features present but derivative uses scaled same-axis instead
-          of true secondary y-axis
+        comment: 'EP vertical dashed line + annotation, derivative curve, buffer region
+          shading, pH 0-14 all present. Minor: spec requests secondary y-axis for
+          derivative; uses same-axis scaling (lets_plot constraint). Buffer region
+          concept applies loosely to strong acid/base system.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume, Y=pH correctly assigned, full pH scale 0-14 shown
+        comment: X=volume (0-50 mL), Y=pH (0-14). All data visible across full range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and descriptive
+        comment: Title is 'titration-curve · python · letsplot · anyplot.ai'. Legend
+          labels 'pH Curve' and 'dpH/dV (scaled)' correctly describe series.
     data_quality:
       score: 15
       max: 15
@@ -144,20 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows complete S-curve with all characteristic regions and derivative
-          peak
+        comment: Full sigmoidal shape, buffer region, steep EP jump, derivative peak,
+          acidic/basic zones, EP annotation. Comprehensive coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH'
+        comment: 'Real chemistry: 25 mL of 0.1 M HCl titrated with 0.1 M NaOH. Scientifically
+          neutral and credible.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic concentrations, volumes, and pH range
+        comment: pH computed from actual strong acid chemistry. EP at pH 7.0 correct.
+          Volume range 0-50 mL realistic.
     code_quality:
       score: 10
       max: 10
@@ -167,31 +207,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+        comment: 'Clean top-down: imports, tokens, data, plot layers, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic - pH calculated from chemistry equations
+        comment: Fully deterministic data from mathematical chemistry formulas. No
+          random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, pandas, lets_plot, export_ggsave'
+        comment: Wildcard import idiomatic for lets_plot. All imports used. Duplicate
+          ggsave import redundant but harmless.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized with practical derivative scaling approach
+        comment: Appropriate complexity for multi-layer annotated plot. No fake UI
+          elements. Clean layer composition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via export_ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
     library_mastery:
       score: 7
       max: 10
@@ -201,20 +245,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar with layered geoms, aes, scales, flavor theme
+        comment: 'Good ggplot grammar: layered geoms, scale_color_manual, labs, theme
+          customization, explicit breaks. Idiomatic but not exhaustive of lets_plot
+          capabilities.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer_tooltips(), flavor_high_contrast_light(), geom_label with
-          label_padding/label_r, HTML export
+        comment: layer_tooltips() with .title(), .format(), .line() formatting - lets_plot
+          distinctive feature. HTML output with real interactivity. geom_label with
+          label_r (rounded corners) also lets_plot-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
@@ -223,4 +270,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling

@@ -264,3 +264,14 @@ secrets/
 plots/*/implementations/*/plot-*.png
 plots/*/implementations/*/plot-*.html
 plots/*/implementations/*/plot-*.webp
+
+# design-sync (local sync scaffolding) — generated/staged, never committed
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+# proprietary brand font (MonoLisa, © FaceType Foundry) — fetched at sync time, never committed
+# (the @font-face CSS at app/.designsync-fonts/monolisa.css IS committed)
+app/.designsync-fonts/*.ttf
+app/.designsync-fonts/*.woff2

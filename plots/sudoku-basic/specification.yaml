@@ -6,7 +6,7 @@ title: Basic Sudoku Grid
 
 # Specification tracking
 created: 2025-12-21T22:37:21Z
-updated: null
+updated: 2026-06-25T21:42:15Z
 issue: 1311
 suggested: MarkusNeusinger
 
@@ -14,8 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - grid
-    - puzzle
+    - heatmap
   data_type:
     - discrete
     - categorical

@@ -1,0 +1,281 @@
+library: echarts
+language: javascript
+specification_id: dumbbell-basic
+created: '2026-06-30T23:10:21Z'
+updated: '2026-06-30T23:32:05Z'
+generated_by: claude-sonnet
+workflow_run: 28481441838
+issue: 945
+language_version: 22.23.0
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dumbbell-basic/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Sophisticated triple-encoding of delta magnitude: connector line width, connector
+    opacity, AND dot size all scale with |delta|, creating an elegant and immediately
+    readable visual hierarchy without annotations'
+  - 'Semantic color on connector lines: theme-adaptive inkSoft for gains vs matte
+    red (#AE3030 semantic anchor) for declines — declining departments (Legal, Finance)
+    immediately pop from the chart'
+  - Inline delta labels (+26, +24, -3) positioned right of each After dot provide
+    instant quantitative readability without requiring readers to estimate from axis
+    positions
+  - Sort order ascending by delta places largest-gain departments at the top — viewer
+    immediately reads the story from top to bottom
+  - 'Clean minimal chrome: no x-axis line, no tick marks, no split lines — full focus
+    on the dumbbell elements themselves'
+  - 'Correct palette usage: Before = palette[0] #009E73 (brand green, first series),
+    After = palette[1] #C475FD (lavender); both renders theme-correct with transparent
+    background inheriting page surface'
+  - Custom ECharts series with renderItem for connector lines is idiomatic and sophisticated
+    — exactly the right approach for custom geometry in ECharts
+  weaknesses:
+  - 'No x-axis split lines (grid): subtle vertical grid lines would help readers estimate
+    exact Efficiency Score values, especially for the middle rows where the dumbbell
+    endpoints don''t align to easily-read tick positions'
+  - Delta labels use fontSize 12 CSS px — at the lower end for a 3200px canvas; rounding
+    up to 13-14 CSS px would improve readability when the image is scaled to smaller
+    viewports
+  - 'Gain connector color (inkSoft = #4A4A44 light / #B8B7B0 dark) blends into the
+    chrome layer rather than reading as a data color — using a muted Imprint palette
+    tint for gains would give more visual separation between the ''positive direction''
+    cue and structural elements'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, clearly #FAF8F1 (not pure white) — confirmed correct.
+      Chrome: Title "Digital Transformation · dumbbell-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, font scaled to ~21px CSS (appropriate for the 70-char title). Legend row beneath shows green circle "Before" and lavender circle "After" in inkSoft color. Y-axis category labels (Sales, Engineering, IT, Marketing, R&D, Logistics, HR, Operations, Finance, Legal) legible in inkSoft. X-axis "Efficiency Score" label readable. Tick values (40–100) slightly small at fontSize 13 CSS but readable.
+      Data: 10 horizontal dumbbells. Before dots in brand green (#009E73), After dots in lavender (#C475FD). Connector lines vary in width (1.5–5px) and opacity (0.25–0.70) proportional to |delta|. Declining connectors (Finance −3, Legal −3) render in matte red (#AE3030). Dot sizes also scale with |delta| giving prominent dots to Sales/Engineering (+26) and small ones to Finance/Legal (−3). Delta labels (+26, +24, +24, +19, +17, +17, +15, −3, −3) in inkSoft to the right of each After dot.
+      Legibility verdict: PASS — all text clearly readable against the light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, clearly #1A1A17 (not pure black) — confirmed correct.
+      Chrome: Title in light ink (tokens.ink = #F0EFE8) clearly readable against dark background. Category labels, axis label, and legend text all in light inkSoft (#B8B7B0) — readable. Tick labels visible. No dark-on-dark failures observed anywhere.
+      Data: Data colors identical to light render — brand green Before dots, lavender After dots, matte red declining connectors. The connector size/opacity encoding carries through identically. Delta labels in #B8B7B0 (inkSoft dark) are legible though on the smaller side.
+      Legibility verdict: PASS — all text clearly readable against the dark background. No dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes. Minor
+          deduction for delta labels at fontSize 12 CSS px being slightly small on
+          the 3200px canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Category labels well-spaced. Delta labels
+          clear of all other elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Dot sizes (14–26px CSS) and connector widths (1.5–5px) scale with
+          delta magnitude — optimal density adaptation. Declining connectors in red
+          enhance visibility of small-delta rows.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pair is CVD-safe per Imprint palette design. Matte
+          red for declining connectors has good contrast. No red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Good margins (130 left, 90 right, 100 top, 70
+          bottom CSS px). Plot fills canvas well in landscape. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Efficiency Score'' descriptive. Y-axis: category names
+          serve as labels. Title follows {Descriptive} · {spec-id} · {lang} · {lib}
+          · anyplot.ai format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Before series = palette[0] #009E73 (brand green, first series).
+          After series = palette[1] #C475FD (lavender). Connector colors are structural
+          (inkSoft/semantic red anchor). Background transparent → page surface. Both
+          renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: connector width + opacity + dot size all scale with
+          |delta| (triple encoding), semantic red for declines, inline delta annotations.
+          Clearly above defaults. Not quite publication-ready (8) but strong (6).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: x-axis line hidden, all tick marks removed, no
+          split lines/grid. Left y-axis line kept for structural reference. Generous
+          margins. No grid limits value estimation.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong storytelling: sort by delta puts biggest gains at top, declining
+          departments (Legal/Finance) pop in red, delta annotations provide instant
+          insight. Multiple techniques working together. One step below ''excellent''
+          (no callout annotations for the star performers).'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct dumbbell/connected dot plot. Horizontal orientation with
+          categories on y-axis and values on x-axis as required.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Two dots per category (start/end), connecting line, distinct colors
+          for start/end, sorted by delta as specified.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, Efficiency Score values on x-axis (40–100 range
+          covers all data). Correct mapping throughout.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Digital Transformation · dumbbell-basic · javascript ·
+          echarts · anyplot.ai'' — correct {Descriptive} · {spec-id} · {lang} · {lib}
+          · anyplot.ai format. Legend: Before/After with correct colors.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all dumbbell aspects: both start and end values, both improvements
+          (8 categories) and declines (2 categories), wide range of delta magnitudes
+          (3 to 26). Comprehensive coverage.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Department efficiency scores before/after digital transformation
+          — real business scenario, neutral, concrete department names. No controversial
+          content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 departments (within 5–20 spec range). Efficiency score 0–100 scale
+          is sensible. Values (55–91) and deltas (−3 to +26) are realistic for a digital
+          transformation initiative.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No top-level functions or classes. Clean data → init → setOption
+          structure. Inline callbacks (renderItem, symbolSize, formatter) are required
+          by ECharts API, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded in literal arrays — fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports — uses browser globals (window.ANYPLOT_TOKENS, echarts)
+          only, as required.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Comments explain design intent concisely.
+          No fake UI elements. Appropriate complexity for a custom dumbbell in ECharts.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Orientation directive present (landscape). echarts.init called correctly
+          — no explicit size, no devicePixelRatio. animation: false set. Harness handles
+          output files.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series with renderItem is exactly the ECharts-idiomatic approach
+          for custom line geometry. encode for data binding, z for layering, silent:true
+          for non-interactive series — all correct idiomatic patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: renderItem in custom series is a genuinely ECharts-distinctive feature
+          enabling pixel-level custom rendering. encode for multi-dimensional data
+          binding is ECharts-specific. Strong distinctive usage, one point held for
+          not using tooltip formatter or other advanced ECharts-specific patterns.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

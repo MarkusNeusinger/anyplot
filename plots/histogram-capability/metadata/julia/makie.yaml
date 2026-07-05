@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: histogram-capability
+created: '2026-06-20T15:21:21Z'
+updated: '2026-06-20T15:38:29Z'
+generated_by: claude-sonnet
+workflow_run: 27875057492
+issue: 4552
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Perfect spec compliance — all required elements (histogram, fitted normal curve,
+    LSL/USL lines, target line, Cp/Cpk annotations) implemented correctly and displayed
+    clearly.
+  - Semantic Imprint palette usage — matte red for spec limits/reject zones (error
+    role), ochre for target, brand green for measurements, blue for fitted curve —
+    each color carries meaning.
+  - Reject zone shading (vspan!) provides immediate visual context for out-of-spec
+    risk without needing a legend entry.
+  - Off-center process data (mean≈10.012 vs target=10.00) creates a realistic and
+    instructive Cpk < Cp demonstration.
+  - 'Perfect code quality: KISS structure, reproducible seed, clean imports, idiomatic
+    Makie primitives.'
+  weaknesses:
+  - No formal Legend identifying the green bars as 'Measurements' and the blue curve
+    as 'Normal Fit' — readers must infer these from context; adding a two-entry Legend
+    would eliminate any ambiguity.
+  - 'LM-02 is modest: vspan! is used well but the implementation does not leverage
+    Makie''s more distinctive features (Legend, Layout grid, Colorbar, or multi-panel
+    composition).'
+  - Cp/Cpk annotation fontsize=14 is the smallest text element on the canvas; marginally
+    readable — consider fontsize=15–16 for this annotation to match axis label scale.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "histogram-capability · julia · makie · anyplot.ai" in dark ink, clearly readable. X-axis label "Shaft Diameter (mm)" and Y-axis label "Count" in dark ink, balanced size. Tick labels in INK_SOFT gray, clearly visible. No text crowding or overlap.
+      Data: Brand green (#009E73) histogram bars with white edges; blue (#4467A3) normal distribution curve overlaid; red (#AE3030) dashed LSL/USL vertical lines with "LSL"/"USL" labels; ochre (#BD8233) dashed target line with "Target" label; subtle red-tinted reject zone shading on left/right flanks; Cp=1.13 / Cpk=0.87 annotation in dark ink upper-right.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface.
+      Chrome: Title and axis labels in light ink (#F0EFE8), clearly readable against dark background. Tick labels in soft gray (#B8B7B0), visible. Cp/Cpk annotation in light ink, readable. No dark-on-dark failures.
+      Data: All data colors identical to light render — brand green histogram, blue curve, red dashed spec lines, ochre target line. Reject zone shading appears as a subtle dark brownish tint, consistent with red at 0.08 alpha over dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, labels=14, ticks=12);
+          well-proportioned in both themes; Cp/Cpk annotation at fontsize=14 is marginally
+          small
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All elements clearly visible: histogram bars, normal curve, spec
+          lines, target, annotations'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas (gate passed); balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Shaft Diameter (mm)'' with units; Y: ''Count''; title format
+          correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; spec limits #AE3030 semantic; target #BD8233;
+          backgrounds #FAF8F1/#1A1A17; chrome flips correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured with semantic color hierarchy; reject zone shading
+          adds context; resembles a well-tuned library default rather than publication-ready
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; x-grid off; y-grid with 12% alpha; white
+          bar edges (strokecolor=PAGE_BG)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reject zone shading + Cp/Cpk annotation create clear narrative; off-center
+          process (Cpk=0.87 < Cp=1.13) tells a story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Histogram with fitted normal curve and vertical specification lines
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LSL/USL lines, target line, normal curve, Cp/Cpk annotations — all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Shaft diameter (mm) on X, Count on Y; all 200 measurements visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'histogram-capability · julia · makie · anyplot.ai' correct;
+          inline labels for LSL/Target/USL
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows histogram, normal curve, spec limits, target, reject zones,
+          Cp/Cpk — all process capability aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter manufacturing is a real, neutral Six Sigma use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: LSL=9.95/USL=10.05/Target=10.00 (±0.05mm) realistic for precision
+          machined parts; sigma≈0.015 yields plausible Cp/Cpk
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → constants → data → statistics → plot → save; no
+          functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; no fake UI; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) correct
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Multiple Makie primitives used correctly: hist!, lines!, vlines!,
+          vspan!, text!; RGBAf for grid; theme tokens properly wired'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: vspan! for region shading is Makie-native; but no Legend element,
+          no layout grid composition, no other distinctively-Makie features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

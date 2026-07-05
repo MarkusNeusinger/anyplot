@@ -1,0 +1,261 @@
+library: makie
+language: julia
+specification_id: line-win-probability
+created: '2026-06-21T03:43:23Z'
+updated: '2026-06-21T04:07:14Z'
+generated_by: claude-sonnet
+workflow_run: 27892329643
+issue: 4418
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-win-probability/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect spec compliance — all required features implemented: band fills above/below
+    50%, prominent reference line, quarter markers (Q1–Q4), key event annotations
+    with dots, final score annotation'
+  - Excellent theme adaptation — all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG)
+    properly threaded through Axis and text elements; dark render shows clean light-on-dark
+    with no dark-on-dark failures; data colors remain identical between themes
+  - 'Correct Imprint palette usage — home team uses brand green #009E73 (position
+    1), away team uses #4467A3 (position 3); backgrounds match spec (#FAF8F1 light
+    / #1A1A17 dark)'
+  - Compelling narrative arc — Wolves build early lead through Q1–Q2, Eagles surge
+    in Q3, complete comeback in Q4; annotated turning points guide the viewer through
+    the story
+  - Clean idiomatic CairoMakie code — flat script structure, Random.seed!(42) set,
+    all font sizes explicitly declared, correct use of band!, hlines!, vlines!, text!,
+    scatter! primitives with proper RGBAf alpha syntax
+  weaknesses:
+  - 'DE-01: Chart is functional but visual hierarchy could be stronger — the 50% reference
+    line (linewidth=1.8, INK_SOFT color) blends somewhat with the grid; a slightly
+    more prominent separator (e.g., linewidth=2.2, INK color at full opacity) would
+    anchor the threshold visually'
+  - 'LM-02: Implementation stays with basic Makie primitives and does not leverage
+    distinctively Makie-specific capabilities beyond band!() — for example, custom
+    Makie Legend element (axislegend! or manual Legend) would show deeper library
+    knowledge compared to raw text!() team labels'
+  - 'DE-02: Lower chart area (below 25% win probability) is visually empty across
+    the full game because probability rarely dips below 30%; a note annotation or
+    subtle shaded zone could use that whitespace purposefully'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "line-win-probability · julia · makie · anyplot.ai" is bold, dark (#1A1A17), clearly visible centered at top. X-axis label "Game Time (minutes)" and Y-axis label "Win Probability" are dark and well-proportioned (size 14). Tick labels (0%, 25%, 50%, 75%, 100% on Y; 0, 12, 24, 36, 48 on X) are muted dark (#4A4A44) and readable. Quarter labels Q1–Q4 in muted INK_MUTED. All chrome text is clearly dark-on-light.
+      Data: Win probability line is dark (INK #1A1A17), linewidth=2.0, clearly tracks above 50% through Q1–Q2, dips below in Q3–Q4. Green fill (#009E73 at alpha=0.22) fills territory above 50% — home team Lakeside Wolves dominates first half. Blue fill (#4467A3 at alpha=0.22) fills territory below 50% in the Q3–Q4 area — Eagles complete comeback. 50% reference line is a solid horizontal at y=0.5. Three event markers (dots) at notable turning points with muted text annotations. "Lakeside Wolves (home)" in brand green and "Harbor Eagles (away)" in blue serve as team legends.
+      Legibility verdict: PASS — all elements clearly readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title, axis labels, tick labels all switch to light (#F0EFE8 / #B8B7B0 range) — clearly readable against dark surface. Quarter labels and annotation text lighten appropriately. NO dark-on-dark failures observed.
+      Data: Data colors are identical to light render — green band (#009E73) and blue band (#4467A3) maintain the same hex values (only opacity/alpha applies). Win probability line becomes near-white (INK flips to #F0EFE8), strongly visible against dark background. 50% reference line remains visible as a lighter line. Event markers have PAGE_BG stroke that adapts to dark, keeping markers defined. Team labels "Lakeside Wolves (home)" (green) and "Harbor Eagles (away)" (blue) are unchanged in hue, readable on dark.
+      Legibility verdict: PASS — all elements clearly readable against near-black background; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=20, labels=14, ticks=12); all
+          text readable in both themes; no proportional sizing issues
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor crowding: ''Wolves 10–0 run'' annotation at x=9 extends close
+          to Q2 dashed line at x=12; no actual pixel overlap but visual tightness'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Win probability line (linewidth=2.0), band fills (alpha=0.22), event
+          markers (size=10), and reference line all clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green (#009E73) vs blue (#4467A3) is CVD-safe per Imprint palette
+          design; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed (gate passed); size=(1600,900) px_per_unit=2;
+          good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Game Time (minutes)'', Y: ''Win Probability'' (with % tick
+          format); title correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Home=#009E73 (Imprint pos 1), Away=#4467A3 (Imprint pos 3); backgrounds
+          #FAF8F1/#1A1A17; chrome adapts correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): band fills create intentional visual territories;
+          team labels in team colors replace legend elegantly; quarter markers use
+          dashed lines appropriately'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): top/right spines removed, subtle y-only grid
+          (alpha=0.12), muted text hierarchy (INK/INK_SOFT/INK_MUTED)'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): clear narrative arc through color territories,
+          event annotations at turning points, final score provides closure'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct win probability chart: line + area fills above/below 50%'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0-100% with 50% reference line, home/away fills, event annotations,
+          final score, quarter markers — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=game time (0–48 min), Y=win probability (0–1 shown as 0%–100%),
+          home=above 50% (green), away=below 50% (blue)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-win-probability · julia · makie · anyplot.ai'' correct;
+          team color labels serve as legend effectively'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: line, fills, reference threshold, period markers,
+          event annotations, final score'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: NBA playoff game with realistic score (104–98), plausible win probability
+          trajectory, recognizable team names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Win probability 0–1 (0%–100%), game time 0–48 minutes (NBA), 200
+          data points for play-by-play — all appropriate
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat Julia script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set before data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: using CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean variable naming, no fake UI, appropriate complexity for spec
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of band!, hlines!, vlines!, text! with align tuples,
+          scatter! with strokecolor; RGBAf() for alpha; colorant"#hex" from Colors;
+          comprehensive Axis token config
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band!() is distinctively Makie (vs matplotlib fill_between); (color,
+          alpha) tuple syntax is Makie-specific; text! align parameter; above default
+          of 1 but no advanced Makie features like Legend, GridLayout nesting, or
+          recipes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

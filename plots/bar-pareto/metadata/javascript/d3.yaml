@@ -1,0 +1,274 @@
+library: d3
+language: javascript
+specification_id: bar-pareto
+created: '2026-06-20T17:09:11Z'
+updated: '2026-06-20T17:27:39Z'
+generated_by: claude-sonnet
+workflow_run: 27877888493
+issue: 4550
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Pareto chart: bars sorted descending, cumulative % line with markers
+    at bar centers, amber 80% threshold reference line — all spec requirements met'
+  - 'Imprint palette applied idiomatically: bars use palette[0] (#009E73), 80% threshold
+    uses amber token — no custom hexes'
+  - 'Dual-axis layout well-executed: left axis (raw count), right axis (0–100%) with
+    correct D3 axisRight, both styled with theme-adaptive inkSoft tokens'
+  - 'Full theme-adaptive chrome: pageBg, ink, inkSoft, grid tokens used throughout;
+    both light (#FAF8F1) and dark (#1A1A17) backgrounds render correctly with readable
+    text'
+  - E-commerce complaint data is realistic, plausible, and neutral with realistic
+    power-law distribution (312 down to 18)
+  - 'Idiomatic D3 usage: d3.scaleBand, d3.line with .datum(), .join(), d3.format('',''),
+    d3.axisRight — modern D3 v5+ patterns throughout'
+  - 'Subtle grid (stroke-opacity: 0.15) and pageBg stroke on cumulative dot markers
+    show deliberate visual polish'
+  weaknesses:
+  - 'Palette canonical order violated: cumulative line uses palette[2] (#4467A3, blue)
+    instead of palette[1] (#C475FD, lavender) — no semantic cue justifies skipping
+    position 1; use t.palette[1] for the second data series'
+  - Legend text at 13px is just below the recommended 14px minimum for D3 at 3200px
+    canvas; increase legend font-size to 14px for better mobile readability
+  - No visual differentiation between 'vital few' bars (below 80% threshold) and 'trivial
+    many' bars (above 80%) — adding reduced opacity or a subtle color shift on post-threshold
+    bars would strengthen data storytelling
+  - Axis domain lines (spines) are retained on all three axes; for a Pareto chart
+    with dual y-axes the right axis and bottom axis are structural and should stay,
+    but the left domain line could optionally be removed for a cleaner look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "bar-pareto · javascript · d3 · anyplot.ai" centered at top in dark ink (#1A1A17), bold 22px — clearly readable. Left y-axis label "Complaint Count" and right y-axis label "Cumulative %" both in dark ink 15px, rotated — readable. Bottom x-axis label "Complaint Category" in dark ink 15px — readable. Tick labels on all three axes at 14px in inkSoft (#4A4A44) — readable. Legend text at 13px in inkSoft — readable but slightly small.
+      Data: 8 descending bars in #009E73 (brand green) — Late Delivery tallest (~312), Other shortest (~18). Blue (#4467A3) cumulative line with circle markers at bar centers, rising from ~34% to 100%. Amber (#DDCC77) dashed horizontal line at 80% with "80% threshold" label. Legend in upper-right: green square for Complaint Count, blue line+dot for Cumulative %, amber dash for 80% threshold.
+      Legibility verdict: PASS — all text clearly readable on light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and all axis labels render in light text (#F0EFE8 / #B8B7B0) — clearly readable against the dark surface. No dark-on-dark failures observed. Tick labels, axis labels, legend text all flip correctly to light tones.
+      Data: Bar color identical to light render (#009E73 green) — confirmed. Cumulative line identical (#4467A3 blue). Amber threshold line identical (#DDCC77). The dot markers show pageBg stroke that adapts correctly to the dark theme.
+      Legibility verdict: PASS — all text clearly readable on dark background, full theme adaptation verified.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, ticks 14px, axis labels
+          15px, legend 13px). Well-proportioned, no overflow, balanced axes. Legend
+          at 13px is slightly below 14px minimum — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements. Category labels
+          on x-axis are well-spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, cumulative line, dot markers, and threshold line all clearly
+          visible and well-sized for the canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green bars and blue line are perceptually distinct. Imprint palette
+          is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Plot fills canvas well with balanced margins
+          (90/120/100/90). Right margin accommodates secondary y-axis.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Left y-axis: ''Complaint Count'', right y-axis: ''Cumulative %'',
+          x-axis: ''Complaint Category''. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Bars correctly use palette[0] (#009E73). Cumulative line uses palette[2]
+          (#4467A3) instead of canonical palette[1] (#C475FD, lavender) — skips ordinal
+          position without semantic justification. Background and chrome are theme-correct
+          in both renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: Imprint palette applied correctly,
+          amber threshold adds intentional design layer, pageBg stroke on markers
+          is a polished detail. Not quite publication-ready (no spine removal, limited
+          typographic hierarchy).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid explicitly set to 0.15 opacity (very subtle). Axis lines styled
+          with inkSoft. pageBg stroke on cumulative markers. Whitespace generous.
+          All three axis domain lines retained — acceptable for dual-axis Pareto.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber 80% threshold line creates clear focal point for the 80/20
+          principle. Descending bar arrangement guides viewer through the story. No
+          color differentiation between 'vital few' vs 'trivial many' bars — missed
+          opportunity to strengthen the narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Pareto chart: descending bars + cumulative % line overlay
+          on secondary y-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: descending sort, cumulative % line, secondary
+          y-axis (0-100%), 80% reference line, markers at center-top of each bar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: complaint categories. Left Y: raw count. Right Y: cumulative
+          percentage. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bar-pareto · javascript · d3 · anyplot.ai' matches required
+          format. Legend shows all three data elements correctly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Pareto chart aspects: descending distribution with clear
+          dominant category, cumulative line reaching 100%, threshold demonstrating
+          80/20 rule.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: E-commerce complaint categories (Late Delivery, Wrong Item, Damaged
+          Package, etc.) — realistic business scenario, neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Power-law distribution (312 to 18) is realistic for complaint frequency
+          data. Total 925 complaints is plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: data → computation → SVG → elements → axes → labels
+          → legend. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is hard-coded; no random elements. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses d3 global only — no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic D3. No over-engineering. Appropriate complexity for
+          a dual-axis Pareto chart.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: D3 harness outputs plot-light.png, plot-dark.png, plot-light.html,
+          plot-dark.html. window.ANYPLOT_TOKENS and window.ANYPLOT_SIZE used correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Modern D3 patterns throughout: .join(), d3.scaleBand, d3.line with
+          .datum(), d3.format('',''), d3.axisRight, d3.sum, d3.max — all idiomatic
+          D3 v7.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses D3-specific features: d3.line path generator with .datum()
+          for the cumulative path, d3.format for comma-separated tick formatting,
+          scaleBand padding, dual independent linear scales with separate axes. Standard
+          D3 patterns, not particularly innovative.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - alpha-blending
+  - edge-highlighting

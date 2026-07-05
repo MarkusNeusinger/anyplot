@@ -1,13 +1,21 @@
-""" pyplots.ai
+""" anyplot.ai
 root-locus-basic: Root Locus Plot for Control Systems
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 82/100 | Created: 2026-03-20
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-06-18
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data — root locus for G(s) = (s+3) / [s(s+1)(s+2)(s+4)]
 # Open-loop poles: 0, -1, -2, -4  |  Open-loop zero: -3
@@ -25,7 +33,7 @@ gains = np.concatenate(
     [np.linspace(0, 2, 200), np.linspace(2, 15, 300), np.linspace(15, 80, 200), np.linspace(80, 500, 150)]
 )
 
-# Compute closed-loop poles for each gain: roots of den(s) + K·num(s) = 0
+# Compute closed-loop poles via nearest-neighbor tracking
 loci = np.zeros((len(gains), n_branches), dtype=complex)
 for i, K in enumerate(gains):
     roots = np.roots(den + K * num_padded)
@@ -40,7 +48,7 @@ for i, K in enumerate(gains):
             loci[i, j] = roots[best]
             available.remove(best)
 
-# Find imaginary axis crossings (stability boundary)
+# Imaginary axis crossings (stability boundary)
 jw_crossings = []
 for b in range(n_branches):
     reals = loci[:, b].real
@@ -51,72 +59,59 @@ for b in range(n_branches):
             K_cross = float(gains[i] + frac * (gains[i + 1] - gains[i]))
             jw_crossings.append((round(im, 3), round(K_cross, 2)))
 
-# Find breakaway point: on real axis between poles at -1 and -2
-# d/ds[1 + K·N(s)/D(s)] = 0 → d/ds[D(s)/N(s)] = 0
-# Numerically search between -1 and -2
+# Breakaway point between poles at -1 and -2
 s_test = np.linspace(-1.01, -1.99, 500)
 ratio = np.polyval(den, s_test) / np.polyval(num, s_test)
 breakaway_idx = np.argmin(np.abs(np.gradient(ratio, s_test)))
 breakaway_s = round(float(s_test[breakaway_idx]), 3)
 breakaway_K = round(float(-np.polyval(den, breakaway_s) / np.polyval(num, breakaway_s)), 2)
 
-# Real-axis locus segments (to the left of an odd number of real poles+zeros)
+# Real-axis locus segments (left of odd number of real poles/zeros)
 real_segments = [(0, -1), (-2, -3), (-4, -6)]
 
-# Constant damping ratio guide lines (ζ = 0.2, 0.4, 0.6, 0.8)
+# Guide parameters
 zeta_values = [0.2, 0.4, 0.6, 0.8]
 guide_extent = 5.5
-
-# Constant natural frequency semicircles (ωn = 1, 2, 3, 4, 5)
 wn_values = [1, 2, 3, 4, 5]
 
-# Style — refined palette with warm background tint for polish
-font = "DejaVu Sans, Helvetica, Arial, sans-serif"
+# Style — Imprint palette with theme-adaptive chrome
+# Color order: INK_MUTED for guides, then Imprint positions 1→6 for data series
 custom_style = Style(
-    background="#fafafa",
-    plot_background="#fefefe",
-    foreground="#1a1a2e",
-    foreground_strong="#1a1a2e",
-    foreground_subtle="#d8d8d8",
-    guide_stroke_color="#eaeaea",
-    guide_stroke_dasharray="2, 4",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
     colors=(
-        "#c0c0c0",  # 0: ζ guide lines (soft gray, background)
-        "#c0c0c0",  # 1: ωn guide semicircles (soft gray, background)
-        "#2563EB",  # 2: Root locus branches (vivid blue)
-        "#EA580C",  # 3: Real-axis locus (burnt orange)
-        "#DC2626",  # 4: Open-loop poles (red)
-        "#7C3AED",  # 5: Open-loop zero (violet — colorblind-safe vs red)
-        "#16A34A",  # 6: Breakaway point (green — distinct emphasis)
-        "#D97706",  # 7: Stability boundary (amber)
-        "#1D4ED8",  # 8: Gain direction markers (dark blue)
+        INK_MUTED,  # ζ/ωn reference lines (muted, background layer)
+        "#009E73",  # Root Locus — Imprint palette position 1 (ALWAYS first data series)
+        "#BD8233",  # Real-Axis Locus — Imprint ochre
+        "#AE3030",  # Poles — semantic red (critical system points)
+        "#4467A3",  # Zero — Imprint blue
+        "#DDCC77",  # Breakaway — amber (caution marker)
+        "#2ABCCD",  # Stability Boundary — Imprint cyan
+        "#009E73",  # Direction arrows — same color as root locus
     ),
-    font_family=font,
-    title_font_family=font,
-    title_font_size=52,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=26,
-    legend_font_family=font,
-    value_font_size=24,
-    tooltip_font_size=26,
-    tooltip_font_family=font,
-    opacity=0.92,
-    opacity_hover=1.0,
-    stroke_width=5,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
+# Chart — 2400×2400 square canvas (root locus is symmetric in the complex plane)
 chart = pygal.XY(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="root-locus-basic · pygal · pyplots.ai",
+    title="root-locus-basic · python · pygal · anyplot.ai",
     x_title="Real Axis (σ)",
     y_title="Imaginary Axis (jω)",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
-    legend_box_size=22,
+    legend_box_size=20,
     stroke=True,
     dots_size=0,
     show_x_guides=True,
@@ -138,32 +133,32 @@ chart = pygal.XY(
     spacing=18,
 )
 
-# Constant damping ratio guide lines (ζ rays from origin) — rendered first as background
-zeta_pts = []
+# Reference guide lines — ζ (damping ratio) rays and ωn (natural frequency) arcs combined
+# into one subtle series to reduce legend clutter (was two separate series in prior version)
+guide_pts = []
 for zeta in zeta_values:
     theta = np.arccos(zeta)
     for t in np.linspace(0, guide_extent, 25):
-        zeta_pts.append((round(-t * np.cos(theta), 3), round(t * np.sin(theta), 3)))
-    zeta_pts.append(None)
+        guide_pts.append((round(-t * np.cos(theta), 3), round(t * np.sin(theta), 3)))
+    guide_pts.append(None)
     for t in np.linspace(0, guide_extent, 25):
-        zeta_pts.append((round(-t * np.cos(theta), 3), round(-t * np.sin(theta), 3)))
-    zeta_pts.append(None)
-chart.add(
-    "ζ guides", zeta_pts, stroke_style={"width": 1.2, "dasharray": "6, 5"}, show_dots=False, allow_interruptions=True
-)
-
-# Constant natural frequency semicircles (ωn arcs in left half-plane)
-wn_pts = []
+        guide_pts.append((round(-t * np.cos(theta), 3), round(-t * np.sin(theta), 3)))
+    guide_pts.append(None)
 for wn in wn_values:
     angles = np.linspace(np.pi / 2, 3 * np.pi / 2, 50)
     for a in angles:
-        wn_pts.append((round(wn * np.cos(a), 3), round(wn * np.sin(a), 3)))
-    wn_pts.append(None)
+        guide_pts.append((round(wn * np.cos(a), 3), round(wn * np.sin(a), 3)))
+    guide_pts.append(None)
+
 chart.add(
-    "ωn guides", wn_pts, stroke_style={"width": 1.2, "dasharray": "6, 5"}, show_dots=False, allow_interruptions=True
+    "ζ/ωn Reference Lines",
+    guide_pts,
+    stroke_style={"width": 1.0, "dasharray": "5, 5"},
+    show_dots=False,
+    allow_interruptions=True,
 )
 
-# Root locus branches — skip points near zero at s=-3 to avoid obscuring it
+# Root locus branches — primary data series (Imprint brand green #009E73)
 zero_exclusion_radius = 0.35
 locus_pts = []
 for b in range(n_branches):
@@ -186,10 +181,10 @@ for b in range(n_branches):
     locus_pts.append(None)
 
 chart.add(
-    "Root Locus", locus_pts, stroke_style={"width": 7, "linecap": "round"}, show_dots=False, allow_interruptions=True
+    "Root Locus", locus_pts, stroke_style={"width": 9, "linecap": "round"}, show_dots=False, allow_interruptions=True
 )
 
-# Real-axis locus segments — thick orange line
+# Real-axis locus segments — ochre, thick to distinguish from guides
 real_pts = []
 for seg_start, seg_end in real_segments:
     for x in np.linspace(seg_start, seg_end, 60):
@@ -198,38 +193,69 @@ for seg_start, seg_end in real_segments:
 chart.add(
     "Real-Axis Locus",
     real_pts,
-    stroke_style={"width": 12, "linecap": "round"},
-    show_dots=False,
+    stroke_style={"width": 10, "linecap": "round"},
+    show_dots=True,
+    dots_size=7,
     allow_interruptions=True,
 )
 
-# Open-loop poles (marked with ×)
+# Open-loop poles (×) — semantic red for critical control points
 pole_pts = [{"value": (round(float(p), 2), 0.0), "label": f"Pole at s = {p:.0f}"} for p in ol_poles]
-chart.add("Poles (×)", pole_pts, stroke=False, dots_size=22)
+chart.add("Poles (×)", pole_pts, stroke=False, dots_size=15)
 
-# Open-loop zero (marked with ○) — large dot, rendered after locus to stay on top
+# Open-loop zero (○) — Imprint blue, distinct from poles
 zero_pts = [{"value": (round(float(z), 2), 0.0), "label": f"Zero at s = {z:.0f}"} for z in ol_zeros]
-chart.add("Zero (○)", zero_pts, stroke=False, dots_size=28)
+chart.add("Zero (○)", zero_pts, stroke=False, dots_size=18)
 
-# Breakaway point — emphasized with distinct green marker
-breakaway_pts = [{"value": (breakaway_s, 0.0), "label": f"Breakaway: s = {breakaway_s}, K = {breakaway_K}"}]
-chart.add("Breakaway Point", breakaway_pts, stroke=False, dots_size=30)
+# Breakaway point — amber caution marker
+breakaway_pts = [{"value": (breakaway_s, 0.0), "label": f"Breakaway: s = {breakaway_s:.3f}, K = {breakaway_K}"}]
+chart.add("Breakaway", breakaway_pts, stroke=False, dots_size=20)
 
-# Imaginary axis crossings — stability boundary markers
+# Stability boundary (jω axis crossings) — cyan, clearly marks instability threshold
 jw_pts = [{"value": (0.0, im), "label": f"jω crossing: s = {im:+.3f}j, K = {K:.2f}"} for im, K in jw_crossings]
-chart.add("Stability Boundary", jw_pts, stroke=False, dots_size=24)
+chart.add("Stability Boundary", jw_pts, stroke=False, dots_size=17)
 
-# Gain direction markers along locus at selected gains
+# Direction arrows along complex locus branches — V-shaped tick marks indicating increasing K
 arrow_pts = []
-arrow_gains = [5, 15, 40, 100, 250]
-for ag in arrow_gains:
-    idx = np.argmin(np.abs(gains - ag))
-    for b in range(n_branches):
-        r, im = float(loci[idx, b].real), float(loci[idx, b].imag)
-        if -6 <= r <= 4 and -5 <= im <= 5:
-            arrow_pts.append({"value": (round(r, 3), round(im, 3)), "label": f"K = {ag} →"})
-chart.add("Gain K →", arrow_pts, stroke=False, dots_size=20)
+arrow_target_gains = [3, 8, 20, 60, 180]
+arrow_size = 0.28
+for b in range(n_branches):
+    for target_K in arrow_target_gains:
+        idx = int(np.argmin(np.abs(gains - target_K)))
+        if idx < 3:
+            continue
+        x, y = float(loci[idx, b].real), float(loci[idx, b].imag)
+        if abs(y) < 0.25 or not (-5.8 <= x <= 3.8 and -4.8 <= y <= 4.8):
+            continue
+        dx = float(loci[idx, b].real - loci[idx - 3, b].real)
+        dy = float(loci[idx, b].imag - loci[idx - 3, b].imag)
+        length = np.sqrt(dx**2 + dy**2)
+        if length < 1e-6:
+            continue
+        dx, dy = dx / length, dy / length
+        px, py = -dy, dx
+        bx = x - dx * arrow_size
+        by = y - dy * arrow_size
+        arrow_pts.extend(
+            [
+                (round(bx + px * arrow_size * 0.55, 3), round(by + py * arrow_size * 0.55, 3)),
+                (round(x, 3), round(y, 3)),
+                (round(bx - px * arrow_size * 0.55, 3), round(by - py * arrow_size * 0.55, 3)),
+            ]
+        )
+        arrow_pts.append(None)
+
+if arrow_pts:
+    chart.add(
+        "→ increasing gain",
+        arrow_pts,
+        stroke_style={"width": 4, "linecap": "round"},
+        show_dots=False,
+        stroke=True,
+        allow_interruptions=True,
+    )
 
 # Save
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

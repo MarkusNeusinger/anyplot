@@ -1,107 +1,164 @@
 library: bokeh
+language: python
 specification_id: titration-curve
 created: '2026-03-21T22:12:50Z'
-updated: '2026-03-21T22:34:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23389866006
+updated: '2026-06-24T11:36:45Z'
+generated_by: claude-sonnet
+workflow_run: 28094745317
 issue: 4407
-python_version: 3.14.3
-library_version: 3.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/titration-curve/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/titration-curve/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.14
+library_version: 3.9.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/titration-curve/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Chemically accurate stoichiometric calculations produce a realistic titration
-    curve
-  - Excellent use of Bokeh model system (BoxAnnotation, Span, Label, HoverTool, extra_y_ranges)
-  - Colorblind-safe Wong palette with intentional color assignments
-  - Clean visual hierarchy with shaded regions, equivalence point annotation, and
-    derivative overlay
-  - Dual output (PNG + interactive HTML) leverages Bokeh strengths
+  - 'Full spec compliance: equivalence point annotation with diamond + dashed vertical
+    line, secondary y-axis derivative curve, region shading, and correct pH 0-14 range
+    all implemented correctly'
+  - Scientifically accurate strong acid/strong base titration data (25 mL 0.1 M HCl
+    vs 0.1 M NaOH) with correct pH 7.0 equivalence point and proper Henderson-Hasselbalch-free
+    calculation for strong acid/base system
+  - 'Semantic color assignment: amber (#DDCC77) for Excess HCl region (caution/acid
+    semantic) and blue (#4467A3) for Excess NaOH region (cool/alkaline semantic) —
+    intentional design beyond ordinal palette use'
+  - 'Coordinated twin-axis coloring: derivative series and its right-axis labels/ticks
+    both rendered in #4467A3, reinforcing the association between curve and axis scale'
+  - 'Theme-adaptive chrome is correct in both renders: #FAF8F1 light background, #1A1A17
+    dark background, INK/INK_SOFT text tokens applied throughout with no dark-on-dark
+    or light-on-light failures'
+  - All font sizes explicitly set per bokeh.md spec (50pt title, 42pt axis labels,
+    34pt tick labels, 26pt annotations) with good proportions in both renders
+  - 'Clean idiomatic bokeh code: ColumnDataSource, extra_y_ranges for secondary axis,
+    BoxAnnotation for region fills, HoverTool with vline mode, proper output_file+Selenium
+    screenshot pipeline'
+  - 'Perfect code quality: deterministic data generation (no random seed needed),
+    no functions or classes, all imports used'
   weaknesses:
-  - Derivative spike is extremely narrow due to data nature, slightly hard to appreciate
-    visually
-  - Design could reach publication-level with more typographic refinement
-  image_description: The plot displays an acid-base titration curve (HCl + NaOH) with
-    a characteristic S-shaped sigmoidal curve in blue (#306998) plotting pH (y-axis,
-    0-14) against volume of NaOH added in mL (x-axis, 0-50). A secondary y-axis on
-    the right shows the derivative dpH/dV (mL⁻¹) in orange (#D55E00) as a dot-dash
-    line, with a sharp spike at the equivalence point. The equivalence point at 25
-    mL, pH 7.0 is marked with a green diamond marker and a vertical dashed green line,
-    accompanied by a bold annotation label. Two semi-transparent shaded regions indicate
-    the "Excess HCl Region" (0-15 mL, yellow tint) and "Excess NaOH Region" (35-50
-    mL, blue tint) with italic labels. A subtle dotted gray line marks pH 7. The legend
-    in the top-left corner shows entries for dpH/dV and pH with a white background
-    and thin gray border. The background is light gray (#F7F7F7) with subtle dashed
-    gridlines. Title reads "titration-curve · bokeh · pyplots.ai" in dark gray.
+  - Derivative curve (dpH/dV) baseline is nearly invisible in flat portions (x=0-24
+    mL and x=26-50 mL) — the dashed blue line hugs y≈0 on the right scale and is difficult
+    to distinguish; consider increasing line_alpha to 0.95 or adding a subtle zero-baseline
+    indicator so the derivative series has visual presence throughout, not only at
+    the equivalence spike
+  - 'Region shading alpha is very low (fill_alpha=0.09 for acid, 0.07 for base) —
+    in the dark render especially, the amber (#DDCC77 at 9% alpha over #1A1A17) is
+    barely perceptible; consider increasing to 0.12-0.15 so both shaded zones read
+    clearly in both themes while remaining non-dominant'
+  - 'Design Excellence could be elevated — the plot is visually correct and professionally
+    styled but stops short of ''strong design'': the equivalence point focal point
+    (spec-required) is effective, but an additional design touch (e.g. slightly enlarging
+    the diamond marker to size=28, or adding a subtle horizontal annotation bracket
+    showing the buffer transition zone) would lift DE-01 from 5 to 6'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct. The amber region fill on the left (~0-15 mL) creates a very subtle warm tint; the blue region fill on the right (~35-50 mL) adds a slightly cooler tint. Both are faint but discernible.
+      Chrome: Title "titration-curve · python · bokeh · anyplot.ai" in dark ink at top-left, spans ~40% canvas width. Left y-axis label "pH" in dark italic ink, x-axis label "Volume of NaOH added (mL)" in dark italic ink — both explicitly sized at 42pt. Right y-axis label "dpH/dV (mL⁻¹)" in blue (#4467A3), coordinated with the derivative series. Tick labels in INK_SOFT (#4A4A44) on all axes. All text clearly readable against the warm off-white background. No light-on-light failures.
+      Data: Main pH curve (solid, #009E73, line_width=5) shows the classic S-shaped sigmoidal titration curve rising steeply at x≈25 mL. Derivative curve (dashed, #4467A3, line_width=3) runs near-zero baseline across most of the plot with a sharp visible spike at x≈25 mL. Equivalence point marked with green diamond at (25, 7.0), vertical dashed green line, and bold annotation "Equivalence Point / 25 mL, pH 7.0" offset to the right. Region labels "Excess HCl Region" (italic, muted ink, pH≈3.8) and "Excess NaOH Region" (italic, muted ink, pH≈10.2) visible with no overlap. Legend in top-left shows dpH/dV (dashed) and pH (solid).
+      Legibility verdict: PASS — all text readable, no overlap, correct warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct. The amber region fill (~0-15 mL) is very faint over the dark background (barely perceptible brownish tint). The blue region fill (~35-50 mL) is a similarly faint lighter area. Region labels "Excess HCl Region" and "Excess NaOH Region" remain readable in muted light text (INK_MUTED = #A8A79F).
+      Chrome: Title and all axis labels rendered in light-colored text (INK = #F0EFE8 dark token) against the near-black background. Tick labels in INK_SOFT (#B8B7B0 dark token). Right axis labels in blue (#4467A3 — constant, non-theme-adaptive). Grid lines subtle. Legend background uses ELEVATED_BG (#242420) with INK_SOFT border. No dark-on-dark failures observed — all text is clearly light-colored against the dark background.
+      Data: pH curve (#009E73) is identical to light render — same green, same weight. Derivative curve (#4467A3) identical. All Imprint palette data colors unchanged between themes. Only chrome (background, text, legend fill) flipped.
+      Legibility verdict: PASS — all text readable in light colors against dark background, no dark-on-dark failures, data colors correctly theme-invariant.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set well above minimums (title 36pt, labels
-          26pt, ticks 20pt, legend 22pt)
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks, 26pt annotations, 34pt legend). Well-proportioned in both themes,
+          title ~40% canvas width, balanced left/right axis labels.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend and annotations well positioned
+        comment: No text overlaps. Region labels positioned away from curve (Excess
+          HCl at pH 3.8 vs curve at pH~1.5 at x=7.5; Excess NaOH at pH 10.2 below
+          the curve at pH~12.4 at x=42.5). Equivalence annotation offset 35px right
+          of vertical line, clear of rising curve.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Main curve and derivative visible, derivative spike inherently narrow
-          due to sharp pH transition
+        comment: pH curve (line_width=5) optimally prominent. Derivative curve (line_width=3,
+          dashed) visible at equivalence spike; baseline near-zero in flat regions
+          is scientifically correct but visually subtle. Region shading (alpha=0.09/0.07)
+          visible with label support but quite faint in dark render. Diamond marker
+          (size=22) clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe Wong palette with good contrast
+        comment: Green (#009E73) + blue (#4467A3) combination is CVD-safe. No red-green
+          sole signal. Line style redundancy (solid vs dashed) adds non-color distinction.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Generous borders, plot fills canvas well, nothing cut off
+        comment: Canvas gate passed (3200x1800). Plot area fills ~70-75% of canvas
+          with balanced margins. min_border_right=220 correctly accommodates the secondary
+          axis label and ticks. No clipping in either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on all axes
+        comment: 'X: ''Volume of NaOH added (mL)'' — descriptive with units. Y: ''pH''
+          — standard unit. Right Y: ''dpH/dV (mL⁻¹)'' — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (pH) = #009E73 (Imprint position 1). Derivative uses
+          #4467A3 (position 3) — justified for twin-axis coordinated coloring with
+          axis labels. Backgrounds: #FAF8F1 light / #1A1A17 dark. Theme-correct chrome
+          in both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom colorblind-safe palette, custom background, professional typography,
-          above defaults
+        comment: 'Above ''well-configured default'' (4): semantic color assignment
+          for regions (amber=caution/acid, blue=cool/alkaline), coordinated twin-axis
+          coloring (derivative series and axis both in #4467A3), muted italic region
+          labels. Not yet ''strong design'' (6) — overall look is polished but not
+          striking.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Ticks removed, subtle dashed grid, outline removed, generous whitespace
+        comment: 'Good refinement: tick marks removed on both axes (major+minor tick_line_color=None),
+          subtle grid (alpha 0.10-0.15), outline_line_color=None removes the plot
+          frame box, legend has elevated background (#FFFDF6/#242420) with INK_SOFT
+          border. Axis lines kept but in INK_SOFT (subdued).'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Shaded regions and annotations create visual hierarchy, guides reader
-          to equivalence point
+        comment: 'Good visual hierarchy: pH curve dominant (line_width=5, brand green),
+          equivalence point is focal point (diamond + bold annotation + vertical line),
+          derivative curve provides analytical depth, region shading contextualizes
+          the chemistry narrative. All spec-required features executed with clear
+          visual priority ordering.'
     spec_compliance:
       score: 15
       max: 15
@@ -111,26 +168,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-shaped titration curve
+        comment: 'Correct: line chart showing pH vs volume with classic S-shaped sigmoidal
+          titration curve.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: equivalence point, derivative, shaded
-          regions, correct data'
+        comment: 'All features present: equivalence point with vertical dashed line
+          + text annotation showing volume and pH; secondary y-axis with dpH/dV derivative
+          curve (located at maximum = equivalence); region shading (adapted for strong
+          acid/base: Excess HCl and Excess NaOH regions instead of buffer region,
+          which is correct for this system); y-axis spans 0-14; axis labels as specified.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=volume, Y=pH, full 0-14 scale
+        comment: 'X: volume_ml (0-50 mL), Y: pH (0-14). Equivalence at 25 mL pH 7.0.
+          ~200 data points with dense sampling around equivalence. Correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, clear legend labels
+        comment: 'Title: ''titration-curve · python · bokeh · anyplot.ai'' — correct
+          format. Legend: ''dpH/dV'' (dashed) and ''pH'' (solid) — correct labels.'
     data_quality:
       score: 15
       max: 15
@@ -140,20 +203,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete S-curve with all regions, derivative spike, excess acid/base
-          regions
+        comment: 'Shows all titration curve features: pre-equivalence acid region,
+          steep S-curve inflection, post-equivalence base region, derivative spike
+          locating equivalence, region annotations.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real chemistry: 25 mL 0.1 M HCl titrated with 0.1 M NaOH'
+        comment: 'Real-world analytical chemistry scenario: 25 mL of 0.1 M HCl titrated
+          with 0.1 M NaOH. Neutral educational/scientific context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Chemically accurate values throughout
+        comment: pH 0-14 full scale correct. Equivalence at 25 mL with equal concentration
+          and volume is physically correct. pH calculation from first principles (H+/OH-
+          concentrations) gives factually accurate curve shape.
     code_quality:
       score: 10
       max: 10
@@ -163,52 +230,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: 'Flat script: imports → data calculation → figure setup → add elements
+          → save. No functions or classes. The for-loop for pH calculation is appropriate
+          (not an abstraction).'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic stoichiometric calculations
+        comment: 'Fully deterministic: data derived from mathematical formulas (Henderson-Hasselbalch
+          / acid-base calculations), no random numbers.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, sys, time, Path, numpy, bokeh.io, bokeh.models
+          (all 7 models used), bokeh.plotting, selenium webdriver + Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean chemistry calculations
+        comment: Appropriate complexity. Organized in logical sections with clear
+          comments. No over-engineering, no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html, current Bokeh API
+        comment: Saves plot-{THEME}.html (interactive) and plot-{THEME}.png (screenshot
+          via Selenium). Current API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert Bokeh usage with ColumnDataSource, extra_y_ranges, BoxAnnotation,
-          Label, Span, LinearAxis
+        comment: 'Idiomatic bokeh: ColumnDataSource, extra_y_ranges for secondary
+          axis, add_layout() for annotations, LinearAxis with custom range for derivative,
+          HoverTool with vline mode. Follows the canonical output_file + Selenium
+          pattern from bokeh.md.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: HoverTool with vline mode, HTML export with CDN, BoxAnnotation for
-          declarative region shading
+        comment: 'Uses bokeh-distinctive features: HoverTool (interactive tooltips),
+          BoxAnnotation (semantic region fills), extra_y_ranges + LinearAxis for twin-axis
+          layout, HTML artifact output. These features cannot be trivially replicated
+          in matplotlib.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - twin-axes
   - annotations
@@ -219,5 +297,5 @@ impl_tags:
   - columndatasource
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling

@@ -6,7 +6,7 @@ title: Basic Scatter Plot
 
 # Specification tracking
 created: 2025-12-11T22:45:43Z
-updated: 2025-12-11T22:45:43Z
+updated: 2026-06-25T01:09:20Z
 issue: 611
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - point
   data_type:
     - numeric
     - continuous

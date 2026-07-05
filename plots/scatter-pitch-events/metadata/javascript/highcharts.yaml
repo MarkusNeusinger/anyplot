@@ -1,0 +1,273 @@
+library: highcharts
+language: javascript
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:21:05Z'
+updated: '2026-06-21T06:27:12Z'
+generated_by: claude-sonnet
+workflow_run: 27895244957
+issue: 4417
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Complete FIFA-standard pitch with all required markings: boundary, halfway line,
+    center circle, penalty areas, goal areas, corner arcs, penalty arcs, and goals'
+  - All 4 event types implemented with distinct markers (circles=Pass, diamonds=Shot,
+    triangles=Tackle, squares=Interception) and correct Imprint palette order
+  - Trajectory lines for passes and shots clearly show directional play, with shot
+    lines converging on the attacking goal creating a natural focal point
+  - Outcome encoding via fill opacity (22% for unsuccessful, 100% for successful)
+    with white outlines making all markers pop against the dark grass
+  - Deterministic LCG RNG (seed 42) ensures reproducibility in the offline browser
+    runtime
+  - Correct aspect ratio maintained via smart X-axis padding calculation (X_PAD) based
+    on CSS mount dimensions
+  - 'Theme-adaptive chrome: `t.ink`, `t.inkSoft`, `t.elevatedBg`, `t.grid` tokens
+    correctly applied to all non-data elements'
+  weaknesses:
+  - No true arrowheads on pass/shot trajectory lines — spec requests 'directional
+    arrows' but implementation uses plain line segments (Highcharts core has no built-in
+    arrow renderer; consider an SVG `marker` workaround or note the limitation in
+    the subtitle)
+  - Subtitle fontsize 13px is slightly small — at CSS 13px (26px native on 3200px
+    canvas) it may be hard to read at mobile widths; increase to 14–15px to match
+    the legend label size
+  - Unused variable `const THEME = window.ANYPLOT_THEME` is captured but never referenced
+    — all theme adaptation flows through `t`; remove it to keep the code clean
+  - Faded unsuccessful markers at 22% opacity may be borderline invisible for small
+    marker types (circles at radius 5) on the dark green pitch — consider raising
+    to 28–30% opacity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) visible in canvas margins around the pitch — correct light theme surface.
+      Chrome: Title "scatter-pitch-events · javascript · highcharts · anyplot.ai" in dark ink (#1A1A17) at 22px — clearly readable. Subtitle in softer dark ink at 13px — readable at full resolution but slightly small. Legend at bottom center with box border, labels "Pass / Shot / Tackle / Interception" in #4A4A44 on light elevated background — readable. Axis labels and tick labels suppressed (correct for a pitch visualization).
+      Data: Dark green pitch (#2d5a27) with white boundary lines, halfway line, center circle, penalty areas, goal areas, corner arcs, and goal boxes clearly rendered. Four event types visible: green circles (Pass, brand #009E73), lavender/purple diamonds (Shot, #C475FD), blue triangles (Tackle, #4467A3), ochre squares (Interception, #BD8233). Successful events show solid fills; unsuccessful events show faded ~22% opacity fills. Green semi-transparent pass trajectory lines fan across the pitch; purple shot trajectory lines converge toward the right goal.
+      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) visible in canvas margins — correct dark theme surface.
+      Chrome: Title text rendered in light ink (#F0EFE8) via t.ink token — clearly visible on dark background. Subtitle uses t.inkSoft (#B8B7B0) — readable against dark background. Legend box uses elevated dark background (#242420) with #B8B7B0 label text — readable. No dark-on-dark failures detected.
+      Data: Pitch content is identical to light render — same green pitch, same white markings, same event marker colors (Imprint palette is theme-invariant). Only the outer canvas background flips from cream to near-black. Pass/shot trajectory lines have identical colors and opacity. Marker fills and outlines are identical.
+      Legibility verdict: PASS — title and subtitle adapt correctly to dark theme; legend text visible on dark elevated background; data colors are identical between both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px and legend 14px readable in both themes; subtitle at 13px
+          is slightly small for mobile readability
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in attacking third where shot markers and trajectory
+          lines converge, but no text overlaps
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All markers visible; white outlines help pop against dark green pitch;
+          faded markers at 22% opacity still detectable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 Imprint palette hues with distinct marker shapes provide redundant
+          CVD-safe encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; smart X_PAD calculation maintains 105:68 pitch
+          aspect ratio; no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted; subtitle explains encoding; axes suppressed
+          appropriately for pitch visualization
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Pass) uses brand green #009E73; canonical Imprint
+          order for 4 event types; grass #2d5a27 is a valid semantic exception; backgrounds
+          correct in both themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Exceptional custom pitch construction with full FIFA geometry; semantic
+          grass green; white pitch lines on dark pitch; distinct marker shapes for
+          all event types; outcome opacity encoding — well above generic Highcharts
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes completely hidden; no grid on pitch; subtle trajectory line
+          opacity; white marker outlines; clean boxed legend; penalty arcs and corner
+          arcs correctly rendered
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shot lines converging on goal create a natural focal point; successful
+          vs unsuccessful fill encoding creates visual hierarchy; subtitle explains
+          the encoding system clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter/event map on accurately scaled soccer pitch
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: boundary, halfway line, center circle,
+          penalty areas, goal areas, corner arcs, penalty arcs, penalty spots, goals,
+          distinct markers, outcome encoding, trajectory lines'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (0-105m) and Y (0-68m) correctly map pitch coordinates; 4 event
+          types with outcome encoding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: scatter-pitch-events · javascript · highcharts · anyplot.ai;
+          legend labels Pass/Shot/Tackle/Interception match event types'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types shown; trajectory lines for passes and shots; successful
+          vs unsuccessful encoding; 140 events across pitch zones
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Football match event data with realistic distributions: passes spread
+          across pitch, shots concentrated in attacking third, realistic success rates'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: FIFA standard 105m x 68m dimensions; correct penalty area depths
+          and widths; 140 events within spec range of 50-500
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: 5 helper functions (circlePts, arcPts, buildPitchLines, arrowData,
+          markerData) add some structural complexity, but these are justified by the
+          geometric needs of pitch drawing
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG RNG with seed 42 (no Math.random); all data generated
+          in-memory
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only uses window globals (ANYPLOT_TOKENS, ANYPLOT_THEME,
+          Highcharts)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized; const THEME is defined but unused (minor); good inline
+          comments explain the X_PAD calculation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct Highcharts.chart(''container'', ...) API; animation: false
+          on both chart and plotOptions.series; harness generates correct output files'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic multi-series Highcharts chart; null-separated line segments
+          for complex geometry; per-point marker.fillColor for outcome encoding; showInLegend:
+          false for infrastructure series; connectNulls: false for null-separated
+          segments'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Mixed chart types (scatter + line) in one chart; plotBackgroundColor
+          for grass effect; zIndex for proper layer ordering; per-point marker customization;
+          complex geometric data generation in browser JS
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - html-export
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
+  - edge-highlighting

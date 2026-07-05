@@ -1,0 +1,291 @@
+library: highcharts
+language: javascript
+specification_id: nyquist-basic
+created: '2026-06-17T22:36:50Z'
+updated: '2026-06-17T23:05:42Z'
+generated_by: claude-sonnet
+workflow_run: 27723388349
+issue: 4412
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/highcharts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Full spec compliance: all 6 required features present (critical point ×+circle
+    marker, unit circle, frequency annotations, direction arrows, 1:1 aspect ratio,
+    Real/Imaginary axis labels)'
+  - 'Factually accurate data: G(s)=30/((s+1)(s+2)(s+3)) with correct phase crossover
+    at ω=√11≈3.32 rad/s and analytically correct gain margin 6 dB; phase margin computed
+    by binary search'
+  - 'Semantic use of Imprint palette: brand green (#009E73) for main Nyquist curve,
+    matte red (#AE3030) for critical point (danger/warning role), blue (#4467A3) for
+    frequency markers'
+  - 'Distinctive Highcharts renderer usage: custom SVG × mark and direction-arrow
+    triangles drawn via chart render event with this.renderer.path() — a genuinely
+    Highcharts-native pattern'
+  - 'Informative subtitle encodes key insight: transfer function, gain margin, and
+    computed phase margin presented as a subtitle — viewer immediately sees stability
+    margins without additional annotation'
+  - 'Correct orientation directive (//# anyplot-orientation: square) ensures 1:1 aspect
+    ratio matching spec requirement; canvas gate passed'
+  - Negative-frequency conjugate curve correctly shown as dashed with 0.6 opacity
+    — provides visual hierarchy while completing the full Nyquist diagram
+  - 'All chrome tokens wired through: t.ink, t.inkSoft, t.grid, transparent background
+    — both themes render correctly'
+  weaknesses:
+  - 'Label crowding near the critical region: ''(−1, 0)'', ''ω_pc ≈ 3.32 rad/s'',
+    and ''2 rad/s'' labels cluster in the [-1.5, 0] × [-1, 0.5] region; despite intentional
+    y-offsets (y:-28 for critical label, y:18 for ω_pc), the three labels compete
+    visually — consider pushing ω_pc label further below (y:28) or anchoring it to
+    the left of its point'
+  - Direction arrows are 10 CSS px (20px in final 2400×2400 PNG), which is on the
+    small side for a complex-plane plot with a busy curve density — increase to hs=14-16
+    for better visibility
+  - Frequency scatter markers at radius:5 (10px in final PNG) are slightly small given
+    the sparse annotation count (4 points total) — radius:7 would make them more prominent
+    without crowding
+  - 'CQ-01: g(w) function and binary-search loop add moderate complexity beyond KISS;
+    acceptable for mathematical correctness but noted'
+  - 'DE-01/DE-02: Design excellence is good but not publication-quality — the overall
+    aesthetic is a well-configured Highcharts default; no spine removal or custom
+    legend framing to further distinguish it'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. Square canvas with symmetric margins.
+      Chrome: Title "nyquist-basic · javascript · highcharts · anyplot.ai" in dark ink at top (~70% width, correct for mandated format). Subtitle "G(s) = 30/((s+1)(s+2)(s+3)) · Gain margin: 6 dB · Phase margin: 25°" in inkSoft below title — small (14px) but readable. Axis labels "Real" (x) and "Imaginary" (y) in inkSoft at 16px — clear. Tick labels (-2 through 6 on x, -4 through 4 on y) at 14px — clearly readable. Legend at bottom row shows four series icons and labels in inkSoft — readable. Grid lines subtle on both axes. All text readable against light background.
+      Data: Brand green (#009E73) solid curve for G(jω) ω>0; same green dashed at 0.6 opacity for ω<0 conjugate curve. Unit circle shown as dashed inkSoft line. Red (#AE3030) × SVG mark and filled circle at critical point (-1, 0) with "(−1, 0)" label above in red. Blue (#4467A3) scatter dots at 0.3, 1, 2, and ω_pc≈3.32 rad/s with text labels. Small green triangular direction arrows on both curves near ω=0.5 and ω=2. The curve correctly spirals: starts near (5, 0) for low ω, passes through (0, -3) at ω=1, crosses real axis at (-0.5, 0) at phase crossover, then spirals toward origin.
+      Legibility verdict: PASS — all text readable; some label density near (-1, 0) region but no overlap or clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Subtitle in #B8B7B0 (inkSoft dark) — readable. Axis labels and tick labels in #B8B7B0 — readable. Legend text light-colored. Grid lines subtle. No dark-on-dark failures observed.
+      Data: Colors are identical to light render — brand green #009E73 main curve, red #AE3030 critical point, blue #4467A3 frequency markers, inkSoft unit circle. Data colors unchanged between themes; only chrome flips. Green (#009E73) reads well on dark background. Matte red (#AE3030) is slightly less saturated-looking on dark but still clearly visible. Direction arrows retained.
+      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark failures; data colors identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          14px, legend 13px, annotations 12px). All text readable in both themes.
+          Minor label density near critical point region reduces from 8.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe overlap. The (−1,0) label (y:-28), ω_pc label (y:18), and
+          '2 rad/s' cluster in the [-1.5, 0]×[-1, 0.5] zone — manageable but visually
+          dense.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nyquist curves well-visible at lineWidth 2.5. Direction arrows at
+          hs=10 (20px in final PNG) are slightly small. Frequency markers at radius
+          5 are sparse but visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Critical point uses red+circle+×  (redundant
+          encoding beyond color). Green/red combination has shape redundancy.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for Nyquist (1:1 aspect ratio per spec).
+          Canvas gate passed. Balanced margins, legend at bottom, no overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Real'', Y-axis: ''Imaginary'' — exactly as required by
+          spec. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'colors: t.palette set. First series #009E73 ✓. Critical point uses
+          t.palette[4]=#AE3030 (semantic red — correct). Frequency markers t.palette[2]=#4467A3.
+          Background transparent (shows page bg). Both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default (4): semantic red for critical point,
+          dashed/opacity hierarchy for negative-frequency curve, subtitle with computed
+          margins, SVG custom rendering. Not publication-ready (8) due to label crowding
+          and standard chart frame.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Transparent background, subtle 1px grid on both axes (appropriate
+          for complex plane), clean tick styling, dashed unit circle, opacity differentiation.
+          Above minimal defaults (2) but no spine customization or custom legend framing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle encodes the key story (transfer function + both stability
+          margins). Red critical point creates focal point. Phase crossover annotated.
+          Direction arrows show frequency progression. Viewer immediately sees this
+          is a stable system.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Nyquist plot: complex plane with both positive and negative
+          frequency loci, phase/gain crossover points identified.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All 6 spec requirements met: (1) critical point marked with red
+          × + circle, (2) unit circle drawn, (3) frequency annotations at 0.3/1/2/3.32
+          rad/s, (4) direction arrows on both curves, (5) 1:1 aspect ratio via square
+          orientation, (6) Real and Imaginary axis labels.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: real part of G(jω), Y: imaginary part. 400 log-spaced points
+          from 0.01 to 100 rad/s (within spec 200-1000 range). Axes show full curve
+          with key features visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''nyquist-basic · javascript · highcharts · anyplot.ai''
+          ✓. Legend shows 4 distinct series with correct names.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Nyquist diagram features: positive/negative frequency
+          curves, phase crossover, gain crossover, stability margins, unit circle
+          reference, frequency annotations, direction arrows.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: G(s) = 30/((s+1)(s+2)(s+3)) is a standard third-order control system
+          transfer function. Neutral, educational engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Phase crossover at ω=√11≈3.32 rad/s is analytically exact. Gain margin=2=6
+          dB correct. Phase margin ~25° computed by binary search on gain crossover.
+          All values factually correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper function g(w) and binary search loop are justified for mathematical
+          correctness but add complexity. Chart render event for SVG drawing is necessary
+          but verbose.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: data computed from formula, binary search is
+          deterministic, no random numbers.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (JS library, Highcharts is global). Only window.ANYPLOT_TOKENS
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Well-organized: data computation section, then chart config. No
+          fake UI. SVG rendering approach is appropriate for Highcharts custom drawing.'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No explicit save (harness handles PNG + HTML output). Highcharts.chart('container',
+          ...) current API. animation:false both in chart and plotOptions.series.
+          credits disabled. No explicit width/height.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses plotLines for axis reference, dataLabels with format strings,
+          multiple series types (line + scatter), dashStyle, opacity, enableMouseTracking.
+          Correct pattern for Highcharts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Chart render event hook + this.renderer.path().attr().add() for custom
+          SVG drawing is distinctly Highcharts. plotLines for real/imaginary axis
+          guides is Highcharts-specific. Arrow direction computation with atan2 and
+          renderer paths is a sophisticated Highcharts pattern.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

@@ -1,0 +1,28 @@
+{
+  "pkg": "anyplot",
+  "globalName": "Anyplot",
+  "projectId": "bdf69a23-f0d2-40d5-b6cb-3ef035579852",
+  "shape": "package",
+  "entry": "app/designsync-entry.tsx",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.designsync.json",
+  "cssEntry": "src/styles/tokens.css",
+  "provider": { "component": "AppProviders" },
+  "extraFonts": ".designsync-fonts/monolisa.css",
+  "guidelinesGlob": ["../docs/reference/style-guide.md"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "CodeHighlighter": "src/components/CodeHighlighter.tsx",
+    "LoaderSpinner": "src/components/LoaderSpinner.tsx",
+    "ThemeToggle": "src/components/ThemeToggle.tsx",
+    "SectionHeader": "src/components/SectionHeader.tsx",
+    "Footer": "src/layouts/Footer.tsx"
+  },
+  "dtsPropsFor": {
+    "CodeHighlighter": "  /** Source code to render, syntax-highlighted with the anyplot imprint theme. */\n  code: string;\n  /** anyplot language id: \"python\" | \"r\" | \"julia\" | \"javascript\". Defaults to \"python\"; unknown ids render as plain text. */\n  language?: string;\n  /** Library id — overrides the language's default grammar (e.g. \"muix\" highlights as React TSX). */\n  library?: string;",
+    "LoaderSpinner": "  /** Spinner scale. Defaults to \"large\". */\n  size?: 'large' | 'small';",
+    "ThemeToggle": "  /** Current theme mode. */\n  mode: 'system' | 'light' | 'dark';\n  /** Advance to the next mode in the system → light → dark cycle. */\n  onCycle: () => void;",
+    "SectionHeader": "  /** Prefix symbol rendered at title size — e.g. \"§\", \"❯\", \"$\". */\n  prompt?: string;\n  /** Heading content; a string or rich nodes. An <em> child renders in brand green italic. */\n  title: React.ReactNode;\n  /** Trailing link label. Pair with `linkTo` (internal route) OR `linkHref` (external URL). */\n  linkText?: string;\n  /** Internal react-router route for the trailing link. Mutually exclusive with `linkHref`. */\n  linkTo?: string;\n  /** External URL for the trailing link (opens in a new tab). Mutually exclusive with `linkTo`. */\n  linkHref?: string;",
+    "Footer": "  /** Optional analytics callback fired on footer link clicks. */\n  onTrackEvent?: (name: string, props?: Record<string, string | undefined>) => void;\n  /** Currently-selected spec id, passed through to the \"report an issue\" link. */\n  selectedSpec?: string;\n  /** Currently-selected library id, passed through to the \"report an issue\" link. */\n  selectedLibrary?: string;"
+  }
+}

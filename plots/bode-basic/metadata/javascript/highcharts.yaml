@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: bode-basic
+created: '2026-06-17T20:19:27Z'
+updated: '2026-06-17T20:38:31Z'
+generated_by: claude-sonnet
+workflow_run: 27716554814
+issue: 4411
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bode-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct dual-panel Bode layout: magnitude (top) and phase (bottom) panels share
+    a single logarithmic frequency axis — exactly as specified'
+  - 'Stability margins computed and annotated: PM = 54.9° in ochre, GM = 21.7 dB in
+    matte-red — semantic Imprint palette colors chosen intentionally'
+  - Reference lines at 0 dB (magnitude) and −180° (phase) with readable dotted-style
+    labels on the right side of each panel
+  - 'First series (Magnitude) correctly uses #009E73 brand green; Phase uses #C475FD
+    lavender — canonical Imprint order'
+  - 'Both renders theme-correct: transparent chart background shows page surface (#FAF8F1
+    light / #1A1A17 dark); all chrome tokens (ink, inkSoft, grid) properly threaded'
+  - 'All font sizes explicitly set: title 22px, subtitle 13px, axis titles 16px, tick/legend
+    labels 14px, annotation labels 12px'
+  - Three-pole low-pass system (K=10, f1=1Hz, f2=10Hz, f3=100Hz) is a realistic, well-understood
+    engineering scenario with plausible stability margins
+  - Deterministic transfer-function data — no RNG needed; crossover frequencies computed
+    via log-linear interpolation
+  - Idiomatic Highcharts multi-panel via yAxis[].top + yAxis[].height; plotLines used
+    for both reference lines and crossover markers
+  weaknesses:
+  - Annotation labels ('PM = 54.9°', 'GM = 21.7 dB', '0 dB', '−180°') are all at 12px
+    CSS — borderline small on a 400px mobile scaled view; raise to 13–14px for better
+    legibility
+  - Subtitle font at 13px is slightly smaller than the axis-label font (14px) — a
+    minor inversion of expected typographic hierarchy; increase to 14px or reduce
+    tick labels to match
+  - 'DE-01/DE-03: The chart is professionally laid out but reads as a well-configured
+    library default; no additional focal-point emphasis (e.g. shaded stability region,
+    bolder crossover markers) to elevate storytelling beyond the annotation labels'
+  - No gap/axis-break between the two panels — a thin horizontal rule or explicit
+    panel label ('Magnitude' / 'Phase' as panel titles rather than y-axis titles)
+    would improve panel separation clarity at glance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct page surface, not pure white.
+      Chrome: Title "bode-basic · javascript · highcharts · anyplot.ai" in dark ink at 22px — fully readable. Subtitle "Three-pole system — K = 10, f₁ = 1 Hz, f₂ = 10 Hz, f₃ = 100 Hz" in inkSoft at 13px — readable. Both y-axis titles ("Magnitude (dB)" top panel, "Phase (°)" bottom panel) in inkSoft at 16px — readable. Shared x-axis title "Frequency (Hz)" at bottom — readable. Tick labels at 14px on both axes — readable.
+      Data: Magnitude line in brand green (#009E73) rolls from ~+20 dB at low frequencies down to ~-160 dB at 5 kHz — correct three-pole rolloff profile. Phase line in lavender (#C475FD) rolls from 0° to ~-270° — correct for a three-pole system. Ochre dashed vertical at the gain crossover frequency labeled "PM = 54.9°" (top of magnitude panel). Matte-red dashed vertical at the phase crossover labeled "GM = 21.7 dB" (bottom of phase panel). Dotted horizontal reference at 0 dB with "0 dB" label right-aligned. Dotted horizontal reference at −180° with "−180°" label right-aligned. Legend (Magnitude / Phase) top-right in inkSoft.
+      Legibility verdict: PASS — all text clearly visible against the warm off-white background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct page surface, not pure black.
+      Chrome: Title, subtitle, axis titles, tick labels, legend, and annotation labels all render in light-colored ink — readable against the dark surface. No dark-on-dark failures observed.
+      Data: Magnitude line remains #009E73 brand green (identical to light render). Phase line remains #C475FD lavender (identical). Crossover marker lines (ochre and matte-red) retain their colors. Reference dotted lines visible against dark grid.
+      Legibility verdict: PASS — all text clearly visible against the warm near-black background; data colors are identical between themes (only chrome flips).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; all text readable in both themes.
+          Annotation labels at 12px CSS are borderline for mobile scale — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements in either render; PM and GM labels positioned
+          to avoid collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Both lines clearly visible with lineWidth: 2.5; markers disabled
+          — appropriate for continuous line chart.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette; green and lavender are perceptually distinct under
+          CVD simulations.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; dual-panel layout fills canvas well; explicit
+          margins (85/40/70/65) provide adequate breathing room.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Magnitude (dB), Phase (°), Frequency (Hz) — all descriptive with
+          units. Title in correct spec-id · javascript · highcharts · anyplot.ai format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; second #C475FD; crossover lines use semantic
+          palette members (ochre / matte red). Transparent bg shows correct page surface
+          in both themes. All chrome tokens properly applied.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic color coding for crossover markers, informative
+          subtitle with system parameters, clean transparent background. Not publication-ready
+          but clearly intentional design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Dotted reference lines, dashed crossover marker lines, markers disabled,
+          subtle grid. Good refinement visible beyond library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: PM and GM annotations create clear focal points and tell the stability
+          story. Color contrast between magnitude (green) and phase (purple) guides
+          eye. Above default of 2.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Bode plot: dual-panel with magnitude on top, phase on bottom.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dual panels, logarithmic frequency axis,
+          reference lines at 0 dB and -180°, gain margin and phase margin annotations.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Frequency (Hz) on shared logarithmic x-axis; magnitude (dB) on top
+          y-axis; phase (°) on bottom y-axis.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'bode-basic · javascript · highcharts · anyplot.ai' — correct.
+          Legend shows Magnitude / Phase with correct colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Bode plot aspects: magnitude rolloff, phase rolloff, 0
+          dB crossing, -180° crossing, stability margins.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Three-pole low-pass transfer function with realistic engineering
+          parameters. System parameters stated in subtitle. Neutral engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency range 0.05–5000 Hz covers all three poles well. Magnitude
+          range realistic for K=10 three-pole system. Phase 0° to ~-270° correct for
+          three poles.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: data generation → crossover computation → chart
+          config. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: transfer function math, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports (correct for Highcharts — uses window globals only).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable JS; appropriate complexity for a dual-panel chart
+          with crossover computation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Uses Highcharts.chart(''container'', ...) correctly; animation:
+          false set; harness handles PNG/HTML output.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic multi-panel via yAxis[].top + yAxis[].height; plotLines
+          for reference lines and crossover markers; logarithmic xAxis type; transparent
+          backgroundColor; animation: false correctly placed in both chart and plotOptions.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multiple yAxis panels with percentage positioning is a distinctive
+          Highcharts feature; plotLines with labels used effectively for both reference
+          lines and stability margin annotations; logarithmic axis native to Highcharts
+          core bundle.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - grid-styling

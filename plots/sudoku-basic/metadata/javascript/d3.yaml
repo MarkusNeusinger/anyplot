@@ -1,0 +1,243 @@
+library: d3
+language: javascript
+specification_id: sudoku-basic
+created: '2026-06-25T07:59:09Z'
+updated: '2026-06-25T08:18:27Z'
+generated_by: claude-sonnet
+workflow_run: 28155322357
+issue: 1311
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sudoku-basic/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correct square canvas orientation with proper //# anyplot-orientation: square
+    directive'
+  - Strong thick/thin line hierarchy (3.5px box boundaries, 0.75px cell lines) using
+    theme-adaptive tokens
+  - Intentional serif font (Georgia) fits the traditional printed-puzzle aesthetic
+  - Alternating 3x3 box elevation fills using t.elevatedBg add visual structure without
+    visual noise
+  - Proportional cell number sizing (Math.round(cellSize * 0.52)) makes text responsive
+    to canvas
+  - Perfect theme adaptation — all ANYPLOT_TOKENS correctly mapped for both light
+    and dark renders
+  - Clean D3 data-join patterns with no imperative loops
+  weaknesses:
+  - Numbers use t.palette[0] (#009E73) rather than t.ink — spec explicitly describes
+    a 'monochrome design' and 'clean black-and-white design optimized for printing';
+    while using the Imprint palette green follows system rules, it creates a tension
+    with the stated printing intent
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "sudoku-basic · javascript · d3 · anyplot.ai" in bold dark text at top — clearly readable. Grid lines use t.ink (thick) and t.inkSoft (thin) — visible hierarchy. No axis labels or tick labels needed for Sudoku.
+      Data: Numbers in brand green (#009E73), large bold serif (Georgia) centered in cells. Alternating 3x3 box fills using t.elevatedBg at 0.5 opacity create subtle checkerboard. Thick dark lines (3.5px) at every 3rd boundary, thin lines (0.75px) for individual cells.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light-colored text, clearly readable against dark background. Grid lines appear as lighter strokes against dark surface — theme tokens properly applied. No dark-on-dark failures.
+      Data: Numbers remain identical #009E73 green — data colors unchanged between themes as required. Alternating box fills use elevated dark bg creating subtle differentiation visible on dark surface.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, chrome fully theme-adaptive
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; cell numbers proportional at 52% cell size;
+          title 22px/600 weight; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Numbers well-centered in cells, no overlaps; title clear of grid
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Numbers prominent at 52% cell size; thick/thin grid line hierarchy
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single data color (#009E73) with high contrast on both light and
+          dark backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for Sudoku; grid centered; fills ~70%
+          of canvas with generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows required format; no axis labels needed for grid visualization
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Numbers use t.palette[0] (#009E73); background uses t.pageBg; all
+          chrome via ANYPLOT_TOKENS; data colors identical across themes
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Deliberate serif font (Georgia) for puzzle aesthetic; checkerboard
+          elevation pattern shows considered design above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Strong thick/thin line weight hierarchy; subtle alternating fills
+          with opacity; clean minimal layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Alternating box fills group 3x3 regions visually; green numbers create
+          immediate focus on given clues vs empty cells
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 9x9 Sudoku grid with proper structure
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Thick/thin lines correct; centered numbers; empty cells blank; minor:
+          spec says monochrome/B&W but numbers use brand green'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Classic Sudoku puzzle with valid 9x9 layout; all given numbers at
+          correct positions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 9x9 grid; all nine 3x3 boxes; mix of given numbers and empty
+          cells well-distributed
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic Sudoku puzzle format; neutral non-controversial; recognized
+          puzzle structure
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 1-9 correct; standard ~26 clue density realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level code, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic puzzle data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only window globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean D3 patterns, good variable naming, no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: '//# anyplot-orientation: square directive present; SVG sized from
+          window.ANYPLOT_SIZE'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper .data().join() data-joins; d3.range(10) for index generation;
+          callback-based conditional styling; flatMap+filter for data flattening
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: D3 data-join drives all SVG generation; callback-based conditional
+          attribute setting is distinctively D3; d3.range(9).filter() for box index
+          computation
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

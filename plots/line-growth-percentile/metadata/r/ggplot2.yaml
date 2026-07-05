@@ -1,0 +1,274 @@
+library: ggplot2
+language: r
+specification_id: line-growth-percentile
+created: '2026-06-20T09:33:47Z'
+updated: '2026-06-20T09:40:15Z'
+generated_by: claude-sonnet
+workflow_run: 27866946598
+issue: 4555
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-growth-percentile/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec compliance — all 7 percentile bands (P3–P97) present with correctly
+    graduated alpha intensity (outer 0.45, mid 0.28, inner 0.12), emphasized P50 median
+    at 1.4 linewidth, and patient data as connected green markers
+  - 'Both themes render correctly: warm off-white #FAF8F1 background on light, warm
+    near-black #1A1A17 on dark; all chrome tokens (INK, INK_SOFT, INK_MUTED) flip
+    appropriately; no dark-on-dark or light-on-light failures'
+  - 'Semantic color choices are well-justified: Imprint rose (#954477) for girls''
+    reference data (palette wellness/health role), brand green #009E73 for the individual
+    patient (clear contrast and correct first-series usage)'
+  - Right-margin percentile labels use coord_cartesian(clip='off') idiomatically to
+    render P3–P97 labels outside the panel area without clipping — correct ggplot2
+    pattern for right-margin annotations
+  - 'Idiomatic ggplot2 layer composition: geom_ribbon × 5 for graduated bands, geom_line
+    × 7 for boundaries and emphasized median, geom_point for patient markers — grammar-of-graphics
+    approach correctly stacked'
+  - Realistic parametric LMS-approximation model (p50_fn, sd_fn) with sensible weight
+    values (birth ~3.3 kg through 60-month ~17–20 kg); patient tracking near 30th
+    percentile is a clinically plausible and neutral scenario
+  weaknesses:
+  - 'Unused dplyr import: library(dplyr) is loaded but no dplyr functions are called
+    — all data prep uses base R (data.frame, vectors, indexing). Remove to keep imports
+    clean.'
+  - Full panel border (4-sided box via panel.border) goes against the style guide
+    default of L-frame (top/right spines removed). For a growth chart the box is defensible,
+    but removing the top and right spines would reduce visual clutter and better align
+    with anyplot style conventions.
+  - Percentile margin labels use geom_text(size = 2.8) ≈ 8pt — borderline small at
+    mobile scale (~400 px wide). Consider raising to size = 3.2–3.5 to improve legibility
+    when the chart is displayed at thumbnail sizes.
+  - Minor Y-axis grid breaks at seq(0, 30, by = 1) produce 30 minor tick lines, which
+    is denser than needed and adds visual noise — seq(0, 30, by = 2) or seq(0, 30,
+    by = 5) for minor breaks would be subtler.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface matching #FAF8F1 — correct anyplot light theme background.
+      Chrome: Title "line-growth-percentile · r · ggplot2 · anyplot.ai" in bold dark text (~55% width), clearly readable. Y-axis label "Weight (kg)" and X-axis label "Age" in dark text at appropriate size. Tick labels ("Birth", "1 yr"–"5 yr" on x; 5/10/15/20 on y) in medium-dark INK_SOFT color, all readable. Right-margin percentile labels P3–P97 in muted gray, legible at full resolution.
+      Data: Five rose (#954477) filled bands with graduated alpha (darker at extremes P3-P10/P90-P97 at alpha=0.45, lighter at inner P25-P75 at alpha=0.12). Six subtle rose boundary lines at linewidth=0.4 plus an emphasized P50 line at linewidth=1.4. Individual patient data as brand green (#009E73) connected line with circular markers — clearly contrasting against the rose reference bands. Grid is subtle and non-competing.
+      Legibility verdict: PASS — all text readable against the off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface matching #1A1A17 — correct anyplot dark theme background.
+      Chrome: Title in light (F0EFE8) text, clearly visible against the dark background. Axis labels and tick labels rendered in INK_SOFT (#B8B7B0) light-gray — all legible, no dark-on-dark failures. Right-margin labels in INK_MUTED (#A8A79F) muted light-gray, readable.
+      Data: Rose (#954477) percentile bands appear slightly more vivid on the dark background — still graduated correctly. Emphasized P50 line remains distinct. Brand green (#009E73) patient line and markers are clearly visible and identical in color to the light render. Grid lines use the dark GRID token (#3A3936) — subtle and appropriate.
+      Legibility verdict: PASS — all text adapts correctly to the dark theme; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, ticks all readable in both themes. Margin labels
+          at geom_text(size=2.8) ~8pt are borderline small at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Right-margin labels stack cleanly
+          with adequate spacing.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Patient data prominent in contrasting green; percentile bands graduated
+          correctly; emphasized P50 median clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs rose is CVD-distinguishable; both are Imprint palette colors
+          optimized for color-blind safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Right-margin labels handled correctly
+          via coord_cartesian(clip='off') and 55pt right margin. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is correct format. 'Weight (kg)' includes units. 'Age' is appropriately
+          concise for a standard clinical axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Patient data uses #009E73 (brand green). Reference bands use Imprint
+          rose #954477 — valid semantic exception (wellness/health). Backgrounds #FAF8F1/#1A1A17
+          correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default: graduated alpha bands show design thought; semantic
+          color choice for girls'' chart; visual hierarchy through emphasized median
+          and contrasting patient data.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Full panel border (4 spines) instead of L-frame per style guide.
+          Alpha blending on bands is refined. Dense minor grid (y=1 intervals) adds
+          unnecessary visual noise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear zone structure via graduated bands. Emphasized median creates
+          a reference anchor. Patient data path tells a clinical tracking story. No
+          explicit annotation of patient trajectory.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: filled percentile band chart with overlaid individual patient
+          trajectory.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 percentiles (P3-P97), graduated band intensity, emphasized
+          P50, patient connected markers, right-margin labels, gender-specific rose
+          coloring — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows age 0-60 months with clinical labels (Birth, 1yr-5yr).
+          Y-axis shows Weight (kg). Full data range covered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'line-growth-percentile · r · ggplot2 · anyplot.ai' — correct
+          format. No legend used; percentile bands labeled directly in margin — appropriate
+          design choice.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 7 percentile bands shown; graduated intensity demonstrated; median
+          emphasized; individual patient tracking with multiple measurements overlaid.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: WHO weight-for-age girls 0-60 months is a standard clinical context.
+          Synthetic LMS approximation produces realistic values. Patient near 30th
+          percentile is a clinically neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Birth weight ~3.3 kg, 5-year weight ~17-20 kg — accurate for girls
+          aged 0-5. Age range 0-60 months (0-5 years) matches the spec's 0-36+ months
+          example.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Linear flow: tokens → data → plot → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) used. Parametric model is deterministic given seed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) imported but never used — all data prep uses base
+          R. Remove.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean layer composition, appropriate complexity for the plot type.
+          No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Uses linewidth= (not deprecated
+          size=) for geom_line. ragg::agg_png device specified explicitly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_ribbon for bands, coord_cartesian(clip='off') for margin labels,
+          theme_minimal as base — all idiomatic ggplot2 patterns. Grammar-of-graphics
+          composition correctly applied.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses geom_ribbon, coord_cartesian clip-off, panel border theming,
+          graduated alpha across multiple ribbon layers — distinctive ggplot2 features.
+          Could also use annotate() or scale_x_continuous expand for additional distinctiveness.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

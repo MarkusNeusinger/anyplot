@@ -1,0 +1,268 @@
+library: muix
+language: javascript
+specification_id: bar-pareto
+created: '2026-06-20T17:40:23Z'
+updated: '2026-06-20T18:28:43Z'
+generated_by: claude-sonnet
+workflow_run: 27877996267
+issue: 4550
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Perfect Imprint palette compliance: brand green bars, lavender cumulative line,
+    amber reference line, correct theme backgrounds in both renders'
+  - Clever COUNT_MAX=500 tick alignment ensures left-axis intervals (100,200,300,400,500)
+    align perfectly with right-axis % intervals (20,40,60,80,100)
+  - Custom ChartContainer composition with BarPlot+LinePlot+ChartsReferenceLine demonstrates
+    idiomatic MUI X multi-series dual-axis approach
+  - 'All spec requirements met: descending bars, cumulative % on secondary y-axis,
+    80% reference line, markers at bar centers'
+  - Custom legend and title layout (separate Box components) avoids MUI's default
+    chrome and gives clean visual structure
+  - Both light and dark themes render correctly with readable text and consistent
+    data colors
+  - Manufacturing QC defect data is realistic, neutral, and shows clear Pareto distribution
+    with 80% threshold landing exactly at 4th category
+  weaknesses:
+  - 'DE-01 (5/8): Design is above defaults but not yet publication-ready — missing
+    annotation labeling which categories comprise the critical 80% (e.g. a bracket
+    or text callout ''Top 4 types = 80% of defects'')'
+  - 'DE-02 (4/6): Visual refinement is good but not perfect — the right y-axis label
+    ''Cumulative %'' is small and rotated, could benefit from a non-rotated label
+    or slightly larger font in labelStyle'
+  - 'DE-03 (4/6): Pareto story is clear via the reference line, but no visual emphasis
+    distinguishes the categories above vs below the 80% threshold (e.g., bars above
+    threshold could be slightly differentiated through opacity or annotation)'
+  - 'VQ-01 (7/8): Title is readable but could use slightly larger font (currently
+    22px CSS) for better presence; line mark circles are small at the 3200x1800 resolution'
+  - 'LM-02 (3/5): Could leverage more distinctive MUI X features like slotProps.mark
+    for larger/custom markers or ChartsLegend slot customization rather than the manual
+    Box-based legend'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "bar-pareto · javascript · muix · anyplot.ai" in dark ink, bold, centered — fully readable. Left axis label "Defect Count" rotated vertically, dark ink — readable. Right axis label "Cumulative %" rotated vertically, dark ink — readable though small. X-axis label "Defect Type" in dark ink — readable. Tick labels in inkSoft (muted dark) at 13–14px CSS — readable. Horizontal grid lines are subtle.
+      Data: 8 descending bars in brand green (#009E73). Cumulative % line in lavender (#C475FD, Imprint position 2) with small circle marks at each band center. Amber (#DDCC77) dashed reference line at 80%. Legend at bottom: green swatch "Defect Count", lavender line "Cumulative %", amber dashed "80% Threshold".
+      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light ink on dark background — readable. Axis labels in light ink — readable. Tick labels in light muted tone — readable. Horizontal grid lines in light semi-transparent color — subtle and appropriate.
+      Data: Bar colors identical to light render (brand green #009E73). Cumulative line identical lavender (#C475FD). Amber reference line identical (#DDCC77). Legend text in light inkSoft — readable.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All text clearly readable against the near-black surface. Data colors are identical to the light render as required.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; proportionally well-balanced; readable
+          in both themes. Minor: title at 22px CSS could be slightly larger; line
+          mark circles are small at full resolution.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements — all bars, line marks, labels, and legend
+          are well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars clearly visible and well-sized. Line circles are small but visible.
+          Minor size increase on marks would help at mobile scale.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe. Green bars and purple line are clearly
+          distinguishable. Amber reference line provides additional contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well. Title, chart, and legend sections balanced.
+          Margins generous and symmetric.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Left: ''Defect Count'', Right: ''Cumulative %'', X: ''Defect Type''
+          — all descriptive and context-appropriate.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 first series (bars), lavender #C475FD second
+          series (line), amber #DDCC77 reference line. Backgrounds #FAF8F1 light /
+          #1A1A17 dark. Perfect Imprint compliance.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above 'well-configured default' — custom Box layout, Imprint palette,
+          clever tick alignment — but not publication-ready. Missing annotation of
+          80% threshold insight.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizontal-only grid, reduced axis line opacity, custom manual legend.
+          Right axis label size/rotation could be improved.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Amber reference line creates clear focal point; descending bars guide
+          eye. Missing explicit emphasis (callout/annotation) for the top-4 critical
+          categories.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Pareto chart: descending bars + cumulative line overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: descending bars, cumulative % line, secondary
+          y-axis, 80% reference line, markers at bar centers.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: defect categories; Left Y: raw counts; Right Y: cumulative percentage
+          — all correctly assigned.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'bar-pareto · javascript · muix · anyplot.ai' correct. Legend
+          labels 'Defect Count', 'Cumulative %', '80% Threshold' are accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows clear Pareto distribution, 80% threshold intersection at 4th
+          category, declining tail — all key Pareto features visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing QC defect analysis (Scratches, Dents, Cracks, etc.)
+          — realistic, neutral, professional domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Defect counts 32-412, total 1300. 80% threshold falls exactly at
+          4th category (412+298+187+143=1040, 1040/1300=80%). Factually perfect.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean structure: data → computation → single default-exported component.
+          No classes or helper functions beyond the required React component.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data — no randomness, fully reproducible.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (ChartContainer, BarPlot, LinePlot, MarkPlot, ChartsXAxis,
+          ChartsYAxis, ChartsGrid, ChartsReferenceLine, Box, Typography) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. COUNT_MAX=500 alignment trick is elegant.
+          No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness generates plot-light.png/dark.png correctly. React component
+          pattern with skipAnimation and window.ANYPLOT_SIZE correctly used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good idiomatic ChartContainer composition with BarPlot+LinePlot+ChartsReferenceLine+ChartsGrid.
+          Multi-axis axisId pattern used correctly. Not quite expert-level.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ChartsReferenceLine (MUI X specific), ChartContainer composition
+          pattern for dual chart types, ChartsGrid. These are MUI X distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  - html-export
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - grid-styling
+  - edge-highlighting

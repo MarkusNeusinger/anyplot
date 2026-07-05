@@ -1,0 +1,259 @@
+library: makie
+language: julia
+specification_id: nyquist-basic
+created: '2026-06-17T22:41:05Z'
+updated: '2026-06-17T23:05:28Z'
+generated_by: claude-sonnet
+workflow_run: 27723659864
+issue: 4412
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Full spec compliance: all required Nyquist features (critical point, unit circle,
+    direction arrows, frequency annotations, 1:1 aspect) correctly implemented'
+  - Frequency-colormap (imprint_seq) on the Nyquist curve is a technically elegant
+    and distinctive use of continuous color encoding
+  - 'Stability narrative: gain margin segment, phase margin callout, and bottom stability
+    Label guide the viewer to the key insight'
+  - Theme-adaptive chrome is complete and correct — both renders are fully readable
+    with no dark-on-dark or light-on-light failures
+  - Idiomatic Makie layout (grid cells, Colorbar/Label as layout elements) showcases
+    library strengths
+  weaknesses:
+  - Colorbar (width=18 figure-units → ~36px in final PNG) is too thin to convey the
+    frequency scale legibly; increasing to width=28–32 or relocating would help
+  - Annotation cluster near critical point ("(-1, 0)", "GM = 3.0", "ω = √2 rad/s")
+    is spatially tight — slight crowding at small x∈[−1, 0], y≈0 region
+  - The asymmetric axis limits (x range 3.7 vs y range 6.0 with DataAspect) leave
+    noticeable empty space in upper and right regions within the square canvas; tightening
+    ylims to (−3.5, 1.5) would improve canvas utilisation
+  - Annotation font sizes (11pt → 22px effective) are at the low end for a 2400×2400
+    canvas; bumping to 12–13pt would improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "nyquist-basic · julia · makie · anyplot.ai" in dark ink — clearly readable. Axis labels "Real" (x) and "Imaginary" (y) readable. Tick labels (-2, -1, 0, 1 on x; -4, -2, 0, 2 on y) readable in secondary ink tone.
+      Data: Nyquist curve rendered with imprint_seq colormap (green #009E73 at low ω → blue #4467A3 at high ω). Orange circle (ochre, palette[4]) at phase crossover (−1/3, 0). Cyan diamond (palette[6]) at gain crossover. Red X (matte-red, palette[5]) at critical point (−1, 0). Dashed unit circle in muted blue. Direction arrows on curve.
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels switch to light cream text (INK = #F0EFE8). Tick labels in soft secondary tone (INK_SOFT = #B8B7B0). Legend box uses elevated dark background (#242420) with light text. Grid lines are subtle lighter stripes. No dark-on-dark failures observed.
+      Data: Colors identical to light render — same green→blue gradient curve, same ochre circle, cyan diamond, and red X. Brand green #009E73 clearly visible.
+      Legibility verdict: PASS — all text clearly distinguishable from near-black background
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title=20, labels=14, ticks=12, legend/annotations=11).
+          Readable in both themes. Annotation text at 11pt (22px effective) is at
+          the low end for 2400×2400.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No severe overlap; annotation cluster near critical point ((-1,0),
+          GM=3.0, ω=√2 rad/s labels) is slightly dense near y=0.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Nyquist curve (linewidth=2.8), markers (size 16-22), direction arrows
+          all clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct shape+color per marker; CVD-safe Imprint palette; frequency-colormap
+          adds redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for Nyquist 1:1 aspect. DataAspect with asymmetric
+          limits (x 3.7, y 6.0 units) creates portrait axis in square canvas, leaving
+          empty space. Colorbar (width=18 → 36px) is very thin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Real'' and ''Imaginary'' are correct conventional labels for complex
+          plane; no units needed. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Nyquist curve uses ANYPLOT_SEQ (imprint_seq). Markers use Imprint
+          palette[4/5/6]. Background #FAF8F1/#1A1A17. Chrome fully theme-adaptive.
+          Data colors identical across both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful design with frequency-encoded colormap, multiple annotated
+          features, stability summary. Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle 12% alpha grid, theme-correct chrome,
+          semi-transparent legend frame. Colorbar too thin to contribute visual weight
+          proportional to role.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear narrative: direction arrows, annotated crossover markers,
+          gain-margin segment, PM label, stability conclusion Label. Clear focal point
+          at critical-point region.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot in the complex plane.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Critical point marked, unit circle drawn, frequency annotations at
+          crossovers, direction arrows, 1:1 aspect (DataAspect), axes labelled Real/Imaginary.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Re(G(jω)) on x, Im(G(jω)) on y; 800 log-spaced points from ω=0.04
+          to 100 rad/s.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'nyquist-basic · julia · makie · anyplot.ai' correct. Legend
+          labels descriptive and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full Nyquist locus, unit circle, critical point, gain/phase
+          crossover, directional sense, stability margins and verdict.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic control-theory textbook transfer function G(s)=1/[s(s+1)(0.5s+1)];
+          neutral engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Phase crossover at ω=√2 (gain margin=3, ~9.5 dB) and phase margin
+          ≈33° are mathematically correct for the chosen transfer function.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → constants → data → plot → save. No classes or
+          unnecessary abstractions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set; data is deterministic (mathematical formula).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie, Colors, Random — all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. Direction-arrow loop over 3 indices
+          is justified.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) correct.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Makie grid layout (fig[1,1]/[1,2]/[2,1:2]), Colorbar as layout element,
+          Label as layout element, axislegend, DataAspect(), hlines!/vlines!/arrows!
+          — all idiomatic CairoMakie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Composable grid layout with Colorbar and Label as first-class layout
+          citizens, frequency-colormap on line plot via color=array, DataAspect()
+          for exact aspect control — distinctive Makie features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting

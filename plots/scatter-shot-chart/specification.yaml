@@ -6,7 +6,7 @@ title: Basketball Shot Chart
 
 # Specification tracking
 created: "2026-02-25T21:30:47Z"
-updated: null
+updated: "2026-06-21T07:38:39Z"
 issue: 4416
 suggested: MarkusNeusinger
 
@@ -15,14 +15,13 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - point
   data_type:
     - numeric
     - spatial
     - categorical
   domain:
     - general
+    - sports
   features:
     - color-mapped
-    - annotated
     - 2d

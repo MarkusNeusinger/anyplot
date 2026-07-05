@@ -1,0 +1,269 @@
+library: makie
+language: julia
+specification_id: donut-basic
+created: '2026-06-25T06:05:18Z'
+updated: '2026-06-25T06:32:25Z'
+generated_by: claude-sonnet
+workflow_run: 28149987390
+issue: 733
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correct Imprint palette positions 1-6 in canonical order with brand green (#009E73)
+    as the first series for Software
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT tokens correctly flip between
+    light (#FAF8F1) and dark (#1A1A17) renders'
+  - 'All spec requirements met: hollow center with $4.8M total annotation, percentage
+    labels on segments with threshold filtering for small slices, thick ring width
+    (0.50 inner radius)'
+  - Dominant segment (Software 34%) correctly emphasized with bold + larger percentage
+    label for visual hierarchy
+  - 'Clean CairoMakie idioms: hidespines!/hidedecorations!, theme-adaptive strokecolor=PAGE_BG
+    for segment dividers, frame-free legend with PolyElement swatches'
+  - Realistic and neutral R&D budget allocation dataset with plausible department
+    breakdown
+  weaknesses:
+  - Title fontsize (16pt → 32px effective on 2400×2400 canvas) is at the lower end;
+    consider increasing to 18–20pt for better visual authority on the square canvas
+  - The smallest segment (Support, 6%) is unlabeled due to the threshold filter —
+    consider adding a small callout line or reducing the threshold to 0.05 to include
+    it, otherwise the segment appears mysterious in the ring
+  - Percentage labels use hardcoded pure-white `RGBf(1.0, 1.0, 1.0)` rather than a
+    theme token — works here because all Imprint palette colors are dark enough, but
+    consider using a luminance-adaptive approach for robustness
+  - Moderate vertical whitespace above and below the donut in the square canvas —
+    axis limits of ±1.35 with outer radius 1.0 leave 26% padding; could tighten to
+    ±1.25 to better fill the canvas
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct; not pure white.
+      Chrome: Title "R&D Budget Allocation · donut-basic · julia · makie · anyplot.ai" in dark ink, clearly readable. No axis tick labels (decorations hidden, appropriate for donut). Legend on right with dark label text, no frame — readable.
+      Data: Six annular segments in Imprint palette canonical order: brand green (#009E73) Software 34%, lavender (#C475FD) Hardware 19%, blue (#4467A3) Research 21%, ochre (#BD8233) Testing 10%, matte red (#AE3030) Design 10%, cyan (#2ABCCD) Support (no label, < 7% threshold). White segment dividers (strokecolor=PAGE_BG) provide clean separation. Center shows "$4.8M" (large, dark ink) and "Total Budget" (smaller, soft ink). Percentage labels in white on colored segments are all readable. Dominant segment (Software) uses bold+larger "34%" label.
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct; not pure black.
+      Chrome: Title in light near-white (#F0EFE8 INK token), clearly readable. Legend with light text and dark elevated background (#242420) — readable. No axis tick labels.
+      Data: Data colors IDENTICAL to light render — brand green, lavender, blue, ochre, matte red, cyan segments unchanged. White percentage labels still readable on the colored Imprint palette segments. Center "$4.8M" in INK (#F0EFE8) — clearly visible against the dark inner hole. "Total Budget" in INK_SOFT (#B8B7B0) — legible against the dark background. Segment dividers use dark PAGE_BG color creating clean gaps.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements adapt correctly to the dark surface via theme tokens.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=16, segment labels 16-20pt,
+          center 24/13pt, legend 14pt). Readable in both themes. Title fontsize at
+          the lower end for 2400×2400 canvas — slight deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Segment labels, center text, and legend
+          are all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All segments clearly visible with Imprint palette colors. Support
+          (6%) has no label by design but is still a visible segment. Legend compensates.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-optimized. White text on colored segments
+          provides adequate contrast. No red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas correct for donut chart. Axis limits ±1.35 with outer
+          radius 1.0 leave moderate whitespace margins. Overall layout is balanced
+          but not perfectly tight.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels (correctly omitted for donut). Title includes descriptive
+          prefix + required spec-id/library/lang format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (#009E73 brand green for Software) correct. Canonical
+          Imprint palette positions 1-6. Light bg #FAF8F1, dark bg #1A1A17. Chrome
+          fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default. Custom polygon donut implementation, center budget
+          annotation, size+weight variation on dominant segment. Polished but not
+          publication-ready level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: all decorations hidden, frame-free legend, theme-adaptive
+          segment dividers (strokecolor=PAGE_BG). Above the library-defaults baseline.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: percentage labels guide the viewer, dominant
+          segment emphasized with bold+larger text, center annotation provides key
+          takeaway. Clear focal point.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct donut chart with hollow center, implemented via custom annular
+          polygon segments.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: center key metric, percentage labels
+          with threshold filtering, consistent segment ordering, thick ring width
+          (inner=0.50).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 6 categories correctly mapped to proportional ring segments. Angles
+          computed from cumsum of proportions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''R&D Budget Allocation · donut-basic · julia · makie · anyplot.ai''
+          — compliant with optional prefix format. Legend labels match category names.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all donut chart aspects: annular segments, hollow center with
+          annotation, percentage labels, segment ordering, legend, small-slice handling.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: R&D budget allocation by department — real, neutral business scenario.
+          Six named departments with plausible distribution.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $4.8M total R&D budget with Software (34%) as largest category is
+          factually plausible for a mid-sized tech company.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data → geometry computation
+          → figure → segments loop → labels → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set. Data is deterministic but seed is still good
+          practice.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all three are used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable Julia. Appropriate use of const for data arrays.
+          No over-engineering or fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. No bare plot.png.
+          Current CairoMakie API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Figure/Axis layout system, hidespines!/hidedecorations!, colsize!
+          with Relative(), Legend with PolyElement. Above the defaults baseline.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom annular segment rendering via poly!() from first principles
+          — distinctively leverages Makie's low-level geometry primitives. Not trivially
+          replicable in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - edge-highlighting

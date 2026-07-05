@@ -1,0 +1,273 @@
+library: ggplot2
+language: r
+specification_id: line-parametric
+created: '2026-06-20T22:54:31Z'
+updated: '2026-06-20T23:01:05Z'
+generated_by: claude-sonnet
+workflow_run: 27886274376
+issue: 4424
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-parametric/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-parametric/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Uses geom_path() (not geom_line) — the critical ggplot2 distinction for parametric
+    curves where drawing order must follow the parameter, not sorted x values
+  - imprint_seq gradient (green→blue) is perfectly applied as scale_color_gradient
+    for continuous parameter visualization
+  - start/end markers with distinct shapes (circle vs square) plus a caption legend
+    elegantly communicate traversal direction without annotations
+  - facet_wrap(~curve, scales='free') + aspect.ratio=1 correctly gives each curve
+    its own square coordinate space
+  - adjustcolor(INK, alpha.f=0.12) for grid lines is an idiomatic R approach to subtle,
+    theme-adaptive grids
+  - Theme tokens fully wired — all chrome (background, text, grid, legend, strip)
+    adapts correctly between light and dark renders
+  - Both curve types (closed Lissajous + open spiral) strongly contrast each other,
+    covering the full specification requirement
+  weaknesses:
+  - linewidth=0.9 is marginally below the canonical 1.0 starting value — curves are
+    clear but could carry slightly more visual weight on a 3200×1800 canvas
+  - 'DE-01: Design polish is good but not exceptional — the gradient and markers are
+    effective, but typographic hierarchy and overall layout could be pushed further
+    toward publication quality'
+  - 'DE-02: Minor grid removal and subtle alpha=0.12 grid are well done, but whitespace
+    margins could be slightly more generous to give the facets more breathing room'
+  - 'LM-02: geom_path and facet_wrap are strong ggplot2 idioms, but no truly distinctive
+    ggplot2-only feature (e.g. coord_fixed, stat_function, or custom coord transformation)
+    is leveraged'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct, clearly not pure white
+      Chrome: title "line-parametric · r · ggplot2 · anyplot.ai" in dark ink at top-left, readable; facet labels "Lissajous (3:2)" and "Archimedean Spiral" in bold dark ink above each panel; axis labels "x(t)" / "y(t)" in dark ink at appropriate size; tick labels in INK_SOFT dark gray; caption "● start (t=0) ■ end (t=max)" at bottom-left in INK_SOFT; all chrome clearly readable against the warm off-white background
+      Data: Left panel shows Lissajous (3:2) as a closed symmetric figure-eight variant, gradient from brand green #009E73 (t=0) through teal to blue #4467A3 (t=1); Right panel shows Archimedean spiral outward from origin, same green→blue gradient; start points are filled circles in brand green, end points are filled squares in blue; colorbar legend "t (0 to 1)" on right side shows the full gradient
+      Legibility verdict: PASS — all text readable, no overflow, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title and all text render in light off-white (#F0EFE8 / #B8B7B0 range); axis labels, tick labels, facet labels, caption all clearly visible against the dark background; legend box has elevated dark fill (#242420) with subtle border; grid lines are very faint (nearly invisible) against dark background — subtle and appropriate
+      Data: gradient colors are identical to light render — brand green #009E73 to blue #4467A3, same start/end marker colors; the curves read clearly against the dark background with no contrast degradation
+      Legibility verdict: PASS — no dark-on-dark failures; light text on near-black background throughout
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title=12pt, axis=10pt, tick=8pt,
+          legend=8/10pt, strip=10pt. Proportions well-balanced in both renders. No
+          overflow.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps in either render. Caption, legend, facet
+          labels, axis text all clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Curves clearly visible with gradient. linewidth=0.9 is marginally
+          below canonical 1.0 — visible but could carry slightly more weight on 3200×1800
+          canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green→blue) is CVD-safe. Start/end markers use both
+          shape AND color as redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel faceted layout fills canvas well. Legend appropriately
+          placed. Asymmetric panel widths are inherent to the data ranges, not a layout
+          flaw.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: x(t) and y(t) are precisely correct labels for a parametric curve.
+          Title format matches spec exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'scale_color_gradient(low=''#009E73'', high=''#4467A3'') = imprint_seq.
+          Backgrounds #FAF8F1 / #1A1A17. All chrome tokens theme-adaptive. Data colors
+          identical across both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: intentional gradient storytelling,
+          shaped markers, clean faceted layout. Not yet publication-grade but clearly
+          design-aware.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor grid removed, panel border blank, strip background blank, very
+          subtle grid (alpha=0.12), L-shaped axis lines. Good refinement; whitespace
+          margins could be slightly more generous.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The gradient along the curve is an effective storytelling device
+          — viewer immediately understands parameter direction. Two curve types (closed
+          vs open) provide meaningful contrast. Start/end markers reinforce traversal
+          direction.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct parametric curve plot with smooth curves traced by parameter
+          t.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Equal aspect ratio (aspect.ratio=1), color gradient (imprint_seq),
+          two curves (Lissajous+Spiral), start/end markers, 1200 points for smooth
+          rendering — all satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x(t) on x-axis, y(t) on y-axis, scales='free' allows appropriate
+          range per curve.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-parametric · r · ggplot2 · anyplot.ai'' — exact format.
+          Legend ''t (0 to 1)'' correctly labeled. Caption explains marker shapes.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows closed self-intersecting curve (Lissajous) AND open outward
+          spiral — contrasting topological behaviors. Parameter direction shown via
+          gradient. Start/end points marked.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Lissajous figures (physics/signal analysis) and Archimedean spiral
+          (math/engineering) are real, well-known scientific curves with genuine applications.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lissajous x,y ∈ [-1,1] correct for sin(3t)/sin(2t). Spiral range
+          correct for t·cos(t)/t·sin(t) with t up to 4π≈12.57.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present. Data is fully deterministic (mathematical curves,
+          no randomness).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2 (plot), dplyr (group_by/slice/ungroup), ragg (device) — all
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic R/ggplot2. Appropriate complexity. No fake UI or
+          over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as sprintf('plot-%s.png', THEME). Correct file naming. Modern
+          ggplot2 API (linewidth= not size=).
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_path() (not geom_line) is the expert choice for parametric curves.
+          facet_wrap+scales=free, scale_color_gradient, aspect.ratio in theme — all
+          idiomatic ggplot2 patterns used correctly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_path vs geom_line distinction is ggplot2-specific. facet_wrap
+          is a strong ggplot2 feature. adjustcolor() for theme-adaptive grids is idiomatic
+          R. Missing truly unique features like coord_fixed, stat_function, or custom
+          coord transformations.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - colorbar
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap

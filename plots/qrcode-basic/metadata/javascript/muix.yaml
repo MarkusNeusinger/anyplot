@@ -1,0 +1,247 @@
+library: muix
+language: javascript
+specification_id: qrcode-basic
+created: '2026-06-24T17:40:04Z'
+updated: '2026-06-24T18:08:00Z'
+generated_by: claude-sonnet
+workflow_run: 28116869899
+issue: 3184
+language_version: 22.23.0
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/muix/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - Brand green (#009E73) modules on theme-adaptive pageBg create an elegant, on-brand
+    QR visualisation that integrates naturally with both light and dark surfaces.
+  - All font sizes explicitly set with a clear typographic hierarchy (title > URL
+    > caption).
+  - 'Deterministic, fully self-contained implementation: no network calls, no RNG.'
+  - Perfect Code Quality score — KISS structure, clean imports, elegant SVG rendering.
+  - Canvas dimensions and theme-readability pass in both renders; no edge clipping.
+  weaknesses:
+  - QR matrix is manually hardcoded (25x25 array) contrary to spec guidance to use
+    a proper QR encoding library; scannability cannot be verified from code review
+    alone and any single bit error would corrupt the code silently.
+  - Dark render produces an inverted QR pattern (brand green on near-black background);
+    non-standard contrast direction may prevent scanning on older readers.
+  - MUI X chart-specific features are not exercised beyond ChartContainer as an SVG
+    shell; both LM scores are held back.
+  - Caption at fontsize 14 px CSS may be marginally small on mobile viewports.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface.
+      Chrome: Title "qrcode-basic · javascript · muix · anyplot.ai" in dark (#1A1A17) text at fontsize 22, readable. URL "https://anyplot.ai" in monospace secondary ink at fontsize 16, readable. Caption at fontsize 14 in tertiary ink, readable at full resolution.
+      Data: Brand green (#009E73) QR modules on off-white page background. Quiet zone (4 modules) surrounds the 25x25 grid. Three finder patterns clearly visible in top-left, top-right, and bottom-left corners.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light cream text, clearly readable. URL in lighter secondary ink, readable. Caption in muted light tone, readable. No dark-on-dark failures detected.
+      Data: QR modules remain identical brand green (#009E73) — data colour unchanged from light render; only chrome flipped. Quiet zone renders as dark page background, producing an inverted QR pattern (light-on-dark).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22/16/14 px CSS); proportionate and
+          readable in both themes. Minor deduction for caption at 14px being marginally
+          small at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: QR code at ~55% canvas width is large, crisp (shapeRendering=crispEdges),
+          dominant in both renders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green on off-white and on near-black both offer adequate luminance
+          contrast; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Centred layout with balanced whitespace. Good canvas utilisation
+          for square spec.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (N/A for QR); title present and correct; URL
+          and caption provide equivalent contextual labelling.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary data colour is #009E73 (brand green). Background is #FAF8F1/#1A1A17
+          per theme. Chrome flips correctly; data colour stays constant.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Deliberate brand alignment, clean typographic hierarchy with system-ui
+          and monospace fonts. Above configured-default but not publication-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chartjunk; no spines/grid (appropriately omitted). Generous whitespace
+          and clean layout.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: URL label makes explicit what the QR encodes; caption surfaces technical
+          parameters. Slightly above pure-display default.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct QR code visualisation.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Quiet zone (4 modules), finder patterns, Error Correction M, Version
+          2/25x25 all present. However QR matrix is manually hardcoded contrary to
+          spec guidance to use a QR library; scannability unverifiable.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: https://anyplot.ai displayed as encoded URL; appropriate for spec.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'qrcode-basic · javascript · muix · anyplot.ai'.
+          No legend needed.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows QR structural features: three finder patterns, quiet zone,
+          timing strips, data modules. Could illustrate error correction tolerance
+          but appropriate for ''basic''.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses real platform URL (https://anyplot.ai); neutral, non-controversial,
+          directly relevant.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Version 2 (25x25) with Error Correction M is correct for this URL
+          length; factually appropriate.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean: const data -> const layout math -> single exported component.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded QR matrix, no RNG.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer (@mui/x-charts) and Box (@mui/material); both
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise SVG rendering with .map(); layout math is explicit and readable;
+          no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Output handled by harness (plot-{THEME}.png + .html); no deprecated
+          API usage.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct use of ChartContainer as SVG composition root with series=[]
+          and skipAnimation. No actual MUI X chart components exercised — visualisation
+          is raw SVG inside themed wrapper.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Creative use of ChartContainer as generic themed SVG canvas is somewhat
+          distinctive, but no MUI X chart-specific features (series, axis slots, legend)
+          are leveraged.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome

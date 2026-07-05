@@ -6,7 +6,7 @@ title: Force-Directed Graph
 
 # Specification tracking
 created: 2025-12-15T20:43:54Z
-updated: 2025-12-15T20:43:54Z
+updated: 2026-07-01T01:06:42Z
 issue: 990
 suggested: MarkusNeusinger
 
@@ -14,7 +14,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - network
-    - graph
   data_type:
     - network
     - relational

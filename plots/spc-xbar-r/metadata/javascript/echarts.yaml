@@ -1,0 +1,290 @@
+library: echarts
+language: javascript
+specification_id: spc-xbar-r
+created: '2026-06-20T13:20:10Z'
+updated: '2026-06-20T13:28:41Z'
+generated_by: claude-sonnet
+workflow_run: 27872084101
+issue: 4551
+language_version: 22.22.3
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance — all SPC features implemented: dual X-bar/R panel layout,
+    UCL/LCL as dashed red lines with values, solid center line, ±2σ warning lines,
+    out-of-control scatter overlays with larger red markers, and correct SPC constants
+    (A2=0.577, D3=0, D4=2.115 for n=5)'
+  - Excellent use of ECharts multi-grid system with linked xAxisIndex/yAxisIndex routing
+    — idiomatic dual-panel chart without any axis synchronization hacks
+  - 'Semantically correct Imprint palette use: brand green (#009E73) for data series,
+    matte red (#AE3030) for control limits and OOC points (semantic error anchor),
+    blue (#4467A3) for warning lines — all with appropriate opacity layering'
+  - Realistic, technically accurate CNC shaft diameter context with correct SPC statistics
+    and 25 subgroups of n=5; three out-of-control events clearly visible (samples
+    12 and 22 in X-bar, sample 13 in R chart)
+  - 'Clean, flat, reproducible code structure with deterministic hard-coded data and
+    correct ECharts API usage (animation: false, no devicePixelRatio, no explicit
+    sizing)'
+  weaknesses:
+  - markLine end-labels are at fontSize=11 (CSS px), which renders at ~22 source pixels
+    — readable but at the lower bound; consider raising to 12–13px for better legibility
+    at mobile-scaled widths
+  - R chart does not show ±2σ warning lines — X-bar chart has both upper and lower
+    warning limits but R chart only has UCL; adding R-chart warning limit (UCL_r ×
+    2/3 ratio) would improve feature symmetry, though the spec marks warnings as optional
+  - No legend is shown — the markLine labels on the right serve as reference but a
+    small legend identifying 'In-control' vs 'Out-of-control' series would improve
+    interpretability for readers unfamiliar with SPC charts
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correctly the anyplot light surface, not pure white.
+      Chrome: Title "spc-xbar-r · javascript · echarts · anyplot.ai" in bold dark ink, centered at top, fully readable. Subplot subtitles "X-bar Chart — Shaft Diameter (CNC Machining, n = 5)" and "R Chart — Sample Range" in smaller dark text at left-top of each panel, readable. Y-axis labels "Mean (mm)" and "Range (mm)" rotated vertically, dark soft text, readable. X-axis label "Sample Number" centered at bottom, readable. Tick labels (1–25 on x, decimal values on y) in dark soft color, readable. markLine labels on right edge (UCL=50.692, LCL=49.308, CL=50.000, +2σ, -2σ for X-bar; UCL=2.538, CL=1.200 for R) in small but legible text.
+      Data: X-bar panel — brand green (#009E73) line with circle markers; dashed matte-red (#AE3030) UCL/LCL lines; solid near-black center line; lighter blue (#4467A3, opacity≈0.55) dashed ±2σ warning lines; two larger red circles overlay OOC events (sample 12 above UCL, sample 22 below LCL). R panel — same green line with circle markers; dashed red UCL line; solid center line; one larger red circle at sample 13 above UCL.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background; no "light-on-light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correctly the anyplot dark surface, not pure black.
+      Chrome: Title in light/cream text on dark background, fully readable. Subplot subtitles in light text, readable. Y-axis and X-axis labels in light-gray (t.inkSoft adaptive token), readable. Tick labels in light-gray, readable. markLine end-labels (UCL, LCL, CL, ±2σ) in theme-appropriate light text, readable. Center line renders in white/near-white (t.ink flips to #F0EFE8 for dark theme), clearly visible.
+      Data: Data colors identical to light render — brand green (#009E73) line, matte-red (#AE3030) control limit lines and OOC overlay markers, blue (#4467A3) warning lines. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text clearly readable against near-black background; center line correctly flips to white; no "dark-on-dark" issues identified.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, subtitles 15px, axis
+          labels 14px, ticks 12px, markLine labels 11px). Readable in both themes.
+          Minor deduction: markLine labels at 11px CSS are at the lower legibility
+          bound for scaled-down mobile views.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. markLine right-side labels
+          are well-spaced across the y-axis range. Subplot subtitles do not collide
+          with data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 25 data points with symbolSize=9 circles on line chart — appropriate
+          density. OOC overlay scatter at symbolSize=14 clearly distinguishable. Line
+          width 2.5 for data, 2 for UCL/LCL, 1.5 for warnings — well-calibrated hierarchy.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic Imprint colors used correctly. OOC points distinguished
+          by both color (red) and size (larger markers), providing redundant encoding
+          beyond hue alone. Warning lines at 55% opacity distinguishable from solid
+          UCL/LCL.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Dual-panel layout fills canvas well with appropriate
+          margins (left=90, right=130, top=92, bottom=62). No clipping detected. Panels
+          visually balanced. Right margin sufficient for markLine labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axes labeled 'Mean (mm)' and 'Range (mm)' with units. X-axis labeled
+          'Sample Number'. Title follows required format. Subplot subtitles provide
+          additional context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series uses #009E73 (brand green, Imprint position 1).
+          UCL/LCL use #AE3030 (Imprint position 5, semantic red for error/limits).
+          Warning lines use #4467A3 (Imprint position 3). Center line uses t.ink (theme-adaptive).
+          Background transparent over page surface (#FAF8F1 light / #1A1A17 dark).
+          Chrome tokens correctly applied. Data colors identical across both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4). Intentional visual hierarchy: solid data line,
+          dashed red control limits, lighter-opacity blue warning lines, larger red
+          OOC overlays. Semantic color assignment (error=red, caution=blue, data=green)
+          shows design thought. Subplot subtitles add contextual richness. Not quite
+          ''FiveThirtyEight-level'' (no annotations on OOC events, no legend panel)
+          but clearly above generic default configuration.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement above default (2). Y-axis lines hidden (axisLine:
+          show: false), tick marks suppressed. Subtle grid (t.grid color token). Clean
+          whitespace between panels. Right margin properly cleared for labels. Warning
+          lines at opacity 0.55 show deliberate opacity layering.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy (above default 2). Larger red OOC scatter overlays
+          create immediate focal points — viewer's eye is drawn to the out-of-control
+          events. Hierarchical line styling (UCL/LCL > warning lines > center line)
+          guides interpretation. Dual-panel narrative shows both mean shift (X-bar)
+          and variance instability (R chart) simultaneously.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct X-bar/R chart pair with X-bar on top, R chart on bottom,
+          sharing x-axis via ECharts multi-grid system.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: dashed UCL/LCL with labels, solid center
+          line, ±2σ warning limits, out-of-control highlighting, 25 subgroups (within
+          20-50 range), 3 OOC events total (2 in X-bar, 1 in R), SPC constants A2/D3/D4
+          correctly applied.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: sample numbers 1-25. Y-axis top: sample means in mm (range
+          49.0-51.0). Y-axis bottom: sample ranges in mm (range 0-3.0). All data visible
+          within chart bounds.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''spc-xbar-r · javascript · echarts · anyplot.ai'' — exact
+          required format. markLine labels identify UCL, LCL, CL, +2σ, -2σ values
+          on the right side of each panel.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all SPC chart features: in-control variation, out-of-control
+          mean shift (sample 12 above UCL, sample 22 below LCL), out-of-control range
+          (sample 13 R exceeds UCL_r), warning zone behavior, and stable process baseline.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC machining shaft diameter monitoring — a canonical SPC application.
+          Neutral industrial quality control context with no controversial elements.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Process mean 50.0mm, R-bar 1.2mm (~2.4% variation) — realistic for
+          precision CNC. UCL/LCL at ±0.692mm from mean using correct A2=0.577 constant.
+          R chart UCL at 2.538 = D4 × R-bar = 2.115 × 1.20. All mathematically correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat structure: constants → data → init → setOption. No functions
+          or classes. Clean separation of SPC math, data arrays, and chart configuration.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data is hard-coded as literal arrays. SPC constants are fixed
+          values. Fully deterministic with no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (echarts is a global). Only window.ANYPLOT_TOKENS
+          accessed from globals. No unused references.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic JS — OOC point extraction via .map().filter(Boolean) is
+          clean. No over-engineering. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'echarts.init called correctly without explicit size or devicePixelRatio.
+          animation: false set. Harness handles file output. ECharts 5.x API throughout.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ECharts multi-grid system (grid[0]/grid[1]) with per-series
+          xAxisIndex/yAxisIndex routing. markLine for reference lines is the ECharts-native
+          approach. z-index layering for scatter overlays on line series. All idiomatic
+          ECharts patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses ECharts-specific features: multi-grid dual-panel layout, markLine
+          with per-item color/style/label formatting, layer composition (line + scatter
+          in same grid panel via z-index), and theme-token-driven styling. Could further
+          leverage ECharts'' native tooltip/dataZoom in HTML output, but those don''t
+          appear in static PNG.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

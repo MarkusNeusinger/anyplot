@@ -1,0 +1,280 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-cohort-retention
+created: '2026-06-20T01:15:30Z'
+updated: '2026-06-20T01:39:24Z'
+generated_by: claude-sonnet
+workflow_run: 27855328185
+issue: 4570
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect triangular heatmap: correct cohort retention logic (period 0 = 100%,
+    power-decay model, null for future periods)'
+  - 'Repair addressed all three prior weaknesses: colorbar label text bumped to 13px,
+    subtitle added with key insight, Wk 0 column label bolded'
+  - 'Correct imprint_seq colormap (#009E73 green → #4467A3 blue) for continuous single-polarity
+    retention data'
+  - Luminance-based adaptive text color ensures white text on dark cells and dark
+    text on light cells at every retention value
+  - Both themes render correctly with identical data colors — warm off-white (#FAF8F1)
+    light and warm near-black (#1A1A17) dark
+  - Creative use of Highcharts SVG Renderer to implement native heatmap without the
+    unavailable heatmap module
+  - 'Subtitle highlights editorial focal point: May 2024 leading cohort and average
+    weekly-1 retention'
+  weaknesses:
+  - Cell text is 9px CSS (18px native) in the smallest cells — readable at full canvas
+    but will be very small on 400px mobile displays; inherent to a 10x10 heatmap but
+    worth noting
+  - 'CQ-01: Six helper functions (getRetention, cellRgb, cellBg, cellTextColor, clearDrawn,
+    drawAll) deviate from KISS; architecturally necessary for the SVG renderer pattern
+    but adds complexity'
+  - 'DE-01 not yet at strong-design level: no distinctive typographic hierarchy between
+    cohort label sizes; the colorbar could use tick marks or a frame to separate it
+    from the plot area'
+  - Double header block in source (pipeline artifact from impl-review header rewrite
+    + generator prepend) — cosmetically messy but no functional impact
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "heatmap-cohort-retention · javascript · highcharts · anyplot.ai" at 22px in dark ink (#1A1A17), clearly readable and fills ~75% of plot width (expected for this title length). Subtitle "May 2024 leads all cohorts with 78% week-1 retention — average across cohorts: 72%" at 13px in inkSoft — clearly readable. Cohort labels "Jan 2024 (n = 1,842)" etc. at 12px in inkSoft on left — readable. Period labels "Wk 0"–"Wk 9" at 13px in inkSoft at bottom — readable, with "Wk 0" bolded as anchor. Axis titles "Signup Cohort" (Y) and "Weeks Since Signup" (X) at 15px in inkSoft — readable. Colorbar labels ("Retention", "100%", "50%", "0%") at 13px in inkSoft — clearly readable (previously 11px, now fixed).
+      Data: Triangular heatmap using Imprint sequential colormap (#009E73 green for 0% retention → #4467A3 blue for 100% retention). Wk 0 column (100%) appears deep blue across all 10 cohorts. Cells with 5–7% retention appear teal-green. Percentage labels in each cell — luminance-based white or dark text depending on cell luminance. Triangular shape clearly visible — Oct 2024 cohort has only Wk 0, Jan 2024 cohort spans all 10 weeks. Custom colorbar on right with 30 gradient segments, labeled at 100%/50%/0%.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues; no clipping
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: Title in light cream (#F0EFE8, t.ink for dark theme) — clearly readable. Subtitle in #B8B7B0 (inkSoft dark) — clearly readable. Cohort labels, period labels, and axis titles all in inkSoft dark (#B8B7B0) — clearly readable against near-black background. Colorbar labels at 13px — readable. No dark-on-dark failures detected anywhere.
+      Data: Heatmap cell colors are pixel-identical to the light render — same #009E73 to #4467A3 blue-green gradient. Only background and chrome flipped. Empty lower-right triangle (future periods for recent cohorts) shows dark page background correctly. Brand green #009E73 visible in low-retention cells. Cell text uses same luminance-based adaptive color — white on dark blue cells, dark on lighter cells.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set. Title 22px, subtitle 13px, cohort
+          labels 12px, period labels 13px, axis titles 15px, colorbar labels 13px
+          (fixed from 11px in prior attempt). Cell text 9-11px is small but appropriate
+          for a 10x10 grid and explicitly sized. Well-proportioned in both renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean 1px gap between cells; no overlapping text anywhere in either
+          render; colorbar well-spaced from plot area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All heatmap cells clearly visible; luminance-based adaptive text
+          color ensures readable labels at all retention values; gradient colorbar
+          clear
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential colormap is CVD-safe; luminance-based cell text
+          contrast ensures accessibility at every value
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correct for symmetric heatmap; generous left margin
+          (200px) for cohort labels; right margin (72px) accommodates colorbar; no
+          clipping or overflow detected
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: ''Signup Cohort'', X: ''Weeks Since Signup''; cohort labels include
+          n= sizes; period labels use ''Wk N'' format per spec; colorbar labeled ''Retention''
+          with 0/50/100% ticks'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct Imprint sequential colormap (#009E73 to #4467A3) for continuous
+          single-polarity retention data; transparent background shows pageBg (#FAF8F1/#1A1A17);
+          theme-adaptive chrome throughout; data colors identical between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean and professional with intentional Imprint sequential gradient,
+          luminance-based text contrast, rounded cell corners, custom segmented colorbar,
+          and informative subtitle. Clearly above defaults but not yet at strong-design
+          (6) level — typographic hierarchy could be more pronounced.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Both axes fully hidden; no grid lines; cell gaps provide breathing
+          room; tasteful segmented colorbar with gradient. Good refinement — not quite
+          perfect (no tick marks on colorbar, no separator line between plot area
+          and legend).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Subtitle ''May 2024 leads all cohorts with 78% week-1 retention
+          — average across cohorts: 72%'' provides editorial emphasis and highlights
+          the focal point. Bold Wk 0 anchors the triangular shape structurally. Color
+          gradient communicates retention intensity at a glance. Good data storytelling.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular cohort retention heatmap; newer cohorts have fewer
+          columns as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: triangular shape, retention % in cells, cohort
+          sizes on y-axis (n=X,XXX format), ''Wk N'' column labels, sequential colormap,
+          colorbar legend with labels, period-0 always 100%'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=weeks since signup (Wk 0–Wk 9), Y=signup cohort (Jan–Oct 2024),
+          color=retention rate; triangular shape correctly maps missing future data
+          as null
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'heatmap-cohort-retention · javascript · highcharts
+          · anyplot.ai'; colorbar legend present and labeled; no categorical legend
+          needed (continuous data)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all heatmap aspects: triangular drop-off, cohort quality variation
+          (65–78% week-1 retention), power-decay retention curves, full 100%-to-5%
+          range'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly signup cohorts Jan–Oct 2024 in SaaS context; cohort sizes
+          (1,654–2,312) and retention rates are realistic; neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 cohorts × 10 periods within spec 8–12 range; retention values
+          from 5% to 100% plausible for SaaS weekly retention with power-decay model
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Six helper functions (getRetention, cellRgb, cellBg, cellTextColor,
+          clearDrawn, drawAll) deviate from KISS, though architecturally necessary
+          for the Highcharts SVG renderer pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed BASE_RETENTION array, fixed cohort labels
+          and sizes; no RNG required'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only ANYPLOT_TOKENS global as required by harness
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-named variables; appropriate complexity for custom renderer-based
+          heatmap; no over-engineering; double header block is a pipeline artifact,
+          not a code quality issue
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: '//# anyplot-orientation: square present; Highcharts.chart(''container'',...)
+          correct; animation:false in both required places; credits disabled'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct chart.events.load/redraw pattern; proper mount-node contract
+          (no explicit width/height); ANYPLOT_TOKENS integrated correctly; animation
+          disabled in both required places; xAxis/yAxis correctly hidden
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts SVG Renderer API used to implement heatmap without unavailable
+          heatmap module; WCAG luminance computation for cell text; load/redraw event
+          pattern for persistent custom SVG elements across chart redraws
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

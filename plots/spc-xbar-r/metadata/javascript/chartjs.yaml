@@ -1,0 +1,256 @@
+library: chartjs
+language: javascript
+specification_id: spc-xbar-r
+created: '2026-06-20T13:16:41Z'
+updated: '2026-06-20T13:35:10Z'
+generated_by: claude-sonnet
+workflow_run: 27871988015
+issue: 4551
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect spec compliance: X-bar on top, R on bottom, stacked with shared x-axis,
+    UCL/LCL dashed, warning limits, OOC points highlighted — all required features
+    present'
+  - 'Excellent semantic color assignment: brand green (#009E73) for X-bar data series
+    (correct first-series rule), matte red (#AE3030) for OOC points and control limit
+    lines (semantic error anchor), blue (#4467A3) for R chart — all from Imprint palette'
+  - 'OOC detection uses redundant encoding: both red color AND larger pointRadius
+    (11 vs 7) — strong CVD-safe design choice'
+  - Correct SPC constants (A2=0.577, D3=0, D4=2.114 for n=5) and deterministic LCG
+    RNG ensures reproducibility
+  - 'Clean Chart.js idioms: per-point pointBackgroundColor/pointRadius arrays, legend
+    filter callback for hiding mirror datasets, border:false for clean look, animation:false
+    correctly set'
+  - 'Both themes render correctly — background #FAF8F1 (light) / #1A1A17 (dark), all
+    chrome uses theme tokens (t.ink, t.inkSoft, t.grid), no dark-on-dark or light-on-light
+    issues'
+  weaknesses:
+  - Legend font size is 13px across both panels, slightly below the chartjs.md recommended
+    16px — increase to 14-16px for better readability at mobile widths
+  - The 'UCL / LCL' and '±2σ Warning' legend entries are repeated identically in both
+    the X-bar panel and the R panel — consider sharing those entries only in one panel
+    or using a unified legend div to reduce visual clutter
+  - Design Excellence is solid but not exceptional — the two-panel layout is clean
+    but could benefit from subtle panel separators or background differentiation to
+    visually anchor each chart area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct per style guide.
+      Chrome: Title "spc-xbar-r · javascript · chartjs · anyplot.ai" at 22px, bold, dark ink — fully readable. Y-axis labels "Sample Mean X̅ (mm)" and "Sample Range R (mm)" in dark ink, X-axis label "Sample Number" on bottom panel. Tick labels in inkSoft gray. All text clearly visible against light background.
+      Data: Top panel (X-bar chart) — brand green (#009E73) line connecting 25 sample means; three out-of-control points at samples 8 (~51.0), 16 (~48.9), 22 (~51.1) rendered as larger red (#AE3030) filled circles. UCL/LCL shown as dashed red horizontal lines, ±2σ warning as dashed ochre lines, center line (X̄-bar) as a solid gray line. Bottom panel (R chart) — blue (#4467A3) line for sample ranges; no OOC ranges visible in this render. R chart UCL dashed red, ±2σ warning dashed ochre, center (R̄) solid gray.
+      Legibility verdict: PASS — all elements readable, appropriate contrast throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct per style guide.
+      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0 range) — clearly visible against dark background. No dark-on-dark failures observed. Grid lines subtle (low-opacity light rule on dark surface).
+      Data: Data colors are identical to light render — brand green X-bar line, red OOC circles at same positions (8, 16, 22), blue R chart line. Control limit lines maintain same red/ochre/gray colors. Visual hierarchy identical across themes.
+      Legibility verdict: PASS — all text and data elements fully readable, no dark-on-dark failures, both themes correct.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 22px, axis labels 14px, ticks 12px — readable in both themes.
+          Legend at 13px is slightly below recommended 16px.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-panel layout clean, no text or data overlap in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: OOC points larger (r=11) and red; normal points green (r=7); control
+          lines clearly differentiated by dash pattern and color.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used; OOC uses redundant encoding (color + size)
+          — CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Flex-column layout, title at top, balanced top/bottom panels. No
+          AR-09 clipping. Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axes labeled with units (mm); X-axis 'Sample Number'; title in
+          correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); OOC uses semantic #AE3030; background
+          #FAF8F1/#1A1A17; all from Imprint palette.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Intentional color hierarchy: green data, red errors, ochre warning,
+          gray center. OOC redundant encoding. Semantic palette assignment.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: border:false, subtle grid via t.grid token, legend filter for clean
+          entries, no chart junk. Repeated legend entries across panels slightly verbose.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on OOC points, stacked panels tell quality control
+          story, visual hierarchy guides eye to process instability.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: X-bar chart top, R chart bottom, vertically stacked, shared x-axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: UCL/LCL dashed labeled; center line solid; OOC points highlighted;
+          ±2σ warning limits; ≥3 OOC points; standard constants A2/D3/D4.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Sample number x-axis, sample mean y-top, sample range y-bottom, realistic
+          CNC shaft diameter data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'spc-xbar-r · javascript · chartjs · anyplot.ai' correct. Legend
+          labels descriptive.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: X-bar and R charts both complete with UCL/LCL, center, warning limits,
+          and OOC highlighting.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: CNC shaft diameter measurements (50mm mean, 0.3mm σ), 25 subgroups
+          of n=5 — realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 45% headroom padding on x-bar y-axis, R chart from 0, all 25 samples
+          visible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes; helper functions (refLine, hline,
+          rand, randNorm) are minimal and purposeful.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG RNG (seed=42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Chart.js is a global; no imports needed. No unused dependencies.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean code, no fake UI; tooltip explicitly disabled.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Chart.js harness handles PNG+HTML output; no manual file saves; current
+          API used.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point pointBackgroundColor/pointRadius arrays, legendFilter callback,
+          border:false, animation:false — correct Chart.js patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Legend filter callback, per-point array styling for OOC, html-export
+          via harness. Could go further with Chart.js-specific features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - custom-legend
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending

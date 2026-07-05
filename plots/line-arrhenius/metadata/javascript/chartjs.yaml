@@ -1,0 +1,244 @@
+library: chartjs
+language: javascript
+specification_id: line-arrhenius
+created: '2026-06-24T09:52:27Z'
+updated: '2026-06-24T10:13:58Z'
+generated_by: claude-sonnet
+workflow_run: 28089801302
+issue: 4408
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: all five required features (regression line, R², Eₐ/R
+    annotation, secondary temperature axis, visible scatter markers) implemented correctly'
+  - 'Accurate chemistry: H₂O₂/MnO₂ system with physically realistic Eₐ = 74.4 kJ/mol;
+    regression calculation done in-place without external libraries'
+  - 'Advanced Chart.js API: afterBuildTicks for custom secondary axis ticks and afterDraw
+    plugin for annotation callout are non-trivial and idiomatic'
+  - 'Both theme renders flawless: correct backgrounds (#FAF8F1 / #1A1A17), all chrome
+    uses token values, data colors identical across themes'
+  weaknesses:
+  - 'Palette ordering: regression line uses t.palette[2] (blue) while scatter uses
+    t.palette[0] (green), reversing canonical first-series rule — reorder datasets
+    so scatter is dataset 0 (palette[0]) and fit line is dataset 1 (palette[1])'
+  - 'Minor design ceiling: y-axis border still visible; adding border: {display: false}
+    on the y scale would produce a cleaner L-shape frame'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "line-arrhenius · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Axis labels "1/T  (K⁻¹)" (bottom), "Temperature (K)" (top secondary), "ln(k)" (left) all readable with units. Tick labels in inkSoft tone, clearly legible. Annotation callout box in bottom-left shows "Eₐ/R = 8953 K → Eₐ = 74.4 kJ/mol" and "R² = 0.9988" with semi-transparent elevated background and dark ink text.
+      Data: 12 brand-green (#009E73) scatter markers with white borders on a blue (#4467A3) linear regression line. Markers clearly visible and on top of the fit line.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in light colors (t.ink = #F0EFE8, t.inkSoft = #B8B7B0). Annotation callout box uses t.elevatedBg (#242420) with light ink text — fully readable. No dark-on-dark failures detected. Grid lines are subtle using t.grid token.
+      Data: Colors identical to light render — brand-green (#009E73) scatter, blue (#4467A3) regression line. Both clearly distinguishable against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, labels 15px, ticks 13px,
+          annotation 14px); well-proportioned in both themes; no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; secondary axis labels well-spaced; annotation
+          box positioned away from data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 sparse points at pointRadius=9 CSS px are prominent; white marker
+          borders add definition
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette; green and blue are perceptually distinct;
+          white borders help separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good plot fill; balanced dual x-axis layout;
+          no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 1/T (K⁻¹), Temperature (K), ln(k) — all descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Scatter (experimental data) correctly uses palette[0] (#009E73) but
+          regression line (dataset 0 in array) uses palette[2] (#4467A3), skipping
+          palette[1] and violating canonical order. Both theme backgrounds correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: dual palette, custom annotation callout, dual x-axis
+          with scientific tick display. Professional but not publication-stunning.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: White marker borders, semi-transparent elevated callout (alpha 0.82),
+          secondary axis border suppressed. Some clear refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Annotation box communicates key insight (Eₐ, R²); dual x-axis makes
+          accessible to non-specialists; visual hierarchy guides from data to fit.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed line+scatter Arrhenius plot correctly implemented
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression line, R², Eₐ/R annotation, secondary temperature axis,
+          scatter on top of fit — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=1/T (K⁻¹), Y=ln(k); all 12 points across 300-550 K visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'line-arrhenius · javascript · chartjs · anyplot.ai' correct;
+          legend labels accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All Arrhenius plot aspects shown: scatter, fit line, Eₐ extraction,
+          R², dual temperature scale'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: H₂O₂ decomposition over MnO₂ catalyst — real, well-known catalytic
+          system; scientifically neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature 300-550 K realistic; Eₐ=74.4 kJ/mol physically reasonable;
+          R²=0.9988 consistent with near-linear data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; sequential data → compute → render pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hard-coded arrays, no randomness'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; Chart.js accessed as global per harness contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic JS; custom plugin minimal and correct; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct Chart.js harness pattern; animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed chart with per-dataset type; responsive+maintainAspectRatio:false+animation:false;
+          ANYPLOT_TOKENS fully consumed; correct harness contract
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin (Chart.js plugin API + Canvas 2D); secondary
+          x-axis with afterBuildTicks; exponential notation tick callback. Very strong,
+          could use chartjs-plugin-annotation patterns for more polish.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - twin-axes
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

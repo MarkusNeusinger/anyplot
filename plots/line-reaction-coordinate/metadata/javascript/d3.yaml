@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: line-reaction-coordinate
+created: '2026-06-24T08:14:46Z'
+updated: '2026-06-24T08:33:45Z'
+generated_by: claude-sonnet
+workflow_run: 28083795761
+issue: 4409
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'All spec requirements satisfied: direct species labels, Ea arrow, ΔH arrow, dashed
+    reference lines, smooth curve with clear transition state peak'
+  - Custom SVG <defs> arrowhead markers are an elegant and theme-adaptive D3 solution
+  - Fully deterministic Gaussian formula with CatmullRom interpolation produces a
+    smooth, realistic reaction profile
+  - 'Complete theme adaptation: all chrome (text, axes, grid, arrows) uses ANYPLOT_TOKENS;
+    data colour unchanged across themes'
+  - Clean flat code structure — self-contained, no functions/classes, no fetch
+  - Subtle ΔH shaded region adds meaningful chemistry storytelling without cluttering
+  weaknesses:
+  - Sub-label text (energy values like '50 kJ/mol') at 14 px is at the minimum recommended
+    floor — bumping to 15 px would improve mobile readability
+  - DE-02 could be elevated by removing the remaining y-axis tick lines and using
+    a horizontal-rule-only approach for the reference grid
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "line-reaction-coordinate · javascript · d3 · anyplot.ai" bold, centered, 22px dark ink — clearly readable. Y-axis label "Potential Energy (kJ/mol)" rotated, 18px dark ink, readable. X-axis label "Reaction Coordinate →" 18px, readable. Tick labels 14px in inkSoft tone, all readable. Annotation labels (Reactants/TS/Products, Ea/ΔH text) at 15–16px, readable.
+      Data: Smooth Gaussian curve in #009E73 (brand green, stroke-width 4) from Reactants (50 kJ/mol) through Transition State (120 kJ/mol) to Products (20 kJ/mol). Double-headed arrows for Ea=70 kJ/mol and ΔH=-30 kJ/mol with SVG marker arrowheads. Dashed horizontal reference lines at reactant and product energy levels. Subtle green shaded region (palette[0] @ 8% opacity) fills the ΔH band.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and all labels render in light cream/grey tones (ink token #F0EFE8, inkSoft #B8B7B0) — clearly readable against dark surface. No dark-on-dark failures. Arrow fills flip via inkSoft token, remaining visible on dark background.
+      Data: Curve colour (#009E73) is identical to light render — only chrome flipped. Brand green reads well on dark background. All annotations, dashed reference lines, and arrowheads visible. ΔH shaded region at 8% opacity is more subtle on dark but present.
+      Legibility verdict: PASS — no dark-on-dark issues, all text readable in both themes
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (22px title, 18px axis labels, 15-16px
+          annotations, 14px tick/sub-labels); readable in both themes; minor: energy
+          sub-labels at 14px are at the minimum floor for mobile scale'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; ΔH annotation and Products labels vertically
+          separated with sufficient spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve at stroke-width 4 is prominent; dashed reference lines, arrows,
+          and all annotations clearly distinguishable in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint green is CVD-safe; single-series plot with no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; landscape 3200x1800; generous margins (top/bottom
+          90, left 110, right 160); nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y: Potential Energy (kJ/mol) with units; X: Reaction Coordinate
+          →; title format correct'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Curve and shading use t.palette[0] (#009E73); backgrounds #FAF8F1/#1A1A17;
+          data colours identical across themes; chrome fully theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom SVG arrowhead markers via defs, Gaussian curve with hierarchical
+          direct labelling, subtle ΔH shaded region, clean Imprint-palette integration
+          — goes beyond defaults but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No top/right spines; y-axis domain explicitly removed; x-axis ticks/labels
+          removed; grid uses t.grid token at stroke-width 1; subtle shaded region
+          at 8% opacity
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ea and ΔH arrows guide viewer through chemistry; transition state
+          is clear focal point; direct species labels eliminate legend noise; shading
+          reinforces exothermic story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: smooth line chart tracing energy landscape with clear maximum
+          at transition state'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: direct labels for Reactants/TS/Products, Ea double-headed
+          arrow, ΔH double-headed arrow, horizontal dashed reference lines, clean
+          minimal style'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=reaction coordinate [0,1]; Y=potential energy kJ/mol; values 50/120/20
+          match spec example
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: line-reaction-coordinate · javascript · d3 · anyplot.ai;
+          direct labels used, no legend needed for single-series'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: energy landscape, activation barrier (Ea=70 kJ/mol),
+          enthalpy change (ΔH=-30 kJ/mol), transition state, reactants, products'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physically plausible single-step exothermic reaction; values (Ea=70,
+          ΔH=-30 kJ/mol) realistic for organic chemistry; neutral educational context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 0-140 kJ/mol; N=300 deterministic points for smooth curve;
+          Gaussian formula centred at x=0.5 produces correct peak shape
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no functions or classes, clean sequential
+          flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic Gaussian formula; no fetch, no Math.random(), no CDN
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only d3 global and ANYPLOT_TOKENS/ANYPLOT_SIZE used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate complexity, no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles plot-{THEME}.png + plot-{THEME}.html; current D3
+          7.9 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.line() with d3.curveCatmullRom.alpha(0.5), selectAll/data/join
+          pattern, d3.axisLeft/axisBottom, d3.scaleLinear — all idiomatic D3
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'SVG <defs>/<marker> arrowheads (distinctively SVG/D3); d3.curveCatmullRom
+          curve factory; d3.line() path generator. Minor gap: could exploit D3 path
+          generators further'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - html-export
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

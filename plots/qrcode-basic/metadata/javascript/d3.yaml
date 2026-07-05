@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: qrcode-basic
+created: '2026-06-24T17:33:01Z'
+updated: '2026-06-24T17:52:40Z'
+generated_by: claude-sonnet
+workflow_run: 28116627411
+issue: 3184
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Clean square canvas layout with well-proportioned QR code filling ~60% of the
+    canvas
+  - Excellent theme adaptation — warm card background preserved in both light and
+    dark renders for QR scannability
+  - All font sizes explicitly set (22px title, 18px URL, 14px caption) and readable
+    in both themes
+  - Informative caption providing matrix stats (25×25, 338 dark modules, Error correction
+    M)
+  - Idiomatic D3 data binding via flatMap → .data().join() to render QR modules
+  - Dark mode subtle border on QR card for visual separation — thoughtful touch
+  weaknesses:
+  - 'DE-01/DE-02: Design is clean but minimal — limited aesthetic scope due to QR
+    chart type; harder to achieve high design sophistication scores for functional
+    binary-matrix visualizations'
+  - 'LM-02: D3 data-binding used for module rendering is correct but the unique D3
+    advantage (complex interactive layouts, force-directed, hierarchy) is not showcased
+    for this spec type'
+  - Caption at 14px is the smallest recommended size — borderline for mobile legibility
+    at 400px width
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "qrcode-basic · javascript · d3 · anyplot.ai" in bold dark ink at top; URL "https://anyplot.ai" and caption in secondary dark ink below — all clearly readable
+      Data: Large QR code centered, dark near-black (#1A1A17) modules on cream (#FAF8F1) card; three 7×7 finder patterns visible in top-left, top-right, and bottom-left corners; quiet zone included; card has subtle rounded corners
+      Legibility verdict: PASS — all text readable, QR modules high-contrast
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and labels render in light text against dark background — clearly readable; the QR card maintains its cream (#FAF8F1) background (correct — required for QR scannability), and gains a subtle light border for visual separation from the dark canvas
+      Data: QR module colors identical to light render (dark modules, cream background) — data colors consistent across themes as required
+      Legibility verdict: PASS — no dark-on-dark failures; title and labels correctly flip to light text; QR card correctly maintains white/cream background
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 18px URL, 14px caption).
+          Readable in both themes. Title takes ~55% of width — good proportion.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Clean spacing between title, QR card, URL,
+          and caption.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: QR modules rendered large with maximum contrast (near-black on near-white).
+          Fully visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Near-black (#1A1A17) on near-white (#FAF8F1) — near-maximum contrast,
+          CVD-safe binary scheme.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for QR code. QR fills ~60% of canvas with
+          balanced whitespace. No overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. No axis labels needed for QR code visualization.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'QR modules use neutral anchors (#1A1A17/#FAF8F1) which are required
+          for QR scannability. Page backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct.
+          Chrome uses t.ink / t.inkSoft theme tokens.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional presentation. Dark mode card border is a thoughtful
+          adaptation. Limited design scope inherent to QR code chart type.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous whitespace, rounded corners on QR card, no unnecessary chrome.
+          Dark mode adds subtle border for visual definition.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Caption provides quantitative context (25×25 matrix, 338 dark modules,
+          Error correction M). URL shown for transparency. Limited storytelling scope
+          for functional QR visualization.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct QR code implementation with three finder patterns in corners,
+          quiet zone, and proper module grid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zone included, high contrast black on white, position detection
+          patterns in three corners, error correction M.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: URL https://anyplot.ai encoded correctly in the QR matrix. Deterministic
+          hard-coded matrix (unavoidable in D3 with no external imports).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'qrcode-basic · javascript · d3 · anyplot.ai' — correct
+          format. No legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full QR structure shown: finder patterns, timing patterns, data
+          modules, quiet zone, error correction level indicated.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: https://anyplot.ai is a real, neutral, relevant URL. Practical use
+          case for QR code (URL for mobile access).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Version 2 (25×25) is correct for a short URL. Error correction M
+          is the recommended default per spec.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat code with no functions or classes. Clean top-to-bottom flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: QR matrix is hard-coded — fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed (D3 is a global). No unused globals referenced.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant use of flatMap to create D3 data from 2D matrix. Conditional
+          dark-mode border is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: SVG sized from window.ANYPLOT_SIZE. Harness handles output correctly.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correct D3 patterns: select→append→attr, data binding with .data().join(),
+          scaleLinear for coordinate mapping, ANYPLOT_TOKENS/SIZE globals used properly.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: D3 data-binding (flatMap matrix → .data().join()) is used distinctively
+          for QR module rendering. Above default but does not showcase D3's more advanced
+          capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome

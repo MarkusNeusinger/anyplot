@@ -1,43 +1,55 @@
 library: letsplot
+language: python
 specification_id: eye-diagram-basic
 created: '2026-03-17T23:34:53Z'
-updated: '2026-03-17T23:57:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23221365710
+updated: '2026-06-18T02:33:44Z'
+generated_by: claude-sonnet
+workflow_run: 27732069965
 issue: 4561
-python_version: 3.14.3
-library_version: 4.9.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/eye-diagram-basic/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent dark oscilloscope aesthetic perfectly suited for the engineering domain
-  - Comprehensive signal generation with realistic noise, jitter, and bandwidth-limited
-    sigmoid transitions
-  - Eye height/width annotations add quantitative value and tell the signal quality
-    story
-  - High-resolution 300x180 bin density heatmap for smooth rendering
-  - Well-crafted inferno-inspired colormap with perceptually uniform progression
+  - Domain-appropriate oscilloscope screen effect (dark panel with glowing trace density)
+    creates a visually authentic and publication-level design
+  - 'Full spec compliance: 2D density heatmap, NRZ simulation with jitter and noise,
+    eye height and width annotations'
+  - Excellent data quality with realistic NRZ parameters (noise σ=5%, jitter σ=3%)
+    and 400 overlaid traces producing a clear eye shape
+  - Theme-adaptive chrome correctly implemented — title, axis labels, and tick labels
+    flip cleanly between warm off-white and near-black backgrounds
+  - Idiomatic letsplot usage with layer_tooltips(), guide_colorbar(), and geom_raster
+    for efficient high-density raster rendering
   weaknesses:
-  - Minor vertical streak artifacts at time window boundaries from edge effects in
-    data extraction windowing
-  - Could leverage more distinctive lets-plot features
-  image_description: 'The plot displays an eye diagram on a dark background (#000004
-    panel, #0d0d2b outer) mimicking an oscilloscope display. A density heatmap rendered
-    via geom_raster shows overlaid NRZ signal traces using an inferno-inspired colormap
-    — dark blue/purple for low trace density, through pink/magenta, to bright yellow/orange
-    for high density regions. The characteristic eye-shaped opening is clearly visible
-    centered around 1.0 UI. The high-density (yellow) regions appear at the stable
-    0V and 1V signal levels and along the transition paths. The X-axis is labeled
-    "Time (UI)" with ticks at 0.0, 0.5, 1.0, 1.5, 2.0. The Y-axis is labeled "Voltage
-    (V)" with ticks at 0.0, 0.5, 1.0. Two cyan annotation lines mark the eye height
-    (vertical, 0.68 V) and eye width (horizontal, 0.79 UI) with corresponding labels.
-    A colorbar on the right shows "Trace Density" from 0 to 1. Title reads "eye-diagram-basic
-    · letsplot · pyplots.ai" in light gray bold text.'
+  - 'VQ-07 partial: uses a 3-stop gradient ["#000004", "#009E73", "#4467A3"] instead
+    of the prescribed imprint_seq (["#009E73", "#4467A3"]); the dark anchor is domain-motivated
+    but deviates from the strict Imprint cmap rule'
+  - 'DE-02: grid and tick removal is good, but outer chrome spines around the raster
+    panel have default appearance — explicit axis_line removal is present but a more
+    polished border treatment around the scope panel would lift refinement further'
+  - 'DE-01: oscilloscope aesthetic is strong but annotation typography (cyan size-5
+    text) could benefit from a slightly bolder weight or drop-shadow to improve legibility
+    against dense trace regions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "eye-diagram-basic · python · letsplot · anyplot.ai" is bold, dark-ink, centered at top (~65% width, well-proportioned). Axis labels "Time (UI)" and "Voltage (V)" in dark secondary ink (#4A4A44). Tick labels (0.0/0.5/1.0/1.5/2.0 on X; 0.0/0.5/1.0 on Y) in same secondary ink — all clearly readable. Colorbar "Trace Density" label and values (0.2–1.0) fully legible against the elevated-bg legend box.
+      Data: Dark oscilloscope panel (SCOPE_BG=#000004) hosts the 2D density heatmap. Zero-density areas are black (blending with panel), mid-density glows green (#009E73), high-density shifts to Imprint blue (#4467A3). Two characteristic eye openings are clearly visible. Dashed horizontal lines at 0 V and 1 V mark NRZ signal levels. Cyan (#2ABCCD) annotation segments and labels show Eye Width (0.79 UI) and Eye Height (0.68 V).
+      Legibility verdict: PASS — all text fully readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels flip to light ink (#F0EFE8 / #B8B7B0) — all clearly readable against the dark surface. Colorbar legend text also uses light secondary ink. No dark-on-dark failures observed.
+      Data: Oscilloscope panel remains #000004 (domain-appropriate; constant across both themes). Density gradient is visually identical to light render — black→green→blue, same eye shape, same cyan annotations. Brand green (#009E73) still visible and distinctive.
+      Legibility verdict: PASS — no dark-on-dark text; all chrome elements correctly themed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -45,65 +57,80 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, axis titles 20pt, axis
-          text 16pt, legend title 16pt, legend text 14pt'
+        comment: All font sizes explicitly set; title, axis labels, ticks, legend
+          text proportional and readable at full resolution and mobile scale in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, annotations well-positioned
+        comment: No text or element overlap; annotations positioned outside dense
+          trace regions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good density rendering at 300x180 bins, minor vertical streak artifacts
-          at time boundaries
+        comment: Density heatmap clearly shows trace distribution; oscilloscope panel
+          contrast ensures all density levels are distinguishable
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Black-green-blue gradient provides luminance steps distinguishable
+          under CVD; cyan annotations contrast well against the heatmap
+      - id: VQ-05
+        name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Inferno colormap is perceptually uniform and colorblind-safe, cyan
-          annotations contrast well
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good proportions, minor edge artifacts create visual noise at boundaries
+        comment: 3200x1800 landscape canvas; plot fills canvas well; generous plot_margin=[40,30,20,20];
+          legend positioned right without crowding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Time (UI) and Voltage (V) with appropriate units
+        comment: 'X: ''Time (UI)'', Y: ''Voltage (V)'' — both descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Uses 3-stop gradient ['#000004','#009E73','#4467A3'] instead of prescribed
+          imprint_seq ['#009E73','#4467A3']. Dark anchor is domain-motivated (scope
+          background), but deviates from strict Imprint cmap rule. Chrome is correctly
+          themed in both renders.
     design_excellence:
-      score: 17
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Dark oscilloscope aesthetic, custom inferno palette, cyan annotations,
-          professional polish
+        comment: Domain-specific oscilloscope aesthetic (dark panel + glowing trace
+          density) is a publication-level design choice clearly above generic defaults.
+          Warm chrome contrast with dark panel is well-executed.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, ticks removed, grid removed, dark themed backgrounds,
-          generous margins
+        comment: Grid removed, axis lines and ticks removed, generous margins, elevated
+          legend background. Good refinement but scope panel border treatment is default;
+          explicit polish on that boundary would lift further.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Eye height/width annotations communicate signal quality, density
-          creates natural visual hierarchy
+        comment: Density coloring naturally guides the eye to high-traffic trace regions;
+          annotated eye measurements (height=0.68V, width=0.79UI) provide quantitative
+          story; dashed signal-level lines add context. Clear visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -113,50 +140,57 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density heatmap of overlaid NRZ signal traces
+        comment: 'Correct: 2D density heatmap overlaying NRZ signal traces — authentic
+          eye diagram'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: density coloring, UI axis, voltage levels,
-          noise, jitter, sigmoid transitions, annotations'
+        comment: Color intensity via density heatmap; time axis in UI; voltage axis
+          with NRZ levels; Gaussian noise; jitter on transition times; sigmoid filter
+          for bandwidth limiting; optional eye measurements annotated
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time in UI, Y=voltage in volts, correct mapping
+        comment: X=time (UI), Y=voltage (V), fill=density — all correctly mapped;
+          axes cover full signal range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, descriptive colorbar legend
+        comment: 'Title: ''eye-diagram-basic · python · letsplot · anyplot.ai'' —
+          correct format; legend ''Trace Density'' with colorbar is appropriate'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both signal levels, transitions, noise, jitter, and eye opening;
-          minor edge artifacts
+        comment: 'Shows all eye diagram features: overlapping traces, density variation,
+          clear eye opening, jitter (transitional blur), noise (speckle), NRZ bit
+          transitions, 2 UI window'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NRZ signal integrity is a genuine engineering application with realistic
-          parameters
+        comment: Realistic NRZ signal integrity scenario with 400 traces, 150 samples/UI,
+          σ_noise=5%, σ_jitter=3% — values typical for PCB/SerDes signal integrity
+          analysis
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Voltage 0-1V, 2 UI window, 5% noise, 3% jitter are physically sensible
+        comment: Voltage range [-0.3, 1.3] V with 0/1 NRZ levels; 2 UI time window;
+          all values correct for NRZ signal integrity context
     code_quality:
       score: 10
       max: 10
@@ -166,7 +200,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports-data-plot-save structure, no functions or classes
+        comment: 'Linear structure: imports → theme tokens → data generation → 2D
+          histogram → annotation DataFrames → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -178,52 +213,53 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used, specific imports from lets_plot
+        comment: All imports used; no extraneous packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean vectorized operations
+        comment: Well-structured; complexity appropriate for the eye measurement algorithm;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via ggsave with scale=3
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot() + geom_raster() + scale/theme layers — idiomatic grammar
+          of graphics; guide_colorbar() for colorbar control; layer_tooltips() for
+          interactive tooltips
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good ggplot grammar: aes, geom_raster, scale_fill_gradientn, comprehensive
-          theme'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses layer_tooltips() for interactive hover, guide_colorbar with
-          custom params, HTML export
+        comment: layer_tooltips() with .format() and .line() chains is distinctively
+          letsplot; geom_raster for efficient large-array rendering; ggsave scale=4
+          for high-res export; HTML output for interactivity
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
   dataprep:
   - binning
   - normalization
   styling:
-  - dark-theme
   - custom-colormap

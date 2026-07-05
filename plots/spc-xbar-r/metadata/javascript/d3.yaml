@@ -1,0 +1,271 @@
+library: d3
+language: javascript
+specification_id: spc-xbar-r
+created: '2026-06-20T13:21:47Z'
+updated: '2026-06-20T13:45:36Z'
+generated_by: claude-sonnet
+workflow_run: 27872037473
+issue: 4551
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spc-xbar-r/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct dual-panel SPC layout (X̄ + R) with shared x-axis and proper panel spacing
+  - 'Semantic color assignment: green (#009E73) for in-control, red (#AE3030) for
+    OOC — appropriate semantic exception with redundant encoding (size + annotations)'
+  - Deterministic LCG seeded at 42 produces reproducible data without Math.random()
+  - 'Realistic CNC machining context: shaft diameter 25mm, n=5 subgroups, uses standard
+    A2/D4 constants — factually correct'
+  - Horizontal legend with elevated background pill is a polished D3-specific detail
+  - Right-side control limit labels (UCL, +2σ, CL, -2σ, LCL) follow SPC chart conventions
+    precisely
+  - OOC annotations (▲ UCL / ▼ LCL) directly identify which limit was breached
+  - 'Full Imprint palette compliance: t.palette[0/2/3/4], theme-adaptive chrome via
+    tokens throughout'
+  weaknesses:
+  - Right-side control limit labels and OOC annotations at 12px CSS (24 source-px)
+    fall below the recommended 14px minimum from the D3 prompt — slightly small at
+    scale
+  - drawPanel helper function deviates from the no-functions KISS principle (though
+    justified by the near-identical two-panel structure)
+  - 'LM-02: Core visualization techniques (scalePoint, line generator, axis generators)
+    are standard D3 — no use of distinctively advanced D3 capabilities such as d3-brush,
+    zoom behaviors, or custom path interpolators'
+  - 'DE-02: Grid lines present but no explicit spine removal beyond D3 defaults; legend
+    elevated background is good but the panels themselves have no border refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "spc-xbar-r · javascript · d3 · anyplot.ai" at 22px, dark ink (#1A1A17) — fully readable. X-axis label "Sample Number" at 14px and Y-axis labels "X̄ (mm)" / "R (mm)" at 14px both readable. Tick labels at 13px readable. Right-side control limit labels (UCL, +2σ, CL, -2σ, LCL) and OOC annotations at 12px — slightly below the 14px recommendation but still readable at full size.
+      Data: In-control data series rendered in brand green (#009E73) connected by green line. OOC points rendered in matte red (#AE3030) at larger radius with directional annotations. UCL/LCL lines in blue (#4467A3) dashed. Warning limits in ochre (#BD8233) lighter dashed. Center line in ink color (solid). Horizontal legend row with elevated (#FFFDF6) background between title and panels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, and tick labels all flip to light colors (ink/#F0EFE8, inkSoft/#B8B7B0) via token mapping. All text is clearly visible against the dark background. No dark-on-dark failures observed. Legend background flips to elevated dark (#242420). Grid lines remain subtle.
+      Data: Data colors are identical to light render — brand green (#009E73) in-control series, matte red (#AE3030) OOC points, blue UCL/LCL, ochre warning limits. Only chrome flips, data palette is theme-invariant.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 22px, axis labels 14px, ticks
+          13px readable in both themes. Right-side control limit labels and OOC annotations
+          at 12px CSS (24 source-px) are slightly below the 14px recommendation but
+          remain readable.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; right-side labels (UCL, +2σ, CL, -2σ,
+          LCL) well-spaced; OOC annotations clear of data line.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: In-control circles r=5, OOC circles r=7.5 (larger for emphasis),
+          data line stroke-width 2.5 — all clearly visible. 30 data points with appropriate
+          sizing.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red semantic distinction (in-control vs OOC) reinforced by
+          size difference (r=5 vs r=7.5) and text annotations — redundant encoding
+          saves CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Dual panels fill canvas well. Generous margins,
+          balanced whitespace. Legend between title and panels is well-proportioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Sample Number''; Y-axes: ''X̄ (mm)'' and ''R (mm)'' —
+          descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'In-control series: t.palette[0] (#009E73). UCL/LCL: t.palette[2]
+          (#4467A3). Warning: t.palette[3] (#BD8233). OOC: t.palette[4] (#AE3030)
+          — correct semantic exception. Backgrounds #FAF8F1/#1A1A17. Data colors theme-invariant.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: semantic color assignment, elevated legend background
+          pill, panel headers, directional OOC annotations, right-side limit labels
+          — clearly above library defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: subtle Y-axis gridlines, elevated legend background,
+          clean two-panel layout, appropriate stroke widths. No explicit spine removal
+          code (D3 defaults don''t add top/right axes, so this is inherent but not
+          deliberate).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy guides reader: OOC points immediately draw the
+          eye via size + color + annotation contrast. Dual panel structure mirrors
+          standard SPC presentation. Three violations clearly identified.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct SPC chart: X-bar panel on top + R panel on bottom, vertically
+          stacked, sharing X-axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: UCL/LCL dashed and labeled, center line solid and distinct, OOC points
+          highlighted (larger + different color + annotations), warning limits ±2σ
+          shown, A2/D4 constants used, 3 OOC points generated.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: sample numbers; Y: X̄ values (mm) and R values (mm). All 30 samples
+          visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''spc-xbar-r · javascript · d3 · anyplot.ai'' — exact required
+          format. Legend correctly labels all 5 visual elements.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows X̄ chart AND R chart, in-control AND OOC points (3 violations),
+          UCL/LCL/CL/warning limits, R chart LCL correctly omitted for n=5 (D3=0).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter measurements (25mm) from CNC machining process, n=5
+          subgroups of 30 — standard SPC setup. Neutral manufacturing context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Process mean 25.0mm, σ=0.012mm → ±0.036mm control limits (3σ). Range
+          values 0.02–0.06mm. Realistic CNC precision tolerances.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses drawPanel() helper function, which deviates from the no-functions
+          principle, but is justified to avoid ~80 lines of duplication for the nearly-identical
+          two-panel structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Park-Miller LCG with fixed seed 42 — fully deterministic in a JS
+          environment without Math.random().
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: d3 is a global; no extra CDN imports or require() calls.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic D3 code. Declarative data binding, line generator,
+          axis generators. No fake UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles output. Uses d3 7.9.0 idioms, no deprecated functions.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.scalePoint for discrete sample IDs, d3.line generator, d3.axisLeft/Bottom,
+          d3.format('.4f'), data binding with .join() — fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses D3-specific scalePoint with tickValues(), datum-binding on path,
+          selective data filtering for OOC points via .filter().join(). Core techniques
+          are standard D3 without advanced features (brush, zoom, custom interpolators).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

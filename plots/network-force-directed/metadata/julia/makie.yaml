@@ -1,0 +1,247 @@
+library: makie
+language: julia
+specification_id: network-force-directed
+created: '2026-07-01T01:43:50Z'
+updated: '2026-07-01T07:54:04Z'
+generated_by: claude-sonnet
+workflow_run: 28487209068
+issue: 990
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect theme compliance in both renders: all chrome tokens (INK, INK_SOFT, ELEVATED_BG,
+    PAGE_BG) correctly applied to every Makie color parameter'
+  - Clean Fruchterman-Reingold implementation from scratch, correctly working around
+    the CI-unavailable NetworkLayout.jl
+  - Dual data encoding (color → department, size → degree) adds meaningful information
+    density without clutter
+  - 'Edge opacity (0.25) well-calibrated: connectivity readable without competing
+    with nodes'
+  - 'Perfect palette compliance: Imprint positions 1–4 in canonical order, #009E73
+    first, identical data colors across both themes'
+  weaknesses:
+  - Footer annotation 'Node size ∝ degree (connections)' at fontsize=10 is small;
+    increasing to fontsize=12 would improve mobile-width readability without disrupting
+    layout
+  - Node strokewidth=1.5 is adequate but 2.0 would improve definition in denser cluster
+    areas (Machine Learning green cluster)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "network-force-directed · julia · makie · anyplot.ai" in dark INK (#1A1A17), clearly readable. Legend "Department" title and 4 department labels in INK/INK_SOFT. Footer annotation "Node size ∝ degree (connections)" in small INK_SOFT text at lower-left.
+      Data: 32 nodes in 4 Imprint palette colors — Machine Learning (#009E73 green), Networks (#C475FD lavender), Databases (#4467A3 blue), Systems (#BD8233 ochre). Edges as light gray at 0.25 alpha. Nodes sized 12–27pt by degree. Node stroke in PAGE_BG color.
+      Legibility verdict: PASS — all text readable; footer annotation small but all pixels visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title in light INK (#F0EFE8), clearly readable against dark background. Legend text readable in light colors. Footer annotation in INK_SOFT (#B8B7B0). No dark-on-dark failures detected.
+      Data: Colors identical to light render — same green, lavender, blue, ochre. Edge lines visible as slightly lighter than background. Node strokes use dark PAGE_BG creating clean separation.
+      Legibility verdict: PASS — all text readable in both themes; no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and legend readable in both themes. Footer annotation fontsize=10
+          is small but all pixels visible; marginally tight at mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlaps data. Machine Learning cluster has moderately close
+          nodes but no actual overlap visible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node sizing 12–27pt appropriate for 32 nodes. Edge opacity 0.25 well-calibrated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 departments use Imprint positions 1–4; CVD-safe at n=4.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title ~65% canvas width. colsize!
+          82% gives good proportion.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for network graph. Title exact format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73. Imprint 1–4 canonical order. Correct backgrounds
+          both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Node-size encoding adds second data dimension. Edges at 0.25 alpha
+          avoid clutter. Node strokes for definition. Above default but not artistically
+          ambitious.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, low-alpha edges, node stroke for separation.
+          Well above default.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Force-directed layout naturally clusters departments. Node size adds
+          second dimension. Footer annotation explains encoding.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct force-directed graph with Fruchterman-Reingold physics simulation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Node size by degree, edges, 300 iterations with cooling, community
+          structure visible.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node positions by FR layout, color by department, edges = collaboration.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''network-force-directed · julia · makie · anyplot.ai''.
+          Legend labels match departments.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows within-department density, cross-department bridges, and node
+          degree encoding.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Academic CS collaboration network with realistic departments and
+          connectivity. Neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 32 nodes within 20–200 spec range. Connectivity density realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used, none extraneous.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: FR algorithm cleanly implemented. No fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2. Uses Makie 0.21.9 API
+          (size= not deprecated resolution=).
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook CairoMakie: Figure/GridLayout, fig[1,1]+fig[1,2], colsize!,
+          MarkerElement, limits!, colorant"", RGBAf, all chrome params in Axis constructor.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'GridLayout with colsize!, Legend with MarkerElement, colorant"+RGBAf
+          integration. Minor deduction: FR algorithm is a NetworkLayout.jl workaround,
+          not native Makie.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
