@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-basic: Basic Scatter Plot
-// Library: echarts 5.5.1 | JavaScript 22.22.3
-// Quality: 92/100 | Created: 2026-06-02
+// Library: echarts 5.5.1 | JavaScript 22.23.0
+// Quality: 88/100 | Updated: 2026-06-25
 
 //# anyplot-orientation: landscape
 
@@ -28,14 +28,9 @@ for (let i = 0; i < n; i++) {
   points.push([+h.toFixed(1), +w.toFixed(1)]);
 }
 
-// --- Linear regression trend line ------------------------------------------
-let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-for (const [x, y] of points) {
-  sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x;
-}
-const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-const intercept = (sumY - slope * sumX) / n;
-const trendY = (x) => +(slope * x + intercept).toFixed(1);
+// Trend line endpoints from population parameters (slope = r·σy/σx)
+const slope = r * (weightStd / heightStd);
+const intercept = weightMean - slope * heightMean;
 
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -49,7 +44,7 @@ chart.setOption({
     text: "scatter-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: 24,
-    textStyle: { color: t.ink, fontSize: 30, fontWeight: "bold" },
+    textStyle: { color: t.ink, fontSize: 22, fontWeight: "bold" },
   },
   tooltip: {
     trigger: "item",
@@ -59,16 +54,16 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 14 },
   },
   // borderWidth: 0 removes the default 1px grid box — leaves only L-shaped axes
-  grid: { left: 120, right: 90, top: 100, bottom: 95, borderWidth: 0 },
+  grid: { left: 110, right: 70, top: 90, bottom: 90, borderWidth: 0 },
   xAxis: {
     type: "value",
     min: 140,
     max: 205,
     name: "Height (cm)",
     nameLocation: "middle",
-    nameGap: 58,
-    nameTextStyle: { color: t.inkSoft, fontSize: 20, fontWeight: "normal" },
-    axisLabel: { color: t.inkSoft, fontSize: 16 },
+    nameGap: 52,
+    nameTextStyle: { color: t.inkSoft, fontSize: 16, fontWeight: "normal" },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
@@ -80,9 +75,9 @@ chart.setOption({
     name: "Weight (kg)",
     nameLocation: "middle",
     nameRotate: 90,
-    nameGap: 78,
-    nameTextStyle: { color: t.inkSoft, fontSize: 20, fontWeight: "normal" },
-    axisLabel: { color: t.inkSoft, fontSize: 16 },
+    nameGap: 68,
+    nameTextStyle: { color: t.inkSoft, fontSize: 16, fontWeight: "normal" },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
@@ -91,14 +86,14 @@ chart.setOption({
     {
       type: "scatter",
       data: points,
-      symbolSize: 15,
+      symbolSize: 14,
       itemStyle: {
         color: t.palette[0],
         opacity: 0.65,
         borderColor: t.pageBg,
         borderWidth: 1,
       },
-      // emphasis + blur are ECharts-distinctive: focused points enlarge, unfocused dim
+      // emphasis + blur: focused points enlarge, unfocused dim — idiomatic ECharts
       emphasis: {
         scale: 1.4,
         itemStyle: { opacity: 1, borderWidth: 2 },
@@ -106,24 +101,22 @@ chart.setOption({
       blur: {
         itemStyle: { opacity: 0.25 },
       },
+      // markLine: ECharts-native annotation that overlays the regression line
       markLine: {
         silent: true,
         symbol: "none",
-        lineStyle: { color: t.amber, width: 2.5, type: "solid" },
+        lineStyle: { color: t.palette[0], opacity: 0.45, width: 2.5, type: "dashed" },
         label: {
           show: true,
+          formatter: "r ≈ 0.7",
           position: "insideEndTop",
-          // ECharts rich text: italic variable name + bold coefficient — publication-style
-          formatter: "{it|r} ≈ {val|0.7}",
-          rich: {
-            it: { color: t.inkSoft, fontSize: 15, fontStyle: "italic" },
-            val: { color: t.ink, fontSize: 15, fontWeight: "bold" },
-          },
+          color: t.inkSoft,
+          fontSize: 13,
         },
         data: [
           [
-            { coord: [140, trendY(140)] },
-            { coord: [205, trendY(205)] },
+            { coord: [140, +(intercept + slope * 140).toFixed(1)] },
+            { coord: [205, +(intercept + slope * 205).toFixed(1)] },
           ],
         ],
       },

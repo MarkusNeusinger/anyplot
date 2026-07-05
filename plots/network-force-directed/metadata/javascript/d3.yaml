@@ -1,0 +1,284 @@
+library: d3
+language: javascript
+specification_id: network-force-directed
+created: '2026-07-01T01:43:15Z'
+updated: '2026-07-01T07:59:58Z'
+generated_by: claude-sonnet
+workflow_run: 28487362976
+issue: 990
+language_version: 22.23.0
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Correct force-directed graph using d3.forceSimulation with multiple forces (link,
+    charge, center, position, collision)
+  - Node size scales by degree — immediately identifies hub nodes (Python degree=7,
+    JavaScript degree=6, PostgreSQL degree=6)
+  - Community structure with 5 Imprint palette groups creates clear visual grouping
+  - Hub-only labels (degree >= 4) prevent clutter while labeling important nodes
+  - Semi-transparent edges (opacity 0.35) with pageBg stroke on nodes add polish
+  - Perfect spec compliance — correct chart type, all required features, accurate
+    tech-ecosystem data
+  - Synchronous tick loop (300 iterations) with sim.stop() is the correct D3 static-render
+    pattern
+  - 'Idiomatic D3: d3.forceLink id-based resolution, forceCollide for node separation,
+    all forces well-tuned'
+  - Theme-adaptive chrome throughout — t.ink, t.inkSoft, t.pageBg used correctly in
+    both renders
+  weaknesses:
+  - 'Central cluster label crowding: Django, Python, PostgreSQL, FastAPI labels are
+    densely packed and partially overlap — use a label collision detection pass or
+    widen the force layout (increase charge strength or link distance for the Databases-Frameworks
+    cluster)'
+  - 'Force simulation initial positions are non-deterministic (no fixed-seed LCG)
+    — D3 uses Math.random() for initial node placement, so layout can vary between
+    renders. Add a tiny LCG: e.g. let seed=42; const lcg = () => (seed = (seed * 1664525
+    + 1013904223) >>> 0) / 2**32; then assign n.x=lcg()*iw, n.y=lcg()*ih before sim.stop()'
+  - Bottom of canvas is noticeably empty (~20-25% of canvas height unused below the
+    network cluster) — increase forceY strength slightly or use a slightly larger
+    charge strength to spread nodes more vertically
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "network-force-directed · javascript · d3 · anyplot.ai" at top center in dark ink, bold 22px — clearly readable. Legend header "Community" in dark ink, 5 group entries in inkSoft, "Node size ∝ degree" annotation in inkSoft — all readable.
+      Data: 35 nodes colored by community group using Imprint palette (Languages=green #009E73, Frameworks=lavender #C475FD, Databases=blue #4467A3, DevOps=ochre #BD8233, ML/Data=matte red #AE3030). Node sizes scale by degree (Python largest, degree=7). Hub node labels at 14px bold. Semi-transparent edges (opacity 0.35). Dense cluster in center with Django, Python, PostgreSQL, FastAPI, NumPy nodes close together; label crowding is noticeable in this area.
+      Legibility verdict: PASS — all text readable. Minor concern: central cluster labels (PostgreSQL, FastAPI, Django, Python) are dense and partially crowded but individually legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in near-white (t.ink = #F0EFE8) — clearly readable against dark background. Legend text in light gray (t.inkSoft = #B8B7B0) — readable. No dark-on-dark failures detected. Node labels use t.inkSoft which shows as light gray on dark background.
+      Data: Colors are identical to light render — green Languages, lavender Frameworks, blue Databases, ochre DevOps, red ML/Data. Same data colors confirm correct palette implementation (only chrome flips).
+      Legibility verdict: PASS — all text readable in dark theme. Edges visible as subtle light gray lines. Legend fully readable.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px bold, labels 14px, legend
+          14px). Readable in both themes. Minor concern: hub node labels in dense
+          central cluster are close but individually legible.'
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Label crowding in central cluster: PostgreSQL, FastAPI, Django,
+          Python labels are densely packed. Minimal overlap, main content still readable.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent: node size scales by degree (6+13*(deg/maxDeg)), all nodes
+          clearly visible. Edge stroke-opacity 0.35 is appropriately subtle. Hub nodes
+          have thicker stroke.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5 distinct Imprint palette hues for 5 community groups. Good contrast
+          on both surfaces. CVD-safe palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Layout is reasonable for force-directed graph. Legend well-positioned
+          in right margin. Minor issue: bottom 20-25% of canvas is empty — network
+          cluster could be spread more vertically.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (appropriate for network). Legend clearly labels
+          communities. 'Node size proportional to degree' annotation explains node
+          sizing.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical group (Languages) uses t.palette[0]=#009E73 (brand
+          green). Groups 2-5 use palette[1]-palette[4] in canonical Imprint order.
+          Backgrounds correct: #FAF8F1 light, #1A1A17 dark. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: intentional node size hierarchy
+          by degree, hub-only labels, semi-transparent edges, pageBg stroke on nodes
+          for visual separation. Clear community structure. Not quite publication-ready
+          due to label crowding.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, no axes (appropriate for network). Low-opacity edges (0.35).
+          Node stroke using t.pageBg creates nice visual separation. Clean legend
+          without border boxes. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Node size hierarchy immediately identifies Python and JavaScript
+          as ecosystem hubs. Community colors make cluster structure obvious. Viewer
+          can immediately see that Python connects to frameworks, ML libraries and
+          JavaScript to frontend frameworks.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct force-directed graph using d3.forceSimulation with multiple
+          physics forces (link, charge, center, position, collision). Nodes attract/repel
+          creating organic layout.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with unique IDs and groups present. Edges connecting nodes
+          present. Node size by degree implemented. Community coloring implemented.
+          Hub labels for key nodes. Edge weight encoding is optional per spec and
+          not implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Tech ecosystem dependency network with 35 nodes and 51 edges. Node
+          group maps to community color. Node degree maps to node size. Links represent
+          real dependencies.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'network-force-directed · javascript · d3 · anyplot.ai'.
+          Legend shows 5 community groups with color swatches and 'Node size ∝ degree'
+          annotation.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: community structure (5 groups), degree-based
+          node sizing (hub vs leaf nodes), cross-community edges (Language→Framework,
+          Language→DB, Framework→DB, etc.), varying connectivity density.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Highly realistic tech ecosystem dependency network. Real relationships
+          (Python→Django, JavaScript→React, Scala→Spark, Go→Docker, etc.). Neutral
+          technological topic. No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 35 nodes (within spec's 20-200 typical range). 51 edges. Factually
+          accurate dependency relationships. Python correctly identified as highest-degree
+          node (7 connections). Scale appropriate for visualization.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'No functions or classes. Linear flow: data definition → degree computation
+          → simulation → SVG mount → edges → nodes → labels → legend → title.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Node/link data is hard-coded (deterministic). However, D3 force simulation
+          uses Math.random() internally for initial node positions — layout can vary
+          between renders. No fixed-seed LCG implemented as required by d3.md.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses window.ANYPLOT_TOKENS, window.ANYPLOT_SIZE, window.d3 —
+          all required globals. No unused globals accessed.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic D3 patterns. Appropriate complexity for a force-directed
+          network. No fake UI elements. D3 join pattern used correctly.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles output. No deprecated D3 APIs. SVG correctly sized
+          to window.ANYPLOT_SIZE. Single SVG appended to #container.'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert idiomatic D3: forceSimulation with id-based forceLink resolution,
+          forceManyBody for repulsion, forceCenter + forceX/Y for positioning, forceCollide
+          for separation. Correct sim.stop()+tick loop for static rendering.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: D3's force simulation physics engine is a distinctive D3 capability.
+          Multiple specialized forces (link, charge, center, position, collision)
+          working in concert. This couldn't be replicated easily in another library
+          without custom physics.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

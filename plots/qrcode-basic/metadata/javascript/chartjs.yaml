@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: qrcode-basic
+created: '2026-06-24T18:50:15Z'
+updated: '2026-06-24T19:15:01Z'
+generated_by: claude-sonnet
+workflow_run: 28116510695
+issue: 3184
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/qrcode-basic/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Technically exceptional: implements a complete, spec-correct QR encoder from
+    scratch in browser JavaScript (GF(256) arithmetic, Reed-Solomon, BCH format info,
+    all 8 masks defined) because no offline QR library exists in the browser harness.'
+  - 'Perfect spec compliance: quiet zone (4 modules), finder patterns in all three
+    corners, EC level M (15%), Version 2 — all match spec requirements.'
+  - 'Elegant brand integration: thin #009E73 accent border frames the white QR card
+    without interfering with scannability.'
+  - 'Correct theme adaptation: white QR card preserved in both themes for scannability;
+    only chrome (background, text) flips.'
+  - 'Clean Chart.js integration: plugin hooks (beforeDraw/afterDraw), canvas sizing,
+    square orientation directive, and responsive settings all correctly applied.'
+  weaknesses:
+  - Sub-labels ('https://anyplot.ai' at 16px, version note at 14px) are slightly small
+    for a 2400x2400 canvas — consider increasing to 18px and 16px respectively.
+  - Mask index is hardcoded to 0 (MASK_IDX = 0) rather than evaluating all 8 mask
+    patterns and selecting the lowest-penalty one per ISO 18004. A fixed mask produces
+    a valid QR code but may reduce scan reliability with some readers.
+  - Multiple helper functions (GF arithmetic, RS encoder, matrix builder) needed to
+    implement QR from scratch add complexity beyond the KISS ideal, though they were
+    unavoidable given no browser-available QR library.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "qrcode-basic · javascript · chartjs · anyplot.ai" in bold dark ink (~65% canvas width), clearly readable. No axis labels or ticks (axes hidden). URL label "https://anyplot.ai" in muted secondary ink below QR; "Version 2 · Error Correction M (15%)" in smaller sans-serif below that — both readable.
+      Data: QR code rendered as black modules on a white card, centered in the canvas. Three finder patterns in top-left, top-right, bottom-left corners. Thin #009E73 (brand green) accent border frames the white QR card. Quiet zone of 4 modules surrounds the matrix. First (only) data color is #009E73.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title switches to light cream text — clearly readable against dark background. URL and version labels use light muted text — readable. No dark-on-dark issues detected.
+      Data: QR code card retains its white background (required for QR scannability) — white card on dark background is correct tradeoff. Black QR modules identical to light render. #009E73 green border equally visible on dark surface. Data colors (green border, black modules) are identical across both renders; only chrome flips.
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, URL 16px, version 14px);
+          all text readable in both themes. Minor deduction: sub-labels slightly small
+          for 2400px canvas.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: QR modules rendered black on white at maximum contrast; perfectly
+          visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Black-on-white is highest possible contrast; no CVD issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Square orientation correct. QR well-centered;
+          all content within bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches exact spec format; URL label and version note add context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'pageBg applied correctly; palette[0] #009E73 for accent border;
+          t.ink and t.inkSoft for text; full theme-adaptive chrome.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: green accent border is deliberate branding; monospace
+          font for URL is considered; clean composition. Constrained by QR format
+          requirements.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All chart scaffolding stripped; generous whitespace; scatter used
+          minimally as canvas platform.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: URL label and version/EC note explain what is encoded. Slightly above
+          default of 2.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: QR code visualization with correct structural elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zone (4 modules), high contrast black on white, finder patterns
+          in three corners, EC level M — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: https://anyplot.ai correctly encoded via byte-mode Version 2 M.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'qrcode-basic · javascript · chartjs · anyplot.ai'.
+          No legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Full QR structure: finder patterns, timing strips, alignment pattern,
+          format info (BCH), data region with RS EC codewords, mask application.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: https://anyplot.ai is a real, neutral, on-brand URL — ideal for this
+          visualization.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Version 2 (25x25) appropriate for 18-character URL. EC level M matches
+          spec recommendation.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Multiple helper functions required for QR encoding from scratch;
+          unavoidable without a browser-available QR library.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: fixed input text, fixed mask index.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; pure browser JS using only pre-loaded globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant implementation; Chart.js plugin pattern correct; no fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No explicit save; harness handles PNG/HTML. Square orientation directive
+          correctly placed.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Chart.js plugin system with beforeDraw/afterDraw hooks; responsive/animation
+          settings correct; no canvas size attributes set.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Leverages Chart.js plugin lifecycle to render custom canvas content;
+          uses chart.chartArea for layout — a Chart.js-specific pattern.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome

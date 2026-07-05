@@ -1,0 +1,296 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-risk-matrix
+created: '2026-06-20T06:05:37Z'
+updated: '2026-06-20T06:27:19Z'
+generated_by: claude-sonnet
+workflow_run: 27861993343
+issue: 4567
+language_version: 22.22.3
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-risk-matrix/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Clever use of Highcharts SVG renderer (chart.renderer.g/rect/text + events.render
+    callback) to build a fully custom 5×5 risk grid without the unavailable heatmap
+    module
+  - Semantic Imprint color mapping for risk zones (green=#009E73 Low, amber=#DDCC77
+    Medium, ochre=#BD8233 High, red=#AE3030 Critical) is on-palette and instantly
+    readable
+  - Deterministic jitter array (JX/JY offsets keyed by cell) prevents overlapping
+    risk markers without any RNG
+  - Color-coded HTML subtitle serves as a compact, well-styled legend; avoids a separate
+    legend box that would clutter the square canvas
+  - Risk score labels in each cell bottom-right corner add useful reference density
+    without competing with the markers
+  - Data labels on scatter markers use textOutline with t.pageBg — ensures readability
+    on all four cell colors in both themes
+  - 'Full spec compliance: 5×5 grid, descriptive axis tick labels (Rare→Almost Certain,
+    Negligible→Catastrophic), labeled jitter markers, and zone legend all present'
+  - Realistic IT-security risk register with 12 risks spanning all four zones provides
+    good feature coverage
+  - Square orientation correctly chosen for symmetric grid; canvas gate passed (2400×2400)
+  weaknesses:
+  - 'X-axis title ''Likelihood'' is not clearly visible in either render — with rotation:
+    -30 on tick labels and marginBottom: 95, the axis title may be pushed to the very
+    edge of or outside the visible canvas area; increase marginBottom to 120 or add
+    explicit offset to bring the label into view'
+  - Data Breach and Cyber Attack share cell (3,5) with only 0.18-unit jitter — their
+    name labels ('Cyber Attack' above, 'Data Breach' below) are very close together
+    and appear to touch or lightly overlap at 13px font; consider reducing data label
+    font to 10px for crowded cells or increasing vertical jitter spacing
+  - 'Large empty gap (~90px CSS) between subtitle legend row and top of the colored
+    grid — the subtitle ends around 60px from the top but marginTop: 90 pushes the
+    plot area further down; reduce marginTop to 65 to tighten the composition on the
+    square canvas'
+  - 'Scatter marker fillColor uses t.ink (theme-adaptive: dark in light theme, white
+    in dark theme) — the markers change appearance between themes; for a single-series
+    data indicator consider using a fixed palette color like t.palette[0] (#009E73)
+    or a semi-transparent t.inkSoft to keep the data layer visually stable across
+    themes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white. PASS.
+      Chrome: Bold title "heatmap-risk-matrix · javascript · highcharts · anyplot.ai" in dark ink, clearly readable. Subtitle row shows color-coded zone labels (Low/Medium/High/Critical) in Imprint colors, readable. Y-axis title "Impact" visible in dark bold text. Y-axis tick labels (Catastrophic, Major, Moderate, Minor, Negligible) readable. X-axis tick labels (Rare, Unlikely, Possible, Likely, Almost Certain) rotated -30° and readable. X-axis title "Likelihood" is NOT clearly visible in the render — the bottom canvas margin appears to push it out of or to the very edge of the viewable area. Score labels in cell corners are semi-transparent dark text, readable.
+      Data: 5×5 grid cells colored by risk zone — #009E73 green (Low ≤4), #DDCC77 amber (Medium 5–9), #BD8233 ochre (High 10–16), #AE3030 red (Critical 20–25). 12 risk markers as solid dark circles with white ring outline, placed with deterministic jitter; risk name data labels in dark ink with cream text-outline are readable on all cell backgrounds. Data Breach and Cyber Attack in cell (3,5) are close but marginally distinguishable.
+      Legibility verdict: PASS (with caveat: "Likelihood" x-axis title not clearly visible)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black. PASS.
+      Chrome: Title in light ink (#F0EFE8) clearly readable against dark background. Subtitle zone labels retain their Imprint colors and are readable. Y-axis title "Impact" visible in light bold text. Tick labels (both axes) in light inkSoft color, readable against dark background — NO dark-on-dark failures detected. Cell score labels appear as faded light text in corner, readable. Same "Likelihood" x-axis title visibility issue as light render.
+      Data: Cell colors are IDENTICAL to light render — same green/amber/ochre/red zones confirm Imprint palette consistency. Risk markers flip to white circles with dark outlines (t.ink = #F0EFE8 in dark theme), visible against all cell backgrounds. Data labels use light ink with dark page-background text outline — readable on colored cells.
+      Legibility verdict: PASS (with same caveat: "Likelihood" x-axis title not clearly visible; no dark-on-dark failures)
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, subtitle, Y-axis labels all clearly readable in both themes.
+          X-axis title 'Likelihood' not clearly visible (may be cut off at bottom
+          margin). Risk name data labels readable on colored cell backgrounds with
+          text outline. Minor crowding of Data Breach/Cyber Attack labels in cell
+          (3,5).
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Deterministic jitter prevents most overlap. Data Breach and Cyber
+          Attack in same cell (3,5) have very close labels that touch/lightly overlap.
+          All other markers well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 risk markers clearly visible as solid circles. Background
+          cell colors (green/amber/ochre/red) clearly distinguishable. Score labels
+          visible in cell corners.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Risk zone colors from Imprint palette are distinct under major CVD
+          types. Zone names in legend provide redundant encoding beyond color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square canvas correct for symmetric grid. Canvas gate passed (2400x2400).
+          Notable gap (~90px CSS) between subtitle and top of colored grid due to
+          marginTop: 90. Bottom margin may be insufficient for axis title. Otherwise
+          proportions good.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Y-axis title 'Impact' clearly visible with descriptive tick labels.
+          X-axis title 'Likelihood' not clearly visible in either render — appears
+          to be positioned outside or at the very edge of the visible canvas area.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background transparent (shows t.pageBg = #FAF8F1 light / #1A1A17
+          dark). colors: t.palette set. Risk zone colors are all Imprint palette members:
+          #009E73 (brand green), #DDCC77 (amber anchor), #BD8233 (ochre), #AE3030
+          (matte red). Semantic color mapping appropriate for risk levels. Both themes
+          correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Creative use of SVG renderer for custom risk matrix overlay is above
+          default. Semantic color mapping is intentional. Subtitle legend with colored
+          squares is elegant. Markers are plain dark/white circles — no size variation
+          or additional encoding beyond labels. Default=4, raised to 5 for SVG renderer
+          creativity and semantic palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'No external grid lines (gridLineWidth: 0) — cell borders create
+          clean structure. Animation disabled. Clean chart without unnecessary chrome.
+          Default=2, raised to 3.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green-to-red color gradient clearly communicates escalating risk
+          from bottom-left to top-right. Risk name labels on markers enable immediate
+          identification. Score numbers in cells provide quantitative reference. Subtitle
+          legend decodes zone boundaries. Default=2, raised to 4.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct risk assessment matrix implementation: 5x5 heatmap grid
+          with scatter overlay for individual risk items.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: 5x5 grid colored by risk score, descriptive
+          axis labels (Rare/Unlikely/Possible/Likely/Almost Certain; Negligible/Minor/Moderate/Major/Catastrophic),
+          labeled jitter markers, risk scores in cells, zone legend (Low/Medium/High/Critical
+          with score ranges).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Likelihood (1-5), Y=Impact (1-5), cell background colored by likelihood
+          x impact product. All 12 risk items plotted at correct positions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'heatmap-risk-matrix · javascript · highcharts · anyplot.ai'
+          — correct format. Zone legend provided via color-coded HTML subtitle with
+          Low/Medium/High/Critical labels and score ranges.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 risks span all four zones (Low, Medium, High, Critical). Multiple
+          risks share cells to demonstrate jitter. Full 5x5 grid with all cells colored.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: IT security risk register is a canonical real-world use case. Risk
+          names (Data Breach, Cyber Attack, Server Outage, Compliance Gap, etc.) are
+          authentic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 1-5 likelihood and impact scales with named levels match
+          ISO 31000 / enterprise risk management conventions.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (riskColor, drawCells) justified by SVG renderer
+          approach for custom cells. Code is otherwise flat and readable. Minor deduction
+          for functions in an otherwise flat-script context.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hard-coded. Jitter offsets are deterministic arrays. No
+          RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only Highcharts global and window.ANYPLOT_TOKENS used. No unnecessary
+          imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the task. SVG renderer pattern is clean.
+          No fake interactivity (tooltip is real Highcharts tooltip for HTML export).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles plot-{THEME}.png + plot-{THEME}.html output. Correct
+          animation: false set. credits disabled.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: SVG renderer API (chart.renderer.g, rect, text, css, add) used correctly.
+          events.render callback for cell redraws is the idiomatic Highcharts pattern.
+          Tooltip formatter, dataLabels, and plotOptions all properly configured.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Clever workaround using scatter + SVG renderer instead of the unavailable
+          heatmap module — correctly noted in library rules. Uses chart._riskGroup.destroy()
+          pattern for clean re-render. Demonstrates deep Highcharts renderer knowledge.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready

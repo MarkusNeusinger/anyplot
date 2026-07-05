@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: histogram-capability
+created: '2026-06-20T15:26:50Z'
+updated: '2026-06-20T15:51:18Z'
+generated_by: claude-sonnet
+workflow_run: 27875169134
+issue: 4552
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-capability/javascript/d3/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Full spec compliance: histogram, normal overlay, LSL/USL lines, Target line,
+    and Cp/Cpk annotation box all implemented correctly'
+  - Deterministic LCG + Box-Muller random number generation with seed=42 for reproducible
+    output across runs
+  - 'Intentional semantic color mapping: green for measurements, blue for normal fit,
+    red for spec limits, ochre for target — tells the engineering story'
+  - 12%-opacity in-spec zone fill under the PDF between LSL and USL adds meaningful
+    visual context highlighting the acceptable region
+  - Cp/Cpk annotation box with elevated background, rounded corners, and bold text
+    is cleanly integrated in upper right
+  - Both light and dark renders pass readability checks with no dark-on-dark or light-on-light
+    failures
+  - 'Idiomatic D3 usage: d3.area() with curveBasis, d3.bin(), proper data joins, d3.format
+    for axis ticks'
+  weaknesses:
+  - 'Density calibration bug: `const binWidth = bins[0].x1 - bins[0].x0` captures
+    the boundary bin width (~0.003 mm) rather than interior bin width (~0.005 mm).
+    d3.bin with thresholds(22) and domain [9.932, 10.068] picks step=0.005 mm so bins[0]
+    spans only [9.932, 9.935] = 0.003 mm. All interior bars are normalized using 0.003
+    instead of their actual 0.005 mm width, inflating density by 1.67x. PDF curve
+    peaks at ~38-40 on y-axis while bars reach ~65 — a visible and misleading gap.
+    Fix: use center bin width: `const binWidth = bins[Math.floor(bins.length / 2)].x1
+    - bins[Math.floor(bins.length / 2)].x0`'
+  - 'Minor: axis label font-size of 16px CSS is slightly large for the short labels
+    ''Density'' (7 chars); 14px would improve hierarchy differentiation from the 22px
+    title'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "histogram-capability · javascript · d3 · anyplot.ai" at 22px clearly readable in dark ink. Axis labels "Shaft Diameter (mm)" and "Density" at 16px readable. Tick labels at 14px readable. Legend text readable. Cp/Cpk annotation box text readable.
+      Data: Green bars (#009E73, opacity 0.65) for measurements — first series correctly uses brand green. Blue curve (#4467A3) for normal fit. Red dashed lines (#AE3030) for LSL/USL. Ochre dashed line (#BD8233) for Target. Subtle 12%-opacity green fill between LSL and USL under the PDF (in-spec zone). First series is #009E73 (confirmed).
+      Density mismatch: histogram bars peak at ~65 on y-axis (0-80 scale), fitted PDF curve peaks at ~38-40. ~1.7x gap due to binWidth taken from narrow boundary bin (0.003mm) instead of interior bins (0.005mm).
+      Legibility verdict: PASS (all text readable), but density calibration mismatch is a meaningful weakness.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title visible in light (#F0EFE8) ink. Axis labels and tick labels appear in inkSoft (#B8B7B0) — clearly readable against dark background. Annotation box uses elevated-bg (#242420) with light ink text. No dark-on-dark failures detected.
+      Data: All data colors identical to light render — green bars (#009E73), blue curve (#4467A3), red dashed LSL/USL (#AE3030), ochre Target (#BD8233). Palette colors unchanged between themes (only chrome flips). Same density calibration mismatch visible.
+      Legibility verdict: PASS — no dark-on-dark text, no readability failures.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Title 22px, axis labels 16px, tick labels 14px, annotation box 15px
+          — all readable in both themes. Minor: 16px is at upper bound for short axis
+          labels like ''Density''.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, LSL/USL labels, Target label, and annotation box occupy distinct
+          regions. No text-on-text collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: All elements visually present and distinguishable, but density calibration
+          bug inflates bars ~1.67x relative to PDF curve. Bars peak at ~65, curve
+          at ~38-40 on 0-80 y-axis — overlay looks miscalibrated.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette. Red and green used but never as sole distinguishing
+          signal — both labeled.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Title ~65% plot width at 22px. Generous margins
+          (80/100/80/90). No overflow or clipping in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Shaft Diameter (mm)'' with units. Y: ''Density''. Title in
+          mandated format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'palette[0] for bars, palette[2] for curve, palette[4] for LSL/USL,
+          palette[3] for Target. Backgrounds #FAF8F1/#1A1A17. Chrome via ink/inkSoft
+          tokens. Data colors theme-invariant.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: In-spec zone fill (12% opacity green between LSL and USL), Cp/Cpk
+          annotation box with elevated bg and rounded corners, semantic color storytelling.
+          Raised from default 4.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Domain lines removed, subtle y-grid with t.grid token, no chartjunk.
+          In-spec area fill adds refinement. Raised from default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chart directly answers process capability question. Cp/Cpk box provides
+          quantitative answer, in-spec fill provides visual answer. Clear focal point.
+          Raised from default 2.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Histogram with fitted normal curve and specification limits — exactly
+          as specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Histogram, normal distribution fit, LSL/USL vertical lines, Target
+          line, Cp/Cpk annotations all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: shaft diameter in mm. Y: density. LSL=9.95, USL=10.05, TARGET=10.00
+          as specified. All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''histogram-capability · javascript · d3 · anyplot.ai''.
+          Legend: Measurements, Normal fit, LSL/USL, Target.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram shape, normal overlay, bilateral spec limits, center target,
+          capability indices all shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Shaft diameter manufacturing (10.00 mm ±0.05 mm) is a standard Six
+          Sigma example. Mean 10.001 mm (slight drift), Cp=1.49, Cpk=1.44 are realistic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: N=200 within spec range 50-500. Sigma ~0.012 mm is tight precision
+          manufacturing tolerance.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Three small helpers (lcg, randNorm, normalPDF) are algorithmic necessities,
+          not structural abstractions. Linear flow throughout.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) with Box-Muller transform. Fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; d3 is a global. All used functions are in the
+          bundle.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity. Clean readable sections. Appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Harness handles file output. Current D3 API. Single svg appended
+          to #container. Sized from window.ANYPLOT_SIZE.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.bin(), d3.area() with curveBasis, d3.line(), proper data joins
+          (.join()), d3.mean/deviation/max, d3.format('.3f'). Idiomatic throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.area() with d3.curveBasis for smooth in-spec fill is distinctively
+          D3. d3.bin() leveraged as native histogram API. Data-driven DOM joins showcase
+          D3 paradigm.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - grid-styling

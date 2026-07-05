@@ -1,45 +1,58 @@
 library: matplotlib
+language: python
 specification_id: line-stress-strain
 created: '2026-03-20T21:23:30Z'
-updated: '2026-03-20T21:37:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23363005389
+updated: '2026-06-21T09:41:14Z'
+generated_by: claude-sonnet
+workflow_run: 27899849018
 issue: 4413
-python_version: 3.14.3
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 3.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Comprehensive data storytelling with color-coded regions, annotated critical points,
-    and informative subtitle
-  - Physically accurate mild steel stress-strain behavior including Lüders band yield
-    plateau
-  - Path effects on main line create a polished, publication-quality appearance
-  - Clean code with well-motivated data generation and elegant region shading loop
+  - Realistic mild steel stress-strain curve with correct Lüders band (yield plateau)
+    behavior
+  - All four critical points correctly marked (yield, UTS, fracture) with Imprint
+    palette colors
+  - 0.2% offset construction line and elastic modulus annotation per spec
+  - Path effects (pe.Stroke + pe.Normal) create polished visual depth on the main
+    curve
+  - Excellent region shading with axvspan and fill_between at low alpha
+  - Full spec compliance — all required features present and working
+  - Physically accurate material parameters (E=210 GPa, σy=250 MPa, UTS=400 MPa, fracture
+    strain ~35%)
+  - Theme-adaptive chrome fully implemented; both renders pass legibility checks
   weaknesses:
-  - Yield Plateau label at fontsize=11 is inconsistent with other region labels at
-    fontsize=14, placed in cramped narrow band
-  - Lower-left quadrant has four annotations in close proximity creating visual density
-  image_description: 'The plot displays an engineering stress-strain curve for mild
-    steel on a 16:9 canvas. The main curve is drawn in Python blue (#306998) with
-    a white stroke path effect, creating a clean outlined appearance. A very subtle
-    blue fill sits beneath the curve. Four distinct regions are shaded with color-coded
-    vertical spans: Elastic (narrow blue band near origin), Yield Plateau (purple-tinted
-    band), Strain Hardening (blue-tinted, largest region), and Necking (brown-tinted
-    band). Three critical points are marked with colored markers and arrow annotations:
-    Yield Point (0.2% Offset) in purple with a circle marker, UTS in red with a circle
-    marker at ~(0.22, 400), and Fracture in brown with an X marker at ~(0.35, 300).
-    A gray dashed 0.2% offset line is drawn near the origin. The elastic modulus "E
-    = 210,000 MPa" is annotated in a rounded box with an arrow pointing to the elastic
-    slope. Region labels appear near the bottom in italics. A subtitle reads "Mild
-    Steel Tensile Test — E = 210 GPa, σᵧ = 250 MPa, UTS = 400 MPa". Top and right
-    spines are removed. X-axis: "Engineering Strain (mm/mm)" 0.00–0.40; Y-axis: "Engineering
-    Stress (MPa)" 0–~450. Legend shows "0.2% Offset Line".'
+  - 'Annotation overlap: the main stress-strain curve (with its wide path-effect stroke)
+    passes through the Yield Point annotation box at xytext=(0.06, 320 MPa) — the
+    curve sits at ~314 MPa at strain=0.06 and intersects the text characters. Reposition
+    xytext upward to (0.06, 355) or leftward to (0.04, 335) to avoid the curve crossing
+    the box.'
+  - Annotation text size 7pt for region labels (Elastic, Yield Plateau, Strain Hardening,
+    Necking) is at the lower boundary for mobile readability (~5px at 400px viewport)
+    — consider raising to 8pt to match the tick label baseline.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-stress-strain · python · matplotlib · anyplot.ai" visible in dark ink, spanning ~75% of canvas width. Italic subtitle below title in muted color. Axis labels "Engineering Strain (mm/mm)" and "Engineering Stress (MPa)" in dark ink at balanced sizes. Tick labels in INK_SOFT (dark gray), readable. Legend box with elevated background visible at center-right.
+      Data: Main stress-strain curve in brand green (#009E73) with path-effect outline — highly visible. Yield plateau behavior (Lüders band) correctly shown. Yield point marker in lavender (#C475FD). UTS marker in matte red (#AE3030). Fracture marker (X) in blue (#4467A3). Dashed 0.2% offset line in INK_SOFT. Regional shading with axvspan at low alpha.
+      Issue: The main curve (with wide pe.Stroke path effect, effective linewidth ~4px) passes through the "Yield Point (0.2% Offset)" annotation box at xytext=(0.06, 320 MPa). At strain=0.06 the curve sits at ~314 MPa, causing the green line to intersect the annotation text characters. Text is still readable but overlap is visible.
+      Legibility verdict: PASS (all major text readable; minor annotation overlap noted)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels in light near-white ink (#F0EFE8 equivalent), readable against dark background. Tick labels in INK_SOFT light variant (#B8B7B0). Legend box with dark elevated background (#242420) and light text. No dark-on-dark failures detected.
+      Data: Data colors identical to light render — main curve #009E73 (brand green), yield marker #C475FD (lavender), UTS marker #AE3030 (red), fracture marker #4467A3 (blue). All markers and curve clearly visible against the dark background. Regional shading at low alpha visible.
+      Issue: Same annotation overlap as light render — curve passes through the "Yield Point" box at (0.06, ~320 MPa). The 85% opaque elevated dark background of the box partially masks the curve but the green line still visibly crosses the text.
+      Legibility verdict: PASS (all text readable in dark theme; same minor annotation overlap as light render)
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,44 +60,61 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All major text explicitly sized. Yield Plateau label at 11pt is inconsistent
-          with other region labels at 14pt.
+        comment: Font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt, annotations
+          7pt). All readable in both themes. Region label annotations at 7pt are slightly
+          below the 8pt tick baseline, marginally reducing mobile readability.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Lower-left quadrant dense with four annotations in close proximity.
-          Yield Plateau text cramped in narrow band.
+        passed: false
+        comment: Main stress-strain curve (with pe.Stroke path effect at linewidth=4)
+          passes through the Yield Point annotation box at xytext=(0.06, 320 MPa).
+          Curve is at ~314 MPa at strain=0.06 — box alpha=0.85 lets the curve show
+          through and intersect text characters. Text remains legible but overlap
+          is visually distracting.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Main line with path effects provides excellent visibility. Markers
-          clearly visible at size 12-14.
+        comment: Main curve at linewidth=2.5 with path effect stroke is highly prominent.
+          Markers at markersize=8-10 are well-sized. All data elements clearly visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/purple/red/brown palette is colorblind-distinguishable with
-          good contrast.
+        comment: Imprint palette used (green, lavender, blue, red) — CVD-safe. Multiple
+          redundant encodings (shape + color for fracture X marker). Adequate luminance
+          contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized with balanced margins.
+        comment: Canvas 3200x1800 (landscape 16:9). Plot fills the canvas well with
+          good margins (left=0.09, right=0.97, top=0.87, bottom=0.12). No edge clipping.
+          Good whitespace balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Engineering Strain (mm/mm), Engineering
-          Stress (MPa).'
+        comment: 'X: ''Engineering Strain (mm/mm)'', Y: ''Engineering Stress (MPa)''
+          — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green) ✓. Lavender (#C475FD) for yield,
+          blue (#4467A3) for fracture, matte red (#AE3030) for UTS (semantic anchor
+          for limit role) — all correct Imprint positions. Background #FAF8F1 light
+          / #1A1A17 dark ✓. Chrome flips correctly between themes ✓.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -92,21 +122,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom color palette, path effects, subtle fill, color-coded regions,
-          boxed annotation, white-edged markers.
+        comment: 'Strong design: path effects on main curve, multi-layer alpha shading
+          (fill_between + axvspan), styled annotation boxes with rounded corners,
+          Imprint palette applied intentionally. Clearly above configured defaults.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed/thinned, subtle dual-level grid, good whitespace.
+        comment: 'Good refinement: top/right spines removed, dual-axis grid at different
+          alpha (y=0.15, x=0.08), legend frame styled with elevated background, annotation
+          boxes with matching edge colors.'
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Color-coded regions guide viewer through deformation stages. UTS
-          in red as focal point. Informative subtitle.
+        comment: 'Good visual hierarchy: color-coded regions guide the viewer through
+          material behavior, all critical mechanical property points highlighted with
+          distinct markers, subtitle provides immediate material context, italic region
+          labels create depth without clutter.'
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +151,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line plot for stress-strain curve.
+        comment: Correct engineering stress-strain curve (line plot with all required
+          behavioral regions).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: labeled regions, critical points, elastic modulus
-          annotation, 0.2% offset line.'
+        comment: 'All required features present: region labels (elastic, yield plateau,
+          strain hardening, necking), critical point markers (yield/UTS/fracture),
+          elastic modulus annotation, 0.2% offset line.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=strain, Y=stress, correct mapping with full data range.
+        comment: X=strain (mm/mm), Y=stress (MPa) — correct. Data spans full range
+          from elastic through fracture.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend for offset line appropriate.
+        comment: 'Title: ''line-stress-strain · python · matplotlib · anyplot.ai''
+          — correct format. Legend shows ''0.2% Offset Line''. Critical points annotated
+          directly (more appropriate for this chart type than legend entries).'
     data_quality:
       score: 15
       max: 15
@@ -145,20 +185,26 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four deformation regions including Lüders band yield plateau.
+        comment: 'All regions shown: elastic (linear), Lüders band yield plateau (mild
+          steel-specific), strain hardening (power law), necking (post-UTS drop to
+          fracture). All four critical points marked.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mild steel tensile test — classic real-world engineering scenario.
+        comment: Mild steel tensile test — neutral engineering/materials science scenario.
+          Lüders band behavior is correctly implemented (mild steel-specific feature),
+          showing domain knowledge.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: E=210 GPa, σy=250 MPa, UTS=400 MPa, fracture strain=0.35 — all realistic
-          for mild steel.
+        comment: 'Physically accurate: E=210 GPa (correct for mild steel), σy=250
+          MPa (realistic), UTS=400 MPa (realistic for mild structural steel), fracture
+          strain=35% (realistic for ductile mild steel). All proportions factually
+          correct.'
     code_quality:
       score: 10
       max: 10
@@ -168,31 +214,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
+        comment: 'Clean linear structure: theme tokens → data → plot → style → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for yield plateau noise.
+        comment: np.random.seed(42) set before any random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used.
+        comment: Only os, matplotlib.patheffects, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Region shading loop with zip is elegant.
+        comment: Clean, Pythonic. zip() iteration for region shading. Appropriate
+          complexity for the visualization requirements. No fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png, dpi=300, bbox_inches='tight'. No deprecated API.
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. No deprecated
+          API.
     library_mastery:
       score: 7
       max: 10
@@ -202,21 +251,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Ax methods throughout, annotate with arrowprops, fill_between, axvspan,
-          bbox styling.
+        comment: Axes-based API used throughout (ax.plot, ax.fill_between, ax.axvspan,
+          ax.annotate). Correct legend guard check. Path effects imported and used
+          correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: path_effects (Stroke+Normal) for white-outlined line is distinctive
-          matplotlib. axvspan for region shading.
+        comment: matplotlib.patheffects (pe.Stroke + pe.Normal) for curve outline
+          effect — a distinctive matplotlib-specific feature. fill_between for area
+          shading under the curve. axvspan for region highlighting. These three combined
+          produce an effect not easily replicated in other libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []

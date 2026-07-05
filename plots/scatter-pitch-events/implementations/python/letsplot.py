@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-pitch-events: Soccer Pitch Event Map
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 88/100 | Created: 2026-03-20
+Library: letsplot 4.10.1 | Python 3.13.14
+Quality: 87/100 | Updated: 2026-06-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_alpha_identity,
     scale_color_identity,
     scale_fill_identity,
@@ -36,12 +39,31 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
+# Theme tokens (Imprint palette, theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Pitch color is data context — stays constant across themes
+PITCH_GREEN = "#1A5C2A"  # darker forest green keeps #009E73 markers visually distinct
+PITCH_LINE = "#FFFFFF"
+
+# Imprint palette (canonical order) mapped to 4 event types
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+pass_color = IMPRINT_PALETTE[0]  # brand green
+shot_color = IMPRINT_PALETTE[1]  # lavender
+tackle_color = IMPRINT_PALETTE[2]  # blue
+intercept_color = IMPRINT_PALETTE[3]  # ochre
+
+color_map = {"Pass": pass_color, "Shot": shot_color, "Tackle": tackle_color, "Interception": intercept_color}
+shape_map = {"Pass": 21, "Shot": 23, "Tackle": 24, "Interception": 22}
+
 # Data
 np.random.seed(42)
-
 n_events = 100
 event_types = np.random.choice(["Pass", "Shot", "Tackle", "Interception"], size=n_events, p=[0.45, 0.15, 0.22, 0.18])
-
 success_rates = {"Pass": 0.78, "Shot": 0.30, "Tackle": 0.60, "Interception": 0.70}
 outcomes = [
     np.random.choice(["Successful", "Unsuccessful"], p=[success_rates[et], 1 - success_rates[et]]) for et in event_types
@@ -68,54 +90,42 @@ for et in event_types:
     x_end.append(xe)
     y_end.append(ye)
 
-# Colorblind-safe palette (distinct hues: blue, red, orange, purple)
-pitch_green = "#2E7D32"
-pass_color = "#FFD700"
-shot_color = "#E63946"
-tackle_color = "#F77F00"
-intercept_color = "#7B2D8E"
-color_map = {"Pass": pass_color, "Shot": shot_color, "Tackle": tackle_color, "Interception": intercept_color}
-shape_map = {"Pass": 21, "Shot": 23, "Tackle": 24, "Interception": 22}
-
 df = pd.DataFrame(
     {"x": x_pos, "y": y_pos, "x_end": x_end, "y_end": y_end, "event_type": event_types, "outcome": outcomes}
 )
 df["color"] = df["event_type"].map(color_map)
 df["shape"] = df["event_type"].map(shape_map)
-df["alpha"] = np.where(df["outcome"] == "Successful", 0.92, 0.85)
+# Clearer alpha encoding: successful=1.0 opaque, unsuccessful=0.42 semi-transparent
+df["alpha"] = np.where(df["outcome"] == "Successful", 1.0, 0.42)
 df["fill"] = np.where(df["outcome"] == "Successful", df["color"], "#FFFFFF")
-df["marker_size"] = np.where(df["event_type"] == "Shot", 8.0, 5.0)
+df["marker_size"] = np.where(df["event_type"] == "Shot", 4.5, 3.0)
 
-# Directional events (passes and shots)
 df_arrows = df[df["event_type"].isin(["Pass", "Shot"])].copy()
 
-# Pitch markings
+# Pitch geometry
 theta = np.linspace(0, 2 * np.pi, 80)
 df_center_circle = pd.DataFrame({"x": 52.5 + 9.15 * np.cos(theta), "y": 34 + 9.15 * np.sin(theta)})
 
 theta_l = np.linspace(-np.pi / 2, np.pi / 2, 40)
-arc_lx, arc_ly = 11 + 9.15 * np.cos(theta_l), 34 + 9.15 * np.sin(theta_l)
-mask_l = arc_lx >= 16.5
-df_left_arc = pd.DataFrame({"x": arc_lx[mask_l], "y": arc_ly[mask_l]})
+arc_lx = 11 + 9.15 * np.cos(theta_l)
+arc_ly = 34 + 9.15 * np.sin(theta_l)
+df_left_arc = pd.DataFrame({"x": arc_lx[arc_lx >= 16.5], "y": arc_ly[arc_lx >= 16.5]})
 
 theta_r = np.linspace(np.pi / 2, 3 * np.pi / 2, 40)
-arc_rx, arc_ry = 94 + 9.15 * np.cos(theta_r), 34 + 9.15 * np.sin(theta_r)
-mask_r = arc_rx <= 88.5
-df_right_arc = pd.DataFrame({"x": arc_rx[mask_r], "y": arc_ry[mask_r]})
+arc_rx = 94 + 9.15 * np.cos(theta_r)
+arc_ry = 34 + 9.15 * np.sin(theta_r)
+df_right_arc = pd.DataFrame({"x": arc_rx[arc_rx <= 88.5], "y": arc_ry[arc_rx <= 88.5]})
 
-# Corner arcs (radius = 1m)
-corner_positions = [
+corner_arc_dfs = []
+for cx, cy, t0, t1 in [
     (0, 0, 0, np.pi / 2),
     (0, 68, -np.pi / 2, 0),
     (105, 0, np.pi / 2, np.pi),
     (105, 68, np.pi, 3 * np.pi / 2),
-]
-corner_arc_dfs = []
-for cx, cy, t_start, t_end in corner_positions:
-    t = np.linspace(t_start, t_end, 20)
-    corner_arc_dfs.append(pd.DataFrame({"x": cx + 1.0 * np.cos(t), "y": cy + 1.0 * np.sin(t)}))
+]:
+    t = np.linspace(t0, t1, 20)
+    corner_arc_dfs.append(pd.DataFrame({"x": cx + np.cos(t), "y": cy + np.sin(t)}))
 
-# Pitch rectangles
 df_rects = pd.DataFrame(
     {
         "xmin": [0, 0, 0, 88.5, 99.5],
@@ -125,151 +135,145 @@ df_rects = pd.DataFrame(
     }
 )
 
-# Legend labels positioned below the pitch
-legend_x = [12, 37, 62, 87]
-legend_y_marker = [-7.5] * 4
-legend_y_label = [-11.5] * 4
-legend_labels = ["Pass", "Shot", "Tackle", "Interception"]
-legend_colors = [pass_color, shot_color, tackle_color, intercept_color]
-legend_shapes = [21, 23, 24, 22]
-
-df_legend_markers = pd.DataFrame(
-    {"x": legend_x, "y": legend_y_marker, "color": legend_colors, "shape": legend_shapes, "fill": legend_colors}
-)
-df_legend_labels = pd.DataFrame({"x": legend_x, "y": legend_y_label, "label": legend_labels})
-
-# Outcome annotation
-df_outcome_text = pd.DataFrame(
-    {"x": [32, 72], "y": [-15.5, -15.5], "label": ["\u25cf Colored = Successful", "\u25cb White fill = Unsuccessful"]}
-)
-
-# Zone highlights for storytelling (attacking and defensive thirds)
+# Zone highlights with improved visibility
 df_attack_zone = pd.DataFrame({"xmin": [70], "ymin": [0], "xmax": [105], "ymax": [68]})
 df_defend_zone = pd.DataFrame({"xmin": [0], "ymin": [0], "xmax": [35], "ymax": [68]})
+
+# Custom legend below the pitch
+legend_x = [12, 37, 62, 87]
+df_legend_markers = pd.DataFrame(
+    {
+        "x": legend_x,
+        "y": [-8.0] * 4,
+        "color": [pass_color, shot_color, tackle_color, intercept_color],
+        "shape": [21, 23, 24, 22],
+        "fill": [pass_color, shot_color, tackle_color, intercept_color],
+    }
+)
+df_legend_labels = pd.DataFrame({"x": legend_x, "y": [-12.5] * 4, "label": ["Pass", "Shot", "Tackle", "Interception"]})
+df_outcome_text = pd.DataFrame(
+    {"x": [28, 78], "y": [-17.0, -17.0], "label": ["● Colored fill = Successful", "○ White fill = Unsuccessful"]}
+)
 
 # Plot
 plot = (
     ggplot()
-    # Pitch background
+    # Pitch surface
     + geom_rect(
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
         data=pd.DataFrame({"xmin": [-4], "ymin": [-4], "xmax": [109], "ymax": [72]}),
-        fill=pitch_green,
-        color=pitch_green,
+        fill=PITCH_GREEN,
+        color=PITCH_GREEN,
     )
-    # Zone highlights
+    # Zone highlights — alpha 0.15/0.12 for perceptibility (was 0.08/0.06)
     + geom_rect(
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
         data=df_attack_zone,
         fill="#FFFFFF",
         color="rgba(0,0,0,0)",
-        alpha=0.08,
+        alpha=0.15,
     )
     + geom_rect(
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
         data=df_defend_zone,
         fill="#000000",
         color="rgba(0,0,0,0)",
-        alpha=0.06,
+        alpha=0.12,
     )
     # Pitch markings
     + geom_rect(
         aes(xmin="xmin", ymin="ymin", xmax="xmax", ymax="ymax"),
         data=df_rects,
         fill="rgba(0,0,0,0)",
-        color="#FFFFFF",
-        size=1.0,
+        color=PITCH_LINE,
+        size=0.8,
     )
-    # Halfway line
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=pd.DataFrame({"x": [52.5], "y": [0], "xend": [52.5], "yend": [68]}),
-        color="#FFFFFF",
-        size=1.0,
+        color=PITCH_LINE,
+        size=0.8,
     )
-    # Goal posts
     + geom_segment(
         aes(x="x", y="y", xend="xend", yend="yend"),
         data=pd.DataFrame({"x": [0, 105], "y": [30.34, 30.34], "xend": [0, 105], "yend": [37.66, 37.66]}),
         color="#DDDDDD",
-        size=2.5,
+        size=2.0,
     )
-    # Center circle and penalty arcs
-    + geom_path(data=df_center_circle, mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    + geom_path(data=df_left_arc, mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    + geom_path(data=df_right_arc, mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    # Corner arcs
-    + geom_path(data=corner_arc_dfs[0], mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    + geom_path(data=corner_arc_dfs[1], mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    + geom_path(data=corner_arc_dfs[2], mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    + geom_path(data=corner_arc_dfs[3], mapping=aes(x="x", y="y"), color="#FFFFFF", size=1.0)
-    # Spots
+    + geom_path(data=df_center_circle, mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=df_left_arc, mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=df_right_arc, mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=corner_arc_dfs[0], mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=corner_arc_dfs[1], mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=corner_arc_dfs[2], mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
+    + geom_path(data=corner_arc_dfs[3], mapping=aes(x="x", y="y"), color=PITCH_LINE, size=0.8)
     + geom_point(
-        aes(x="x", y="y"), data=pd.DataFrame({"x": [52.5, 11, 94], "y": [34, 34, 34]}), color="#FFFFFF", size=2
+        aes(x="x", y="y"), data=pd.DataFrame({"x": [52.5, 11, 94], "y": [34, 34, 34]}), color=PITCH_LINE, size=1.5
     )
-    # Directional arrows
+    # Directional arrows for passes and shots
     + geom_segment(
         data=df_arrows,
         mapping=aes(x="x", y="y", xend="x_end", yend="y_end", color="color", alpha="alpha"),
-        size=0.8,
-        arrow=arrow(length=7, type="open"),
+        size=0.6,
+        arrow=arrow(length=6, type="open"),
     )
-    # Event markers with size encoding (shots larger for focal emphasis)
+    # Event markers (shots enlarged for tactical emphasis)
     + geom_point(
         data=df,
         mapping=aes(x="x", y="y", color="color", fill="fill", shape="shape", alpha="alpha", size="marker_size"),
-        stroke=1.5,
+        stroke=1.2,
+        tooltips=layer_tooltips().line("@event_type").line("Outcome: @outcome").line("x=@x, y=@y"),
     )
-    # Zone annotations
+    # Zone annotation labels
     + geom_text(
         data=pd.DataFrame({"x": [87.5], "y": [65.5], "label": ["Attacking Third"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=10,
+        size=5,
         color="#FFFFFF",
-        alpha=0.55,
+        alpha=0.7,
         fontface="italic",
     )
     + geom_text(
         data=pd.DataFrame({"x": [17.5], "y": [65.5], "label": ["Defensive Third"]}),
         mapping=aes(x="x", y="y", label="label"),
-        size=10,
+        size=5,
         color="#FFFFFF",
-        alpha=0.45,
+        alpha=0.65,
         fontface="italic",
     )
-    # Legend markers
+    # Custom legend markers and labels
     + geom_point(
-        data=df_legend_markers, mapping=aes(x="x", y="y", color="color", fill="fill", shape="shape"), size=6, stroke=1.2
+        data=df_legend_markers,
+        mapping=aes(x="x", y="y", color="color", fill="fill", shape="shape"),
+        size=3.5,
+        stroke=1.0,
     )
-    # Legend labels
     + geom_text(
-        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), size=15, color="#333333", fontface="bold"
+        data=df_legend_labels, mapping=aes(x="x", y="y", label="label"), size=5, color=INK_SOFT, fontface="bold"
     )
-    # Outcome annotation
-    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=12, color="#555555")
+    + geom_text(data=df_outcome_text, mapping=aes(x="x", y="y", label="label"), size=5, color=INK_MUTED)
     + scale_color_identity()
     + scale_fill_identity()
     + scale_shape_identity()
     + scale_alpha_identity()
     + scale_size_identity()
-    # Layout
     + coord_fixed(ratio=1)
     + xlim(-5, 112)
-    + ylim(-19, 76)
+    + ylim(-20, 76)
     + labs(
-        title="scatter-pitch-events \u00b7 letsplot \u00b7 pyplots.ai",
-        subtitle="100 match events \u2014 passes, shots, tackles & interceptions with outcome encoding",
+        title="scatter-pitch-events · python · letsplot · anyplot.ai",
+        subtitle="100 match events — passes, shots, tackles & interceptions with outcome encoding",
     )
     + theme_void()
     + theme(
-        plot_title=element_text(size=26, hjust=0.5, color="#222222", face="bold"),
-        plot_subtitle=element_text(size=16, hjust=0.5, color="#666666"),
-        plot_background=element_rect(fill="#F5F5F0", color="#F5F5F0"),
-        plot_margin=[40, 20, 20, 20],
+        plot_title=element_text(size=16, hjust=0.5, color=INK, face="bold"),
+        plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_margin=[25, 15, 10, 15],
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save PNG and HTML for this theme
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")

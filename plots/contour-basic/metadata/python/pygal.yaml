@@ -2,48 +2,47 @@ library: pygal
 language: python
 specification_id: contour-basic
 created: '2026-04-24T01:37:51Z'
-updated: '2026-04-24T02:19:35Z'
-generated_by: claude-opus
-workflow_run: 24867578429
+updated: '2026-06-25T04:09:28Z'
+generated_by: claude-sonnet
+workflow_run: 28145014195
 issue: 855
-python_version: 3.14.4
-library_version: 3.1.0
+language_version: 3.13.14
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-basic/python/pygal/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - Correct viridis colormap for continuous elevation data; both light and dark themes
-    fully theme-correct with no chrome failures
-  - Smart contour label placement algorithm (maximize-distance from placed anchors)
-    prevents label-marker collisions
-  - Inline marching squares + vectorized viridis interpolation is a technically accomplished,
-    elegant solution to a hard problem (contour plots in pygal)
-  - All five required spec features present; axis labels and colorbar title include
-    units
-  - 'Perfect data quality: realistic topographic scenario with appropriate scale and
-    good feature coverage'
-  weaknesses:
-  - Colorbar tick labels at 34px are slightly below the 38px minimum for pixel-based
-    tick labels; raising to 38px would improve consistency
-  - Minor label crowding near the 1200 m / primary peak area — the halo keeps labels
-    readable but the placement could fan labels slightly further from peak markers
-  - DE-01 could approach 8 with more typographic polish (e.g., a slightly refined
-    font weight hierarchy between the title and axis labels)
+  - 'Correct Imprint sequential colormap (#009E73 → #4467A3) applied via per-cell
+    interpolation — exactly the imprint_seq spec with no forbidden cmaps'
+  - 'Full contour feature set: filled regions, minor (50 m) and major (200 m) contour
+    lines, labeled major levels, colorbar with elevation units, and annotated peak
+    markers'
+  - 'Clever coordinate-system bootstrapping: renders a pygal XY chart first, parses
+    the rendered SVG to extract exact pixel positions of peak dots, then reverse-engineers
+    the affine transform to align all custom SVG elements with pygal coords'
+  - 'Both themes fully adaptive — background, text, contour-line color, and halo fills
+    all flip correctly between #FAF8F1 and #1A1A17'
+  - Realistic neutral topographic scenario (10 km × 10 km mountain region) with sensible
+    elevation range (~322 – 1221 m); math-backed Gaussian peaks give smooth, geographically
+    plausible contours
+  - 'HTML output preserved: pygal interactive tooltips on peak markers (Primary/Secondary
+    Peak with elevation in metres) survive into plot-{THEME}.html'
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "contour-basic · pygal · anyplot.ai" in dark ink (#1A1A17) at top — clearly readable; axis labels "Distance East (km)" and "Distance North (km)" in INK at 44px — readable; tick labels at 38px in INK_SOFT — readable; colorbar labels at 34px — readable; contour level labels (400, 600, 800, 1000, 1200 m) with PAGE_BG halo — readable
-      Data: Viridis colormap (deep purple to bright yellow) for elevation surface; two mountain peaks visible; orange (#D55E00) dot = primary peak upper-right; blue (#0072B2) dot = secondary peak lower-left; white contour lines at 0.65/0.30 opacity for major/minor levels; colorbar gradient on right
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, no pure white.
+      Chrome: Title "contour-basic · python · pygal · anyplot.ai" at 66 px — dark ink, clearly readable. X-axis label "Distance East (km)" and Y-axis label "Distance North (km)" visible in dark INK at 44 px. Tick labels 0–10 on both axes at 38 px — readable. Colorbar values (322, 502, 682, 862, 1041, 1221) and "Elevation (m)" rotated label visible at 38–40 px. All text dark on light bg — no light-on-light failures.
+      Data: Smooth gradient fill from brand green #009E73 at low elevations to blue #4467A3 at high elevations — correct imprint_seq. Minor contour lines (1.5 px, white, low opacity) and major contour lines (3 px, white) visible throughout. Major level labels: "400 m" (lower region), "600 m" (right), "800 m" (middle-right), "1000 m" (near primary peak), "1200 m" (inside primary peak ellipse) — all legible with ink-halo backing. Primary peak (7,7) marked with PAGE_BG-filled white halo circle + dark INK dot; secondary peak (2.5,3) with white halo + darker dot.
+      Legibility verdict: PASS — all text and data elements readable against #FAF8F1 background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title in light #F0EFE8 — clearly readable; axis labels in INK (light token) — readable; tick labels in INK_SOFT (light token) — readable; colorbar labels in light tone — readable; contour labels use INK (light) fill with dark PAGE_BG halo — readable; L-frame uses INK_SOFT light token
-      Data: Viridis colormap colors identical to light render — purple-to-yellow gradient unchanged; orange and blue peak markers retain same Okabe-Ito hues; contour lines use #F0EFE8 at same opacities
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) — correct.
+      Chrome: Title readable in light #F0EFE8 ink. Axis labels and tick labels visible in light INK_SOFT (#B8B7B0). Colorbar values and "Elevation (m)" label visible. No dark-on-dark text failures detected — all chrome flipped correctly to light tones.
+      Data: Gradient fill and contour lines identical in color to light render (imprint_seq green→blue, data colors unchanged). Contour level labels render in near-white INK (#F0EFE8) — readable against the teal gradient fill. Peak marker halos: PAGE_BG on dark is #1A1A17 (same as bg), so halo fill merges into background; only the INK_SOFT ring border (#B8B7B0) remains visible as a gray circle. Primary peak dot (INK = #F0EFE8) appears as a light dot inside the ring — visible. Secondary peak dot (INK_MUTED = #A8A79F) visible as a medium-gray dot.
+      Legibility verdict: PASS — all text readable on dark background; no dark-on-dark failures. Minor: dark-render halo rings are less visible than light-render white halos (cosmetic, not a legibility failure).
   criteria_checklist:
     visual_quality:
       score: 28
@@ -54,51 +53,58 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set in SVG; all readable in both themes.
-          Minor: colorbar labels at 34px slightly below 38px minimum.'
+        comment: 'All font sizes explicitly set (title 66px, axis labels 44px, tick
+          labels 38px, colorbar 38-40px, contour labels 38px). Both themes readable.
+          Minor concern: at mobile scale (~400px) contour labels at ~5px become unreadable
+          — inherent to dense contour plots but worth noting.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Halo-backed contour labels legible; minor crowding of 1200m label
-          near primary peak marker.
+        comment: Label placement algorithm effectively separates contour labels. Slight
+          crowding near '1200 m' inside the dense primary-peak ellipse — text is readable
+          but barely has breathing room.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Viridis gradient, contour lines, peak markers, colorbar all perfectly
-          visible.
+        comment: Filled contour regions, major/minor contour lines, labeled levels,
+          colorbar, and peak markers all clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis perceptually uniform and CVD-safe; peak markers use Okabe-Ito
-          orange and blue.
+        comment: imprint_seq (green→blue) is CVD-safe per Imprint palette design.
+          No red-green sole signal. Contour lines in white with opacity variation
+          distinguish major vs minor levels.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills well over 50% of 4800x2700 canvas; margins balanced; colorbar
-          fits cleanly.
+        comment: 'Correct 3200×1800 landscape canvas (canvas gate passed). Good proportions:
+          generous margins, plot fills ~75% of canvas, colorbar positioned within
+          right margin. L-shaped frame correctly placed.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Distance East (km), Distance North (km), Elevation (m) — all descriptive
-          with units.
+        comment: 'Title: ''contour-basic · python · pygal · anyplot.ai'' correct.
+          X: ''Distance East (km)'', Y: ''Distance North (km)'', colorbar: ''Elevation
+          (m)'' — all descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis sequential correct for continuous elevation; light bg #FAF8F1,
-          dark bg #1A1A17; chrome tokens flip correctly; data colors identical across
-          renders.'
+        comment: 'Sequential continuous colormap: #009E73 (low elevation) → #4467A3
+          (high elevation) — correct imprint_seq, no forbidden cmaps. Background #FAF8F1
+          (light) / #1A1A17 (dark). All chrome theme-adaptive. Data colors identical
+          across both renders.'
     design_excellence:
       score: 14
       max: 20
@@ -108,22 +114,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: viridis gradient fill professional; smart label placement;
-          contrasting peak markers. Clearly above defaults.'
+        comment: 'Strong design clearly above library defaults: custom Imprint sequential
+          colormap with smooth per-cell gradient, major/minor contour line visual
+          hierarchy, annotated peak markers with halos, clean L-frame. Professional
+          and polished.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped frame, no grid, layered contour line opacities (0.30 minor
-          / 0.65 major), generous whitespace.
+        comment: L-shaped frame (top/right spines removed), major contour lines at
+          3px vs minor at 1.5px creates visual separation, no unnecessary grid, generous
+          whitespace, colorbar cleanly framed. Good attention to detail.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: bright yellow primary peak draws the eye;
-          labeled contours and annotated peak elevations tell a topographic story.'
+        comment: Dual-peak topographic narrative clearly communicated through the
+          gradient, contour density, and labeled peaks. Major/minor contour distinction
+          guides the eye to high-elevation areas. Viewer immediately reads 'two mountains.'
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: filled contour regions + isoline overlay.'
+        comment: Correct contour plot implementing both filled regions and contour
+          isolines.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Viridis colormap, colorbar, filled regions + contour lines, labeled
-          major contour levels, 80x80 grid resolution.
+        comment: Sequential colormap (imprint_seq), colorbar, filled+lined contours,
+          labeled major levels, 80×80 grid resolution — all spec requirements met.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Distance East (km), Y=Distance North (km), Z=Elevation (m) via
-          viridis; axes span 0-10 km correctly.
+        comment: X/Y as spatial km coordinates, Z as elevation. Full 10×10 km meshgrid
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'contour-basic · pygal · anyplot.ai' correct; colorbar serves
-          as legend with 'Elevation (m)'.
+        comment: Title 'contour-basic · python · pygal · anyplot.ai' correct. Colorbar
+          serves as legend for continuous data; no separate legend needed.
     data_quality:
       score: 15
       max: 15
@@ -164,78 +175,84 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: high/low elevation, multiple peaks of different
-          heights, saddle, minor and major isolines.'
+        comment: 'Demonstrates all contour plot aspects: filled regions, major/minor
+          isolines, level labels, colorbar, peak markers as overlay.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Topographic elevation map of 10km x 10km mountain region; neutral,
-          comprehensible real-world scenario.
+        comment: Neutral topographic elevation map of a 10 km × 10 km mountain region.
+          Real-world plausible science context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range ~350-1371m realistic for mountainous 10km region;
-          50m/200m contour intervals standard for topo maps.
+        comment: Elevation range ~322–1221 m for a mountain landscape — factually
+          correct for a mid-sized mountain region.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script, no functions or classes, follows Imports -> Data ->
-          Plot -> Save.
+        comment: No functions or classes, clear linear flow. However at ~434 lines
+          it is substantially longer than a typical plot implementation. The embedded
+          marching-squares case table is justified (pygal has no native contour) but
+          adds length.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; data is also analytically deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, re, sys, cairosvg, numpy, pygal, pygal.style.Style.'
+        comment: os, re, sys, cairosvg, numpy, pygal, Style — all used. sys.path.pop(0)
+          workaround for script-name collision is correctly noted.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Inline marching squares and vectorized viridis interpolation appropriate
-          for contour plotting in pygal; SVG injection well-commented; no fake UI.
+        comment: Creative SVG injection approach is the correct solution given pygal's
+          lack of native contour support. Coordinate extraction from rendered circle
+          positions is clever and well-executed.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes. Current
+          pygal API used.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY for interactive peak markers, pygal.Style for theme
-          tokens, pygal.render() for SVG, cairosvg for PNG. SVG injection non-standard
-          but correct approach for pygal's limitations.
+        comment: Correct use of pygal.XY, Style object, add() with value dicts and
+          tooltip labels. The main rendering bypasses pygal in favour of custom SVG
+          — so the library's actual drawing capabilities are minimally exercised.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Distinctive: reverse-engineers peak marker pixel positions via SVG
-          regex to align contour overlay; native JS hover interactivity retained in
-          HTML; leverages pygal''s interactive rendering pipeline.'
+        comment: Distinctive use of pygal's SVG rendering pipeline as a coordinate
+          calculator — parsing rendered circle cx/cy to reverse-engineer the affine
+          transform is a creative and library-specific technique. HTML interactivity
+          preserved for peak tooltips.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -248,7 +265,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
-  - alpha-blending

@@ -1,112 +1,142 @@
 library: seaborn
+language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:46:01Z'
-updated: '2026-03-20T23:25:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23365453301
+updated: '2026-06-17T22:28:59Z'
+generated_by: claude-sonnet
+workflow_run: 27722831308
 issue: 4412
-python_version: 3.14.3
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - All specification requirements fully implemented with careful attention to detail
-  - 'Excellent visual hierarchy: critical point prominently marked, mirror branch
-    de-emphasized, directional arrows guide the viewer'
-  - Realistic and well-chosen transfer function producing a pedagogically clear Nyquist
-    curve
-  - Clean deterministic code with proper scipy.signal usage for frequency response
-    computation
-  - Cohesive color scheme and professional polish with subtle grid, removed spines,
-    and balanced layout
+  - 'Complete spec compliance: all required features present — critical point with
+    semantic red, unit circle, direction arrows, frequency annotations at 5 key ω
+    values, 1:1 aspect ratio'
+  - 'Correct Imprint palette usage: BRAND green (#009E73) for positive-frequency branch,
+    Imprint position-2 purple (#C475FD) for mirror branch, semantic red anchor (#AE3030)
+    for critical stability point'
+  - 'Sophisticated seaborn usage: hue+style+dashes mapping in sns.lineplot with estimator=None
+    and sort=False correctly preserves Nyquist path ordering'
+  - Alpha de-emphasis (0.4) on negative-frequency mirror branch — appropriate domain
+    knowledge, keeps focus on positive-frequency trajectory
+  - 'Excellent code quality: clean linear structure, deterministic scipy-based data,
+    all theme tokens applied consistently to both renders'
+  - Spread frequency-annotation offsets minimize crowding in the low-ω region near
+    origin
   weaknesses:
-  - Minor annotation crowding near the origin where multiple frequency labels converge
-  - Seaborn role is somewhat limited since Nyquist plots require specialized matplotlib
-    features for annotations, arrows, and geometric references
-  image_description: The plot displays a Nyquist diagram on the complex plane. The
-    positive-frequency branch (solid dark blue line, labeled "G(jω), ω ≥ 0") sweeps
-    from approximately (10, 0) at low frequencies downward through the lower half-plane,
-    curving left and back toward the origin at high frequencies. The mirror (negative-frequency)
-    branch (dashed lighter blue, labeled "G(jω), ω < 0") reflects symmetrically through
-    the upper half-plane with reduced opacity. A dotted gray unit circle is centered
-    at the origin for reference. The critical point at (-1, 0) is marked with a bold
-    red X and annotated with a red arrow and "Critical point (-1, 0)" label. Five
-    frequency points (ω = 0.1, 0.5, 1.0, 3.0, 10.0 rad/s) are marked with teal dots
-    and labeled via gray annotation arrows. Three blue directional arrows along the
-    positive branch indicate increasing frequency. Title reads "nyquist-basic · seaborn
-    · pyplots.ai". Axes are labeled "Real Part of G(jω)" and "Imaginary Part of G(jω)".
-    Legend in upper right with both branch labels. Top and right spines removed. Subtle
-    whitegrid with low-alpha gridlines. Square aspect ratio maintained.
+  - Unit circle reference too faint (dotted linestyle + alpha=0.5) — barely visible
+    in dark render; increase to alpha=0.7 with coarser dashes or a solid line at alpha=0.25
+  - Mirror branch at 40% alpha over dark background (#1A1A17) renders near-invisibly
+    dim in dark theme; increase to alpha=0.5–0.55 so the conjugate branch is legible
+    in both themes
+  - 'Minor crowding in left quadrant near (-2, 0) to (-1, 0.5): critical point annotation
+    arrow, ω=3.0 label with its arrow, and direction arrow from the green curve all
+    compete in the same data-coordinate region — slight visual noise though no hard
+    text-on-text overlap'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "nyquist-basic · python · seaborn · anyplot.ai" in dark ink at top, fully readable. Axis labels "Real Part Re[G(jω)]" (x) and "Imaginary Part Im[G(jω)]" (y) in dark ink, readable. Tick labels at 8pt in INK_SOFT, readable. Subtle cross-axis grid at alpha=0.12.
+      Data: Positive-frequency branch in brand green (#009E73), solid line with direction arrows. Negative-frequency (mirror) branch in muted lavender-gray (Imprint #C475FD at 40% alpha over cream) as a dashed line — clearly secondary. Critical point (-1, 0) marked with bold red X (#AE3030) with annotated arrow from upper-left. Five frequency annotation dots in green with connecting arrows to labels (ω=0.1, 0.5, 1.0, 3.0, 10.0). Reference unit circle as dotted gray circle near origin — very faint but detectable. Legend in upper-right with dark-on-elevated-cream labels.
+      Legibility verdict: PASS — all text readable against light background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Very dark near-black #1A1A17 — correct warm near-black, not pure black.
+      Chrome: Title in light text (#F0EFE8), clearly readable. Axis labels in light ink, readable. Tick labels in INK_SOFT light-gray, readable. Grid subtle but visible. Legend box uses elevated dark (#242420) fill with light text — readable.
+      Data: Green brand curve (#009E73) identical to light render — clearly visible against dark background. Mirror branch appears as muted dark blue-purple (Imprint purple at 40% alpha over #1A1A17) — present but dim, on the edge of visibility. Critical point red X visible. Frequency annotation dots green, labels in light INK_SOFT, readable. Unit circle extremely faint — barely detectable on dark background. Direction arrows visible on green curve.
+      Legibility verdict: PASS — no dark-on-dark text failures. All labels readable. One note: mirror branch and unit circle are on the dim side in dark theme but not invisible.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          annotations 12-14pt'
+        comment: Title/axis/tick fonts explicitly set at 12/10/8pt; readable at full
+          res in both themes. Annotation text at 8pt is compact but readable. Minor
+          deduction for small annotation labels.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Manual offsets prevent most collisions; minor crowding near origin
-          between frequency labels
+        comment: 'No hard text-on-text overlaps. Minor visual crowding in left quadrant
+          near (-1,0): critical-point annotation arrow, ω=3.0 label, and direction
+          arrow compete for space.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Lines at 2.5 width, markers s=120 with white edges, directional arrows
-          prominent
+        comment: Primary green curve clear and prominent. Mirror branch at alpha=0.4
+          is intentionally de-emphasized but verges on too faint in dark render. Unit
+          circle at dotted+alpha=0.5 is barely detectable in both renders, especially
+          dark.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red/gray scheme is colorblind-safe with no red-green ambiguity
+        comment: Green/purple branches are CVD-safe distinct hue families. Red critical
+          point is a semantic anchor, not sole distinguishing factor.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 10x10 figure with equal aspect ratio, good canvas utilization
+        comment: Canvas gate passed. Square 2400×2400 appropriate for equal-aspect
+          Nyquist. Title fits well. No overflow or clipping observed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with mathematical notation: Real Part of G(jω)'
+        comment: Title matches required format. Axis labels 'Real Part Re[G(jω)]'
+          and 'Imaginary Part Im[G(jω)]' are descriptive with notation.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second #C475FD (Imprint position
+          2). Critical point uses semantic red anchor #AE3030. Backgrounds #FAF8F1
+          / #1A1A17. All correct.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Cohesive color scheme, intentional hierarchy with alpha-reduced mirror
-          branch, professional typography
+        comment: 'Above default: Imprint palette, semantic red anchor, direction arrows
+          showing domain knowledge, alpha de-emphasis on mirror branch. Solid professional
+          execution, not exceptional.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Spines removed, grid alpha 0.15, axis reference lines, generous whitespace
+        comment: sns.despine applied, subtle alpha=0.12 grid, alpha on secondary branch.
+          Good but straightforward refinements. Unit circle too faint to add elegance.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: critical point emphasized, mirror branch
-          de-emphasized, directional arrows guide viewer'
+        comment: Critical point is a clear focal point; direction arrows guide the
+          viewer through frequency traversal; frequency annotations provide meaningful
+          context for control engineers. Good narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -116,26 +146,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane
+        comment: 'Correct Nyquist plot: imaginary vs real of frequency response G(jω).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: critical point, unit circle, freq annotations,
-          arrows, 1:1 aspect'
+        comment: 'All spec features present: critical point (-1,0) marked, unit circle
+          drawn, frequency annotations at key points, direction arrows, 1:1 aspect
+          ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, both branches correctly computed
+        comment: Real part on x-axis, imaginary on y-axis. Both ω≥0 and conjugate
+          (ω<0) branches shown. 800 points logarithmically spaced.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format, legend labels match branch descriptions
+        comment: 'Title ''nyquist-basic · python · seaborn · anyplot.ai'' matches
+          format exactly. Legend labels meaningful: G(jω), ω≥0 and G(jω), ω<0.'
     data_quality:
       score: 15
       max: 15
@@ -145,19 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full frequency sweep, both branches, gain/phase characteristics visible
+        comment: Shows full Nyquist trajectory with both branches, stability-critical
+          features highlighted, direction of increasing frequency shown via arrows.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic 3rd-order control system G(s) = 10/((s+1)(0.5s+1)(0.2s+1))
+        comment: Uses realistic 3rd-order transfer function G(s)=10/((s+1)(0.5s+1)(0.2s+1))
+          via scipy.signal — physically meaningful, neutral educational context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.01-100 rad/s appropriate for this system
+        comment: 800 log-spaced points over 10^-2 to 10^2 rad/s; appropriate for this
+          system's bandwidth. Data range fills the square canvas well.
     code_quality:
       score: 10
       max: 10
@@ -167,33 +203,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save. No functions or classes'
+        comment: No functions or classes; clean linear top-to-bottom script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic via scipy.signal.freqresp with fixed coefficients
+        comment: 'Fully deterministic: scipy transfer function with no randomness.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All five imports used: matplotlib, numpy, pandas, seaborn, scipy'
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn, scipy.signal.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no over-engineering or fake functionality
+        comment: Clean, appropriate complexity for a Nyquist plot. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png at dpi=300 with bbox_inches=tight
+        comment: Saves as plot-{THEME}.png with correct API usage. No bbox_inches='tight'
+          on savefig.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -201,27 +238,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good seaborn usage: lineplot with hue/style, scatterplot, set_theme,
-          despine, color_palette'
+        comment: DataFrame-centric sns.lineplot with hue+style+dashes, estimator=None,
+          sort=False for path data. sns.scatterplot for frequency markers. sns.set_theme
+          for comprehensive rc setup. sns.despine. Idiomatic seaborn patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: true
-        comment: Uses seaborn theming and hue-based styling but bulk requires matplotlib
-          for specialized features
+        comment: Dual-series with hue+dashes mapping is distinctively seaborn. However,
+          the bulk of the complex annotation work (arrows, annotate, axhline/axvline,
+          reference circle) is pure matplotlib — seaborn's specific contribution is
+          mainly for the line/scatter rendering.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
-  - custom-legend
   patterns:
-  - data-generation
   - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting
+  - grid-styling

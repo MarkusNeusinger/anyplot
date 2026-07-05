@@ -1,24 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 line-win-probability: Win Probability Chart
-Library: plotly 6.6.0 | Python 3.14.3
-Quality: 91/100 | Created: 2026-03-20
+Library: plotly 6.8.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-21
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - simulated NFL game: Eagles vs Cowboys
+# Theme-adaptive chrome (Imprint palette)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID_RULE = "rgba(26,26,23,0.30)" if THEME == "light" else "rgba(240,239,232,0.30)"
+
+# Team colors — semantic exception: football teams carry strong real-world color identity.
+# Eagles (PHI) → Imprint brand green; Cowboys (DAL) → Imprint blue.
+HOME_COLOR = "#009E73"  # Imprint position 1 — Eagles green
+AWAY_COLOR = "#4467A3"  # Imprint position 3 — Cowboys blue
+HOME_FILL = "rgba(0,158,115,0.22)"
+AWAY_FILL = "rgba(68,103,163,0.22)"
+
+# Data — simulated NFL game: Eagles vs Cowboys
 np.random.seed(42)
 
 play_count = 120
 plays = np.arange(play_count)
 
-# Build win probability through game events
 win_prob = np.zeros(play_count)
 win_prob[0] = 0.50
 
-# Quarter boundaries
 q1_end, q2_end, q3_end = 30, 60, 90
 
 # Key scoring events (play_index, prob_shift, label)
@@ -42,24 +59,16 @@ for i in range(1, play_count):
         drift = np.random.normal(0, 0.012)
     win_prob[i] = np.clip(win_prob[i - 1] + drift, 0.03, 0.97)
 
-# Final plays ramp to victory
 win_prob[-1] = 1.0
 win_prob[-2] = 0.96
 win_prob[-3] = 0.92
 
-# Convert to percentage
 win_pct = win_prob * 100
-
-# Team colors - high contrast for accessibility
-home_color = "#00875A"  # Eagles green (brighter, distinct)
-away_color = "#003594"  # Cowboys blue (brighter, distinct)
-home_fill = "rgba(0,135,90,0.30)"  # Green fill - clearly distinguishable
-away_fill = "rgba(0,53,148,0.30)"  # Blue fill - clearly distinguishable
 
 # Plot
 fig = go.Figure()
 
-# Fill above 50% (home team)
+# Fill above 50% — home team (Eagles)
 win_above = np.clip(win_pct, 50, 100)
 fig.add_trace(go.Scatter(x=plays, y=win_above, mode="lines", line={"width": 0}, showlegend=False, hoverinfo="skip"))
 fig.add_trace(
@@ -69,13 +78,13 @@ fig.add_trace(
         mode="lines",
         line={"width": 0},
         fill="tonexty",
-        fillcolor=home_fill,
+        fillcolor=HOME_FILL,
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Fill below 50% (away team)
+# Fill below 50% — away team (Cowboys)
 win_below = np.clip(win_pct, 0, 50)
 fig.add_trace(go.Scatter(x=plays, y=win_below, mode="lines", line={"width": 0}, showlegend=False, hoverinfo="skip"))
 fig.add_trace(
@@ -85,42 +94,41 @@ fig.add_trace(
         mode="lines",
         line={"width": 0},
         fill="tonexty",
-        fillcolor=away_fill,
+        fillcolor=AWAY_FILL,
         showlegend=False,
         hoverinfo="skip",
     )
 )
 
-# Main win probability line with smoothing
+# Main win probability line
 fig.add_trace(
     go.Scatter(
         x=plays,
         y=win_pct,
         mode="lines",
-        line={"width": 3.5, "color": "#2a2a2a", "shape": "spline", "smoothing": 0.8},
+        line={"width": 2.5, "color": INK, "shape": "spline", "smoothing": 0.8},
         name="Win Probability",
         hovertemplate="Play %{x}<br>Win Prob: %{y:.1f}%<extra></extra>",
     )
 )
 
 # 50% reference line
-fig.add_hline(y=50, line_dash="dash", line_color="rgba(0,0,0,0.35)", line_width=2)
+fig.add_hline(y=50, line_dash="dash", line_color=INK_SOFT, line_width=1.5, opacity=0.6)
 
-# Quarter dividers
+# Quarter dividers and labels
 for q_play, q_label in [(q1_end, "Q2"), (q2_end, "Q3"), (q3_end, "Q4")]:
-    fig.add_vline(x=q_play, line_dash="dot", line_color="rgba(0,0,0,0.2)", line_width=1.5)
+    fig.add_vline(x=q_play, line_dash="dot", line_color=GRID_RULE, line_width=1.5)
     fig.add_annotation(
-        x=q_play, y=100, text=f"<b>{q_label}</b>", showarrow=False, font={"size": 16, "color": "#888"}, yshift=12
+        x=q_play, y=100, text=f"<b>{q_label}</b>", showarrow=False, font={"size": 10, "color": INK_MUTED}, yshift=14
     )
 
-# Q1 label
-fig.add_annotation(x=0, y=100, text="<b>Q1</b>", showarrow=False, font={"size": 16, "color": "#888"}, yshift=12)
+fig.add_annotation(x=0, y=100, text="<b>Q1</b>", showarrow=False, font={"size": 10, "color": INK_MUTED}, yshift=14)
 
-# Annotate scoring events
+# Scoring event markers and annotations
 for play_idx, _, label in events:
     label_clean = label.replace("\n", "<br>")
     is_home = "Eagles" in label
-    marker_color = home_color if is_home else away_color
+    marker_color = HOME_COLOR if is_home else AWAY_COLOR
     y_val = win_pct[play_idx]
 
     fig.add_trace(
@@ -128,16 +136,18 @@ for play_idx, _, label in events:
             x=[play_idx],
             y=[y_val],
             mode="markers",
-            marker={"size": 14, "color": marker_color, "line": {"color": "white", "width": 2}},
+            marker={"size": 10, "color": marker_color, "line": {"color": PAGE_BG, "width": 2}},
             showlegend=False,
             hovertemplate=f"{label_clean}<br>Play {play_idx}<br>Win Prob: {y_val:.1f}%<extra></extra>",
         )
     )
 
-    ay_offset = -60 if y_val > 55 else 60
+    ay_offset = -55 if y_val > 55 else 55
     ax_offset = 0
-    # Stagger annotations to reduce overlap in crowded regions
-    if play_idx == 68:
+    if play_idx == 10:
+        ax_offset = 60  # steer right to avoid PHI Eagles legend in upper-left
+        ay_offset = -60
+    elif play_idx == 68:
         ax_offset = 55
         ay_offset = -45
     elif play_idx == 80:
@@ -160,92 +170,98 @@ for play_idx, _, label in events:
         arrowcolor=marker_color,
         ax=ax_offset,
         ay=ay_offset,
-        font={"size": 15, "color": marker_color},
-        bgcolor="rgba(255,255,255,0.94)",
+        font={"size": 10, "color": marker_color},
+        bgcolor=ELEVATED_BG,
         bordercolor=marker_color,
         borderwidth=1.5,
         borderpad=5,
     )
 
-# Team legend annotations
+# Team legend
 fig.add_annotation(
     x=0.01,
-    y=0.98,
+    y=0.97,
     xref="paper",
     yref="paper",
     text="<b>▲ PHI Eagles</b>",
     showarrow=False,
-    font={"size": 18, "color": home_color},
-    bgcolor="rgba(255,255,255,0.85)",
+    font={"size": 12, "color": HOME_COLOR},
+    bgcolor=ELEVATED_BG,
+    bordercolor=HOME_COLOR,
+    borderwidth=1,
     borderpad=6,
 )
-
 fig.add_annotation(
     x=0.01,
-    y=0.02,
+    y=0.04,
     xref="paper",
     yref="paper",
     text="<b>▼ DAL Cowboys</b>",
     showarrow=False,
-    font={"size": 18, "color": away_color},
-    bgcolor="rgba(255,255,255,0.85)",
+    font={"size": 12, "color": AWAY_COLOR},
+    bgcolor=ELEVATED_BG,
+    bordercolor=AWAY_COLOR,
+    borderwidth=1,
     borderpad=6,
 )
 
-# Final score subtitle
+# Final score — upper right corner inside the plot
 fig.add_annotation(
-    x=0.5,
-    y=1.08,
+    x=0.99,
+    y=0.97,
     xref="paper",
     yref="paper",
+    xanchor="right",
+    yanchor="top",
     text="Final Score: Eagles 27 – Cowboys 17",
     showarrow=False,
-    font={"size": 20, "color": "#555"},
+    font={"size": 12, "color": INK_SOFT},
+    bgcolor=ELEVATED_BG,
+    borderpad=5,
 )
 
-# Style
+# Layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "line-win-probability · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#2a2a2a"},
+        "text": "line-win-probability · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
         "y": 0.97,
     },
-    template="plotly_white",
-    plot_bgcolor="rgba(248,249,252,1)",
-    paper_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     xaxis={
-        "title": {"text": "Play Number", "font": {"size": 22, "color": "#444"}},
-        "tickfont": {"size": 18, "color": "#666"},
+        "title": {"text": "Play Number", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "showline": True,
         "linewidth": 1,
-        "linecolor": "rgba(0,0,0,0.18)",
+        "linecolor": INK_SOFT,
+        "showgrid": False,
         "range": [-2, play_count + 2],
     },
     yaxis={
-        "title": {"text": "Win Probability (%)", "font": {"size": 22, "color": "#444"}},
-        "tickfont": {"size": 18, "color": "#666"},
+        "title": {"text": "Win Probability (%)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": [0, 25, 50, 75, 100],
         "ticktext": ["0%", "25%", "50%", "75%", "100%"],
         "range": [0, 100],
         "showline": True,
         "linewidth": 1,
-        "linecolor": "rgba(0,0,0,0.18)",
+        "linecolor": INK_SOFT,
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(0,0,0,0.06)",
+        "gridcolor": GRID,
     },
     showlegend=False,
-    margin={"l": 80, "r": 40, "t": 130, "b": 70},
+    margin={"l": 80, "r": 40, "t": 100, "b": 70},
+    hovermode="x unified",
 )
 
-# Add custom hover mode for better interactivity in HTML
-fig.update_layout(hovermode="x unified")
+fig.update_xaxes(showspikes=True, spikecolor=INK_SOFT, spikethickness=1, spikedash="dot")
 
-# Add play-by-play spike lines for HTML interactivity
-fig.update_xaxes(showspikes=True, spikecolor="rgba(0,0,0,0.3)", spikethickness=1, spikedash="dot")
-
-# Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save — landscape 3200×1800 (width=800, height=450, scale=4)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

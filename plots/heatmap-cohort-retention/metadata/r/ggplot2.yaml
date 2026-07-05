@@ -1,0 +1,262 @@
+library: ggplot2
+language: r
+specification_id: heatmap-cohort-retention
+created: '2026-06-20T01:08:14Z'
+updated: '2026-06-20T01:25:30Z'
+generated_by: claude-sonnet
+workflow_run: 27855420584
+issue: 4570
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-cohort-retention/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Triangular heatmap with correct cohort-period structure, triangular shape, and
+    all 10 cohorts × decreasing periods implemented precisely
+  - Perfect spec compliance — retention %, cohort sizes on y-axis, Wk 0–9 x-axis labels,
+    colorbar legend all present
+  - 'Effective data storytelling: amber dashed vline highlights the Week 1 cliff,
+    dynamically computed subtitle drives the insight home'
+  - Excellent theme adaptation — PAGE_BG, INK, INK_SOFT tokens threaded throughout,
+    both renders pass legibility checks
+  - 'Clean idiomatic ggplot2: geom_tile + geom_text + geom_vline layers, guide_colorbar,
+    factor level ordering — all idiomatic and correct'
+  - 'Perfect data quality: realistic SaaS retention decay (100% → ~60% → ~25% plateau),
+    plausible cohort sizes, non-controversial domain'
+  weaknesses:
+  - 'Cell text color #FFFDF6 is hardcoded rather than theme-adaptive — works here
+    because tile colors are constant across themes, but introduces a subtle assumption;
+    consider using INK or a high-contrast constant like white'
+  - Color gradient direction (blue=low, green=high) reverses the canonical imprint_seq
+    order (green→blue); the semantic justification is sound but reviewers may flag
+    it — add a comment explaining the semantic reversal
+  - 'DE-01 is slightly below publication-ready: the amber separator and semantic gradient
+    show intentional design, but the overall aesthetic lacks the visual hierarchy
+    and typographic refinement of a truly polished release (e.g. no font weight variation,
+    legend slightly heavy with bordered box)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface color.
+      Chrome: Title "heatmap-cohort-retention · r · ggplot2 · anyplot.ai" centered in dark ink at 12pt, clearly readable. Subtitle "Week 1 cliff: ~38 pp drop from signup — subsequent weeks show gradual plateau" in secondary ink at 8.5pt, readable. X-axis label "Weeks Since Signup" in dark ink, readable. Y-axis tick labels (two-line format: cohort name + user count) in INK_SOFT at 8.5pt, readable. Colorbar legend "Retention" label in dark ink, tick labels in INK_SOFT.
+      Data: Blue (#4467A3) for low retention grading to brand green (#009E73) for high retention. All cells show white percentage text (#FFFDF6, bold, 3mm). Amber dashed vertical line between Wk 0 and Wk 1 clearly marks the cliff. Triangular shape correctly emerges with Jan '24 having 10 periods and Oct '24 having 1.
+      Legibility verdict: PASS — all text elements readable against the off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title and subtitle in light ink (#F0EFE8), clearly readable against dark background. X-axis tick labels and "Weeks Since Signup" label in #B8B7B0 (INK_SOFT for dark), readable. Y-axis tick labels in #B8B7B0, readable. Legend box has elevated dark background (#242420) with INK_SOFT border, text in #B8B7B0. No dark-on-dark failures observed.
+      Data: Tile colors identical to light render (same blue-to-green gradient) — data colors are theme-independent as required. Cell text in #FFFDF6 remains readable against all tile backgrounds. Amber dashed line visible.
+      Legibility verdict: PASS — all text adapts correctly to dark theme, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, subtitle 8.5pt, axis title
+          10pt, tick labels 8–8.5pt, cell text 3mm bold). Y-axis two-line labels slightly
+          tight but readable. Minor deduction for compact y-axis label lines.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Heatmap grid is clean, cell text fits in
+          tiles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All tiles clearly visible with saturated colors. Cell percentage
+          labels bold and readable. Amber separator line prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-green gradient distinguishable under CVD simulations (luminance
+          difference sufficient). Colorbar provides quantitative reference.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 canvas. Plot fills canvas well. Colorbar positioned
+          cleanly on the right. Balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: ''Weeks Since Signup'' descriptive. Y-axis NULL but tick
+          labels are self-documenting (cohort + user count). Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous gradient uses Imprint palette stops (#4467A3 and #009E73)
+          — reversed from canonical imprint_seq but semantically justified (green=good=high
+          retention). Backgrounds #FAF8F1 / #1A1A17 correct. Chrome theme-adaptive
+          in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: intentional amber separator, semantic gradient
+          direction, informative dynamic subtitle. Not yet publication-ready — lacks
+          refined typographic hierarchy and the bordered legend box adds visual weight.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed (appropriate for heatmap), tile borders use PAGE_BG
+          for clean separation, elevated legend background. Good whitespace in margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear narrative: subtitle calls out the cliff, amber vline visually
+          marks it, dynamic cliff_drop computation. Viewer is guided to the Week 1
+          insight immediately.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular cohort retention heatmap.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: triangular shape, cell % annotations,
+          cohort sizes on y-axis, Wk 0–9 labels, colorbar.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=period, Y=cohort, fill=retention_rate. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'heatmap-cohort-retention · r · ggplot2 · anyplot.ai' correct.
+          Colorbar labeled 'Retention' with % scale.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: retention decay, cohort variation, triangular
+          incomplete data for recent cohorts, Week 1 cliff pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly SaaS signup cohorts Jan–Oct 2024, realistic cohort sizes
+          980–1480 users. Neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100% at Week 0, ~60% Week 1 cliff, gradual plateau to ~22–27% by
+          Week 9 — realistic SaaS retention numbers.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg — both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R. Data generation loop is clear and appropriate
+          for the triangular structure.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave(sprintf('plot-%s.png', THEME)) produces plot-light.png / plot-dark.png
+          correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot2: geom_tile, scale_fill_gradient, guides(fill=guide_colorbar()),
+          factor level ordering, scale_*_discrete(expand=), theme() token threading.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ggplot2-distinctive grammar layering (tile+text+vline), guide_colorbar
+          customization, factor levels for triangular ordering. Not quite 'impossible
+          in another library' level but clearly leverages ggplot2 strengths.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome

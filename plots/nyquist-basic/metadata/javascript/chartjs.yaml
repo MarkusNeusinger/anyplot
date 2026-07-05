@@ -1,0 +1,268 @@
+library: chartjs
+language: javascript
+specification_id: nyquist-basic
+created: '2026-06-17T22:36:43Z'
+updated: '2026-06-17T22:53:42Z'
+generated_by: claude-sonnet
+workflow_run: 27723750259
+issue: 4412
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/javascript/chartjs/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Full spec compliance: critical point marker, unit circle, frequency annotations,
+    direction arrows, and 1:1 aspect ratio all present'
+  - Accurate transfer function G(s) = 6/((s+1)(s+2)(s+3)) with correct complex arithmetic
+    — DC gain, phase crossover, and gain margin are all correct
+  - Custom Chart.js plugins (bgPlugin + nyquistPlugin) correctly use beforeDraw/afterDraw
+    lifecycle for background fill and canvas 2D arrow/annotation rendering
+  - 'Palette compliant: positive/negative frequency curves use brand green palette[0],
+    critical point uses semantic matte red, ochre dots for annotations; both themes
+    adapt correctly'
+  - 600 log-spaced frequency points (ω from 0.01 to 100 rad/s) produce a smooth, professional
+    Nyquist curve with negative-frequency conjugate mirror
+  - Square orientation directive correctly ensures 1:1 aspect ratio per the spec requirement
+  weaknesses:
+  - Frequency annotation labels for ω ≈ 3.32 (φ×) and ω = 2 are spatially crowded
+    — both points are near x≈-0.1 to -0.2, y near 0 and -0.16, so their labels overlap
+    visually; add a larger vertical offset for the ω = 2 label or reposition to reduce
+    crowding
+  - Annotation font is hardcoded as 'bold 15px sans-serif' rather than using a token-derived
+    font string — this works visually but bypasses the style system; use `${15 * (window.devicePixelRatio
+    || 1)}px` or the t token approach for consistency
+  - 'DE-02 refinement gap: legend box uses Chart.js default border styling (no explicit
+    labels.boxWidth/borderColor tied to the token system); no explicit removal of
+    legend border — could set labels.borderColor: ''transparent'' for a cleaner look'
+  - Helper functions cmul/cdiv/evalG increase code surface area; could be inlined
+    or expressed as a single evalG call with inline arithmetic to satisfy the KISS
+    criterion more strictly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct anyplot light theme background.
+      Chrome: Title "nyquist-basic · javascript · chartjs · anyplot.ai" in dark ink is clearly readable at the top. X-axis label "Real" and Y-axis label "Imaginary" in dark ink are readable. Tick labels (-1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5 on both axes) in inkSoft are readable. Grid lines are present and subtle.
+      Data: Nyquist curve in brand green #009E73: positive-frequency segment is solid, negative-frequency is dashed. Unit circle shown as dashed gray line. Critical point (-1, 0) marked with a prominent red × (matte red #AE3030). Ochre frequency annotation dots at ω = 0.5, 1, 2, ≈3.32 with directional arrow triangles along the curve. Legend top-center shows all four series labels.
+      Legibility verdict: PASS — all chrome elements are clearly readable on the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct anyplot dark theme background.
+      Chrome: Title and axis labels adapt to light ink (#F0EFE8-range), tick labels adapt to inkSoft — all clearly readable against the dark background. No dark-on-dark failures observed. Grid lines remain subtle (light-opacity white rule).
+      Data: Nyquist curve remains in identical brand green #009E73, confirming correct theme separation (data colors unchanged). Unit circle now renders in light dashed style (inkSoft adapted to near-white). Critical point red × (#AE3030) remains clearly visible. Ochre annotation dots (palette[3]) unchanged between themes.
+      Legibility verdict: PASS — all text elements are clearly readable on the dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all explicitly sized and readable
+          in both themes. Annotation font hardcoded as '15px sans-serif' bypasses
+          token system but is visually appropriate.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels for ω≈3.32 and ω=2 are spatially crowded near the center of
+          the plot; not strictly overlapping but uncomfortably close.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 600-point curve renders smoothly, direction arrows clearly visible,
+          critical point × is prominent, ochre annotation dots are easily spotted.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette used, CVD-safe. Critical point uses both color (red)
+          and shape (×) redundant encoding — excellent practice.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square 2400×2400 format correct for 1:1 aspect ratio spec requirement.
+          Chart fills canvas well. Minor: title area slightly large relative to plot
+          area height.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is exact required format. Axes labeled 'Real' and 'Imaginary'
+          per spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series = palette[0] (#009E73). Critical point uses semantic
+          matte red palette[4]. Annotation dots use ochre palette[3]. Background =
+          t.pageBg. Both themes correct.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: custom plugins drive direction arrows and frequency
+          annotation dots, solid vs dashed curve distinction for pos/neg frequency,
+          semantic use of matte red for critical point. Clear design intent beyond
+          generic Chart.js defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Axis borders removed (border: {display: false}), grid uses t.grid
+          token, tooltips disabled. Legend box retains default styling without explicit
+          border removal.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Direction arrows communicate frequency sweep direction, annotations
+          identify key engineering points (phase crossover, gain crossover), critical
+          point clearly marked. Functional storytelling for engineering audience.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Nyquist plot on complex plane with both positive and negative
+          frequency branches.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: critical point (-1,0) with distinct marker,
+          unit circle, frequency annotations at key points, direction arrows, 1:1
+          aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on x-axis, imaginary part on y-axis. 600 log-spaced frequencies
+          from 0.01 to 100 rad/s. Conjugate mirror for negative frequencies.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'nyquist-basic · javascript · chartjs · anyplot.ai'.
+          Legend clearly labels all four series including unit circle, pos/neg G(jω),
+          and critical point.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Nyquist plot features: frequency response curve, conjugate
+          (negative-freq) branch, unit circle, critical stability point, frequency
+          annotations, direction of increasing frequency.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: G(s) = 6/((s+1)(s+2)(s+3)) is a standard textbook third-order stable
+          plant. DC gain=1, phase crossover ω≈3.32, gain margin=10 (20 dB) — mathematically
+          correct and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Axes range ±1.5 contains the full Nyquist curve. 600 log-spaced points
+          produce a smooth, professional curve.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three helper functions (cmul, cdiv, evalG) increase code surface;
+          justified by complex math but could be inlined for stricter KISS compliance.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — pure mathematical computation, no random numbers.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; Chart is global, code is fully self-contained.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom plugins for background and arrows are appropriate Chart.js
+          architecture. Code is well-organized with clear section comments.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Square orientation directive present. Chart.js produces both HTML
+          and PNG outputs as expected for interactive library.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of scatter type with showLine:true for line-connected
+          scatter. Plugin registration via plugins array at chart config level is
+          idiomatic Chart.js.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Custom Chart.js plugin lifecycle (beforeDraw/afterDraw) with direct
+          Canvas 2D API drawing demonstrates deep library knowledge. pointStyle: ''crossRot''
+          for critical point marker uses Chart.js built-in shape vocabulary.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []

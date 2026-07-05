@@ -1,298 +1,243 @@
-""" pyplots.ai
+""" anyplot.ai
 heatmap-chromagram: Music Chromagram (Pitch Class Distribution over Time)
-Library: pygal 3.1.0 | Python 3.14.3
-Quality: 91/100 | Updated: 2026-03-23
+Library: pygal 3.1.3 | Python 3.13.14
+Quality: 90/100 | Updated: 2026-06-24
 """
 
+import os
 import sys
 
 import numpy as np
 
 
-# Temporarily remove current directory from path to avoid name collision
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+# Imprint sequential colormap: #009E73 → #4467A3 (20 stops)
+_N = 20
+_c0, _c1 = (0, 158, 115), (68, 103, 163)
+SEQ_CMAP = [
+    "#{:02X}{:02X}{:02X}".format(
+        round(_c0[0] + (_c1[0] - _c0[0]) * i / (_N - 1)),
+        round(_c0[1] + (_c1[1] - _c0[1]) * i / (_N - 1)),
+        round(_c0[2] + (_c1[2] - _c0[2]) * i / (_N - 1)),
+    )
+    for i in range(_N)
+]
+
+# Pop cwd from path so this file (pygal.py) doesn't shadow the pygal package
+_p0 = sys.path.pop(0) if sys.path else ""
 from pygal.graph.graph import Graph  # noqa: E402
 from pygal.style import Style  # noqa: E402
 
 
-# Restore path
-sys.path.insert(0, _cwd)
+sys.path.insert(0, _p0)
+
+
+def _lerp_color(value, vmin=0.0, vmax=1.0):
+    t = max(0.0, min(1.0, (value - vmin) / (vmax - vmin))) * (len(SEQ_CMAP) - 1)
+    i, j = int(t), min(int(t) + 1, len(SEQ_CMAP) - 1)
+    f = t - i
+    c0, c1 = SEQ_CMAP[i], SEQ_CMAP[j]
+    r = int(int(c0[1:3], 16) + (int(c1[1:3], 16) - int(c0[1:3], 16)) * f)
+    g = int(int(c0[3:5], 16) + (int(c1[3:5], 16) - int(c0[3:5], 16)) * f)
+    b = int(int(c0[5:7], 16) + (int(c1[5:7], 16) - int(c0[5:7], 16)) * f)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _render_heatmap(chart):
+    if not chart.chroma_data:
+        return
+
+    n_rows, n_cols = len(chart.chroma_data), len(chart.chroma_data[0])
+    m_l, m_b, m_t, m_r = 245, 180, 80, 300
+    cw = (chart.view.width - m_l - m_r) / n_cols
+    ch = (chart.view.height - m_b - m_t) / n_rows
+    gw, gh = n_cols * cw, n_rows * ch
+    x0 = chart.view.x(0) + m_l
+    y0 = chart.view.y(n_rows) + m_t
+
+    node = chart.svg.node(chart.nodes["plot"], class_="chroma-heatmap")
+
+    # Chord region background bands — opacity raised to be clearly visible (DE-01)
+    for k, reg in enumerate(chart.chord_regions):
+        rx = x0 + reg["start"] * cw
+        rw = (reg["end"] - reg["start"]) * cw
+        chart.svg.node(node, "rect", x=rx, y=y0, width=rw, height=gh, fill=chart.ink, opacity=["0.12", "0.17"][k % 2])
+        t = chart.svg.node(node, "text", x=rx + rw / 2, y=y0 - 20)
+        t.set("text-anchor", "middle")
+        t.set("fill", chart.ink_muted)
+        t.set("style", "font-size:42px;font-weight:bold;font-family:sans-serif;font-style:italic")
+        t.text = reg["label"]
+        if reg["start"] > 0:
+            chart.svg.node(
+                node, "line", x1=rx, y1=y0 - 5, x2=rx, y2=y0 + gh + 5, stroke=chart.ink_muted, fill="none"
+            ).set("style", "stroke-width:2;stroke-dasharray:8,6")
+
+    # Subtitle below x-axis
+    st = chart.svg.node(node, "text", x=x0 + gw / 2, y=y0 + gh + 165)
+    st.set("text-anchor", "middle")
+    st.set("fill", chart.ink_muted)
+    st.set("style", "font-size:40px;font-family:sans-serif;font-style:italic")
+    st.text = "Chord progression: I – V – vi – IV (C major key)"
+
+    # Heatmap cells with SVG tooltip titles (pygal interactive feature)
+    for i in range(n_rows):
+        rg = chart.svg.node(node, "g", class_=f"row-{i}")
+        for j in range(n_cols):
+            v = chart.chroma_data[i][j]
+            rect = chart.svg.node(
+                rg,
+                "rect",
+                x=x0 + j * cw,
+                y=y0 + i * ch,
+                width=cw + 0.5,
+                height=ch + 0.5,
+                fill=_lerp_color(v),
+                stroke="none",
+            )
+            chart.svg.node(rect, "title").text = f"{chart.pitch_labels[i]} @ {chart.time_labels[j]}s — Energy: {v:.3f}"
+
+    # Thin horizontal pitch-row separators
+    for i in range(1, n_rows):
+        chart.svg.node(
+            node,
+            "line",
+            x1=x0,
+            y1=y0 + i * ch,
+            x2=x0 + gw,
+            y2=y0 + i * ch,
+            stroke="#ffffff",
+            fill="none",
+            opacity="0.3",
+        ).set("style", "stroke-width:1.5")
+
+    # Heatmap border — INK_MUTED at 0.5 opacity to unify fine chrome (DE-02)
+    chart.svg.node(node, "rect", x=x0, y=y0, width=gw, height=gh, fill="none", stroke=chart.ink_muted, opacity="0.5")
+
+    # Y-axis: pitch class labels
+    row_font = min(44, int(ch * 0.6))
+    for i, label in enumerate(chart.pitch_labels):
+        t = chart.svg.node(node, "text", x=x0 - 18, y=y0 + i * ch + ch / 2 + row_font * 0.35)
+        t.set("text-anchor", "end")
+        t.set("fill", chart.ink)
+        t.set("style", f"font-size:{row_font}px;font-weight:600;font-family:sans-serif")
+        t.text = label
+
+    # Y-axis title (rotated)
+    yt_x, yt_y = x0 - 200, y0 + gh / 2
+    t = chart.svg.node(node, "text", x=yt_x, y=yt_y)
+    t.set("text-anchor", "middle")
+    t.set("fill", chart.ink)
+    t.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
+    t.set("transform", f"rotate(-90, {yt_x}, {yt_y})")
+    t.text = "Pitch Class"
+
+    # X-axis: time tick labels
+    step = max(1, n_cols // 10)
+    for j in range(0, n_cols, step):
+        t = chart.svg.node(node, "text", x=x0 + j * cw + cw / 2, y=y0 + gh + 51)
+        t.set("text-anchor", "middle")
+        t.set("fill", chart.ink)
+        t.set("style", "font-size:36px;font-family:sans-serif")
+        t.text = chart.time_labels[j]
+
+    # X-axis title
+    t = chart.svg.node(node, "text", x=x0 + gw / 2, y=y0 + gh + 130)
+    t.set("text-anchor", "middle")
+    t.set("fill", chart.ink)
+    t.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
+    t.text = "Time (seconds)"
+
+    # Colorbar gradient (high=blue at top, low=green at bottom)
+    cb_w, n_seg = 50, 60
+    cb_h = gh * 0.85
+    cb_x, cb_y = x0 + gw + 50, y0 + (gh - cb_h) / 2
+    seg_h = cb_h / n_seg
+    for s in range(n_seg):
+        chart.svg.node(
+            node,
+            "rect",
+            x=cb_x,
+            y=cb_y + s * seg_h,
+            width=cb_w,
+            height=seg_h + 1,
+            fill=_lerp_color(1.0 - s / (n_seg - 1)),
+        )
+
+    chart.svg.node(
+        node, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, fill="none", stroke=chart.ink_muted, opacity="0.5"
+    )
+
+    cb_font = 36
+    for frac, txt in [(0.0, "1.0"), (0.5, "0.5"), (1.0, "0.0")]:
+        t = chart.svg.node(node, "text", x=cb_x + cb_w + 15, y=cb_y + frac * cb_h + cb_font * 0.35)
+        t.set("fill", chart.ink)
+        t.set("style", f"font-size:{cb_font}px;font-family:sans-serif")
+        t.text = txt
+
+    t = chart.svg.node(node, "text", x=cb_x + cb_w / 2, y=cb_y - 25)
+    t.set("text-anchor", "middle")
+    t.set("fill", chart.ink)
+    t.set("style", "font-size:40px;font-weight:bold;font-family:sans-serif")
+    t.text = "Energy"
 
 
 class ChromagramHeatmap(Graph):
-    """Custom chromagram heatmap extending pygal's Graph base class."""
-
     _series_margin = 0
 
-    def __init__(self, *args, **kwargs):
-        self.chroma_data = kwargs.pop("chroma_data", [])
-        self.pitch_labels = kwargs.pop("pitch_labels", [])
-        self.time_labels = kwargs.pop("time_labels", [])
-        self.colormap = kwargs.pop("colormap", [])
-        self.x_axis_title = kwargs.pop("x_axis_title", "")
-        self.y_axis_title = kwargs.pop("y_axis_title", "")
-        self.chord_regions = kwargs.pop("chord_regions", [])
-        self.vmin = kwargs.pop("vmin", 0.0)
-        self.vmax = kwargs.pop("vmax", 1.0)
-        super().__init__(*args, **kwargs)
-
-    def _interpolate_color(self, value):
-        """Interpolate color from sequential colormap based on value."""
-        normalized = max(0, min(1, (value - self.vmin) / (self.vmax - self.vmin)))
-        pos = normalized * (len(self.colormap) - 1)
-        idx1 = int(pos)
-        idx2 = min(idx1 + 1, len(self.colormap) - 1)
-        frac = pos - idx1
-
-        c1, c2 = self.colormap[idx1], self.colormap[idx2]
-        r = int(int(c1[1:3], 16) + (int(c2[1:3], 16) - int(c1[1:3], 16)) * frac)
-        g = int(int(c1[3:5], 16) + (int(c2[3:5], 16) - int(c1[3:5], 16)) * frac)
-        b = int(int(c1[5:7], 16) + (int(c2[5:7], 16) - int(c1[5:7], 16)) * frac)
-        return f"#{r:02x}{g:02x}{b:02x}"
-
-    def _plot(self):
-        """Draw the chromagram heatmap with chord region annotations."""
-        if not self.chroma_data:
-            return
-
-        n_rows = len(self.chroma_data)
-        n_cols = len(self.chroma_data[0])
-
-        plot_width = self.view.width
-        plot_height = self.view.height
-
-        # Tighter margins for better canvas utilization
-        margin_left = 245
-        margin_bottom = 180
-        margin_top = 80
-        margin_right = 300
-
-        avail_w = plot_width - margin_left - margin_right
-        avail_h = plot_height - margin_bottom - margin_top
-
-        cell_w = avail_w / n_cols
-        cell_h = avail_h / n_rows
-        grid_w = n_cols * cell_w
-        grid_h = n_rows * cell_h
-
-        x0 = self.view.x(0) + margin_left
-        y0 = self.view.y(n_rows) + margin_top
-
-        plot_node = self.nodes["plot"]
-        hmap = self.svg.node(plot_node, class_="chromagram-heatmap")
-
-        # --- Chord region labels and separators (Data Storytelling) ---
-        region_font = 38
-        region_colors = ["#e8e8e8", "#f4f4f4", "#e8e8e8", "#f4f4f4"]
-        for idx, region in enumerate(self.chord_regions):
-            rx = x0 + region["start"] * cell_w
-            rw = (region["end"] - region["start"]) * cell_w
-
-            # Subtle alternating background band behind heatmap
-            self.svg.node(
-                hmap,
-                "rect",
-                x=rx,
-                y=y0,
-                width=rw,
-                height=grid_h,
-                fill=region_colors[idx % len(region_colors)],
-                opacity="0.15",
-            )
-
-            # Chord label above the heatmap
-            label_x = rx + rw / 2
-            label_y = y0 - 20
-            t = self.svg.node(hmap, "text", x=label_x, y=label_y)
-            t.set("text-anchor", "middle")
-            t.set("fill", "#555555")
-            t.set("style", f"font-size:{region_font}px;font-weight:bold;font-family:sans-serif;font-style:italic")
-            t.text = region["label"]
-
-            # Vertical separator line at chord boundary (except first)
-            if region["start"] > 0:
-                sep_x = rx
-                self.svg.node(
-                    hmap, "line", x1=sep_x, y1=y0 - 5, x2=sep_x, y2=y0 + grid_h + 5, stroke="#999999", fill="none"
-                )
-                self.svg.node(hmap, "line", x1=sep_x, y1=y0 - 5, x2=sep_x, y2=y0 + grid_h + 5).set(
-                    "style", "stroke:#999999;stroke-width:2;stroke-dasharray:8,6"
-                )
-
-        # --- Subtitle: harmonic progression pattern ---
-        subtitle_x = x0 + grid_w / 2
-        subtitle_y = y0 + grid_h + 165
-        st = self.svg.node(hmap, "text", x=subtitle_x, y=subtitle_y)
-        st.set("text-anchor", "middle")
-        st.set("fill", "#777777")
-        st.set("style", "font-size:34px;font-family:sans-serif;font-style:italic")
-        st.text = "Chord progression: I \u2013 V \u2013 vi \u2013 IV (C major key)"
-
-        # --- Heatmap cells ---
-        for i in range(n_rows):
-            row_group = self.svg.node(hmap, "g", class_=f"pitch-row-{i}")
-            for j in range(n_cols):
-                value = self.chroma_data[i][j]
-                color = self._interpolate_color(value)
-                x = x0 + j * cell_w
-                y = y0 + i * cell_h
-
-                rect = self.svg.node(
-                    row_group, "rect", x=x, y=y, width=cell_w + 0.5, height=cell_h + 0.5, fill=color, stroke="none"
-                )
-                # Native pygal tooltip via <title> element
-                title_el = self.svg.node(rect, "title")
-                title_el.text = f"{self.pitch_labels[i]} @ {self.time_labels[j]}s — Energy: {value:.3f}"
-
-        # --- Thin horizontal separators between pitch rows ---
-        for i in range(1, n_rows):
-            sep_y = y0 + i * cell_h
-            self.svg.node(
-                hmap, "line", x1=x0, y1=sep_y, x2=x0 + grid_w, y2=sep_y, stroke="#ffffff", fill="none", opacity="0.3"
-            ).set("style", "stroke-width:1.5")
-
-        # --- Heatmap border ---
-        self.svg.node(hmap, "rect", x=x0, y=y0, width=grid_w, height=grid_h, fill="none", stroke="#333333")
-
-        # --- Y-axis: pitch class labels ---
-        row_font = min(44, int(cell_h * 0.6))
-        for i, label in enumerate(self.pitch_labels):
-            y = y0 + i * cell_h + cell_h / 2
-            t = self.svg.node(hmap, "text", x=x0 - 18, y=y + row_font * 0.35)
-            t.set("text-anchor", "end")
-            t.set("fill", "#333333")
-            t.set("style", f"font-size:{row_font}px;font-weight:600;font-family:sans-serif")
-            t.text = label
-
-        # --- Y-axis title (rotated) ---
-        if self.y_axis_title:
-            yt_x = x0 - 200
-            yt_y = y0 + grid_h / 2
-            t = self.svg.node(hmap, "text", x=yt_x, y=yt_y)
-            t.set("text-anchor", "middle")
-            t.set("fill", "#333333")
-            t.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
-            t.set("transform", f"rotate(-90, {yt_x}, {yt_y})")
-            t.text = self.y_axis_title
-
-        # --- X-axis: time labels ---
-        col_font = 36
-        step = max(1, n_cols // 10)
-        for j in range(0, n_cols, step):
-            x = x0 + j * cell_w + cell_w / 2
-            y = y0 + grid_h + col_font + 15
-            t = self.svg.node(hmap, "text", x=x, y=y)
-            t.set("text-anchor", "middle")
-            t.set("fill", "#333333")
-            t.set("style", f"font-size:{col_font}px;font-family:sans-serif")
-            t.text = self.time_labels[j]
-
-        # --- X-axis title ---
-        if self.x_axis_title:
-            xt_x = x0 + grid_w / 2
-            xt_y = y0 + grid_h + 130
-            t = self.svg.node(hmap, "text", x=xt_x, y=xt_y)
-            t.set("text-anchor", "middle")
-            t.set("fill", "#333333")
-            t.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
-            t.text = self.x_axis_title
-
-        # --- Colorbar ---
-        cb_w = 50
-        cb_h = grid_h * 0.85
-        cb_x = x0 + grid_w + 50
-        cb_y = y0 + (grid_h - cb_h) / 2
-
-        n_seg = 60
-        seg_h = cb_h / n_seg
-        for s in range(n_seg):
-            sv = self.vmax - (self.vmax - self.vmin) * s / (n_seg - 1)
-            self.svg.node(
-                hmap, "rect", x=cb_x, y=cb_y + s * seg_h, width=cb_w, height=seg_h + 1, fill=self._interpolate_color(sv)
-            )
-
-        # Colorbar border
-        self.svg.node(hmap, "rect", x=cb_x, y=cb_y, width=cb_w, height=cb_h, fill="none", stroke="#333333")
-
-        # Colorbar tick labels
-        cb_font = 36
-        for frac, txt in [
-            (0.0, f"{self.vmax:.1f}"),
-            (0.5, f"{(self.vmax + self.vmin) / 2:.1f}"),
-            (1.0, f"{self.vmin:.1f}"),
-        ]:
-            ty = cb_y + frac * cb_h + cb_font * 0.35
-            t = self.svg.node(hmap, "text", x=cb_x + cb_w + 15, y=ty)
-            t.set("fill", "#333333")
-            t.set("style", f"font-size:{cb_font}px;font-family:sans-serif")
-            t.text = txt
-
-        # Colorbar title
-        t = self.svg.node(hmap, "text", x=cb_x + cb_w / 2, y=cb_y - 25)
-        t.set("text-anchor", "middle")
-        t.set("fill", "#333333")
-        t.set("style", "font-size:40px;font-weight:bold;font-family:sans-serif")
-        t.text = "Energy"
+    def __init__(self, chroma_data, pitch_labels, time_labels, chord_regions, ink, ink_muted, **kwargs):
+        self.chroma_data = chroma_data
+        self.pitch_labels = pitch_labels
+        self.time_labels = time_labels
+        self.chord_regions = chord_regions
+        self.ink = ink
+        self.ink_muted = ink_muted
+        super().__init__(**kwargs)
 
     def _compute(self):
-        """Compute bounding box for the graph view."""
-        n_cols = len(self.chroma_data[0]) if self.chroma_data else 1
-        n_rows = len(self.chroma_data) if self.chroma_data else 1
-        self._box.xmin = 0
-        self._box.xmax = n_cols
-        self._box.ymin = 0
-        self._box.ymax = n_rows
+        nc = len(self.chroma_data[0]) if self.chroma_data else 1
+        nr = len(self.chroma_data) if self.chroma_data else 1
+        self._box.xmin, self._box.xmax = 0, nc
+        self._box.ymin, self._box.ymax = 0, nr
+
+    def _plot(self):
+        _render_heatmap(self)
 
 
-# --- Data: C major -> G major -> Am -> F major chord progression ---
+# Data: C major → G major → A minor → F major chord progression
 np.random.seed(42)
-
 pitch_classes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-n_pitches = len(pitch_classes)
-n_frames = 80
-frame_duration = 0.1
-time_positions = [f"{i * frame_duration:.1f}" for i in range(n_frames)]
+n_pitches, n_frames = len(pitch_classes), 80
+time_positions = [f"{i * 0.1:.1f}" for i in range(n_frames)]
 
 chroma = np.random.uniform(0.02, 0.12, (n_pitches, n_frames))
-
-# C major (C, E, G) - frames 0-19
 for f in range(0, 20):
     chroma[0, f] += np.random.uniform(0.7, 0.95)
     chroma[4, f] += np.random.uniform(0.5, 0.75)
     chroma[7, f] += np.random.uniform(0.55, 0.8)
-
-# G major (G, B, D) - frames 20-39
 for f in range(20, 40):
     chroma[7, f] += np.random.uniform(0.7, 0.95)
     chroma[11, f] += np.random.uniform(0.5, 0.75)
     chroma[2, f] += np.random.uniform(0.55, 0.8)
-
-# A minor (A, C, E) - frames 40-59
 for f in range(40, 60):
     chroma[9, f] += np.random.uniform(0.7, 0.95)
     chroma[0, f] += np.random.uniform(0.5, 0.75)
     chroma[4, f] += np.random.uniform(0.55, 0.8)
-
-# F major (F, A, C) - frames 60-79
 for f in range(60, 80):
     chroma[5, f] += np.random.uniform(0.7, 0.95)
     chroma[9, f] += np.random.uniform(0.5, 0.75)
     chroma[0, f] += np.random.uniform(0.55, 0.8)
-
-# Smooth transitions
 for f in range(n_frames - 1):
     chroma[:, f + 1] = 0.3 * chroma[:, f] + 0.7 * chroma[:, f + 1]
-
 chroma = np.clip(chroma, 0, 1)
 
-# Reverse so C is at bottom, B at top
 chroma_display = chroma[::-1]
 pitch_labels_display = pitch_classes[::-1]
-
-# Chord region definitions for storytelling annotations
 chord_regions = [
     {"start": 0, "end": 20, "label": "C major"},
     {"start": 20, "end": 40, "label": "G major"},
@@ -300,82 +245,55 @@ chord_regions = [
     {"start": 60, "end": 80, "label": "F major"},
 ]
 
-# pygal Style configuration
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    colors=("#306998",),
-    title_font_size=64,
-    legend_font_size=40,
-    label_font_size=40,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     font_family="sans-serif",
 )
 
-# Inferno-inspired sequential colormap
-sequential_colormap = [
-    "#000004",
-    "#1b0c41",
-    "#4a0c6b",
-    "#781c6d",
-    "#a52c60",
-    "#cf4446",
-    "#ed6925",
-    "#fb9b06",
-    "#f7d13d",
-    "#fcffa4",
-]
-
-# Create chart using pygal Graph extension pattern
 chart = ChromagramHeatmap(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="heatmap-chromagram · pygal · pyplots.ai",
     chroma_data=chroma_display.tolist(),
     pitch_labels=pitch_labels_display,
     time_labels=time_positions,
-    colormap=sequential_colormap,
     chord_regions=chord_regions,
+    ink=INK,
+    ink_muted=INK_MUTED,
+    width=3200,
+    height=1800,
+    style=custom_style,
+    title="heatmap-chromagram · python · pygal · anyplot.ai",
     show_legend=False,
     margin=80,
     margin_top=160,
     margin_bottom=60,
     show_x_labels=False,
     show_y_labels=False,
-    x_axis_title="Time (seconds)",
-    y_axis_title="Pitch Class",
-    vmin=0.0,
-    vmax=1.0,
 )
-
-# Add series to trigger pygal rendering pipeline
 chart.add("chromagram", [0])
 
-# Render outputs using pygal's native methods
-chart.render_to_file("plot.svg")
-chart.render_to_png("plot.png")
+chart.render_to_file(f"plot-{THEME}.svg")
+chart.render_to_png(f"plot-{THEME}.png")
 
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>heatmap-chromagram - pygal</title>
-    <style>
-        body {{ margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f5f5f5; }}
-        .chart {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    <figure class="chart">
-        {chart.render(is_unicode=True)}
-    </figure>
-</body>
-</html>
-"""
-
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+svg_content = chart.render(is_unicode=True)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(
+        "<!DOCTYPE html>\n<html>\n<head>\n"
+        '    <meta charset="utf-8">\n'
+        "    <title>heatmap-chromagram - python - pygal - anyplot.ai</title>\n"
+        "    <style>\n"
+        f"        body {{ margin: 0; display: flex; justify-content: center;"
+        f" align-items: center; min-height: 100vh; background: {PAGE_BG}; }}\n"
+        "        .chart { max-width: 100%; height: auto; }\n"
+        "    </style>\n"
+        "</head>\n<body>\n"
+        '    <figure class="chart">\n' + svg_content + "\n    </figure>\n</body>\n</html>\n"
+    )

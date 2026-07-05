@@ -6,7 +6,7 @@ title: Win Probability Chart
 
 # Specification tracking
 created: "2026-02-25T21:31:31Z"
-updated: null
+updated: "2026-06-21T03:09:46Z"
 issue: 4418
 suggested: MarkusNeusinger
 
@@ -22,6 +22,7 @@ tags:
   domain:
     - general
     - statistics
+    - sports
   features:
     - annotated
     - color-mapped

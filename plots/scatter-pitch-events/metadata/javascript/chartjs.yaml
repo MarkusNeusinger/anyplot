@@ -1,0 +1,268 @@
+library: chartjs
+language: javascript
+specification_id: scatter-pitch-events
+created: '2026-06-21T06:28:38Z'
+updated: '2026-06-21T06:46:16Z'
+generated_by: claude-sonnet
+workflow_run: 27895418684
+issue: 4417
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-pitch-events/javascript/chartjs/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - Sophisticated custom pitch-drawing plugin renders full FIFA-accurate pitch with
+    penalty areas, goal areas, center circle, halfway line, corner arcs, and penalty
+    spots — all in correct dimensions
+  - Alpha-based outcome encoding (high opacity = successful, low opacity = unsuccessful)
+    combined with distinct marker shapes per event type creates a rich multi-dimensional
+    encoding
+  - Directional arrows for passes and shots implemented via custom afterDatasetsDraw
+    plugin with proper canvas clipping and arrowhead geometry
+  - LCG seeded at 42 provides deterministic data generation without relying on browser
+    RNG, with realistic event count distributions and zone-appropriate positioning
+  - Advanced use of Chart.js plugin API (beforeDraw, afterDatasetsDraw, getPixelForValue)
+    demonstrates deep library mastery for bespoke canvas rendering
+  weaknesses:
+  - 'Pitch aspect ratio is not preserved: the 105:68m (≈1.54:1) pitch is rendered
+    in a 16:9 landscape canvas, stretching the pitch to approximately 2:1 — center
+    circle appears as a wide ellipse rather than a circle. Could be addressed by adding
+    layout padding to force the chart area to a 105:68 sub-region, or by choosing
+    a square canvas with chart-area offsets'
+  - Title font size (22px CSS) is a touch small relative to the full canvas — consider
+    increasing to 24-26px for better title presence at full resolution
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) canvas surrounds the pitch. The pitch itself renders in the specified dark grass green (#2e7d3a) with slightly lighter alternating 10m stripe bands for visual depth.
+      Chrome: Title "scatter-pitch-events · javascript · chartjs · anyplot.ai" in dark ink is readable above the pitch. Legend at bottom shows all 8 series with correct Imprint palette swatches — all text is dark and readable against the light-theme canvas background. Pitch lines (white/near-white) are clearly visible.
+      Data: Pass events as green circles (#009E73); shots as lavender stars (#C475FD); tackles as blue triangles (#4467A3); interceptions as ochre diamonds (#BD8233). Successful events are solid (alpha ~0.85–0.92), unsuccessful are transparent (alpha ~0.18–0.28). Green and lavender arrows show pass/shot trajectories.
+      Legibility verdict: PASS — all text and legend items are clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) canvas surrounds the pitch. Pitch renders in darker grass green (#1b4a22) with darker alternating stripes.
+      Chrome: Title text renders in light ink (#F0EFE8 equivalent from t.ink token), clearly readable against the dark canvas. Legend text is light-colored and readable. Pitch markings (white lines) remain high-contrast.
+      Data: Data colors are identical to the light render — green circles, lavender stars, blue triangles, ochre diamonds — consistent with the Imprint palette's theme-invariant data colors. Arrows remain in the same palette colors.
+      Legibility verdict: PASS — all chrome (title, legend) uses light text via t.ink token. No dark-on-dark text failures. Data colors unchanged between themes as required.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title 22px, legend 16px, t.ink/t.inkSoft
+          for theme-adaptive colors. All text readable in both themes. Slight reduction:
+          title could be 24-26px for more presence at full canvas size.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps. Legend items well-spaced with padding:20. Data
+          marker density in attacking zone is expected behavior.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All marker types clearly visible: circles r=6, stars r=10, triangles
+          r=8, diamonds r=8. Alpha encoding effectively separates successful from
+          unsuccessful outcomes.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette is CVD-safe. Redundant encoding: shape+color for
+          event type, alpha for outcome. No red-green sole signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch fills canvas well. Legend at bottom near data. Balanced margins
+          with layout padding.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes deliberately hidden (display:false) — correct design for a pitch
+          map where the pitch outlines provide spatial context. Title correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (t.palette[0]). Multi-series follows Imprint
+          canonical order. Canvas background uses page bg tokens (theme-adaptive).
+          Chrome uses t.ink/t.inkSoft tokens. Pitch background custom green is spec-required.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Genuinely sophisticated: custom FIFA-accurate pitch with alternating
+          stripes, all standard markings, multi-dimensional event encoding. Well above
+          configured defaults. One step below maximum due to slight austerity in the
+          overall composition.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Highly refined: axes hidden, no cartesian grid, pitch stripes for
+          visual interest, proper canvas clipping for arrows. usePointStyle in legend.
+          Subtle reduction for slightly tight outer margins.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Good spatial storytelling: shot concentration in attacking zone,
+          pass flow arrows showing direction, defensive actions distributed in defensive
+          half. Alpha encoding makes outcome immediately readable. No single dominant
+          focal point to push to 6.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct soccer pitch event map with scatter overlays.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'All features present: penalty areas, goal areas, center circle,
+          halfway line, corner arcs, penalty spots, distinct marker shapes, outcome-alpha
+          encoding, directional arrows. Deduction: pitch aspect ratio is not preserved
+          — 105:68 (1.54:1) rendered in 16:9 landscape stretches to ~2:1, center circle
+          appears elliptical.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (0-105m) and Y (0-68m) correctly mapped. All events within pitch
+          bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title is exactly ''scatter-pitch-events · javascript · chartjs ·
+          anyplot.ai''. Legend labels descriptive: Pass (complete/incomplete), Shot
+          (on/off target), Tackle (won/lost), Interception (won/lost).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 event types with both outcomes (8 series total). Pass and shot
+          arrows. Realistic zone distributions (passes in midfield, shots in attacking
+          zone, tackles/interceptions in defensive half).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Soccer match event data is a neutral, real domain. Event counts are
+          realistic (52/16 pass split, 7/13 shot split is a realistic on/off-target
+          ratio).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pitch dimensions correct (105m × 68m). Event positions within valid
+          bounds. Counts per event type are realistic for a match segment.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean flow: theme setup → data generation → mount → plugins → chart.
+          Two minimal helper functions (hexRgba, rand LCG) are necessary.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom LCG seeded at 42 with comment explaining why browser has no
+          seeded RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; Chart is a global. No unused code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured plugins. Dataset declarations are appropriately verbose
+          for 8 distinct series. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness handles file output. No deprecated APIs. Chart.js 4.4.7 patterns
+          used correctly.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic Chart.js: responsive+maintainAspectRatio+animation flags,
+          plugins array, pointStyle per dataset, usePointStyle in legend labels.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Advanced Chart.js plugin API: beforeDraw hook for pitch rendering
+          with getPixelForValue coordinate translation, afterDatasetsDraw for clipped
+          arrow rendering. This is a genuinely distinctive Chart.js technique not
+          easily replicated in other libraries.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - html-export
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

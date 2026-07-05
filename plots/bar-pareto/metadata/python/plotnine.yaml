@@ -1,44 +1,57 @@
 library: plotnine
+language: python
 specification_id: bar-pareto
 created: '2026-03-20T07:23:18Z'
-updated: '2026-03-20T07:49:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23332978871
+updated: '2026-06-20T17:27:22Z'
+generated_by: claude-sonnet
+workflow_run: 27877532343
 issue: 4550
-python_version: 3.14.3
-library_version: 0.15.3
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.14
+library_version: 0.15.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-pareto/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent data storytelling through vital few / useful many color distinction
-    — directly communicates the Pareto principle
-  - 'All spec requirements fully implemented: descending bars, cumulative line, secondary
-    y-axis, 80% threshold, centered markers'
-  - Clean professional design with thoughtful color palette and subtle grid styling
-  - Realistic manufacturing defect data naturally demonstrates the 80/20 rule
-  - Well-structured readable code with deterministic data
+  - Perfect spec compliance — all Pareto chart requirements implemented correctly
+    (descending bars, cumulative line, 80% threshold, secondary y-axis with percentage
+    labels, markers at bar centers)
+  - Excellent semantic color usage — brand green (#009E73) for vital few, muted grey
+    for useful many creates instant visual comprehension of the Pareto principle
+  - Robust dual-theme implementation with full chrome adaptation; both light and dark
+    renders pass readability checks
+  - Clean, deterministic code with explicit theme tokens and comprehensive plotnine
+    theme settings
+  - Realistic call-centre complaint data with convincing Pareto distribution (9 categories,
+    counts 14–245)
   weaknesses:
-  - Cumulative percentage labels could be slightly larger for guaranteed legibility
-    at all viewing sizes
-  - Library mastery limited by necessary matplotlib fallback for twin axes
-  image_description: 'The plot displays a Pareto chart of manufacturing defect types.
-    Ten categories are shown on the x-axis (rotated 30°), sorted in descending order:
-    Scratches (186), Dents (145), Misalignment (112), Cracks (87), Discoloration (64),
-    Burrs (43), Warping (29), Contamination (18), Chipping (11), and Porosity (5).
-    Bars use two distinct colors: dark steel blue (#306998) for the "vital few" categories
-    (those contributing to the first 80%) and light blue (#A8C4D9) for the "useful
-    many." An orange-red cumulative percentage line with open circle markers overlays
-    the bars, with bold percentage labels (27%, 47%, 63%, 76%, 85%, 91%, 95%, 98%,
-    99%, 100%) above each point. A dashed gray horizontal line marks the 80% threshold
-    with a "80% threshold" label. The primary y-axis shows "Defect Count" (0-200+),
-    the secondary y-axis shows "Cumulative %" (0%-100%). The title reads "bar-pareto
-    · plotnine · pyplots.ai". Background is clean white with subtle horizontal grid
-    lines only on the y-axis.'
+  - Last three cumulative percentage labels (96%, 99%, 100%) are mildly crowded in
+    the upper-right quadrant — consecutive cumulative values differ by only 1–3pp
+    and nudge_y=10 provides insufficient vertical separation
+  - Secondary y-axis implementation requires matplotlib ax.twinx() fallback after
+    plot.draw() — necessary for this spec but reduces plotnine library mastery score
+  - 80% threshold annotation placed at x=0.5 (left of first bar, in left margin area)
+    reads as slightly awkward — would be cleaner positioned inside the plot area near
+    the first bar
+  - Design excellence is functional but not exceptional — legend placement and typography
+    hierarchy could be more refined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "bar-pareto · python · plotnine · anyplot.ai" bold and readable in dark ink; x-axis label "Complaint Category" and y-axis label "Complaint Count" clearly visible; tick labels in INK_SOFT (#4A4A44) readable; x-axis category labels rotated 30°
+      Data: Brand-green (#009E73) bars for Vital Few categories; muted grey bars for Useful Many; purple (#C475FD) cumulative line with open-circle markers; percentage labels (23%, 46%, 62%, 84%, 91%, 96%, 99%, 100%) above each marker; dashed grey 80% threshold line; secondary y-axis showing 0%–100%
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8) clearly readable; axis labels and tick labels in INK_SOFT (#B8B7B0) readable against dark surface; secondary y-axis labels in same adapted tone; 80% threshold annotation visible; no dark-on-dark failures observed
+      Data: Identical Imprint palette colors to light render — brand-green vital-few bars, muted grey useful-many bars, purple cumulative line with open-circle markers; all percentage labels readable in purple (#C475FD)
+      Legibility verdict: PASS — all text readable against dark background; chrome correctly adapted
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -46,68 +59,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, axis titles=20, ticks=16).
-          Percentage labels (size=9) and threshold annotation (size=10) slightly small
-          but readable.
+        comment: 'All font sizes explicitly set (title 12pt, axes 10pt, ticks 8pt).
+          Readable in both themes. Minor: x-axis labels at 30° rotation slightly tight
+          on right side.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text. X-axis labels rotated 30° with right-alignment.
-          Percentage labels well-spaced.
+        comment: Generally clean. Last three cumulative labels (96%, 99%, 100%) mildly
+          crowded — consecutive values differ by only 1-3pp.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-proportioned (width=0.7), cumulative markers visible (size=4,
-          stroke=1.5), line weight appropriate.
+        comment: 'All elements clearly visible: bars, cumulative line with open-circle
+          markers, 80% dashed line, secondary axis.'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue bars vs orange-red line provides strong colorblind-safe contrast.
-          Vital/useful uses luminance difference.
+        comment: Imprint palette used correctly; CVD-safe; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills canvas well with 16:9 aspect ratio. Secondary y-axis adds
-          information density. Balanced margins.
+        comment: 'Correct 3200x1800px canvas. Layout generally good. Minor: slight
+          density of elements in right portion of chart.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Defect Count, Defect Type, Cumulative %.'
+        comment: 'Title matches required format. Left axis: Complaint Count; x-axis:
+          Complaint Category; secondary axis communicates percentages via tick labels.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (vital few) correct. Useful-many uses INK_MUTED
+          semantic anchor (appropriate for rest/disabled role). Cumulative line uses
+          #C475FD (Imprint position 2). Backgrounds #FAF8F1/#1A1A17 correct.'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom palette with semantic meaning (vital=dark blue, useful=light
-          blue). Orange-red cumulative line contrasts well. Above defaults.
+        comment: Intentional semantic color coding, open-circle markers with stroke,
+          clear typography hierarchy. Raised from default 4 for deliberate Pareto-specific
+          design choices.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-grid (alpha=0.15), x-grid removed, clean white background,
-          spines removed. Good refinement.
+        comment: X-grid removed, minor grids removed, y-grid at 15% alpha, tick marks
+          removed, secondary axis spines removed. Raised from default 2.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Vital few / useful many color distinction communicates Pareto principle.
-          80% threshold line highlights key insight.
+        comment: 80% threshold line creates focal point for Pareto principle. Color-coded
+          bars make vital few immediately identifiable. Raised from default 2 for
+          strong visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -117,29 +140,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Pareto chart with descending bars and cumulative percentage
-          line overlay.
+        comment: 'Correct Pareto chart: descending bars + cumulative percentage line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: descending sort, cumulative line, secondary y-axis,
-          80% threshold, centered markers.'
+        comment: 'All features: bars sorted descending, cumulative line, secondary
+          y-axis (0-100%), 80% reference line with annotation, markers at bar centers.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x, counts on primary y, cumulative on secondary y.
-          All data visible.
+        comment: 'X: categories sorted descending. Left y: counts. Right y: cumulative
+          percentage. All data displayed.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend appropriately hidden for self-explanatory
-          color scheme.
+        comment: 'Title: ''bar-pareto · python · plotnine · anyplot.ai'' correct.
+          Legend: Vital Few / Useful Many matches bar categories.'
     data_quality:
       score: 15
       max: 15
@@ -149,20 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 categories with good Pareto distribution. Clear 80/20 demonstration.
+        comment: 'All Pareto aspects shown: vital-few coding, cumulative line, 80%
+          threshold, percentage annotations, secondary axis.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Manufacturing defect types matching spec example. Neutral real-world
-          scenario.
+        comment: Call-centre complaint categories are realistic and neutral. Counts
+          follow convincing Pareto distribution.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Defect counts 5-186 realistic for manufacturing quality report.
+        comment: 9 categories (within 5-15 range). Count range 14-245, sum ~965 realistic
+          for Q1. Clear Pareto distribution visible.
     code_quality:
       score: 10
       max: 10
@@ -172,33 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, cumulative calc, plot, secondary
-          axis, save.'
+        comment: No functions or classes; linear script structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic with hardcoded data values.
+        comment: Fully deterministic; all values hardcoded.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unused imports.
+        comment: All imports used; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. matplotlib fallback for twin axes is standard
-          plotnine approach.
+        comment: No fake interactivity. Clean, well-organized code with appropriate
+          theme token comments.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight.
+        comment: Saves as plot-{THEME}.png via fig.savefig(). No bare plot.png.
     library_mastery:
       score: 6
       max: 10
@@ -208,24 +231,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good grammar of graphics usage: layered geoms, aes, scale_fill_manual,
-          pd.Categorical, theme. Uses .draw() for twin axes.'
+        comment: 'Core plotnine grammar-of-graphics is idiomatic: ggplot + aes + layered
+          geoms + scales + theme. Secondary axis requires matplotlib twinx() fallback
+          (known plotnine limitation) which reduces score.'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Grammar layering and pd.Categorical ordering are plotnine patterns,
-          but twin axes falls back to matplotlib.
+        comment: Scaled-y-axis approach for cumulative line in plotnine is creative.
+          geom_point(fill=PAGE_BG, stroke=1.2) for open-circle markers uses plotnine-specific
+          styling. Secondary axis relies on matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
   - annotations
-  - layer-composition
+  - manual-ticks
   patterns: []
   dataprep:
   - cumulative-sum
   styling:
-  - grid-styling
+  - edge-highlighting

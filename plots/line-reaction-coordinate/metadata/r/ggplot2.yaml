@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: line-reaction-coordinate
+created: '2026-06-24T08:00:51Z'
+updated: '2026-06-24T08:17:40Z'
+generated_by: claude-sonnet
+workflow_run: 28083491223
+issue: 4409
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-reaction-coordinate/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Perfect spec implementation — all required features present (Ea/ΔH double-headed
+    arrows, direct Reactants/Transition State/Products labels, dashed reference lines
+    at energy levels, hollow transition-state marker)
+  - 'Excellent data storytelling with intentional color coding: brand green (#009E73)
+    for the main energy curve, Imprint blue (#4467A3) for Ea, Imprint matte red (#AE3030)
+    for ΔH — semantically coherent and immediately readable'
+  - Chemically accurate synthetic data matching spec exactly (reactants 50 kJ/mol,
+    TS 120 kJ/mol, products 20 kJ/mol, exothermic)
+  - 'Full theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are fully
+    readable with no dark-on-dark or light-on-light failures'
+  - Clean idiomatic R code using splinefun with monoH.FC method for smooth monotone
+    spline interpolation — distinctively R-native and correctly chosen for this chemistry
+    curve
+  weaknesses:
+  - Annotation text sizes (size=3.2–3.5 ggplot2 units, ~9–10 pt) are slightly small
+    for mobile readability at 400 px viewport — consider raising to 3.5–4.0 for 'Transition
+    State' and annotation labels
+  - 'Grid lines use full INK color at linewidth=0.10 rather than a semi-transparent
+    token; in the dark render #F0EFE8 at even 0.10mm is slightly more prominent than
+    the 15% opacity guideline intends — acceptable but not ideal'
+  - Library mastery could be further distinguished with ggplot2-specific stat functions
+    or theme inheritance (e.g. composing a named anyplot_theme object rather than
+    inline theme() chain)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "line-reaction-coordinate · r · ggplot2 · anyplot.ai" in dark ink, spanning ~65–70% of plot width — well-proportioned. X-axis label "Reaction Coordinate" and Y-axis label "Potential Energy (kJ/mol)" both in dark INK at 10pt — clearly readable. Tick labels in INK_SOFT at 8pt — readable. Subtle horizontal grid lines visible but not competing.
+      Data: Bold brand-green (#009E73) smooth energy curve rising from 50 kJ/mol (reactants) to 120 kJ/mol (transition state peak) then descending to 20 kJ/mol (products). Hollow circle marker at TS peak. Dashed grey reference lines at 50 and 20 kJ/mol. Blue (#4467A3) vertical double-headed arrow for Ea=70 kJ/mol with blue label. Matte-red (#AE3030) vertical arrow for ΔH=−30 kJ/mol with red label. Direct bold text labels "Reactants", "Transition State" (2-line), "Products" in dark ink.
+      Legibility verdict: PASS — all text, labels, and annotations clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light #F0EFE8 — clearly visible. Axis labels and tick labels in light INK/INK_SOFT tokens — all readable against the dark background. No dark-on-dark failures observed. Grid lines in near-white INK at linewidth=0.10 are slightly more visible than on the light render but still subtle and not competing with data.
+      Data: Brand green #009E73 curve is identical to the light render — visually vibrant on the dark surface. Ea blue arrow and ΔH red arrow retain their Imprint palette colors unchanged. Direct labels "Reactants", "Transition State", "Products" in light INK (#F0EFE8) — readable.
+      Legibility verdict: PASS — all text and annotations are legible on the dark background; no dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all readable in both themes. Annotation
+          text (size=3.2–3.5) is slightly small — borderline at 400px mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Main curve prominent (linewidth=1.4), arrows clearly visible, dashed
+          reference lines clear, TS marker visible in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Ea/ΔH distinguished by color AND text labels — no red-green sole-signal
+          issue. Imprint palette CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800). Right margin=80pt provides space
+          for ΔH label. Well-proportioned layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title in correct format. X: ''Reaction Coordinate'', Y: ''Potential
+          Energy (kJ/mol)'' with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only data series = #009E73. Annotation colors from Imprint
+          positions 3 and 5 with semantic justification. Backgrounds #FAF8F1/#1A1A17
+          correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional color-coded annotations (blue Ea, red
+          ΔH), hollow TS peak marker, dynamic title scaling formula — evidence of
+          deliberate design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-spine approach (panel.border=blank, axis.line kept), minor grid
+          disabled, very thin grid (linewidth=0.10), generous right margin for annotations.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent chemistry narrative: clear focal point at TS peak, color
+          hierarchy (green curve → blue Ea → red ΔH), dashed reference lines anchor
+          energy levels, direct labeling eliminates legend.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct reaction coordinate energy diagram — smooth line plot with
+          energy vs coordinate.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: direct labels (Reactants/TS/Products), Ea double-headed
+          arrow, ΔH double-headed arrow, dashed reference lines at reactant/product
+          levels, clean minimal style.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: reaction coordinate (0–1), Y: potential energy (kJ/mol). Spec
+          example values exactly matched (50/120/20 kJ/mol).'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-reaction-coordinate · r · ggplot2 · anyplot.ai'' —
+          correct format. No legend (single series, appropriate).'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 300-point smooth curve, transition state peak, activation energy,
+          enthalpy change, direct labels — all aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Single-step exothermic reaction — canonical chemistry education example.
+          Realistic kJ/mol values, neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy range 0–130 kJ/mol, coordinate 0–1 (arbitrary units). Chemically
+          plausible values.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, clean annotation pattern.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png. Current ggplot2 API (linewidth=
+          not size=).
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper grammar of graphics: geom_line + geom_hline + annotate().
+          theme_minimal() base + theme() overlay. labs() for metadata. Idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: splinefun with monoH.FC (R-base monotone Hermite spline) is distinctively
+          R-native for smooth curve generation. ragg device properly used. arrow()
+          in annotate('segment') is ggplot2-specific.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling: []

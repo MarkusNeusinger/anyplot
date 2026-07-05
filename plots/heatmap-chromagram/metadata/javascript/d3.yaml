@@ -1,0 +1,261 @@
+library: d3
+language: javascript
+specification_id: heatmap-chromagram
+created: '2026-06-24T13:35:58Z'
+updated: '2026-06-24T13:59:01Z'
+generated_by: claude-sonnet
+workflow_run: 28101961129
+issue: 4564
+language_version: 22.22.3
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct Imprint sequential colormap (tok.seq) used for continuous energy data
+    — teal-to-blue per style guide
+  - All 12 pitch classes labeled B-to-C in conventional chromagram orientation
+  - Colorbar correctly implemented with 200-step smooth gradient and energy axis 0.0–1.0
+  - I–V–vi–IV chord section labels (C maj, G maj, A min, F maj) with dashed boundary
+    lines add clear storytelling
+  - LCG seeded random (seed=42) ensures full reproducibility without browser RNG
+  - Domain axes removed for clean open-face style; no grid lines cluttering the heatmap
+  - 'Idiomatic D3 patterns: d3.groups() nested binding, d3.scaleSequential() + d3.interpolateRgbBasis(),
+    d3.scaleBand().padding(0)'
+  - Both light and dark renders are fully readable with correct theme-adaptive chrome
+    (ink/inkSoft tokens)
+  weaknesses:
+  - 'DE-03 moderate: chord section labels use a simplified linear x-position formula
+    (iw * midpoint / DURATION) rather than computing from the actual band scale —
+    the centering is approximate but not perfectly aligned to the band-scale column
+    positions'
+  - 'DE-02 minor: colorbar implemented with 200 SVG rects rather than a <linearGradient>
+    in <defs> — functional but less elegant SVG'
+  - 'VQ-01 minor: secondary text (chord labels at 13px CSS, colorbar ticks at 13px)
+    could be slightly larger (14px) for maximum legibility at mobile widths'
+  - 'DE-03 minor: no annotation or subtitle explaining the I–V–vi–IV progression for
+    viewers without music theory background'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface for light theme.
+      Chrome: Title "heatmap-chromagram · javascript · d3 · anyplot.ai" in bold 22px dark ink, centered at top, occupies ~65% of canvas width. Y-axis label "Pitch Class" rotated 90° in dark ink at left margin, X-axis label "Time (s)" below heatmap — both readable. All 12 pitch-class tick labels (B, A#, A, G#, G, F#, F, E, D#, D, C#, C) at 14px in inkSoft — fully readable. X-axis time ticks (0s–7s) at 14px — readable. Chord section labels "C maj", "G maj", "A min", "F maj" at 13px above the heatmap boundary — readable. Colorbar "Energy" label at 13px above the bar; tick labels 0.0–1.0 at 13px to the right — readable.
+      Data: Sequential Imprint colormap from #009E73 (teal, low energy) → #4467A3 (blue-purple, high energy). High-energy pitch classes clearly differentiated per chord section (e.g., C/E/G high in C maj, G/B/D high in G maj). Dashed vertical lines at 2s, 4s, 6s mark chord transitions in dark ink at 0.6 opacity. Colorbar gradient runs top=1.0 (dark blue) to bottom=0.0 (teal), matching data.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct surface for dark theme.
+      Chrome: Title in light #F0EFE8 ink — fully readable against dark surface. Y-axis and X-axis labels in light ink — readable. All 12 pitch-class tick labels in muted light color (inkSoft) — fully readable. Time tick labels in muted light — readable. Chord section labels in light ink — readable. Colorbar "Energy" and scale ticks in light ink — readable. No dark-on-dark failures detected.
+      Data: Data colors (teal-to-blue sequential) are identical to the light render — only chrome flipped as required. Chord patterns (high-energy pitch classes per section) are equally visible. Dashed chord boundaries appear in light ink at 0.6 opacity — clearly visible against the dark surface.
+      Legibility verdict: PASS — all text readable against near-black background, theme-adaptive chrome tokens correctly applied throughout.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels all readable in both themes. Secondary
+          text (chord labels, colorbar ticks) at 13px CSS is slightly small but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps detected in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible. Imprint seq (teal-to-blue) provides
+          adequate but not maximum contrast; chord energy patterns are clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential palette (green-to-blue) is CVD-safe per palette
+          design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400×2400 canvas correct for symmetric heatmap. Canvas gate
+          passed. No overflow or clipping. Good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Time (s)'', Y: ''Pitch Class'', colorbar: ''Energy'' — all
+          descriptive with units where applicable.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'tok.seq (Imprint sequential) correctly used for continuous energy
+          data. Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Data colors
+          identical across themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Professional composition with 200-step smooth
+          colorbar, chord annotation labels, clear typography hierarchy, and realistic
+          harmonic data.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Domain axes removed, no grid lines, anti-aliasing trick (+0.5 on
+          cell dimensions), smooth gradient colorbar. Clear visual refinement above
+          default (2).
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Chord section labels and dashed boundary lines narrate the I-V-vi-IV
+          progression. Above default (2) for clear musical storytelling, but no subtitle/annotation
+          for non-music viewers.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chromagram heatmap — time on X, pitch classes on Y, energy
+          as color.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes labeled, sequential colormap, colorbar included,
+          time axis in seconds, chord transitions visible.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time (0-8s), Y=pitch class (B to C), color=energy (0-1). All 80×12
+          data points covered.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''heatmap-chromagram · javascript · d3 · anyplot.ai''. Colorbar
+          serves as legend with Energy scale.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 12-class chromagram over 80 time frames. Chord patterns clearly
+          visible for all four chord sections.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: I-V-vi-IV (C maj, G maj, A min, F maj) is a canonical, neutral chord
+          progression. Energy values (0.07-0.92 base) match real chroma feature extraction
+          ranges.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized energy 0.0-1.0, 8s duration, 80 frames at 10fps — all
+          realistic for chroma feature extraction.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes. Small rand() LCG function is necessary for
+          reproducibility.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports. Only uses d3 global and window.ANYPLOT_* as specified.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. No fake UI. CHORD_SECTIONS/CHORD_SEQ structure
+          is clean.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Uses //# anyplot-orientation: square correctly. D3 7.9.0 API. Harness
+          handles plot-{theme}.png/.html output.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct D3 patterns: window.ANYPLOT_SIZE for canvas, d3.scaleBand().padding(0)
+          for heatmap, d3.groups() for nested binding, join() pattern, d3.axisRight()
+          for colorbar.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'D3-specific: d3.groups() nested data binding, d3.interpolateRgbBasis()
+          for smooth color scale, d3.scaleSequential(), d3.format() for tick labels.
+          Colorbar via 200-rect gradient is classic D3 pattern.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

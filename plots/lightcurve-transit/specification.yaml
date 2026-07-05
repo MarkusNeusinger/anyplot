@@ -6,7 +6,7 @@ title: Astronomical Light Curve
 
 # Specification tracking
 created: "2026-03-06T19:52:23Z"
-updated: null
+updated: "2026-06-20T07:20:59Z"
 issue: 4559
 suggested: MarkusNeusinger
 
@@ -17,7 +17,7 @@ tags:
     - line
     - scatter
   data_type:
-    - timeseries
+    - time-series
     - numeric
     - continuous
   domain:

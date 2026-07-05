@@ -1,7 +1,7 @@
 """ anyplot.ai
 dumbbell-basic: Basic Dumbbell Chart
-Library: letsplot 4.9.0 | Python 3.14.4
-Quality: 86/100 | Updated: 2026-04-26
+Library: letsplot 4.11.0 | Python 3.13.14
+Quality: 91/100 | Updated: 2026-06-30
 """
 
 import os
@@ -19,6 +19,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -36,15 +37,14 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "#1A1A17" if THEME == "light" else "#F0EFE8"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Okabe-Ito palette — "After" comes first alphabetically → brand green
-BRAND = "#009E73"
-ACCENT = "#C475FD"
-SEGMENT = INK_SOFT
+# Imprint palette — position 1 = After (hero), position 2 = Before, position 5 = semantic decline
+BRAND = "#009E73"  # position 1 — After scores / positive change direction
+LAVENDER = "#C475FD"  # position 2 — Before scores
+DECLINE = "#AE3030"  # position 5 — semantic red for regressions
 
-# Data — Employee satisfaction scores before and after policy changes.
-# Mix of strong gains, modest shifts, and a regression to show full plot capability.
+# Data — Employee satisfaction scores before and after policy changes
 categories = [
     "Engineering",
     "Marketing",
@@ -65,46 +65,86 @@ df["diff"] = df["after"] - df["before"]
 df = df.sort_values("diff", ascending=True).reset_index(drop=True)
 df["y_pos"] = range(len(df))
 
+df_improved = df[df["diff"] > 0]
+df_declined = df[df["diff"] <= 0]
+
 df_points = pd.concat(
     [
-        pd.DataFrame({"y_pos": df["y_pos"], "value": df["before"], "period": "Before"}),
-        pd.DataFrame({"y_pos": df["y_pos"], "value": df["after"], "period": "After"}),
+        pd.DataFrame(
+            {
+                "y_pos": df["y_pos"],
+                "value": df["before"],
+                "period": "Before",
+                "category": df["category"].values,
+                "diff": df["diff"].values,
+            }
+        ),
+        pd.DataFrame(
+            {
+                "y_pos": df["y_pos"],
+                "value": df["after"],
+                "period": "After",
+                "category": df["category"].values,
+                "diff": df["diff"].values,
+            }
+        ),
     ]
 )
 
-# Plot — horizontal dumbbell
+# Scale title fontsize for longer-than-baseline title (floor: 11px)
+title = "Employee Satisfaction · dumbbell-basic · python · letsplot · anyplot.ai"
+n = len(title)
+title_size = max(11, round(16 * 67 / n)) if n > 67 else 16
+
+# Plot — horizontal dumbbell; segments color-coded by change direction
 plot = (
     ggplot()
-    + geom_segment(data=df, mapping=aes(x="before", xend="after", y="y_pos", yend="y_pos"), size=1.5, color=SEGMENT)
-    + geom_point(data=df_points, mapping=aes(x="value", y="y_pos", color="period"), size=8)
-    + scale_color_manual(values=[BRAND, ACCENT], name="Period")
+    + geom_segment(
+        data=df_improved,
+        mapping=aes(x="before", xend="after", y="y_pos", yend="y_pos"),
+        color=BRAND,
+        size=1.2,
+        alpha=0.65,
+    )
+    + geom_segment(
+        data=df_declined,
+        mapping=aes(x="before", xend="after", y="y_pos", yend="y_pos"),
+        color=DECLINE,
+        size=1.2,
+        alpha=0.65,
+    )
+    + geom_point(
+        data=df_points,
+        mapping=aes(x="value", y="y_pos", color="period"),
+        size=5,
+        tooltips=layer_tooltips().line("@category").line("@period: @value").line("Change: @diff"),
+    )
+    + scale_color_manual(values=[BRAND, LAVENDER], name="Period")
     + scale_x_continuous(limits=[50, 95])
     + scale_y_continuous(breaks=list(range(len(df))), labels=df["category"].tolist())
-    + labs(
-        x="Satisfaction Score", y="Department", title="Employee Satisfaction · dumbbell-basic · letsplot · anyplot.ai"
-    )
-    + ggsize(1600, 900)
+    + labs(x="Satisfaction Score", y="Department", title=title)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        panel_grid_major_x=element_line(color=GRID, size=0.3),
-        panel_grid_minor_x=element_line(color=GRID, size=0.2),
+        legend_background=element_rect(fill=ELEVATED_BG, color="transparent"),
+        panel_grid_major_x=element_line(color=RULE, size=0.3),
+        panel_grid_minor_x=element_blank(),
         panel_grid_major_y=element_blank(),
         panel_grid_minor_y=element_blank(),
         axis_line=element_line(color=INK_SOFT),
         axis_ticks=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK, hjust=0.5),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_position=[0.88, 0.18],
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_title=element_text(size=title_size, color=INK, hjust=0.5),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_position=[0.92, 0.2],
         legend_justification=[1, 0],
     )
 )
 
 # Save
-ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, filename=f"plot-{THEME}.html", path=".")

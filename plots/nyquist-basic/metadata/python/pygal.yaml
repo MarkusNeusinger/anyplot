@@ -1,45 +1,54 @@
 library: pygal
+language: python
 specification_id: nyquist-basic
 created: '2026-03-20T22:44:57Z'
-updated: '2026-03-20T23:23:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 23365453282
+updated: '2026-06-17T23:34:50Z'
+generated_by: claude-sonnet
+workflow_run: 27725449255
 issue: 4412
-python_version: 3.14.3
+language_version: 3.13.14
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/pygal/plot.html
-quality_score: 76
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/nyquist-basic/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Solid transfer function choice G(s) = 2/[s(s+1)(s+2)] demonstrates a classic control
-    systems example
-  - Good use of pygal tooltip/label system for frequency information in interactive
-    HTML output
-  - Clean linear code structure with deterministic data generation
-  - Both positive and negative frequency curves with distinct styling (solid vs dashed)
-  - Critical point prominently highlighted with large red marker at (-1, 0)
+  - Critical point (−1, 0) prominently marked with semantic red (#AE3030) — creates
+    immediate visual focus on the stability-critical element
+  - G(s) = 2/[s(s+1)(s+2)] is a textbook-quality transfer function with realistic
+    control engineering context
+  - 'All six spec requirements implemented: critical point, unit circle, frequency
+    annotations, direction indicators, 1:1 square canvas, correct axis labels'
+  - Per-point tooltip labels on every data point leverage pygal native SVG interactivity
+    in the HTML output
+  - 'Full Code Quality score: deterministic data, clean imports, KISS structure, all
+    font sizes explicitly set'
   weaknesses:
-  - Frequency annotations only exist as tooltip labels, invisible in static PNG —
-    spec requires visible text annotations along curve
-  - No arrows showing direction of increasing frequency on the curve as required by
-    spec
-  - Wrong canvas dimensions 4800x4800 instead of allowed 3600x3600 square format
-  - Left portion of canvas underutilized with data concentrated in center-right area
-  image_description: The plot displays a Nyquist diagram on the complex plane. The
-    positive frequency curve (G(jω), ω ≥ 0) is rendered as a solid blue line sweeping
-    from the origin downward to approximately (-1, -1.3) and curving back. The negative
-    frequency mirror (G(jω), ω < 0) is shown as a dashed brown/orange line reflecting
-    the positive curve across the real axis. A prominent red dot marks the critical
-    point at (-1, 0). A dashed gray unit circle is centered at the origin. Several
-    orange dots mark frequency values along the curve. The title reads "nyquist-basic
-    · pygal · pyplots.ai" at top. Axes are labeled "Real Axis" and "Imaginary Axis".
-    A legend at the bottom lists all series. The plot uses a white background with
-    subtle gray grid lines and equal axis ranges of approximately -2.5 to 2.5 on both
-    axes.
+  - Direction arrows implemented as 3-dot V-chevron clusters are subtle; in the static
+    PNG they are hard to read as directional indicators — larger arrow_scale/arrow_wing
+    or a simpler approach would better satisfy the spec requirement
+  - Marker crowding near the (−1, 0) to (0.2, 0) corridor where critical point, frequency
+    annotation dots, direction arrow clusters, and the curve all overlap — reduce
+    dots_size for frequency markers (14→10) and direction arrows (12→8)
+  - 'Design refinement limited by pygal API: no spine removal, limited grid alpha
+    control'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "nyquist-basic · python · pygal · anyplot.ai" clearly visible, spans ~60–65% of plot width. X-axis label "Real" and Y-axis label "Imaginary" readable. Tick labels (−2.4 to 2.4) legible.
+      Data: Positive-frequency Nyquist curve in brand green #009E73 (stroke-width=6). Negative-frequency mirror in lavender #C475FD (dashed). Critical point at (−1, 0) in large red dot (#AE3030, dots_size=28). Unit circle in dashed muted gray. Ochre frequency annotation markers at six key ω values. Blue V-chevron direction indicators.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and all axis/tick labels appear in light text, clearly readable against the dark background. No dark-on-dark failures observed. Legend text is light-colored and legible.
+      Data: Colors identical to light render — green curve, lavender mirror, red critical point, muted gray unit circle, ochre frequency markers, blue direction arrows. Direction arrow clusters slightly more visible on dark background due to higher contrast.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -47,70 +56,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=72, label=48, major_label=42, legend=42).
-          All text readable.
+        comment: All font sizes explicitly set via Style (title=66, label=56, major_label=44,
+          legend=44, value=36). Readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Main plot area clear. Minor crowding between frequency marker dots
-          near origin.
+        comment: Moderate crowding near (-1,0) to (0.2,0) where critical point, frequency
+          markers, direction arrows, and curve converge.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Curves visible with appropriate stroke widths. Critical point large.
-          Unit circle faint but visible.
+        comment: All elements visible; direction arrow V-chevrons subtle as directional
+          cue in static PNG.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 4
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, brown, red, gray palette is distinguishable. Blue vs brown
-          could challenge some colorblind users.
+        comment: Imprint palette CVD-safe; distinct hue families; semantic red for
+          critical point provides high contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Canvas 4800x4800 is not an allowed format (should be 3600x3600).
-          Data concentrated center-right, left half mostly empty.
+        passed: true
+        comment: 2400x2400 square canvas correct for 1:1 aspect ratio. Plot fills
+          ~70-75% of canvas with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Real and Imaginary are correct standard labels for Nyquist plot on
-          complex plane.
+        comment: Real and Imaginary are correct complex-plane domain labels. No units
+          required.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green #009E73. All colors from Imprint palette
+          or semantic anchors. Backgrounds #FAF8F1/#1A1A17 correct. Chrome theme-adaptive
+          in both renders.'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Custom color palette, intentional hierarchy with stroke widths and
-          dash patterns. Above defaults.
+        comment: Custom Imprint palette with intentional hierarchy. Well-configured
+          but not exceptional — pygal SVG rendering limits refinement ceiling.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Customized grid via foreground_subtle, dash patterns for unit circle
-          and mirror, explicit stroke widths.
+        comment: 'Some refinement: dashed strokes for mirror/unit circle, foreground_subtle
+          for grid, legend_at_bottom. Spine control not available in pygal.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Critical point prominently highlighted. Mirror reflection adds context.
-          Frequency markers guide understanding.
+        comment: Large semantic-red critical point creates unmistakable focal point.
+          Frequency annotations add context. Clear visual hierarchy communicating
+          stability analysis.
     spec_compliance:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -118,27 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Nyquist plot on complex plane.
+        comment: Correct Nyquist plot on complex plane using pygal.XY.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Missing: frequency text annotations visible in PNG (only tooltips).
-          Missing: directional arrows on curve.'
+        passed: true
+        comment: Critical point, unit circle, frequency annotations, 1:1 aspect ratio,
+          axis labels all present. Direction arrows as V-chevron dot clusters are
+          subtle in static PNG.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real on X, imaginary on Y, log-spaced frequencies.
+        comment: Real on X, Imaginary on Y. G(s)=2/[s(s+1)(s+2)] correctly computed.
+          Both frequency contours shown. Range -2.5 to 2.5 appropriate.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend labels vague for static output — frequency
-          values only in tooltips.
+        passed: true
+        comment: Title correct format. All six series clearly labeled in legend.
     data_quality:
       score: 14
       max: 15
@@ -148,22 +167,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows positive/negative curves, critical point, unit circle. Classic
-          transfer function.
+        comment: Positive/negative curves, critical point, unit circle, frequency
+          annotations, direction indicators all present. Direction cue slightly subtle.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classical control systems transfer function — standard engineering
-          domain.
+        comment: G(s)=2/[s(s+1)(s+2)] is a textbook third-order control system transfer
+          function — genuinely realistic engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency range 0.01-100 rad/s, 800 log-spaced points, axis range
-          ±2.5.
+        comment: Logarithmic frequency span 0.01-100 rad/s with 800 points. Axis range
+          -2.5 to 2.5 captures critical region and unit circle.
     code_quality:
       score: 10
       max: 10
@@ -173,31 +192,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, style, chart, series, save.'
+        comment: 'Linear flow: imports -> constants -> data -> style -> chart -> series
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic transfer function, no randomness.
+        comment: Transfer function data is mathematically deterministic. No random
+          seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, numpy, pygal, Style.'
+        comment: math, os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. List comprehensions for data points.
+        comment: Vector math for V-chevron arrows appropriately complex. No fake UI
+          elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png via render_to_png. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current pygal API.
     library_mastery:
       score: 7
       max: 10
@@ -207,22 +229,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of pygal.XY with dict data points, custom Style, stroke_style.
+        comment: Correct pygal.XY usage, Style object for theming, per-series stroke_style
+          and dots_size, render_to_png and render().
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Leverages pygal tooltips, HTML export, SVG-native stroke_style with
-          dasharray.
+        comment: Per-point interactive tooltip labels, HTML SVG output, per-series
+          dasharray stroke styling — genuinely pygal-distinctive features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

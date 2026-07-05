@@ -2,129 +2,130 @@ library: plotly
 language: python
 specification_id: venn-labeled-items
 created: '2026-04-25T05:17:24Z'
-updated: '2026-04-25T05:22:07Z'
-generated_by: claude-opus
-workflow_run: 24923249738
+updated: '2026-06-25T11:41:26Z'
+generated_by: claude-sonnet
+workflow_run: 28166092679
 issue: 5364
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.13.14
+library_version: 6.8.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/venn-labeled-items/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all 7 interior zones populated, outside zone used, 15
-    items in range, semi-transparent fills, category labels outside circles — hits
-    every requirement'
-  - 'Excellent editorial Chartgeist aesthetic: Georgia serif font, bold color-matched
-    category labels, italic subtitle, witty pop-culture items fully capture the magazine
-    commentary vibe'
-  - 'Full theme adaptation: PAGE_BG, INK, INK_SOFT, INK_MUTED tokens applied throughout
-    — both renders pass legibility checks with no dark-on-dark failures'
-  - 'Perfect code quality: deterministic data, clean imports, flat KISS structure,
-    correct output filenames (plot-{THEME}.png + .html)'
-  - 'Good use of Plotly-specific features: hovertext on item markers, HTML-tagged
-    text in annotations (<b>, <i>), HTML export'
+  - All 7 zones + outside region populated with 15 well-chosen pop-culture items demonstrating
+    the full set-membership taxonomy
+  - Editorial serif typography (Georgia), CHARTGEIST branding prefix, and italic subtitle
+    give a genuine magazine-print feel matching the spec
+  - 'Theme tokens correctly applied: both renders pass dark-on-dark and light-on-light
+    checks; Imprint palette data colors are identical across themes'
+  - 'Idiomatic plotly code: traces grouped by text-position, fill=toself circles,
+    native hover tooltips, HTML export'
+  - Square 2400x2400 canvas is appropriate for the symmetric Venn; canvas gate passed
   weaknesses:
-  - Large empty space (~25-30% of canvas) at the bottom — the Venn diagram sits in
-    the upper portion of the 3600×3600 canvas; vertical range or margin should be
-    adjusted so the diagram fills the canvas more evenly
-  - All text positions are hardcoded to 'middle right', meaning every item label extends
-    right of its dot; items on the left half of circles (e.g. Google Maps, VS Code,
-    Dishwasher in zone B) would read better with 'middle left' alignment
-  - zone_offsets table only covers up to 3 items per zone; the strict=False zip silently
-    truncates if a zone ever gets 4+ items — no guard or warning
+  - Item text labels at 13px (52 source px) and subtitle/hint text at 11px (44 source
+    px) are at the lower limit for mobile readability (~400 px); consider bumping
+    item labels to 14-15px and subtitle to 12px
+  - Slight visual crowding in the AB/ABC central region (ChatGPT -> Slack -> Sourdough
+    cluster); zone_offsets for AB could be spread slightly further or the AB anchor
+    shifted from (-0.50, 0.30) to (-0.60, 0.38)
+  - Typographic hierarchy between zone item labels (13px) and category headers (15px)
+    is subtle; increase category label size to 17-18px for clearer two-level hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "CHARTGEIST · venn-labeled-items · plotly · anyplot.ai" in bold near-black serif font, clearly readable. Italic subtitle in muted dark text, readable. "Neither here nor there" caption in muted ink, readable. No axis labels (appropriate for Venn). Category labels "OVERHYPED" (green), "ACTUALLY USEFUL" (orange), "SECRETLY LOVED" (blue) are large, bold, and clearly visible outside their respective circles.
-      Data: Three overlapping circles — green (#009E73) at top, orange (#D55E00) bottom-left, blue (#0072B2) bottom-right — with semi-transparent fills (rgba ~0.26 alpha). All 15 item labels (NFTs, Crypto Bros, Metaverse in A; Google Maps, VS Code, Dishwasher in B; ABBA, Slippers, Crocs in C; ChatGPT/Slack in AB; Vinyl Records in AC; Dolly Parton in BC; Sourdough in ABC; Beige Walls outside) are visible with small black dot markers. Item labels are dark on the light surface and readable.
-      Legibility verdict: PASS — all text readable. Minor: bottom 25% of canvas is empty whitespace below the diagram.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "CHARTGEIST · venn-labeled-items · python · plotly · anyplot.ai" in bold Georgia serif, dark ink — readable. Italic subtitle in muted secondary ink — readable. Category labels (OVERHYPED, ACTUALLY USEFUL, SECRETLY LOVED) in colored uppercase serif outside circles — readable. Item labels in 13px Georgia serif dark ink — readable at full resolution, small at mobile scale.
+      Data: Three overlapping circles with 26%-opacity fills: green (#009E73), lavender (#C475FD), blue (#4467A3) in Imprint canonical order. Black dot markers for 15 items across all zones. "Beige Walls" in outside zone.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in off-white/light text, clearly readable against the dark background. Subtitle in muted light text, readable. "Neither here nor there" in muted lighter text, readable. Category labels "OVERHYPED" (green), "ACTUALLY USEFUL" (orange), "SECRETLY LOVED" (blue) remain in their Okabe-Ito colors — all readable against the dark background.
-      Data: Data colors are identical to light render — same green, orange, blue circles. The semi-transparent fills now appear darker (mixing with near-black background) creating a moodier editorial look. Item markers are white/light (#F0EFE8 INK token), labels are light text on dark — all readable. No dark-on-dark failures detected.
-      Legibility verdict: PASS — all text readable in dark mode; chrome properly inverted; no near-black text on near-black background.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and item labels in warm near-white (#F0EFE8) — readable, no dark-on-dark issues. Subtitle in secondary warm text — readable. Category labels retain Imprint circle colors (green/lavender/blue) — readable against dark background.
+      Data: Circle fill colors are identical to light render (Imprint palette unchanged — green #009E73, lavender #C475FD, blue #4467A3). Item dot markers appear as light dots on dark surface. All data colors confirmed identical to light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=30, category=28, items=19); all
-          text readable in both themes
+        comment: Title (20px) and category labels (15px) clearly readable. Item labels
+          at 13px (52 source px) adequate at full res but borderline at 400px mobile
+          scale. Subtitle/hint at 11px (44 source px) small.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; items well-spaced within each zone
+        comment: Labels well-distributed via vertical zone offsets. Slight crowding
+          in AB/ABC region (ChatGPT/Slack/Sourdough cluster) but no actual pixel overlap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All circles, markers, and labels visible in both themes
+        comment: Dot markers at size=11 (44 source px) visible and adequate. Semi-transparent
+          circles allow overlap visibility.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (green/orange/blue) is CVD-safe; no red-green sole
-          signal
+        comment: Imprint palette (green/lavender/blue). Ink-colored markers ensure
+          contrast. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Significant empty space (~25-30%) at bottom of canvas; diagram positioned
-          too high in square canvas
+        passed: true
+        comment: 2400x2400 square canvas correct. Canvas gate passed. No clipping.
+          Diagram centered with generous whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title present with spec-id, library, anyplot.ai; no axis labels appropriate
-          for Venn
+        comment: Title format CHARTGEIST · venn-labeled-items · python · plotly ·
+          anyplot.ai is correct. Axes hidden appropriately.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First circle #009E73 (brand green), Okabe-Ito order preserved; PAGE_BG
-          correct for both themes'
+        comment: 'First circle #009E73 brand green. Imprint order. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical across themes; chrome flips correctly.'
     design_excellence:
-      score: 14
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Genuine editorial Chartgeist aesthetic: Georgia serif, color-matched
-          bold category labels, italic subtitle, witty pop-culture items'
+        comment: Georgia serif typography, CHARTGEIST branding, italic subtitle, and
+          'Neither here nor there' outside-zone label add editorial personality above
+          default. Good overall.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: No axes/spines (appropriate), clean gridless background, editorial
-          typography; penalized for empty bottom space
+        comment: No grid, no visible axes — clean. Generous whitespace. Much minimalism
+          is baseline for Venn type.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Clear visual hierarchy through circle colors, witty content supports
-          editorial framing, 'Neither here nor there' caption adds personality
+        comment: Editorial subtitle sets context. Category label colors match circles.
+          Outside-zone framing adds wit. Full zone distribution demonstrates taxonomy.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +135,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Three-circle Venn diagram with labeled items, editorial Chartgeist
-          style
+        comment: Three equal-sized circles in symmetric Venn layout with pairwise
+          and triple overlaps.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 7 zones used, semi-transparent fills, markers+labels inside zones,
-          category names outside circles, outside zone present
+        comment: Category names outside circles, labeled items as dot markers, semi-transparent
+          fills, outside zone with spatial separation and hint label, vertical spread
+          offsets for collision avoidance.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Items correctly placed in their designated zones
+        comment: All 15 items in correct zones. All 7 interior zones + outside populated.
+          Placements match spec examples.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title contains spec-id, library, anyplot.ai; no legend (category
-          labels serve this role)
+        comment: Title format correct with valid CHARTGEIST descriptive prefix. No
+          legend; category names as colored annotations outside circles.
     data_quality:
       score: 15
       max: 15
@@ -165,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 7 interior zones plus outside populated; demonstrates full set-theory
-          coverage
+        comment: All 7 interior zones + outside populated. 15 items in spec range
+          10-25.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, witty pop-culture items (tech, music, food, trends); no
-          controversial content
+        comment: Contemporary tech/culture items mixed with pop culture and lifestyle
+          — witty, neutral, relatable editorial content. Classifications are defensible
+          and humorous.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15 items within 10-25 spec range; balanced distribution across zones
+        comment: 15 items across 8 zones, max 3 per single-circle zone. No zone overcrowded.
     code_quality:
       score: 10
       max: 10
@@ -189,50 +193,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clear linear flow with well-named sections
+        comment: No functions or classes. Linear script flow with data dicts for geometry
+          lookups.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random numbers, all data hardcoded
+        comment: No random elements; fully deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, plotly.graph_objects — all used
+        comment: os, numpy, plotly.graph_objects only — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized; zone grouping and offset logic is appropriate
-          complexity
+        comment: Clean zone_anchors and zone_offsets lookup tables. Type hint dict[str,
+          list[str]]. Traces grouped by text-position is idiomatic.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (3600x3600px via scale=3) and plot-{THEME}.html
+        comment: write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)
+          and write_html correct. autosize=False with explicit dimensions.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Standard go.Scatter with fill='toself' for circles; add_annotation
-          for labels — correct but not advanced
+        comment: go.Scatter with fill=toself for circles, hoverinfo=skip on decorative
+          traces, add_annotation for positioned text, traces grouped by text-position
+          to minimize trace count.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Hover tooltips (hovertext+hoverinfo), HTML-tagged text in annotations,
-          HTML export are Plotly-distinctive
+        comment: Native hover tooltips via hovertext + hoverinfo=text showing zone
+          context per item. write_html for interactive artifact. Good use of plotly's
+          interactive layer.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -244,5 +252,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending

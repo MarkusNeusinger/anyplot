@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: line-arrhenius
+created: '2026-06-24T09:52:01Z'
+updated: '2026-06-24T10:10:07Z'
+generated_by: claude-sonnet
+workflow_run: 28089574248
+issue: 4408
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-arrhenius/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Full spec compliance: all required Arrhenius features implemented correctly —
+    regression line, R², Ea annotation, dual x-axis with inverse-transform, prominent
+    data points'
+  - 'Excellent ggplot2 library mastery: idiomatic use of sec_axis() with transform
+    function, geom_smooth with SE confidence band, plotmath parsing in annotate(),
+    and the ggplot2 ≥ 3.5 inside-legend API'
+  - 'Proper theme-adaptive chrome throughout: all INK/INK_SOFT/ELEVATED_BG tokens
+    correctly applied, producing readable renders in both light and dark themes without
+    dark-on-dark failures'
+  - Realistic, scientifically grounded dataset (H₂O₂ decomposition, Ea ≈ 75 kJ/mol)
+    with physically correct parameter values and appropriate noise level
+  weaknesses:
+  - 'DE-01 headroom: equal visual weight between regression line and data points reduces
+    hierarchy — enlarging markers to size=4.5–5 or increasing regression linewidth
+    to 1.4–1.6 would create clearer primary/secondary distinction between observations
+    and model'
+  - 'DE-03 headroom: annotations tell the story effectively but a slope indicator
+    arrow or rise/run annotation directly on the line would make the slope=-Ea/R relationship
+    physically tangible'
+  - 'LM-02 opportunity: replace manual annotate() stat labels with ggpmisc::stat_poly_eq()
+    or stat_regline_equation() for more idiomatic R/ggplot2 ecosystem annotation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "line-arrhenius · r · ggplot2 · anyplot.ai" in dark ink at top-left, ~60% width. Primary x-axis label "10³/T (K⁻¹)" and y-axis label "ln(k)" in dark ink at 10pt. Secondary x-axis label "Temperature (K)" at top with tick values 440, 420, 380, 340, 300. All labels and ticks clearly readable.
+      Data: 10 green #009E73 circular markers; lavender #C475FD regression line with tight confidence band; two annotation boxes (Ea=75.2 kJ/mol, R²=0.999) in upper-right with elevated-bg #FFFDF6 fill.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: All chrome correctly flips to light tokens. Title in near-white #F0EFE8. Axis labels in #F0EFE8. Tick labels in secondary-text #B8B7B0. Grid lines subtle and visible. Legend background uses elevated dark token #242420. Annotation boxes use elevated dark fill with light ink text.
+      Data: Colors identical to light render — green #009E73 markers, lavender #C475FD regression line. Brand green remains clearly visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable against dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set; readable in both themes. Minor deduction:
+          annotation labels (size=3.5) slightly small at mobile scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions. Annotations, legend,
+          and data well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 sparse points at size=3.5 are prominent. Regression line linewidth=1.1
+          clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint positions 1 and 2 (#009E73, #C475FD) are CVD-safe; green/lavender
+          avoids red-green encoding.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas (8x4.5in @400dpi). Good plot-to-canvas ratio. No
+          content cut off. Dual axes make good use of vertical space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary x: ''10³/T (K⁻¹)'' via expression(); secondary: ''Temperature
+          (K)''; y: ''ln(k)''. All descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #C475FD. Background #FAF8F1/#1A1A17.
+          Chrome tokens correctly flip. Fully Imprint-compliant.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above stock defaults: Imprint palette, plotmath annotation boxes
+          with elevated-bg styling, inside-positioned legend. Professional but not
+          FiveThirtyEight-level hierarchy.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, grid linewidth=0.18 (very subtle), minor grids
+          removed, explicit L-frame axis lines, styled legend background. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ea and R² annotations actively guide viewer to key Arrhenius outputs.
+          Dual axis bridges transformed scale to familiar temperatures. Good but could
+          add slope indicator.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Arrhenius plot: ln(k) vs 10³/T with linear regression overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression line, R² annotation, Ea annotation, secondary temperature
+          axis, data points above line — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: 1000/T correctly assigned; Y: ln(k) correctly assigned. All 10
+          points visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''line-arrhenius · r · ggplot2 · anyplot.ai''. Legend labels
+          ''Measured k'' and ''Arrhenius fit'' correct.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All required features covered plus confidence band as bonus.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: H₂O₂ catalytic decomposition, Ea≈75 kJ/mol, 298–433 K range — real,
+          neutral chemistry scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10³/T and ln(k) scales physically correct for the chosen Arrhenius
+          parameters.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: tokens → data → fit → plot → save. No functions or
+          classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, scales (alpha()), ragg (device) — all actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with section comments; no fake UI; plotmath annotation
+          syntax correct.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as sprintf('plot-%s.png', THEME) with ragg::agg_png. Modern
+          ggplot2 ≥ 3.5 APIs.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: geom_smooth(method=''lm'', se=TRUE),
+          sec_axis(transform=~1000/.), scale_color_manual, theme() chain.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sec_axis() with functional transform, annotate('label', parse=TRUE)
+          with R plotmath, legend.position.inside (ggplot2 ≥ 3.5) — distinctly ggplot2.
+          Minor deduction for not using ggpmisc::stat_poly_eq().
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - twin-axes
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

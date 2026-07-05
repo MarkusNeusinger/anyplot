@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: curve-oc
+created: '2026-06-20T11:23:26Z'
+updated: '2026-06-20T11:29:46Z'
+generated_by: claude-sonnet
+workflow_run: 27869481444
+issue: 4553
+language_version: 22.22.3
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-oc/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Mathematically correct binomial CDF implementation, verifiably accurate alpha
+    and beta risk annotations
+  - 'Semantic color intent: amber for AQL (caution) and matte red for LTPD (rejection)
+    follows Imprint anchors correctly'
+  - 'Comprehensive spec compliance: all required OC curve features present and correct
+    (AQL/LTPD lines, producer/consumer risk annotations, 3 curves)'
+  - 'Expert Chart.js idioms: custom plugin API for post-render text drawing, scatter+showLine
+    for smooth S-shaped curves'
+  - 'Clean theme adaptation: both renders use token-driven colors throughout with
+    no dark-on-dark or light-on-light failures'
+  weaknesses:
+  - Helper functions (probAccept, buildOCCurve) technically violate KISS but are small
+    and justified for the binomial math
+  - 'DE-02 visual refinement could improve by removing the default Chart.js chart
+    border box via `border: { display: false }` on both x and y scales'
+  - Axis title fontsize (18px) is slightly large relative to tick labels (14px), though
+    still proportionate and readable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "curve-oc · javascript · chartjs · anyplot.ai" in dark ink, fully readable. Axis labels "Fraction Defective (p)" and "Probability of Acceptance" in dark ink, readable. Tick labels in soft dark tone, formatted as percentages. Legend above plot with 5 items, all readable.
+      Data: Three smooth S-shaped OC curves — brand green (#009E73, n=50 c=2), lavender (#C475FD, n=100 c=3), blue (#4467A3, n=200 c=5). Amber dashed vertical line at AQL 2%. Matte red dashed vertical line at LTPD 8%. Annotation "alpha = 0.08" in amber, "beta = 0.23" in matte red.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light off-white, clearly readable. Axis labels in light color, readable. Tick labels in softer light tone, readable. Legend items in light color. No dark-on-dark failures observed.
+      Data: Colors identical to light render — green, lavender, blue OC curves unchanged. Amber AQL line and matte red LTPD line still clearly visible. Alpha and beta annotations readable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 18px, ticks
+          14px, annotations 16px). Readable in both themes. Axis title fontsize slightly
+          large vs ticks but not disproportionate.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions. Legend, annotations, and curves all well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Smooth continuous lines with borderWidth=3 for OC curves and 2 for
+          reference lines. Clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette positions 0-2 (green/lavender/blue) are CVD-safe.
+          Amber and matte-red reference lines distinct from all curves.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced margins, legend sits cleanly above
+          plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Fraction Defective (p) and Probability of Acceptance are descriptive
+          and meaningful.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, subsequent follow Imprint order. AQL uses
+          t.amber (warning anchor), LTPD uses palette[4]=#AE3030 (rejection semantic).
+          Backgrounds #FAF8F1/#1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured defaults. Semantic color intent for reference
+          lines shows deliberate design. Falls short of FiveThirtyEight-level polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid uses theme tokens for subtlety. Clean spacing. Doesn't remove
+          chart border box, which is the main refinement gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: AQL/LTPD lines create clear threshold context. Alpha/beta annotations
+          communicate producer/consumer risk directly. Three curves visually show
+          discrimination improvement.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OC curve implementation using Chart.js scatter with showLine:true.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: AQL/LTPD reference lines, producer's risk alpha, consumer's risk
+          beta, 3 OC curves, binomial CDF in-code, x-axis 0-15%.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: fraction defective 0-15%. Y: probability of acceptance 0-100%.
+          Correct.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: curve-oc · javascript · chartjs · anyplot.ai. Legend labels
+          accurate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All OC curve aspects: multiple plans, discrimination power comparison,
+          producer/consumer risk, AQL/LTPD threshold interpretation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Industrial quality inspection, acceptance sampling. Plans n=50 c=2,
+          n=100 c=3, n=200 c=5 are realistic. AQL=2%, LTPD=8% are plausible thresholds.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mathematically correct binomial CDF. Alpha~0.08 and beta~0.23 are
+          verifiably accurate.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses helper functions (probAccept, buildOCCurve) that are small and
+          focused but technically outside strict no-functions KISS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: pure binomial math, no randomness.'
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only window.ANYPLOT_TOKENS and global Chart.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized, appropriate complexity. Custom plugin for
+          canvas annotations is idiomatic Chart.js.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the Chart.js harness contract correctly.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert usage: scatter+showLine for xy curve data, borderDash for
+          reference lines, correct token mapping, animation:false, responsive:true,
+          maintainAspectRatio:false.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Chart.js plugin API (riskLabels with afterDraw) for post-render
+          canvas annotations. Dataset-level borderDash. Both are Chart.js-distinctive
+          features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling: []

@@ -2,115 +2,144 @@ library: bokeh
 language: python
 specification_id: lollipop-basic
 created: '2025-12-23T15:14:01Z'
-updated: '2026-04-26T12:54:40Z'
-generated_by: claude-opus
-workflow_run: 24956899574
+updated: '2026-07-01T06:20:05Z'
+generated_by: claude-sonnet
+workflow_run: 28496532200
 issue: 934
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.13.14
+library_version: 3.9.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/python/bokeh/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: stems + markers + sorted data + correct title format'
-  - 'Excellent theme adaptation: all chrome tokens applied correctly, both renders
-    pass legibility check'
-  - Clean minimal code with proper KISS structure
-  - White-ring detail on markers (PAGE_BG as line_color) adds visual separation
-  - NumeralTickFormatter adds professional dollar formatting
+  - Brand green (#009E73) used consistently for stems and circular markers
+  - White outline ring on scatter markers (line_color=PAGE_BG) adds professional definition
+  - Average reference line with dashed style and annotation contextualizes the data
+  - Value labels above each marker make values immediately readable without requiring
+    axis lookup
+  - Data sorted descending creates natural visual hierarchy guiding viewer from highest
+    to lowest
+  - Theme-adaptive chrome thoroughly applied — all ink tokens set for both light and
+    dark renders
+  - 'Excellent Bokeh idioms: ColumnDataSource, Span, NumeralTickFormatter, Label models'
+  - NumeralTickFormatter for y-axis dollar formatting is a polished library-specific
+    touch
   weaknesses:
-  - 'No data storytelling: sorted data is good but no emphasis on top performer, no
-    focal points, no value labels, no visual hierarchy to guide the viewer'
-  - 'Title not bold: style guide specifies bold/medium-weight for titles, text_font_style=normal
-    weakens typographic hierarchy'
-  - 'Design sophistication stays at well-configured default level: white ring on markers
-    is the only distinctive aesthetic choice'
+  - Average reference line label uses INK_MUTED for the reference line annotation
+    text which is good, but the label text at 22pt is noticeably smaller than the
+    34pt tick labels — consider bumping to 26-28pt for better readability at mobile
+    scale
+  - Single brand-green color for all lollipops misses an opportunity to emphasize
+    outliers (e.g. Compute at $94K could be highlighted via a slightly larger marker
+    or bolder stem) — color or size variation would elevate the storytelling
+  - X-axis tick labels are rotated at 0.5 radians which creates a slightly awkward
+    angled look — consider 0.7-0.8 radians for a steeper slant or π/4 for 45° diagonal
+    which reads more cleanly
+  - 'DE-02: Minor tick lines are explicitly set to None (good) but major tick lines
+    are still the default size — styling major_tick_line_width smaller would further
+    refine the chrome'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "lollipop-basic · bokeh · anyplot.ai" top-left in dark INK color, readable; axis labels "Sales (USD)" and "Product Category" in dark INK, readable; y-axis tick labels in INK_SOFT ($0, $20,000, $40,000, etc.), readable; x-axis category labels rotated and readable
-      Data: 10 lollipops in brand green #009E73 — thin stems (line_width=4) rising from y=0 baseline to large circular markers (size=42) with white PAGE_BG ring; values sorted descending Electronics ($85K) to Office ($15K)
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct, clearly not pure white.
+      Chrome: Title "lollipop-basic · python · bokeh · anyplot.ai" in bold dark ink, ~60-65% of canvas width, well-proportioned. X-axis label "Cloud Service" and Y-axis label "Monthly Spend (USD)" in dark INK at 42pt — balanced and readable. Tick labels in INK_SOFT at 34pt — legible. X-axis categories rotated ~28° to avoid overlap. Y-axis formatted as "$0"–"$100,000" in dollar notation.
+      Data: 10 lollipops all in brand green #009E73 with white outline rings, sorted descending (Compute $94K → Monitoring $6K). Stems as thin vertical lines from baseline. Circular markers prominently visible. Value labels ("$94K", "$67K", etc.) in INK_SOFT above each marker. Dashed average reference line with "Avg: $34.7K" annotation in INK_MUTED. Y-only subtle grid at 10% alpha.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light F0EFE8 text, readable; axis labels in INK color (light), readable; tick labels in INK_SOFT (B8B7B0), readable; no dark-on-dark failures detected
-      Data: Brand green #009E73 lollipops identical to light render — stems, markers, and white ring all unchanged; only background and text colors flip
-      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render
+      Background: Warm near-black #1A1A17 — correct, clearly not pure black.
+      Chrome: Title in light #F0EFE8 ink — readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — clearly legible against the dark surface. No dark-on-dark failures observed.
+      Data: Identical brand green #009E73 lollipops with white-ring markers — data colors unchanged from light render as required. Value labels in INK_SOFT (#B8B7B0) remain visible. Average reference line and annotation adapt correctly to dark chrome.
+      Legibility verdict: PASS — all text readable against the near-black background. Chrome correctly flips while data colors remain identical to the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set (28pt/22pt/18pt), readable in both themes; title
-          not bold
+        comment: 'All font sizes explicitly set: title 50pt, axis labels 42pt, tick
+          labels 34pt, value labels 24pt, avg annotation 22pt. Well-proportioned in
+          both renders. No overflow. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Rotated x-axis labels well-spaced, no collisions
+        comment: No overlapping elements. Value labels well-spaced above markers.
+          X-axis tick labels rotated to avoid collision. No text-on-data overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stems line_width=4 and markers size=42 clearly visible
+        comment: Markers at size=42 are prominently visible for 10 sparse data points.
+          Stems at line_width=4 clearly visible. Appropriate sizing for the data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand green series, good contrast, CVD-safe
+        comment: Single-color brand green (#009E73) with good contrast on both backgrounds.
+          White outline ring on markers adds definition. CVD-safe — no red-green conflict.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Decent canvas utilization, minor empty space in upper plot area
+        comment: 'Well-balanced layout. Plot fills good portion of 3200x1800 canvas.
+          Appropriate margins (min_border: left 180, bottom 160, top 110, right 80).
+          Canvas gate passed — no dimension drift.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sales (USD) and Product Category with units
+        comment: Y-axis 'Monthly Spend (USD)' has units. X-axis 'Cloud Service' is
+          descriptive. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, light #FAF8F1, dark #1A1A17, chrome correct'
+        comment: 'Brand green #009E73 as sole data color. Backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark) correct. All chrome tokens theme-adaptive (INK, INK_SOFT,
+          INK_MUTED). Both renders pass. Data colors identical across themes.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default with white ring on markers; not exceptional
-          design
+        passed: true
+        comment: 'Above well-configured default. Intentional choices: white outline
+          ring on markers (line_color=PAGE_BG), average reference line with annotation,
+          sorted data, value labels. Not yet at FiveThirtyEight sophistication level
+          — no color hierarchy or dramatic emphasis.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No x-grid, subtle y-grid, no outline, minor ticks removed, no toolbar
+        comment: Y-only subtle grid at 10% alpha. No outer frame (outline_line_color=None).
+          Minor ticks suppressed. Theme-adaptive chrome throughout. Good refinement
+          visible above defaults, not yet 'perfect'.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Sorted data but no visual hierarchy, focal points, or emphasis
+        passed: true
+        comment: 'Sorted descending order creates visual hierarchy. Average reference
+          line contextualizes which services are above/below average. Value labels
+          make data immediately readable. Viewer quickly identifies the story. Missing:
+          color/size emphasis on outliers.'
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +149,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct lollipop: segment stems + scatter markers, vertical orientation'
+        comment: 'Correct lollipop chart: segment() for stems from baseline, scatter()
+          for circular markers at data values. Vertical orientation with categories
+          on x-axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems, markers, vertical, 10 categories, sorted descending
+        comment: 'All spec features present: thin stems, circular markers, vertical
+          orientation, categories on x-axis, values on y-axis, data sorted by value
+          descending.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x with x_range, values on y, all data visible
+        comment: Categories on x-axis (Cloud Service), values on y-axis (Monthly Spend).
+          All 10 categories visible. Range $0-$100K covers all data.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title lollipop-basic · bokeh · anyplot.ai correct; no legend for
-          single series
+        comment: Title 'lollipop-basic · python · bokeh · anyplot.ai' matches required
+          format. No legend needed for single-series — correctly omitted.
     data_quality:
       score: 15
       max: 15
@@ -149,19 +183,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All lollipop aspects shown: varying heights, sorted order, 10 categories'
+        comment: Shows all lollipop features with good value range ($6.8K to $94.2K).
+          Natural variation in heights demonstrates the chart type effectively.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Product sales by category - natural neutral business scenario
+        comment: Monthly cloud infrastructure spend by service category — real, neutral,
+          business scenario. Realistic categories (Compute, Storage, Networking, Database,
+          Security, Analytics, AI/ML, IoT, DevOps, Monitoring).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $15K-$85K realistic for product category sales, good spread
+        comment: Values plausible for a mid-size tech company (~$347K/month total
+          cloud spend). Proportions between services (Compute largest, Monitoring
+          smallest) are realistic. No factual issues.
     code_quality:
       score: 10
       max: 10
@@ -171,53 +210,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> tokens -> data -> figure -> styling -> save'
+        comment: 'Linear flow: imports → theme constants → data → figure → glyphs
+          → styling → output. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data
+        comment: Fully deterministic — hardcoded data arrays, no random generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 4 imports used
+        comment: 'All imports used: sys, io, os, time, pathlib.Path, bokeh models,
+          PIL.Image, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no fake UI
+        comment: Clean, idiomatic Python. Appropriate complexity. No over-engineering.
+          sys.path fix is necessary and documented.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot-{THEME}.png and plot-{THEME}.html both generated
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly. Uses current
+          Bokeh 3.9 API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, x_range for categorical, segment+scatter pattern
+        comment: 'Expert Bokeh usage: ColumnDataSource for all data, Span for reference
+          line, Label with x_units=''screen'' for annotation, NumeralTickFormatter
+          for dollar formatting, proper Selenium screenshot pattern per library guide.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: NumeralTickFormatter and HTML export via output_file/save
-  verdict: REJECTED
+        comment: Uses Bokeh-specific Span model, NumeralTickFormatter, Label with
+          mixed coordinate units. HTML interactive export via output_file+save. Core
+          segment+scatter technique is library-agnostic — partial credit.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - pillow
   techniques:
+  - annotations
   - html-export
   patterns:
   - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling

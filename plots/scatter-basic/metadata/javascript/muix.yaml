@@ -1,0 +1,251 @@
+library: muix
+language: javascript
+specification_id: scatter-basic
+created: '2026-06-25T01:47:57Z'
+updated: '2026-06-25T02:07:38Z'
+generated_by: claude-sonnet
+workflow_run: 28141198152
+issue: 611
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Deterministic LCG with seed 42 solves browser-harness reproducibility cleanly
+  - OLS trend line + mean reference + r annotation create a cohesive data story beyond
+    just displaying points
+  - Brand green with 0.72 alpha balances marker visibility and overlap transparency
+    for 120 points
+  - L-frame via background-colour line painting and t.ink/t.inkSoft wiring deliver
+    clean theme adaptation in both renders
+  - Correct ChartContainer composition pattern — the idiomatic MUI X approach for
+    combining chart primitives
+  weaknesses:
+  - Marker size (markerSize=7) is slightly small at 3200x1800 for 120 points — nudge
+    to 8–9 for better presence
+  - Avg 20 h/wk reference-line label (fontSize=12) is too small to serve as a strong
+    storytelling element — increase to 14px and reposition above the line
+  - Both-axis grid lines slightly more prominent than the style guide preferred treatment
+    for scatter — reduce opacity or switch to Y-axis only
+  - Diagonal trend line implemented as raw SVG line with manual pixel-space coordinate
+    mapping — necessary but slightly breaks MUI X declarative pattern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "scatter-basic · javascript · muix · anyplot.ai" in bold dark ink, centered at top — readable. X-axis label "Weekly Hours on Creative Projects" and Y-axis label "Innovation Score" in dark ink — readable. Tick labels on both axes in slightly softer dark ink — readable. Reference line label "Avg 20 h/wk" in small (12px) muted ink near x-axis — readable but small.
+      Data: 120 scatter markers in brand green #009E73 at ~72% alpha. OLS dashed trend line in muted ink. Vertical reference line at ~20 h/wk. Correlation annotation "r = 0.84" upper right. Both-axis subtle grid.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title in off-white/light text — readable. Axis labels and tick labels in light-colored text — readable. Reference line label visible in lighter ink. No dark-on-dark failures detected.
+      Data: Same 120 brand green #009E73 markers — identical to light render, confirming Imprint palette data colours are theme-independent. Dashed trend line and reference line rendered in lighter ink tone appropriate for dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22px, axis labels 16px, tick
+          labels 14px); proportions well-balanced. Minor: reference-line label fontSize=12
+          is small.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 120 markers at markerSize=7 with 0.72 alpha are visible but slightly
+          small at final resolution.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green on off-white/near-black; CVD-safe single series; no red-green
+          issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins (72/52/90/100); plot fills 50-75% of canvas; no
+          content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: Weekly Hours on Creative Projects (implicit units); Y: Innovation
+          Score (unitless metric). Both descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 from ANYPLOT_TOKENS;
+          t.ink/t.inkSoft for all chrome; data colours identical between themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: brand green with alpha, L-frame, OLS trend
+          line, mean reference, correlation annotation. Below FiveThirtyEight publication
+          level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-frame achieved, transparent markers, subtle dashed trend line.
+          Both-axis grid slightly more prominent than preferred for scatter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear story via trend line + mean reference + r annotation. Mean
+          reference label too small to be strong focal element.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D scatter plot on Cartesian axes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Transparency, grid, axis labels, title, appropriate point sizing
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=creative hours (independent), Y=innovation score (dependent); all
+          120 points visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'scatter-basic · javascript · muix · anyplot.ai' matches required
+          format. Single series, no standalone legend needed.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows positive correlation with visible noise/spread, outliers, full
+          range of values.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Tech-sector employee creative hours vs innovation score: neutral,
+          comprehensible business scenario.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hours 2-38/week, scores 12-98, r≈0.84, N=120 — all realistic proportions
+          for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data generation → OLS computation → single Chart component;
+          clear linear structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42); fully deterministic in browser context.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All six MUI X imports are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; pixel-space helpers necessary for SVG trend
+          line; no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component; skipAnimation set; window.ANYPLOT_SIZE
+          used; community @mui/x-charts API only.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'ChartContainer composition pattern is idiomatic MUI X; ChartsReferenceLine
+          used correctly. Minor: diagonal trend line requires raw SVG with manual
+          coordinate mapping.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine (MUI X specific) used meaningfully; ChartContainer
+          composition pattern is MUI X distinctive. Doesn't leverage tooltip slot
+          customisation or deeper capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending

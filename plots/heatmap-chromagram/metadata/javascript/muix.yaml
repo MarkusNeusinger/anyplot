@@ -1,0 +1,244 @@
+library: muix
+language: javascript
+specification_id: heatmap-chromagram
+created: '2026-06-24T13:52:36Z'
+updated: '2026-06-24T14:25:40Z'
+generated_by: claude-sonnet
+workflow_run: 28102222862
+issue: 4564
+language_version: 22.22.3
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-chromagram/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Creative use of MUI X context hooks (useDrawingArea, useXScale) to build a heatmap
+    — a non-native chart type — using SVG children inside ChartContainer
+  - 'Perfect Imprint sequential colormap application: seqColor() correctly interpolates
+    between t.seq[0] (#009E73) and t.seq[1] (#4467A3) from window tokens'
+  - 'Excellent data storytelling: chord section labels and semi-transparent dividers
+    immediately guide the viewer through the C-G-Am-F progression'
+  - Fully deterministic LCG (seed=42) for reproducible data generation — correct approach
+    for the offline browser context
+  - 'Full theme adaptation in both renders: divColor, chord labels, and colorbar labels
+    all use theme-adaptive tokens'
+  weaknesses:
+  - useYScale is imported from @mui/x-charts/hooks but never called — remove the unused
+    import (CQ-03)
+  - MUI X axis tick labels and axis label font sizes not explicitly set via tickLabelStyle
+    or slotProps — rely on ThemeProvider defaults; consider adding explicit sizing
+    (~14px tick labels, ~16px axis label) to fully satisfy VQ-01
+  - Chord annotation labels (fontSize=13 CSS px) and colorbar min/max labels (13px)
+    are slightly small; bumping to 14-15px would improve legibility at mobile widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "heatmap-chromagram · javascript · muix · anyplot.ai" fully visible at 22px CSS, dark ink; Y-axis label "Pitch Class" (rotated) readable; X-axis label "Time (seconds)" readable; all 12 pitch class tick labels (C–B) clearly visible; time tick labels (0.0s–4.0s) clear; chord labels "C major", "G major", "A minor", "F major" above each section readable at 13px CSS; colorbar "1.0"/"0.0" and "Energy" labels readable
+      Data: Imprint sequential colormap (green #009E73 → blue #4467A3) applied correctly; high-energy chord tones render blue, low-energy noise is green; four chord sections clearly delineated by semi-transparent dark dividers at 1s/2s/3s; custom colorbar gradient on right
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, chord labels, colorbar annotations all render in light ink on dark surface; no dark-on-dark failures observed; dividers use lighter rgba token (rgba(240,239,232,0.4)) adapting correctly; ThemeProvider correctly flips all chrome text to light color
+      Data: Colors identical to light render — Imprint seq green-to-blue gradient unchanged; same chord structure and energy patterns visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom elements have explicit sizes (title 22px, chord labels 13px,
+          colorbar 13-14px); MUI X axis tick/label sizes rely on ThemeProvider defaults
+          rather than explicit slotProps
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements in either theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap cells clearly visible, colorbar and chord labels present
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq palette (green to blue) is CVD-safe with luminance variation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800, balanced margins (left 70, right 90, top 80,
+          bottom 70)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (seconds) with unit, Pitch Class descriptive, Energy colorbar
+          with 0.0/1.0 scale
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq colormap from t.seq[0] to t.seq[1]; correct backgrounds;
+          data colors identical between themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above well-configured defaults; creative MUI X hook usage; intentional
+          chord annotation hierarchy; not yet FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid lines (appropriate for heatmap); subtle dividers; clean margins;
+          MUI X default axis tick marks visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Chord labels and dividers guide viewer through harmonic narrative;
+          clear structure without requiring domain knowledge
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct heatmap/chromagram visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 pitch classes, sequential colormap, colorbar, time in seconds,
+          chord transitions
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=pitch class, color=energy — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: heatmap-chromagram · javascript · muix · anyplot.ai — exact required
+          format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 distinct chord regions; active tones high, overtones medium, noise
+          low; all pitch classes and temporal evolution shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: C major to G major to A minor to F major — realistic, neutral musicology
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy 0-1 (standard chroma feature range); 0-4 seconds at 0.05s/frame
+          is realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Sub-components are idiomatic for MUI X hook access
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG seeded at 42 — correct for browser context
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: useYScale imported from @mui/x-charts/hooks but never called anywhere
+          in the code
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean React/MUI X code; no fake UI; LCG is elegant
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component; harness handles output
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of useDrawingArea() and useXScale() context hooks; ChartContainer
+          with SVG children is the recommended community pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: MUI X-specific hooks enable chart-coordinated SVG rendering unique
+          to MUI X's React context system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

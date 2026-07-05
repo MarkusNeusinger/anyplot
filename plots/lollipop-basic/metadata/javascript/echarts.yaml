@@ -1,0 +1,261 @@
+library: echarts
+language: javascript
+specification_id: lollipop-basic
+created: '2026-07-01T06:14:41Z'
+updated: '2026-07-01T06:34:23Z'
+generated_by: claude-sonnet
+workflow_run: 28497356876
+issue: 934
+language_version: 22.23.0
+library_version: 5.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-basic/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Clean lollipop via ECharts bar+scatter composition with correct barWidth:2 stems
+    and symbolSize:16 dots
+  - All theme tokens correctly mapped (t.ink, t.inkSoft, t.grid, t.palette[0])
+  - Average reference line via markLine adds storytelling context with a clear benchmark
+  - All font sizes explicitly set, theme-adaptive chrome works correctly in both light
+    and dark renders
+  - 'Perfect spec compliance: vertical orientation, sorted data, thin stems, circular
+    markers'
+  - Data sorted descending for clean ranking readability
+  weaknesses:
+  - Title font size 22 CSS px produces a title spanning ~42% of canvas width, slightly
+    below the 50–70% target for this ~51-char mandated title — consider increasing
+    to 26px
+  - Physician salary at 115K USD is notably lower than typical US physician averages
+    (~200–400K), making the salary comparison somewhat factually inaccurate relative
+    to the other professions
+  - 'VQ-01: minor proportional concern — title appears slightly small at fontsize
+    22 in the 1600px CSS mount'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "lollipop-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, all readable; Y-axis label "Avg. Annual Salary (USD thousands)" in t.inkSoft; X-axis categorical labels rotated 30°, all 10 professions clearly legible; Y-axis tick labels (0, 30, 60, 90, 120, 150) readable; value labels (e.g. "125K", "118K") above each scatter dot in t.inkSoft
+      Data: 10 lollipops in brand green (#009E73) — thin 2px stems (bar) rising from 0 baseline to symbolSize:16 circular scatter dots. Dashed average line at ~91K with "Avg: 91K" label at right edge. Data sorted descending from Software Eng (125K) to Teacher (58K).
+      Legibility verdict: PASS — all text readable, no light-on-light failures, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title in light-colored ink readable against dark background; Y-axis label visible in t.inkSoft (warm light gray); X-axis categorical labels remain readable with light text; Y-axis tick labels legible; value labels above dots remain visible; dashed average line and "Avg: 91K" label both visible against dark background
+      Data: Same brand green (#009E73) lollipop stems and dots — data colors identical to light render (only chrome flipped). Grid lines subtle and visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly use theme-adaptive tokens (t.ink / t.inkSoft); data green remains visible and distinguishable on the dark surface
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title:22, axis/tick/labels:14, data
+          labels:13). Title at fontSize 22 CSS px spans ~42% of canvas width — slightly
+          below the 50-70% target for this 51-char mandated title. All text readable
+          in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 30° at interval:0 — no visible overlap. Value
+          labels above dots well-separated. No text collision with data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: barWidth:2 stems clearly visible as thin lines, symbolSize:16 dots
+          prominent — ideal density-adapted sizing for 10 sparse data points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Single-series chart using brand green #009E73. CVD-safe by palette
+          design. Adequate contrast in both themes.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization (~65-70%). Margins left:90 right:80 top:90
+          bottom:120 well-balanced. 30° rotation with bottom:120 provides enough room
+          for rotated labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Avg. Annual Salary (USD thousands)'' — descriptive with
+          units. X-axis categorical labels are self-explanatory professions. Title
+          format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'color:t.palette set; both series use t.palette[0] (#009E73); backgroundColor:transparent
+          with page-level #FAF8F1/#1A1A17; all chrome uses t.ink/t.inkSoft/t.grid
+          tokens. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clean minimal look above library defaults: axis lines and tick marks
+          removed, brand green applied, value labels provide precise reading. Not
+          yet publication-ready but clearly above generic defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'axisLine:show:false and axisTick:show:false on both axes creates
+          a clean frameless chart. Y-axis split lines only with t.grid color. Good
+          whitespace. Missing: legend styling, no box frames.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Average reference line at 91K creates a meaningful focal point —
+          viewer immediately sees which professions are above/below average. Data
+          sorted descending reinforces the ranking narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct lollipop chart via bar+scatter composition. Thin stems (barWidth:2)
+          + circular markers (scatter symbolSize:16) in vertical orientation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stems from baseline to marker, circular dots at values, vertical
+          orientation (categories on x-axis), data sorted by value descending — all
+          spec requirements met.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: profession categories; Y-axis: salary values. All 10 data
+          points correctly mapped and visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'lollipop-basic · javascript · echarts · anyplot.ai'.
+          No legend needed for single-series chart (correct omission).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 10 professions with varying salary values (58K-125K range) demonstrating
+          the chart's ranking and comparison strengths. Good variation across the
+          range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Average annual salary by profession — real-world, comprehensible,
+          neutral scenario. No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Most salary values are plausible for the US market. However, Physician
+          at 115K USD is notably below typical US physician averages ($200K-$400K),
+          making the relative ranking between Physician and Software Engineer feel
+          factually inverted vs. real-world expectations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clear linear Data→Init→Option structure. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All data hardcoded deterministically. Appropriate for browser ECharts
+          environment.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ECharts available as global — no imports needed. Code is clean.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean bar+scatter combination for lollipop. No over-engineering.
+          Correct use of z-ordering for layering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: echarts.init(#container), animation:false,
+          no devicePixelRatio. Harness handles plot-light.png/plot-dark.png output.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard ECharts lollipop pattern (bar+scatter) with correct markLine
+          usage for reference annotations. Proper token integration. Good but could
+          leverage more ECharts-specific idioms.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ECharts markLine for average reference line with custom label
+          formatter — this is a distinctively ECharts API feature. layer-composition
+          of bar+scatter series is the canonical ECharts lollipop approach.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome
