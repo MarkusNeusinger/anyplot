@@ -20,7 +20,13 @@ lang_of() {
   esac
 }
 
-LABELS=$(gh issue view "$ISSUE" --json labels --jq '.labels[].name' 2>/dev/null)
+# A gh failure must surface as such — silencing it would report a bogus
+# done=0/15 and let the poller mis-diagnose a stall.
+if ! LABELS=$(gh issue view "$ISSUE" --json labels --jq '.labels[].name' 2>&1); then
+  echo "ERROR: gh issue view #$ISSUE failed (auth/network?): $LABELS"
+  echo "STATUS=NEEDS_ATTENTION"
+  exit 0
+fi
 
 done_count=0
 failed_libs=""

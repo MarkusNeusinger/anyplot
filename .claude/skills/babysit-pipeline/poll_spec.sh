@@ -21,9 +21,15 @@ pipeline_active() {
   # processed strictly sequentially, ANY active impl-* run belongs to the
   # current spec — so an unfiltered in_progress/queued check is correct here.
   for wf in bulk-generate.yml impl-generate.yml impl-review.yml impl-repair.yml impl-merge.yml impl-review-retry.yml; do
-    if gh run list --workflow="$wf" --limit 12 --json status \
-        --jq '.[] | select(.status=="in_progress" or .status=="queued") | .status' 2>/dev/null \
-        | grep -q .; then return 0; fi
+    local out
+    if ! out=$(gh run list --workflow="$wf" --limit 12 --json status \
+        --jq '.[] | select(.status=="in_progress" or .status=="queued") | .status' 2>&1); then
+      # gh failure means status is UNKNOWN — treat as "might be active" so a
+      # rate-limit/auth hiccup can never manufacture a false STALL.
+      printf 'WARN: gh run list --workflow=%s failed; assuming pipeline active: %s\n' "$wf" "$out" >> "$LOG"
+      return 0
+    fi
+    if grep -q . <<<"$out"; then return 0; fi
   done
   return 1
 }
@@ -43,8 +49,12 @@ for ((i=1; i<=iters; i++)); do
   fi
 
   # stall detection: no label progress for a while AND the pipeline has gone
-  # idle (dispatcher done + no impl runs active for this spec).
-  if [ "$done_now" = "$last_done" ]; then stale=$((stale+1)); else stale=0; last_done="$done_now"; fi
+  # idle (dispatcher done + no impl runs active for this spec). A non-numeric
+  # done count means monitor_spec.sh errored — report, don't count as a stall.
+  if ! [[ "$done_now" =~ ^[0-9]+$ ]]; then
+    # no `continue` here — the sleep below must still run or errors spin hot
+    printf 'WARN: non-numeric done count (%s) — monitor error, skipping stall accounting\n' "${done_now:-empty}" >> "$LOG"
+  elif [ "$done_now" = "$last_done" ]; then stale=$((stale+1)); else stale=0; last_done="$done_now"; fi
   if [ "$stale" -ge 5 ] && ! pipeline_active; then
     echo "=== STALL for $SPEC (#$ISSUE): done stuck at $done_now/15 for ~$((stale*INTERVAL/60)) min, pipeline idle ==="
     echo "$out"

@@ -38,7 +38,11 @@ const shots = process.env.SHOTS || '/tmp/anyplot-ui';
 mkdirSync(shots, { recursive: true });
 
 // Desktop + the mobile width the skill mandates; extras catch column overflow.
-const widths = (process.env.WIDTHS || '1440,390,360,320').split(',').map(Number);
+const widths = (process.env.WIDTHS || '1440,390,360,320')
+  .split(',')
+  .map(Number)
+  .filter((w) => Number.isFinite(w) && w > 0);
+if (widths.length === 0) throw new Error('WIDTHS contained no valid positive numbers');
 
 const browser = await chromium.launch({ executablePath });
 for (const url of urls) {
