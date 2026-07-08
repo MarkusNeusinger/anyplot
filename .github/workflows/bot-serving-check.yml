@@ -48,8 +48,8 @@ jobs:
 
           # Bot path: prerendered per-route HTML from the seo-proxy
           check "$GOOGLEBOT"  "https://anyplot.ai/"                                "<title>anyplot.ai</title>"
-          check "$GOOGLEBOT"  "https://anyplot.ai/scatter-basic"                   "Basic Scatter Plot | anyplot.ai"
-          check "$TWITTERBOT" "https://anyplot.ai/scatter-basic/python/matplotlib" "Basic Scatter Plot - matplotlib"
+          check "$GOOGLEBOT"  "https://anyplot.ai/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
+          check "$TWITTERBOT" "https://anyplot.ai/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - matplotlib | anyplot.ai</title>"
 
           # Control: humans must still get the SPA shell
           check "$HUMAN" "https://anyplot.ai/" '<div id="root">'
