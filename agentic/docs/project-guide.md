@@ -934,7 +934,8 @@ mechanics (see `agentic/commands/release.md` for the executable flow).
   every non-exempt PR adds bold-titled bullets with PR refs under `[Unreleased]`. **Exempt** (would
   drown the file): the automated plot pipeline's output (spec-create, impl-generate/review/repair/
   merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — these are summarized
-  in aggregate at release time (an italic *Catalog* line per version and one *Dependencies* bullet).
+  in aggregate at release time (an italic *Catalog* line at the end of the version section and a
+  single **Dependencies:** bullet under `### Changed`).
 - **Versioning** is product communication: major for milestone releases (new language waves,
   rebrands, breaking URL/schema changes — v2.0.0/v3.0.0 precedent), minor for feature batches,
   patch for fix-only. Version lives in `pyproject.toml`.

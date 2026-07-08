@@ -41,8 +41,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
 6. **Tag after merge** (on the updated `main`):
    `git tag -a vX.Y.Z -m "<Codename> (YYYY-MM-DD)" && git push origin vX.Y.Z`
-7. **Publish the GitHub release** with the changelog section as body:
-   `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes "<section body>"` — the body is
+7. **Publish the GitHub release** with the changelog section as body. Write the body to a temp
+   file first (it is multiline and contains backticks — do not inline it into `--notes`):
+   `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes-file <tmpfile>` — the body is
    the new version's `###` sections copied verbatim, plus a trailing
    `**Full Changelog:** https://github.com/MarkusNeusinger/anyplot/compare/v<last>...vX.Y.Z` line.
 8. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
