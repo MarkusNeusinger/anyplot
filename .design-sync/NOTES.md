@@ -13,6 +13,7 @@ This is an **app-shape** sync — the *source* is the `app/` website (`anyplot-w
 - **CSS / tokens.** `cfg.cssEntry = src/styles/tokens.css` (the `var(--*)` token system, incl. `[data-theme="dark"]`). Component styles are MUI/emotion injected at runtime → build prints `[CSS_RUNTIME]` (expected, non-blocking). Tokens land inside `_ds_bundle.css`, reachable via the `styles.css` `@import` closure.
 - **Render check uses system chrome:** `DS_CHROMIUM_PATH=/usr/bin/google-chrome` on every build/validate/capture/driver run. Playwright is installed in `.ds-sync` with `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` (no 200 MB download). Node is v20 (works; root `engines` asks for 22 but the converter doesn't need it).
 - **`assets/` is preserved in the project.** The target's `assets/*.svg` (logo/favicon/palette-strip) are hand-authored, NOT produced by this build. They were deliberately kept OUT of the delete set. **On every re-sync, keep `assets/**` out of the deletes** or the reconciliation will remove them.
+- **Pass `localDir` (and every path argument) to the DesignSync tool as an ABSOLUTE path.** Relative paths resolve against the persisted Bash cwd, which drifts — a prior `cd` into the bundle dir made the skill-prescribed `./ds-bundle` resolve to `.../ds-bundle/ds-bundle` (ENOENT in finalize_plan).
 
 ## MonoLisa fonts (re-fetch on a fresh clone)
 
