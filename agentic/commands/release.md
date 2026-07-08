@@ -25,7 +25,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
 1. **Verify completeness.** Compare `CHANGELOG.md`'s `[Unreleased]` section against
    `git log v<last>..origin/main --oneline --no-merges`, ignoring the exempt classes (spec-create,
    impl-generate/review/repair/merge, spec auto-polish, daily-regen commits, individual Dependabot
-   bumps). Add any missing notable entries first.
+   bumps). Add any missing notable entries first. Run `git fetch origin main` before comparing, and
+   check the state of any in-flight PRs the release should include yourself
+   (`gh pr view <num> --json state,mergedAt`) — do not rely on the user to report merge status.
 2. **Add the aggregate lines.** Summarize the exempt classes for the release window:
    - An italic `*Catalog: ...*` line at the end of the section (counts of new implementations,
      regenerations, coverage milestones — query merged impl PRs or `impl:*:done` labels).
