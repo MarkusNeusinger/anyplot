@@ -21,7 +21,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **`CHANGELOG.md` introduced, with the v1.0.0–v3.0.0 history backfilled** from the GitHub
   releases. The per-PR changelog contract is wired into `CLAUDE.md`,
   `.github/copilot-instructions.md`, and `/pull_request`; a new `/release` command
-  (`agentic/commands/release.md`) codifies the version-bump → tag → GitHub-release flow.
+  (`agentic/commands/release.md`) codifies the version-bump → tag → GitHub-release flow (#9614).
 - **Design-sync inputs for the anyplot.ai Design System.** `.design-sync/` carries the app-shape
   sync inputs so the Design System on claude.ai/design can be synced from `app/` via
   `/design-sync`; MonoLisa is fetched from GCS and never committed (#9213).
