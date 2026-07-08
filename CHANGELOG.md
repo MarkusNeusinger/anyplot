@@ -18,8 +18,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
-- **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift /
-  cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
+- **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift
+  and cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
   both viewports × both themes, cloud playwright-core fallback probe), `verify-api` (read sweep +
   shared-prod-DB discipline), `verify-core` (pytest/ruff/mypy gates + registry smoke), `open-pr`
   (gates → PR → CI watch → review-thread resolution with runnable GraphQL recipes),

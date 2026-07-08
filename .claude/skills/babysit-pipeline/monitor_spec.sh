@@ -54,8 +54,11 @@ if [ "$done_count" -eq 15 ]; then
   if [ "$gcs_ok" -eq 2 ]; then
     echo "STATUS=COMPLETE"
   else
-    echo "  GCS spot-check incomplete (matplotlib+muix present=$gcs_ok/2)"
-    echo "STATUS=IN_PROGRESS"
+    # impl-merge promotes to GCS atomically with the labels, so 15/15 labels
+    # without the images is abnormal (broken gsutil auth or a failed
+    # promotion), not a transient — surface it instead of waiting forever.
+    echo "  GCS spot-check failed at 15/15 labels (matplotlib+muix present=$gcs_ok/2) — check gsutil auth, then the impl-merge promotion"
+    echo "STATUS=NEEDS_ATTENTION"
   fi
 elif [ -n "$failed_libs" ] && [ -z "$pending_libs" ]; then
   # nothing left running, only failures remain -> needs intervention

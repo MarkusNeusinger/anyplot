@@ -9,8 +9,8 @@ library coverage, and open impl-PR classification.
 - **Always `git fetch origin main` first** — every query below reads `origin/main`, and a
   stale fetch has produced wrong counts that the user had to correct.
 - Counts drift with the pipeline — report the numbers WITH the fetch timestamp.
-- The canonical library registry is `core/constants.py` (15 libraries, 4 languages);
-  derive expected coverage from it, never from a hardcoded list.
+- The canonical library registry is `core/constants.py`; derive the expected library count
+  from it, never from a hardcoded list.
 
 ## Run
 
@@ -25,12 +25,13 @@ echo "fully-old: $(comm -23 /tmp/old_specs.txt /tmp/new_specs.txt | wc -l)  part
 comm -23 /tmp/old_specs.txt /tmp/new_specs.txt   # the fully-old list
 ```
 
-3. **Per-spec library coverage** (which of the 15 libs have an implementation file):
+3. **Per-spec library coverage** (which of the registry's libs have an implementation file):
 
 ```bash
+TOTAL=$(uv run python -c "from core.constants import SUPPORTED_LIBRARIES; print(len(SUPPORTED_LIBRARIES))")
 for spec in <spec-ids or all>; do
   n=$(git ls-tree -r --name-only origin/main "plots/$spec/implementations/" 2>/dev/null | wc -l)
-  echo "$spec: $n/15"
+  echo "$spec: $n/$TOTAL"
 done
 ```
 
