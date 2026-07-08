@@ -23,10 +23,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
   endpoint and the repo, served directly in nginx like robots.txt so mapped crawler UAs aren't
   proxied into a `/seo-proxy/llms.txt` 404 (#9618).
-- **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls
-  production with Googlebot/Twitterbot UAs plus a human-UA control and fails on non-200 or
-  missing per-route titles, so the crawler-only serving path can never break silently again
-  (#9617).
+- **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls the
+  Cloud Run origin with Googlebot/Twitterbot UAs plus a human-UA control (and an `llms.txt`
+  check) and fails on non-200 or missing per-route titles, so the crawler-only serving path can
+  never break silently again. Targets the origin because Cloudflare's bot management 403s
+  GitHub-runner IPs (#9617, #9619).
 - **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
   workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
   headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and

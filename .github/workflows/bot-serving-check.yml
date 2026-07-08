@@ -7,6 +7,13 @@
 # proxy_ssl_verify_depth 1 vs a 4-deep Let's Encrypt chain) and every bot UA
 # received HTTP 502 on every page, undetected for ~4 weeks. This check is the
 # alarm that was missing.
+#
+# The checks target the Cloud Run ORIGIN, not https://anyplot.ai: Cloudflare's
+# bot management 403s GitHub-runner (datacenter) IPs — including UA-spoofed
+# "Googlebot", which only passes verified-bot checks from real Google IPs —
+# verified on the first dispatched run. The origin is also exactly the layer
+# that broke in the incident above; Cloudflare-edge issues are out of this
+# monitor's reach by design.
 
 name: Bot Serving Check
 
@@ -21,13 +28,16 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 4 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
-    # ~6 min worst-case; 10 leaves room to report a clean failure.
+    # 5 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~7.5 min worst-case; 10 leaves room to report a clean failure.
     timeout-minutes: 10
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
           set -uo pipefail
+          # Cloud Run origin of the anyplot-app service (see header comment
+          # for why not https://anyplot.ai).
+          ORIGIN="https://anyplot-app-r3tvmejsmq-ez.a.run.app"
           GOOGLEBOT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
           TWITTERBOT="Twitterbot/1.0"
           HUMAN="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
@@ -51,11 +61,14 @@ jobs:
           }
 
           # Bot path: prerendered per-route HTML from the seo-proxy
-          check "$GOOGLEBOT"  "https://anyplot.ai/"                                "<title>anyplot.ai</title>"
-          check "$GOOGLEBOT"  "https://anyplot.ai/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
-          check "$TWITTERBOT" "https://anyplot.ai/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - matplotlib | anyplot.ai</title>"
+          check "$GOOGLEBOT"  "$ORIGIN/"                                "<title>anyplot.ai</title>"
+          check "$GOOGLEBOT"  "$ORIGIN/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
+          check "$TWITTERBOT" "$ORIGIN/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - matplotlib | anyplot.ai</title>"
+
+          # llms.txt must be served directly, never proxied to the seo backend
+          check "$GOOGLEBOT" "$ORIGIN/llms.txt" "# anyplot"
 
           # Control: humans must still get the SPA shell
-          check "$HUMAN" "https://anyplot.ai/" '<div id="root">'
+          check "$HUMAN" "$ORIGIN/" '<div id="root">'
 
           exit $fail
