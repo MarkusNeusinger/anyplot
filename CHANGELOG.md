@@ -21,7 +21,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **Legal page "other projects" block** — below the disclaimer, cross-linking the maintainer's
   other projects kurrentschrift.ink and cite-citadel, tracked as `external_link` with
   destinations `kurrentschrift` / `cite_citadel`; deliberately without `noreferrer` so the
-  target sites' analytics can attribute the traffic.
+  target sites' analytics can attribute the traffic (#9616).
 
 - **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift
   and cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
@@ -65,7 +65,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **All react-refresh ESLint warnings resolved** — `PALETTE` / `snippet()` extracted from
   `PalettePage.tsx` into `PalettePage.helpers.ts` (following the `MapPage.helpers.ts` pattern),
   and the `react-refresh/only-export-components` rule scoped off for test modules
-  (`*.test.{ts,tsx}`, `test-utils.tsx`), which never participate in Fast Refresh.
+  (`*.test.{ts,tsx}`, `test-utils.tsx`), which never participate in Fast Refresh (#9616).
 
 ## [3.0.0] — 2026-06-10 — Julia & JavaScript, 15 libraries & the Imprint palette
 
