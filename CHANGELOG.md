@@ -20,7 +20,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 - **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls
   production with Googlebot/Twitterbot UAs plus a human-UA control and fails on non-200 or
-  missing per-route titles, so the crawler-only serving path can never break silently again.
+  missing per-route titles, so the crawler-only serving path can never break silently again
+  (#9617).
 - **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
   workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
   headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and
@@ -74,7 +75,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `@seo_proxy` hop verifies the upstream TLS chain of `api.anyplot.ai`, which is 4 certificates
   deep (leaf → Let's Encrypt YE1 → ISRG Root YE cross-sign → ISRG Root X2), while nginx's
   default `proxy_ssl_verify_depth` is 1. Depth raised to 4 in both proxy locations — humans saw
-  a healthy site the whole time, making this a de-facto site-wide noindex.
+  a healthy site the whole time, making this a de-facto site-wide noindex (#9617).
 - **All react-refresh ESLint warnings resolved** — `PALETTE` / `snippet()` extracted from
   `PalettePage.tsx` into `PalettePage.helpers.ts` (following the `MapPage.helpers.ts` pattern),
   and the `react-refresh/only-export-components` rule scoped off for test modules
