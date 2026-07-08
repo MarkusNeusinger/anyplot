@@ -21,7 +21,9 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    # 4 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~6 min worst-case; 10 leaves room to report a clean failure.
+    timeout-minutes: 10
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
@@ -34,7 +36,9 @@ jobs:
           check() {
             local ua="$1" url="$2" expect="$3"
             local code
-            code=$(curl -sS --retry 2 --max-time 30 -A "$ua" -o body.html -w '%{http_code}' "$url" || echo "000")
+            # On curl failure REPLACE the code — a failing curl can still have
+            # printed a partial -w code; appending would yield e.g. "200000".
+            code=$(curl -sS --retry 2 --max-time 30 -A "$ua" -o body.html -w '%{http_code}' "$url") || code="000"
             if [ "$code" != "200" ]; then
               echo "::error::$url with UA '$ua' returned HTTP $code (expected 200)"
               fail=1
