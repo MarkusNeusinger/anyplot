@@ -22,7 +22,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
   llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
   endpoint and the repo, served directly in nginx like robots.txt so mapped crawler UAs aren't
-  proxied into a `/seo-proxy/llms.txt` 404.
+  proxied into a `/seo-proxy/llms.txt` 404 (#9618).
 - **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
   workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
   headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and
