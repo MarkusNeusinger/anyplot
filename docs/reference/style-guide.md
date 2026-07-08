@@ -226,14 +226,16 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 >
 > Don't: `Oops! Looks like we don't support "ggplot" yet. But don't worry — we're always adding new libraries! 🙂`
 
-**Changelog entry:**
+**Changelog entry** (format per `CHANGELOG.md`, Keep a Changelog):
 
 > Do:
 > ```
-> v0.4.0
-> + altair support
-> + palette exports accept theme="light"|"dark"
-> ~ seaborn examples now include legends (was: omitted)
+> ### Added
+> - **altair support.** 74 examples across the catalog (#412).
+>
+> ### Changed
+> - **Palette exports accept `theme="light"|"dark"`** (#418).
+> - **seaborn examples now include legends** (was: omitted) (#421).
 > ```
 >
 > Don't: `🎉 v0.4.0 is here! We've been working hard to bring you some amazing new features...`
@@ -666,7 +668,7 @@ The site opens with a thin horizontal rule displaying:
 ~/anyplot.ai · main · v1.1.0 │ // the open plot catalogue. │ ◐ dark
 ```
 
-Lowercase, monospace, three slots. The left slot shows the domain + git branch + current release tag (the tag is fetched live from the GitHub releases API with 24h localStorage cache); `main` links to the branch tree, the version links to the release page. The center slot is a code-comment-style sub-tagline. The right slot is a `◐` half-circle theme toggle. This bar immediately positions the site as a tool/publication hybrid rather than a marketing page, and puts the domain in view at all times.
+Lowercase, monospace, three slots. The left slot shows the domain + git branch + current release tag (the tag is fetched live from the GitHub releases API with 1h localStorage cache); `main` links to the branch tree, the version links to the release page. The center slot is a code-comment-style sub-tagline. The right slot is a `◐` half-circle theme toggle. This bar immediately positions the site as a tool/publication hybrid rather than a marketing page, and puts the domain in view at all times.
 
 **Sticky behaviour.** Masthead is `position: sticky, top: 0, zIndex: 100` on every route *except* `/plots`. On `/plots` it flows with the page so the `FilterBar` can pin cleanly at the top of the viewport without z-index competition (both used to fight for top 0 and the `0%` counter would visually stack over `any.plot()`). The masthead bg is opaque `var(--bg-page)` (no `backdrop-filter`) so the NavBar scrolls behind it without a cross-fade artefact.
 
