@@ -14,6 +14,8 @@ For detailed project documentation (architecture, commands, workflows, etc.), se
 - **Always write in English** - All output text (code comments, commit messages, PR descriptions, issue comments, documentation) must be in English, even if the user writes in another language.
 - **Update documentation when making changes** - When adding new features, events, or modifying behavior, always check if related documentation needs updating (e.g., `docs/reference/plausible.md` for analytics events, `docs/workflows/` for workflow changes, `docs/contributing.md` for user-facing changes).
 - **Every PR updates `CHANGELOG.md`** - Add entries under `[Unreleased]` (Keep-a-Changelog categories, English, bold-titled bullets for headline entries, PR refs — like the existing entries) — that file is how releases get posted; a PR without its entry is incomplete. **Exempt:** the automated plot pipeline's output (spec-create, impl-generate/review/repair/merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — those are summarized in aggregate at release time (see `agentic/commands/release.md`). This rule is duplicated in `.github/copilot-instructions.md` and `agentic/commands/pull_request.md`; keep all three in sync when changing it.
+- **External-system writes need explicit, named authorization** - Merging or closing PRs/issues this session did not create, bulk merges, and label changes on others' PRs are blocked by the permission classifier unless the user named that action; a generic "ok, sounds good" authorizes nothing. For any change to `.claude/settings*.json`, use the `/update-config` skill immediately — direct writes are blocked as self-modification and retrying variants just burns round trips.
+- **Long-running work reports progress proactively** - During pipeline babysitting, bulk operations, or extended planning, post a one-line status roughly every 10 minutes and flag a suspected stall immediately with evidence; never let the user be the one to ask "still running?". Before starting a multi-item queue, confirm its extent and stop-point with the user.
 - **Fix small build/test blockers directly, even when out of scope** - If a typecheck error, failing test, lint failure, or other small pipeline blocker shows up while working on something unrelated (incl. things the current PR was not meant to touch), fix it in the same PR or a tiny follow-up — never leave it parked under "out of scope". A latent `tsc` error that doesn't surface locally will silently break the next Cloud Build, which deploys nothing new and leaves production stale even though every PR check looks green (this is exactly how PR #6961's frontend fixes never reached anyplot.ai — the unrelated `prism/r` TS7016 from #6944 was deferred, then blocked the next `yarn build`). The bar: if the fix is < ~20 lines and obviously correct, just do it; if it would expand scope meaningfully, ask first rather than deferring silently.
 
 ## PR Follow-Through (mandatory after every `gh pr create`)
@@ -32,6 +34,19 @@ After opening a PR, the work is **not** complete. Stay with the PR until both th
 
 This rule applies to every PR Claude opens, including small fixes and follow-ups.
 
+## Self-Verification (skill routing)
+
+Project skills in `.claude/skills/` encode the verification loops — route by what the diff touches before shipping:
+
+| Diff touches | Skill |
+|---|---|
+| `app/` | `/verify-frontend` — drive the changed flow in the browser; both viewports, both themes |
+| `api/` | `/verify-api` — read sweep + changed-endpoint payload; shared-prod-DB discipline |
+| `core/`, `tests/` | `/verify-core` — pytest + direct smoke, ruff/mypy gates |
+| any ship request | `/open-pr` — gates → PR → CI watch → review-thread resolution (the executable form of "PR Follow-Through" above) |
+
+Known gaps with NO verification loop yet (reason through carefully and say so in the PR): `.github/workflows/` and `prompts/` changes (only observable on real pipeline runs), Cloud Build deploys, GCS promotion, and the Postgres sync. Run `/optimize-skills` periodically to mine session transcripts for new friction and fold it back into these loops.
+
 ## MCP Tools (Context7)
 
 **Context7** - Use for up-to-date library documentation:
@@ -41,7 +56,7 @@ This rule applies to every PR Claude opens, including small fixes and follow-ups
 
 ## Development Workflow
 
-- **Verify working directory** - Always verify the correct working directory before running commands (especially frontend dev servers, package managers). Use `pwd` before executing build/serve commands.
+- **Verify working directory** - Always verify the correct working directory before running commands (especially frontend dev servers, package managers). Use `pwd` before executing build/serve commands. Prefer absolute paths (or `git -C <path>`) over prefixing every Bash call with `cd` — shell cwd and env vars do not reliably persist between calls (sessions have hit dozens of redundant `cd`s and doubled `app/app/src` paths). After `cd app`, path arguments must not repeat the `app/` prefix.
 - **Keep plans simple** - Do not over-scope by adding extra modes, elaborate multi-step processes, or spawning teams when a direct approach is requested. Ask for clarification before expanding scope. Only do exactly what was asked.
 - **Proper lint fixes only** - Always apply proper fixes for lint/code quality issues. Never use disable comments (`eslint-disable`, `noqa`, etc.) unless explicitly approved by the user.
 - **Fix formatting when editing docs** - When formatting or improving markdown files, actually fix formatting issues (headings, lists, code blocks, structure) — don't just analyze the content.

@@ -18,6 +18,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Project skill layer under `.claude/skills/`** — six skills, ported from the kurrentschrift /
+  cite-citadel setups and adapted to anyplot: `verify-frontend` (browser-drive changed flows,
+  both viewports × both themes, cloud playwright-core fallback probe), `verify-api` (read sweep +
+  shared-prod-DB discipline), `verify-core` (pytest/ruff/mypy gates + registry smoke), `open-pr`
+  (gates → PR → CI watch → review-thread resolution with runnable GraphQL recipes),
+  `optimize-skills` (session-transcript retro mining), and `babysit-pipeline` (bulk-generate
+  monitoring with the battle-tested poller scripts promoted from gitignored local state).
+  CLAUDE.md gained a Self-Verification routing table wiring diff paths to the skills.
+- **`/dependabot` and `/catalog-status` commands** — batch-processing of Dependabot PRs with the
+  GITHUB_TOKEN/auto-merge gotchas encoded, and a reproducible catalog-status report (light/dark
+  migration counts, per-spec library coverage, open impl-PR classification). Both derived from a
+  13-session transcript retro; the same retro added working rules to CLAUDE.md (explicit
+  authorization for external writes, proactive progress reporting, absolute-path discipline).
 - **`CHANGELOG.md` introduced, with the v1.0.0–v3.0.0 history backfilled** from the GitHub
   releases. The per-PR changelog contract is wired into `CLAUDE.md`,
   `.github/copilot-instructions.md`, and `/pull_request`; a new `/release` command
