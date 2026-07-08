@@ -68,6 +68,14 @@ export default [
     },
   },
   {
+    // Test modules never participate in Fast Refresh — the rule only guards
+    // HMR boundaries of the running app, so it has no meaning here.
+    files: ['src/**/*.test.{ts,tsx}', 'src/test-utils.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
     ignores: ['dist/**', 'node_modules/**', 'coverage/**', '*.config.js', '*.config.mjs'],
   },
   prettierConfig,
