@@ -309,7 +309,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
-| `destination` | Link target (github, plausible, stats, compare, linkedin, kurrentschrift, cite_citadel, mcp, legal) | `external_link`, `internal_link` |
+| `destination` | Link-target slug — external: `github`, `github_issue_chooser`, `github_personal`, `github_bug`, `github_discussions`, `github_plot_request`, `github_releases`, `linkedin`, `x`, `kurrentschrift`, `cite_citadel`, `library_docs`; internal: `about`, `legal`, `legal_transparency`, `palette` (grep `destination: '` in `app/src` for the authoritative list) | `external_link`, `internal_link` |
 | `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
