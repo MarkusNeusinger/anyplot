@@ -925,8 +925,33 @@ pytest -s          # Show prints
 pytest --pdb       # Debug on failure
 ```
 
+## Releases & Changelog
+
+The release notes ARE the changelog — they accumulate PR-by-PR, so cutting a release is pure
+mechanics (see `agentic/commands/release.md` for the executable flow).
+
+- **`CHANGELOG.md`** (repo root) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
+  every non-exempt PR adds bold-titled bullets with PR refs under `[Unreleased]`. **Exempt** (would
+  drown the file): the automated plot pipeline's output (spec-create, impl-generate/review/repair/
+  merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — these are summarized
+  in aggregate at release time (an italic *Catalog* line per version and one *Dependencies* bullet).
+- **Versioning** is product communication: major for milestone releases (new language waves,
+  rebrands, breaking URL/schema changes — v2.0.0/v3.0.0 precedent), minor for feature batches,
+  patch for fix-only. Version lives in `pyproject.toml`.
+- **Release flow**: a small `release/vX.Y.Z` PR moves `[Unreleased]` under
+  `## [X.Y.Z] — YYYY-MM-DD — <Codename>` and bumps `pyproject.toml` + `uv.lock`; after merge, an
+  annotated tag `vX.Y.Z` is pushed and `gh release create` publishes the changelog section
+  verbatim as the release body, titled `vX.Y.Z — <Codename>`.
+- **Product integration**: the site masthead displays the latest release tag live
+  (`app/src/hooks/useLatestRelease.ts` fetches the GitHub `releases/latest` API with a 1 h
+  localStorage cache) and the About page links to the GitHub releases, so publishing the release
+  is user-visible without a deploy.
+- The changelog rule is duplicated in `CLAUDE.md`, `.github/copilot-instructions.md`, and
+  `agentic/commands/pull_request.md` — keep all three in sync when changing it.
+
 ## Key Documentation Files
 
+- **CHANGELOG.md**: Keep-a-Changelog record of notable changes; source of release notes
 - **docs/contributing.md**: How to add/improve specs and implementations
 - **docs/workflows/overview.md**: Automation flows and label system
 - **docs/concepts/vision.md**: Product vision
