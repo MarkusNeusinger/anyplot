@@ -18,6 +18,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
+  by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
+  llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
+  endpoint and the repo, served directly in nginx like robots.txt so mapped crawler UAs aren't
+  proxied into a `/seo-proxy/llms.txt` 404 (#9618).
 - **`bot-serving-check.yml` synthetic monitor** — daily scheduled workflow that curls
   production with Googlebot/Twitterbot UAs plus a human-UA control and fails on non-200 or
   missing per-route titles, so the crawler-only serving path can never break silently again
