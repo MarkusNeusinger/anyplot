@@ -64,6 +64,31 @@ describe('LegalPage', () => {
     expect(screen.getByText('~$34/month')).toBeInTheDocument();
   });
 
+  it('renders other projects links without noreferrer', () => {
+    render(<LegalPage />);
+
+    const kurrentLink = screen.getByRole('link', { name: 'kurrentschrift.ink' });
+    expect(kurrentLink).toHaveAttribute('href', 'https://kurrentschrift.ink');
+    expect(kurrentLink).toHaveAttribute('target', '_blank');
+    expect(kurrentLink).toHaveAttribute('rel', 'noopener');
+
+    const citadelLink = screen.getByRole('link', { name: 'cite-citadel' });
+    expect(citadelLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/cite-citadel');
+    expect(citadelLink).toHaveAttribute('target', '_blank');
+    expect(citadelLink).toHaveAttribute('rel', 'noopener');
+  });
+
+  it('tracks external link clicks for other projects', () => {
+    trackEvent.mockClear();
+    render(<LegalPage />);
+
+    fireEvent.click(screen.getByRole('link', { name: 'kurrentschrift.ink' }));
+    fireEvent.click(screen.getByRole('link', { name: 'cite-citadel' }));
+
+    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'kurrentschrift' });
+    expect(trackEvent).toHaveBeenCalledWith('external_link', { destination: 'cite_citadel' });
+  });
+
   it('tracks external link clicks for linkedin, x and github', () => {
     trackEvent.mockClear();
     render(<LegalPage />);
