@@ -108,7 +108,7 @@ export function LegalPage() {
         — read and write old german cursive
         <br />
         <Link
-          href="https://markusneusinger.github.io/cite-citadel/"
+          href="https://github.com/MarkusNeusinger/cite-citadel"
           target="_blank"
           rel="noopener"
           onClick={() => trackEvent('external_link', { destination: 'cite_citadel' })}

@@ -73,7 +73,7 @@ describe('LegalPage', () => {
     expect(kurrentLink).toHaveAttribute('rel', 'noopener');
 
     const citadelLink = screen.getByRole('link', { name: 'cite-citadel' });
-    expect(citadelLink).toHaveAttribute('href', 'https://markusneusinger.github.io/cite-citadel/');
+    expect(citadelLink).toHaveAttribute('href', 'https://github.com/MarkusNeusinger/cite-citadel');
     expect(citadelLink).toHaveAttribute('target', '_blank');
     expect(citadelLink).toHaveAttribute('rel', 'noopener');
   });
