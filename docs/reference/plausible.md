@@ -184,12 +184,12 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx | User clicks external link |
-| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx | User clicks internal link in footer |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx | User clicks external link |
+| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx | User clicks internal link |
 
-**External destinations (Footer)**: `github`, `stats`, `linkedin`
-**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`
-**Internal destinations**: `mcp`, `legal`
+**External destinations (Footer)**: `github`, `github_issue_chooser`, `linkedin`
+**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`, `kurrentschrift`, `cite_citadel`
+**Internal destinations (Footer)**: `about`, `legal`
 
 ### Performance (Core Web Vitals)
 
@@ -309,7 +309,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
-| `destination` | Link target (github, plausible, stats, compare, linkedin, mcp, legal) | `external_link`, `internal_link` |
+| `destination` | Link-target slug — external: `github`, `github_issue_chooser`, `github_personal`, `github_bug`, `github_discussions`, `github_plot_request`, `github_releases`, `linkedin`, `x`, `kurrentschrift`, `cite_citadel`, `library_docs`; internal: `about`, `legal`, `legal_transparency`, `palette`. `SectionHeader` external links emit the target **hostname** instead (e.g. `plausible.io`). Grep `destination:` in `app/src` for the authoritative list. | `external_link`, `internal_link` |
 | `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
@@ -449,8 +449,8 @@ User lands on anyplot.ai
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
 | `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx |
-| `internal_link` | `destination`, `spec`, `library` | Footer.tsx |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx |
+| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx |
 | `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDay, PlotOfTheDayTerminal, LandingPage |
 | `theme_toggle` | `to` | MastheadRule.tsx |
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx |

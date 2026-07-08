@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Lang, PALETTE, snippet } from 'src/pages/PalettePage';
+import { type Lang, PALETTE, snippet } from 'src/pages/PalettePage.helpers';
 
 const LANGS: Lang[] = ['python', 'r', 'julia', 'js'];
 

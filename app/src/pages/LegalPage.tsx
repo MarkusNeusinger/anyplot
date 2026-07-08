@@ -91,6 +91,36 @@ export function LegalPage() {
     </>
   );
 
+  const otherProjectsBlock = (
+    <>
+      <Typography sx={subheadingStyle}>other projects</Typography>
+      <Typography sx={textStyle}>
+        {/* no noreferrer — own sites, keep the referrer for their analytics */}
+        <Link
+          href="https://kurrentschrift.ink"
+          target="_blank"
+          rel="noopener"
+          onClick={() => trackEvent('external_link', { destination: 'kurrentschrift' })}
+          sx={proseLinkStyle}
+        >
+          kurrentschrift.ink
+        </Link>{' '}
+        — read and write old german cursive
+        <br />
+        <Link
+          href="https://github.com/MarkusNeusinger/cite-citadel"
+          target="_blank"
+          rel="noopener"
+          onClick={() => trackEvent('external_link', { destination: 'cite_citadel' })}
+          sx={proseLinkStyle}
+        >
+          cite-citadel
+        </Link>{' '}
+        — llm-maintained, fully-cited personal wiki
+      </Typography>
+    </>
+  );
+
   const disclaimerBlock = (
     <>
       <Typography sx={subheadingStyle}>disclaimer</Typography>
@@ -148,6 +178,7 @@ export function LegalPage() {
               <Box sx={{ flex: 1, minWidth: 0 }}>{operatorContactBlock}</Box>
             </Box>
             {disclaimerBlock}
+            {otherProjectsBlock}
           </Box>
         </Box>
 
@@ -523,7 +554,7 @@ export function LegalPage() {
             mt: 2,
           }}
         >
-          last updated: April 2026
+          last updated: July 2026
         </Typography>
       </Box>
     </>
