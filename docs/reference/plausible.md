@@ -187,9 +187,9 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 | `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx | User clicks external link |
 | `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx | User clicks internal link in footer |
 
-**External destinations (Footer)**: `github`, `stats`, `linkedin`
-**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`
-**Internal destinations**: `mcp`, `legal`
+**External destinations (Footer)**: `github`, `github_issue_chooser`, `linkedin`
+**External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`, `kurrentschrift`, `cite_citadel`
+**Internal destinations (Footer)**: `about`, `legal`
 
 ### Performance (Core Web Vitals)
 
@@ -309,7 +309,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `category` | Filter category (lib, spec, plot, data, dom, feat, dep, tech, pat, prep, style) | `search`, `random_filter`, `filter_remove` |
 | `value` | Filter value | `random_filter`, `filter_remove`, `tag_click` |
 | `query` | Search query text | `search`, `search_no_results` |
-| `destination` | Link target (github, plausible, stats, compare, linkedin, mcp, legal) | `external_link`, `internal_link` |
+| `destination` | Link target (github, plausible, stats, compare, linkedin, kurrentschrift, cite_citadel, mcp, legal) | `external_link`, `internal_link` |
 | `tab` | Tab name (code, specification, implementation, quality) | `tab_toggle` |
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
