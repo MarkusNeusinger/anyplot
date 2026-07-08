@@ -1,0 +1,61 @@
+# Synthetic monitor for the nginx bot -> seo-proxy path.
+#
+# Humans get the SPA shell and never notice when the bot hop breaks: the site
+# looks healthy, Plausible shows normal traffic, CI is green — and every
+# crawler sees an error page. Exactly that happened between 2026-06-12 and
+# 2026-07-09: the @seo_proxy upstream TLS verification failed (default
+# proxy_ssl_verify_depth 1 vs a 4-deep Let's Encrypt chain) and every bot UA
+# received HTTP 502 on every page, undetected for ~4 weeks. This check is the
+# alarm that was missing.
+
+name: Bot Serving Check
+
+on:
+  schedule:
+    - cron: "23 6 * * *" # daily 06:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bot-serving:
+    runs-on: ubuntu-latest
+    # 4 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~6 min worst-case; 10 leaves room to report a clean failure.
+    timeout-minutes: 10
+    steps:
+      - name: Crawler UAs must get 200 + per-route titles
+        run: |
+          set -uo pipefail
+          GOOGLEBOT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+          TWITTERBOT="Twitterbot/1.0"
+          HUMAN="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          fail=0
+
+          check() {
+            local ua="$1" url="$2" expect="$3"
+            local code
+            # On curl failure REPLACE the code — a failing curl can still have
+            # printed a partial -w code; appending would yield e.g. "200000".
+            code=$(curl -sS --retry 2 --max-time 30 -A "$ua" -o body.html -w '%{http_code}' "$url") || code="000"
+            if [ "$code" != "200" ]; then
+              echo "::error::$url with UA '$ua' returned HTTP $code (expected 200)"
+              fail=1
+            elif ! grep -qF "$expect" body.html; then
+              echo "::error::$url with UA '$ua' returned 200 but the body is missing: $expect"
+              fail=1
+            else
+              echo "OK: $url ($ua)"
+            fi
+          }
+
+          # Bot path: prerendered per-route HTML from the seo-proxy
+          check "$GOOGLEBOT"  "https://anyplot.ai/"                                "<title>anyplot.ai</title>"
+          check "$GOOGLEBOT"  "https://anyplot.ai/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
+          check "$TWITTERBOT" "https://anyplot.ai/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - matplotlib | anyplot.ai</title>"
+
+          # Control: humans must still get the SPA shell
+          check "$HUMAN" "https://anyplot.ai/" '<div id="root">'
+
+          exit $fail

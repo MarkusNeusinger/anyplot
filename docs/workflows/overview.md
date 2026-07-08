@@ -174,6 +174,7 @@ Located in `.github/workflows/`:
 | `ci-lint.yml` | Ruff lint check on PRs |
 | `ci-tests.yml` | Unit + integration tests on PRs |
 | `notify-deployment.yml` | Records GitHub deployment events for `app` / `api` |
+| `bot-serving-check.yml` | Daily synthetic monitor: curls production with crawler UAs (Googlebot/Twitterbot) and fails on non-200 or missing per-route titles — the bot→seo-proxy path is invisible to human traffic and needs its own alarm |
 | `util-claude.yml` | On-demand `@claude` utility (issue/PR comments) |
 
 ---
