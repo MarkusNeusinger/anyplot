@@ -18,6 +18,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Product/UX audit 2026-07-08** (`agentic/audits/2026-07-08-product-ux.md`) — 8-auditor
+  workflow run scoped to pipeline, rating criteria, tabs, and product qualities; Health Score 43,
+  headlined by a critical crawler outage (every bot UA gets 502 from the `@seo_proxy` hop) and
+  quality-score calibration drift (#9616).
 - **Legal page "other projects" block** — below the disclaimer, cross-linking the maintainer's
   other projects kurrentschrift.ink and cite-citadel, tracked as `external_link` with
   destinations `kurrentschrift` / `cite_citadel`; deliberately without `noreferrer` so the
