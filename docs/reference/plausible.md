@@ -184,8 +184,8 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx | User clicks external link |
-| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx | User clicks internal link in footer |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx | User clicks external link |
+| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx | User clicks internal link |
 
 **External destinations (Footer)**: `github`, `github_issue_chooser`, `linkedin`
 **External destinations (LegalPage)**: `linkedin`, `x`, `github_personal`, `kurrentschrift`, `cite_citadel`
@@ -449,8 +449,8 @@ User lands on anyplot.ai
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
 | `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx |
-| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx |
-| `internal_link` | `destination`, `spec`, `library` | Footer.tsx |
+| `external_link` | `destination`, `spec`?, `library`? | Footer.tsx, LegalPage.tsx, AboutPage.tsx, LibrariesPage.tsx, SectionHeader.tsx |
+| `internal_link` | `destination`, `spec`?, `library`? | Footer.tsx, AboutPage.tsx |
 | `nav_click` | `source`, `target`, `spec`?, `library`?, `value`? | NavBar, MastheadRule, HeroSection, SectionHeader, PlotOfTheDay, PlotOfTheDayTerminal, LandingPage |
 | `theme_toggle` | `to` | MastheadRule.tsx |
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx |
