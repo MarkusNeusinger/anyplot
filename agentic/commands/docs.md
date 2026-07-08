@@ -64,6 +64,11 @@ in the codebase. Review the conditions below and read the relevant documentation
     - When modifying batched upsert logic or chunk sizes for database sync
     - When troubleshooting sync-postgres workflow performance
 
+- CHANGELOG.md
+  - Conditions:
+    - When preparing a release or version bump
+    - When finishing a notable change that needs an entry under `[Unreleased]`
+
 - agentic/
   - Conditions:
     - When working with agentic commands or workflows

@@ -5,6 +5,7 @@ This file provides guidance to GitHub Copilot when working with code in this rep
 ## Important Rules
 
 - **Always write in English** - All output text (code comments, commit messages, PR descriptions, issue comments, documentation) must be in English, even if the user writes in another language.
+- **Every PR updates `CHANGELOG.md`** - Add entries under `[Unreleased]` (Keep-a-Changelog categories, English, bold-titled bullets for headline entries, PR refs — like the existing entries) — that file is how releases get posted; a PR without its entry is incomplete. **Exempt:** the automated plot pipeline's output (spec-create, impl-generate/review/repair/merge, spec auto-polish, daily-regen PRs) and individual Dependabot bumps — those are summarized in aggregate at release time (see `agentic/commands/release.md`). This rule is duplicated in `CLAUDE.md` and `agentic/commands/pull_request.md`; keep all three in sync when changing it. When reviewing a non-exempt PR that lacks a changelog entry, flag it.
 
 ## Task Suitability
 
@@ -260,6 +261,7 @@ Before completing any task:
 4. Type hints are included for all new functions
 5. Docstrings follow Google style for public functions
 6. Add integration tests for database-related changes (repositories, models)
+7. Non-exempt changes have a `CHANGELOG.md` entry under `[Unreleased]` (see Important Rules)
 
 ## Database
 
