@@ -22,7 +22,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   open instead of everything collapsed, the selected tab shows a small caret signaling the
   click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
   `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
-  wiring (audit 2026-07-08 High#5 + Low#1).
+  wiring (audit 2026-07-08 High#5 + Low#1) (#9622).
 
 ### Fixed
 
@@ -31,7 +31,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   alerts rendered light-theme colors on dark backgrounds (~2.1:1 label contrast). MuiTab,
   MuiDivider, MuiSkeleton, and MuiAlert are now wired to the CSS-var system
   (`--ink-soft`/`--rule`/`--bg-elevated`), and the two `borderColor: 'divider'` usages in
-  SpecTabs/RelatedSpecs use `var(--rule)` (audit 2026-07-08 High#4).
+  SpecTabs/RelatedSpecs use `var(--rule)` (audit 2026-07-08 High#4) (#9622).
 
 ### Added
 
