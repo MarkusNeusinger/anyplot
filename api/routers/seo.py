@@ -1,6 +1,7 @@
 """SEO endpoints (sitemap, bot-optimized pages)."""
 
 import html
+import json
 import re
 from datetime import datetime
 from urllib.parse import quote, urlparse
@@ -12,8 +13,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
 from core.config import settings
-from core.database import SpecRepository
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
+from core.database import ImplRepository, SpecRepository
 from core.database.connection import get_db_context
+from core.utils import strip_noqa_comments
 
 
 router = APIRouter(tags=["seo"])
@@ -85,7 +88,9 @@ async def _refresh_sitemap() -> str:
     return _build_sitemap_xml(specs)
 
 
-# Minimal HTML template for social media bots (meta tags are what matters)
+# HTML template for search/social crawlers. Meta tags drive social previews;
+# the {body} slot carries what search engines index (headings, code, links,
+# JSON-LD) — an empty body reads as a thin page and wastes the crawl.
 BOT_HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,15 +107,206 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
     <meta name="twitter:image" content="{image}" />
-    <link rel="canonical" href="{url}" />
+    <link rel="canonical" href="{url}" />{jsonld}
 </head>
-<body><h1>{title}</h1><p>{description}</p></body>
+<body>
+{body}
+</body>
 </html>"""
 
 # Route through API for tracking (was: anyplot.ai/og-image.png)
 DEFAULT_HOME_IMAGE = "https://api.anyplot.ai/og/home.png"
 DEFAULT_PLOTS_IMAGE = "https://api.anyplot.ai/og/plots.png"
 DEFAULT_DESCRIPTION = "library-agnostic, ai-powered plotting."
+
+# Display names derived from the canonical registry — never hand-maintain
+# name maps in routers (that is how the 9-library-era drift happened).
+_LANGUAGE_NAMES = {lang["id"]: str(lang["name"]) for lang in LANGUAGES_METADATA}
+_LIBRARY_NAMES = {lib["id"]: str(lib["name"]) for lib in LIBRARIES_METADATA}
+
+# Site-wide footer nav on every bot page: crawlers that land deep on an impl
+# page can reach the hub surfaces without executing the SPA.
+_BOT_NAV_HTML = (
+    "<nav>"
+    '<a href="https://anyplot.ai/">anyplot.ai</a> · '
+    '<a href="https://anyplot.ai/plots">plots</a> · '
+    '<a href="https://anyplot.ai/specs">specs</a> · '
+    '<a href="https://anyplot.ai/libraries">libraries</a> · '
+    '<a href="https://anyplot.ai/map">map</a> · '
+    '<a href="https://anyplot.ai/palette">palette</a> · '
+    '<a href="https://anyplot.ai/mcp">mcp</a> · '
+    '<a href="https://anyplot.ai/stats">stats</a> · '
+    '<a href="https://anyplot.ai/about">about</a>'
+    "</nav>"
+)
+
+
+def _jsonld_script(payload: dict) -> str:
+    """Serialize a JSON-LD payload into a <script> element for the template head.
+
+    `</` is emitted as `\\u003c/` so DB-sourced text (titles, descriptions)
+    can never close the script element early; the escape is plain JSON and
+    parses back to the identical string.
+    """
+    body = json.dumps(payload, ensure_ascii=False).replace("</", "\\u003c/")
+    return f'\n    <script type="application/ld+json">{body}</script>'
+
+
+def _render_bot_html(
+    *, title: str, description: str, image: str, url: str, body: str = "", jsonld: dict | None = None
+) -> str:
+    """Render a bot-serving page.
+
+    ``title``, ``description``, ``url`` and ``body`` must arrive HTML-escaped
+    (same contract the bare template had); ``jsonld`` takes raw values —
+    ``json.dumps`` handles its quoting.
+    """
+    return BOT_HTML_TEMPLATE.format(
+        title=title,
+        description=description,
+        image=image,
+        url=url,
+        jsonld=_jsonld_script(jsonld) if jsonld else "",
+        body=f"{body or f'<h1>{title}</h1><p>{description}</p>'}\n{_BOT_NAV_HTML}",
+    )
+
+
+def _impl_display_names(impl) -> tuple[str, str]:
+    """(library display name, language display name) for an impl, falling back to raw ids."""
+    language_id = impl.library.language if impl.library else ""
+    return _LIBRARY_NAMES.get(impl.library_id, impl.library_id), _LANGUAGE_NAMES.get(language_id, language_id)
+
+
+def _sorted_impls(spec) -> list:
+    """Impls with a loaded library relation, in stable (language, library) order."""
+    return sorted((i for i in spec.impls if i.library), key=lambda i: (i.library.language, i.library_id))
+
+
+def _build_spec_hub_html(spec, image: str) -> str:
+    """Full bot page for the cross-language spec hub /{spec_id}.
+
+    Body carries the preview image and one link per implementation page;
+    JSON-LD carries BreadcrumbList + ItemList so the hub↔impl structure is
+    machine-readable.
+    """
+    spec_id_esc = html.escape(spec.id)
+    title_esc = html.escape(spec.title)
+    desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    image_esc = html.escape(image, quote=True)
+    hub_url = f"https://anyplot.ai/{spec.id}"
+
+    impl_links = []
+    impl_list_items = []
+    for position, impl in enumerate(_sorted_impls(spec), start=1):
+        lib_name, lang_name = _impl_display_names(impl)
+        impl_url = f"{hub_url}/{impl.library.language}/{impl.library_id}"
+        impl_links.append(
+            f'<li><a href="{html.escape(impl_url, quote=True)}">'
+            f"{title_esc} in {html.escape(lib_name)} ({html.escape(lang_name)})</a></li>"
+        )
+        impl_list_items.append(
+            {"@type": "ListItem", "position": position, "name": f"{spec.title} — {lib_name}", "url": impl_url}
+        )
+
+    body = (
+        f"<h1>{title_esc}</h1>"
+        f"<p>{desc_esc}</p>"
+        f'<img src="{image_esc}" alt="{title_esc}" width="1200" height="630" />'
+        + (f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else "")
+    )
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "anyplot.ai", "item": "https://anyplot.ai/"},
+                    {"@type": "ListItem", "position": 2, "name": spec.title, "item": hub_url},
+                ],
+            },
+            {"@type": "ItemList", "name": spec.title, "itemListElement": impl_list_items},
+        ],
+    }
+    return _render_bot_html(
+        title=f"{title_esc} | anyplot.ai",
+        description=desc_esc,
+        image=image_esc,
+        url=f"https://anyplot.ai/{spec_id_esc}",
+        body=body,
+        jsonld=jsonld,
+    )
+
+
+def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
+    """Full bot page for an implementation detail /{spec_id}/{language}/{library}.
+
+    Body carries the preview image, the implementation source in a <pre>
+    block, and hub + sibling links; JSON-LD carries BreadcrumbList +
+    SoftwareSourceCode.
+    """
+    language_id = impl.library.language
+    lib_name, lang_name = _impl_display_names(impl)
+    title_esc = html.escape(spec.title)
+    lib_name_esc = html.escape(lib_name)
+    desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    image_esc = html.escape(image, quote=True)
+    hub_url = f"https://anyplot.ai/{spec.id}"
+    page_url = f"{hub_url}/{language_id}/{impl.library_id}"
+
+    sibling_links = []
+    for sibling in _sorted_impls(spec):
+        if sibling.library_id == impl.library_id and sibling.library.language == language_id:
+            continue
+        sib_lib_name, sib_lang_name = _impl_display_names(sibling)
+        sibling_url = f"{hub_url}/{sibling.library.language}/{sibling.library_id}"
+        sibling_links.append(
+            f'<li><a href="{html.escape(sibling_url, quote=True)}">'
+            f"{title_esc} in {html.escape(sib_lib_name)} ({html.escape(sib_lang_name)})</a></li>"
+        )
+
+    body = (
+        f"<h1>{title_esc} — {lib_name_esc}</h1>"
+        f"<p>{desc_esc}</p>"
+        f'<img src="{image_esc}" alt="{title_esc} rendered with {lib_name_esc}" width="1200" height="630" />'
+        + (
+            f"<h2>{html.escape(lang_name)} source ({lib_name_esc})</h2><pre><code>{html.escape(code)}</code></pre>"
+            if code
+            else ""
+        )
+        + f'<p>Part of <a href="{html.escape(hub_url, quote=True)}">{title_esc}</a> on anyplot.ai.</p>'
+        + (f"<h2>Other implementations</h2><ul>{''.join(sibling_links)}</ul>" if sibling_links else "")
+    )
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "anyplot.ai", "item": "https://anyplot.ai/"},
+                    {"@type": "ListItem", "position": 2, "name": spec.title, "item": hub_url},
+                    {"@type": "ListItem", "position": 3, "name": lib_name, "item": page_url},
+                ],
+            },
+            {
+                "@type": "SoftwareSourceCode",
+                "name": f"{spec.title} — {lib_name}",
+                "description": spec.description or DEFAULT_DESCRIPTION,
+                "programmingLanguage": lang_name,
+                "runtimePlatform": lib_name,
+                "codeSampleType": "full solution",
+                "url": page_url,
+                "image": image,
+            },
+        ],
+    }
+    return _render_bot_html(
+        title=f"{title_esc} - {lib_name_esc} | anyplot.ai",
+        description=desc_esc,
+        image=image_esc,
+        url=html.escape(page_url, quote=True),
+        body=body,
+        jsonld=jsonld,
+    )
 
 
 @router.get("/robots.txt")
@@ -165,7 +361,7 @@ async def seo_home(request: Request):
     page_url = f"https://anyplot.ai/?{query_string}" if query_string else "https://anyplot.ai/"
 
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(title="anyplot.ai", description=DEFAULT_DESCRIPTION, image=image_url, url=page_url)
+        _render_bot_html(title="anyplot.ai", description=DEFAULT_DESCRIPTION, image=image_url, url=page_url)
     )
 
 
@@ -173,7 +369,7 @@ async def seo_home(request: Request):
 async def seo_plots():
     """Bot-optimized plots page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="plots | anyplot.ai",
             description="Browse and filter visualization examples across 15 libraries in Python, R, Julia, and JavaScript: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js, ECharts, Highcharts, MUI X Charts.",
             image=DEFAULT_PLOTS_IMAGE,
@@ -186,7 +382,7 @@ async def seo_plots():
 async def seo_specs():
     """Bot-optimized specs page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="specs | anyplot.ai",
             description="Browse all Python plotting specifications alphabetically.",
             image=DEFAULT_PLOTS_IMAGE,
@@ -199,7 +395,7 @@ async def seo_specs():
 async def seo_libraries():
     """Bot-optimized libraries page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="libraries | anyplot.ai",
             description="All supported plotting libraries across languages.",
             image=DEFAULT_PLOTS_IMAGE,
@@ -212,7 +408,7 @@ async def seo_libraries():
 async def seo_legal():
     """Bot-optimized legal page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="Legal | anyplot.ai",
             description="Legal notice, privacy policy, and transparency information for anyplot.ai",
             image=DEFAULT_HOME_IMAGE,
@@ -225,7 +421,7 @@ async def seo_legal():
 async def seo_mcp():
     """Bot-optimized MCP page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="MCP Server | anyplot.ai",
             description="Connect your AI assistant to anyplot via the Model Context Protocol (MCP).",
             image=DEFAULT_HOME_IMAGE,
@@ -238,7 +434,7 @@ async def seo_mcp():
 async def seo_about():
     """Bot-optimized about page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="About | anyplot.ai",
             description="About anyplot.ai — library-agnostic, AI-powered plotting.",
             image=DEFAULT_HOME_IMAGE,
@@ -251,7 +447,7 @@ async def seo_about():
 async def seo_palette():
     """Bot-optimized palette page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="imprint palette | anyplot.ai",
             description="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
             image=DEFAULT_HOME_IMAGE,
@@ -264,7 +460,7 @@ async def seo_palette():
 async def seo_map():
     """Bot-optimized network map page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="Network Map | anyplot.ai",
             description=(
                 "Interactive network map of plot specifications grouped by visual similarity — "
@@ -280,7 +476,7 @@ async def seo_map():
 async def seo_stats():
     """Bot-optimized stats page with correct og:tags."""
     return HTMLResponse(
-        BOT_HTML_TEMPLATE.format(
+        _render_bot_html(
             title="Stats | anyplot.ai",
             description="Platform statistics: library scores, coverage, tags, and top implementations.",
             image=DEFAULT_HOME_IMAGE,
@@ -299,7 +495,7 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
     """Bot-optimized cross-language spec hub."""
     if db is None:
         return HTMLResponse(
-            BOT_HTML_TEMPLATE.format(
+            _render_bot_html(
                 title=f"{html.escape(spec_id)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
@@ -320,12 +516,7 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
     has_previews = any(i.preview_url for i in spec.impls)
     image = f"https://api.anyplot.ai/og/{spec_id}.png" if has_previews else DEFAULT_HOME_IMAGE
 
-    result = BOT_HTML_TEMPLATE.format(
-        title=f"{html.escape(spec.title)} | anyplot.ai",
-        description=html.escape(spec.description or DEFAULT_DESCRIPTION),
-        image=html.escape(image, quote=True),
-        url=f"https://anyplot.ai/{html.escape(spec_id)}",
-    )
+    result = _build_spec_hub_html(spec, image)
     set_cache(key, result)
     return HTMLResponse(result)
 
@@ -365,7 +556,7 @@ async def seo_spec_implementation(
     """Bot-optimized implementation detail."""
     if db is None:
         return HTMLResponse(
-            BOT_HTML_TEMPLATE.format(
+            _render_bot_html(
                 title=f"{html.escape(spec_id)} - {html.escape(library)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
@@ -392,11 +583,18 @@ async def seo_spec_implementation(
         else DEFAULT_HOME_IMAGE
     )
 
-    result = BOT_HTML_TEMPLATE.format(
-        title=f"{html.escape(spec.title)} - {html.escape(library)} | anyplot.ai",
-        description=html.escape(spec.description or DEFAULT_DESCRIPTION),
-        image=html.escape(image, quote=True),
-        url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(language)}/{html.escape(library)}",
-    )
+    if impl:
+        code_impl = await ImplRepository(db).get_code(spec_id, library, language)
+        code = strip_noqa_comments(code_impl.code) if code_impl and code_impl.code else None
+        result = _build_impl_html(spec, impl, code, image)
+    else:
+        # Unknown language/library combination for a real spec: keep serving
+        # the minimal meta-only page (bots may hold stale URLs after regens).
+        result = _render_bot_html(
+            title=f"{html.escape(spec.title)} - {html.escape(library)} | anyplot.ai",
+            description=html.escape(spec.description or DEFAULT_DESCRIPTION),
+            image=html.escape(image, quote=True),
+            url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(language)}/{html.escape(library)}",
+        )
     set_cache(key, result)
     return HTMLResponse(result)

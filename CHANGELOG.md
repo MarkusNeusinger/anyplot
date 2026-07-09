@@ -16,6 +16,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Changed
+
+- **Bot-served pages now carry the site's actual content** — the crawler-facing HTML
+  (`/seo-proxy/*`, what Googlebot & social bots see) grows from a title+description shell to a
+  real document: spec hubs list and link every implementation, implementation pages embed the
+  full source in a `<pre>` block plus hub/sibling links, both carry the preview image and
+  JSON-LD (`BreadcrumbList`, `ItemList`, `SoftwareSourceCode`), and every bot page ends with a
+  site-wide nav. Display names derive from `core/constants.py`, never hand-maintained (audit
+  2026-07-08 High#6).
+
 ### Added
 
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
