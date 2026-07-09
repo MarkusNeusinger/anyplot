@@ -111,7 +111,7 @@ export function RelatedSpecs({ specId, mode = 'spec', library, onHoverTags }: Re
         '@keyframes relatedFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
       }}
     >
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'var(--rule)' }}>
         <Tabs
           value={expanded ? 0 : false}
           onChange={() => setExpanded(e => !e)}

@@ -9,13 +9,20 @@ interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number | null;
+  // Shared id prefix wiring the panel to its <Tab> (id / aria-controls pair)
+  idPrefix?: string;
 }
 
-export function TabPanel({ children, value, index }: TabPanelProps) {
+export function TabPanel({ children, value, index, idPrefix }: TabPanelProps) {
   const isOpen = value === index;
   return (
     <Collapse in={isOpen}>
-      <Box role="tabpanel" sx={{ pt: 2 }}>
+      <Box
+        role="tabpanel"
+        id={idPrefix ? `${idPrefix}-tabpanel-${index}` : undefined}
+        aria-labelledby={idPrefix ? `${idPrefix}-tab-${index}` : undefined}
+        sx={{ pt: 2 }}
+      >
         {children}
       </Box>
     </Collapse>

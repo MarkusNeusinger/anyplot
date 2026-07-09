@@ -16,6 +16,23 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Changed
+
+- **Spec-detail tabs are self-explanatory now** — the Code tab (Spec tab on hub pages) starts
+  open instead of everything collapsed, the selected tab shows a small caret signaling the
+  click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
+  `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
+  wiring (audit 2026-07-08 High#5 + Low#1).
+
+### Fixed
+
+- **Dark-mode contrast for stock MUI components** — the MUI palette is locked to light-mode
+  hexes (it can't hold CSS variables), so unselected tab labels, dividers, skeletons, and
+  alerts rendered light-theme colors on dark backgrounds (~2.1:1 label contrast). MuiTab,
+  MuiDivider, MuiSkeleton, and MuiAlert are now wired to the CSS-var system
+  (`--ink-soft`/`--rule`/`--bg-elevated`), and the two `borderColor: 'divider'` usages in
+  SpecTabs/RelatedSpecs use `var(--rule)` (audit 2026-07-08 High#4).
+
 ### Added
 
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
