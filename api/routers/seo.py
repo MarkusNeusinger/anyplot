@@ -157,9 +157,14 @@ def _render_bot_html(
 ) -> str:
     """Render a bot-serving page.
 
-    ``title``, ``description``, ``url`` and ``body`` must arrive HTML-escaped
-    (same contract the bare template had); ``jsonld`` takes raw values —
-    ``json.dumps`` handles its quoting.
+    Contract per argument:
+    - ``title``, ``description``, ``image``, ``url``: text/URL values that
+      must arrive HTML-escaped (same contract the bare template had).
+    - ``body``: a trusted, fully-built HTML fragment inserted verbatim (plus
+      the site nav). Callers must escape any DB-sourced text BEFORE
+      interpolating it into the fragment.
+    - ``jsonld``: raw (unescaped) values; ``json.dumps`` handles quoting and
+      ``_jsonld_script`` neutralizes ``</``.
     """
     return BOT_HTML_TEMPLATE.format(
         title=title,
