@@ -24,7 +24,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   full source in a `<pre>` block plus hub/sibling links, both carry the preview image and
   JSON-LD (`BreadcrumbList`, `ItemList`, `SoftwareSourceCode`), and every bot page ends with a
   site-wide nav. Display names derive from `core/constants.py`, never hand-maintained (audit
-  2026-07-08 High#6).
+  2026-07-08 High#6) (#9621).
 
 ### Added
 
