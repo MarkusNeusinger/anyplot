@@ -149,11 +149,13 @@ export function PlotsPage() {
   // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
       // A focused interactive element owns the keystroke — without this
       // guard, Space/Enter on a focused card, chip, or toggle fires both
       // the element's own handler and these global shortcuts.
-      if (target.closest?.('input, textarea, select, button, a, [role="button"], [tabindex]'))
+      if (
+        e.target instanceof Element &&
+        e.target.closest('input, textarea, select, button, a, [role="button"], [tabindex]')
+      )
         return;
 
       if (e.key === ' ') {

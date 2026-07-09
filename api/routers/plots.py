@@ -404,7 +404,7 @@ async def _build_filtered_plots(db: AsyncSession, filter_groups: list[dict]) -> 
         repo = SpecRepository(db)
         all_specs = await repo.get_all()
     except SQLAlchemyError as e:
-        logger.error("Database query failed in get_filtered_plots: %s", e)
+        logger.error("Database query failed while building the /plots/filter response: %s", e)
         raise DatabaseQueryError("fetch_specs", str(e)) from e
 
     spec_lookup = _build_spec_lookup(all_specs)

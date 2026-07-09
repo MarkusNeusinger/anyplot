@@ -87,18 +87,24 @@ describe('PlotsPage', () => {
       card.setAttribute('role', 'button');
       card.tabIndex = 0;
       document.body.appendChild(card);
-      fireEvent.keyDown(card, { key: ' ' });
-      expect(mockHandleRandom).not.toHaveBeenCalled();
-      card.remove();
+      try {
+        fireEvent.keyDown(card, { key: ' ' });
+        expect(mockHandleRandom).not.toHaveBeenCalled();
+      } finally {
+        card.remove();
+      }
     });
 
     it('does not fire when a native button owns the keystroke', () => {
       render(<PlotsPage />);
       const button = document.createElement('button');
       document.body.appendChild(button);
-      fireEvent.keyDown(button, { key: ' ' });
-      expect(mockHandleRandom).not.toHaveBeenCalled();
-      button.remove();
+      try {
+        fireEvent.keyDown(button, { key: ' ' });
+        expect(mockHandleRandom).not.toHaveBeenCalled();
+      } finally {
+        button.remove();
+      }
     });
   });
 
