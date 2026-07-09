@@ -12,6 +12,7 @@ from api.dependencies import require_db
 from api.exceptions import DatabaseQueryError
 from api.schemas import FilteredPlotsResponse
 from core.database import SpecRepository
+from core.database.connection import get_db_context
 
 
 logger = logging.getLogger(__name__)
@@ -397,6 +398,64 @@ def _filter_images(
     ]
 
 
+async def _build_filtered_plots(db: AsyncSession, filter_groups: list[dict]) -> FilteredPlotsResponse:
+    """Compute the (unpaginated) filter response for a set of filter groups."""
+    try:
+        repo = SpecRepository(db)
+        all_specs = await repo.get_all()
+    except SQLAlchemyError as e:
+        logger.error("Database query failed in get_filtered_plots: %s", e)
+        raise DatabaseQueryError("fetch_specs", str(e)) from e
+
+    spec_lookup = _build_spec_lookup(all_specs)
+    impl_lookup = _build_impl_lookup(all_specs)
+    all_images = _collect_all_images(all_specs)
+    spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
+
+    global_counts = _calculate_global_counts(all_specs)
+
+    # Fast path for the unfiltered request (e.g. the /specs page list and
+    # the initial /plots load). With no filter groups, `filtered_images`
+    # equals `all_images`, `counts` equals `global_counts`, and `or_counts`
+    # is empty — so skip the two O(images × categories) recomputations
+    # that would otherwise dominate the cold-cache `filter:all` response.
+    if not filter_groups:
+        return FilteredPlotsResponse(
+            total=len(all_images),
+            images=all_images,
+            counts=global_counts,
+            globalCounts=global_counts,
+            orCounts=[],
+            specTitles=spec_titles,
+        )
+
+    spec_id_to_tags = {spec_id: spec_data["tags"] for spec_id, spec_data in spec_lookup.items()}
+
+    filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
+
+    counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
+    or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
+
+    return FilteredPlotsResponse(
+        total=len(filtered_images),
+        images=filtered_images,
+        counts=counts,
+        globalCounts=global_counts,
+        orCounts=or_counts,
+        specTitles=spec_titles,
+    )
+
+
+async def _refresh_filter_all() -> FilteredPlotsResponse:
+    """Standalone factory for startup prewarm of the unfiltered `filter:all` payload.
+
+    Creates its own DB session so it can be invoked outside the request
+    cycle (e.g. by the lifespan prewarm hook in api/main.py).
+    """
+    async with get_db_context() as fresh_db:
+        return await _build_filtered_plots(fresh_db, [])
+
+
 @router.get("/plots/filter", response_model=FilteredPlotsResponse)
 async def get_filtered_plots(
     request: Request,
@@ -434,50 +493,7 @@ async def get_filtered_plots(
     cache_k = _build_cache_key(filter_groups)
 
     async def _fetch_filtered() -> FilteredPlotsResponse:
-        try:
-            repo = SpecRepository(db)
-            all_specs = await repo.get_all()
-        except SQLAlchemyError as e:
-            logger.error("Database query failed in get_filtered_plots: %s", e)
-            raise DatabaseQueryError("fetch_specs", str(e)) from e
-
-        spec_lookup = _build_spec_lookup(all_specs)
-        impl_lookup = _build_impl_lookup(all_specs)
-        all_images = _collect_all_images(all_specs)
-        spec_titles = {spec_id: data["spec"].title for spec_id, data in spec_lookup.items() if data["spec"].title}
-
-        global_counts = _calculate_global_counts(all_specs)
-
-        # Fast path for the unfiltered request (e.g. the /specs page list and
-        # the initial /plots load). With no filter groups, `filtered_images`
-        # equals `all_images`, `counts` equals `global_counts`, and `or_counts`
-        # is empty — so skip the two O(images × categories) recomputations
-        # that would otherwise dominate the cold-cache `filter:all` response.
-        if not filter_groups:
-            return FilteredPlotsResponse(
-                total=len(all_images),
-                images=all_images,
-                counts=global_counts,
-                globalCounts=global_counts,
-                orCounts=[],
-                specTitles=spec_titles,
-            )
-
-        spec_id_to_tags = {spec_id: spec_data["tags"] for spec_id, spec_data in spec_lookup.items()}
-
-        filtered_images = _filter_images(all_images, filter_groups, spec_lookup, impl_lookup)
-
-        counts = _calculate_contextual_counts(filtered_images, spec_id_to_tags, impl_lookup)
-        or_counts = _calculate_or_counts(filter_groups, all_images, spec_id_to_tags, spec_lookup, impl_lookup)
-
-        return FilteredPlotsResponse(
-            total=len(filtered_images),
-            images=filtered_images,
-            counts=counts,
-            globalCounts=global_counts,
-            orCounts=or_counts,
-            specTitles=spec_titles,
-        )
+        return await _build_filtered_plots(db, filter_groups)
 
     # get_or_set_cache provides stampede lock (no refresh_after — too many filter key variants)
     cached = await get_or_set_cache(cache_k, _fetch_filtered)
