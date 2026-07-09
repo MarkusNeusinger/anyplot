@@ -21,6 +21,7 @@ export function TabPanel({ children, value, index, idPrefix }: TabPanelProps) {
         role="tabpanel"
         id={idPrefix ? `${idPrefix}-tabpanel-${index}` : undefined}
         aria-labelledby={idPrefix ? `${idPrefix}-tab-${index}` : undefined}
+        aria-hidden={!isOpen}
         sx={{ pt: 2 }}
       >
         {children}

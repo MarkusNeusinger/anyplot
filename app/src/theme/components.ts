@@ -27,6 +27,12 @@ export const components: ThemeOptions['components'] = {
     styleOverrides: {
       root: {
         borderColor: 'var(--rule)',
+        // Dividers with children render their lines via ::before/::after,
+        // which carry their own borderTop — the root borderColor alone
+        // doesn't reach them.
+        '&::before, &::after': {
+          borderColor: 'var(--rule)',
+        },
       },
     },
   },

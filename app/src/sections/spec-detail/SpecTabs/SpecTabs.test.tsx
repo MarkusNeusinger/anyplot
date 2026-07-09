@@ -432,6 +432,12 @@ describe('SpecTabs', () => {
     expect(panel).not.toBeNull();
     expect(panel).toHaveAttribute('role', 'tabpanel');
     expect(panel).toHaveAttribute('aria-labelledby', codeTab.id);
+
+    // The open panel is exposed; collapsed panels are aria-hidden
+    expect(panel).toHaveAttribute('aria-hidden', 'false');
+    const specTab = screen.getByRole('tab', { name: /spec/i });
+    const specPanel = document.getElementById(specTab.getAttribute('aria-controls') as string);
+    expect(specPanel).toHaveAttribute('aria-hidden', 'true');
   });
 
   // -------------------------------------------------------
