@@ -16,6 +16,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **15-library drift sweep across secondary surfaces** — four independent audit findings traced
+  to the same root cause: the library expansion never propagated beyond the pipeline.
+  `core/constants.py` now derives `LIBRARY_NAMES`/`LANGUAGE_NAMES` from the canonical registry
+  and `insights.py`/`debug.py` import them instead of hand-written maps (the `/debug` page
+  showed raw ids for all four JS libraries), `app/index.html` meta/OG/Twitter/JSON-LD copy and
+  the landing tagline no longer say "9 python libraries" (now 15 libraries across Python, R,
+  Julia & JavaScript; JSON-LD keywords refreshed, stale okabe-ito reference replaced by the
+  Imprint palette), and `scripts/evaluate-plot.py` dropped its dead Python-era highcharts
+  pattern block and derives the AR-07 static-library set from the registry (audit 2026-07-08
+  Medium#5 + Medium#6 + Low#8).
+
 ### Added
 
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
