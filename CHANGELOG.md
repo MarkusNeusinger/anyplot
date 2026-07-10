@@ -22,9 +22,20 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   window-level Space/Enter/Backspace handler now bails out when the keystroke targets an
   interactive element (button, link, focused card/chip/toggle), so keyboard-activating a card
   no longer double-fires with a random-plot jump (audit 2026-07-08 Quick Win 1) (#9620).
+- **Dark-mode contrast for stock MUI components** — the MUI palette is locked to light-mode
+  hexes (it can't hold CSS variables), so unselected tab labels, dividers, skeletons, and
+  alerts rendered light-theme colors on dark backgrounds (~2.1:1 label contrast). MuiTab,
+  MuiDivider, MuiSkeleton, and MuiAlert are now wired to the CSS-var system
+  (`--ink-soft`/`--rule`/`--bg-elevated`), and the two `borderColor: 'divider'` usages in
+  SpecTabs/RelatedSpecs use `var(--rule)` (audit 2026-07-08 High#4) (#9622).
 
 ### Changed
 
+- **Spec-detail tabs are self-explanatory now** — the Code tab (Spec tab on hub pages) starts
+  open instead of everything collapsed, the selected tab shows a small caret signaling the
+  click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
+  `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
+  wiring (audit 2026-07-08 High#5 + Low#1) (#9622).
 - **Bot-served pages now carry the site's actual content** — the crawler-facing HTML
   (`/seo-proxy/*`, what Googlebot & social bots see) grows from a title+description shell to a
   real document: spec hubs list and link every implementation, implementation pages embed the
