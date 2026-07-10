@@ -37,7 +37,7 @@ Checks that gate quality scoring. On fail: Score=0. Workflow-handled checks (AR-
 
 | ID | Check | Description | Verification |
 |----|-------|-------------|--------------|
-| AR-01 | SYNTAX_ERROR | Code cannot be parsed | `python -m py_compile` |
+| AR-01 | SYNTAX_ERROR | Code cannot be parsed | Language parser (`python -m py_compile`, `Rscript -e parse`, `node --check`, …) |
 | AR-02 | RUNTIME_ERROR | Code throws exception | Execution with timeout |
 | AR-03 | NO_OUTPUT | No `plot.png` created | File exists? |
 | AR-04 | EMPTY_PLOT | Image empty | < 10KB or > 95% white |
@@ -61,8 +61,12 @@ Implementation must use **plot functions** from the library, not just styling.
 | altair | `alt.Chart().mark_*()` | Only `configure_*()` |
 | plotnine | `ggplot() + geom_*()` | Only `theme()` |
 | pygal | Chart classes with data | Only config |
-| highcharts | Chart with series | Only options |
+| highcharts | `Highcharts.chart()` with series | Only options objects |
 | letsplot | `ggplot() + geom_*()` | Only `ggsize()` |
+| chartjs | `new Chart(...)` with datasets | Only options/plugin config |
+| d3 | Data joins + scales rendering marks (`selection.data(...).join(...)`) | Only selections/styling |
+| echarts | `chart.setOption(...)` with series | Only `echarts.init()`/theme config |
+| muix | MUI X chart components (`<LineChart>`, `<ScatterChart>`, …) with series | Only `ThemeProvider`/styling |
 
 **Note:** Using data loading utilities (e.g., `sns.load_dataset()`, `sklearn.datasets`) from other libraries is allowed and does not count as library usage. This check only evaluates whether the implementation uses the library's **plotting functions**.
 
@@ -72,7 +76,7 @@ When a library cannot technically implement a spec (e.g., pygal cannot do 3D), t
 
 ### AR-08: Fake Functionality
 
-A static library (matplotlib, seaborn, plotnine) simulates interactive features that cannot work in a PNG image.
+A static library (matplotlib, seaborn, plotnine, ggplot2, makie) simulates interactive features that cannot work in a PNG image.
 
 **Triggers (auto-reject):**
 - Simulated tooltips (annotation boxes styled to look like hover tooltips)
@@ -358,7 +362,7 @@ This category evaluates aesthetic sophistication beyond mere correctness. A plot
 
 | Points | Criterion |
 |--------|-----------|
-| 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r}). Legend labels correct |
+| 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels correct |
 | 2 | Title format correct but legend issues, or vice versa |
 | 1 | Partially correct |
 | 0 | Missing or wrong |

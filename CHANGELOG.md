@@ -16,6 +16,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **Review rubric finally knows all 15 libraries** — the workflow-active reviewer prompt and
+  scoring criteria still described the 9-Python-library era: the file-extension guide called
+  highcharts Python and knew no `.js`/`.tsx`, SC-04's title rule rejected `javascript` (and in
+  `quality-criteria.md` even `julia`) as a language token — silently costing every correct
+  JS/Julia title points — `${LANGUAGE}`/`${EXT}` were referenced in the prompt but never passed
+  by `impl-review.yml`, the interactive-fairness rules (don't penalize hover/zoom invisible in
+  the PNG) lived only in a file no workflow reads, and the step-10 `review_checklist.json`
+  example still showed the pre-rebalance 5-category shape (`library_features`, 40/25/20/10/5
+  maxima) that corrupted ~6% of stored checklists. All lists are corrected to the canonical
+  registry, the fairness rules (plus a JS-harness note for CQ-05) moved into the running prompt,
+  AR-05 gained rows for chartjs/d3/echarts/muix, and new registry-derived tests in
+  `tests/unit/prompts/` fail on any future library-list drift (audit 2026-07-08 Medium#1 +
+  Medium#12).
+
 ### Added
 
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged

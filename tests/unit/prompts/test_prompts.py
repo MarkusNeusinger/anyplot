@@ -14,6 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from core.constants import INTERACTIVE_LIBRARIES, LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA, SUPPORTED_LANGUAGES
+
 
 # Base paths
 PROMPTS_DIR = Path(__file__).parent.parent.parent.parent / "prompts"
@@ -419,3 +421,71 @@ class TestPromptQuality:
                     f"{filepath.name} has too few labeled code blocks "
                     f"({labeled}/{total} = {labeled_ratio:.0%}, need ≥20%)"
                 )
+
+
+class TestFifteenLibraryCoverage:
+    """Review prompts must know the full library registry.
+
+    Guards against the drift the 2026-07-08 audit found (M#12): scoring
+    prompts still describing the 9-Python-library era while the pipeline
+    reviews R, Julia, and JavaScript implementations. Expectations derive
+    from core.constants so a future library lands here as a failing test,
+    not as silent scoring bias.
+    """
+
+    WORKFLOW_PROMPTS_DIR = PROMPTS_DIR / "workflow-prompts"
+
+    SCORING_PROMPTS = [PROMPTS_DIR / "quality-evaluator.md", PROMPTS_DIR / "workflow-prompts" / "ai-quality-review.md"]
+
+    @pytest.mark.parametrize("prompt_path", SCORING_PROMPTS, ids=lambda p: p.name)
+    def test_interactive_library_list_matches_registry(self, prompt_path: Path) -> None:
+        """The '**Interactive libraries**' line must cover the canonical set."""
+        content = prompt_path.read_text()
+        line = next((line for line in content.splitlines() if line.startswith("**Interactive libraries**")), None)
+        assert line is not None, f"{prompt_path.name} has no '**Interactive libraries**' line"
+        missing = [lib for lib in sorted(INTERACTIVE_LIBRARIES) if lib not in line]
+        assert not missing, f"{prompt_path.name} interactive list missing: {missing}"
+
+    @pytest.mark.parametrize("prompt_path", SCORING_PROMPTS, ids=lambda p: p.name)
+    def test_every_file_extension_documented(self, prompt_path: Path) -> None:
+        """Language defaults plus per-library overrides (.tsx) must all appear."""
+        expected = set(LANGUAGE_FILE_EXTENSIONS.values()) | {
+            lib["file_extension"] for lib in LIBRARIES_METADATA if "file_extension" in lib
+        }
+        content = prompt_path.read_text()
+        missing = [ext for ext in sorted(expected) if f"`{ext}`" not in content]
+        assert not missing, f"{prompt_path.name} missing file extensions: {missing}"
+
+    @pytest.mark.parametrize(
+        "prompt_path",
+        [
+            PROMPTS_DIR / "quality-criteria.md",
+            PROMPTS_DIR / "quality-evaluator.md",
+            PROMPTS_DIR / "workflow-prompts" / "ai-quality-review.md",
+        ],
+        ids=lambda p: p.name,
+    )
+    def test_sc04_title_rule_accepts_every_language(self, prompt_path: Path) -> None:
+        """SC-04's language set must include every supported language, or every
+        correct JS/Julia title costs points."""
+        content = prompt_path.read_text()
+        sc04_lines = [line for line in content.splitlines() if "language ∈" in line]
+        assert sc04_lines, f"{prompt_path.name} has no SC-04 'language ∈' rule"
+        joined = "\n".join(sc04_lines)
+        missing = [lang for lang in sorted(SUPPORTED_LANGUAGES) if lang not in joined]
+        assert not missing, f"{prompt_path.name} SC-04 language set missing: {missing}"
+
+    def test_checklist_example_uses_canonical_six_keys(self) -> None:
+        """The step-10 review_checklist.json example must show exactly the six
+        canonical category keys (the website renders this shape directly)."""
+        content = (self.WORKFLOW_PROMPTS_DIR / "ai-quality-review.md").read_text()
+        for key in (
+            "visual_quality",
+            "design_excellence",
+            "spec_compliance",
+            "data_quality",
+            "code_quality",
+            "library_mastery",
+        ):
+            assert f'"{key}"' in content, f"checklist example missing key: {key}"
+        assert "library_features" not in content, "stale 5-category checklist key resurfaced"
