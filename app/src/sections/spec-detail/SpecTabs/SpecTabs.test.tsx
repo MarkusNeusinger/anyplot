@@ -271,10 +271,7 @@ describe('SpecTabs', () => {
     const onTrackEvent = vi.fn();
     render(<SpecTabs {...baseProps} onTrackEvent={onTrackEvent} />);
 
-    // Open Code tab
-    await user.click(screen.getByRole('tab', { name: /code/i }));
-
-    // Click copy button
+    // Code tab starts open — the copy button is immediately available
     const copyButton = screen.getByRole('button', { name: /copy code/i });
     await user.click(copyButton);
 
@@ -337,11 +334,14 @@ describe('SpecTabs', () => {
   });
 
   // -------------------------------------------------------
-  // 12. Quality tab label shows numeric score when present
+  // 12. Quality tab label shows labeled score when present
   // -------------------------------------------------------
-  it('shows numeric score in the Quality tab label', () => {
+  it('labels the Quality tab with the score and an explanatory aria-label', () => {
     render(<SpecTabs {...baseProps} qualityScore={93} />);
-    expect(screen.getByRole('tab', { name: /93/i })).toBeInTheDocument();
+    const qualityTab = screen.getByRole('tab', { name: /quality: ai review score 93 of 100/i });
+    expect(qualityTab).toBeInTheDocument();
+    // Visible label is "Quality 93" (short form "93" on xs)
+    expect(qualityTab).toHaveTextContent('Quality 93');
   });
 
   it('shows "Quality" in the tab label when score is null', () => {
@@ -384,13 +384,10 @@ describe('SpecTabs', () => {
   });
 
   // -------------------------------------------------------
-  // 15. Code tab shows code via CodeHighlighter
+  // 15. Code tab starts open in detail mode (default-open)
   // -------------------------------------------------------
-  it('renders CodeHighlighter with code when Code tab is open', async () => {
-    const user = userEvent.setup();
+  it('renders CodeHighlighter without any click — Code tab starts open', async () => {
     render(<SpecTabs {...baseProps} />);
-
-    await user.click(screen.getByRole('tab', { name: /code/i }));
 
     await waitFor(() => {
       expect(screen.getByTestId('code-highlighter')).toBeInTheDocument();
@@ -398,6 +395,49 @@ describe('SpecTabs', () => {
     expect(screen.getByTestId('code-highlighter')).toHaveTextContent(
       'import matplotlib print("hello")'
     );
+    expect(screen.getByRole('tab', { name: /code/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('starts with the Spec tab open in overviewMode', () => {
+    render(<SpecTabs {...baseProps} overviewMode />);
+    expect(screen.getByRole('tab', { name: /spec/i })).toHaveAttribute('aria-selected', 'true');
+    // Spec content is visible without a click
+    expect(screen.getByText('A scatter plot showing data points')).toBeVisible();
+  });
+
+  it('collapses the default-open Code tab on click and tracks the close', async () => {
+    const user = userEvent.setup();
+    const onTrackEvent = vi.fn();
+    render(<SpecTabs {...baseProps} onTrackEvent={onTrackEvent} />);
+
+    await user.click(screen.getByRole('tab', { name: /code/i }));
+
+    expect(onTrackEvent).toHaveBeenCalledWith('tab_toggle', {
+      action: 'close',
+      tab: 'code',
+      library: 'matplotlib',
+    });
+  });
+
+  // -------------------------------------------------------
+  // 15b. Tabs a11y wiring: tab ↔ tabpanel id pairing
+  // -------------------------------------------------------
+  it('wires each tab to its panel via id/aria-controls', () => {
+    render(<SpecTabs {...baseProps} />);
+
+    const codeTab = screen.getByRole('tab', { name: /code/i });
+    const panelId = codeTab.getAttribute('aria-controls');
+    expect(panelId).toBeTruthy();
+    const panel = document.getElementById(panelId as string);
+    expect(panel).not.toBeNull();
+    expect(panel).toHaveAttribute('role', 'tabpanel');
+    expect(panel).toHaveAttribute('aria-labelledby', codeTab.id);
+
+    // The open panel is exposed; collapsed panels are aria-hidden
+    expect(panel).toHaveAttribute('aria-hidden', 'false');
+    const specTab = screen.getByRole('tab', { name: /spec/i });
+    const specPanel = document.getElementById(specTab.getAttribute('aria-controls') as string);
+    expect(specPanel).toHaveAttribute('aria-hidden', 'true');
   });
 
   // -------------------------------------------------------
