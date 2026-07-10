@@ -17,7 +17,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - Note all required features
 
 ### 2. Read the Implementation
-`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot), `.R` for ggplot2, and `.jl` for makie
+`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — the workflow supplies `${LANGUAGE}` and `${EXT}` for this run. Reference: `.py` for the Python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, letsplot), `.R` for ggplot2 (R), `.jl` for makie (Julia), `.js` for the JavaScript libraries (chartjs, d3, echarts, highcharts), and `.tsx` for muix (JavaScript, React)
 
 ### 3. Read Library-Specific Rules
 `prompts/library/${LIBRARY}.md`
@@ -104,6 +104,15 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 - "Title spans ~80% of width at fontsize=14pt." → Expected for the long mandated anyplot title; no deduction.
 - "Y-axis label 'Fläche von Häusern in Quadratmetern' takes ~40% of axis length at fontsize=12pt." → Genuinely long label at sensible fontsize; no deduction as long as it doesn't overflow the axis.
 
+### 5e. Interactive & JavaScript Libraries — Fairness Rules
+
+**Interactive libraries** (produce `plot-{theme}.html` alongside the PNG): altair, bokeh, chartjs, d3, echarts, highcharts, letsplot, muix, plotly, pygal.
+
+- **DO NOT penalize** interactive features that aren't visible in the PNG — tooltips/hover info, zoom/pan/selection tools, interactive legends, crossfiltering. The PNG is a static preview; these features add real value in the HTML detail view. Treat well-configured interactivity as a strength (e.g. "Uses HoverTool for detailed data inspection in HTML output").
+- **Only criticize** interactivity when it hurts the static render: hover-only labels that leave the PNG unreadable, misconfigured features, or errors.
+
+**JavaScript libraries** (chartjs, d3, echarts, highcharts as `.js`; muix as `.tsx`): the snippet renders into the browser harness's pre-sized `#container` mount node and never saves files itself — the harness (`automation/js-render/render.mjs`) captures `plot-{theme}.png` and `plot-{theme}.html`. For CQ-05, check the mount-node contract and current library API instead of `savefig`-style calls; animations must be disabled (`animation: false` or the library's equivalent) so the harness doesn't screenshot mid-animation.
+
 ### 6. Check for Auto-Reject (AR-08, AR-09)
 
 **AR-08 — Fake interactivity (static libraries only — matplotlib, seaborn, plotnine, ggplot2, makie):**
@@ -167,7 +176,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All features from spec? |
 | SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia}). Legend labels match? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels match? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |
@@ -324,21 +333,26 @@ Dark render (plot-dark.png):
   Legibility verdict: PASS | FAIL (explain if FAIL)
 EOF
 
-# Criteria checklist as structured JSON
+# Criteria checklist as structured JSON.
+# Use EXACTLY these six keys — visual_quality, design_excellence,
+# spec_compliance, data_quality, code_quality, library_mastery — with these
+# maxima (30/20/15/15/10/10, matching step 7). The website's quality tab and
+# the stored metadata rely on this exact shape; no other keys, no renames.
 cat > review_checklist.json << 'EOF'
 {
   "visual_quality": {
-    "score": 36,
-    "max": 40,
+    "score": 24,
+    "max": 30,
     "items": [
-      {"id": "VQ-01", "name": "Text Legibility", "score": 10, "max": 10, "passed": true, "comment": "All text readable"},
-      {"id": "VQ-02", "name": "No Overlap", "score": 8, "max": 8, "passed": true, "comment": "No overlapping elements"}
+      {"id": "VQ-01", "name": "Text Legibility", "score": 7, "max": 8, "passed": true, "comment": "All text readable in both themes"},
+      {"id": "VQ-02", "name": "No Overlap", "score": 5, "max": 6, "passed": true, "comment": "No collisions"}
     ]
   },
-  "spec_compliance": {"score": 23, "max": 25, "items": [...]},
-  "data_quality": {"score": 18, "max": 20, "items": [...]},
-  "code_quality": {"score": 10, "max": 10, "items": [...]},
-  "library_features": {"score": 5, "max": 5, "items": [...]}
+  "design_excellence": {"score": 12, "max": 20, "items": [...]},
+  "spec_compliance": {"score": 13, "max": 15, "items": [...]},
+  "data_quality": {"score": 12, "max": 15, "items": [...]},
+  "code_quality": {"score": 9, "max": 10, "items": [...]},
+  "library_mastery": {"score": 6, "max": 10, "items": [...]}
 }
 EOF
 ```
