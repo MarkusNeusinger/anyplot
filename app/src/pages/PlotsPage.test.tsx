@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { render, screen } from 'src/test-utils';
+import { fireEvent, render, screen } from 'src/test-utils';
+
+const { mockHandleRandom } = vi.hoisted(() => ({ mockHandleRandom: vi.fn() }));
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({ trackPageview: vi.fn(), trackEvent: vi.fn() }),
@@ -22,7 +24,7 @@ vi.mock('src/hooks', () => ({
     handleAddValueToGroup: vi.fn(),
     handleRemoveFilter: vi.fn(),
     handleRemoveGroup: vi.fn(),
-    handleRandom: vi.fn(),
+    handleRandom: mockHandleRandom,
     randomAnimation: null,
   }),
   isFiltersEmpty: (f: unknown[]) => !f || f.length === 0,
@@ -70,6 +72,40 @@ describe('PlotsPage', () => {
   it('renders Helmet for SEO', () => {
     render(<PlotsPage />);
     expect(screen.getByTestId('helmet')).toBeInTheDocument();
+  });
+
+  describe('global keyboard shortcuts', () => {
+    it('triggers random navigation on Space when nothing interactive is focused', () => {
+      render(<PlotsPage />);
+      fireEvent.keyDown(document.body, { key: ' ' });
+      expect(mockHandleRandom).toHaveBeenCalledWith('space');
+    });
+
+    it('does not fire when a focusable card owns the keystroke', () => {
+      render(<PlotsPage />);
+      const card = document.createElement('div');
+      card.setAttribute('role', 'button');
+      card.tabIndex = 0;
+      document.body.appendChild(card);
+      try {
+        fireEvent.keyDown(card, { key: ' ' });
+        expect(mockHandleRandom).not.toHaveBeenCalled();
+      } finally {
+        card.remove();
+      }
+    });
+
+    it('does not fire when a native button owns the keystroke', () => {
+      render(<PlotsPage />);
+      const button = document.createElement('button');
+      document.body.appendChild(button);
+      try {
+        fireEvent.keyDown(button, { key: ' ' });
+        expect(mockHandleRandom).not.toHaveBeenCalled();
+      } finally {
+        button.remove();
+      }
+    });
   });
 
   describe('scrollRestoration', () => {
