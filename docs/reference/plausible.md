@@ -364,6 +364,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `potd_dismiss` | Custom Event | Track plot-of-the-day banner dismissals |
 | `view_mode_change` | Custom Event | Track preview ↔ interactive toggles in spec detail |
 | `library_click` | Custom Event | Track library-card clicks on the libraries page |
+| `library_filter` | Custom Event | Track language/framework filter-chip clicks on the libraries page |
 | `stats_top_impl_click` | Custom Event | Track clicks on top-quality implementation thumbnails on /stats |
 | `map_node_click` | Custom Event | Track navigation clicks from `/map` into a spec detail |
 | `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
@@ -460,6 +461,7 @@ User lands on anyplot.ai
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx |
 | `library_click` | `source`, `library` | LibrariesPage.tsx |
+| `library_filter` | `source`, `framework` | LibrariesPage.tsx |
 | `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx |
 | `map_node_click` | `spec` | MapPage.tsx |
 | `map_node_pin` | `spec` | MapPage.tsx |
@@ -471,7 +473,7 @@ User lands on anyplot.ai
 | `TTFB` | `value`, `rating` | reportWebVitals.ts |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`? | api/analytics.py (server-side) |
 
-**Total: 30 client-side + 1 server-side = 31 events**
+**Total: 31 client-side + 1 server-side = 32 events**
 
 > Every pageview and event additionally carries a `theme` ambient prop (`dark` /
 > `light`). Set in `RootLayout` via `setAnalyticsAmbientProps` whenever the user
