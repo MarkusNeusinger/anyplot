@@ -27,7 +27,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   and `/debug` fires a pageview at all. `docs/reference/plausible.md` caught up with the shipped
   product: `/map` + `/debug` pages, `nav_map` source, the previously undocumented
   `library_filter` event with its `framework` prop, and the 15-library value list (audit
-  2026-07-08 High#7 repo-side + Medium#10 + Low#12/#15).
+  2026-07-08 High#7 repo-side + Medium#10 + Low#12/#15) (#9625).
 
 ### Added
 
