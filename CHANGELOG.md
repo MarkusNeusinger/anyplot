@@ -30,7 +30,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   registry, the fairness rules (plus a JS-harness note for CQ-05) moved into the running prompt,
   AR-05 gained rows for chartjs/d3/echarts/muix, and new registry-derived tests in
   `tests/unit/prompts/` fail on any future library-list drift (audit 2026-07-08 Medium#1 +
-  Medium#12).
+  Medium#12) (#9623).
 
 ### Added
 
