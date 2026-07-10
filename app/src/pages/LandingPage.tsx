@@ -41,7 +41,7 @@ export function LandingPage() {
         <title>any.plot() — any library.</title>
         <meta
           name="description"
-          content="any library. get inspired. grab the code. make it yours. human ideas, ai builds the rest. 9 python plotting libraries, colorblind-safe, open source."
+          content="any library. get inspired. grab the code. make it yours. human ideas, ai builds the rest. 15 plotting libraries across python, r, julia & javascript, colorblind-safe, open source."
         />
         <link rel="canonical" href="https://anyplot.ai/" />
       </Helmet>
