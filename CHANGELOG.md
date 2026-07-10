@@ -27,7 +27,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   Julia & JavaScript; JSON-LD keywords refreshed, stale okabe-ito reference replaced by the
   Imprint palette), and `scripts/evaluate-plot.py` dropped its dead Python-era highcharts
   pattern block and derives the AR-07 static-library set from the registry (audit 2026-07-08
-  Medium#5 + Medium#6 + Low#8).
+  Medium#5 + Medium#6 + Low#8) (#9624).
 
 ### Added
 
