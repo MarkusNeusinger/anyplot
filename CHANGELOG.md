@@ -16,6 +16,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **Analytics hygiene: bots out, /plots visible, docs in sync** — nginx's `/api/event`
+  Plausible proxy now returns 202 (without forwarding) for crawler UAs and headless/automation
+  clients (HeadlessChrome, puppeteer/playwright/selenium, scripted HTTP libraries, empty UA) —
+  the unfiltered synthetic waves inflated visitor counts ~40% and broke trend lines. Pageview
+  URLs keep the real pathname for reserved pages, so `/plots` no longer records as `/` (the
+  site's #2 page was invisible in Plausible; filter paths move from `/lib/x` to `/plots/lib/x`),
+  and `/debug` fires a pageview at all. `docs/reference/plausible.md` caught up with the shipped
+  product: `/map` + `/debug` pages, `nav_map` source, the previously undocumented
+  `library_filter` event with its `framework` prop, and the 15-library value list (audit
+  2026-07-08 High#7 repo-side + Medium#10 + Low#12/#15).
+
 ### Added
 
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged

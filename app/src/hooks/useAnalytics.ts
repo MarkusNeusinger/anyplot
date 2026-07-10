@@ -1,7 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
 
-import { RESERVED_TOP_LEVEL } from 'src/routes/paths';
-
 interface EventProps {
   [key: string]: string | undefined;
 }
@@ -42,13 +40,13 @@ function buildPlausibleUrl(): string {
   const params = new URLSearchParams(window.location.search);
   const segments: string[] = [];
 
-  // Preserve the current spec/language/library path prefix if present.
-  // For routes like /:specId/:language[/:library] we keep the full pathname so
-  // filter segments are appended after it. Reserved top-level routes use no prefix.
+  // Preserve the full current pathname so filter segments are appended after
+  // it — for spec routes (/:specId/:language[/:library]) AND for real reserved
+  // pages like /plots. Dropping the reserved prefix recorded every filterless
+  // /plots visit as "/" and made the site's #2 page invisible in Plausible.
   const pathname = window.location.pathname;
   const parts = pathname.split('/').filter(Boolean);
-  const pathPrefix =
-    parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]) ? `/${parts.join('/')}` : '';
+  const pathPrefix = parts.length > 0 ? `/${parts.join('/')}` : '';
 
   // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags).
   // - `language` covers the spec-hub carousel scope (`/{spec}?language=python`)

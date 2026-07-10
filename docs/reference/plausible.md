@@ -85,6 +85,8 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `/legal` | Legal notice, privacy policy, transparency |
 | `/mcp` | MCP server documentation (AI assistant integration) |
 | `/stats` | Platform statistics (library scores, coverage, tags, top implementations) |
+| `/map` | Network map of specs clustered by visual similarity |
+| `/debug` | Pipeline status dashboard (spec coverage, feedback, ping) |
 | `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
 | `/{spec_id}/{language}` | Language overview (all libraries for that language) |
 | `/{spec_id}/{language}/{library}` | Implementation detail (preview ↔ interactive toggle) |
@@ -134,6 +136,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx | User dismisses the plot-of-the-day banner |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
 | `library_click` | `source`, `library` | LibrariesPage.tsx | User clicks a library card on `/libraries` to navigate to its filtered plots view. `source` is `libraries_page` from this entry point. |
+| `library_filter` | `source`, `framework` | LibrariesPage.tsx | User clicks a language/framework filter chip on `/libraries` (`framework` carries the chip id; register the prop in the dashboard for breakdowns) |
 | `stats_top_impl_click` | `spec`, `library` | StatsPage.tsx | User clicks a "top implementation" thumbnail on `/stats` to jump into its spec detail. |
 | `map_node_click` | `spec` | MapPage.tsx | User clicks a node on `/map` (or, on touch, second tap on an already-pinned node) to navigate to its spec detail. |
 | `map_node_pin` | `spec` | MapPage.tsx | Touch device only: first tap on a node opens the preview panel + pin marker without navigating. A second tap on the same node fires `map_node_click` and navigates. |
@@ -151,7 +154,7 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 
 | `source` value | Where | Target |
 |----------------|-------|--------|
-| `nav_specs` / `nav_plots` / `nav_libraries` / `nav_stats` / `nav_palette` / `nav_mcp` | NavBar.tsx | top-level menu bar |
+| `nav_specs` / `nav_plots` / `nav_map` / `nav_libraries` / `nav_stats` / `nav_palette` / `nav_mcp` | NavBar.tsx | top-level menu bar |
 | `nav_logo` | NavBar.tsx | logo → `/` |
 | `nav_search` | NavBar.tsx | `plots.search()` button → `/plots?focus=search` |
 | `masthead_logo` / `masthead_branch` / `masthead_release` | MastheadRule.tsx | masthead `~/anyplot.ai · main · v1.x.x` |
@@ -301,7 +304,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
 | `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
-| `language` | Language slug (`python`, `r`, `julia`; future: `matlab`) | `og_image_view` |
+| `language` | Language slug (`python`, `r`, `julia`, `javascript`) | `og_image_view` |
 | `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view` |
 | `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, plots, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |
@@ -315,6 +318,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `size` | Grid size (normal, compact) | `grid_resize` |
 | `param` | URL parameter name for tag | `tag_click` |
 | `source` | Source UI element / page context | `tag_click`, `nav_click` |
+| `framework` | Library id clicked in the libraries-page filter (needs dashboard registration to appear in breakdowns) | `library_filter` |
 | `target` | Click destination (route or external label) | `nav_click` |
 | `to` | New mode after toggle (`system` / `light` / `dark`) | `theme_toggle` |
 | `mode` | Spec detail view mode (`preview` / `interactive`) | `view_mode_change` |
@@ -483,8 +487,10 @@ Any valid specification ID (e.g., `scatter-basic`, `heatmap-correlation`, `bar-g
 
 ### `library` Values
 ```
-matplotlib | seaborn | plotly | bokeh | altair | plotnine | pygal | highcharts | letsplot
+matplotlib | seaborn | plotly | bokeh | altair | plotnine | pygal | letsplot
+ggplot2 | makie | chartjs | d3 | echarts | highcharts | muix
 ```
+(Canonical source: `LIBRARIES_METADATA` in `core/constants.py`.)
 
 ### `method` Values
 ```
@@ -660,5 +666,5 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ---
 
-**Last Updated**: 2026-04-25
+**Last Updated**: 2026-07-10
 **Status**: Production-ready with full journey tracking, Core Web Vitals, server-side og:image analytics, landing-page nav tracking, and theme analytics
