@@ -290,7 +290,7 @@ def check_ar07_format(impl_path: Path, library: str) -> AutoRejectResult:
     # Static libraries must produce .png; interactive ones may also emit HTML.
     # Derived from the registry so a new Python library can't silently drift
     # (this Python-only evaluator never reaches AR-07 for non-Python libs).
-    static_libraries = sorted(set(SUPPORTED_LIBRARIES) - INTERACTIVE_LIBRARIES)
+    static_libraries = set(SUPPORTED_LIBRARIES) - INTERACTIVE_LIBRARIES
 
     plot_png = impl_path.parent / "plot.png"
     plot_html = impl_path.parent / "plot.html"
