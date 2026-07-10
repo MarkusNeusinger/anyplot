@@ -145,7 +145,11 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 
 ### HTML Template
 
-All SEO proxy endpoints return minimal HTML with meta tags:
+All SEO proxy endpoints share one template (`BOT_HTML_TEMPLATE` + `_render_bot_html()`):
+the `<head>` carries the meta/OG/Twitter tags plus an optional JSON-LD script, and the
+`<body>` carries what search engines actually index. Every page ends with a site-wide
+`<nav>` (home, plots, specs, libraries, map, palette, mcp, stats, about) so crawlers
+landing deep can walk the site without executing the SPA.
 
 ```html
 <!DOCTYPE html>
@@ -165,10 +169,25 @@ All SEO proxy endpoints return minimal HTML with meta tags:
     <meta name="twitter:description" content="{description}" />
     <meta name="twitter:image" content="{image}" />
     <link rel="canonical" href="{url}" />
+    {jsonld}
 </head>
-<body><h1>{title}</h1><p>{description}</p></body>
+<body>
+{body}
+</body>
 </html>
 ```
+
+Per-page body content:
+
+| Page | Body | JSON-LD |
+|------|------|---------|
+| Static pages (`/`, `/plots`, …) | `<h1>` + description + nav | — |
+| Spec hub `/{spec_id}` | description, preview `<img>`, one link per implementation page | `BreadcrumbList` + `ItemList` |
+| Implementation `/{spec_id}/{language}/{library}` | description, preview `<img>`, full source in `<pre><code>` (noqa-stripped, HTML-escaped), hub link, sibling-implementation links | `BreadcrumbList` + `SoftwareSourceCode` |
+
+Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
+`core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
+hand-maintained in the router.
 
 ## Branded OG Images
 
