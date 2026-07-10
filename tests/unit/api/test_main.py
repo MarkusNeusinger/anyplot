@@ -369,10 +369,12 @@ class TestPrewarmCache:
     Each Cloud Run instance has its own in-memory cache; without prewarm,
     the first request to a fresh instance pays the full DB roundtrip and
     the user-visible NumbersStrip + /specs page sit on placeholders. The
-    hook populates the four metadata caches before the app starts serving.
+    hook populates the four metadata caches plus the two heavy user-facing
+    payloads (unfiltered gallery `filter:all` and /specs/map) before the
+    app starts serving.
     """
 
-    async def test_prewarm_populates_all_four_caches(self) -> None:
+    async def test_prewarm_populates_all_caches(self) -> None:
         from api.main import _prewarm_cache
 
         with (
@@ -380,6 +382,8 @@ class TestPrewarmCache:
             patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
             patch("api.main._refresh_languages", new=AsyncMock(return_value="LANGS")) as m_langs,
             patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
+            patch("api.main._refresh_specs_map", new=AsyncMock(return_value="MAP")) as m_map,
+            patch("api.main._refresh_filter_all", new=AsyncMock(return_value="FILTER")) as m_filter,
             patch("api.main.set_cache") as m_set,
         ):
             await _prewarm_cache()
@@ -388,9 +392,11 @@ class TestPrewarmCache:
         m_libs.assert_awaited_once()
         m_langs.assert_awaited_once()
         m_specs.assert_awaited_once()
+        m_map.assert_awaited_once()
+        m_filter.assert_awaited_once()
 
         cached_keys = {call.args[0] for call in m_set.call_args_list}
-        assert cached_keys == {"stats", "libraries", "languages", "specs_list"}
+        assert cached_keys == {"stats", "libraries", "languages", "specs_list", "specs_map", "filter:all"}
 
     async def test_prewarm_swallows_one_failure_and_continues(self) -> None:
         """A failing factory must not abort the remaining prewarms — those
@@ -402,6 +408,8 @@ class TestPrewarmCache:
             patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
             patch("api.main._refresh_languages", new=AsyncMock(return_value="LANGS")) as m_langs,
             patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
+            patch("api.main._refresh_specs_map", new=AsyncMock(return_value="MAP")) as m_map,
+            patch("api.main._refresh_filter_all", new=AsyncMock(return_value="FILTER")) as m_filter,
             patch("api.main.set_cache") as m_set,
         ):
             await _prewarm_cache()  # must not raise
@@ -409,5 +417,15 @@ class TestPrewarmCache:
         m_libs.assert_awaited_once()
         m_langs.assert_awaited_once()
         m_specs.assert_awaited_once()
+        m_map.assert_awaited_once()
+        m_filter.assert_awaited_once()
         cached_keys = {call.args[0] for call in m_set.call_args_list}
-        assert cached_keys == {"libraries", "languages", "specs_list"}
+        assert cached_keys == {"libraries", "languages", "specs_list", "specs_map", "filter:all"}
+
+    async def test_prewarm_filter_all_key_matches_endpoint_cache_key(self) -> None:
+        """The prewarm must write the exact key the /plots/filter endpoint
+        reads for the unfiltered request — a drifted key would silently
+        turn the prewarm into dead work."""
+        from api.routers.plots import _build_cache_key
+
+        assert _build_cache_key([]) == "filter:all"

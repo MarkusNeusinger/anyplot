@@ -18,6 +18,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Global keyboard shortcuts no longer hijack focused elements on `/plots`** — the
+  window-level Space/Enter/Backspace handler now bails out when the keystroke targets an
+  interactive element (button, link, focused card/chip/toggle), so keyboard-activating a card
+  no longer double-fires with a random-plot jump (audit 2026-07-08 Quick Win 1) (#9620).
+- **Dark-mode contrast for stock MUI components** — the MUI palette is locked to light-mode
+  hexes (it can't hold CSS variables), so unselected tab labels, dividers, skeletons, and
+  alerts rendered light-theme colors on dark backgrounds (~2.1:1 label contrast). MuiTab,
+  MuiDivider, MuiSkeleton, and MuiAlert are now wired to the CSS-var system
+  (`--ink-soft`/`--rule`/`--bg-elevated`), and the two `borderColor: 'divider'` usages in
+  SpecTabs/RelatedSpecs use `var(--rule)` (audit 2026-07-08 High#4) (#9622).
 - **Review rubric finally knows all 15 libraries** — the workflow-active reviewer prompt and
   scoring criteria still described the 9-Python-library era: the file-extension guide called
   highcharts Python and knew no `.js`/`.tsx`, SC-04's title rule rejected `javascript` (and in
@@ -31,6 +41,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   AR-05 gained rows for chartjs/d3/echarts/muix, and new registry-derived tests in
   `tests/unit/prompts/` fail on any future library-list drift (audit 2026-07-08 Medium#1 +
   Medium#12) (#9623).
+
+### Changed
+
+- **Spec-detail tabs are self-explanatory now** — the Code tab (Spec tab on hub pages) starts
+  open instead of everything collapsed, the selected tab shows a small caret signaling the
+  click-to-collapse toggle, the quality tab reads "Quality 91" (with an explanatory
+  `aria-label`) instead of a bare number, and tabs↔panels got standard `id`/`aria-controls`
+  wiring (audit 2026-07-08 High#5 + Low#1) (#9622).
+- **Bot-served pages now carry the site's actual content** — the crawler-facing HTML
+  (`/seo-proxy/*`, what Googlebot & social bots see) grows from a title+description shell to a
+  real document: spec hubs list and link every implementation, implementation pages embed the
+  full source in a `<pre>` block plus hub/sibling links, both carry the preview image and
+  JSON-LD (`BreadcrumbList`, `ItemList`, `SoftwareSourceCode`), and every bot page ends with a
+  site-wide nav. Display names derive from `core/constants.py`, never hand-maintained (audit
+  2026-07-08 High#6) (#9621).
+- **Gallery cold path prewarmed** — the startup cache prewarm now also computes the two
+  heaviest user-facing payloads, `/plots/filter` (`filter:all`) and `/specs/map`, so the first
+  visitor of a fresh Cloud Run instance no longer waits on the full DB roundtrip for the
+  gallery or the map page (audit 2026-07-08 Quick Win 2) (#9620).
 
 ### Added
 
