@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import cache_key, get_or_set_cache
 from api.dependencies import require_db
 from core.config import settings
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
 from core.database import ImplRepository, Spec, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
@@ -176,24 +176,6 @@ class RelatedSpecsResponse(BaseModel):
 # =============================================================================
 # Shared helpers
 # =============================================================================
-
-LIBRARY_NAMES = {
-    "altair": "Altair",
-    "bokeh": "Bokeh",
-    "chartjs": "Chart.js",
-    "d3": "D3.js",
-    "echarts": "Apache ECharts",
-    "ggplot2": "ggplot2",
-    "highcharts": "Highcharts",
-    "letsplot": "lets-plot",
-    "makie": "Makie.jl",
-    "matplotlib": "Matplotlib",
-    "muix": "MUI X Charts",
-    "plotly": "Plotly",
-    "plotnine": "plotnine",
-    "pygal": "Pygal",
-    "seaborn": "Seaborn",
-}
 
 
 def _score_bucket(score: float) -> str:

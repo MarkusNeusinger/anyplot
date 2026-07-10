@@ -18,7 +18,7 @@ from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
 from core.config import settings
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
 from core.database import FEEDBACK_REACTIONS, FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
 
 
@@ -333,27 +333,13 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
     # Library Statistics
     # ========================================================================
 
-    library_names = {
-        "altair": "Altair",
-        "bokeh": "Bokeh",
-        "ggplot2": "ggplot2",
-        "highcharts": "Highcharts",
-        "letsplot": "lets-plot",
-        "makie": "Makie.jl",
-        "matplotlib": "Matplotlib",
-        "plotly": "Plotly",
-        "plotnine": "plotnine",
-        "pygal": "Pygal",
-        "seaborn": "Seaborn",
-    }
-
     lib_stats: list[LibraryStats] = []
     for lib_id in sorted(SUPPORTED_LIBRARIES):
         scores = library_scores[lib_id]
         lib_stats.append(
             LibraryStats(
                 id=lib_id,
-                name=library_names.get(lib_id, lib_id),
+                name=LIBRARY_NAMES.get(lib_id, lib_id),
                 impl_count=library_counts[lib_id],
                 avg_score=round(sum(scores) / len(scores), 1) if scores else None,
                 min_score=round(min(scores), 1) if scores else None,
