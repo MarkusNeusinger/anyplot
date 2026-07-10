@@ -35,11 +35,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 # Local imports must come AFTER sys.path is patched so the script remains
 # runnable from any working directory (Copilot review: PR #5414).
 from core.config import settings  # noqa: E402
-from core.constants import LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA  # noqa: E402
+from core.constants import INTERACTIVE_LIBRARIES, LANGUAGE_FILE_EXTENSIONS, LIBRARIES_METADATA  # noqa: E402
 
 # This local evaluator only supports Python AST + python-script execution.
-# Non-Python libraries (currently just ggplot2) skip in main() with a clear
-# pointer at the CI workflow.
+# Non-Python libraries (R, Julia, and the browser-rendered JavaScript libs)
+# skip in main() with a clear pointer at the CI workflow.
 SUPPORTED_LIBRARIES = [lib["id"] for lib in LIBRARIES_METADATA if lib["language_id"] == "python"]
 
 # Reverse lookup: library_id -> language_id, used for path resolution and the
@@ -105,14 +105,6 @@ LIBRARY_PATTERNS = {
             "pygal.Bar", "pygal.Line", "pygal.Pie", "pygal.Histogram",
             "pygal.XY", "pygal.Dot", "pygal.Radar", "pygal.Box",
             "pygal.Treemap", "pygal.Gauge", "pygal.StackedBar",
-        ],
-        "style_only": [],
-    },
-    "highcharts": {
-        "import": ["from highcharts", "import highcharts"],
-        "plot_functions": [
-            "Chart(", "Highcharts", "highcharts.Chart",
-            "HighchartsStockChart", "HighchartsMapsChart",
         ],
         "style_only": [],
     },
@@ -295,10 +287,10 @@ def check_ar05_library(impl_path: Path, library: str) -> AutoRejectResult:
 
 def check_ar07_format(impl_path: Path, library: str) -> AutoRejectResult:
     """AR-07: Check if output format is correct."""
-    # Static libraries should produce .png
-    static_libraries = ["matplotlib", "seaborn", "plotnine"]
-    # Interactive libraries can produce .png or .html
-    interactive_libraries = ["plotly", "bokeh", "altair", "pygal", "highcharts", "letsplot"]
+    # Static libraries must produce .png; interactive ones may also emit HTML.
+    # Derived from the registry so a new Python library can't silently drift
+    # (this Python-only evaluator never reaches AR-07 for non-Python libs).
+    static_libraries = set(SUPPORTED_LIBRARIES) - INTERACTIVE_LIBRARIES
 
     plot_png = impl_path.parent / "plot.png"
     plot_html = impl_path.parent / "plot.html"
