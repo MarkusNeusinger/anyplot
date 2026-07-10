@@ -12,6 +12,46 @@ export const components: ThemeOptions['components'] = {
       },
     },
   },
+  // Stock MUI components fall back to the light-mode palette hexes (the MUI
+  // palette can't hold var(...) tokens — see palette.ts). Wire the handful of
+  // stock components we render to the CSS-var system so they adapt to
+  // [data-theme='dark'] like everything else.
+  MuiTab: {
+    styleOverrides: {
+      root: {
+        color: 'var(--ink-soft)',
+      },
+    },
+  },
+  MuiDivider: {
+    styleOverrides: {
+      root: {
+        borderColor: 'var(--rule)',
+        // Dividers with children render their lines via ::before/::after,
+        // which carry their own borderTop — the root borderColor alone
+        // doesn't reach them.
+        '&::before, &::after': {
+          borderColor: 'var(--rule)',
+        },
+      },
+    },
+  },
+  MuiSkeleton: {
+    styleOverrides: {
+      root: {
+        backgroundColor: 'var(--rule)',
+      },
+    },
+  },
+  MuiAlert: {
+    styleOverrides: {
+      root: {
+        backgroundColor: 'var(--bg-elevated)',
+        color: 'var(--ink)',
+        border: '1px solid var(--rule)',
+      },
+    },
+  },
   MuiTooltip: {
     defaultProps: {
       enterDelay: 200,

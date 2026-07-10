@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -86,8 +86,9 @@ export function SpecTabs({
   overviewMode = false,
   highlightedTags = [],
 }: SpecTabsProps) {
-  // In overview mode, start with Spec tab open; in detail mode, all collapsed
-  const [tabIndex, setTabIndex] = useState<number | null>(null);
+  // Index 0 starts open — the Code tab in detail mode, the Spec tab in
+  // overview mode. An all-collapsed start hides the page's main content.
+  const [tabIndex, setTabIndex] = useState<number | null>(0);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [tagCounts, setTagCounts] = useState<Record<string, Record<string, number>> | null>(
     getCachedTagCounts()
@@ -166,9 +167,26 @@ export function SpecTabs({
   // In overview mode, use different tab indexing (only Spec tab at index 0)
   const specTabIndex = overviewMode ? 0 : 1;
 
+  // Standard tabs a11y wiring; useId keeps ids unique if two SpecTabs render
+  // on one page.
+  const uid = useId();
+  const tabA11yProps = (index: number) => ({
+    id: `${uid}-tab-${index}`,
+    'aria-controls': `${uid}-tabpanel-${index}`,
+  });
+
+  // The selected tab collapses on a second click — show a caret as the
+  // affordance, otherwise the toggle behavior is undiscoverable.
+  const collapseCaret = (index: number) =>
+    tabIndex === index ? (
+      <Box component="span" aria-hidden sx={{ ml: 0.5, fontSize: '0.6rem', opacity: 0.6 }}>
+        ▴
+      </Box>
+    ) : null;
+
   return (
     <Box sx={{ mt: 3, maxWidth: { xs: '100%', md: 1200, lg: 1400, xl: 1600 }, mx: 'auto' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'var(--rule)' }}>
         <Tabs
           value={tabIndex !== null ? tabIndex : false}
           onChange={handleTabChange}
@@ -196,13 +214,15 @@ export function SpecTabs({
         >
           {!overviewMode && (
             <Tab
+              {...tabA11yProps(0)}
               onClick={e => tabIndex === 0 && handleTabChange(e, 0)}
               icon={<CodeIcon sx={{ fontSize: '1.1rem' }} />}
               iconPosition="start"
-              label="Code"
+              label={<>Code{collapseCaret(0)}</>}
             />
           )}
           <Tab
+            {...tabA11yProps(specTabIndex)}
             onClick={e => tabIndex === specTabIndex && handleTabChange(e, specTabIndex)}
             icon={<DescriptionIcon sx={{ fontSize: '1.1rem' }} />}
             iconPosition="start"
@@ -214,11 +234,13 @@ export function SpecTabs({
                 <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                   Spec
                 </Box>
+                {collapseCaret(specTabIndex)}
               </>
             }
           />
           {!overviewMode && (
             <Tab
+              {...tabA11yProps(2)}
               onClick={e => tabIndex === 2 && handleTabChange(e, 2)}
               icon={<ImageIcon sx={{ fontSize: '1.1rem' }} />}
               iconPosition="start"
@@ -230,13 +252,20 @@ export function SpecTabs({
                   <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                     Impl
                   </Box>
+                  {collapseCaret(2)}
                 </>
               }
             />
           )}
           {!overviewMode && (
             <Tab
+              {...tabA11yProps(3)}
               onClick={e => tabIndex === 3 && handleTabChange(e, 3)}
+              aria-label={
+                qualityScore !== null
+                  ? `Quality: AI review score ${Math.round(qualityScore)} of 100`
+                  : 'Quality'
+              }
               icon={
                 <StarIcon
                   sx={{
@@ -246,7 +275,21 @@ export function SpecTabs({
                 />
               }
               iconPosition="start"
-              label={qualityScore !== null ? `${Math.round(qualityScore)}` : 'Quality'}
+              label={
+                qualityScore !== null ? (
+                  <>
+                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                      {`Quality ${Math.round(qualityScore)}`}
+                    </Box>
+                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                      {`${Math.round(qualityScore)}`}
+                    </Box>
+                    {collapseCaret(3)}
+                  </>
+                ) : (
+                  <>Quality{collapseCaret(3)}</>
+                )
+              }
             />
           )}
         </Tabs>
@@ -254,7 +297,7 @@ export function SpecTabs({
 
       {/* Code Tab - only in detail mode */}
       {!overviewMode && (
-        <TabPanel value={tabIndex} index={0}>
+        <TabPanel value={tabIndex} index={0} idPrefix={uid}>
           <CodeTab
             code={code}
             specId={specId}
@@ -266,7 +309,7 @@ export function SpecTabs({
       )}
 
       {/* Specification Tab */}
-      <TabPanel value={tabIndex} index={specTabIndex}>
+      <TabPanel value={tabIndex} index={specTabIndex} idPrefix={uid}>
         <SpecTab
           title={title}
           description={description}
@@ -278,7 +321,7 @@ export function SpecTabs({
 
       {/* Implementation Tab - only in detail mode */}
       {!overviewMode && (
-        <TabPanel value={tabIndex} index={2}>
+        <TabPanel value={tabIndex} index={2} idPrefix={uid}>
           <ImplTab
             imageDescription={imageDescription}
             strengths={strengths}
@@ -294,7 +337,7 @@ export function SpecTabs({
 
       {/* Quality Tab - only in detail mode */}
       {!overviewMode && (
-        <TabPanel value={tabIndex} index={3}>
+        <TabPanel value={tabIndex} index={3} idPrefix={uid}>
           <QualityTab
             qualityScore={qualityScore}
             criteriaChecklist={criteriaChecklist}
