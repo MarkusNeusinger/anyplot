@@ -439,12 +439,18 @@ class TestFifteenLibraryCoverage:
 
     @pytest.mark.parametrize("prompt_path", SCORING_PROMPTS, ids=lambda p: p.name)
     def test_interactive_library_list_matches_registry(self, prompt_path: Path) -> None:
-        """The '**Interactive libraries**' line must cover the canonical set."""
+        """The '**Interactive libraries**' line must EQUAL the canonical set —
+        a missing entry biases scoring against that library, an extra entry
+        makes reviewers expect HTML output the library never produces."""
         content = prompt_path.read_text()
         line = next((line for line in content.splitlines() if line.startswith("**Interactive libraries**")), None)
         assert line is not None, f"{prompt_path.name} has no '**Interactive libraries**' line"
-        missing = [lib for lib in sorted(INTERACTIVE_LIBRARIES) if lib not in line]
-        assert not missing, f"{prompt_path.name} interactive list missing: {missing}"
+        listed = {entry.strip().rstrip(".") for entry in line.rsplit(":", 1)[1].split(",")}
+        assert listed == set(INTERACTIVE_LIBRARIES), (
+            f"{prompt_path.name} interactive list drifted — "
+            f"missing: {sorted(set(INTERACTIVE_LIBRARIES) - listed)}, "
+            f"extra: {sorted(listed - set(INTERACTIVE_LIBRARIES))}"
+        )
 
     @pytest.mark.parametrize("prompt_path", SCORING_PROMPTS, ids=lambda p: p.name)
     def test_every_file_extension_documented(self, prompt_path: Path) -> None:
