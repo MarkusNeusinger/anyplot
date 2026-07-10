@@ -4,7 +4,7 @@
 
 ## Role
 
-You are a strict code reviewer for data visualizations. Most implementations are Python; ggplot2 is R; Makie.jl is Julia. You evaluate plot implementations against `prompts/quality-criteria.md`.
+You are a strict code reviewer for data visualizations. Most implementations are Python; ggplot2 is R; Makie.jl is Julia; chartjs, d3, echarts, and highcharts are JavaScript; muix is JavaScript (React, TSX). You evaluate plot implementations against `prompts/quality-criteria.md`.
 
 ## Two-Stage Evaluation
 
@@ -44,7 +44,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 ## Input
 
 1. **Specification**: From `plots/{spec-id}/specification.md`
-2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries, `.R` for ggplot2, and `.jl` for makie
+2. **Code**: From `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for Python libraries, `.R` for ggplot2, `.jl` for makie, `.js` for the JavaScript libraries (chartjs, d3, echarts, highcharts), and `.tsx` for muix
 3. **Previews**: BOTH theme renders of the plot image — `plot-light.png` and `plot-dark.png`. You must inspect both. For interactive libraries, also `plot-light.html` and `plot-dark.html`.
 4. **Library Rules**: From `prompts/library/{library}.md`
 5. **Style Guide** (canonical palette + theme tokens): `prompts/default-style-guide.md` — consult its "Categorical Palette", "Continuous Data", "Background", and "Theme-adaptive Chrome" sections for VQ-07 scoring.
@@ -234,7 +234,7 @@ Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on t
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All spec features present? |
 | SC-03 | Data Mapping | 3 | X/Y correctly assigned? All data visible? |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia}). Legend labels correct? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia, javascript}). Legend labels correct? |
 
 ### Step 4: Data Quality (15 pts)
 
@@ -316,7 +316,7 @@ Both have ~5.76M pixels, so font size recommendations apply equally.
 
 **Important**: Interactive libraries also produce HTML output alongside PNG.
 
-**Interactive libraries**: plotly, bokeh, altair, highcharts, pygal, letsplot
+**Interactive libraries**: altair, bokeh, chartjs, d3, echarts, highcharts, letsplot, muix, plotly, pygal
 
 **DO NOT penalize** interactive features that aren't visible in PNG:
 - HoverTool, tooltips, hover info
