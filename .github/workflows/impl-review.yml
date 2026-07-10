@@ -327,6 +327,8 @@ jobs:
             - SPEC_ID: ${{ steps.pr.outputs.specification_id }}
             - PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
             - ATTEMPT: ${{ steps.attempts.outputs.display }}
+            - LANGUAGE: ${{ steps.lang.outputs.language }}
+            - EXT: ${{ steps.lang.outputs.ext }}
 
       - name: Extract quality score
         id: score

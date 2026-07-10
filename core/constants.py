@@ -258,6 +258,13 @@ LIBRARY_FILE_EXTENSION_OVERRIDES = {
     lib["id"]: lib["file_extension"] for lib in LIBRARIES_METADATA if lib.get("file_extension")
 }
 
+# Display names for UI/API surfaces, derived from the canonical registries
+# above. Routers and scripts must import these instead of hand-maintaining
+# name maps — hand-written copies are how the 9-library-era drift happened
+# (audit 2026-07-08: /debug showed raw ids for every JS library).
+LANGUAGE_NAMES = {lang["id"]: str(lang["name"]) for lang in LANGUAGES_METADATA}
+LIBRARY_NAMES = {lib["id"]: str(lib["name"]) for lib in LIBRARIES_METADATA}
+
 # Interactive libraries that generate HTML previews (not just PNG). The
 # browser-rendered JS libraries (Chart.js, D3, ECharts, Highcharts, and the
 # React MUI X entry) render in a browser; the harness emits both a static PNG
