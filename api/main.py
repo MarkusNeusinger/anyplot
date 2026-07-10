@@ -41,7 +41,8 @@ from api.routers import (  # noqa: E402
 )
 from api.routers.languages import _refresh_languages  # noqa: E402
 from api.routers.libraries import _refresh_libraries  # noqa: E402
-from api.routers.specs import _refresh_specs_list  # noqa: E402
+from api.routers.plots import _refresh_filter_all  # noqa: E402
+from api.routers.specs import _refresh_specs_list, _refresh_specs_map  # noqa: E402
 from api.routers.stats import _refresh_stats  # noqa: E402
 from core.database import close_db, init_db, is_db_configured  # noqa: E402
 
@@ -56,9 +57,12 @@ mcp_http_app = mcp_server.http_app(path="/")
 
 
 async def _prewarm_cache() -> None:
-    """Populate the in-memory cache for the four metadata endpoints that the
-    frontend's AppDataProvider fires on every page load (/stats, /libraries,
-    /languages, /specs).
+    """Populate the in-memory cache for the endpoints the frontend hits on
+    page load: the four AppDataProvider metadata calls (/stats, /libraries,
+    /languages, /specs) plus the two heaviest user-facing payloads — the
+    unfiltered gallery (/plots/filter → `filter:all`) and the /map page
+    (/specs/map) — which would otherwise take the full cold-cache DB
+    roundtrip for the first visitor of every new instance.
 
     The cache lives per Cloud Run instance, so every new instance that comes
     up from autoscale or a cold start would otherwise force its first user
@@ -70,11 +74,15 @@ async def _prewarm_cache() -> None:
     means the first user request takes the cold-cache path it would have
     taken without this hook.
     """
+    # Ordered lightest-first so the cheap metadata endpoints are warm even
+    # while the two heavy payloads are still being computed.
     refreshers = (
         ("stats", _refresh_stats),
         ("libraries", _refresh_libraries),
         ("languages", _refresh_languages),
         ("specs_list", _refresh_specs_list),
+        ("specs_map", _refresh_specs_map),
+        ("filter:all", _refresh_filter_all),
     )
     for key, factory in refreshers:
         try:
