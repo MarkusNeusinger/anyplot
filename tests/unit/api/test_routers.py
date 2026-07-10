@@ -740,8 +740,15 @@ class TestSeoProxyRouter:
 
         mock_spec_repo = MagicMock()
         mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+        mock_code_impl = MagicMock()
+        mock_code_impl.code = "import matplotlib.pyplot as plt"
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=mock_code_impl)
 
-        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+        with (
+            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.seo.ImplRepository", return_value=mock_impl_repo),
+        ):
             response = client.get("/seo-proxy/scatter-basic/python/matplotlib")
             assert response.status_code == 200
             assert "Basic Scatter Plot" in response.text
@@ -750,6 +757,8 @@ class TestSeoProxyRouter:
             assert "https://anyplot.ai/scatter-basic/python/matplotlib" in response.text
             # Branded OG image URL includes language segment
             assert "api.anyplot.ai/og/scatter-basic/python/matplotlib.png" in response.text
+            # Enriched body carries the implementation source for crawlers
+            assert "<pre><code>import matplotlib.pyplot as plt</code></pre>" in response.text
 
     def test_seo_spec_implementation_not_found(self, db_client) -> None:
         """SEO spec implementation should return 404 when spec not found."""
@@ -782,11 +791,18 @@ class TestSeoProxyRouter:
 
         mock_spec_repo = MagicMock()
         mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec_no_preview)
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=None)
 
-        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+        with (
+            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.seo.ImplRepository", return_value=mock_impl_repo),
+        ):
             response = client.get("/seo-proxy/scatter-basic/python/seaborn")
             assert response.status_code == 200
             assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
+            # No stored code -> no <pre> block, page still renders
+            assert "<pre>" not in response.text
 
     def test_seo_about(self, client: TestClient) -> None:
         """SEO about page should return HTML with og:tags."""
