@@ -4,10 +4,45 @@ Tests for SEO helper functions.
 Directly tests the pure helper functions in api/routers/seo.py.
 """
 
+import json
+import re
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from api.routers.seo import BOT_HTML_TEMPLATE, _build_sitemap_xml, _lastmod
+from api.routers.seo import (
+    _build_impl_html,
+    _build_sitemap_xml,
+    _build_spec_hub_html,
+    _jsonld_script,
+    _lastmod,
+    _render_bot_html,
+)
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
+
+
+def _extract_jsonld(page: str) -> dict:
+    """Pull the JSON-LD payload back out of a rendered bot page."""
+    match = re.search(r'<script type="application/ld\+json">(.*?)</script>', page, re.S)
+    assert match, "page has no JSON-LD script"
+    return json.loads(match.group(1))
+
+
+def _mock_impl(library_id: str, language: str, preview: str | None = "https://gcs/preview.png") -> MagicMock:
+    impl = MagicMock()
+    impl.library_id = library_id
+    impl.library = MagicMock()
+    impl.library.language = language
+    impl.preview_url = preview
+    return impl
+
+
+def _mock_spec(impls: list) -> MagicMock:
+    spec = MagicMock()
+    spec.id = "scatter-basic"
+    spec.title = "Basic Scatter Plot"
+    spec.description = "Points on <axes> & friends"
+    spec.impls = impls
+    return spec
 
 
 class TestLastmod:
@@ -183,11 +218,11 @@ class TestBuildSitemapXml:
         assert "<loc>https://anyplot.ai/scatter-basic</loc></url>" in result
 
 
-class TestBotHtmlTemplate:
-    """Tests for the BOT_HTML_TEMPLATE."""
+class TestRenderBotHtml:
+    """Tests for _render_bot_html (the template wrapper every bot route uses)."""
 
-    def test_template_has_required_meta_tags(self) -> None:
-        result = BOT_HTML_TEMPLATE.format(
+    def test_has_required_meta_tags(self) -> None:
+        result = _render_bot_html(
             title="Test Title",
             description="Test Description",
             image="https://example.com/image.png",
@@ -202,8 +237,126 @@ class TestBotHtmlTemplate:
         assert "Test Title" in result
         assert "Test Description" in result
 
-    def test_template_has_canonical(self) -> None:
+    def test_has_canonical(self) -> None:
         url = "https://anyplot.ai/"
-        result = BOT_HTML_TEMPLATE.format(title="t", description="d", image="i", url=url)
+        result = _render_bot_html(title="t", description="d", image="i", url=url)
         assert 'rel="canonical"' in result
         assert url in result
+
+    def test_default_body_and_nav(self) -> None:
+        result = _render_bot_html(title="t", description="d", image="i", url="u")
+        assert "<h1>t</h1><p>d</p>" in result
+        assert '<a href="https://anyplot.ai/plots">plots</a>' in result
+
+    def test_custom_body_replaces_default(self) -> None:
+        result = _render_bot_html(title="t", description="d", image="i", url="u", body="<h1>custom</h1>")
+        assert "<h1>custom</h1>" in result
+        assert "<h1>t</h1>" not in result
+        # nav is still appended after custom bodies
+        assert "<nav>" in result
+
+    def test_body_with_braces_survives_format(self) -> None:
+        """Code bodies contain {braces}; they must not be treated as format fields."""
+        result = _render_bot_html(title="t", description="d", image="i", url="u", body="<pre>d = {'a': 1}</pre>")
+        assert "d = {'a': 1}" in result
+
+    def test_no_jsonld_by_default(self) -> None:
+        result = _render_bot_html(title="t", description="d", image="i", url="u")
+        assert "application/ld+json" not in result
+
+
+class TestJsonldScript:
+    """Tests for _jsonld_script."""
+
+    def test_round_trips_payload(self) -> None:
+        payload = {"@type": "Thing", "name": "scatter"}
+        script = _jsonld_script(payload)
+        assert script.strip().startswith('<script type="application/ld+json">')
+        inner = re.search(r">(.*)</script>", script, re.S).group(1)  # type: ignore[union-attr]
+        assert json.loads(inner) == payload
+
+    def test_script_breakout_is_escaped(self) -> None:
+        """DB-sourced text containing </script> must not close the element early."""
+        payload = {"name": "evil</script><script>alert(1)</script>"}
+        script = _jsonld_script(payload)
+        # the only literal "</" left is the script tag's own closer
+        assert script.count("</") == 1
+        inner = re.search(r">(.*)</script>", script, re.S).group(1)  # type: ignore[union-attr]
+        assert json.loads(inner) == payload
+
+
+class TestBuildSpecHubHtml:
+    """Tests for the enriched cross-language hub page."""
+
+    def test_links_every_impl_and_carries_jsonld(self) -> None:
+        spec = _mock_spec([_mock_impl("matplotlib", "python"), _mock_impl("ggplot2", "r")])
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+
+        assert '<a href="https://anyplot.ai/scatter-basic/python/matplotlib">' in page
+        assert '<a href="https://anyplot.ai/scatter-basic/r/ggplot2">' in page
+        # display names from core.constants, not raw ids
+        assert "in Matplotlib (Python)" in page
+        assert "in ggplot2 (R)" in page
+        # preview image in the body
+        assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' in page
+        # description is escaped
+        assert "&lt;axes&gt; &amp; friends" in page
+
+        jsonld = _extract_jsonld(page)
+        breadcrumb, item_list = jsonld["@graph"]
+        assert breadcrumb["@type"] == "BreadcrumbList"
+        assert breadcrumb["itemListElement"][1]["item"] == "https://anyplot.ai/scatter-basic"
+        assert item_list["@type"] == "ItemList"
+        assert [i["url"] for i in item_list["itemListElement"]] == [
+            "https://anyplot.ai/scatter-basic/python/matplotlib",
+            "https://anyplot.ai/scatter-basic/r/ggplot2",
+        ]
+
+
+class TestBuildImplHtml:
+    """Tests for the enriched implementation page."""
+
+    def _page(self, code: str | None = "plt.scatter(x, y)  # x < y") -> str:
+        impl = _mock_impl("matplotlib", "python")
+        spec = _mock_spec([impl, _mock_impl("seaborn", "python"), _mock_impl("makie", "julia")])
+        return _build_impl_html(spec, impl, code, "https://api.anyplot.ai/og/scatter-basic/python/matplotlib.png")
+
+    def test_code_block_is_escaped(self) -> None:
+        page = self._page("if x < 2:\n    plot()</script>")
+        assert "<pre><code>if x &lt; 2:\n    plot()&lt;/script&gt;</code></pre>" in page
+
+    def test_links_hub_and_siblings_but_not_self(self) -> None:
+        page = self._page()
+        assert '<a href="https://anyplot.ai/scatter-basic">' in page
+        assert '<a href="https://anyplot.ai/scatter-basic/python/seaborn">' in page
+        assert '<a href="https://anyplot.ai/scatter-basic/julia/makie">' in page
+        assert "in Makie.jl (Julia)" in page
+        assert '<a href="https://anyplot.ai/scatter-basic/python/matplotlib">' not in page
+
+    def test_jsonld_software_source_code(self) -> None:
+        jsonld = _extract_jsonld(self._page())
+        breadcrumb, source = jsonld["@graph"]
+        assert [i["name"] for i in breadcrumb["itemListElement"]] == ["anyplot.ai", "Basic Scatter Plot", "Matplotlib"]
+        assert source["@type"] == "SoftwareSourceCode"
+        assert source["programmingLanguage"] == "Python"
+        assert source["url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+
+    def test_no_code_no_pre_block(self) -> None:
+        page = self._page(code=None)
+        assert "<pre>" not in page
+        # page is still enriched otherwise
+        assert '<a href="https://anyplot.ai/scatter-basic">' in page
+
+
+class TestDisplayNameMaps:
+    """The registry-derived name maps must cover the full canonical registry."""
+
+    def test_language_names_cover_registry(self) -> None:
+        from api.routers.seo import _LANGUAGE_NAMES
+
+        assert set(_LANGUAGE_NAMES) == {lang["id"] for lang in LANGUAGES_METADATA}
+
+    def test_library_names_cover_registry(self) -> None:
+        from api.routers.seo import _LIBRARY_NAMES
+
+        assert set(_LIBRARY_NAMES) == {lib["id"] for lib in LIBRARIES_METADATA}
