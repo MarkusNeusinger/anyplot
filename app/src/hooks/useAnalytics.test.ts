@@ -171,10 +171,10 @@ describe('useAnalytics', () => {
       expect(window.plausible).toHaveBeenCalled();
     });
 
-    it('converts ?lang=python on /plots to a /lang/python path segment for Plausible', () => {
-      // `/plots` is a reserved top-level route so the path prefix is stripped
-      // and filter segments are appended directly to the domain — matching
-      // how the other `/plots?lib=…` filters are already tracked.
+    it('keeps the /plots prefix when converting ?lang=python to path segments', () => {
+      // `/plots` is a real page — the prefix must survive so Plausible
+      // attributes the pageview to /plots, not to "/". (Dropping the
+      // reserved prefix made the site's #2 page invisible in analytics.)
       Object.defineProperty(window, 'location', {
         value: {
           ...originalLocation,
@@ -193,7 +193,30 @@ describe('useAnalytics', () => {
       });
 
       expect(window.plausible).toHaveBeenCalledWith('pageview', {
-        url: 'https://anyplot.ai/lang/python',
+        url: 'https://anyplot.ai/plots/lang/python',
+      });
+    });
+
+    it('records a filterless /plots visit as /plots, not as the root page', () => {
+      Object.defineProperty(window, 'location', {
+        value: {
+          ...originalLocation,
+          hostname: 'anyplot.ai',
+          pathname: '/plots',
+          search: '',
+        },
+        writable: true,
+        configurable: true,
+      });
+      const { result } = renderHook(() => useAnalytics());
+
+      act(() => {
+        result.current.trackPageview();
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(window.plausible).toHaveBeenCalledWith('pageview', {
+        url: 'https://anyplot.ai/plots',
       });
     });
 
