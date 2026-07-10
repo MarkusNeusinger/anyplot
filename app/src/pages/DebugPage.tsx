@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
-import { useCopyCode } from 'src/hooks';
+import { useAnalytics, useCopyCode } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
 import { specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -238,6 +238,11 @@ const clearAdminToken = (): void => {
 };
 
 export function DebugPage() {
+  const { trackPageview } = useAnalytics();
+  useEffect(() => {
+    trackPageview('/debug');
+  }, [trackPageview]);
+
   const [data, setData] = useState<DebugStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
