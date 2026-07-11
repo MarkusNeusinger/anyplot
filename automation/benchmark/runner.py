@@ -61,6 +61,10 @@ def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300
     scratch_home = workdir / ".render-home"
     scratch_home.mkdir(exist_ok=True)
     for theme in THEMES:
+        # Attempts share the workdir — a stale PNG from a previous attempt
+        # must never make this run look like it rendered successfully.
+        (workdir / f"plot-{theme}.png").unlink(missing_ok=True)
+    for theme in THEMES:
         env = render_env(theme, home=scratch_home)
         try:
             # -I (isolated mode): ignore PYTHON* env vars, user site-packages,

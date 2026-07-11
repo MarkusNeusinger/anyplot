@@ -135,7 +135,14 @@ def main(argv: list[str] | None = None) -> int:
             code = extract_code_block(generation.text)
         except ValueError as exc:
             result["error"] = str(exc)
-            prompt = build_repair_prompt(base_prompt, code or "(no code block produced)", str(exc))
+            # Feed back THIS attempt's raw response — there is no code block to
+            # show, and reusing an earlier attempt's extracted code here would
+            # mislead the repair prompt.
+            prompt = build_repair_prompt(
+                base_prompt,
+                generation.text.strip()[-4000:] or "(empty response)",
+                f"{exc} — your previous response is shown above in place of code",
+            )
             continue
 
         code_file = out_dir / f"{args.library}.py"

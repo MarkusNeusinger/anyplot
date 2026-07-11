@@ -90,6 +90,15 @@ class TestRunPythonImplementation:
         assert result.success is False
         assert "wrote no plot-light.png" in result.error
 
+    def test_stale_pngs_from_prior_attempt_do_not_count(self, tmp_path):
+        # A previous attempt left renders behind; this attempt writes nothing.
+        _write_png(tmp_path / "plot-light.png", 10, 10)
+        _write_png(tmp_path / "plot-dark.png", 10, 10)
+        script = self._write_script(tmp_path, "print('renders nothing')")
+        result = run_python_implementation(script, workdir=tmp_path, timeout=60)
+        assert result.success is False
+        assert "wrote no plot-light.png" in result.error
+
     def test_generated_code_does_not_see_caller_secrets(self, tmp_path, monkeypatch):
         monkeypatch.setenv("FAKE_GCP_CREDENTIAL", "super-secret")
         script = self._write_script(
