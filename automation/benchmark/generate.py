@@ -53,6 +53,13 @@ def accumulate_tokens(current: int | None, reported: int | None) -> int | None:
     return (current or 0) + reported
 
 
+def _positive_int(value: str) -> int:
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError(f"must be >= 1, got {number}")
+    return number
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate one plot implementation with a Vertex AI model")
     parser.add_argument("--spec-id", required=True, help="Specification id, e.g. scatter-basic")
@@ -70,10 +77,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--location", default="us-central1", help="Vertex region for Gemini / Model Garden")
     parser.add_argument("--anthropic-location", default="us-east5", help="Vertex region for Claude models")
     parser.add_argument("--output-dir", default="benchmark-results", help="Root directory for benchmark output")
-    parser.add_argument("--max-attempts", type=int, default=3, help="Generation attempts (errors are fed back)")
-    parser.add_argument("--max-tokens", type=int, default=16000, help="Max output tokens per model call")
+    parser.add_argument(
+        "--max-attempts", type=_positive_int, default=3, help="Generation attempts (errors are fed back)"
+    )
+    parser.add_argument("--max-tokens", type=_positive_int, default=16000, help="Max output tokens per model call")
     parser.add_argument("--temperature", type=float, default=0.2, help="Sampling temperature")
-    parser.add_argument("--render-timeout", type=int, default=300, help="Seconds allowed per theme render")
+    parser.add_argument("--render-timeout", type=_positive_int, default=300, help="Seconds allowed per theme render")
     return parser.parse_args(argv)
 
 

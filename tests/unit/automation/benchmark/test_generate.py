@@ -85,6 +85,13 @@ class TestParseArgs:
         with pytest.raises(SystemExit):
             parse_args(["--spec-id", "scatter-basic", "--library", "ggplot2", "--model", "gemini-2.5-pro"])
 
+    def test_non_positive_numeric_args_rejected(self):
+        base = ["--spec-id", "scatter-basic", "--library", "matplotlib", "--model", "gemini-2.5-pro"]
+        for flag in ("--max-attempts", "--max-tokens", "--render-timeout"):
+            for bad in ("0", "-1"):
+                with pytest.raises(SystemExit):
+                    parse_args([*base, flag, bad])
+
 
 class TestMain:
     """End-to-end main() runs against the real repo prompts/spec with a fake client."""

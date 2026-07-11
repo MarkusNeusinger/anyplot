@@ -185,7 +185,13 @@ jobs:
               errors = [(r.get("model"), r.get("error")) for r in rows if r.get("error")]
               if errors:
                   lines += ["", "### Errors", ""]
-                  lines += [f"- **{model}**: {error}" for model, error in errors]
+                  for model, error in errors:
+                      # Errors can be multi-line tracebacks; keep each bullet on
+                      # one line so the Markdown list survives, and cap length.
+                      flat = " ".join(str(error).split())
+                      if len(flat) > 500:
+                          flat = flat[:500] + "…"
+                      lines.append(f"- **{model}**: {flat}")
           else:
               lines.append("No result.yaml files were produced.")
 
