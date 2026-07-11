@@ -1,0 +1,195 @@
+name: "Benchmark: Generate"
+run-name: "Benchmark: ${{ inputs.library }} for ${{ inputs.specification_id }} (${{ inputs.models }})"
+
+# LLM benchmark generation (issue #6913): generate the same (spec, library)
+# implementation with several models served by Google Vertex AI — Gemini,
+# Claude on Vertex, and Model Garden partner models — under the repo's
+# existing Workload Identity Federation auth. Adding a model to the
+# comparison is just another id in the `models` input; no new secrets or
+# integrations. Results (code, renders, raw responses, result.yaml) are
+# uploaded as a workflow artifact; nothing is committed to the repo and the
+# plots/ catalog is untouched.
+
+on:
+  workflow_dispatch:
+    inputs:
+      specification_id:
+        description: "Specification ID (e.g., scatter-basic)"
+        required: true
+        type: string
+      library:
+        description: "Library to benchmark (Python libraries only in v1)"
+        required: true
+        type: choice
+        default: 'matplotlib'
+        options:
+          - matplotlib
+          - seaborn
+          - plotly
+          - bokeh
+          - altair
+          - plotnine
+          - pygal
+          - letsplot
+      models:
+        description: "Comma-separated Vertex AI model ids (gemini-*, claude-*@<version>, meta/*, mistralai/*, …)"
+        required: true
+        type: string
+        default: 'google/gemini-2.5-pro,anthropic/claude-sonnet-4-5@20250929'
+      max_attempts:
+        description: "Generation attempts per model (render errors are fed back)"
+        required: false
+        type: string
+        default: '3'
+      location:
+        description: "Vertex region for Gemini / Model Garden models"
+        required: false
+        type: string
+        default: 'us-central1'
+      anthropic_location:
+        description: "Vertex region for Claude models"
+        required: false
+        type: string
+        default: 'us-east5'
+
+# One benchmark per (spec, library) at a time; a second dispatch queues.
+concurrency:
+  group: benchmark-generate-${{ inputs.specification_id }}-${{ inputs.library }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Validate specification exists
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+        run: |
+          if [ ! -f "plots/${SPEC_ID}/specification.md" ]; then
+            echo "::error::Specification not found: plots/${SPEC_ID}/specification.md"
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39  # v8.2.0
+
+      - name: Install dependencies
+        env:
+          LIBRARY: ${{ inputs.library }}
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          # Same per-library extras impl-generate uses, plus the Vertex client's auth dep.
+          uv pip install -e ".[lib-${LIBRARY}]" pillow pyyaml google-auth
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Run benchmark generation per model
+        env:
+          SPEC_ID: ${{ inputs.specification_id }}
+          LIBRARY: ${{ inputs.library }}
+          MODELS: ${{ inputs.models }}
+          MAX_ATTEMPTS: ${{ inputs.max_attempts }}
+          LOCATION: ${{ inputs.location }}
+          ANTHROPIC_LOCATION: ${{ inputs.anthropic_location }}
+          GOOGLE_CLOUD_PROJECT: anyplot
+        run: |
+          set -u
+          succeeded=0
+          failed=0
+
+          IFS=',' read -ra MODEL_LIST <<< "$MODELS"
+          for MODEL in "${MODEL_LIST[@]}"; do
+            MODEL=$(echo "$MODEL" | xargs)  # trim whitespace
+            [ -z "$MODEL" ] && continue
+            echo "::group::Model: ${MODEL}"
+            if .venv/bin/python -m automation.benchmark.generate \
+                --spec-id "$SPEC_ID" \
+                --library "$LIBRARY" \
+                --model "$MODEL" \
+                --location "$LOCATION" \
+                --anthropic-location "$ANTHROPIC_LOCATION" \
+                --max-attempts "$MAX_ATTEMPTS" \
+                --output-dir benchmark-results; then
+              succeeded=$((succeeded + 1))
+            else
+              echo "::warning::Benchmark generation failed for model ${MODEL}"
+              failed=$((failed + 1))
+            fi
+            echo "::endgroup::"
+          done
+
+          echo "::notice::Benchmark done: ${succeeded} succeeded, ${failed} failed"
+          # Fail the job only when NO model produced a working implementation —
+          # individual model failures are a benchmark signal, not a CI error.
+          if [ "$succeeded" -eq 0 ]; then
+            exit 1
+          fi
+
+      - name: Write job summary
+        if: always()
+        run: |
+          .venv/bin/python - <<'PY'
+          import os
+          import pathlib
+
+          import yaml
+
+          rows = []
+          for result_file in sorted(pathlib.Path("benchmark-results").rglob("result.yaml")):
+              data = yaml.safe_load(result_file.read_text(encoding="utf-8")) or {}
+              rows.append(data)
+
+          lines = ["## Benchmark results", ""]
+          if rows:
+              lines += [
+                  "| Model | Provider | Success | Attempts | Canvas OK | Gen time (s) | In tokens | Out tokens |",
+                  "|---|---|---|---|---|---|---|---|",
+              ]
+              for r in rows:
+                  lines.append(
+                      "| {model} | {provider} | {success} | {attempts}/{max_attempts} | {canvas_ok} "
+                      "| {generation_seconds} | {input_tokens} | {output_tokens} |".format(**{
+                          k: r.get(k, "?")
+                          for k in (
+                              "model", "provider", "success", "attempts", "max_attempts",
+                              "canvas_ok", "generation_seconds", "input_tokens", "output_tokens",
+                          )
+                      })
+                  )
+              errors = [(r.get("model"), r.get("error")) for r in rows if r.get("error")]
+              if errors:
+                  lines += ["", "### Errors", ""]
+                  lines += [f"- **{model}**: {error}" for model, error in errors]
+          else:
+              lines.append("No result.yaml files were produced.")
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Upload benchmark artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: benchmark-${{ inputs.specification_id }}-${{ inputs.library }}
+          path: benchmark-results/
+          if-no-files-found: warn
+          retention-days: 30

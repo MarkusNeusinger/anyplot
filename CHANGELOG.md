@@ -16,6 +16,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Added
+
+- **LLM benchmark generation on Vertex AI (foundation for #6913)** — new
+  `benchmark-generate.yml` workflow plus `automation/benchmark/` module generate the same
+  (spec, library) implementation with multiple models served by Google Vertex AI — Gemini,
+  Claude on Vertex, and Model Garden partners (Llama, Mistral, …) — under the existing
+  Workload Identity Federation auth, so adding a model to the comparison is just another
+  model id. Single-shot generation with render-error feedback keeps the comparison
+  model-neutral; per-model `result.yaml` records provider, attempts, latency, tokens, and
+  the canvas gate. Results are workflow artifacts only (nothing lands in `plots/`); Python
+  libraries in v1. Docs: `docs/workflows/benchmark.md`.
+
 ### Fixed
 
 - **Global keyboard shortcuts no longer hijack focused elements on `/plots`** — the
