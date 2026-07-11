@@ -1,5 +1,6 @@
 """Tests for automation.benchmark.runner."""
 
+import os
 import textwrap
 
 from PIL import Image
@@ -34,18 +35,25 @@ class TestCheckCanvas:
 
 
 class TestRenderEnv:
-    def test_secrets_are_not_inherited(self, monkeypatch):
+    def test_secrets_are_not_inherited(self, monkeypatch, tmp_path):
         monkeypatch.setenv("FAKE_GCP_CREDENTIAL", "super-secret")
-        env = render_env("light")
+        env = render_env("light", home=tmp_path)
         assert "FAKE_GCP_CREDENTIAL" not in env
 
-    def test_theme_and_backend_are_set(self):
-        env = render_env("dark")
+    def test_theme_and_backend_are_set(self, tmp_path):
+        env = render_env("dark", home=tmp_path)
         assert env["ANYPLOT_THEME"] == "dark"
         assert env["MPLBACKEND"] == "Agg"
 
-    def test_path_passes_through(self):
-        assert "PATH" in render_env("light")
+    def test_path_passes_through(self, tmp_path):
+        assert "PATH" in render_env("light", home=tmp_path)
+
+    def test_home_is_remapped_to_scratch_dir(self, tmp_path):
+        # The caller's real HOME (~/.config with gcloud credentials, …) must
+        # not be visible to LLM-generated code.
+        env = render_env("light", home=tmp_path)
+        assert env["HOME"] == str(tmp_path)
+        assert env["HOME"] != os.environ.get("HOME")
 
 
 class TestRunPythonImplementation:

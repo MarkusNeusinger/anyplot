@@ -35,13 +35,16 @@ class RenderResult:
 
 # The render subprocess executes LLM-generated code, so it must NOT inherit
 # the caller's environment (in CI that includes the GCP/WIF credentials and
-# GitHub token). Only these harmless variables pass through.
-_RENDER_ENV_ALLOWLIST = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "TEMP", "TMP")
+# GitHub token). Only these harmless variables pass through; HOME is remapped
+# to a scratch directory so ~/.config (gcloud credentials, tool configs) is
+# out of reach too.
+_RENDER_ENV_ALLOWLIST = ("PATH", "LANG", "LC_ALL", "TMPDIR", "TEMP", "TMP")
 
 
-def render_env(theme: str) -> dict[str, str]:
+def render_env(theme: str, home: Path) -> dict[str, str]:
     """Minimal, credential-free environment for running generated code."""
     env = {key: value for key in _RENDER_ENV_ALLOWLIST if (value := os.environ.get(key)) is not None}
+    env["HOME"] = str(home)
     env["ANYPLOT_THEME"] = theme
     env["MPLBACKEND"] = "Agg"
     return env
@@ -55,8 +58,10 @@ def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300
     the benchmark wants to *measure* how often models hit the contract.
     """
     images: dict[str, Path] = {}
+    scratch_home = workdir / ".render-home"
+    scratch_home.mkdir(exist_ok=True)
     for theme in THEMES:
-        env = render_env(theme)
+        env = render_env(theme, home=scratch_home)
         try:
             # -I (isolated mode): ignore PYTHON* env vars, user site-packages,
             # and the script directory on sys.path — defense in depth on top of
