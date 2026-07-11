@@ -26,7 +26,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   model id. Single-shot generation with render-error feedback keeps the comparison
   model-neutral; per-model `result.yaml` records provider, attempts, latency, tokens, and
   the canvas gate. Results are workflow artifacts only (nothing lands in `plots/`); Python
-  libraries in v1. Docs: `docs/workflows/benchmark.md`.
+  libraries in v1. Docs: `docs/workflows/benchmark.md` (#9638).
 
 ### Fixed
 
