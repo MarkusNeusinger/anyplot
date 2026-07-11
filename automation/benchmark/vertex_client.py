@@ -56,7 +56,11 @@ def resolve_provider(model: str) -> tuple[str, str]:
     - ``google/gemini-2.5-pro``                → ``("openapi", "google/gemini-2.5-pro")``
     - ``meta/llama-3.3-70b-instruct-maas``     → ``("openapi", "meta/llama-3.3-70b-instruct-maas")``
 
-    Raises ``ValueError`` for ids with no recognizable publisher.
+    Any ``publisher/model`` id is accepted and routed to the OpenAI-compatible
+    endpoint — Model Garden's publisher list keeps growing, so the prefix is
+    deliberately not validated against a fixed set; an unknown publisher fails
+    at call time with Vertex's own error. Only bare ids without a recognizable
+    family (``claude-*`` / ``gemini-*``) or publisher prefix raise ``ValueError``.
     """
     normalized = model.strip()
     if not normalized:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from automation.benchmark.generate import PYTHON_LIBRARIES, parse_args, slugify_model
+from automation.benchmark.generate import PYTHON_LIBRARIES, accumulate_tokens, parse_args, slugify_model
 
 
 class TestSlugifyModel:
@@ -23,6 +23,23 @@ class TestPythonLibraries:
         # Non-Python catalogue entries are excluded from benchmark v1
         for non_python in ("ggplot2", "makie", "chartjs", "d3", "echarts", "muix"):
             assert non_python not in PYTHON_LIBRARIES
+
+
+class TestAccumulateTokens:
+    def test_unreported_usage_stays_none(self):
+        assert accumulate_tokens(None, None) is None
+
+    def test_first_report_starts_from_zero(self):
+        assert accumulate_tokens(None, 120) == 120
+
+    def test_reports_accumulate(self):
+        assert accumulate_tokens(120, 80) == 200
+
+    def test_missing_report_keeps_prior_total(self):
+        assert accumulate_tokens(120, None) == 120
+
+    def test_zero_is_a_real_report_not_unknown(self):
+        assert accumulate_tokens(None, 0) == 0
 
 
 class TestParseArgs:

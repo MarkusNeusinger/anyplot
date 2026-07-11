@@ -41,6 +41,18 @@ def slugify_model(model: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", model.lower()).strip("-")
 
 
+def accumulate_tokens(current: int | None, reported: int | None) -> int | None:
+    """Add a reported token count, keeping ``None`` when nothing was reported.
+
+    ``None`` means "the provider never reported usage" and must stay ``None``
+    across attempts — recording 0 would look like a free run and skew the
+    benchmark comparison.
+    """
+    if reported is None:
+        return current
+    return (current or 0) + reported
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate one plot implementation with a Vertex AI model")
     parser.add_argument("--spec-id", required=True, help="Specification id, e.g. scatter-basic")
@@ -92,8 +104,10 @@ def main(argv: list[str] | None = None) -> int:
         "attempts": 0,
         "max_attempts": args.max_attempts,
         "generation_seconds": 0.0,
-        "input_tokens": 0,
-        "output_tokens": 0,
+        # null until a provider actually reports usage — 0 would read as
+        # "free" and skew comparisons when a publisher omits usage data.
+        "input_tokens": None,
+        "output_tokens": None,
         "canvas_ok": None,
         "error": None,
     }
@@ -113,8 +127,8 @@ def main(argv: list[str] | None = None) -> int:
             break
 
         result["generation_seconds"] = round(result["generation_seconds"] + generation.latency_seconds, 3)
-        result["input_tokens"] += generation.input_tokens or 0
-        result["output_tokens"] += generation.output_tokens or 0
+        result["input_tokens"] = accumulate_tokens(result["input_tokens"], generation.input_tokens)
+        result["output_tokens"] = accumulate_tokens(result["output_tokens"], generation.output_tokens)
         (out_dir / f"attempt-{attempt}-response.md").write_text(generation.text, encoding="utf-8")
 
         try:
