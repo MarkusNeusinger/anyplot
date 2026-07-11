@@ -70,7 +70,9 @@ def main(argv: list[str] | None = None) -> int:
     repo_root = Path(__file__).resolve().parents[2]
 
     provider, normalized_model = resolve_provider(args.model)
-    out_dir = Path(args.output_dir) / args.spec_id / args.library / slugify_model(args.model)
+    # Slug on the normalized id so 'gemini-2.5-pro' and 'google/gemini-2.5-pro'
+    # (or 'anthropic/claude-*' and bare 'claude-*') land in the same folder.
+    out_dir = Path(args.output_dir) / args.spec_id / args.library / slugify_model(normalized_model)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     system, base_prompt = build_generation_prompt(repo_root, args.spec_id, args.library)

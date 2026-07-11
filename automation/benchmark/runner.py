@@ -33,6 +33,20 @@ class RenderResult:
     images: dict[str, Path] = field(default_factory=dict)
 
 
+# The render subprocess executes LLM-generated code, so it must NOT inherit
+# the caller's environment (in CI that includes the GCP/WIF credentials and
+# GitHub token). Only these harmless variables pass through.
+_RENDER_ENV_ALLOWLIST = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "TEMP", "TMP")
+
+
+def render_env(theme: str) -> dict[str, str]:
+    """Minimal, credential-free environment for running generated code."""
+    env = {key: value for key in _RENDER_ENV_ALLOWLIST if (value := os.environ.get(key)) is not None}
+    env["ANYPLOT_THEME"] = theme
+    env["MPLBACKEND"] = "Agg"
+    return env
+
+
 def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300) -> RenderResult:
     """Run ``code_file`` once per theme inside ``workdir``.
 
@@ -42,7 +56,7 @@ def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300
     """
     images: dict[str, Path] = {}
     for theme in THEMES:
-        env = os.environ | {"ANYPLOT_THEME": theme, "MPLBACKEND": "Agg"}
+        env = render_env(theme)
         try:
             completed = subprocess.run(
                 [sys.executable, str(code_file)], cwd=workdir, env=env, capture_output=True, text=True, timeout=timeout
