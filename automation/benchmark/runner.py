@@ -95,7 +95,9 @@ def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300
             )
         images[theme] = png
 
-    return RenderResult(success=True, canvas_ok=check_canvas(images["light"]), images=images)
+    # Both themes must hit the canvas contract — a dark render with layout
+    # drift is a contract miss even when the light render is on target.
+    return RenderResult(success=True, canvas_ok=all(check_canvas(png) for png in images.values()), images=images)
 
 
 def check_canvas(png_path: Path) -> bool:

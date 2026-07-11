@@ -109,6 +109,10 @@ def main(argv: list[str] | None = None) -> int:
         "input_tokens": None,
         "output_tokens": None,
         "canvas_ok": None,
+        # Whether the final response honored the "one fenced code block"
+        # contract; extraction is deliberately lenient, so this is recorded
+        # instead of enforced.
+        "code_fenced": None,
         "error": None,
     }
 
@@ -133,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
 
         try:
             code = extract_code_block(generation.text)
+            result["code_fenced"] = "```" in generation.text
         except ValueError as exc:
             result["error"] = str(exc)
             # Feed back THIS attempt's raw response — there is no code block to

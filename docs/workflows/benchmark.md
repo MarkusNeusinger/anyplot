@@ -67,7 +67,8 @@ benchmark-results/<spec>/<library>/<model-slug>/
 ├── plot-dark.png
 ├── attempt-N-response.md      # raw model response per attempt
 └── result.yaml                # accounting: provider, success, attempts,
-                               # latency, tokens, canvas gate, error
+                               # latency, tokens, canvas gate (both themes),
+                               # fenced-output contract compliance, error
 ```
 
 `result.yaml` is the record the future `/benchmark` leaderboard aggregates

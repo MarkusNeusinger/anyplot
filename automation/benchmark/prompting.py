@@ -101,7 +101,11 @@ def extract_code_block(text: str) -> str:
 
     Takes the longest fenced code block (models occasionally emit a short
     usage snippet next to the real implementation). Falls back to the raw
-    text when there is no fence but the response already looks like code.
+    text when there is no fence but the response already looks like code —
+    deliberate leniency: the benchmark measures plot quality, not markdown
+    discipline, so runnable code is never discarded over a missing fence.
+    Contract compliance is still measurable: ``result.yaml`` records whether
+    the response was fenced (``code_fenced``).
     """
     blocks = re.findall(r"```(?:[a-zA-Z0-9_+-]*)\n(.*?)```", text, flags=re.DOTALL)
     if blocks:

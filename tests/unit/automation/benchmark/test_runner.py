@@ -90,6 +90,22 @@ class TestRunPythonImplementation:
         assert result.success is False
         assert "wrote no plot-light.png" in result.error
 
+    def test_canvas_gate_requires_both_themes_on_target(self, tmp_path):
+        # Light hits 3200x1800 but dark drifts — the gate must fail.
+        script = self._write_script(
+            tmp_path,
+            """
+            import os
+            from PIL import Image
+            theme = os.getenv("ANYPLOT_THEME", "light")
+            size = (3200, 1800) if theme == "light" else (3000, 1800)
+            Image.new("RGB", size).save(f"plot-{theme}.png")
+            """,
+        )
+        result = run_python_implementation(script, workdir=tmp_path, timeout=60)
+        assert result.success is True
+        assert result.canvas_ok is False
+
     def test_stale_pngs_from_prior_attempt_do_not_count(self, tmp_path):
         # A previous attempt left renders behind; this attempt writes nothing.
         _write_png(tmp_path / "plot-light.png", 10, 10)
