@@ -46,13 +46,17 @@ Inputs:
 | `location` | `us-central1` | Region for Gemini / Model Garden |
 | `anthropic_location` | `us-east5` | Claude on Vertex lives in its own region set |
 
-Locally (with `gcloud auth application-default login` and the library extras installed):
+Locally (with `gcloud auth application-default login`):
 
 ```bash
+uv pip install -e ".[lib-matplotlib]" google-auth  # google-auth: ADC tokens for the Vertex client
 python -m automation.benchmark.generate \
   --spec-id scatter-basic --library matplotlib \
   --model gemini-2.5-pro --output-dir benchmark-results
 ```
+
+(`google-auth` usually arrives transitively via `google-cloud-storage`, but the
+Vertex client imports it directly — install it explicitly to be safe.)
 
 ## Output layout
 

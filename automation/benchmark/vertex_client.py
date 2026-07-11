@@ -151,8 +151,14 @@ class VertexClient:
         return f"https://{host}/v1/projects/{self.project}/locations/{self.location}/endpoints/openapi/chat/completions"
 
     def _access_token(self) -> str:
-        import google.auth
-        from google.auth.transport.requests import Request
+        try:
+            import google.auth
+            from google.auth.transport.requests import Request
+        except ImportError as exc:  # google-auth ships transitively (google-cloud-storage); guard minimal envs
+            raise RuntimeError(
+                "google-auth is required for Vertex AI calls but is not installed. "
+                'Install it with `uv pip install google-auth` (or `uv pip install -e ".[lib-<library>]" google-auth`).'
+            ) from exc
 
         if self._credentials is None:
             self._credentials, _ = google.auth.default(scopes=[_CLOUD_PLATFORM_SCOPE])

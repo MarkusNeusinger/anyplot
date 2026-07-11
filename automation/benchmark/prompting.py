@@ -18,9 +18,10 @@ from pathlib import Path
 _OUTPUT_CONTRACT = """
 ## Output contract (benchmark mode — read carefully)
 
-You are running in single-shot benchmark mode. There is no shell, no file
-system, and no second turn: your entire answer must be ONE fenced code block
-containing a complete, self-contained {library} implementation in Python.
+You are running in single-shot benchmark mode. There is no shell and no
+second turn: your entire answer must be ONE fenced code block containing a
+complete, self-contained {library} implementation in Python. The script will
+be executed for you, once per theme, in a working directory it may write to.
 
 Hard requirements:
 
@@ -33,7 +34,8 @@ Hard requirements:
 4. The saved PNG must be exactly 3200x1800 px (landscape) or 2400x2400 px
    (square) — follow the "Canvas" rules in the library section below.
 5. Only use {library}, the Python standard library, and numpy / pandas /
-   scipy / scikit-learn / statsmodels. No network access, no local files.
+   scipy / scikit-learn / statsmodels. No network access; do not read any
+   local files — the PNG you save is the only file system interaction.
 6. Keep the KISS structure: imports -> data -> plot -> save.
 """
 
