@@ -146,6 +146,14 @@ jobs:
       - name: Write job summary
         if: always()
         run: |
+          # Guard: on early failure (e.g. invalid spec id, install failure) the
+          # venv or results tree may not exist — don't obscure the real error.
+          if [ ! -x .venv/bin/python ] || [ ! -d benchmark-results ]; then
+            echo "## Benchmark results" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Workflow failed before any benchmark results were produced." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           .venv/bin/python - <<'PY'
           import os
           import pathlib

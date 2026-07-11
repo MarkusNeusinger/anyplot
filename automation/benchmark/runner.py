@@ -58,8 +58,17 @@ def run_python_implementation(code_file: Path, workdir: Path, timeout: int = 300
     for theme in THEMES:
         env = render_env(theme)
         try:
+            # -I (isolated mode): ignore PYTHON* env vars, user site-packages,
+            # and the script directory on sys.path — defense in depth on top of
+            # the env allowlist, since this runs LLM-generated code. The venv's
+            # site-packages still resolve via pyvenv.cfg next to the executable.
             completed = subprocess.run(
-                [sys.executable, str(code_file)], cwd=workdir, env=env, capture_output=True, text=True, timeout=timeout
+                [sys.executable, "-I", str(code_file)],
+                cwd=workdir,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
             )
         except subprocess.TimeoutExpired:
             return RenderResult(success=False, error=f"{theme} render timed out after {timeout}s", images=images)
