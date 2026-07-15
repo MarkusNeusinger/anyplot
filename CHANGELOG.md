@@ -83,6 +83,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Full 2026-07-15 codebase audit report** — persisted output of a 16-auditor `/audit` run
+  with domain-routed cross-validation (`agentic/audits/2026-07-15-all.md`, mirrored to
+  `latest.md`). Health Score 30/100 with correctness (C, 60) as the weak pillar; headlines are a
+  live `heatmap-calendar` retry loop (#1010), 15-library pipeline/config drift, dark-mode
+  white-surface leaks, and 97 reviewer-rejected implementations live on main, plus an open-issue
+  triage with a recommended work queue (#9641).
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
   by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
   llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
