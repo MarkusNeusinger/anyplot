@@ -88,7 +88,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `latest.md`). Health Score 30/100 with correctness (C, 60) as the weak pillar; headlines are a
   live `heatmap-calendar` retry loop (#1010), 15-library pipeline/config drift, dark-mode
   white-surface leaks, and 97 reviewer-rejected implementations live on main, plus an open-issue
-  triage with a recommended work queue (#9641).
+  triage with a recommended work queue. Report only, no source changes (#9641).
 - **`llms.txt` for AI agents** — `/llms.txt` previously fell through to the SPA shell (flagged
   by Lighthouse's Agentic Browsing audit as non-conformant); now a spec-conformant file per
   llmstxt.org (H1 + summary blockquote + H2 link sections) covering catalog, docs, the MCP
