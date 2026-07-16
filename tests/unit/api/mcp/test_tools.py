@@ -4,6 +4,7 @@ Unit tests for MCP server tools.
 Tests all 6 MCP tools with mocked database sessions.
 """
 
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,6 +19,23 @@ from api.mcp.server import (
     list_specs,
     search_specs_by_tags,
 )
+
+
+@contextmanager
+def _repo_patches(mock_spec_repo, *specs):
+    """Patch SpecRepository and ImplRepository in api.mcp.server.
+
+    `get_ids_with_code` mirrors the SQL presence probe: it returns the ids of
+    every impl (across *specs*) whose mocked `code` is non-None.
+    """
+    mock_impl_repo = MagicMock()
+    ids = {impl.id for spec in specs for impl in spec.impls if impl.code is not None}
+    mock_impl_repo.get_ids_with_code = AsyncMock(return_value=ids)
+    with (
+        patch("api.mcp.server.SpecRepository", return_value=mock_spec_repo),
+        patch("api.mcp.server.ImplRepository", return_value=mock_impl_repo),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -84,10 +102,9 @@ def mock_spec():
 async def test_list_specs(mock_db_context, mock_spec):
     """Test list_specs tool."""
     mock_repo = MagicMock()
-    # list_specs reads impl.code on every spec → eager-loaded variant.
-    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         result = await list_specs(limit=10, offset=0)
 
     assert len(result) == 1
@@ -102,9 +119,9 @@ async def test_list_specs_pagination(mock_db_context):
     specs = [MagicMock(id=f"spec-{i}", title=f"Spec {i}", description="", tags={}, impls=[]) for i in range(5)]
 
     mock_repo = MagicMock()
-    mock_repo.get_all_with_code = AsyncMock(return_value=specs)
+    mock_repo.get_all = AsyncMock(return_value=specs)
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, *specs):
         result = await list_specs(limit=2, offset=1)
 
     assert len(result) == 2
@@ -113,12 +130,29 @@ async def test_list_specs_pagination(mock_db_context):
 
 
 @pytest.mark.asyncio
+async def test_list_specs_excludes_codeless_impls(mock_db_context, mock_spec):
+    """library_count counts only impls whose code column is non-NULL."""
+    codeless = MagicMock()
+    codeless.code = None
+    mock_spec.impls = [mock_spec.impls[0], codeless]
+
+    mock_repo = MagicMock()
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+    with _repo_patches(mock_repo, mock_spec):
+        result = await list_specs(limit=10, offset=0)
+
+    assert len(result) == 1
+    assert result[0]["library_count"] == 1
+
+
+@pytest.mark.asyncio
 async def test_search_specs_by_tags_spec_level(mock_db_context, mock_spec):
     """Test search_specs_by_tags with spec-level filters."""
     mock_repo = MagicMock()
     mock_repo.search_by_tags = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         result = await search_specs_by_tags(plot_type=["scatter"], domain=["statistics"])
 
     # Verify repository called with flattened list (order may vary)
@@ -132,11 +166,11 @@ async def test_search_specs_by_tags_spec_level(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_impl_level(mock_db_context, mock_spec):
     """Test search_specs_by_tags with impl-level filters."""
     mock_repo = MagicMock()
-    # No spec-level tag filter → search_specs falls back to get_all_with_code
-    # because the impl-level filter loop reads `impl.code`.
-    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+    # No spec-level tag filter → search_specs falls back to get_all; the
+    # impl-level filter loop checks code presence via get_ids_with_code.
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         result = await search_specs_by_tags(library=["matplotlib"], patterns=["data-generation"])
 
     assert len(result) == 1
@@ -147,9 +181,9 @@ async def test_search_specs_by_tags_impl_level(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_no_matches(mock_db_context, mock_spec):
     """Test search_specs_by_tags filtering out non-matching impls."""
     mock_repo = MagicMock()
-    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         result = await search_specs_by_tags(library=["seaborn"])  # matplotlib impl, not seaborn
 
     assert len(result) == 0
@@ -161,9 +195,9 @@ async def test_search_specs_by_tags_null_impl_tags(mock_db_context, mock_spec):
     mock_spec.impls[0].impl_tags = None
 
     mock_repo = MagicMock()
-    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         # Library filter alone does not read impl_tags — still matches
         result = await search_specs_by_tags(library=["matplotlib"])
         assert len(result) == 1
@@ -180,9 +214,9 @@ async def test_search_specs_by_tags_null_impl_tags(mock_db_context, mock_spec):
 async def test_search_specs_by_tags_dataprep_styling(mock_db_context, mock_spec):
     """Test search_specs_by_tags with dataprep and styling filters."""
     mock_repo = MagicMock()
-    mock_repo.get_all_with_code = AsyncMock(return_value=[mock_spec])
+    mock_repo.get_all = AsyncMock(return_value=[mock_spec])
 
-    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+    with _repo_patches(mock_repo, mock_spec):
         # Test dataprep filter - should not match (mock_spec has no dataprep tags)
         result = await search_specs_by_tags(dataprep=["normalization"])
         assert len(result) == 0

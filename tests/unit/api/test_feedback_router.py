@@ -5,13 +5,14 @@ from the database. Integration coverage (real persistence, rate limiting against
 SQLite) lives in tests/integration/api/test_api_endpoints.py.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from api.cache import clear_cache
 from api.main import app, fastapi_app
+from api.routers.feedback import _client_ip
 from core.database import get_db
 
 
@@ -150,3 +151,36 @@ class TestFeedbackRouter:
 
         assert response.status_code == 429
         instance.create.assert_not_awaited()
+
+
+class TestClientIpResolution:
+    """_client_ip must never key rate limiting on client-controlled header entries."""
+
+    @staticmethod
+    def _request(headers: dict[str, str], client_host: str | None = "10.0.0.1"):
+        request = MagicMock()
+        request.headers = headers
+        request.client = MagicMock(host=client_host) if client_host else None
+        return request
+
+    def test_prefers_cf_connecting_ip(self):
+        request = self._request(
+            {"cf-connecting-ip": "203.0.113.9", "x-forwarded-for": "6.6.6.6, 203.0.113.9, 172.68.0.1"}
+        )
+        assert _client_ip(request) == "203.0.113.9"
+
+    def test_ignores_spoofable_leftmost_xff_entry(self):
+        # The leftmost entry is attacker-supplied; only the rightmost was
+        # appended by the trusted infrastructure hop.
+        request = self._request({"x-forwarded-for": "6.6.6.6, 198.51.100.7"})
+        assert _client_ip(request) == "198.51.100.7"
+
+    def test_single_xff_entry(self):
+        request = self._request({"x-forwarded-for": "198.51.100.7"})
+        assert _client_ip(request) == "198.51.100.7"
+
+    def test_falls_back_to_client_host(self):
+        assert _client_ip(self._request({})) == "10.0.0.1"
+
+    def test_no_headers_no_client(self):
+        assert _client_ip(self._request({}, client_host=None)) == ""
