@@ -529,7 +529,8 @@ export function StatsPage() {
                     bgcolor:
                       count === 0
                         ? 'var(--bg-elevated)'
-                        : `rgba(34, 197, 94, ${0.15 + intensity * 0.7})`,
+                        : // brand green (#009E73) — was an off-palette Tailwind green
+                          `rgba(0, 158, 115, ${0.15 + intensity * 0.7})`,
                     textDecoration: 'none',
                     '&:hover': { outline: `1px solid ${colors.success}` },
                   }}
@@ -555,7 +556,7 @@ export function StatsPage() {
                 width: 8,
                 height: 8,
                 borderRadius: '1px',
-                bgcolor: `rgba(34, 197, 94, ${0.15 + v * 0.7})`,
+                bgcolor: `rgba(0, 158, 115, ${0.15 + v * 0.7})`,
               }}
             />
           ))}

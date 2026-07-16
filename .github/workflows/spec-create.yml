@@ -363,29 +363,36 @@ jobs:
           # Read the specification content for PR body
           SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
 
-          PR_URL=$(gh pr create \
-            --base main \
-            --head "specification/${SPEC_ID}" \
-            --title "spec: add ${SPEC_ID} specification" \
-            --body "$(cat <<'EOF'
-          ## New Specification: `${SPEC_ID}`
+          # Unquoted heredoc so $VARS expand (a quoted <<'EOF' shipped literal
+          # "$SPEC_CONTENT" into PR bodies). Literal backticks are escaped so
+          # the shell doesn't treat them as command substitution; variable
+          # *values* (e.g. backticks inside specification.md) are inserted
+          # verbatim without re-evaluation.
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" <<EOF
+          ## New Specification: \`${SPEC_ID}\`
 
-          Related to #$ISSUE_NUMBER
+          Related to #${ISSUE_NUMBER}
 
           ---
 
           ### specification.md
 
-          $SPEC_CONTENT
+          ${SPEC_CONTENT}
 
           ---
 
-          **Next:** Add `approved` label to the issue to merge this PR.
+          **Next:** Add \`approved\` label to the issue to merge this PR.
 
           ---
-          :robot: *[spec-create workflow](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
+          :robot: *[spec-create workflow](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*
           EOF
-          )")
+
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "specification/${SPEC_ID}" \
+            --title "spec: add ${SPEC_ID} specification" \
+            --body-file "$BODY_FILE")
 
           PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
@@ -403,25 +410,29 @@ jobs:
         run: |
           SPEC_CONTENT=$(cat "plots/${SPEC_ID}/specification.md")
 
-          gh issue comment "$ISSUE_NUMBER" --body "$(cat <<'EOF'
-          ## :white_check_mark: Specification Ready: `${SPEC_ID}`
+          # Unquoted heredoc + --body-file: see "Create Pull Request" step for
+          # why (variable expansion with escaped literal backticks).
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" <<EOF
+          ## :white_check_mark: Specification Ready: \`${SPEC_ID}\`
 
-          **PR:** #$PR_NUMBER
+          **PR:** #${PR_NUMBER}
 
           ---
 
           ### specification.md
 
-          $SPEC_CONTENT
+          ${SPEC_CONTENT}
 
           ---
 
-          **Next:** Add `approved` label to merge this specification to main.
+          **Next:** Add \`approved\` label to merge this specification to main.
 
           ---
-          :robot: *[spec-create workflow](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
+          :robot: *[spec-create workflow](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*
           EOF
-          )"
+
+          gh issue comment "$ISSUE_NUMBER" --body-file "$BODY_FILE"
 
       - name: Add rocket reaction on success
         if: steps.check.outputs.should_run == 'true' && success()
@@ -508,23 +519,27 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --body "$(cat <<'EOF'
+          # Unquoted heredoc + --body-file: see "Create Pull Request" step for
+          # why (variable expansion with escaped literal backticks).
+          BODY_FILE=$(mktemp)
+          cat > "$BODY_FILE" <<EOF
           ## :rocket: Specification Merged!
 
-          **Specification:** `${SPEC_ID}`
-          **PR:** #$PR_NUMBER (merged)
+          **Specification:** \`${SPEC_ID}\`
+          **PR:** #${PR_NUMBER} (merged)
 
-          The specification is now in `main` and synced to PostgreSQL.
+          The specification is now in \`main\` and synced to PostgreSQL.
 
           ---
 
-          **Next:** Add `generate:{library}` labels to start generating implementations.
+          **Next:** Add \`generate:{library}\` labels to start generating implementations.
 
-          Available libraries: `matplotlib`, `seaborn`, `plotly`, `bokeh`, `altair`, `plotnine`, `pygal`, `highcharts`, `letsplot`
+          Available libraries: \`matplotlib\`, \`seaborn\`, \`plotly\`, \`bokeh\`, \`altair\`, \`plotnine\`, \`pygal\`, \`highcharts\`, \`letsplot\`, \`ggplot2\`, \`makie\`, \`chartjs\`, \`d3\`, \`echarts\`, \`muix\`
 
           Or use workflow dispatch for bulk operations.
 
           ---
-          :robot: *[spec-create workflow](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*
+          :robot: *[spec-create workflow](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})*
           EOF
-          )"
+
+          gh issue comment "$ISSUE_NUMBER" --body-file "$BODY_FILE"

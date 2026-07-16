@@ -44,6 +44,7 @@ from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
 from api.routers.specs import _refresh_specs_list, _refresh_specs_map  # noqa: E402
 from api.routers.stats import _refresh_stats  # noqa: E402
+from core.config import settings  # noqa: E402
 from core.database import close_db, init_db, is_db_configured  # noqa: E402
 
 
@@ -139,10 +140,13 @@ app.add_exception_handler(Exception, generic_exception_handler)
 # Note: GZip must be added before CORS so compression happens before CORS headers are added
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# Configure CORS
+# Configure CORS. Origins come from settings.cors_origins (single source of
+# truth — a hardcoded list here previously left https://www.anyplot.ai out
+# even though config promised it); the regex additionally allows any
+# localhost port for local dev servers.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://anyplot.ai"],
+    allow_origins=settings.cors_origins,
     allow_origin_regex=r"http://localhost:\d+",
     allow_credentials=True,
     allow_methods=["*"],

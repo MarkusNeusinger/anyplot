@@ -1,7 +1,9 @@
 # Multi-stage Dockerfile for anyplot React + Vite app on Cloud Run
 
 # Stage 1: Build the application
-FROM node:20-alpine AS builder
+# node:22-alpine — matches the render harness's pinned Node 22 (Node 20 is EOL
+# April 2026; CI tests on 24, 22 is the conservative in-between).
+FROM node:22-alpine AS builder
 
 # Accept build arguments for environment variables
 ARG VITE_API_URL
@@ -27,8 +29,9 @@ RUN yarn build
 # Stage 2: Serve with nginx (unprivileged — runs as the `nginx` user, not root)
 FROM nginxinc/nginx-unprivileged:alpine
 
-# Copy nginx configuration for SPA
+# Copy nginx configuration for SPA (+ the security-headers snippet it includes)
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=nginx:nginx security-headers.conf /etc/nginx/security-headers.conf
 
 # Copy built assets from builder stage
 COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html

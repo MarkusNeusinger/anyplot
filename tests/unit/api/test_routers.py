@@ -655,23 +655,70 @@ class TestSeoProxyRouter:
     """Tests for SEO proxy endpoints (bot-optimized pages)."""
 
     def test_seo_home(self, client: TestClient) -> None:
-        """SEO home page should return HTML with og:tags."""
-        response = client.get("/seo-proxy/")
+        """SEO home page should return HTML with og:tags, site JSON-LD, and body copy."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "anyplot.ai" in response.text
         assert "og:image" in response.text
         assert "twitter:card" in response.text
+        # Site-level JSON-LD (WebSite + SearchAction, Organization) must reach
+        # crawlers here — the SPA's index.html copies never do.
+        assert "application/ld+json" in response.text
+        assert "SearchAction" in response.text
+        assert '"Organization"' in response.text
+        # Real body copy instead of the one-line default (no spec count without DB)
+        assert "hundreds of plot specifications" in response.text
+        assert "Matplotlib" in response.text
+
+    def test_seo_home_with_db_counts_specs(self, db_client, mock_spec) -> None:
+        """SEO home page should ground the spec count in the DB when available."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            response = client.get("/seo-proxy/")
+            assert response.status_code == 200
+            assert "1 plot specifications" in response.text
+            assert "hundreds of" not in response.text
 
     def test_seo_plots(self, client: TestClient) -> None:
         """SEO plots page should return HTML with og:tags."""
-        response = client.get("/seo-proxy/plots")
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/plots")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "plots" in response.text
         assert "og:title" in response.text
         assert "https://anyplot.ai/plots" in response.text
+
+    def test_seo_plots_with_db_links_every_spec_hub(self, db_client, mock_spec) -> None:
+        """SEO plots page must link every spec hub so hubs aren't link-graph orphans."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            response = client.get("/seo-proxy/plots")
+            assert response.status_code == 200
+            assert '<a href="https://anyplot.ai/scatter-basic">Basic Scatter Plot</a>' in response.text
+
+    def test_seo_specs_with_db_links_every_spec_hub(self, db_client, mock_spec) -> None:
+        """SEO specs page must link every spec hub so hubs aren't link-graph orphans."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            response = client.get("/seo-proxy/specs")
+            assert response.status_code == 200
+            assert '<a href="https://anyplot.ai/scatter-basic">Basic Scatter Plot</a>' in response.text
 
     def test_seo_spec_overview_without_db(self, client: TestClient) -> None:
         """SEO spec overview should return fallback HTML when DB unavailable."""
