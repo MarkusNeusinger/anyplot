@@ -228,3 +228,14 @@ $env:CLI_MODEL_COPILOT_MEDIUM = "gpt-4-turbo"
 ```
 
 All environment variable names follow the pattern: `CLI_MODEL_{CLI}_{TIER}`
+
+---
+
+## LLM Benchmark (experimental)
+
+`benchmark-generate.yml` generates the same (spec, library) implementation with multiple
+models served by Google Vertex AI — Gemini, Claude on Vertex, and Model Garden partner
+models — under the repo's existing Workload Identity Federation auth, so models can be
+compared side-by-side on identical inputs (issue #6913). Results are uploaded as workflow
+artifacts and summarized in the job summary; nothing is committed to `plots/`.
+See [benchmark.md](benchmark.md) for model id routing, inputs, and GCP prerequisites.
