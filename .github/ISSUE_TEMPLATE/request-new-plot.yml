@@ -1,6 +1,9 @@
 name: Request New Plot
 description: Propose a new plot type for anyplot
-labels: ["spec-request"]
+# No auto-applied labels: `spec-request` triggers a write-privileged Claude
+# agent (spec-create.yml), so a maintainer must review the issue and add the
+# label manually. Auto-labeling let any unauthenticated issue author feed
+# prompt text straight into that agent.
 body:
   - type: markdown
     attributes:
@@ -12,7 +15,7 @@ body:
         2. Assign a spec ID (e.g., `scatter-regression-linear`)
         3. Create the specification for review
 
-        **After submission:** A maintainer will review and add the `approved` label to start code generation.
+        **After submission:** A maintainer will review your request and add the `spec-request` label to start AI spec creation, then the `approved` label to start code generation.
 
   - type: textarea
     id: description

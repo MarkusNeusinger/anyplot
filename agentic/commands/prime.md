@@ -20,7 +20,7 @@ gh pr list --limit 5 2>/dev/null || echo "(gh CLI not available)"
 
 ## What this project is
 
-**anyplot**: AI-powered platform that generates Python data-viz examples for 9 libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot). Spec-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations per library.
+**anyplot**: AI-powered platform that generates data-viz examples for 15 libraries across four languages — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot), R (ggplot2), Julia (Makie.jl), and JavaScript (Chart.js, D3.js, ECharts, Highcharts, MUI X Charts; browser-rendered). Spec-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations per library.
 
 ## Where things live
 

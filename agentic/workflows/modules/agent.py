@@ -506,9 +506,9 @@ def save_prompt(prompt: str, run_id: str, agent_name: str = "ops") -> None:
     # Remove leading slash for filename
     command_name = slash_command[1:]
 
-    # Create directory structure at project root
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    prompt_dir = os.path.join(project_root, "agentic", "runs", run_id, agent_name, "prompts")
+    # Create directory structure at project root (module-level _project_root —
+    # this file lives at agentic/workflows/modules/, so the root is 3 levels up)
+    prompt_dir = os.path.join(_project_root, "agentic", "runs", run_id, agent_name, "prompts")
     os.makedirs(prompt_dir, exist_ok=True)
 
     # Save prompt to file
@@ -791,7 +791,8 @@ def prompt_claude_code(request: AgentPromptRequest) -> AgentPromptResponse:
             )
 
     except subprocess.TimeoutExpired:
-        error_msg = "Error: CLI command timed out after 5 minutes"
+        timeout_desc = f"{request.timeout // 60} minutes" if request.timeout else "the configured limit"
+        error_msg = f"Error: CLI command timed out after {timeout_desc}"
         return AgentPromptResponse(output=error_msg, success=False, session_id=None, retry_code=RetryCode.TIMEOUT_ERROR)
     except Exception as e:
         error_msg = f"Error executing CLI: {e}"
@@ -817,9 +818,8 @@ def execute_template(request: AgentTemplateRequest) -> AgentPromptResponse:
     # Construct prompt from slash command and args
     prompt = f"{request.slash_command} {' '.join(request.args)}"
 
-    # Create output directory with run_id at project root
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    output_dir = os.path.join(project_root, "agentic", "runs", request.run_id, request.agent_name)
+    # Create output directory with run_id at project root (module-level _project_root)
+    output_dir = os.path.join(_project_root, "agentic", "runs", request.run_id, request.agent_name)
     os.makedirs(output_dir, exist_ok=True)
 
     # Build output file path

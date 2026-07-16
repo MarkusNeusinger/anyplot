@@ -124,6 +124,74 @@ DEFAULT_DESCRIPTION = "library-agnostic, ai-powered plotting."
 _LANGUAGE_NAMES = {lang["id"]: str(lang["name"]) for lang in LANGUAGES_METADATA}
 _LIBRARY_NAMES = {lib["id"]: str(lib["name"]) for lib in LIBRARIES_METADATA}
 
+# Counts and lists for homepage copy, derived from the registry so the text
+# can never drift from the actual catalog.
+_LIBRARY_COUNT = len(LIBRARIES_METADATA)
+_LANGUAGE_LIST = ", ".join(_LANGUAGE_NAMES.values())
+_LIBRARY_LIST = ", ".join(_LIBRARY_NAMES.values())
+
+# Homepage copy sized for SERP display: title ~50-60 chars, description
+# ~150 chars. The previous 10-char title / 39-char description read as a
+# thin page to search engines (audit 2026-07-16).
+HOME_TITLE = f"anyplot.ai — AI-generated plot catalog for {_LIBRARY_COUNT} libraries"
+HOME_DESCRIPTION = (
+    "The open plot catalogue: every chart starts as a library-agnostic spec; "
+    f"AI drafts implementations across {_LIBRARY_COUNT} libraries in {_LANGUAGE_LIST}."
+)
+
+# Site-level structured data served to crawlers on the homepage. Mirrors the
+# three JSON-LD blocks in app/index.html (WebApplication, WebSite +
+# SearchAction, Organization) — bots routed to /seo-proxy/ never execute the
+# SPA, so schemas living only in index.html are invisible to Googlebot.
+# SearchAction: /plots?spec= is the only term-carrying catalog param the SPA
+# supports (exact-match spec filter, see parseUrlFilters in
+# app/src/hooks/useUrlSync.ts); there is no free-text search URL, so the
+# template mirrors index.html and inherits its exact-match limitation.
+_HOME_JSONLD = {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "WebApplication",
+            "name": "anyplot.ai",
+            "url": "https://anyplot.ai",
+            "description": HOME_DESCRIPTION,
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Any",
+            "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+            "author": {
+                "@type": "Person",
+                "name": "Markus Neusinger",
+                "url": "https://www.linkedin.com/in/markus-neusinger/",
+            },
+            "keywords": [name.lower() for name in _LANGUAGE_NAMES.values()]
+            + [name.lower() for name in _LIBRARY_NAMES.values()]
+            + ["plotting", "data visualization", "charts", "code examples", "colorblind-safe", "imprint palette"],
+            "isAccessibleForFree": True,
+        },
+        {
+            "@type": "WebSite",
+            "name": "anyplot.ai",
+            "url": "https://anyplot.ai",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {"@type": "EntryPoint", "urlTemplate": "https://anyplot.ai/plots?spec={search_term_string}"},
+                "query-input": "required name=search_term_string",
+            },
+        },
+        {
+            "@type": "Organization",
+            "name": "anyplot",
+            "url": "https://anyplot.ai",
+            "logo": "https://anyplot.ai/og-image.png",
+            "description": (
+                f"Open plot catalogue with AI-generated implementations across {_LIBRARY_COUNT} "
+                f"libraries in {_LANGUAGE_LIST}."
+            ),
+            "sameAs": ["https://github.com/MarkusNeusinger/anyplot", "https://www.linkedin.com/in/markus-neusinger/"],
+        },
+    ],
+}
+
 # Site-wide footer nav on every bot page: crawlers that land deep on an impl
 # page can reach the hub surfaces without executing the SPA.
 _BOT_NAV_HTML = (
@@ -185,6 +253,76 @@ def _impl_display_names(impl) -> tuple[str, str]:
 def _sorted_impls(spec) -> list:
     """Impls with a loaded library relation, in stable (language, library) order."""
     return sorted((i for i in spec.impls if i.library), key=lambda i: (i.library.language, i.library_id))
+
+
+def _spec_index_entries(specs: list) -> list[tuple[str, str]]:
+    """(spec_id, title) for every spec with at least one implementation, title-sorted.
+
+    Same inclusion rule as the sitemap: specs without implementations have
+    nothing to show and are left out.
+    """
+    return sorted(((s.id, s.title or s.id) for s in specs if s.impls), key=lambda e: (e[1].lower(), e[0]))
+
+
+async def _refresh_spec_index() -> list[tuple[str, str]]:
+    """Standalone factory for background spec-index refresh (creates own DB session)."""
+    async with get_db_context() as db:
+        repo = SpecRepository(db)
+        specs = await repo.get_all()
+    return _spec_index_entries(specs)
+
+
+async def _get_spec_index(db: AsyncSession) -> list[tuple[str, str]]:
+    """Cached (spec_id, title) index backing crawlable link lists and the homepage spec count."""
+
+    async def _fetch() -> list[tuple[str, str]]:
+        repo = SpecRepository(db)
+        return _spec_index_entries(await repo.get_all())
+
+    return await get_or_set_cache(
+        cache_key("seo_spec_index"),
+        _fetch,
+        refresh_after=settings.cache_refresh_after,
+        refresh_factory=_refresh_spec_index,
+    )
+
+
+def _spec_links_html(spec_index: list[tuple[str, str]]) -> str:
+    """Crawlable link list to every spec hub.
+
+    /plots and /specs are the catalog surfaces crawlers reach from the site
+    nav; without server-rendered links every hub page is an orphan in the
+    internal link graph (reachable only via sitemap.xml), which hurts
+    discovery and PageRank flow (audit 2026-07-16).
+    """
+    if not spec_index:
+        return ""
+    items = "".join(
+        f'<li><a href="https://anyplot.ai/{html.escape(spec_id, quote=True)}">{html.escape(title)}</a></li>'
+        for spec_id, title in spec_index
+    )
+    return f"<h2>All plot specifications</h2><ul>{items}</ul>"
+
+
+def _build_home_body(spec_count: int | None) -> str:
+    """Real body copy for the bot homepage (was a one-line default body).
+
+    All claims derive from the canonical registry (core/constants.py) or the
+    live spec index — nothing hand-maintained that could drift.
+    """
+    count_phrase = f"{spec_count} plot specifications" if spec_count else "hundreds of plot specifications"
+    return (
+        "<h1>anyplot.ai — the open plot catalogue</h1>"
+        f"<p>anyplot.ai is an open catalog of {count_phrase}. Every plot begins as a "
+        "library-agnostic specification; AI drafts an implementation for each supported "
+        "library, reviews it, and publishes the result with full source code.</p>"
+        f"<p>The catalog covers {_LIBRARY_COUNT} libraries across {_LANGUAGE_LIST}: "
+        f"{_LIBRARY_LIST}. Every implementation ships with light and dark theme previews, "
+        "uses the colorblind-safe Imprint palette, and can be browsed, copied, and adapted freely.</p>"
+        '<p>Browse the catalog on the <a href="https://anyplot.ai/plots">plots</a> page, jump to any '
+        'chart type via the <a href="https://anyplot.ai/specs">spec index</a>, or connect an AI '
+        'assistant through the <a href="https://anyplot.ai/mcp">Model Context Protocol (MCP) server</a>.</p>'
+    )
 
 
 def _build_spec_hub_html(spec, image: str) -> str:
@@ -354,8 +492,8 @@ async def get_sitemap(db: AsyncSession | None = Depends(optional_db)):
 
 
 @router.get("/seo-proxy/")
-async def seo_home(request: Request):
-    """Bot-optimized home page with correct og:tags.
+async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_db)):
+    """Bot-optimized home page: og:tags, site-level JSON-LD, and real body copy.
 
     Passes query params (e.g., ?lib=plotly&dom=statistics) to og:image URL for tracking.
     """
@@ -365,33 +503,57 @@ async def seo_home(request: Request):
     image_url = f"{DEFAULT_HOME_IMAGE}?{query_string}" if query_string else DEFAULT_HOME_IMAGE
     page_url = f"https://anyplot.ai/?{query_string}" if query_string else "https://anyplot.ai/"
 
+    spec_count = len(await _get_spec_index(db)) if db is not None else None
     return HTMLResponse(
-        _render_bot_html(title="anyplot.ai", description=DEFAULT_DESCRIPTION, image=image_url, url=page_url)
+        _render_bot_html(
+            title=html.escape(HOME_TITLE),
+            description=html.escape(HOME_DESCRIPTION),
+            image=image_url,
+            url=page_url,
+            body=_build_home_body(spec_count),
+            jsonld=_HOME_JSONLD,
+        )
     )
 
 
 @router.get("/seo-proxy/plots")
-async def seo_plots():
-    """Bot-optimized plots page with correct og:tags."""
+async def seo_plots(db: AsyncSession | None = Depends(optional_db)):
+    """Bot-optimized plots page: og:tags plus a crawlable link to every spec hub."""
+    description = (
+        f"Browse and filter visualization examples across {_LIBRARY_COUNT} libraries "
+        f"in {_LANGUAGE_LIST}: {_LIBRARY_LIST}."
+    )
+    body = ""
+    if db is not None:
+        body = f"<h1>plots</h1><p>{description}</p>{_spec_links_html(await _get_spec_index(db))}"
     return HTMLResponse(
         _render_bot_html(
             title="plots | anyplot.ai",
-            description="Browse and filter visualization examples across 15 libraries in Python, R, Julia, and JavaScript: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js, ECharts, Highcharts, MUI X Charts.",
+            description=description,
             image=DEFAULT_PLOTS_IMAGE,
             url="https://anyplot.ai/plots",
+            body=body,
         )
     )
 
 
 @router.get("/seo-proxy/specs")
-async def seo_specs():
-    """Bot-optimized specs page with correct og:tags."""
+async def seo_specs(db: AsyncSession | None = Depends(optional_db)):
+    """Bot-optimized specs page: og:tags plus a crawlable link to every spec hub."""
+    description = (
+        "Browse all plot specifications alphabetically — every chart type in the anyplot.ai "
+        f"catalog, implemented across {_LIBRARY_COUNT} libraries in {_LANGUAGE_LIST}."
+    )
+    body = ""
+    if db is not None:
+        body = f"<h1>specs</h1><p>{description}</p>{_spec_links_html(await _get_spec_index(db))}"
     return HTMLResponse(
         _render_bot_html(
             title="specs | anyplot.ai",
-            description="Browse all Python plotting specifications alphabetically.",
+            description=description,
             image=DEFAULT_PLOTS_IMAGE,
             url="https://anyplot.ai/specs",
+            body=body,
         )
     )
 

@@ -1,0 +1,29 @@
+# EditorConfig — https://editorconfig.org
+# Mirrors the enforced formatters: ruff (Python, 4-space, 120 cols) and the
+# frontend's 2-space TS/TSX convention. Editors pick this up automatically.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.py]
+indent_size = 4
+max_line_length = 120
+
+[*.{ts,tsx,js,jsx,mjs,css,html}]
+indent_size = 2
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+# Trailing whitespace is meaningful in Markdown (hard line breaks).
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab

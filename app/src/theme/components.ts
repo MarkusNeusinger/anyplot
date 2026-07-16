@@ -36,6 +36,32 @@ export const components: ThemeOptions['components'] = {
       },
     },
   },
+  // Menu/Popover paper falls back to the stock light palette (#fff) and stays
+  // white in dark mode. Wire the dropdown surface to the CSS-var tokens; the
+  // default elevation shadow is kept, plus a hairline border in dark mode
+  // where black shadows barely separate the surface from the page.
+  MuiMenu: {
+    styleOverrides: {
+      paper: {
+        backgroundColor: 'var(--bg-elevated)',
+        color: 'var(--ink)',
+        "[data-theme='dark'] &": {
+          border: '1px solid var(--rule)',
+        },
+      },
+    },
+  },
+  MuiPopover: {
+    styleOverrides: {
+      paper: {
+        backgroundColor: 'var(--bg-elevated)',
+        color: 'var(--ink)',
+        "[data-theme='dark'] &": {
+          border: '1px solid var(--rule)',
+        },
+      },
+    },
+  },
   MuiSkeleton: {
     styleOverrides: {
       root: {

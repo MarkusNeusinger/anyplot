@@ -108,19 +108,7 @@ anyplot provides an [MCP (Model Context Protocol)](https://modelcontextprotocol.
 
 Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
 
-**SSE Transport** (recommended, wider compatibility):
-```json
-{
-  "mcpServers": {
-    "anyplot": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://api.anyplot.ai/sse/"]
-    }
-  }
-}
-```
-
-**Streamable HTTP Transport** (modern, bidirectional):
+**Streamable HTTP Transport** (the only supported transport):
 ```json
 {
   "mcpServers": {
@@ -131,6 +119,12 @@ Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
   }
 }
 ```
+
+Clients with native Streamable HTTP support can connect to
+`https://api.anyplot.ai/mcp/` directly, without the `mcp-remote` bridge.
+
+> The legacy SSE endpoint (`https://api.anyplot.ai/sse/`) has been removed —
+> update any configuration still pointing at it.
 
 ---
 

@@ -33,10 +33,13 @@ This file provides guidance to GitHub Copilot when working with code in this rep
 
 ## Project Overview
 
-**anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
+**anyplot** is an AI-powered platform for data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
 
-**Supported Libraries** (9 total):
-- matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot
+**Supported Libraries** (15 total, per `LIBRARIES_METADATA` in `core/constants.py`):
+- Python (8): matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot
+- R (1): ggplot2
+- Julia (1): Makie.jl
+- JavaScript (5): Chart.js, D3.js, Apache ECharts, Highcharts, MUI X Charts (React, `.tsx`) — rendered via the Node + Playwright browser harness
 
 **Core Principle**: Community proposes plot ideas via GitHub Issues → AI generates code → AI quality review → Deployed.
 
@@ -87,19 +90,19 @@ Everything for one plot type lives in a single directory:
 plots/{spec-id}/
 ├── specification.md             # Library-agnostic description
 ├── specification.yaml           # Tags, created, issue, suggested
-├── metadata/
-│   └── python/                  # Per-library metadata (one file per library)
-│       ├── matplotlib.yaml
-│       ├── seaborn.yaml
-│       └── ...
-└── implementations/
-    └── python/                  # Library implementations (one file per library)
-        ├── matplotlib.py
-        ├── seaborn.py
-        └── ...
+├── metadata/                    # Per-library metadata, grouped by language
+│   ├── python/{matplotlib,seaborn,…}.yaml
+│   ├── r/ggplot2.yaml
+│   ├── julia/makie.yaml
+│   └── javascript/{chartjs,d3,echarts,highcharts,muix}.yaml
+└── implementations/             # Library implementations, grouped by language
+    ├── python/{matplotlib,seaborn,…}.py
+    ├── r/ggplot2.R
+    ├── julia/makie.jl
+    └── javascript/{chartjs,d3,echarts,highcharts}.js + muix.tsx
 ```
 
-The `python/` subdirectory is a deliberate forward-compatibility layer; non-Python implementation languages would live as siblings (e.g. `implementations/r/`) when introduced. All paths in code, prompts, and metadata refer to the language-prefixed form: `plots/{spec-id}/implementations/python/{library}.py` and `plots/{spec-id}/metadata/python/{library}.yaml`.
+Implementations and metadata are grouped by language subdirectory. All paths in code, prompts, and metadata refer to the language-prefixed form: `plots/{spec-id}/implementations/{language}/{library}{ext}` and `plots/{spec-id}/metadata/{language}/{library}.yaml`.
 
 Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
@@ -135,9 +138,9 @@ Examples: `scatter-basic`, `scatter-color-mapped`, `bar-grouped-horizontal`, `he
 ### Implementation Labels
 
 - **`generate:{library}`** - Trigger single library generation (e.g., `generate:matplotlib`)
-- **`generate:all`** - Trigger all 9 libraries via bulk-generate
+- **`generate:all`** - Trigger all 15 libraries via bulk-generate
 - **`impl:{library}:done`** - Implementation merged to main
-- **`impl:{library}:failed`** - Max retries exhausted (3 attempts)
+- **`impl:{library}:failed`** - Max retries exhausted (4 repair attempts)
 
 ### PR Labels (set by workflows)
 
@@ -217,7 +220,7 @@ ax.scatter(x, y, alpha=0.7, s=50, color='#306998')
 ax.set_title('Basic Scatter Plot')
 
 plt.tight_layout()
-plt.savefig('plot.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')  # THEME = os.getenv('ANYPLOT_THEME', 'light')
 ```
 
 **Header format:** 4-line docstring with anyplot.ai branding, spec-id, library version, quality score.

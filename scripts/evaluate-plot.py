@@ -18,6 +18,9 @@ Usage:
 
     # Evaluate all libraries
     python scripts/evaluate-plot.py scatter-basic --all --quick
+
+    # Evaluate the dark-theme render (default: light)
+    ANYPLOT_THEME=dark python scripts/evaluate-plot.py scatter-basic matplotlib
 """
 
 import argparse
@@ -46,6 +49,35 @@ SUPPORTED_LIBRARIES = [lib["id"] for lib in LIBRARIES_METADATA if lib["language_
 # Python-only skip. Falls back to "python" for legacy callers that pass a
 # library not in LIBRARIES_METADATA (e.g. local test fixtures).
 LIBRARY_LANGUAGE = {lib["id"]: lib["language_id"] for lib in LIBRARIES_METADATA}
+
+# Theme handling. The pipeline runs every implementation twice
+# (ANYPLOT_THEME=light / ANYPLOT_THEME=dark) and the scripts save
+# plot-light.png / plot-dark.png — a bare plot.png is legacy-only. This local
+# evaluator evaluates ONE theme per invocation: set ANYPLOT_THEME=dark to
+# check the dark render (default: light). Legacy plot.png is still accepted
+# as a fallback for old implementations.
+THEME = os.environ.get("ANYPLOT_THEME", "light")
+if THEME not in ("light", "dark"):
+    print(f"Invalid ANYPLOT_THEME={THEME!r} (expected 'light' or 'dark')", file=sys.stderr)
+    sys.exit(2)
+
+
+def find_output_png(impl_dir: Path) -> Path | None:
+    """Return the themed output PNG (plot-{THEME}.png), or legacy plot.png as fallback."""
+    for name in (f"plot-{THEME}.png", "plot.png"):
+        candidate = impl_dir / name
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def find_output_html(impl_dir: Path) -> Path | None:
+    """Return the themed output HTML (plot-{THEME}.html), or legacy plot.html as fallback."""
+    for name in (f"plot-{THEME}.html", "plot.html"):
+        candidate = impl_dir / name
+        if candidate.exists():
+            return candidate
+    return None
 
 # Library-specific plot function patterns
 LIBRARY_PATTERNS = {
@@ -144,7 +176,8 @@ def get_plot_paths(spec_id: str, library: str, language: str = "python") -> dict
         "spec": plots_dir / "specification.md",
         "impl": impl_dir / f"{library}{ext}",
         "metadata": plots_dir / "metadata" / language / f"{library}.yaml",
-        "image": impl_dir / "plot.png",
+        "image": impl_dir / f"plot-{THEME}.png",
+        "image_legacy": impl_dir / "plot.png",
         "image_light": impl_dir / "plot-light.png",
         "image_dark": impl_dir / "plot-dark.png",
         "library_rules": PROJECT_ROOT / "prompts" / "library" / f"{library}.md",
@@ -184,6 +217,7 @@ def check_ar02_runtime(impl_path: Path, timeout: int = 60) -> AutoRejectResult:
     """AR-02: Check if code runs without exceptions."""
     env = os.environ.copy()
     env["MPLBACKEND"] = "Agg"
+    env["ANYPLOT_THEME"] = THEME
 
     # Create a temp copy to run from a clean directory (avoids matplotlib.py shadowing)
     import tempfile
@@ -202,10 +236,12 @@ def check_ar02_runtime(impl_path: Path, timeout: int = 60) -> AutoRejectResult:
                 timeout=timeout,
             )
             if result.returncode == 0:
-                # Copy plot.png back if created
-                tmp_plot = Path(tmpdir) / "plot.png"
-                if tmp_plot.exists():
-                    shutil.copy(tmp_plot, impl_path.parent / "plot.png")
+                # Copy outputs back if created (themed plot-{light,dark}.png/.html
+                # per the pipeline contract; bare plot.png/plot.html is legacy)
+                for name in (f"plot-{THEME}.png", f"plot-{THEME}.html", "plot.png", "plot.html"):
+                    tmp_output = Path(tmpdir) / name
+                    if tmp_output.exists():
+                        shutil.copy(tmp_output, impl_path.parent / name)
                 return AutoRejectResult(True, "AR-02", "Runtime OK")
             else:
                 # Get last line of error
@@ -219,37 +255,42 @@ def check_ar02_runtime(impl_path: Path, timeout: int = 60) -> AutoRejectResult:
 
 
 def check_ar03_output(impl_path: Path) -> AutoRejectResult:
-    """AR-03: Check if plot.png was created."""
-    plot_path = impl_path.parent / "plot.png"
-    if plot_path.exists():
+    """AR-03: Check if the themed output PNG was created (plot-{THEME}.png, legacy plot.png)."""
+    plot_path = find_output_png(impl_path.parent)
+    if plot_path is not None:
         return AutoRejectResult(True, "AR-03", f"Output exists: {plot_path.name}")
     else:
-        return AutoRejectResult(False, "AR-03", "No plot.png created")
+        return AutoRejectResult(False, "AR-03", f"No plot-{THEME}.png (or legacy plot.png) created")
 
 
 def check_ar04_empty(impl_path: Path) -> AutoRejectResult:
-    """AR-04: Check if plot.png is not empty (< 10KB or mostly white)."""
-    plot_path = impl_path.parent / "plot.png"
-    if not plot_path.exists():
-        return AutoRejectResult(False, "AR-04", "No plot.png to check")
+    """AR-04: Check if the output PNG is not empty (< 10KB or mostly white)."""
+    plot_path = find_output_png(impl_path.parent)
+    if plot_path is None:
+        return AutoRejectResult(False, "AR-04", f"No plot-{THEME}.png to check")
 
     # Check file size
     size_kb = plot_path.stat().st_size / 1024
     if size_kb < 10:
         return AutoRejectResult(False, "AR-04", f"Plot too small: {size_kb:.1f}KB")
 
-    # Try to check if mostly white (optional, requires PIL)
+    # Try to check if mostly blank (optional, requires PIL). A blank light
+    # render is near-white; a blank dark render is near the dark page bg.
     try:
         from PIL import Image
         import numpy as np
         img = Image.open(plot_path).convert('RGB')
         arr = np.array(img)
-        # Check if > 95% of pixels are white (> 250 in all channels)
-        white_pixels = np.all(arr > 250, axis=2).sum()
+        if THEME == "dark":
+            blank_pixels = np.all(arr < 60, axis=2).sum()
+            blank_desc = "dark"
+        else:
+            blank_pixels = np.all(arr > 250, axis=2).sum()
+            blank_desc = "white"
         total_pixels = arr.shape[0] * arr.shape[1]
-        white_ratio = white_pixels / total_pixels
-        if white_ratio > 0.95:
-            return AutoRejectResult(False, "AR-04", f"Plot is {white_ratio*100:.0f}% white")
+        blank_ratio = blank_pixels / total_pixels
+        if blank_ratio > 0.95:
+            return AutoRejectResult(False, "AR-04", f"Plot is {blank_ratio*100:.0f}% {blank_desc}")
     except ImportError:
         pass  # PIL not available, skip this check
 
@@ -292,17 +333,17 @@ def check_ar07_format(impl_path: Path, library: str) -> AutoRejectResult:
     # (this Python-only evaluator never reaches AR-07 for non-Python libs).
     static_libraries = set(SUPPORTED_LIBRARIES) - INTERACTIVE_LIBRARIES
 
-    plot_png = impl_path.parent / "plot.png"
-    plot_html = impl_path.parent / "plot.html"
+    plot_png = find_output_png(impl_path.parent)
+    plot_html = find_output_html(impl_path.parent)
 
     if library in static_libraries:
-        if plot_png.exists():
+        if plot_png is not None:
             return AutoRejectResult(True, "AR-07", "Correct format: PNG")
         else:
             return AutoRejectResult(False, "AR-07", "Static library must produce PNG")
     else:
-        if plot_png.exists() or plot_html.exists():
-            fmt = "PNG" if plot_png.exists() else "HTML"
+        if plot_png is not None or plot_html is not None:
+            fmt = "PNG" if plot_png is not None else "HTML"
             return AutoRejectResult(True, "AR-07", f"Correct format: {fmt}")
         else:
             return AutoRejectResult(False, "AR-07", "No valid output format")
@@ -367,9 +408,15 @@ def run_auto_reject_checks(spec_id: str, library: str, run_code: bool = True) ->
 # STAGE 2: QUALITY EVALUATION
 # =============================================================================
 
-def create_evaluation_prompt(spec_id: str, library: str, paths: dict) -> str:
+def create_evaluation_prompt(spec_id: str, library: str, paths: dict) -> tuple[str, str]:
     """Build the evaluation prompt by composing the canonical evaluator + criteria
     files (mirrors the workflow pattern — single source of truth for the rubric).
+
+    Returns:
+        (system_prompt, user_prompt). The system prompt holds the static
+        evaluator + rubric block — identical across runs, so it is sent with
+        `cache_control: ephemeral` and prompt-cached by the API. The user
+        prompt holds the per-run inputs (spec, implementation, library rules).
     """
     spec_content = paths["spec"].read_text() if paths["spec"].exists() else "NOT FOUND"
     impl_content = paths["impl"].read_text() if paths["impl"].exists() else "NOT FOUND"
@@ -377,19 +424,28 @@ def create_evaluation_prompt(spec_id: str, library: str, paths: dict) -> str:
     evaluator_content = paths["quality_evaluator"].read_text() if paths["quality_evaluator"].exists() else "NOT FOUND"
     library_rules = paths["library_rules"].read_text() if paths["library_rules"].exists() else ""
 
-    return f"""{evaluator_content}
+    system_prompt = f"""{evaluator_content}
 
 ---
 
 ## Local CLI Mode — Single Render Only
 
 This invocation is from the `evaluate-plot.py` local CLI, not the production
-review workflow. Only a single rendered preview (`plot.png`) is attached, and
-there is no `plot-light.png` / `plot-dark.png` theme pair (or `plot-*.html`)
-available. Score VQ-07 (Palette Compliance) and any other theme-aware criteria
-based on the single render shown — do not deduct for "missing theme variant".
+review workflow. Only a single rendered preview is attached — the
+`plot-light.png` OR `plot-dark.png` for the one theme this CLI run evaluates
+(legacy single-theme `plot.png` for old implementations). The other theme
+variant (and `plot-*.html`) is not available. Score VQ-07 (Palette Compliance)
+and any other theme-aware criteria based on the single render shown — do not
+deduct for "missing theme variant".
 
-## Inputs
+## Quality Criteria (full rubric)
+
+```markdown
+{criteria_content}
+```
+"""
+
+    user_prompt = f"""## Inputs
 
 You are evaluating **{library}** implementation of **{spec_id}**. The implementation
 has already passed Stage 1 auto-reject checks (syntax, runtime, output, library
@@ -413,18 +469,17 @@ usage). Focus purely on Stage 2 quality scoring.
 {library_rules}
 ```
 
-### Quality Criteria (full rubric)
-
-```markdown
-{criteria_content}
-```
-
 Return the JSON output in the exact shape specified in the evaluator's "Output Format" section.
 """
+    return system_prompt, user_prompt
 
 
-def evaluate_with_claude(prompt: str, image_path: Path | None = None) -> dict:
+def evaluate_with_claude(system_prompt: str, prompt: str, image_path: Path | None = None) -> dict:
     """Send the evaluation prompt to Claude API.
+
+    The static evaluator + rubric block goes into the system parameter with
+    `cache_control: ephemeral`, so repeated local runs (e.g. `--all`) reuse the
+    cached prefix instead of re-billing ~350 lines of rubric per call.
 
     Returns one of three shapes:
       - success: parsed quality result dict (has `score`, `tier`, etc.)
@@ -459,6 +514,13 @@ def evaluate_with_claude(prompt: str, image_path: Path | None = None) -> dict:
         response = client.messages.create(
             model=settings.claude_model,
             max_tokens=settings.claude_review_max_tokens,
+            system=[
+                {
+                    "type": "text",
+                    "text": system_prompt,
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
             messages=[{"role": "user", "content": content}],
         )
     except anthropic.APIError as e:
@@ -612,6 +674,7 @@ def main():
             import shutil
             env = os.environ.copy()
             env["MPLBACKEND"] = "Agg"
+            env["ANYPLOT_THEME"] = THEME
             with tempfile.TemporaryDirectory() as tmpdir:
                 tmp_script = Path(tmpdir) / "plot_script.py"
                 shutil.copy(paths["impl"], tmp_script)
@@ -622,9 +685,10 @@ def main():
                     capture_output=True,
                     timeout=60,
                 )
-                tmp_plot = Path(tmpdir) / "plot.png"
-                if tmp_plot.exists():
-                    shutil.copy(tmp_plot, paths["impl"].parent / "plot.png")
+                for name in (f"plot-{THEME}.png", f"plot-{THEME}.html", "plot.png", "plot.html"):
+                    tmp_output = Path(tmpdir) / name
+                    if tmp_output.exists():
+                        shutil.copy(tmp_output, paths["impl"].parent / name)
 
         # Stage 1: Auto-Reject
         print("\n--- STAGE 1: AUTO-REJECT ---")
@@ -640,10 +704,10 @@ def main():
         elif not args.quick:
             # Stage 2: Quality (only if auto-reject passed)
             print("\n--- STAGE 2: QUALITY EVALUATION ---")
-            prompt = create_evaluation_prompt(args.spec_id, library, paths)
+            system_prompt, prompt = create_evaluation_prompt(args.spec_id, library, paths)
 
-            image_path = paths["image"] if paths["image"].exists() else None
-            quality_result = evaluate_with_claude(prompt, image_path)
+            image_path = find_output_png(paths["impl"].parent)
+            quality_result = evaluate_with_claude(system_prompt, prompt, image_path)
             result["quality"] = quality_result
 
             if not args.json:
